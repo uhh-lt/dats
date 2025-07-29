@@ -101,7 +101,7 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
 
     # Alice adds Bob to project1
     response_add_p1_bob = client.patch(
-        f"/project/{project1['id']}/user",
+        f"/user/{project1['id']}/user",
         json={
             "email": bob["email"],
         },
@@ -128,7 +128,7 @@ def test_project_update_remove(client: TestClient, api_user, api_project) -> Non
 
     # Bob adds Alice to project2
     response_add_p2_alice = client.patch(
-        f"/project/{project2['id']}/user",
+        f"/user/{project2['id']}/user",
         json={
             "email": alice["email"],
         },
@@ -215,7 +215,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
     # Alice creates three codes in project1
     codes_project1_before_response = client.get(
-        f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
+        f"/code/project/{project1['id']}", headers=alice["AuthHeader"]
     ).json()
     codes_project1_before = len(codes_project1_before_response)
 
@@ -224,7 +224,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     _ = api_code.create("code3", alice, project1)
 
     code1_read_response = client.get(
-        f"code/{code1['id']}", headers=alice["AuthHeader"]
+        f"/code/{code1['id']}", headers=alice["AuthHeader"]
     ).json()
     assert code1_read_response["name"] == code1["name"]
     assert code1_read_response["color"] == code1["color"]
@@ -234,7 +234,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_read_response["project_id"] == code1["project_id"]
 
     codes_project1_after_response = client.get(
-        f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
+        f"/code/project/{project1['id']}", headers=alice["AuthHeader"]
     ).json()
     codes_project1_after = len(codes_project1_after_response)
 
@@ -244,7 +244,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     bob = api_user.user_list["bob"]
     project2 = api_project.project_list["project2"]
     codes_project2_before_response = client.get(
-        f"/project/{project2['id']}/code", headers=bob["AuthHeader"]
+        f"/code/project/{project2['id']}", headers=bob["AuthHeader"]
     ).json()
     codes_project2_before = len(codes_project2_before_response)
     code4 = api_code.create("code4", bob, project2)
@@ -252,7 +252,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     code6 = api_code.create("code6", bob, project2)
 
     code6_read_response = client.get(
-        f"code/{code6['id']}", headers=bob["AuthHeader"]
+        f"/code/{code6['id']}", headers=bob["AuthHeader"]
     ).json()
     assert code6_read_response["name"] == code6["name"]
     assert code6_read_response["color"] == code6["color"]
@@ -262,7 +262,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code6_read_response["project_id"] == code6["project_id"]
 
     codes_project2_after = client.get(
-        f"/project/{project2['id']}/code", headers=alice["AuthHeader"]
+        f"/code/project/{project2['id']}", headers=alice["AuthHeader"]
     ).json()
     codes_project2_after = len(codes_project2_after)
 
@@ -299,7 +299,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
     # Bob removes code4
     code4_remove_response = client.delete(
-        f"code/{code4['id']}", headers=bob["AuthHeader"]
+        f"/code/{code4['id']}", headers=bob["AuthHeader"]
     )
     assert code4_remove_response.status_code == 200
 
@@ -310,19 +310,19 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
         "description": "track",
     }
     code5_update_response = client.patch(
-        f"code/{code5['id']}", headers=bob["AuthHeader"], json=code5_update
+        f"/code/{code5['id']}", headers=bob["AuthHeader"], json=code5_update
     )
     assert code5_update_response.status_code == 200
     code5_update_response = code5_update_response.json()
 
     code5_remove_response = client.delete(
-        f"code/{code5['id']}", headers=bob["AuthHeader"]
+        f"/code/{code5['id']}", headers=bob["AuthHeader"]
     )
     assert code5_remove_response.status_code == 200
 
     # Bob removes code6
     code6_remove_response = client.delete(
-        f"code/{code6['id']}", headers=bob["AuthHeader"]
+        f"/code/{code6['id']}", headers=bob["AuthHeader"]
     )
     assert code6_remove_response.status_code == 200
 
@@ -531,27 +531,22 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
 def test_project_memos(client, api_user, api_project) -> None:
     alice = api_user.user_list["alice"]
     project1 = api_project.project_list["project1"]
+
+    # the project memo should be automatically created when the project is created
     project_memo = {
-        "title": "This is a memo",
-        "content": "containing informations",
+        "title": "Project Memo",
+        "content": "",
         "content_json": "",
-        "starred": True,
+        "starred": False,
     }
-    memo_response = client.put(
-        f"/memo?attached_object_id={project1['id']}&attached_object_type={AttachedObjectType.project.value}",
-        headers=alice["AuthHeader"],
-        json=project_memo,
-    )
-    assert memo_response.status_code == 200
 
     memo_get = client.get(
-        f"/memo/attached_obj/project/to/{project1['id']}",
+        f"/memo/attached_obj/project/to/{project1['id']}/user",
         headers=alice["AuthHeader"],
-    ).json()[0]
+    ).json()
     assert memo_get["title"] == project_memo["title"]
     assert memo_get["content"] == project_memo["content"]
     assert memo_get["content_json"] == project_memo["content_json"]
-    assert memo_get["id"] == memo_response.json()["id"]
     assert memo_get["starred"] == project_memo["starred"]
     assert memo_get["user_id"] == alice["id"]
     assert memo_get["project_id"] == project1["id"]
@@ -573,13 +568,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "sdoc_id": project_text_doc1["sdoc_id"],
     }
     span1_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span1_annotation
+        "/span", headers=alice["AuthHeader"], json=span1_annotation
     )
     assert span1_create_response.status_code == 200
     span1_id = span1_create_response.json()["id"]
 
     span1_read_response = client.get(
-        f"span/{span1_id}", headers=alice["AuthHeader"]
+        f"/span/{span1_id}", headers=alice["AuthHeader"]
     ).json()
     assert span1_read_response["begin"] == span1_annotation["begin"]
     assert span1_read_response["end"] == span1_annotation["end"]
@@ -604,13 +599,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "sdoc_id": project_text_doc1["sdoc_id"],
     }
     span2_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span2_annotation
+        "/span", headers=alice["AuthHeader"], json=span2_annotation
     )
     span2_id = span2_create_response.json()["id"]
     assert span2_create_response.status_code == 200
 
     span2_read_response = client.get(
-        f"span/{span2_id}", headers=alice["AuthHeader"]
+        f"/span/{span2_id}", headers=alice["AuthHeader"]
     ).json()
     assert span2_read_response["begin"] == span2_annotation["begin"]
     assert span2_read_response["end"] == span2_annotation["end"]
@@ -653,7 +648,7 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
 
     # Alice removes span
     span1_remove_response = client.delete(
-        f"span/{span1_id}", headers=alice["AuthHeader"]
+        f"/span/{span1_id}", headers=alice["AuthHeader"]
     )
     assert span1_remove_response.status_code == 200
 
@@ -670,13 +665,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "sdoc_id": project_text_doc2["sdoc_id"],
     }
     span3_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span3_annotation
+        "/span", headers=alice["AuthHeader"], json=span3_annotation
     )
     assert span3_create_response.status_code == 200
     span3_id = span3_create_response.json()["id"]
 
     span3_read_response = client.get(
-        f"span/{span3_id}", headers=alice["AuthHeader"]
+        f"/span/{span3_id}", headers=alice["AuthHeader"]
     ).json()
     assert span3_read_response["begin"] == span3_annotation["begin"]
     assert span3_read_response["end"] == span3_annotation["end"]
@@ -700,13 +695,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
     }
 
     span4_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span4_annotation
+        "/span", headers=alice["AuthHeader"], json=span4_annotation
     )
     assert span4_create_response.status_code == 200
     span4_id = span4_create_response.json()["id"]
 
     span4_read_response = client.get(
-        f"span/{span4_id}", headers=alice["AuthHeader"]
+        f"/span/{span4_id}", headers=alice["AuthHeader"]
     ).json()
 
     assert span4_read_response["begin"] == span4_annotation["begin"]
@@ -729,13 +724,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "sdoc_id": project_text_doc1["sdoc_id"],
     }
     span5_create_response = client.put(
-        "span", headers=alice["AuthHeader"], json=span5_annotation
+        "/span", headers=alice["AuthHeader"], json=span5_annotation
     )
     assert span5_create_response.status_code == 200
     span5_id = span5_create_response.json()["id"]
 
     span5_read_response = client.get(
-        f"span/{span5_id}", headers=alice["AuthHeader"]
+        f"/span/{span5_id}", headers=alice["AuthHeader"]
     ).json()
     assert span5_read_response["begin"] == span5_annotation["begin"]
     assert span5_read_response["end"] == span5_annotation["end"]
@@ -759,13 +754,13 @@ def test_span_annotation_and_memo(client, api_code, api_user, api_document) -> N
         "sdoc_id": project_text_doc2["sdoc_id"],
     }
     span6_create_response = client.put(
-        "span", headers=bob["AuthHeader"], json=span6_annotation
+        "/span", headers=bob["AuthHeader"], json=span6_annotation
     )
     assert span6_create_response.status_code == 200
     span6_id = span6_create_response.json()["id"]
 
     span6_read_response = client.get(
-        f"span/{span6_id}", headers=bob["AuthHeader"]
+        f"/span/{span6_id}", headers=bob["AuthHeader"]
     ).json()
     assert span6_read_response["begin"] == span6_annotation["begin"]
     assert span6_read_response["end"] == span6_annotation["end"]
@@ -964,10 +959,10 @@ def test_project_metadata(client, api_user, api_project) -> None:
         "project_id": project1["id"],
         "description": "Magic meta",
     }
-    response_create = client.put("projmeta", headers=alice["AuthHeader"], json=meta)
+    response_create = client.put("/projmeta", headers=alice["AuthHeader"], json=meta)
     assert response_create.status_code == 200
     id = response_create.json()["id"]
-    response_meta = client.get(f"projmeta/{id}", headers=alice["AuthHeader"]).json()
+    response_meta = client.get(f"/projmeta/{id}", headers=alice["AuthHeader"]).json()
     assert meta["key"] == response_meta["key"]
     assert meta["metatype"] == response_meta["metatype"]
     assert meta["read_only"] == response_meta["read_only"]
@@ -978,11 +973,11 @@ def test_project_metadata(client, api_user, api_project) -> None:
     bob = api_user.user_list["bob"]
     meta_update = {"key": "reality", "metatype": "STRING"}
     response_update = client.patch(
-        f"projmeta/{id}", headers=bob["AuthHeader"], json=meta_update
+        f"/projmeta/{id}", headers=bob["AuthHeader"], json=meta_update
     )
     assert response_update.status_code == 200
 
-    response_meta = client.get(f"projmeta/{id}", headers=alice["AuthHeader"]).json()
+    response_meta = client.get(f"/projmeta/{id}", headers=alice["AuthHeader"]).json()
     assert meta_update["key"] == response_meta["key"]
     assert meta_update["metatype"] == response_meta["metatype"]
     assert meta["read_only"] == response_meta["read_only"]
@@ -990,7 +985,7 @@ def test_project_metadata(client, api_user, api_project) -> None:
     assert meta["project_id"] == response_meta["project_id"]
 
     # Bob removes the project metadata for project1
-    response_delete = client.delete(f"projmeta/{id}", headers=bob["AuthHeader"])
+    response_delete = client.delete(f"/projmeta/{id}", headers=bob["AuthHeader"])
     assert response_delete.status_code == 200
 
 
