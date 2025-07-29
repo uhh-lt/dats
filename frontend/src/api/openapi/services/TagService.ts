@@ -2,29 +2,25 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_documentTag_update_document_tags_batch } from "../models/Body_documentTag_update_document_tags_batch";
-import type { DocumentTagCreate } from "../models/DocumentTagCreate";
-import type { DocumentTagRead } from "../models/DocumentTagRead";
-import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
-import type { SourceDocumentDocumentTagLinks } from "../models/SourceDocumentDocumentTagLinks";
-import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
+import type { Body_tag_update_tags_batch } from "../models/Body_tag_update_tags_batch";
+import type { SourceDocumentTagLinks } from "../models/SourceDocumentTagLinks";
+import type { SourceDocumentTagMultiLink } from "../models/SourceDocumentTagMultiLink";
+import type { TagCreate } from "../models/TagCreate";
+import type { TagRead } from "../models/TagRead";
+import type { TagUpdate } from "../models/TagUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-export class DocumentTagService {
+export class TagService {
   /**
-   * Creates a new DocumentTag and returns it with the generated ID.
-   * @returns DocumentTagRead Successful Response
+   * Creates a new Tag and returns it with the generated ID.
+   * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static createNewDocTag({
-    requestBody,
-  }: {
-    requestBody: DocumentTagCreate;
-  }): CancelablePromise<DocumentTagRead> {
+  public static createNewDocTag({ requestBody }: { requestBody: TagCreate }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/doctag",
+      url: "/tag",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -33,18 +29,18 @@ export class DocumentTagService {
     });
   }
   /**
-   * Links multiple DocumentTags with the SourceDocuments and returns the number of new Links
+   * Links multiple Tags with the SourceDocuments and returns the number of new Links
    * @returns number Successful Response
    * @throws ApiError
    */
   public static linkMultipleTags({
     requestBody,
   }: {
-    requestBody: SourceDocumentDocumentTagMultiLink;
+    requestBody: SourceDocumentTagMultiLink;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/doctag/bulk/link",
+      url: "/tag/bulk/link",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -53,18 +49,18 @@ export class DocumentTagService {
     });
   }
   /**
-   * Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.
+   * Unlinks all Tags with the SourceDocuments and returns the number of removed Links.
    * @returns number Successful Response
    * @throws ApiError
    */
   public static unlinkMultipleTags({
     requestBody,
   }: {
-    requestBody: SourceDocumentDocumentTagMultiLink;
+    requestBody: SourceDocumentTagMultiLink;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/doctag/bulk/unlink",
+      url: "/tag/bulk/unlink",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -77,14 +73,14 @@ export class DocumentTagService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static setDocumentTagsBatch({
+  public static setTagsBatch({
     requestBody,
   }: {
-    requestBody: Array<SourceDocumentDocumentTagLinks>;
+    requestBody: Array<SourceDocumentTagLinks>;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/doctag/bulk/set",
+      url: "/tag/bulk/set",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -97,14 +93,14 @@ export class DocumentTagService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static updateDocumentTagsBatch({
+  public static updateTagsBatch({
     requestBody,
   }: {
-    requestBody: Body_documentTag_update_document_tags_batch;
+    requestBody: Body_tag_update_tags_batch;
   }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/doctag/bulk/update",
+      url: "/tag/bulk/update",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -113,14 +109,14 @@ export class DocumentTagService {
     });
   }
   /**
-   * Returns the DocumentTag with the given ID.
-   * @returns DocumentTagRead Successful Response
+   * Returns the Tag with the given ID.
+   * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static getById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
+  public static getById({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/doctag/{tag_id}",
+      url: "/tag/{tag_id}",
       path: {
         tag_id: tagId,
       },
@@ -130,8 +126,8 @@ export class DocumentTagService {
     });
   }
   /**
-   * Updates the DocumentTag with the given ID.
-   * @returns DocumentTagRead Successful Response
+   * Updates the Tag with the given ID.
+   * @returns TagRead Successful Response
    * @throws ApiError
    */
   public static updateById({
@@ -139,11 +135,11 @@ export class DocumentTagService {
     requestBody,
   }: {
     tagId: number;
-    requestBody: DocumentTagUpdate;
-  }): CancelablePromise<DocumentTagRead> {
+    requestBody: TagUpdate;
+  }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/doctag/{tag_id}",
+      url: "/tag/{tag_id}",
       path: {
         tag_id: tagId,
       },
@@ -155,14 +151,14 @@ export class DocumentTagService {
     });
   }
   /**
-   * Deletes the DocumentTag with the given ID.
-   * @returns DocumentTagRead Successful Response
+   * Deletes the Tag with the given ID.
+   * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
+  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<TagRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/doctag/{tag_id}",
+      url: "/tag/{tag_id}",
       path: {
         tag_id: tagId,
       },
@@ -172,14 +168,14 @@ export class DocumentTagService {
     });
   }
   /**
-   * Returns all DocumentTags of the Project with the given ID
-   * @returns DocumentTagRead Successful Response
+   * Returns all Tags of the Project with the given ID
+   * @returns TagRead Successful Response
    * @throws ApiError
    */
-  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
+  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<TagRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/doctag/project/{proj_id}",
+      url: "/tag/project/{proj_id}",
       path: {
         proj_id: projId,
       },
@@ -189,14 +185,14 @@ export class DocumentTagService {
     });
   }
   /**
-   * Returns all DocumentTagIDs linked with the SourceDocument.
+   * Returns all TagIDs linked with the SourceDocument.
    * @returns number Successful Response
    * @throws ApiError
    */
   public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/doctag/sdoc/{sdoc_id}",
+      url: "/tag/sdoc/{sdoc_id}",
       path: {
         sdoc_id: sdocId,
       },
@@ -213,7 +209,7 @@ export class DocumentTagService {
   public static getSdocIdsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/doctag/{tag_id}/sdocs",
+      url: "/tag/{tag_id}/sdocs",
       path: {
         tag_id: tagId,
       },
@@ -234,7 +230,7 @@ export class DocumentTagService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/doctag/sdoc_counts",
+      url: "/tag/sdoc_counts",
       body: requestBody,
       mediaType: "application/json",
       errors: {

@@ -3,9 +3,9 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { DocumentTagRecommendationResult } from "./openapi/models/DocumentTagRecommendationResult.ts";
 import { MLJobRead } from "./openapi/models/MLJobRead.ts";
-import { DocumentTagRecommendationService } from "./openapi/services/DocumentTagRecommendationService.ts";
+import { TagRecommendationResult } from "./openapi/models/TagRecommendationResult.ts";
+import { TagRecommendationService } from "./openapi/services/TagRecommendationService.ts";
 
 // TAG RECOMMENDATION QUERIES
 const useGetAllTagRecommendationJobs = () => {
@@ -13,7 +13,7 @@ const useGetAllTagRecommendationJobs = () => {
   return useQuery<MLJobRead[], Error>({
     queryKey: [QueryKey.PROJECT_TAG_RECOMMENDATION_JOBS, projectId],
     queryFn: () =>
-      DocumentTagRecommendationService.getAllDoctagrecommendationJobs({
+      TagRecommendationService.getAllTagrecommendationJobs({
         projectId: projectId!,
       }),
     enabled: !!projectId,
@@ -21,10 +21,10 @@ const useGetAllTagRecommendationJobs = () => {
 };
 
 const useGetTagRecommendationsFromJob = (mlJobId: string | null | undefined) =>
-  useQuery<DocumentTagRecommendationResult[], Error>({
+  useQuery<TagRecommendationResult[], Error>({
     queryKey: [QueryKey.TAG_RECOMMENDATIONS, mlJobId],
     queryFn: () =>
-      DocumentTagRecommendationService.getAllDoctagrecommendationsFromJob({
+      TagRecommendationService.getAllTagrecommendationsFromJob({
         mlJobId: mlJobId!,
       }),
     staleTime: 1000 * 60 * 5,
@@ -34,7 +34,7 @@ const useGetTagRecommendationsFromJob = (mlJobId: string | null | undefined) =>
 // TAG RECOMMENDATION MUTATIONS
 const useReviewTagRecommendations = () =>
   useMutation({
-    mutationFn: DocumentTagRecommendationService.updateRecommendations,
+    mutationFn: TagRecommendationService.updateRecommendations,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_RECOMMENDATIONS] });
     },

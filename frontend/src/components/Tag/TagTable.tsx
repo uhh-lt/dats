@@ -8,10 +8,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 import TagHooks from "../../api/TagHooks.ts";
 
-const createDataTree = (dataset: DocumentTagRead[]): TagTableRow[] => {
+const createDataTree = (dataset: TagRead[]): TagTableRow[] => {
   const hashTable: Record<number, TagTableRow> = Object.create(null);
   dataset.forEach((data) => (hashTable[data.id] = { ...data, subRows: [] }));
 
@@ -23,7 +23,7 @@ const createDataTree = (dataset: DocumentTagRead[]): TagTableRow[] => {
   return dataTree;
 };
 
-interface TagTableRow extends DocumentTagRead {
+interface TagTableRow extends TagRead {
   subRows: TagTableRow[];
 }
 
@@ -52,7 +52,7 @@ const columns: MRT_ColumnDef<TagTableRow>[] = [
 
 export interface TagTableActionProps {
   table: MRT_TableInstance<TagTableRow>;
-  selectedTags: DocumentTagRead[];
+  selectedTags: TagRead[];
 }
 
 interface TagTableProps {
@@ -88,7 +88,7 @@ function TagTable({
         acc[projectTag.id.toString()] = projectTag;
         return acc;
       },
-      {} as Record<string, DocumentTagRead>,
+      {} as Record<string, TagRead>,
     );
 
     const projectTagRows = createDataTree(projectTags.data);

@@ -4,11 +4,11 @@
 /* eslint-disable */
 import type { BBoxAnnotationRead } from "./BBoxAnnotationRead";
 import type { CodeRead } from "./CodeRead";
-import type { DocumentTagRead } from "./DocumentTagRead";
 import type { MemoRead } from "./MemoRead";
 import type { SentenceAnnotationRead } from "./SentenceAnnotationRead";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
 import type { SpanAnnotationRead } from "./SpanAnnotationRead";
+import type { TagRead } from "./TagRead";
 export type WhiteboardData = {
   /**
    * List of source documents
@@ -21,7 +21,7 @@ export type WhiteboardData = {
   /**
    * List of tags
    */
-  tags: Array<DocumentTagRead>;
+  tags: Array<TagRead>;
   /**
    * List of span annotations
    */

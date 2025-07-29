@@ -3,23 +3,23 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { Body_documentTag_update_document_tags_batch } from "./openapi/models/Body_documentTag_update_document_tags_batch.ts";
-import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
-import { SourceDocumentDocumentTagMultiLink } from "./openapi/models/SourceDocumentDocumentTagMultiLink.ts";
-import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
+import { Body_tag_update_tags_batch } from "./openapi/models/Body_tag_update_tags_batch.ts";
+import { SourceDocumentTagMultiLink } from "./openapi/models/SourceDocumentTagMultiLink.ts";
+import { TagRead } from "./openapi/models/TagRead.ts";
+import { TagService } from "./openapi/services/TagService.ts";
 
 // TAG QUERIES
 interface UseProjectTagsQueryParams<T> {
-  select?: (data: DocumentTagRead[]) => T;
+  select?: (data: TagRead[]) => T;
   enabled?: boolean;
 }
 
-const useProjectTagsQuery = <T = DocumentTagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
+const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useQuery({
     queryKey: [QueryKey.PROJECT_TAGS, projectId],
     queryFn: () =>
-      DocumentTagService.getByProject({
+      TagService.getByProject({
         projId: projectId!,
       }),
     staleTime: 1000 * 60 * 5,
@@ -40,7 +40,7 @@ const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_TAGS, sdocId],
     queryFn: () =>
-      DocumentTagService.getBySdoc({
+      TagService.getBySdoc({
         sdocId: sdocId!,
       }),
     staleTime: 1000 * 60 * 5,
@@ -51,7 +51,7 @@ const useGetTagDocumentCounts = (sdocIds: number[]) =>
   useQuery<Map<number, number>, Error>({
     queryKey: [QueryKey.TAG_SDOC_COUNT, sdocIds],
     queryFn: async () => {
-      const stringRecord = await DocumentTagService.getSdocCounts({ requestBody: sdocIds });
+      const stringRecord = await TagService.getSdocCounts({ requestBody: sdocIds });
       return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
     },
   });
@@ -60,34 +60,34 @@ const useGetTagDocumentCounts = (sdocIds: number[]) =>
 
 const useCreateTag = () =>
   useMutation({
-    mutationFn: DocumentTagService.createNewDocTag,
+    mutationFn: TagService.createNewDocTag,
     onSuccess: (tag) => {
-      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
+      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
         oldData ? [...oldData, tag] : [tag],
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
     meta: {
-      successMessage: (tag: DocumentTagRead) => `Created tag ${tag.name}`,
+      successMessage: (tag: TagRead) => `Created tag ${tag.name}`,
     },
   });
 
 const useUpdateTag = () =>
   useMutation({
-    mutationFn: DocumentTagService.updateById,
+    mutationFn: TagService.updateById,
     onSuccess: (tag) => {
-      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
+      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, tag.project_id], (oldData) =>
         oldData ? oldData.map((t) => (t.id === tag.id ? tag : t)) : oldData,
       );
     },
     meta: {
-      successMessage: (tag: DocumentTagRead) => `Updated tag ${tag.name}`,
+      successMessage: (tag: TagRead) => `Updated tag ${tag.name}`,
     },
   });
 
 const useDeleteTag = () =>
   useMutation({
-    mutationFn: DocumentTagService.deleteById,
+    mutationFn: TagService.deleteById,
     onSuccess: (data) => {
       queryClient
         .getQueryCache()
@@ -97,26 +97,23 @@ const useDeleteTag = () =>
             oldData ? oldData.filter((tagId) => tagId !== data.id) : oldData,
           );
         });
-      queryClient.setQueryData<DocumentTagRead[]>([QueryKey.PROJECT_TAGS, data.project_id], (oldData) =>
+      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, data.project_id], (oldData) =>
         oldData ? oldData.filter((tag) => tag.id !== data.id) : oldData,
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
     meta: {
-      successMessage: (tag: DocumentTagRead) => `Deleted tag ${tag.name}`,
+      successMessage: (tag: TagRead) => `Deleted tag ${tag.name}`,
     },
   });
 
-const useBulkSetDocumentTags = () =>
+const useBulkSetTags = () =>
   useMutation({
-    mutationFn: DocumentTagService.setDocumentTagsBatch,
+    mutationFn: TagService.setTagsBatch,
     onSuccess: (_data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.forEach((links) => {
-        queryClient.setQueryData<number[]>(
-          [QueryKey.SDOC_TAGS, links.source_document_id],
-          () => links.document_tag_ids,
-        );
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, links.source_document_id], () => links.tag_ids);
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] }); // todo: zu unspezifisch!
       // Invalidate cache of tag statistics query
@@ -127,15 +124,13 @@ const useBulkSetDocumentTags = () =>
     },
   });
 
-const useBulkLinkDocumentTags = () =>
+const useBulkLinkTags = () =>
   useMutation({
-    mutationFn: DocumentTagService.linkMultipleTags,
+    mutationFn: TagService.linkMultipleTags,
     onSuccess: (_data, variables) => {
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, sdocId], (oldData) =>
-          oldData
-            ? [...new Set([...oldData, ...variables.requestBody.document_tag_ids])]
-            : variables.requestBody.document_tag_ids,
+          oldData ? [...new Set([...oldData, ...variables.requestBody.tag_ids])] : variables.requestBody.tag_ids,
         );
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
@@ -146,21 +141,21 @@ const useBulkLinkDocumentTags = () =>
       successMessage: (
         _data: number,
         variables: {
-          requestBody: SourceDocumentDocumentTagMultiLink;
+          requestBody: SourceDocumentTagMultiLink;
         },
       ) =>
-        `Linked ${variables.requestBody.document_tag_ids.length} tags to ${variables.requestBody.source_document_ids.length} documents`,
+        `Linked ${variables.requestBody.tag_ids.length} tags to ${variables.requestBody.source_document_ids.length} documents`,
     },
   });
 
-const useBulkUnlinkDocumentTags = () =>
+const useBulkUnlinkTags = () =>
   useMutation({
-    mutationFn: DocumentTagService.unlinkMultipleTags,
+    mutationFn: TagService.unlinkMultipleTags,
     onSuccess: (_data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, sdocId], (oldData) =>
-          oldData ? oldData.filter((tagId) => !variables.requestBody.document_tag_ids.includes(tagId)) : oldData,
+          oldData ? oldData.filter((tagId) => !variables.requestBody.tag_ids.includes(tagId)) : oldData,
         );
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_TAG_STATISTICS] });
@@ -171,16 +166,16 @@ const useBulkUnlinkDocumentTags = () =>
       successMessage: (
         _data: number,
         variables: {
-          requestBody: SourceDocumentDocumentTagMultiLink;
+          requestBody: SourceDocumentTagMultiLink;
         },
       ) =>
-        `Unlinked ${variables.requestBody.document_tag_ids.length} tags from ${variables.requestBody.source_document_ids.length} documents`,
+        `Unlinked ${variables.requestBody.tag_ids.length} tags from ${variables.requestBody.source_document_ids.length} documents`,
     },
   });
 
-const useBulkUpdateDocumentTags = () =>
+const useBulkUpdateTags = () =>
   useMutation({
-    mutationFn: DocumentTagService.updateDocumentTagsBatch,
+    mutationFn: TagService.updateTagsBatch,
     onSuccess: (_data, variables) => {
       variables.requestBody.sdoc_ids.forEach((sdocId) => {
         // Update the cache with linked and unlinked tags
@@ -205,7 +200,7 @@ const useBulkUpdateDocumentTags = () =>
       successMessage: (
         _data: number,
         variables: {
-          requestBody: Body_documentTag_update_document_tags_batch;
+          requestBody: Body_tag_update_tags_batch;
         },
       ) => {
         const linkCount = variables.requestBody.link_tag_ids?.length || 0;
@@ -222,10 +217,10 @@ const TagHooks = {
   useCreateTag,
   useUpdateTag,
   useDeleteTag,
-  useBulkSetDocumentTags,
-  useBulkUpdateDocumentTags,
-  useBulkLinkDocumentTags,
-  useBulkUnlinkDocumentTags,
+  useBulkSetTags,
+  useBulkUpdateTags,
+  useBulkLinkTags,
+  useBulkUnlinkTags,
   useGetTagDocumentCounts,
 };
 

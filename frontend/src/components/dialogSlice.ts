@@ -3,11 +3,11 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
 import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
 import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead.ts";
+import { TagRead } from "../api/openapi/models/TagRead.ts";
 import { TaskType } from "../api/openapi/models/TaskType.ts";
 import { TrainingParameters } from "../api/openapi/models/TrainingParameters.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
@@ -19,7 +19,7 @@ interface DialogState {
   isTagCreateDialogOpen: boolean;
   tagName?: string;
   isTagEditDialogOpen: boolean;
-  tag?: DocumentTagRead;
+  tag?: TagRead;
   // codes
   isCodeCreateDialogOpen: boolean;
   codeName?: string;
@@ -52,7 +52,7 @@ interface DialogState {
   llmMethod?: TaskType;
   llmDocumentIds: number[];
   llmStep: number;
-  llmTags: DocumentTagRead[];
+  llmTags: TagRead[];
   llmMetadata: ProjectMetadataRead[];
   llmCodes: CodeRead[];
   llmApproach: ApproachType;
@@ -172,7 +172,7 @@ export const dialogSlice = createSlice({
       state.bboxAnnotationIds = [];
       state.bboxAnnotationEditDialogOnEdit = undefined;
     },
-    openTagEditDialog: (state, action: PayloadAction<{ tag: DocumentTagRead }>) => {
+    openTagEditDialog: (state, action: PayloadAction<{ tag: TagRead }>) => {
       state.isTagEditDialogOpen = true;
       state.tag = action.payload.tag;
     },
@@ -255,7 +255,7 @@ export const dialogSlice = createSlice({
       state,
       action: PayloadAction<{
         approach: ApproachRecommendation;
-        tags: DocumentTagRead[];
+        tags: TagRead[];
         metadata: ProjectMetadataRead[];
         codes: CodeRead[];
       }>,

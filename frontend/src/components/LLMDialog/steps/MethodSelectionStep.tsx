@@ -15,7 +15,7 @@ function MethodSelectionStep() {
         </LLMUtterance>
         <Stack direction="row" columnGap={2} mt={2}>
           <MethodButton
-            method={TaskType.DOCUMENT_TAGGING}
+            method={TaskType.TAGGING}
             headline="Document Tagging"
             description="I will classify your documents!"
           />

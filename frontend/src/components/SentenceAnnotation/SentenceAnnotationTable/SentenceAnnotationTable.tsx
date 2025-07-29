@@ -78,7 +78,7 @@ function SentenceAnnotationTable({
             accessorFn: (row) => row.sdoc.filename,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
-        case SentAnnoColumns.SENT_ANNO_DOCUMENT_DOCUMENT_TAG_ID_LIST:
+        case SentAnnoColumns.SENT_ANNO_TAG_ID_LIST:
           return {
             ...colDef,
             accessorFn: (row) => row.tag_ids,

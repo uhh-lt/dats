@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocumentTaggingResult } from "./DocumentTaggingResult";
-export type DocumentTaggingLLMJobResult = {
+import type { TaggingResult } from "./TaggingResult";
+export type TaggingLLMJobResult = {
   llm_job_type: string;
-  results: Array<DocumentTaggingResult>;
+  results: Array<TaggingResult>;
 };

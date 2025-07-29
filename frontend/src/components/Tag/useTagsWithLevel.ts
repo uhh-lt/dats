@@ -1,17 +1,13 @@
 import { useMemo } from "react";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import { DocumentTagReadWithLevel } from "../TreeExplorer/TagReadWithLevel.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
+import { TagReadWithLevel } from "../TreeExplorer/TagReadWithLevel.ts";
 
 /**
  * Recursively builds a flat list of tags with their hierarchy level
  */
 
-export function buildTagWithLevel(
-  allTags: DocumentTagRead[],
-  parentId: number | null = null,
-  level = 0,
-): DocumentTagReadWithLevel[] {
-  const result: DocumentTagReadWithLevel[] = [];
+export function buildTagWithLevel(allTags: TagRead[], parentId: number | null = null, level = 0): TagReadWithLevel[] {
+  const result: TagReadWithLevel[] = [];
 
   allTags
     .filter((t) => t.parent_id === parentId)
@@ -27,7 +23,7 @@ export function buildTagWithLevel(
  * Hook to transform a flat list of tags into a hierarchical structure
  */
 
-export function useTagsWithLevel(tags: DocumentTagRead[]) {
+export function useTagsWithLevel(tags: TagRead[]) {
   return useMemo(() => {
     return buildTagWithLevel(tags, null, 0);
   }, [tags]);

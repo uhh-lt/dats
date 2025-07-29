@@ -8,7 +8,7 @@ import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.
 
 const useGetMemosAttachedObject = (type: AttachedObjectType | undefined) => {
   switch (type) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return TagHooks.useGetTag;
     case AttachedObjectType.CODE:
       return CodeHooks.useGetCode;

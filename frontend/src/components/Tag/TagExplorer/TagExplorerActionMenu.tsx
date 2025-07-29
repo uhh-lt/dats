@@ -31,7 +31,7 @@ function TagExplorerActionMenu({ node }: TagExplorerActionMenuProps) {
         <TagEditMenuItem tag={node.data} onClick={handleClose} />
         <MemoMenuItem
           attachedObjectId={node.data.id}
-          attachedObjectType={AttachedObjectType.DOCUMENT_TAG}
+          attachedObjectType={AttachedObjectType.TAG}
           onClick={handleClose}
         />
       </Menu>

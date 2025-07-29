@@ -4,7 +4,7 @@ import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import TagTable from "../../Tag/TagTable.tsx";
@@ -24,14 +24,14 @@ function DocumentTagSelectionStep() {
   const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
 
   const handleNext = useCallback(
-    (tags: DocumentTagRead[]) => () => {
+    (tags: TagRead[]) => () => {
       determineApproachMutation(
         {
           requestBody: {
-            llm_job_type: TaskType.DOCUMENT_TAGGING,
+            llm_job_type: TaskType.TAGGING,
             project_id: projectId,
             specific_task_parameters: {
-              llm_job_type: TaskType.DOCUMENT_TAGGING,
+              llm_job_type: TaskType.TAGGING,
               tag_ids: tags.map((tag) => tag.id),
               sdoc_ids: selectedDocuments,
             },
@@ -55,7 +55,7 @@ function DocumentTagSelectionStep() {
 
   // rendering
   const renderBottomToolbarContent = useCallback(
-    (props: { selectedTags: DocumentTagRead[] }) => (
+    (props: { selectedTags: TagRead[] }) => (
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
         <Button disabled={isPending} onClick={handleBack}>

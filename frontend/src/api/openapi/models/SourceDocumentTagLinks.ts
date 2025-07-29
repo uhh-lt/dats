@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SourceDocumentDocumentTagLinks = {
+export type SourceDocumentTagLinks = {
   /**
    * ID of SourceDocument
    */
   source_document_id: number;
   /**
-   * List of IDs of DocumentTags
+   * List of IDs of Tags
    */
-  document_tag_ids: Array<number>;
+  tag_ids: Array<number>;
 };

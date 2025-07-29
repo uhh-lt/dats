@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTaggingParams = {
+export type TaggingParams = {
   llm_job_type: string;
   /**
    * IDs of the source documents to analyse

@@ -122,7 +122,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             size: 360,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
+        case SdocColumns.SD_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,

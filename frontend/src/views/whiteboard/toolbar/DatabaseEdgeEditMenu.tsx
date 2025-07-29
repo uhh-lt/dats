@@ -34,7 +34,7 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => 
   };
 
   // actions
-  const bulkUnlinkDocumentTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
+  const bulkUnlinkTagsMutation = TagHooks.useBulkUnlinkTags();
   const handleDeleteTagSdocEdges = () => {
     if (edges.length === 0) return;
 
@@ -45,9 +45,9 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => 
       if (!sourceNode || !targetNode) return;
 
       if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-        bulkUnlinkDocumentTagsMutation.mutate({
+        bulkUnlinkTagsMutation.mutate({
           requestBody: {
-            document_tag_ids: [sourceNode.data.tagId],
+            tag_ids: [sourceNode.data.tagId],
             source_document_ids: [targetNode.data.sdocId],
           },
         });

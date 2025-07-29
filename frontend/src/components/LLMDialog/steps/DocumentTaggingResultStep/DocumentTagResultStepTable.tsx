@@ -10,12 +10,12 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../../api/openapi/models/TagRead.ts";
 import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
 import TagRenderer from "../../../Tag/TagRenderer.tsx";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
 
-function CustomTagsRenderer({ tags }: { tags: DocumentTagRead[] }) {
+function CustomTagsRenderer({ tags }: { tags: TagRead[] }) {
   if (tags.length === 0) {
     return <i>no tags</i>;
   }

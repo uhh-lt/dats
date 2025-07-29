@@ -64,7 +64,7 @@ export class AnalysisService {
     });
   }
   /**
-   * Returns Tuple[num_sdocs_with_date_metadata, num_total_sdocs].
+   * Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].
    * @returns any[] Successful Response
    * @throws ApiError
    */

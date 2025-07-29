@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type SourceDocumentDocumentTagMultiLink = {
+export type SourceDocumentTagMultiLink = {
   /**
    * List of IDs of SourceDocuments
    */
   source_document_ids: Array<number>;
   /**
-   * List of IDs of DocumentTags
+   * List of IDs of Tags
    */
-  document_tag_ids: Array<number>;
+  tag_ids: Array<number>;
 };

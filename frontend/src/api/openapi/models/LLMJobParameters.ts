@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnnotationParams } from "./AnnotationParams";
-import type { DocumentTaggingParams } from "./DocumentTaggingParams";
 import type { MetadataExtractionParams } from "./MetadataExtractionParams";
 import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
+import type { TaggingParams } from "./TaggingParams";
 import type { TaskType } from "./TaskType";
 export type LLMJobParameters = {
   /**
@@ -19,9 +19,5 @@ export type LLMJobParameters = {
   /**
    * Specific parameters for the LLMJob w.r.t it's type
    */
-  specific_task_parameters:
-    | DocumentTaggingParams
-    | MetadataExtractionParams
-    | AnnotationParams
-    | SentenceAnnotationParams;
+  specific_task_parameters: TaggingParams | MetadataExtractionParams | AnnotationParams | SentenceAnnotationParams;
 };

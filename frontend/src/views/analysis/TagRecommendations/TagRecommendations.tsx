@@ -12,8 +12,8 @@ import {
   Toolbar,
 } from "@mui/material";
 import { useCallback, useState } from "react";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import { DocumentTagRecommendationResult } from "../../../api/openapi/models/DocumentTagRecommendationResult.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
+import { TagRecommendationResult } from "../../../api/openapi/models/TagRecommendationResult.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import TagRecommendationHooks from "../../../api/TagRecommendationHooks.ts";
 import { DocumentTaggingResultRow } from "../../../components/LLMDialog/steps/DocumentTaggingResultStep/DocumentTaggingResultRow.ts";
@@ -76,25 +76,19 @@ function TagRecommendations() {
   );
 }
 
-interface DocumentTagRecommendationResultRow extends DocumentTaggingResultRow {
+interface TagRecommendationResultRow extends DocumentTaggingResultRow {
   recommendation_ids: number[];
 }
 
-function TagRecommendationsContent({
-  results,
-  tags,
-}: {
-  results: DocumentTagRecommendationResult[];
-  tags: DocumentTagRead[];
-}) {
+function TagRecommendationsContent({ results, tags }: { results: TagRecommendationResult[]; tags: TagRead[] }) {
   // local client state
-  const [rows, setRows] = useState<DocumentTagRecommendationResultRow[]>(() => {
+  const [rows, setRows] = useState<TagRecommendationResultRow[]>(() => {
     const tagId2Tag = tags.reduce(
       (acc, tag) => {
         acc[tag.id] = tag;
         return acc;
       },
-      {} as Record<number, DocumentTagRead>,
+      {} as Record<number, TagRead>,
     );
     return results.map((result) => {
       return {
@@ -109,14 +103,14 @@ function TagRecommendationsContent({
   });
 
   // actions
-  const { mutate: applyTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkSetDocumentTags();
+  const { mutate: applyTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkSetTags();
   const { mutate: reviewTagsMutation, isPending: isReviewPending } =
     TagRecommendationHooks.useReviewTagRecommendations();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation({
       requestBody: rows.map((row) => ({
         source_document_id: row.sdocId,
-        document_tag_ids: row.merged_tags.map((tag) => tag.id),
+        tag_ids: row.merged_tags.map((tag) => tag.id),
       })),
     });
     reviewTagsMutation({

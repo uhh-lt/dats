@@ -4,18 +4,18 @@ import MemoHooks from "../../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { MemoCreateSuccessHandler } from "./MemoDialogAPI.ts";
 import MemoDialogForm, { MemoFormValues } from "./MemoDialogForm.tsx";
 
 interface MemoDialogContentProps {
   attachedObject:
-    | DocumentTagRead
+    | TagRead
     | SourceDocumentRead
     | CodeRead
     | SpanAnnotationRead

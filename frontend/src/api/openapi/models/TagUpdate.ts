@@ -2,21 +2,21 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagUpdate = {
+export type TagUpdate = {
   /**
-   * Name of the DocumentTag
+   * Name of the Tag
    */
   name?: string | null;
   /**
-   * Color of the DocumentTag
+   * Color of the Tag
    */
   color?: string | null;
   /**
-   * Description of the DocumentTag
+   * Description of the Tag
    */
   description?: string | null;
   /**
-   * Parent of the DocumentTag
+   * Parent of the Tag
    */
   parent_id?: number | null;
 };

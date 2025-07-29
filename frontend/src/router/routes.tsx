@@ -1,11 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { CodeMap } from "../api/CodeHooks.ts";
 import { BBoxAnnotationRead } from "../api/openapi/models/BBoxAnnotationRead.ts";
-import { DocumentTagRead } from "../api/openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "../api/openapi/models/MemoRead.ts";
 import { SentenceAnnotationRead } from "../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../api/openapi/models/SpanAnnotationRead.ts";
+import { TagRead } from "../api/openapi/models/TagRead.ts";
 import { WhiteboardService } from "../api/openapi/services/WhiteboardService.ts";
 import { QueryKey } from "../api/QueryKey.ts";
 import RequireAuth from "../auth/RequireAuth.tsx";
@@ -205,10 +205,7 @@ const router = createBrowserRouter([
               queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, parseInt(projectId)], codeMap);
             }
             if (whiteboardData.tags.length > 0) {
-              queryClient.setQueryData<DocumentTagRead[]>(
-                [QueryKey.PROJECT_TAGS, parseInt(projectId)],
-                whiteboardData.tags,
-              );
+              queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, parseInt(projectId)], whiteboardData.tags);
             }
 
             return null;

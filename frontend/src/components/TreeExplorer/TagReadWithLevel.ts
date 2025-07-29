@@ -1,6 +1,6 @@
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 
-export interface DocumentTagReadWithLevel {
-  data: DocumentTagRead;
+export interface TagReadWithLevel {
+  data: TagRead;
   level: number;
 }

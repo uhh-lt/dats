@@ -16,14 +16,14 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { memo, useCallback } from "react";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import EditableTypography from "../../../components/EditableTypography.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 interface TagGroupCreatorProps {
-  tags: DocumentTagRead[];
-  aggregationGroups: Record<string, DocumentTagRead[]>;
+  tags: TagRead[];
+  aggregationGroups: Record<string, TagRead[]>;
   cardProps?: CardProps;
 }
 
@@ -52,8 +52,8 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
   );
 
   const handleUpdateGroupTags = useCallback(
-    (groupName: string): UseAutocompleteProps<DocumentTagRead, true, false, false>["onChange"] =>
-      (_, newValue: DocumentTagRead[]) => {
+    (groupName: string): UseAutocompleteProps<TagRead, true, false, false>["onChange"] =>
+      (_, newValue: TagRead[]) => {
         dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
       },
     [dispatch],

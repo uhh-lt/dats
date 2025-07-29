@@ -4,9 +4,9 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
-import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
+import { TagService } from "./openapi/services/TagService.ts";
 
 // SDOC QUERIES
 const useGetDocument = (sdocId: number | null | undefined) =>
@@ -68,7 +68,7 @@ const useGetSdocIdsByTagId = (tagId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_IDS_BY_TAG_ID, tagId],
     queryFn: () =>
-      DocumentTagService.getSdocIdsByTagId({
+      TagService.getSdocIdsByTagId({
         tagId: tagId!,
       }),
     enabled: !!tagId,

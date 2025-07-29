@@ -60,9 +60,9 @@ function MlAutomation() {
   const handleStartNewTagRecommendation = () => {
     startMlJob.mutate({
       requestBody: {
-        ml_job_type: MLJobType.DOC_TAG_RECOMMENDATION,
+        ml_job_type: MLJobType.TAG_RECOMMENDATION,
         project_id: projectId,
-        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.DOC_TAG_RECOMMENDATION },
+        specific_ml_job_parameters: { recompute: false, ml_job_type: MLJobType.TAG_RECOMMENDATION },
       },
     });
   };

@@ -10,5 +10,5 @@ export enum AttachedObjectType {
   SPAN_GROUP = "span_group",
   BBOX_ANNOTATION = "bbox_annotation",
   PROJECT = "project",
-  DOCUMENT_TAG = "document_tag",
+  TAG = "tag",
 }

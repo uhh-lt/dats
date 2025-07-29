@@ -2,8 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../../api/TagHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
 import PercentageResizablePanel from "../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
@@ -37,7 +37,7 @@ function DocumentSampler() {
         acc[tag.id] = tag;
         return acc;
       },
-      {} as Record<number, DocumentTagRead>,
+      {} as Record<number, TagRead>,
     );
   }, [tags.data]);
 

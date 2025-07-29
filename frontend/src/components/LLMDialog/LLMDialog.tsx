@@ -17,21 +17,14 @@ import SentenceAnnotationResultStep from "./steps/SentenceAnnotationResultStep/S
 import StatusStep from "./steps/StatusStep.tsx";
 
 const title: Record<TaskType, string> = {
-  [TaskType.DOCUMENT_TAGGING]: "Document Tagging",
+  [TaskType.TAGGING]: "Document Tagging",
   [TaskType.METADATA_EXTRACTION]: "Metadata Extraction",
   [TaskType.ANNOTATION]: "Annotation",
   [TaskType.SENTENCE_ANNOTATION]: "Sentence Annotation",
 };
 
 const steps: Record<TaskType, string[]> = {
-  [TaskType.DOCUMENT_TAGGING]: [
-    "Select method",
-    "Select tags",
-    "Select appproach",
-    "Edit settings",
-    "Wait",
-    "View results",
-  ],
+  [TaskType.TAGGING]: ["Select method", "Select tags", "Select appproach", "Edit settings", "Wait", "View results"],
   [TaskType.METADATA_EXTRACTION]: [
     "Select method",
     "Select metadata",
@@ -53,37 +46,37 @@ const steps: Record<TaskType, string[]> = {
 
 const contentDict: Record<number, Record<TaskType, JSX.Element>> = {
   0: {
-    [TaskType.DOCUMENT_TAGGING]: <MethodSelectionStep />,
+    [TaskType.TAGGING]: <MethodSelectionStep />,
     [TaskType.METADATA_EXTRACTION]: <MethodSelectionStep />,
     [TaskType.ANNOTATION]: <MethodSelectionStep />,
     [TaskType.SENTENCE_ANNOTATION]: <MethodSelectionStep />,
   },
   1: {
-    [TaskType.DOCUMENT_TAGGING]: <DocumentTagSelectionStep />,
+    [TaskType.TAGGING]: <DocumentTagSelectionStep />,
     [TaskType.METADATA_EXTRACTION]: <ProjectMetadataSelectionStep />,
     [TaskType.ANNOTATION]: <CodeSelectionStep />,
     [TaskType.SENTENCE_ANNOTATION]: <CodeSelectionStep />,
   },
   2: {
-    [TaskType.DOCUMENT_TAGGING]: <ApproachSelectionStep />,
+    [TaskType.TAGGING]: <ApproachSelectionStep />,
     [TaskType.METADATA_EXTRACTION]: <ApproachSelectionStep />,
     [TaskType.ANNOTATION]: <ApproachSelectionStep />,
     [TaskType.SENTENCE_ANNOTATION]: <ApproachSelectionStep />,
   },
   3: {
-    [TaskType.DOCUMENT_TAGGING]: <EditorStep />,
+    [TaskType.TAGGING]: <EditorStep />,
     [TaskType.METADATA_EXTRACTION]: <EditorStep />,
     [TaskType.ANNOTATION]: <EditorStep />,
     [TaskType.SENTENCE_ANNOTATION]: <EditorStep />,
   },
   4: {
-    [TaskType.DOCUMENT_TAGGING]: <StatusStep />,
+    [TaskType.TAGGING]: <StatusStep />,
     [TaskType.METADATA_EXTRACTION]: <StatusStep />,
     [TaskType.ANNOTATION]: <StatusStep />,
     [TaskType.SENTENCE_ANNOTATION]: <StatusStep />,
   },
   5: {
-    [TaskType.DOCUMENT_TAGGING]: <DocumentTagResultStep />,
+    [TaskType.TAGGING]: <DocumentTagResultStep />,
     [TaskType.METADATA_EXTRACTION]: <MetadataExtractionResultStep />,
     [TaskType.ANNOTATION]: <AnnotationResultStep />,
     [TaskType.SENTENCE_ANNOTATION]: <SentenceAnnotationResultStep />,
@@ -112,7 +105,7 @@ function LLMDialog() {
   const dialogTitle = `LLM Assistant${method ? ` - ${title[method]}` : ""}`;
   const stepLabels = useMemo(
     () =>
-      steps[method || TaskType.DOCUMENT_TAGGING].map((label) => (
+      steps[method || TaskType.TAGGING].map((label) => (
         <Step key={label}>
           <StepLabel>{label}</StepLabel>
         </Step>
@@ -132,7 +125,7 @@ function LLMDialog() {
         {stepLabels}
       </Stepper>
       <Divider />
-      {contentDict[step][method || TaskType.DOCUMENT_TAGGING]}
+      {contentDict[step][method || TaskType.TAGGING]}
     </Dialog>
   );
 }

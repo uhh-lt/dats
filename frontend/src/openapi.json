@@ -86,7 +86,7 @@
     "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}": {
       "get": {
         "tags": ["analysis"],
-        "summary": "Returns Tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+        "summary": "Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
         "operationId": "count_sdocs_with_date_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1158,427 +1158,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      }
-    },
-    "/doctag": {
-      "put": {
-        "tags": ["documentTag"],
-        "summary": "Creates a new DocumentTag and returns it with the generated ID.",
-        "operationId": "create_new_doc_tag",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagCreate" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctag/bulk/link": {
-      "patch": {
-        "tags": ["documentTag"],
-        "summary": "Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
-        "operationId": "link_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Documenttag-Link Multiple Tags" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctag/bulk/unlink": {
-      "delete": {
-        "tags": ["documentTag"],
-        "summary": "Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
-        "operationId": "unlink_multiple_tags",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentDocumentTagMultiLink" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Documenttag-Unlink Multiple Tags" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctag/bulk/set": {
-      "patch": {
-        "tags": ["documentTag"],
-        "summary": "Sets SourceDocuments' tags to the provided tags",
-        "operationId": "set_document_tags_batch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": { "$ref": "#/components/schemas/SourceDocumentDocumentTagLinks" },
-                "type": "array",
-                "title": "Links"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Documenttag-Set Document Tags Batch" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctag/bulk/update": {
-      "patch": {
-        "tags": ["documentTag"],
-        "summary": "Updates SourceDocuments' tags",
-        "operationId": "update_document_tags_batch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_documentTag-update_document_tags_batch" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "type": "integer", "title": "Response Documenttag-Update Document Tags Batch" }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctag/{tag_id}": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns the DocumentTag with the given ID.",
-        "operationId": "get_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "patch": {
-        "tags": ["documentTag"],
-        "summary": "Updates the DocumentTag with the given ID.",
-        "operationId": "update_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagUpdate" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["documentTag"],
-        "summary": "Deletes the DocumentTag with the given ID.",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctag/project/{proj_id}": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns all DocumentTags of the Project with the given ID",
-        "operationId": "get_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/DocumentTagRead" },
-                  "title": "Response Documenttag-Get By Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctag/sdoc/{sdoc_id}": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns all DocumentTagIDs linked with the SourceDocument.",
-        "operationId": "get_by_sdoc",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Documenttag-Get By Sdoc"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctag/{tag_id}/sdocs": {
-      "get": {
-        "tags": ["documentTag"],
-        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
-        "operationId": "get_sdoc_ids_by_tag_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Documenttag-Get Sdoc Ids By Tag Id"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctag/sdoc_counts": {
-      "post": {
-        "tags": ["documentTag"],
-        "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
-        "operationId": "get_sdoc_counts",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": { "type": "integer" },
-                  "type": "object",
-                  "title": "Response Documenttag-Get Sdoc Counts"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/doctagrecommendation/{project_id}": {
-      "get": {
-        "tags": ["documentTagRecommendation"],
-        "summary": "Retrieve all finished document tag recommendation MLJobs.",
-        "operationId": "get_all_doctagrecommendation_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MLJobRead" },
-                  "title": "Response Documenttagrecommendation-Get All Doctagrecommendation Jobs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctagrecommendation/job/{ml_job_id}": {
-      "get": {
-        "tags": ["documentTagRecommendation"],
-        "summary": "Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
-        "operationId": "get_all_doctagrecommendations_from_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "ml_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Ml Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationResult" },
-                  "title": "Response Documenttagrecommendation-Get All Doctagrecommendations From Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/doctagrecommendation/review_recommendations": {
-      "patch": {
-        "tags": ["documentTagRecommendation"],
-        "summary": "The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
-        "operationId": "update_recommendations",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Reviewd Recommendation Ids" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/DocumentTagRecommendationLinkRead" },
-                  "type": "array",
-                  "title": "Response Documenttagrecommendation-Update Recommendations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/export": {
@@ -5174,6 +4753,413 @@
         }
       }
     },
+    "/tag": {
+      "put": {
+        "tags": ["tag"],
+        "summary": "Creates a new Tag and returns it with the generated ID.",
+        "operationId": "create_new_doc_tag",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/link": {
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Links multiple Tags with the SourceDocuments and returns the number of new Links",
+        "operationId": "link_multiple_tags",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Link Multiple Tags" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/unlink": {
+      "delete": {
+        "tags": ["tag"],
+        "summary": "Unlinks all Tags with the SourceDocuments and returns the number of removed Links.",
+        "operationId": "unlink_multiple_tags",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTagMultiLink" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Unlink Multiple Tags" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/set": {
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Sets SourceDocuments' tags to the provided tags",
+        "operationId": "set_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": { "$ref": "#/components/schemas/SourceDocumentTagLinks" },
+                "type": "array",
+                "title": "Links"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Set Tags Batch" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/bulk/update": {
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Updates SourceDocuments' tags",
+        "operationId": "update_tags_batch",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-update_tags_batch" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "integer", "title": "Response Tag-Update Tags Batch" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/{tag_id}": {
+      "get": {
+        "tags": ["tag"],
+        "summary": "Returns the Tag with the given ID.",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["tag"],
+        "summary": "Updates the Tag with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["tag"],
+        "summary": "Deletes the Tag with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TagRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tag/project/{proj_id}": {
+      "get": {
+        "tags": ["tag"],
+        "summary": "Returns all Tags of the Project with the given ID",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRead" },
+                  "title": "Response Tag-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tag/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["tag"],
+        "summary": "Returns all TagIDs linked with the SourceDocument.",
+        "operationId": "get_by_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response Tag-Get By Sdoc" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tag/{tag_id}/sdocs": {
+      "get": {
+        "tags": ["tag"],
+        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
+        "operationId": "get_sdoc_ids_by_tag_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "title": "Response Tag-Get Sdoc Ids By Tag Id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tag/sdoc_counts": {
+      "post": {
+        "tags": ["tag"],
+        "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
+        "operationId": "get_sdoc_counts",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "integer" },
+                  "type": "object",
+                  "title": "Response Tag-Get Sdoc Counts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tagrecommendation/{project_id}": {
+      "get": {
+        "tags": ["TagRecommendation"],
+        "summary": "Retrieve all finished tag recommendation MLJobs.",
+        "operationId": "get_all_tagrecommendation_jobs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MLJobRead" },
+                  "title": "Response Tagrecommendation-Get All Tagrecommendation Jobs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tagrecommendation/job/{ml_job_id}": {
+      "get": {
+        "tags": ["TagRecommendation"],
+        "summary": "Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
+        "operationId": "get_all_tagrecommendations_from_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "ml_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Ml Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TagRecommendationResult" },
+                  "title": "Response Tagrecommendation-Get All Tagrecommendations From Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/tagrecommendation/review_recommendations": {
+      "patch": {
+        "tags": ["TagRecommendation"],
+        "summary": "The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
+        "operationId": "update_recommendations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "items": { "type": "integer" }, "type": "array", "title": "Reviewd Recommendation Ids" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/TagRecommendationLinkRead" },
+                  "type": "array",
+                  "title": "Response Tagrecommendation-Update Recommendations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/timelineAnalysis": {
       "put": {
         "tags": ["timelineAnalysis"],
@@ -6204,7 +6190,7 @@
           "span_group",
           "bbox_annotation",
           "project",
-          "document_tag"
+          "tag"
         ],
         "title": "AttachedObjectType"
       },
@@ -6367,7 +6353,7 @@
             "items": { "type": "integer" },
             "type": "array",
             "title": "Tag Ids",
-            "description": "The DocumentTagIDs of the SourceDocument."
+            "description": "The TagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -6419,12 +6405,7 @@
       },
       "BBoxColumns": {
         "type": "string",
-        "enum": [
-          "BB_CODE_ID",
-          "BB_MEMO_CONTENT",
-          "BB_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "BB_DOCUMENT_DOCUMENT_TAG_ID_LIST"
-        ],
+        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_FILENAME", "BB_TAG_ID_LIST"],
         "title": "BBoxColumns"
       },
       "BackgroundJobStatus": {
@@ -6457,16 +6438,6 @@
         "type": "object",
         "required": ["username", "password"],
         "title": "Body_authentication-login"
-      },
-      "Body_documentTag-update_document_tags_batch": {
-        "properties": {
-          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "unlink_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Unlink Tag Ids" },
-          "link_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Link Tag Ids" }
-        },
-        "type": "object",
-        "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
-        "title": "Body_documentTag-update_document_tags_batch"
       },
       "Body_import-start_import_job": {
         "properties": { "uploaded_file": { "type": "string", "format": "binary", "title": "Uploaded File" } },
@@ -6604,6 +6575,16 @@
         "type": "object",
         "required": ["query", "filter"],
         "title": "Body_simsearch-find_similar_sentences"
+      },
+      "Body_tag-update_tags_batch": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "unlink_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Unlink Tag Ids" },
+          "link_tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Link Tag Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "unlink_tag_ids", "link_tag_ids"],
+        "title": "Body_tag-update_tags_batch"
       },
       "Body_word_frequency-word_frequency_analysis": {
         "properties": {
@@ -7482,7 +7463,7 @@
       },
       "DocTagRecommendationParams": {
         "properties": {
-          "ml_job_type": { "type": "string", "const": "DOC_TAG_RECOMMENDATION", "title": "Ml Job Type" },
+          "ml_job_type": { "type": "string", "const": "TAG_RECOMMENDATION", "title": "Ml Job Type" },
           "multi_class": {
             "type": "boolean",
             "title": "Multi Class",
@@ -7497,7 +7478,7 @@
             "default": []
           },
           "method": {
-            "$ref": "#/components/schemas/DocumentTagRecommendationMethod",
+            "$ref": "#/components/schemas/TagRecommendationMethod",
             "description": "Method to use for suggestions",
             "default": "KNN"
           }
@@ -7520,229 +7501,6 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "DocumentEmbeddingParams"
-      },
-      "DocumentTagCreate": {
-        "properties": {
-          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
-          "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
-          "description": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Description",
-            "description": "Description of the DocumentTag"
-          },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the DocumentTag"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the DocumentTag belongs to"
-          }
-        },
-        "type": "object",
-        "required": ["name", "project_id"],
-        "title": "DocumentTagCreate"
-      },
-      "DocumentTagRead": {
-        "properties": {
-          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
-          "color": { "type": "string", "title": "Color", "description": "Color of the DocumentTag" },
-          "description": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Description",
-            "description": "Description of the DocumentTag"
-          },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the DocumentTag"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the DocumentTag" },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the DocumentTag belongs to"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the DocumentTag"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the DocumentTag"
-          },
-          "memo_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Memo Ids",
-            "description": "Memo IDs attached to the DocumentTag"
-          }
-        },
-        "type": "object",
-        "required": ["name", "color", "id", "project_id", "created", "updated", "memo_ids"],
-        "title": "DocumentTagRead"
-      },
-      "DocumentTagRecommendationLinkRead": {
-        "properties": {
-          "ml_job_id": {
-            "type": "string",
-            "title": "Ml Job Id",
-            "description": "Identifier of the corresponding ML Job."
-          },
-          "source_document_id": {
-            "type": "integer",
-            "title": "Source Document Id",
-            "description": "ID of the source document"
-          },
-          "predicted_tag_id": {
-            "type": "integer",
-            "title": "Predicted Tag Id",
-            "description": "ID of the predicted tag"
-          },
-          "prediction_score": {
-            "type": "number",
-            "title": "Prediction Score",
-            "description": "Prediction score of the tag"
-          },
-          "is_reviewed": {
-            "type": "boolean",
-            "title": "Is Reviewed",
-            "description": "Reviewed status of the recommendation",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score"],
-        "title": "DocumentTagRecommendationLinkRead"
-      },
-      "DocumentTagRecommendationMethod": {
-        "type": "string",
-        "enum": ["SIMPLE", "KNN", "EXCLUSIVE"],
-        "title": "DocumentTagRecommendationMethod"
-      },
-      "DocumentTagRecommendationResult": {
-        "properties": {
-          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "recommendation_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Recommendation Ids",
-            "description": "List of the corresponding DocumentTagRecommendationLinks"
-          },
-          "current_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Current Tag Ids",
-            "description": "List of current tag IDs for the source document"
-          },
-          "suggested_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Suggested Tag Ids",
-            "description": "List of suggested tag IDs for the source document"
-          },
-          "scores": {
-            "items": { "type": "number" },
-            "type": "array",
-            "title": "Scores",
-            "description": "List of the scores of the suggested tags"
-          }
-        },
-        "type": "object",
-        "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids", "scores"],
-        "title": "DocumentTagRecommendationResult"
-      },
-      "DocumentTagUpdate": {
-        "properties": {
-          "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Name",
-            "description": "Name of the DocumentTag"
-          },
-          "color": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Color",
-            "description": "Color of the DocumentTag"
-          },
-          "description": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Description",
-            "description": "Description of the DocumentTag"
-          },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the DocumentTag"
-          }
-        },
-        "type": "object",
-        "title": "DocumentTagUpdate"
-      },
-      "DocumentTaggingLLMJobResult": {
-        "properties": {
-          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
-          "results": {
-            "items": { "$ref": "#/components/schemas/DocumentTaggingResult" },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "results"],
-        "title": "DocumentTaggingLLMJobResult"
-      },
-      "DocumentTaggingParams": {
-        "properties": {
-          "llm_job_type": { "type": "string", "const": "DOCUMENT_TAGGING", "title": "Llm Job Type" },
-          "sdoc_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Sdoc Ids",
-            "description": "IDs of the source documents to analyse"
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "IDs of the tags to use for the document tagging"
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
-        "title": "DocumentTaggingParams"
-      },
-      "DocumentTaggingResult": {
-        "properties": {
-          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
-          "status_message": {
-            "type": "string",
-            "title": "Status Message",
-            "description": "Status message of the result"
-          },
-          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
-          "current_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Current Tag Ids",
-            "description": "IDs of the tags currently assigned to the document"
-          },
-          "suggested_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Suggested Tag Ids",
-            "description": "IDs of the tags suggested by the LLM to assign to the document"
-          },
-          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the tagging" }
-        },
-        "type": "object",
-        "required": ["status", "status_message", "sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
-        "title": "DocumentTaggingResult"
       },
       "ElasticSearchHit": {
         "properties": {
@@ -8638,7 +8396,7 @@
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "specific_task_parameters": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/TaggingParams" },
               { "$ref": "#/components/schemas/MetadataExtractionParams" },
               { "$ref": "#/components/schemas/AnnotationParams" },
               { "$ref": "#/components/schemas/SentenceAnnotationParams" }
@@ -8649,9 +8407,9 @@
               "propertyName": "llm_job_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
+                "TAGGING": "#/components/schemas/TaggingParams"
               }
             }
           }
@@ -8669,7 +8427,7 @@
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "specific_task_parameters": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/TaggingParams" },
               { "$ref": "#/components/schemas/MetadataExtractionParams" },
               { "$ref": "#/components/schemas/AnnotationParams" },
               { "$ref": "#/components/schemas/SentenceAnnotationParams" }
@@ -8680,9 +8438,9 @@
               "propertyName": "llm_job_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
+                "TAGGING": "#/components/schemas/TaggingParams"
               }
             }
           },
@@ -8727,7 +8485,7 @@
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "specific_task_parameters": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingParams" },
+              { "$ref": "#/components/schemas/TaggingParams" },
               { "$ref": "#/components/schemas/MetadataExtractionParams" },
               { "$ref": "#/components/schemas/AnnotationParams" },
               { "$ref": "#/components/schemas/SentenceAnnotationParams" }
@@ -8738,9 +8496,9 @@
               "propertyName": "llm_job_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingParams",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams"
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
+                "TAGGING": "#/components/schemas/TaggingParams"
               }
             }
           },
@@ -8832,7 +8590,7 @@
           },
           "specific_task_result": {
             "oneOf": [
-              { "$ref": "#/components/schemas/DocumentTaggingLLMJobResult" },
+              { "$ref": "#/components/schemas/TaggingLLMJobResult" },
               { "$ref": "#/components/schemas/MetadataExtractionLLMJobResult" },
               { "$ref": "#/components/schemas/AnnotationLLMJobResult" },
               { "$ref": "#/components/schemas/SentenceAnnotationLLMJobResult" }
@@ -8843,9 +8601,9 @@
               "propertyName": "llm_job_type",
               "mapping": {
                 "ANNOTATION": "#/components/schemas/AnnotationLLMJobResult",
-                "DOCUMENT_TAGGING": "#/components/schemas/DocumentTaggingLLMJobResult",
                 "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionLLMJobResult",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobResult"
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationLLMJobResult",
+                "TAGGING": "#/components/schemas/TaggingLLMJobResult"
               }
             }
           }
@@ -8898,9 +8656,9 @@
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
-                    "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
                     "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
-                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams"
+                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams",
+                    "TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams"
                   }
                 }
               },
@@ -8933,9 +8691,9 @@
                   "mapping": {
                     "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
                     "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
-                    "DOC_TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams",
                     "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
-                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams"
+                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams",
+                    "TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams"
                   }
                 }
               },
@@ -8987,7 +8745,7 @@
         "type": "string",
         "enum": [
           "QUOTATION_ATTRIBUTION",
-          "DOC_TAG_RECOMMENDATION",
+          "TAG_RECOMMENDATION",
           "COREFERENCE_RESOLUTION",
           "DOCUMENT_EMBEDDING",
           "SENTENCE_EMBEDDING"
@@ -9856,7 +9614,7 @@
         "enum": [
           "SD_SOURCE_DOCUMENT_TYPE",
           "SD_SOURCE_DOCUMENT_FILENAME",
-          "SD_DOCUMENT_TAG_ID_LIST",
+          "SD_TAG_ID_LIST",
           "SD_CODE_ID_LIST",
           "SD_USER_ID_LIST",
           "SD_SPAN_ANNOTATIONS"
@@ -9918,7 +9676,7 @@
           "SentAnno_USER_ID",
           "SentAnno_MEMO_CONTENT",
           "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "SentAnno_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+          "SentAnno_TAG_ID_LIST"
         ],
         "title": "SentAnnoColumns"
       },
@@ -10126,7 +9884,7 @@
             "items": { "type": "integer" },
             "type": "array",
             "title": "Tag Ids",
-            "description": "The DocumentTagIDs of the SourceDocument."
+            "description": "The TagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -10368,43 +10126,6 @@
           "word_level_transcriptions"
         ],
         "title": "SourceDocumentDataRead"
-      },
-      "SourceDocumentDocumentTagLinks": {
-        "properties": {
-          "source_document_id": {
-            "type": "integer",
-            "title": "Source Document Id",
-            "description": "ID of SourceDocument"
-          },
-          "document_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Document Tag Ids",
-            "description": "List of IDs of DocumentTags"
-          }
-        },
-        "type": "object",
-        "required": ["source_document_id", "document_tag_ids"],
-        "title": "SourceDocumentDocumentTagLinks"
-      },
-      "SourceDocumentDocumentTagMultiLink": {
-        "properties": {
-          "source_document_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Source Document Ids",
-            "description": "List of IDs of SourceDocuments"
-          },
-          "document_tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Document Tag Ids",
-            "description": "List of IDs of DocumentTags"
-          }
-        },
-        "type": "object",
-        "required": ["source_document_ids", "document_tag_ids"],
-        "title": "SourceDocumentDocumentTagMultiLink"
       },
       "SourceDocumentMetadataBulkUpdate": {
         "properties": {
@@ -10667,6 +10388,43 @@
         "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
       },
+      "SourceDocumentTagLinks": {
+        "properties": {
+          "source_document_id": {
+            "type": "integer",
+            "title": "Source Document Id",
+            "description": "ID of SourceDocument"
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "List of IDs of Tags"
+          }
+        },
+        "type": "object",
+        "required": ["source_document_id", "tag_ids"],
+        "title": "SourceDocumentTagLinks"
+      },
+      "SourceDocumentTagMultiLink": {
+        "properties": {
+          "source_document_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Source Document Ids",
+            "description": "List of IDs of SourceDocuments"
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "List of IDs of Tags"
+          }
+        },
+        "type": "object",
+        "required": ["source_document_ids", "tag_ids"],
+        "title": "SourceDocumentTagMultiLink"
+      },
       "SourceDocumentUpdate": {
         "properties": {
           "name": {
@@ -10890,7 +10648,7 @@
             "items": { "type": "integer" },
             "type": "array",
             "title": "Tag Ids",
-            "description": "The DocumentTagIDs of the SourceDocument."
+            "description": "The TagIDs of the SourceDocument."
           },
           "memo": {
             "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
@@ -10948,7 +10706,7 @@
           "SP_USER_ID",
           "SP_MEMO_CONTENT",
           "SP_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "SP_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+          "SP_TAG_ID_LIST"
         ],
         "title": "SpanColumns"
       },
@@ -11081,6 +10839,26 @@
         "enum": ["unit", "annotation", "document"],
         "title": "TAAnnotationAggregationType"
       },
+      "TagCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Title of the Tag" },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the Tag"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Parent of the Tag"
+          },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Tag belongs to" }
+        },
+        "type": "object",
+        "required": ["name", "project_id"],
+        "title": "TagCreate"
+      },
       "TagNodeData": {
         "properties": {
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
@@ -11096,9 +10874,118 @@
         "required": ["bgcolor", "bgalpha", "type", "tagId"],
         "title": "TagNodeData"
       },
+      "TagRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Title of the Tag" },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Tag" },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the Tag"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Parent of the Tag"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Tag" },
+          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Tag belongs to" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the Tag"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the Tag"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "Memo IDs attached to the Tag"
+          }
+        },
+        "type": "object",
+        "required": ["name", "color", "id", "project_id", "created", "updated", "memo_ids"],
+        "title": "TagRead"
+      },
+      "TagRecommendationLinkRead": {
+        "properties": {
+          "ml_job_id": {
+            "type": "string",
+            "title": "Ml Job Id",
+            "description": "Identifier of the corresponding ML Job."
+          },
+          "source_document_id": {
+            "type": "integer",
+            "title": "Source Document Id",
+            "description": "ID of the source document"
+          },
+          "predicted_tag_id": {
+            "type": "integer",
+            "title": "Predicted Tag Id",
+            "description": "ID of the predicted tag"
+          },
+          "prediction_score": {
+            "type": "number",
+            "title": "Prediction Score",
+            "description": "Prediction score of the tag"
+          },
+          "is_reviewed": {
+            "type": "boolean",
+            "title": "Is Reviewed",
+            "description": "Reviewed status of the recommendation",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["ml_job_id", "source_document_id", "predicted_tag_id", "prediction_score"],
+        "title": "TagRecommendationLinkRead"
+      },
+      "TagRecommendationMethod": {
+        "type": "string",
+        "enum": ["SIMPLE", "KNN", "EXCLUSIVE"],
+        "title": "TagRecommendationMethod"
+      },
+      "TagRecommendationResult": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "recommendation_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Recommendation Ids",
+            "description": "List of the corresponding TagRecommendationLinks"
+          },
+          "current_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Current Tag Ids",
+            "description": "List of current tag IDs for the source document"
+          },
+          "suggested_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Suggested Tag Ids",
+            "description": "List of suggested tag IDs for the source document"
+          },
+          "scores": {
+            "items": { "type": "number" },
+            "type": "array",
+            "title": "Scores",
+            "description": "List of the scores of the suggested tags"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "recommendation_ids", "current_tag_ids", "suggested_tag_ids", "scores"],
+        "title": "TagRecommendationResult"
+      },
       "TagStat": {
         "properties": {
-          "tag": { "$ref": "#/components/schemas/DocumentTagRead", "description": "The counted document tag." },
+          "tag": { "$ref": "#/components/schemas/TagRead", "description": "The counted document tag." },
           "filtered_count": {
             "type": "integer",
             "title": "Filtered Count",
@@ -11114,9 +11001,91 @@
         "required": ["tag", "filtered_count", "global_count"],
         "title": "TagStat"
       },
+      "TagUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the Tag"
+          },
+          "color": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Color",
+            "description": "Color of the Tag"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Description of the Tag"
+          },
+          "parent_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Parent Id",
+            "description": "Parent of the Tag"
+          }
+        },
+        "type": "object",
+        "title": "TagUpdate"
+      },
+      "TaggingLLMJobResult": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "TAGGING", "title": "Llm Job Type" },
+          "results": { "items": { "$ref": "#/components/schemas/TaggingResult" }, "type": "array", "title": "Results" }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "results"],
+        "title": "TaggingLLMJobResult"
+      },
+      "TaggingParams": {
+        "properties": {
+          "llm_job_type": { "type": "string", "const": "TAGGING", "title": "Llm Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to analyse"
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "IDs of the tags to use for the document tagging"
+          }
+        },
+        "type": "object",
+        "required": ["llm_job_type", "sdoc_ids", "tag_ids"],
+        "title": "TaggingParams"
+      },
+      "TaggingResult": {
+        "properties": {
+          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status_message": {
+            "type": "string",
+            "title": "Status Message",
+            "description": "Status message of the result"
+          },
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "current_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Current Tag Ids",
+            "description": "IDs of the tags currently assigned to the document"
+          },
+          "suggested_tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Suggested Tag Ids",
+            "description": "IDs of the tags suggested by the LLM to assign to the document"
+          },
+          "reasoning": { "type": "string", "title": "Reasoning", "description": "Reasoning for the tagging" }
+        },
+        "type": "object",
+        "required": ["status", "status_message", "sdoc_id", "current_tag_ids", "suggested_tag_ids", "reasoning"],
+        "title": "TaggingResult"
+      },
       "TaskType": {
         "type": "string",
-        "enum": ["DOCUMENT_TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
+        "enum": ["TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
         "title": "TaskType"
       },
       "TextNodeData": {
@@ -11600,7 +11569,7 @@
             "description": "List of codes"
           },
           "tags": {
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "items": { "$ref": "#/components/schemas/TagRead" },
             "type": "array",
             "title": "Tags",
             "description": "List of tags"
@@ -11979,7 +11948,7 @@
           "WF_SOURCE_DOCUMENT_FREQUENCY",
           "WF_SOURCE_DOCUMENT_PERCENT",
           "WF_SOURCE_DOCUMENT_FILENAME",
-          "WF_DOCUMENT_TAG_ID_LIST",
+          "WF_TAG_ID_LIST",
           "WF_CODE_ID_LIST",
           "WF_USER_ID_LIST",
           "WF_SPAN_ANNOTATIONS"
