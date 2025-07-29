@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from core.doc.source_document_data_dto import WordLevelTranscription
 from repos.db.orm_base import ORMBase
@@ -24,22 +24,22 @@ class SourceDocumentDataORM(ORMBase):
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     html: Mapped[str] = mapped_column(String, nullable=False, index=False)
     repo_url: Mapped[str] = mapped_column(String, nullable=False, index=False)
-    token_starts: Mapped[List[int]] = mapped_column(
+    token_starts: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    token_ends: Mapped[List[int]] = mapped_column(
+    token_ends: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    sentence_starts: Mapped[List[int]] = mapped_column(
+    sentence_starts: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    sentence_ends: Mapped[List[int]] = mapped_column(
+    sentence_ends: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=False, index=False
     )
-    token_time_starts: Mapped[List[int]] = mapped_column(
+    token_time_starts: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=True, index=False
     )
-    token_time_ends: Mapped[List[int]] = mapped_column(
+    token_time_ends: Mapped[list[int]] = mapped_column(
         ARRAY(Integer), nullable=True, index=False
     )
 
@@ -84,7 +84,7 @@ class SourceDocumentDataORM(ORMBase):
         ]
 
     @property
-    def word_level_transcriptions(self) -> Optional[List[WordLevelTranscription]]:
+    def word_level_transcriptions(self) -> list[WordLevelTranscription] | None:
         print(self.token_time_starts)
         print(self.token_time_ends)
         if self.token_time_starts is None or self.token_time_ends is None:

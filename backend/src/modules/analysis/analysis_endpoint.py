@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from common.dependencies import get_current_user, get_db_session
 from common.doc_type import DocType
 from core.auth.authz_user import AuthzUser
@@ -27,17 +25,17 @@ router = APIRouter(
 
 @router.post(
     "/code_frequencies",
-    response_model=List[CodeFrequency],
+    response_model=list[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
 def code_frequencies(
     *,
     project_id: int,
-    code_ids: List[int],
-    user_ids: List[int],
-    doctypes: List[DocType],
+    code_ids: list[int],
+    user_ids: list[int],
+    doctypes: list[DocType],
     authz_user: AuthzUser = Depends(),
-) -> List[CodeFrequency]:
+) -> list[CodeFrequency]:
     authz_user.assert_in_project(project_id)
 
     return find_code_frequencies(
@@ -47,16 +45,16 @@ def code_frequencies(
 
 @router.post(
     "/code_occurrences",
-    response_model=List[CodeOccurrence],
+    response_model=list[CodeOccurrence],
     summary="Returns all SourceDocument IDs that match the query parameters.",
 )
 def code_occurrences(
     *,
     project_id: int,
-    user_ids: List[int],
+    user_ids: list[int],
     code_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[CodeOccurrence]:
+) -> list[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
 
     return find_code_occurrences(
@@ -66,15 +64,15 @@ def code_occurrences(
 
 @router.get(
     "/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}",
-    response_model=Tuple[int, int],
-    summary="Returns Tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+    response_model=tuple[int, int],
+    summary="Returns tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
 )
 def count_sdocs_with_date_metadata(
     *,
     project_id: int,
     date_metadata_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     authz_user.assert_in_project(project_id)
 
     return compute_num_sdocs_with_date_metadata(
@@ -85,18 +83,18 @@ def count_sdocs_with_date_metadata(
 
 @router.post(
     "/sample_sdocs_by_tags",
-    response_model=List[SampledSdocsResults],
+    response_model=list[SampledSdocsResults],
     summary="Sample & Aggregate Source Documents by tags.",
 )
 def sample_sdocs_by_tags(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    tag_groups: List[List[int]],
+    tag_groups: list[list[int]],
     n: int,
     frac: float,
     authz_user: AuthzUser = Depends(),
-) -> List[SampledSdocsResults]:
+) -> list[SampledSdocsResults]:
     authz_user.assert_in_project(project_id)
     return document_sampler_by_tags(
         project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
@@ -105,7 +103,7 @@ def sample_sdocs_by_tags(
 
 @router.post(
     "/{proj_id}/find_duplicate_text_sdocs",
-    response_model=List[List[int]],
+    response_model=list[list[int]],
     summary="Returns groups of duplicate sdoc ids.",
 )
 def find_duplicate_text_sdocs(
@@ -114,6 +112,6 @@ def find_duplicate_text_sdocs(
     proj_id: int,
     max_different_words: int,
     authz_user: AuthzUser = Depends(),
-) -> List[List[int]]:
+) -> list[list[int]]:
     authz_user.assert_in_project(proj_id)
     return find_duplicates(project_id=proj_id, max_different_words=max_different_words)

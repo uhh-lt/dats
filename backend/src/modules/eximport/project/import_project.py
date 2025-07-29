@@ -4,7 +4,6 @@ from enum import Enum
 from os import listdir
 from os.path import isfile
 from pathlib import Path
-from typing import Dict
 
 import pandas as pd
 from loguru import logger
@@ -121,11 +120,11 @@ IMPORT_ORDER = [
 ]
 
 
-def __organize_import_files(import_dir: Path) -> Dict[ExportEntity, Path]:
+def __organize_import_files(import_dir: Path) -> dict[ExportEntity, Path]:
     """
     Organizes the import files into a dictionary mapping ExportEntity to their corresponding file paths.
     """
-    organized_files: Dict[ExportEntity, Path] = {}
+    organized_files: dict[ExportEntity, Path] = {}
 
     for file in listdir(import_dir):
         file_path = Path(import_dir) / file

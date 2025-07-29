@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 from common.singleton_meta import SingletonMeta
@@ -24,8 +24,8 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def _encode_query(
         self,
-        text_query: Optional[List[str]] = None,
-        image_query_id: Optional[int] = None,
+        text_query: list[str] | None = None,
+        image_query_id: int | None = None,
         document_query: bool = False,
     ) -> np.ndarray:
         if text_query is None and image_query_id is None:
@@ -50,7 +50,7 @@ class SimSearchService(metaclass=SingletonMeta):
             raise ValueError(msg)
         return query_emb
 
-    def __parse_query_param(self, query: Union[str, List[str], int]) -> Dict[str, Any]:
+    def __parse_query_param(self, query: str | list[str] | int) -> dict[str, Any]:
         query_params = {
             "text_query": None,
             "image_query_id": None,
@@ -70,11 +70,11 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_sentences(
         self,
         proj_id: int,
-        query: Union[str, List[str], int],
+        query: str | list[str] | int,
         top_k: int,
         threshold: float,
-        sdoc_ids_to_search: Optional[List[int]] = None,
-    ) -> List[SimSearchSentenceHit]:
+        sdoc_ids_to_search: list[int] | None = None,
+    ) -> list[SimSearchSentenceHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         ).tolist()
@@ -101,11 +101,11 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_sentences_with_filter(
         self,
         proj_id: int,
-        query: Union[str, List[str], int],
+        query: str | list[str] | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
-    ) -> List[SimSearchSentenceHit]:
+    ) -> list[SimSearchSentenceHit]:
         with self.sqlr.db_session() as db:
             filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(db, proj_id, filter)
 
@@ -119,12 +119,12 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def find_similar_images(
         self,
-        sdoc_ids_to_search: List[int],
+        sdoc_ids_to_search: list[int],
         proj_id: int,
-        query: Union[str, List[str], int],
+        query: str | list[str] | int,
         top_k: int,
         threshold: float,
-    ) -> List[SimSearchImageHit]:
+    ) -> list[SimSearchImageHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query),
         ).tolist()
@@ -150,11 +150,11 @@ class SimSearchService(metaclass=SingletonMeta):
     def find_similar_images_with_filter(
         self,
         proj_id: int,
-        query: Union[str, List[str], int],
+        query: str | list[str] | int,
         top_k: int,
         threshold: float,
         filter: Filter[SdocColumns],
-    ) -> List[SimSearchImageHit]:
+    ) -> list[SimSearchImageHit]:
         with self.sqlr.db_session() as db:
             filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(db, proj_id, filter)
 

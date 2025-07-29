@@ -1,5 +1,4 @@
 from collections import Counter
-from typing import Optional
 
 from loguru import logger
 from preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
@@ -9,9 +8,7 @@ from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 def generate_word_frequncies(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
-    ppad: Optional[PreProAudioDoc] = (
-        cargo.data["ppad"] if "ppad" in cargo.data else None
-    )
+    ppad: PreProAudioDoc | None = cargo.data["ppad"] if "ppad" in cargo.data else None
     out = pptd.spacy_pipeline_output
 
     if out is None:

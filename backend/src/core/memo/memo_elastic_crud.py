@@ -1,5 +1,3 @@
-from typing import Optional, Set
-
 from core.memo.memo_elastic_dto import (
     ElasticSearchMemo,
     ElasticSearchMemoCreate,
@@ -31,10 +29,10 @@ class CRUDElasticMemo(
         *,
         client: Elasticsearch,
         proj_id: int,
-        memo_ids: Set[int],
+        memo_ids: set[int],
         query: str,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
+        limit: int | None = None,
+        skip: int | None = None,
     ) -> PaginatedElasticSearchHits:
         return self.search(
             client=client,
@@ -57,10 +55,10 @@ class CRUDElasticMemo(
         *,
         client: Elasticsearch,
         proj_id: int,
-        memo_ids: Set[int],
+        memo_ids: set[int],
         query: str,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
+        limit: int | None = None,
+        skip: int | None = None,
     ) -> PaginatedElasticSearchHits:
         return self.search(
             client=client,

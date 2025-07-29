@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 from loguru import logger
 from modules.concept_over_time_analysis.cota_dto import (
@@ -16,8 +16,8 @@ class COTARefinementPipeline:
     def __init__(
         self,
     ):
-        self._steps_by_ordering: Dict[int, PipelineStep] = dict()
-        self._steps_by_name: Dict[str, PipelineStep] = dict()
+        self._steps_by_ordering: dict[int, PipelineStep] = dict()
+        self._steps_by_name: dict[str, PipelineStep] = dict()
         self.redis: RedisRepo = RedisRepo()
 
         self.__is_frozen = False
@@ -90,8 +90,8 @@ class COTARefinementPipeline:
         self,
         cargo: Cargo,
         status: BackgroundJobStatus,
-        current_step_name: Optional[str] = None,
-        error_message: Optional[str] = None,
+        current_step_name: str | None = None,
+        error_message: str | None = None,
     ) -> Cargo:
         update_dto = COTARefinementJobUpdate(
             status=status,
@@ -198,7 +198,7 @@ class COTARefinementPipeline:
     def register_step(
         self,
         func: Callable[[Cargo], Cargo],
-        required_data: List[str] = [],
+        required_data: list[str] = [],
     ):
         if self.__is_frozen:
             msg = (

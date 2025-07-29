@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -48,16 +46,16 @@ def add_span_annotation(
 
 @router.put(
     "/bulk/create",
-    response_model=List[SpanAnnotationRead],
+    response_model=list[SpanAnnotationRead],
     summary="Creates SpanAnnotations in Bulk",
 )
 def add_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    spans: List[SpanAnnotationCreate],
+    spans: list[SpanAnnotationCreate],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> List[SpanAnnotationRead]:
+) -> list[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
         authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span.sdoc_id)
@@ -93,7 +91,7 @@ def get_by_id(
 
 @router.get(
     "/sdoc/{sdoc_id}/user/{user_id}}",
-    response_model=List[SpanAnnotationRead],
+    response_model=list[SpanAnnotationRead],
     summary="Returns all SpanAnnotations of the User for the SourceDocument",
 )
 def get_by_sdoc_and_user(
@@ -102,7 +100,7 @@ def get_by_sdoc_and_user(
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationRead]:
+) -> list[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     spans = crud_span_anno.read_by_user_and_sdoc(
@@ -136,16 +134,16 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
-    response_model=List[SpanAnnotationRead],
+    response_model=list[SpanAnnotationRead],
     summary="Updates SpanAnnotations in Bulk",
 )
 def update_span_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    spans: List[SpanAnnotationUpdateBulk],
+    spans: list[SpanAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> List[SpanAnnotationRead]:
+) -> list[SpanAnnotationRead]:
     for span in spans:
         authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
         authz_user.assert_in_same_project_as(
@@ -184,15 +182,15 @@ def delete_by_id(
 
 @router.delete(
     "/bulk/delete",
-    response_model=List[SpanAnnotationDeleted],
+    response_model=list[SpanAnnotationDeleted],
     summary="Deletes all SpanAnnotations with the given IDs.",
 )
 def delete_bulk_by_id(
     *,
     db: Session = Depends(get_db_session),
-    span_anno_ids: List[int],
+    span_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationDeleted]:
+) -> list[SpanAnnotationDeleted]:
     authz_user.assert_in_same_project_as_many(Crud.SPAN_ANNOTATION, span_anno_ids)
 
     db_objs = crud_span_anno.remove_bulk(db=db, ids=span_anno_ids)
@@ -201,7 +199,7 @@ def delete_bulk_by_id(
 
 @router.get(
     "/{span_id}/groups",
-    response_model=List[SpanGroupRead],
+    response_model=list[SpanGroupRead],
     summary="Returns all SpanGroups that contain the the SpanAnnotation.",
 )
 def get_all_groups(
@@ -209,7 +207,7 @@ def get_all_groups(
     db: Session = Depends(get_db_session),
     span_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanGroupRead]:
+) -> list[SpanGroupRead]:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
 
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
@@ -280,7 +278,7 @@ def remove_from_group(
 
 @router.get(
     "/code/{code_id}/user",
-    response_model=List[SpanAnnotationRead],
+    response_model=list[SpanAnnotationRead],
     summary=("Returns SpanAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
@@ -288,7 +286,7 @@ def get_by_user_code(
     db: Session = Depends(get_db_session),
     code_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationRead]:
+) -> list[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_objs = crud_span_anno.read_by_code_and_user(

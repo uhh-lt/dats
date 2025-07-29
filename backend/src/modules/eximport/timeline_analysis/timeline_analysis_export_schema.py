@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 import srsly
 from modules.timeline_analysis.timeline_analysis_dto import (
@@ -70,7 +68,7 @@ class TimelineAnalysisExportSchema(BaseModel):
 class TimelineAnalysisExportCollection(BaseModel):
     """Collection of timeline analyses for export/import operations."""
 
-    timeline_analyses: List[TimelineAnalysisExportSchema]
+    timeline_analyses: list[TimelineAnalysisExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "TimelineAnalysisExportCollection":

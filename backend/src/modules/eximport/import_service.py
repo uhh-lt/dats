@@ -1,6 +1,6 @@
 import zipfile
 from pathlib import Path
-from typing import Callable, Dict, List
+from typing import Callable
 
 import pandas as pd
 from common.singleton_meta import SingletonMeta
@@ -67,7 +67,7 @@ class ImportService(metaclass=SingletonMeta):
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.import_method_for_job_type: Dict[ImportJobType, Callable[..., None]] = {
+        cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
             ImportJobType.PROJECT: cls._import_project,
@@ -120,7 +120,7 @@ class ImportService(metaclass=SingletonMeta):
             raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
         return imj
 
-    def get_all_import_jobs(self, project_id: int) -> List[ImportJobRead]:
+    def get_all_import_jobs(self, project_id: int) -> list[ImportJobRead]:
         return self.redis.get_all_import_jobs(project_id=project_id)
 
     def _update_import_job(

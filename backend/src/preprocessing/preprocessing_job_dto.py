@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
 
 from preprocessing.preprocessing_job_payload_dto import (
     PreprocessingJobPayloadCreate,
@@ -28,7 +27,7 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
         description="Status of the PreprocessingJob",
     )
     project_id: int = Field(description="The ID of the Project.")
-    payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = Field(
+    payloads: list[PreprocessingJobPayloadCreateWithoutPreproJobId] = Field(
         description=(
             "Payloads of the PreprocessingJobs, i.e., documents to be "
             "preprocessed and imported to the project within this PreprocessingJob"
@@ -37,15 +36,15 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
 
     @field_validator("payloads", mode="before")
     def payload_must_contain_at_least_one_doc(
-        cls, v: List[PreprocessingJobPayloadCreate]
-    ) -> List[PreprocessingJobPayloadCreate]:
+        cls, v: list[PreprocessingJobPayloadCreate]
+    ) -> list[PreprocessingJobPayloadCreate]:
         assert len(v) >= 1, "Payloads must contain at least one document!"
         return v
 
 
 # Properties to update
 class PreprocessingJobUpdate(PreprocessingJobBaseDTO, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         description="The current status of the payload.",
         default=None,
     )
@@ -61,7 +60,7 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
     project_id: int = Field(description="The ID of the Project.")
     created: datetime = Field(description="Created timestamp of the PreprocessingJob")
     updated: datetime = Field(description="Updated timestamp of the PreprocessingJob")
-    payloads: List[PreprocessingJobPayloadRead] = Field(
+    payloads: list[PreprocessingJobPayloadRead] = Field(
         description=(
             "Payloads of the PreprocessingJobs, i.e., documents to be "
             "preprocessed and imported to the project within this PreprocessingJob"
@@ -71,6 +70,6 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
 
     @field_validator("payloads")
     def payloads_always_same_order(
-        cls, v: List[PreprocessingJobPayloadRead]
-    ) -> List[PreprocessingJobPayloadRead]:
+        cls, v: list[PreprocessingJobPayloadRead]
+    ) -> list[PreprocessingJobPayloadRead]:
         return sorted(v, key=lambda payload: payload.filename)

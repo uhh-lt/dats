@@ -1,5 +1,3 @@
-from typing import Optional
-
 from core.doc.image_collection import ImageCollection
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
@@ -20,7 +18,7 @@ class CRUDImageEmbedding(CRUDBase[ImageObjectIdentifier, ImageCollection]):
         vector: list[float],
         k: int,
         threshold: float,
-        sdoc_ids: Optional[list[int]],
+        sdoc_ids: list[int] | None,
     ):
         """
         Search for images near a given vector in specific SourceDocument IDs

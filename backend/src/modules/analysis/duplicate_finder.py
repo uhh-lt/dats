@@ -1,5 +1,4 @@
 import time
-from typing import List
 
 import networkx as nx
 import numpy as np
@@ -11,7 +10,7 @@ from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
 
 
-def find_duplicates(project_id: int, max_different_words: int) -> List[List[int]]:
+def find_duplicates(project_id: int, max_different_words: int) -> list[list[int]]:
     logger.info("Finding duplicate text sdocs")
     t0 = time.time()
     with SQLRepo().db_session() as db:

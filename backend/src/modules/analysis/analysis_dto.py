@@ -28,12 +28,12 @@ class CodeFrequency(BaseModel):
 
 
 class SampledSdocsResults(BaseModel):
-    tags: List[int] = Field(description="The tags aggregated by.")
-    sdocs: List[int] = Field(description="The grouped SourceDocument IDs.")
-    sample_fixed: List[int] = Field(
+    tags: list[int] = Field(description="The tags aggregated by.")
+    sdocs: list[int] = Field(description="The grouped SourceDocument IDs.")
+    sample_fixed: list[int] = Field(
         description="The fixed sample of SourceDocument IDs."
     )
-    sample_relative: List[int] = Field(
+    sample_relative: list[int] = Field(
         description="The relative sample of SourceDocument IDs."
     )
 

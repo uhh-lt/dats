@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional
 from uuid import uuid4
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -51,8 +50,8 @@ class CRUDBBoxAnnotation(
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[BBoxAnnotationCreateIntern]
-    ) -> List[BBoxAnnotationORM]:
+        self, db: Session, *, create_dtos: list[BBoxAnnotationCreateIntern]
+    ) -> list[BBoxAnnotationORM]:
         # update all affected annotation documents' timestamp
         adoc_ids = list(
             set([create_dto.annotation_document_id for create_dto in create_dtos])
@@ -63,19 +62,19 @@ class CRUDBBoxAnnotation(
         return super().create_multi(db=db, create_dtos=create_dtos)
 
     def create_bulk(
-        self, db: Session, *, user_id: int, create_dtos: List[BBoxAnnotationCreate]
-    ) -> List[BBoxAnnotationORM]:
+        self, db: Session, *, user_id: int, create_dtos: list[BBoxAnnotationCreate]
+    ) -> list[BBoxAnnotationORM]:
         # find affected sdocs
         sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
 
         # find project id for each sdoc_id
         sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
-        project_id_by_sdoc_id: Dict[int, int] = {}
+        project_id_by_sdoc_id: dict[int, int] = {}
         for sdoc in sdocs:
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        adoc_id_by_sdoc_id: dict[int, int] = {}
         for sdoc_id in sdoc_ids:
             adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
@@ -106,7 +105,7 @@ class CRUDBBoxAnnotation(
         db: Session,
         *,
         project_id: int,
-    ) -> List[BBoxAnnotationORM]:
+    ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
             .join(
@@ -130,7 +129,7 @@ class CRUDBBoxAnnotation(
         *,
         project_id: int,
         uuid: str,
-    ) -> Optional[BBoxAnnotationORM]:
+    ) -> BBoxAnnotationORM | None:
         query = db.query(self.model).where(
             self.model.project_id == project_id,
             self.model.uuid == uuid,
@@ -144,7 +143,7 @@ class CRUDBBoxAnnotation(
         user_id: int,
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[BBoxAnnotationORM]:
+    ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -162,10 +161,10 @@ class CRUDBBoxAnnotation(
         self,
         db: Session,
         *,
-        user_ids: List[int],
+        user_ids: list[int],
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[BBoxAnnotationORM]:
+    ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -186,7 +185,7 @@ class CRUDBBoxAnnotation(
         code_id: int,
         user_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[BBoxAnnotationORM]:
+    ) -> list[BBoxAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -211,8 +210,8 @@ class CRUDBBoxAnnotation(
         return bbox_anno
 
     def update_bulk(
-        self, db: Session, *, update_dtos: List[BBoxAnnotationUpdateBulk]
-    ) -> List[BBoxAnnotationORM]:
+        self, db: Session, *, update_dtos: list[BBoxAnnotationUpdateBulk]
+    ) -> list[BBoxAnnotationORM]:
         return [
             self.update(
                 db,
@@ -231,7 +230,7 @@ class CRUDBBoxAnnotation(
 
         return bbox_anno
 
-    def delete_bulk(self, db: Session, *, ids: List[int]) -> List[BBoxAnnotationORM]:
+    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[BBoxAnnotationORM]:
         bbox_annos = []
         for id in ids:
             bbox_annos.append(self.delete(db, id=id))
@@ -245,7 +244,7 @@ class CRUDBBoxAnnotation(
 
         return bbox_annos
 
-    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
+    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
         # find all bbox annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id

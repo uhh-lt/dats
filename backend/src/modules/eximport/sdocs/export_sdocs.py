@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -26,7 +25,7 @@ def export_selected_sdocs(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    sdoc_ids: List[int],
+    sdoc_ids: list[int],
 ) -> Path:
     sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
     return __export_sdocs(
@@ -55,7 +54,7 @@ def __export_sdocs(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    sdocs: List[SourceDocumentORM],
+    sdocs: list[SourceDocumentORM],
 ) -> Path:
     if len(sdocs) == 0:
         raise NoDataToExportError("No source documents to export.")

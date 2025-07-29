@@ -1,5 +1,3 @@
-from typing import List, Union
-
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -15,17 +13,17 @@ from repos.db.crud_base import NoSuchElementError
 
 
 def get_object_memos(
-    db_obj: Union[
-        SourceDocumentORM,
-        DocumentTagORM,
-        CodeORM,
-        ProjectORM,
-        BBoxAnnotationORM,
-        SentenceAnnotationORM,
-        SpanAnnotationORM,
-        SpanGroupORM,
-    ],
-) -> List[MemoRead]:
+    db_obj: (
+        SourceDocumentORM
+        | DocumentTagORM
+        | CodeORM
+        | ProjectORM
+        | BBoxAnnotationORM
+        | SentenceAnnotationORM
+        | SpanAnnotationORM
+        | SpanGroupORM
+    ),
+) -> list[MemoRead]:
     if db_obj.object_handle is None:
         return []
 
@@ -58,16 +56,16 @@ def get_object_memos(
 
 
 def get_object_memo_for_user(
-    db_obj: Union[
-        SourceDocumentORM,
-        DocumentTagORM,
-        CodeORM,
-        ProjectORM,
-        BBoxAnnotationORM,
-        SentenceAnnotationORM,
-        SpanAnnotationORM,
-        SpanGroupORM,
-    ],
+    db_obj: (
+        SourceDocumentORM
+        | DocumentTagORM
+        | CodeORM
+        | ProjectORM
+        | BBoxAnnotationORM
+        | SentenceAnnotationORM
+        | SpanAnnotationORM
+        | SpanGroupORM
+    ),
     user_id: int,
 ) -> MemoRead:
     if db_obj.object_handle is None:

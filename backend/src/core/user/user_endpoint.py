@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -35,7 +33,7 @@ def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicU
 
 @router.get(
     "/{proj_id}/user",
-    response_model=List[UserRead],
+    response_model=list[UserRead],
     summary="Returns all Users of the Project with the given ID",
 )
 def get_by_project(
@@ -43,7 +41,7 @@ def get_by_project(
     proj_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[UserRead]:
+) -> list[UserRead]:
     authz_user.assert_in_project(proj_id)
 
     proj_db_obj = crud_project.read(db=db, id=proj_id)
@@ -52,14 +50,14 @@ def get_by_project(
 
 @router.get(
     "/all",
-    response_model=List[PublicUserRead],
+    response_model=list[PublicUserRead],
     summary="Returns all Users that exist in the system",
 )
 def get_all(
     *,
     db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> List[PublicUserRead]:
+    skip_limit: dict[str, int] = Depends(skip_limit_params),
+) -> list[PublicUserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
     return [PublicUserRead.model_validate(proj) for proj in db_objs]
 

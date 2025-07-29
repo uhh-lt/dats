@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 import srsly
@@ -29,7 +28,7 @@ def export_selected_timeline_analyses(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    timeline_analysis_ids: List[int],
+    timeline_analysis_ids: list[int],
 ) -> Path:
     """
     Export selected timeline analyses to a CSV file.
@@ -91,7 +90,7 @@ def __export_timeline_analyses(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    timeline_analyses: List[TimelineAnalysisORM],
+    timeline_analyses: list[TimelineAnalysisORM],
 ) -> Path:
     """
     Export timeline analyses to a CSV file.
@@ -122,7 +121,7 @@ def __export_timeline_analyses(
 
 def __generate_export_df_for_timeline_analyses(
     db: Session,
-    timeline_analyses: List[TimelineAnalysisORM],
+    timeline_analyses: list[TimelineAnalysisORM],
 ) -> pd.DataFrame:
     """
     Generate a DataFrame for exporting timeline analyses.

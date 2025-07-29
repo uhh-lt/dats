@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -24,10 +22,10 @@ class SpanAnnotationExportSchema(BaseModel):
     text_end_token: int = Field(
         description="End position of the span annotation in tokens"
     )
-    user_first_name: Optional[str] = Field(
+    user_first_name: str | None = Field(
         description="First name of the user", default=None
     )
-    user_last_name: Optional[str] = Field(
+    user_last_name: str | None = Field(
         description="Last name of the user", default=None
     )
 
@@ -53,7 +51,7 @@ class SpanAnnotationExportSchema(BaseModel):
 class SpanAnnotationExportCollection(BaseModel):
     """Collection of span annotations for export/import operations."""
 
-    annotations: List[SpanAnnotationExportSchema]
+    annotations: list[SpanAnnotationExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "SpanAnnotationExportCollection":

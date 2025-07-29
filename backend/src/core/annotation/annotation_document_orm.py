@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, Sequence, func
@@ -32,28 +32,28 @@ class AnnotationDocumentORM(ORMBase):
     )
 
     # one to many
-    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+    span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM",
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    span_groups: Mapped[List["SpanGroupORM"]] = relationship(
+    span_groups: Mapped[list["SpanGroupORM"]] = relationship(
         "SpanGroupORM",
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
+    bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM",
         back_populates="annotation_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+    sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
         "SentenceAnnotationORM",
         back_populates="annotation_document",
         cascade="all, delete-orphan",

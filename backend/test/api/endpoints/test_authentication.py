@@ -1,5 +1,5 @@
 import inspect
-from typing import Sequence, Set, Tuple
+from typing import Sequence
 
 import starlette.routing
 from fastapi.routing import APIRoute
@@ -7,7 +7,7 @@ from main import app
 
 
 def test_authentication_required():
-    public_routes: Sequence[Tuple[Set[str], str]] = [
+    public_routes: Sequence[tuple[set[str], str]] = [
         ({"GET"}, "/"),
         ({"GET"}, "/info"),
         ({"GET"}, "/heartbeat"),

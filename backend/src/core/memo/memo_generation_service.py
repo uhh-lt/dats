@@ -1,5 +1,3 @@
-from typing import Tuple, Union
-
 from common.doc_type import DocType
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -29,7 +27,7 @@ class OllamaMemoResult(BaseModel):
 def summarize_sdoc(
     obj: SourceDocumentORM,
     db: Session,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     sdoc_data = crud_sdoc.read_data(db=db, id=obj.id)
     if sdoc_data is None:
         raise ValueError("SourceDocumentData not found")
@@ -51,7 +49,7 @@ def summarize_sdoc(
 def summarize_document_tag(
     obj: DocumentTagORM,
     db=None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     return (
         False,
         f'Document Tag with name "{obj.name}" and description "{obj.description}"',
@@ -61,7 +59,7 @@ def summarize_document_tag(
 def summarize_code(
     obj: CodeORM,
     db: Session,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     return (
         False,
         f'Code used for classification with name "{obj.name}" and description "{obj.description}"',
@@ -71,7 +69,7 @@ def summarize_code(
 def summarize_project(
     obj: ProjectORM,
     db=None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     return (
         False,
         f'Project with title "{obj.title}" and description "{obj.description}"',
@@ -81,7 +79,7 @@ def summarize_project(
 def summarize_bbox_anno(
     obj: BBoxAnnotationORM,
     db: Session,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     path = FilesystemRepo().get_path_to_sdoc_file(
         sdoc=SourceDocumentRead.model_validate(obj.annotation_document.source_document),
         webp=False,
@@ -96,7 +94,7 @@ def summarize_bbox_anno(
 def summarize_sent_anno(
     obj: SentenceAnnotationORM,
     db: Session,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     sdoc_data = crud_sdoc.read_data(
         db=db, id=obj.annotation_document.source_document_id
     )
@@ -109,7 +107,7 @@ def summarize_sent_anno(
 def summarize_span_anno(
     obj: SpanAnnotationORM,
     db=None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     return (
         False,
         f'Annotation with code title "{obj.code.name}", code description "{obj.code.description}" and the following content: {obj.span_text.text}',
@@ -119,7 +117,7 @@ def summarize_span_anno(
 def summarize_span_group(
     obj: SpanGroupORM,
     db=None,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     raise NotImplementedError(f"AttachedObjectType is not supported: {type(obj)}")
 
 
@@ -137,16 +135,16 @@ MEMO_GEN_PROMPT = "Don't use imperative form. Generate a concise, 1-2 sentence h
 
 
 def generate_memo_ollama(
-    obj: Union[
-        SourceDocumentORM,
-        DocumentTagORM,
-        CodeORM,
-        ProjectORM,
-        BBoxAnnotationORM,
-        SentenceAnnotationORM,
-        SpanAnnotationORM,
-        SpanGroupORM,
-    ],
+    obj: (
+        SourceDocumentORM
+        | DocumentTagORM
+        | CodeORM
+        | ProjectORM
+        | BBoxAnnotationORM
+        | SentenceAnnotationORM
+        | SpanAnnotationORM
+        | SpanGroupORM
+    ),
     db: Session,
 ) -> str:
     # 1. Update job description

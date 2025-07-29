@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -52,7 +50,7 @@ def transform_content_for_export(
     # wb_content = WhiteboardContent.model_validate_json(content)
 
     # 1. Group nodes by type
-    node_type_groups: Dict[WhiteboardNodeType, List[WhiteboardNode]] = {}
+    node_type_groups: dict[WhiteboardNodeType, list[WhiteboardNode]] = {}
     for node in content.nodes:
         node_type = node.data.type
         if node_type not in node_type_groups:
@@ -60,7 +58,7 @@ def transform_content_for_export(
         node_type_groups[node_type].append(node)
 
     # 2. Transform nodes to the appropriate export format
-    transformed_nodes: List[WhiteboardNodeForExport] = []
+    transformed_nodes: list[WhiteboardNodeForExport] = []
     for node_type, nodes in node_type_groups.items():
         transformed_nodes.extend(
             transform_nodes_for_export(db=db, node_type=node_type, nodes=nodes)
@@ -83,8 +81,8 @@ def transform_content_for_export(
 
 
 def transform_nodes_for_export(
-    db: Session, node_type: WhiteboardNodeType, nodes: List[WhiteboardNode]
-) -> List[WhiteboardNodeForExport]:
+    db: Session, node_type: WhiteboardNodeType, nodes: list[WhiteboardNode]
+) -> list[WhiteboardNodeForExport]:
     """
     Transform nodes of a specific type for export.
 
@@ -104,7 +102,7 @@ def transform_nodes_for_export(
     Returns:
         List of transformed nodes ready for export
     """
-    transformed_nodes: List[WhiteboardNodeForExport] = []
+    transformed_nodes: list[WhiteboardNodeForExport] = []
     match node_type:
         case (
             WhiteboardNodeType.TEXT
@@ -118,13 +116,13 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.SDOC:
             # Resolve sdocId to sdoc_filename
-            sdoc_ids: List[int] = []
+            sdoc_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, SdocNodeData), "Expected SdocNodeData type"
                 sdoc_ids.append(node.data.sdocId)
 
             sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
-            sdoc_id_to_name: Dict[int, str] = {sdoc.id: sdoc.filename for sdoc in sdocs}
+            sdoc_id_to_name: dict[int, str] = {sdoc.id: sdoc.filename for sdoc in sdocs}
 
             for node in nodes:
                 assert isinstance(node.data, SdocNodeData), "Expected SdocNodeData type"
@@ -147,7 +145,7 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.CODE:
             # Resolve codeId to code_name
-            code_ids: List[int] = []
+            code_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, CodeNodeData), "Expected CodeNodeData type"
                 code_ids.append(node.data.codeId)
@@ -155,7 +153,7 @@ def transform_nodes_for_export(
                     code_ids.append(node.data.parentCodeId)
 
             codes = crud_code.read_by_ids(db=db, ids=code_ids)
-            code_id_to_name: Dict[int, str] = {code.id: code.name for code in codes}
+            code_id_to_name: dict[int, str] = {code.id: code.name for code in codes}
 
             for node in nodes:
                 assert isinstance(node.data, CodeNodeData), "Expected CodeNodeData type"
@@ -185,13 +183,13 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.TAG:
             # Resolve tagId to tag_name
-            tag_ids: List[int] = []
+            tag_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, TagNodeData), "Expected TagNodeData type"
                 tag_ids.append(node.data.tagId)
 
             tags = crud_document_tag.read_by_ids(db=db, ids=tag_ids)
-            tag_id_to_name: Dict[int, str] = {tag.id: tag.name for tag in tags}
+            tag_id_to_name: dict[int, str] = {tag.id: tag.name for tag in tags}
 
             for node in nodes:
                 assert isinstance(node.data, TagNodeData), "Expected TagNodeData type"
@@ -215,7 +213,7 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.SPAN_ANNOTATION:
             # Resolve spanAnnotationId to UUID
-            span_annotation_ids: List[int] = []
+            span_annotation_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, SpanAnnotationNodeData), (
                     "Expected SpanAnnotationNodeData type"
@@ -225,7 +223,7 @@ def transform_nodes_for_export(
             span_annotations = crud_span_anno.read_by_ids(
                 db=db, ids=span_annotation_ids
             )
-            span_annotation_id_to_uuid: Dict[int, str] = {
+            span_annotation_id_to_uuid: dict[int, str] = {
                 sa.id: sa.uuid for sa in span_annotations
             }
 
@@ -254,7 +252,7 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.SENTENCE_ANNOTATION:
             # Resolve sentenceAnnotationId to UUID
-            sentence_annotation_ids: List[int] = []
+            sentence_annotation_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, SentenceAnnotationNodeData), (
                     "Expected SentenceAnnotationNodeData type"
@@ -264,7 +262,7 @@ def transform_nodes_for_export(
             sentence_annotations = crud_sentence_anno.read_by_ids(
                 db=db, ids=sentence_annotation_ids
             )
-            sentence_annotation_id_to_uuid: Dict[int, str] = {
+            sentence_annotation_id_to_uuid: dict[int, str] = {
                 sa.id: sa.uuid for sa in sentence_annotations
             }
 
@@ -293,7 +291,7 @@ def transform_nodes_for_export(
 
         case WhiteboardNodeType.BBOX_ANNOTATION:
             # Resolve bboxAnnotationId to UUID
-            bbox_annotation_ids: List[int] = []
+            bbox_annotation_ids: list[int] = []
             for node in nodes:
                 assert isinstance(node.data, BBoxAnnotationNodeData), (
                     "Expected BBoxAnnotationNodeData type"
@@ -303,7 +301,7 @@ def transform_nodes_for_export(
             bbox_annotations = crud_bbox_anno.read_by_ids(
                 db=db, ids=bbox_annotation_ids
             )
-            bbox_annotation_id_to_uuid: Dict[int, str] = {
+            bbox_annotation_id_to_uuid: dict[int, str] = {
                 ba.id: ba.uuid for ba in bbox_annotations
             }
 
@@ -351,7 +349,7 @@ def transform_nodes_for_export(
 
 def transform_content_for_import(
     db: Session, project_id: int, content: WhiteboardContentForExport
-) -> tuple[WhiteboardContent, List[str]]:
+) -> tuple[WhiteboardContent, list[str]]:
     """
     Transform whiteboard content for import.
 
@@ -367,7 +365,7 @@ def transform_content_for_import(
         Tuple of (transformed content as JSON string, list of error messages)
     """
     # Group nodes by type
-    node_type_groups: Dict[WhiteboardNodeType, List[WhiteboardNodeForExport]] = {}
+    node_type_groups: dict[WhiteboardNodeType, list[WhiteboardNodeForExport]] = {}
     for node in content.nodes:
         node_type = node.data.type
         if node_type not in node_type_groups:
@@ -375,8 +373,8 @@ def transform_content_for_import(
         node_type_groups[node_type].append(node)
 
     # Transform nodes for import
-    all_errors: List[str] = []
-    transformed_nodes: List[WhiteboardNode] = []
+    all_errors: list[str] = []
+    transformed_nodes: list[WhiteboardNode] = []
 
     for node_type, nodes in node_type_groups.items():
         nodes_result, errors = transform_nodes_for_import(
@@ -399,8 +397,8 @@ def transform_nodes_for_import(
     db: Session,
     project_id: int,
     node_type: WhiteboardNodeType,
-    nodes: List[WhiteboardNodeForExport],
-) -> tuple[List[WhiteboardNode], List[str]]:
+    nodes: list[WhiteboardNodeForExport],
+) -> tuple[list[WhiteboardNode], list[str]]:
     """
     Transform nodes of a specific type for import.
 
@@ -421,8 +419,8 @@ def transform_nodes_for_import(
     Returns:
         Tuple of (list of transformed nodes ready for import, list of error messages)
     """
-    transformed_nodes: List[WhiteboardNode] = []
-    errors: List[str] = []
+    transformed_nodes: list[WhiteboardNode] = []
+    errors: list[str] = []
 
     match node_type:
         case (
@@ -468,7 +466,7 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.CODE:
             # Resolve code_name to codeId
             project_codes = crud_project.read(db=db, id=project_id).codes
-            code_name_to_id: Dict[str, int] = {
+            code_name_to_id: dict[str, int] = {
                 code.name: code.id for code in project_codes
             }
 
@@ -509,7 +507,7 @@ def transform_nodes_for_import(
         case WhiteboardNodeType.TAG:
             # Resolve tag_name to tagId
             project_tags = crud_project.read(db=db, id=project_id).document_tags
-            tag_name_to_id: Dict[str, int] = {tag.name: tag.id for tag in project_tags}
+            tag_name_to_id: dict[str, int] = {tag.name: tag.id for tag in project_tags}
             # Check if all tags exist in the project
             for node in nodes:
                 assert isinstance(node.data, TagNodeDataForExport), (

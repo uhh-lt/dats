@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from elasticsearch import Elasticsearch, helpers
 from pydantic import BaseModel
@@ -67,10 +67,10 @@ class ElasticCrudBase(Generic[IndexType, ModelDTOType, CreateDTOType, UpdateDTOT
         self,
         client: Elasticsearch,
         proj_id: int,
-        query: Dict[str, Any],
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-        highlight: Optional[Dict[str, Any]] = None,
+        query: dict[str, Any],
+        limit: int | None = None,
+        skip: int | None = None,
+        highlight: dict[str, Any] | None = None,
     ) -> PaginatedElasticSearchHits:
         """
         Helper function that can be reused to find SDocs or Memos with different queries.

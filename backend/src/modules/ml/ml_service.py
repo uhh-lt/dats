@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Union
 
 from common.singleton_meta import SingletonMeta
 from modules.ml.coref_service import CorefService
@@ -30,7 +29,7 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class MLJobPreparationError(Exception):
-    def __init__(self, cause: Union[Exception, str]) -> None:
+    def __init__(self, cause: Exception | str) -> None:
         super().__init__(f"Cannot prepare and create the MLJob! {cause}")
 
 
@@ -60,7 +59,7 @@ class MLService(metaclass=SingletonMeta):
 
         return mlj_read
 
-    def get_all_ml_jobs(self, project_id: int) -> List[MLJobRead]:
+    def get_all_ml_jobs(self, project_id: int) -> list[MLJobRead]:
         return self.redis.get_all_ml_jobs(project_id=project_id)
 
     def start_ml_job_sync(self, ml_job_id: str) -> MLJobRead:

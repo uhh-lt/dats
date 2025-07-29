@@ -1,5 +1,4 @@
 import logging
-from typing import List, Tuple
 
 import torch
 from dto.detr import DETRImageInput, DETRObjectDetectionOutput, ObjectBBox
@@ -50,14 +49,14 @@ class DETRModel:
 
         # Flo: apply the confidence threshold
         keep = output_dict["scores"] > CONFIDENCE_THRESHOLD
-        confidences: List[float] = output_dict["scores"][keep].tolist()
-        boxes: List[Tuple[int, int, int, int]] = (
+        confidences: list[float] = output_dict["scores"][keep].tolist()
+        boxes: list[tuple[int, int, int, int]] = (
             output_dict["boxes"][keep].int().tolist()
         )
-        label_ids: List[int] = output_dict["labels"][keep].tolist()
-        labels: List[str] = [COCO_2017_LABELS[lid].upper() for lid in label_ids]
+        label_ids: list[int] = output_dict["labels"][keep].tolist()
+        labels: list[str] = [COCO_2017_LABELS[lid].upper() for lid in label_ids]
 
-        bboxes: List[ObjectBBox] = []
+        bboxes: list[ObjectBBox] = []
         for (x_min, y_min, x_max, y_max), label, confidence in zip(
             boxes, labels, confidences
         ):

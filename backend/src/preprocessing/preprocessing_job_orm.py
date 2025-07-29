@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
@@ -23,7 +23,7 @@ class PreprocessingJobORM(ORMBase):
     )
 
     # one to many
-    payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
+    payloads: Mapped[list["PreprocessingJobPayloadORM"]] = relationship(
         "PreprocessingJobPayloadORM",
         back_populates="prepro_job",
         cascade="all, delete-orphan",

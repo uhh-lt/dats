@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.project.project_crud import crud_project
@@ -32,7 +31,7 @@ def __export_users(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    users: List[UserORM],
+    users: list[UserORM],
 ) -> Path:
     if len(users) == 0:
         raise NoDataToExportError("No users to export.")
@@ -45,7 +44,7 @@ def __export_users(
 
 
 def __generate_export_df_for_users(
-    users: List[UserORM],
+    users: list[UserORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(users)} users ...")
 

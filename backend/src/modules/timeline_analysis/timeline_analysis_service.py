@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Type, TypedDict, Union
+from typing import Type, TypedDict
 
 import pandas as pd
 import srsly
@@ -41,7 +41,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 
 class TimelineAnalysisRow(TypedDict):
-    data_ids: List[int]
+    data_ids: list[int]
     date: str
     count: int
 
@@ -76,10 +76,10 @@ def update_timeline_analysis(
 
     logger.info(f"Updating timeline analysis {id} concepts")
 
-    current_concepts: Dict[str, TimelineAnalysisConcept] = {
+    current_concepts: dict[str, TimelineAnalysisConcept] = {
         concept.id: concept for concept in ta.concepts
     }
-    new_concepts: Dict[str, TimelineAnalysisConcept] = {
+    new_concepts: dict[str, TimelineAnalysisConcept] = {
         concept.id: TimelineAnalysisConcept(
             id=concept.id,
             name=concept.name,
@@ -145,7 +145,7 @@ def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
     ta = TimelineAnalysisRead.model_validate(db_obj)
 
     # compute new results
-    concepts: Dict[str, TimelineAnalysisConcept] = {
+    concepts: dict[str, TimelineAnalysisConcept] = {
         concept.id: concept for concept in ta.concepts
     }
     for concept_id, concept in concepts.items():
@@ -169,7 +169,7 @@ def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
 def __compute_timeline_analysis(
     timeline_analysis: TimelineAnalysisRead,
     concept: TimelineAnalysisConcept,
-) -> List[TimelineAnalysisResult]:
+) -> list[TimelineAnalysisResult]:
     logger.info(f"Computing timeline analysis for concept {concept.id}")
 
     if timeline_analysis.settings.date_metadata_id is None:
@@ -303,7 +303,7 @@ def __sdoc_timeline_analysis(
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter[SdocColumns],
-) -> List[TimelineAnalysisRow]:
+) -> list[TimelineAnalysisRow]:
     builder = SearchBuilder(db, filter, sorts=[])
 
     date_metadata = aliased(SourceDocumentMetadataORM)
@@ -360,7 +360,7 @@ def __sent_anno_timeline_analysis(
     project_metadata_id: int,
     filter: Filter,
     annotation_aggregation_type: TAAnnotationAggregationType,
-) -> List[TimelineAnalysisRow]:
+) -> list[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
     match annotation_aggregation_type:
         case TAAnnotationAggregationType.UNIT:
@@ -468,7 +468,7 @@ def __span_anno_timeline_analysis(
     project_metadata_id: int,
     filter: Filter,
     annotation_aggregation_type: TAAnnotationAggregationType,
-) -> List[TimelineAnalysisRow]:
+) -> list[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
     match annotation_aggregation_type:
         case TAAnnotationAggregationType.UNIT:
@@ -572,7 +572,7 @@ def __bbox_anno_timeline_analysis(
     project_metadata_id: int,
     filter: Filter,
     annotation_aggregation_type: TAAnnotationAggregationType,
-) -> List[TimelineAnalysisRow]:
+) -> list[TimelineAnalysisRow]:
     # project_metadata_id has to refer to a DATE metadata
     match annotation_aggregation_type:
         case TAAnnotationAggregationType.UNIT:
@@ -613,10 +613,10 @@ def __anno_annotation_timeline_analysis(
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter,
-    annotation_orm: Union[
-        Type[SentenceAnnotationORM], Type[SpanAnnotationORM], Type[BBoxAnnotationORM]
-    ],
-) -> List[TimelineAnalysisRow]:
+    annotation_orm: Type[SentenceAnnotationORM]
+    | Type[SpanAnnotationORM]
+    | Type[BBoxAnnotationORM],
+) -> list[TimelineAnalysisRow]:
     # ANNOTATION = Count annotations
 
     builder = SearchBuilder(db, filter, sorts=[])
@@ -680,10 +680,10 @@ def __anno_document_timeline_analysis(
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter,
-    annotation_orm: Union[
-        Type[SentenceAnnotationORM], Type[SpanAnnotationORM], Type[BBoxAnnotationORM]
-    ],
-) -> List[TimelineAnalysisRow]:
+    annotation_orm: Type[SentenceAnnotationORM]
+    | Type[SpanAnnotationORM]
+    | Type[BBoxAnnotationORM],
+) -> list[TimelineAnalysisRow]:
     # DOCUMENT = Count documents
 
     builder = SearchBuilder(db, filter, sorts=[])

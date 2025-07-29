@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -13,13 +11,11 @@ class SentenceAnnotationExportSchema(BaseModel):
     code_name: str = Field(description="Name of the code assigned to the annotation")
     text_begin_sent: int = Field(description="Starting sentence ID of the annotation")
     text_end_sent: int = Field(description="Ending sentence ID of the annotation")
-    text: Optional[str] = Field(
-        description="Text content of the annotation", default=None
-    )
-    user_first_name: Optional[str] = Field(
+    text: str | None = Field(description="Text content of the annotation", default=None)
+    user_first_name: str | None = Field(
         description="First name of the user", default=None
     )
-    user_last_name: Optional[str] = Field(
+    user_last_name: str | None = Field(
         description="Last name of the user", default=None
     )
 
@@ -41,7 +37,7 @@ class SentenceAnnotationExportSchema(BaseModel):
 class SentenceAnnotationExportCollection(BaseModel):
     """Collection of sentence annotations for export/import operations."""
 
-    annotations: List[SentenceAnnotationExportSchema]
+    annotations: list[SentenceAnnotationExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "SentenceAnnotationExportCollection":

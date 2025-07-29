@@ -1,5 +1,3 @@
-from typing import List
-
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_crawling_job_async
@@ -44,12 +42,12 @@ def get_crawler_job(
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[CrawlerJobRead],
+    response_model=list[CrawlerJobRead],
     summary="Returns all CrawlerJobs for the given project ID if it exists",
 )
 def get_all_crawler_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[CrawlerJobRead]:
+) -> list[CrawlerJobRead]:
     authz_user.assert_in_project(project_id)
 
     crawler_jobs = cs.get_all_crawler_jobs(project_id=project_id)

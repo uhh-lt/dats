@@ -1,5 +1,4 @@
 import traceback
-from typing import Dict, Set
 
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
@@ -45,7 +44,7 @@ def persist_sentence_annotations(cargo: PipelineCargo) -> PipelineCargo:
                     db_code = crud_code.create(db, create_dto=create_dto)
 
                 # group by user
-                grouped_by_user_sent_annos: Dict[int, Set[AutoSentAnno]] = dict()
+                grouped_by_user_sent_annos: dict[int, set[AutoSentAnno]] = dict()
                 for sent_anno in pptd.sent_annos[code_name]:
                     if sent_anno.user_id not in grouped_by_user_sent_annos:
                         grouped_by_user_sent_annos[sent_anno.user_id] = set()

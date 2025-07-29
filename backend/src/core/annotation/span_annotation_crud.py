@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional
 from uuid import uuid4
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -63,8 +62,8 @@ class CRUDSpanAnnotation(
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[SpanAnnotationCreateIntern]
-    ) -> List[SpanAnnotationORM]:
+        self, db: Session, *, create_dtos: list[SpanAnnotationCreateIntern]
+    ) -> list[SpanAnnotationORM]:
         # first create the SpanText
         span_texts_orm = crud_span_text.create_multi(
             db=db,
@@ -95,19 +94,19 @@ class CRUDSpanAnnotation(
         return db_objs
 
     def create_bulk(
-        self, db: Session, *, user_id: int, create_dtos: List[SpanAnnotationCreate]
-    ) -> List[SpanAnnotationORM]:
+        self, db: Session, *, user_id: int, create_dtos: list[SpanAnnotationCreate]
+    ) -> list[SpanAnnotationORM]:
         # find affected sdocs
         sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
 
         # find project id for each sdoc_id
         sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
-        project_id_by_sdoc_id: Dict[int, int] = {}
+        project_id_by_sdoc_id: dict[int, int] = {}
         for sdoc in sdocs:
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        adoc_id_by_sdoc_id: dict[int, int] = {}
         for sdoc_id in sdoc_ids:
             adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
@@ -137,7 +136,7 @@ class CRUDSpanAnnotation(
         db: Session,
         *,
         project_id: int,
-    ) -> List[SpanAnnotationORM]:
+    ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
             .join(
@@ -161,7 +160,7 @@ class CRUDSpanAnnotation(
         *,
         project_id: int,
         uuid: str,
-    ) -> Optional[SpanAnnotationORM]:
+    ) -> SpanAnnotationORM | None:
         query = db.query(self.model).where(
             self.model.project_id == project_id,
             self.model.uuid == uuid,
@@ -175,7 +174,7 @@ class CRUDSpanAnnotation(
         user_id: int,
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[SpanAnnotationORM]:
+    ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -192,10 +191,10 @@ class CRUDSpanAnnotation(
         self,
         db: Session,
         *,
-        user_ids: List[int],
+        user_ids: list[int],
         sdoc_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[SpanAnnotationORM]:
+    ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -216,7 +215,7 @@ class CRUDSpanAnnotation(
         code_id: int,
         user_id: int,
         exclude_disabled_codes: bool = True,
-    ) -> List[SpanAnnotationORM]:
+    ) -> list[SpanAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -240,8 +239,8 @@ class CRUDSpanAnnotation(
         return span_anno
 
     def update_bulk(
-        self, db: Session, *, update_dtos: List[SpanAnnotationUpdateBulk]
-    ) -> List[SpanAnnotationORM]:
+        self, db: Session, *, update_dtos: list[SpanAnnotationUpdateBulk]
+    ) -> list[SpanAnnotationORM]:
         return [
             self.update(
                 db,
@@ -259,7 +258,7 @@ class CRUDSpanAnnotation(
 
         return span_anno
 
-    def remove_bulk(self, db: Session, *, ids: List[int]) -> List[SpanAnnotationORM]:
+    def remove_bulk(self, db: Session, *, ids: list[int]) -> list[SpanAnnotationORM]:
         span_annos = []
         for id in ids:
             span_annos.append(self.delete(db, id=id))
@@ -273,7 +272,7 @@ class CRUDSpanAnnotation(
 
         return span_annos
 
-    def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
+    def remove_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
         # find all span annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id

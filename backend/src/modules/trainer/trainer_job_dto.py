@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -31,7 +30,7 @@ class TrainerJobCreate(TrainerJobBaseDTO):
 
 # Properties to update
 class TrainerJobUpdate(TrainerJobBaseDTO, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         default=None, description="Status of the TrainerJob"
     )
 
@@ -42,7 +41,7 @@ class TrainerJobRead(TrainerJobBaseDTO):
     parameters: TrainerJobParameters = Field(
         description="The parameters of the TrainerJob that defines how to train!"
     )
-    saved_model_path: Optional[str] = Field(
+    saved_model_path: str | None = Field(
         default=None, description="The path to the saved model."
     )
     created: datetime = Field(description="Created timestamp of the TrainerJob")

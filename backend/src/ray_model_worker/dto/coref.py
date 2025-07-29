@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from pydantic import BaseModel, Field
 
 
@@ -10,18 +8,18 @@ class CorefBase(BaseModel):
 
 class CorefInputDoc(BaseModel):
     id: int
-    tokens: List[List[str]] = Field(description="tokens nested within sentences")
+    tokens: list[list[str]] = Field(description="tokens nested within sentences")
 
 
 class CorefOutputDoc(BaseModel):
     id: int
-    clusters: List[List[Tuple[int, int]]]
+    clusters: list[list[tuple[int, int]]]
 
 
 class CorefJobInput(CorefBase):
     language: str
-    documents: List[CorefInputDoc]
+    documents: list[CorefInputDoc]
 
 
 class CorefJobOutput(CorefBase):
-    documents: List[CorefOutputDoc]
+    documents: list[CorefOutputDoc]

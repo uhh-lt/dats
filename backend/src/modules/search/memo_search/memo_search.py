@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
@@ -15,17 +13,17 @@ from systems.search_system.sorting import Sort
 
 def memo_info(
     project_id: int,
-) -> List[ColumnInfo[MemoColumns]]:
+) -> list[ColumnInfo[MemoColumns]]:
     return [ColumnInfo[MemoColumns].from_column(column) for column in MemoColumns]
 
 
 def filter_memo_ids(
     project_id: int,
     filter: Filter[MemoColumns],
-    sorts: List[Sort[MemoColumns]],
-    page_number: Optional[int] = None,
-    page_size: Optional[int] = None,
-) -> Tuple[List[int], int]:
+    sorts: list[Sort[MemoColumns]],
+    page_number: int | None = None,
+    page_size: int | None = None,
+) -> tuple[list[int], int]:
     with SQLRepo().db_session() as db:
         builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
         builder.init_query(
@@ -50,9 +48,9 @@ def memo_search(
     search_query: str,
     search_content: bool,
     filter: Filter[MemoColumns],
-    sorts: List[Sort[MemoColumns]],
-    page_number: Optional[int],
-    page_size: Optional[int],
+    sorts: list[Sort[MemoColumns]],
+    page_number: int | None,
+    page_size: int | None,
 ) -> PaginatedElasticSearchHits:
     if search_query.strip() == "":
         memo_ids, total_results = filter_memo_ids(

@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from core.doc.folder_crud import crud_folder
 from core.doc.source_document_link_dto import SourceDocumentLinkCreate
 from core.doc.source_document_link_orm import SourceDocumentLinkORM
@@ -16,7 +14,7 @@ class CRUDSourceDocumentLink(
 
     def resolve_filenames_to_sdoc_ids(
         self, db: Session, proj_id: int
-    ) -> List[SourceDocumentLinkORM]:
+    ) -> list[SourceDocumentLinkORM]:
         query = db.query(self.model)
         query = query.join(
             SourceDocumentORM,
@@ -26,7 +24,7 @@ class CRUDSourceDocumentLink(
             self.model.linked_source_document_id.is_(None),
             SourceDocumentORM.project_id == proj_id,
         )
-        unresolved_links: List[SourceDocumentLinkORM] = query.all()
+        unresolved_links: list[SourceDocumentLinkORM] = query.all()
 
         query2 = db.query(SourceDocumentORM.filename, SourceDocumentORM.id)
         query2 = query2.filter(
@@ -35,11 +33,11 @@ class CRUDSourceDocumentLink(
             ),
             SourceDocumentORM.project_id == proj_id,
         )
-        sdoc_fn_to_id: Dict[str, int] = {filename: id for filename, id in query2.all()}
+        sdoc_fn_to_id: dict[str, int] = {filename: id for filename, id in query2.all()}
 
-        resolved_links: List[SourceDocumentLinkORM] = []
-        resolved_folders: List[SourceDocumentORM] = []
-        folders_to_be_deleted: List[int] = []
+        resolved_links: list[SourceDocumentLinkORM] = []
+        resolved_folders: list[SourceDocumentORM] = []
+        folders_to_be_deleted: list[int] = []
         for link in unresolved_links:
             # resolve links
             if link.linked_source_document_filename not in sdoc_fn_to_id:
@@ -66,7 +64,7 @@ class CRUDSourceDocumentLink(
 
     def get_linked_sdocs(
         self, db: Session, parent_sdoc_id: int
-    ) -> List[SourceDocumentLinkORM]:
+    ) -> list[SourceDocumentLinkORM]:
         db_obj = (
             db.query(self.model)
             .filter(self.model.parent_source_document_id == parent_sdoc_id)

@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 from uuid import uuid4
 
 import mammoth
@@ -14,14 +13,14 @@ cc = conf.celery
 fsr = FilesystemRepo()
 
 
-def __extract_content_in_html_from_word_docs(filepath: Path) -> Tuple[str, List[Path]]:
+def __extract_content_in_html_from_word_docs(filepath: Path) -> tuple[str, list[Path]]:
     if filepath.suffix != ".docx" and filepath.suffix != ".doc":
         logger.warning(f"File {filepath} is not a Word document!")
         return "", []
 
-    extracted_images: List[Path] = []
+    extracted_images: list[Path] = []
 
-    def convert_image(image) -> Dict[str, str]:
+    def convert_image(image) -> dict[str, str]:
         if not cc.preprocessing.extract_images_from_docx:
             return {"src": ""}
 

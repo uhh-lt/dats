@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from pydantic import BaseModel
@@ -10,7 +10,7 @@ T = TypeVar("T", bound=AbstractColumns)
 
 class ColumnInfo(BaseModel, Generic[T]):
     label: str
-    column: Union[T, int]  # TODO: Annotatoed[, SkipValidation] with pydantic 2.4
+    column: T | int  # TODO: Annotatoed[, SkipValidation] with pydantic 2.4
     sortable: bool
     operator: FilterOperator
     value: FilterValueType

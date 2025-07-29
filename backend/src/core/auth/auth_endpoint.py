@@ -1,5 +1,5 @@
 import json
-from typing import Annotated, Optional
+from typing import Annotated
 
 from common.dependencies import get_current_user, get_db_session, reusable_oauth2_scheme
 from core.auth.auth_exceptions import credentials_exception
@@ -237,7 +237,7 @@ async def sync_session(
     token: str = Depends(reusable_oauth2_scheme),
 ) -> None:
     payload = decode_jwt(token=token)
-    expire: Optional[str] = payload.get("exp")
+    expire: str | None = payload.get("exp")
     if expire is None:
         raise ValueError("Expiration time not found in token payload")
 

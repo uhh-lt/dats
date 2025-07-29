@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional
 from uuid import uuid4
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -50,19 +49,19 @@ class CRUDSentenceAnnotation(
         return db_obj
 
     def create_bulk(
-        self, db: Session, *, user_id: int, create_dtos: List[SentenceAnnotationCreate]
-    ) -> List[SentenceAnnotationORM]:
+        self, db: Session, *, user_id: int, create_dtos: list[SentenceAnnotationCreate]
+    ) -> list[SentenceAnnotationORM]:
         # find affected sdocs
         sdoc_ids = {create_dto.sdoc_id for create_dto in create_dtos}
 
         # find project id for each sdoc_id
         sdocs = crud_sdoc.read_by_ids(db=db, ids=list(sdoc_ids))
-        project_id_by_sdoc_id: Dict[int, int] = {}
+        project_id_by_sdoc_id: dict[int, int] = {}
         for sdoc in sdocs:
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: Dict[int, int] = {}
+        adoc_id_by_sdoc_id: dict[int, int] = {}
         for sdoc_id in sdoc_ids:
             adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
@@ -91,7 +90,7 @@ class CRUDSentenceAnnotation(
         db: Session,
         *,
         project_id: int,
-    ) -> List[SentenceAnnotationORM]:
+    ) -> list[SentenceAnnotationORM]:
         query = (
             db.query(self.model)
             .join(
@@ -115,7 +114,7 @@ class CRUDSentenceAnnotation(
         *,
         project_id: int,
         uuid: str,
-    ) -> Optional[SentenceAnnotationORM]:
+    ) -> SentenceAnnotationORM | None:
         query = db.query(self.model).where(
             self.model.project_id == project_id,
             self.model.uuid == uuid,
@@ -128,7 +127,7 @@ class CRUDSentenceAnnotation(
         *,
         user_id: int,
         sdoc_id: int,
-    ) -> List[SentenceAnnotationORM]:
+    ) -> list[SentenceAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -144,9 +143,9 @@ class CRUDSentenceAnnotation(
         self,
         db: Session,
         *,
-        user_ids: List[int],
+        user_ids: list[int],
         sdoc_id: int,
-    ) -> List[SentenceAnnotationORM]:
+    ) -> list[SentenceAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -160,7 +159,7 @@ class CRUDSentenceAnnotation(
 
     def read_by_code_and_user(
         self, db: Session, *, code_id: int, user_id: int
-    ) -> List[SentenceAnnotationORM]:
+    ) -> list[SentenceAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -171,19 +170,19 @@ class CRUDSentenceAnnotation(
 
         return query.all()
 
-    def read_by_code(self, db: Session, *, code_id: int) -> List[SentenceAnnotationORM]:
+    def read_by_code(self, db: Session, *, code_id: int) -> list[SentenceAnnotationORM]:
         query = db.query(self.model).filter(self.model.code_id == code_id)
         return query.all()
 
     def read_by_codes(
-        self, db: Session, *, code_ids: List[int]
-    ) -> List[SentenceAnnotationORM]:
+        self, db: Session, *, code_ids: list[int]
+    ) -> list[SentenceAnnotationORM]:
         query = db.query(self.model).filter(self.model.code_id.in_(code_ids))
         return query.all()
 
     def read_by_user_sdocs_codes(
-        self, db: Session, *, user_id: int, sdoc_ids: List[int], code_ids: List[int]
-    ) -> List[SentenceAnnotationORM]:
+        self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
+    ) -> list[SentenceAnnotationORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -207,8 +206,8 @@ class CRUDSentenceAnnotation(
         return sentence_anno
 
     def update_bulk(
-        self, db: Session, *, update_dtos: List[SentenceAnnotationUpdateBulk]
-    ) -> List[SentenceAnnotationORM]:
+        self, db: Session, *, update_dtos: list[SentenceAnnotationUpdateBulk]
+    ) -> list[SentenceAnnotationORM]:
         return [
             self.update(
                 db,
@@ -228,8 +227,8 @@ class CRUDSentenceAnnotation(
         return sentence_anno
 
     def delete_bulk(
-        self, db: Session, *, ids: List[int]
-    ) -> List[SentenceAnnotationORM]:
+        self, db: Session, *, ids: list[int]
+    ) -> list[SentenceAnnotationORM]:
         sentence_annos = []
         for id in ids:
             sentence_annos.append(self.delete(db, id=id))
@@ -245,7 +244,7 @@ class CRUDSentenceAnnotation(
 
         return sentence_annos
 
-    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
+    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
         # find all sentence annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id

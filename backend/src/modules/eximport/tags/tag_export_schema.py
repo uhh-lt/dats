@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -9,8 +7,8 @@ class TagExportSchema(BaseModel):
 
     tag_name: str = Field(description="Unique name of the tag within a project")
     description: str = Field(description="Description of the tag", default="")
-    color: Optional[str] = Field(description="Color of the tag", default=None)
-    parent_tag_name: Optional[str] = Field(
+    color: str | None = Field(description="Color of the tag", default=None)
+    parent_tag_name: str | None = Field(
         description="Name of the parent tag", default=None
     )
 
@@ -25,7 +23,7 @@ class TagExportSchema(BaseModel):
 class TagExportCollection(BaseModel):
     """Collection of tags for export/import operations."""
 
-    tags: List[TagExportSchema]
+    tags: list[TagExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "TagExportCollection":

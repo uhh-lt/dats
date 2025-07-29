@@ -1,10 +1,9 @@
 import re
 import unicodedata
 from pathlib import Path
-from typing import Union
 
 
-def validate_output_dir(output_dir: Union[str, None]) -> Path:
+def validate_output_dir(output_dir: str | None) -> Path:
     if output_dir is None:
         print(
             "You have to provide an output directory with -a output_dir=/path/to/directory"

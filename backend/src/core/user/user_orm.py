@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, Integer, String, func
@@ -36,21 +36,21 @@ class UserORM(ORMBase):
     )
 
     # one to many
-    annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
+    annotation_documents: Mapped[list["AnnotationDocumentORM"]] = relationship(
         "AnnotationDocumentORM",
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    memos: Mapped[List["MemoORM"]] = relationship(
+    memos: Mapped[list["MemoORM"]] = relationship(
         "MemoORM",
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    refresh_tokens: Mapped[List["RefreshTokenORM"]] = relationship(
+    refresh_tokens: Mapped[list["RefreshTokenORM"]] = relationship(
         "RefreshTokenORM",
         back_populates="user",
         cascade="all, delete-orphan",
@@ -58,7 +58,7 @@ class UserORM(ORMBase):
     )
 
     # many to many
-    projects: Mapped[List["ProjectORM"]] = relationship(
+    projects: Mapped[list["ProjectORM"]] = relationship(
         "ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users"
     )
 

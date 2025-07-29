@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi.encoders import jsonable_encoder
 from modules.ml.source_document_job_status_dto import (
     SourceDocumentJobStatusCreate,
@@ -19,8 +17,8 @@ class CRUDSourceDocumentJobStatus(
     ]
 ):
     def create_multi(
-        self, db: Session, *, create_dtos: List[SourceDocumentJobStatusCreate]
-    ) -> List[SourceDocumentJobStatusORM]:
+        self, db: Session, *, create_dtos: list[SourceDocumentJobStatusCreate]
+    ) -> list[SourceDocumentJobStatusORM]:
         db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         q = db.query(self.model).where(
             or_(

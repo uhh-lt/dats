@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from loguru import logger
@@ -22,7 +21,7 @@ def export_selected_whiteboards(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    whiteboard_ids: List[int],
+    whiteboard_ids: list[int],
 ) -> Path:
     """
     Export selected whiteboards by their IDs.
@@ -80,7 +79,7 @@ def __export_whiteboards(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    whiteboards: List[WhiteboardORM],
+    whiteboards: list[WhiteboardORM],
 ) -> Path:
     """
     Export a list of whiteboards to a CSV file.
@@ -109,7 +108,7 @@ def __export_whiteboards(
 
 def __generate_export_df_for_whiteboards(
     db: Session,
-    whiteboards: List[WhiteboardORM],
+    whiteboards: list[WhiteboardORM],
 ) -> pd.DataFrame:
     """
     Generate a DataFrame from a list of whiteboards.

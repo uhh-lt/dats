@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import magic
 from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
@@ -44,14 +44,14 @@ class PreprocessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls._pipelines: Dict[DocType, PreprocessingPipeline] = dict()
+        cls._pipelines: dict[DocType, PreprocessingPipeline] = dict()
 
         return super(PreprocessingService, cls).__new__(cls)
 
     def _store_uploaded_files_and_create_payloads(
-        self, proj_id: int, uploaded_files: List[UploadFile]
-    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
-        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
+        self, proj_id: int, uploaded_files: list[UploadFile]
+    ) -> list[PreprocessingJobPayloadCreateWithoutPreproJobId]:
+        payloads: list[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
         for uploaded_file in uploaded_files:
             mime_type = uploaded_file.content_type
             if mime_type is None:
@@ -98,10 +98,10 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _create_ppj_payloads_from_unimported_project_files(
         self,
-        unimported_project_files: List[Path],
+        unimported_project_files: list[Path],
         project_id: int,
-    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
-        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
+    ) -> list[PreprocessingJobPayloadCreateWithoutPreproJobId]:
+        payloads: list[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
         for file_path in tqdm(
             unimported_project_files,
@@ -142,9 +142,9 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _extract_archive_and_create_payloads(
         self, project_id: int, archive_file_path: Path
-    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
+    ) -> list[PreprocessingJobPayloadCreateWithoutPreproJobId]:
         # store and extract the archive
-        file_dsts: List[Path] = self.fsr.extract_archive_in_project(
+        file_dsts: list[Path] = self.fsr.extract_archive_in_project(
             proj_id=project_id, archive_path=archive_file_path
         )
         return self._create_ppj_payloads_from_unimported_project_files(
@@ -154,7 +154,7 @@ class PreprocessingService(metaclass=SingletonMeta):
     def _create_and_store_preprocessing_job(
         self,
         proj_id: int,
-        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId],
+        payloads: list[PreprocessingJobPayloadCreateWithoutPreproJobId],
     ) -> PreprocessingJobRead:
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
         try:
@@ -178,9 +178,9 @@ class PreprocessingService(metaclass=SingletonMeta):
     def _create_pipeline_cargos_from_preprocessing_job(
         self,
         ppj: PreprocessingJobRead,
-    ) -> Dict[DocType, List[PipelineCargo]]:
+    ) -> dict[DocType, list[PipelineCargo]]:
         # create the PipelineCargos for the different DocTypes
-        cargos: Dict[DocType, List[PipelineCargo]] = dict()
+        cargos: dict[DocType, list[PipelineCargo]] = dict()
         for payload in ppj.payloads:
             if payload.doc_type not in cargos:
                 cargos[payload.doc_type] = [
@@ -195,10 +195,10 @@ class PreprocessingService(metaclass=SingletonMeta):
     def _create_pipeline_cargos_from_preprocessing_job_with_data(
         self,
         ppj: PreprocessingJobRead,
-        sdoc_specific_payloads: Dict[str, Dict[str, Any]],
-    ) -> Dict[DocType, List[PipelineCargo]]:
+        sdoc_specific_payloads: dict[str, dict[str, Any]],
+    ) -> dict[DocType, list[PipelineCargo]]:
         # create the PipelineCargos for the different DocTypes
-        cargos: Dict[DocType, List[PipelineCargo]] = dict()
+        cargos: dict[DocType, list[PipelineCargo]] = dict()
         # init them with empty lists
         for doc_type in DocType:
             cargos[doc_type] = []
@@ -258,7 +258,7 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _create_and_start_preprocessing_job_from_payloads_async(
         self,
-        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId],
+        payloads: list[PreprocessingJobPayloadCreateWithoutPreproJobId],
         proj_id: int,
     ) -> PreprocessingJobRead:
         logger.info(
@@ -305,9 +305,9 @@ class PreprocessingService(metaclass=SingletonMeta):
         self,
         *,
         proj_id: int,
-        uploaded_files: Optional[List[UploadFile]] = None,
-        archive_file_path: Optional[Path] = None,
-        unimported_project_files: Optional[List[Path]] = None,
+        uploaded_files: list[UploadFile] | None = None,
+        archive_file_path: Path | None = None,
+        unimported_project_files: list[Path] | None = None,
     ) -> PreprocessingJobRead:
         if (
             uploaded_files is not None

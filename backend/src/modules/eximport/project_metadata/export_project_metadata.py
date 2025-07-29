@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -32,7 +31,7 @@ def __export_project_metadatas(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    project_metadatas: List[ProjectMetadataORM],
+    project_metadatas: list[ProjectMetadataORM],
 ) -> Path:
     if len(project_metadatas) == 0:
         raise NoDataToExportError("No project metadata to export.")
@@ -47,7 +46,7 @@ def __export_project_metadatas(
 
 
 def __generate_export_df_for_project_metadata(
-    project_metadatas: List[ProjectMetadataORM],
+    project_metadatas: list[ProjectMetadataORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(project_metadatas)} Project Metadata items...")
     metadata_export_items = []

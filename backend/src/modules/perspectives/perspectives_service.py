@@ -1,7 +1,7 @@
 import re
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable
 
 import joblib
 import matplotlib.pyplot as plt
@@ -56,7 +56,7 @@ from sqlalchemy.orm import Session
 from umap import UMAP
 from weaviate import WeaviateClient
 
-TMJUpdateFN = Callable[[Optional[int], Optional[str]], PerspectivesJobRead]
+TMJUpdateFN = Callable[[int | None, str | None], PerspectivesJobRead]
 
 
 class PerspectivesService:
@@ -93,7 +93,7 @@ class PerspectivesService:
         class OllamaResponse(BaseModel):
             content: str
 
-        create_dtos: List[DocumentAspectCreate] = []
+        create_dtos: list[DocumentAspectCreate] = []
         if aspect.doc_modification_prompt:
             # if prompt is provided, use ollama to generate a modified document
             for idx, (sdoc_id, sdoc_content) in enumerate(sdoc_data):
@@ -142,10 +142,10 @@ class PerspectivesService:
         aspect_id: int,
         embedding_model: str,
         embedding_prompt: str,
-        doc_aspects: List[DocumentAspectORM],
-        train_docs: Optional[List[str]] = None,
-        train_labels: Optional[List[str]] = None,
-    ) -> Tuple[List[List[float]], List[Tuple[float, float]]]:
+        doc_aspects: list[DocumentAspectORM],
+        train_docs: list[str] | None = None,
+        train_labels: list[str] | None = None,
+    ) -> tuple[list[list[float]], list[tuple[float, float]]]:
         assert len(doc_aspects) > 0, "No document aspects provided."
 
         # 1. Embed the document aspects
@@ -219,9 +219,9 @@ class PerspectivesService:
         doc_id2_dt = {dt.sdoc_id: dt for dt in doc_clusters}
 
         # Prepare data for the map
-        coords_x: List[float] = []
-        coords_y: List[float] = []
-        labels: List[int] = []
+        coords_x: list[float] = []
+        coords_y: list[float] = []
+        labels: list[int] = []
         for da in doc_aspects:
             coords_x.append(da.x)
             coords_y.append(da.y)
@@ -258,9 +258,9 @@ class PerspectivesService:
         db: Session,
         client: WeaviateClient,
         aspect_id: int,
-        sdoc_ids: Optional[List[int]] = None,
-        train_docs: Optional[List[str]] = None,
-        train_labels: Optional[List[str]] = None,
+        sdoc_ids: list[int] | None = None,
+        train_docs: list[str] | None = None,
+        train_labels: list[str] | None = None,
     ):
         """
         Embeds all DocumentAspects of the given Aspect:
@@ -334,8 +334,8 @@ class PerspectivesService:
 
     def __find_new_to_old_cluster_mapping(
         self,
-        labeled_documents: List[Tuple[int, int]],
-    ) -> Dict[int, int]:
+        labeled_documents: list[tuple[int, int]],
+    ) -> dict[int, int]:
         """
         Maps new cluster IDs to the most frequent old cluster ID.
 
@@ -348,13 +348,13 @@ class PerspectivesService:
             Dictionary mapping new_cluster_id (int) to its most frequent
             associated old_cluster_id (int).
         """
-        new_cluster_to_old_cluster_candidates: Dict[int, List[int]] = defaultdict(list)
+        new_cluster_to_old_cluster_candidates: dict[int, list[int]] = defaultdict(list)
 
         # Group old_ids by new_id
         for old_id, new_id in labeled_documents:
             new_cluster_to_old_cluster_candidates[new_id].append(old_id)
 
-        final_mapping: Dict[int, int] = {}
+        final_mapping: dict[int, int] = {}
         # For each new_id, find the most common old_id
         for new_id, old_id_list in new_cluster_to_old_cluster_candidates.items():
             count: Counter[int] = Counter(old_id_list)
@@ -368,11 +368,11 @@ class PerspectivesService:
         db: Session,
         client: WeaviateClient,
         aspect_id: int,
-        sdoc_ids: Optional[List[int]],
-        num_clusters: Optional[int],
-        train_doc_ids: List[int] = [],
-        train_cluster_ids: List[int] = [],
-    ) -> List[int]:
+        sdoc_ids: list[int] | None,
+        num_clusters: int | None,
+        train_doc_ids: list[int] = [],
+        train_cluster_ids: list[int] = [],
+    ) -> list[int]:
         """
         Clusters the document aspects of the given Aspect using HDBSCAN.
         If sdoc_ids are provided, only those source documents will be clustered.
@@ -428,11 +428,11 @@ class PerspectivesService:
         # 4. Storing / reusing the clusters
         if len(train_doc_ids) > 0 and len(train_cluster_ids) > 0:
             # Either: Reuse existing clusters, automatically inferring a mapping from existing clusters to clusters
-            train_doc2top: Dict[int, int] = {
+            train_doc2top: dict[int, int] = {
                 doc_id: cluster_id
                 for doc_id, cluster_id in zip(train_doc_ids, train_cluster_ids)
             }
-            new_doc2top: Dict[int, int] = {
+            new_doc2top: dict[int, int] = {
                 da.sdoc_id: cluster for da, cluster in zip(doc_aspects, hdb_clusters)
             }
             labeled_docs = [
@@ -458,7 +458,7 @@ class PerspectivesService:
                 db=db, aspect_id=aspect_id
             )
             sdoc_id2doccluster = {dt.sdoc_id: dt for dt in doc_clusters}
-            update_dtos: List[DocumentClusterUpdate] = []
+            update_dtos: list[DocumentClusterUpdate] = []
             update_ids: list[tuple[int, int]] = []
             for da, hdb_cluster in zip(doc_aspects, hdb_clusters):
                 if da.sdoc_id in train_doc_ids:
@@ -497,7 +497,7 @@ class PerspectivesService:
 
         else:
             # Or: Store the clusters (clusters) in the DB
-            hdb_cluster_id2db_cluster_id: Dict[int, int] = {}
+            hdb_cluster_id2db_cluster_id: dict[int, int] = {}
 
             # Treat outlier cluster separately. We only want 1 outlier cluster per aspect.
             if -1 in hdb_cluster_ids:
@@ -550,7 +550,7 @@ class PerspectivesService:
 
         return list(hdb_cluster_id2db_cluster_id.values())
 
-    def __preprocess_text(self, documents: List[str]) -> List[str]:
+    def __preprocess_text(self, documents: list[str]) -> list[str]:
         r"""Basic preprocessing of text.
 
         Steps:
@@ -571,8 +571,8 @@ class PerspectivesService:
 
     def __c_tf_idf(
         self,
-        documents_per_cluster: List[str],
-    ) -> Tuple[np.ndarray, List[str]]:
+        documents_per_cluster: list[str],
+    ) -> tuple[np.ndarray, list[str]]:
         """Calculate a class-based TF-IDF where m is the number of total documents.
 
         Arguments:
@@ -607,17 +607,17 @@ class PerspectivesService:
     def __compute_top_words(
         self,
         db: Session,
-        all_cluster_ids: List[int],
-        doc_aspects: List[DocumentAspectORM],
-        assigned_clusters: List[int],
-    ) -> Tuple[Dict[int, List[str]], Dict[int, List[float]]]:
+        all_cluster_ids: list[int],
+        doc_aspects: list[DocumentAspectORM],
+        assigned_clusters: list[int],
+    ) -> tuple[dict[int, list[str]], dict[int, list[float]]]:
         # 1.1. Group the documents by cluster, creating a "big" clusterdocument per cluster, which is required by c-TF-IDF
-        cluster_to_doc_aspects: Dict[int, List[DocumentAspectORM]] = {
+        cluster_to_doc_aspects: dict[int, list[DocumentAspectORM]] = {
             cid: [] for cid in all_cluster_ids
         }
         for da, cluster_id in zip(doc_aspects, assigned_clusters):
             cluster_to_doc_aspects[cluster_id].append(da)
-        cluster_to_clusterdoc: Dict[int, str] = {
+        cluster_to_clusterdoc: dict[int, str] = {
             cid: " ".join([da.content for da in cluster_to_doc_aspects[cid]])
             if len(cluster_to_doc_aspects[cid]) > 0
             else "emptydoc"
@@ -638,8 +638,8 @@ class PerspectivesService:
         # 1.3. Find the most important words for each cluster
         # Use numpy to get top-k values and indices for each cluster (row)
         k = 50
-        top_words: Dict[int, List[str]] = {}
-        top_word_scores: Dict[int, List[float]] = {}
+        top_words: dict[int, list[str]] = {}
+        top_word_scores: dict[int, list[float]] = {}
         for row, cluster_id in zip(c_tf_idf, all_cluster_ids):
             # Get indices of top-k elements in descending order
             if len(row) < k:
@@ -660,7 +660,7 @@ class PerspectivesService:
         db: Session,
         client: WeaviateClient,
         aspect_id: int,
-        cluster_ids: Optional[List[int]],
+        cluster_ids: list[int] | None,
     ):
         """
         Extracts all topis of the given Aspect by:
@@ -691,7 +691,7 @@ class PerspectivesService:
         )
         doc_clusters.sort(key=lambda dt: dt.sdoc_id)  # Sort by source document ID
 
-        assigned_clusters: List[int] = []
+        assigned_clusters: list[int] = []
         assert len(doc_aspects) == len(doc_clusters), (
             "The number of aspects and cluster assignments does not match."
         )
@@ -725,8 +725,8 @@ class PerspectivesService:
             description: str
             title: str
 
-        cluster_name: Dict[int, str] = {}
-        cluster_description: Dict[int, str] = {}
+        cluster_name: dict[int, str] = {}
+        cluster_description: dict[int, str] = {}
         self._log_status_msg("Generating cluster names and descriptions with LLM...")
         for cluster_id in cluster_ids_to_update:
             tw = top_words[cluster_id]
@@ -759,13 +759,13 @@ class PerspectivesService:
         self._log_status_msg(
             f"Computing cluster embeddings & top documents for {len(cluster_ids_to_update)} clusters."
         )
-        cluster_centroids: Dict[int, np.ndarray] = {}
-        cluster_coordinates: Dict[int, np.ndarray] = {}
-        top_docs: Dict[int, List[int]] = {}
-        distance_update_ids: List[
-            Tuple[int, int]
+        cluster_centroids: dict[int, np.ndarray] = {}
+        cluster_coordinates: dict[int, np.ndarray] = {}
+        top_docs: dict[int, list[int]] = {}
+        distance_update_ids: list[
+            tuple[int, int]
         ] = []  # List of (sdoc_id, cluster_id) tuples
-        distance_update_dtos: List[DocumentClusterUpdate] = []
+        distance_update_dtos: list[DocumentClusterUpdate] = []
         for cluster_id in cluster_ids_to_update:
             doc_coordinates = coordinates[assigned_clusters_arr == cluster_id]
             doc_embeddings = embeddings[assigned_clusters_arr == cluster_id]
@@ -818,7 +818,7 @@ class PerspectivesService:
         )
 
         # ... store the clusters in the database
-        update_dtos: List[ClusterUpdateIntern] = []
+        update_dtos: list[ClusterUpdateIntern] = []
         for cluster_id in cluster_ids_to_update:
             update_dtos.append(
                 ClusterUpdateIntern(
@@ -910,7 +910,7 @@ class PerspectivesService:
                 document_clusters = crud_document_cluster.read_by_aspect_id(
                     db=db, aspect_id=aspect.id
                 )
-                doc2cluster: Dict[int, DocumentClusterORM] = {
+                doc2cluster: dict[int, DocumentClusterORM] = {
                     dt.sdoc_id: dt for dt in document_clusters
                 }
                 assert len(document_clusters) == len(doc2cluster), (
@@ -953,9 +953,9 @@ class PerspectivesService:
                 # - For all source documents in the aspect, decide whether to assign the new cluster or not. Track the changes/affected clusters!
                 # - Do not reassign documents that are accepted
                 self._log_status_step(1)
-                update_dtos: List[DocumentClusterUpdate] = []
-                update_ids: List[tuple[int, int]] = []
-                modified_clusters: Set[int] = set()
+                update_dtos: list[DocumentClusterUpdate] = []
+                update_ids: list[tuple[int, int]] = []
+                modified_clusters: set[int] = set()
                 results = crud_aspect_embedding.search_near_vector_in_aspect(
                     client=client,
                     project_id=aspect.project_id,
@@ -1020,7 +1020,7 @@ class PerspectivesService:
             document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
             )
-            doc2cluster: Dict[int, DocumentClusterORM] = {
+            doc2cluster: dict[int, DocumentClusterORM] = {
                 dt.sdoc_id: dt for dt in document_clusters
             }
             assert len(document_clusters) == len(doc2cluster), (
@@ -1048,7 +1048,7 @@ class PerspectivesService:
                 f"Assigning new cluster {new_cluster.id} to {len(params.sdoc_ids)} source documents..."
             )
             # track the changes/affected clusters!
-            modified_clusters: Set[int] = set(
+            modified_clusters: set[int] = set(
                 [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
             )
             modified_clusters.add(new_cluster.id)
@@ -1139,9 +1139,9 @@ class PerspectivesService:
                 similarities = document_embeddings @ cluster_embeddings.T
 
                 # - For each document aspect, find the most similar cluster embedding and update the document cluster assignment
-                modified_clusters: Set[int] = set()
-                sdoc_id2new_cluster_id: Dict[int, int] = {}
-                sdoc_id2new_cluster_distance: Dict[int, float] = {}
+                modified_clusters: set[int] = set()
+                sdoc_id2new_cluster_id: dict[int, int] = {}
+                sdoc_id2new_cluster_distance: dict[int, float] = {}
                 for da, similarity in zip(doc_aspects, similarities):
                     most_similar_cluster_index = np.argmax(similarity)
                     most_similar_cluster_id = cluster_ids[most_similar_cluster_index]
@@ -1153,8 +1153,8 @@ class PerspectivesService:
                     modified_clusters.add(most_similar_cluster_id)
 
                 # - Update the document-cluster assignments in the database
-                update_dtos: List[DocumentClusterUpdate] = []
-                update_ids: List[tuple[int, int]] = []
+                update_dtos: list[DocumentClusterUpdate] = []
+                update_ids: list[tuple[int, int]] = []
                 for dt in document_clusters:
                     update_dtos.append(
                         DocumentClusterUpdate(
@@ -1320,7 +1320,7 @@ class PerspectivesService:
             document_clusters = crud_document_cluster.read_by_aspect_id(
                 db=db, aspect_id=aspect_id
             )
-            doc2cluster: Dict[int, DocumentClusterORM] = {
+            doc2cluster: dict[int, DocumentClusterORM] = {
                 dt.sdoc_id: dt for dt in document_clusters
             }
 
@@ -1331,7 +1331,7 @@ class PerspectivesService:
                 f"Assigning the cluster '{cluster.name}' to {len(params.sdoc_ids)} documents..."
             )
             # track the changes/affected clusters!
-            modified_clusters: Set[int] = set(
+            modified_clusters: set[int] = set(
                 [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
             )
             modified_clusters.add(cluster_id)
@@ -1365,7 +1365,7 @@ class PerspectivesService:
         self,
         db: Session,
         aspect_id: int,
-    ) -> Tuple[List[str], List[str], List[int]]:
+    ) -> tuple[list[str], list[str], list[int]]:
         # Read the aspect
         aspect = crud_aspect.read(db=db, id=aspect_id)
 
@@ -1373,11 +1373,11 @@ class PerspectivesService:
         all_clusters = crud_cluster.read_by_aspect_and_level(
             db=db, aspect_id=aspect.id, level=0
         )
-        cluster2accepted_docs: Dict[int, List[int]] = {t.id: [] for t in all_clusters}
+        cluster2accepted_docs: dict[int, list[int]] = {t.id: [] for t in all_clusters}
 
         # Read the document aspects
         doc_aspects = aspect.document_aspects
-        sdoc_id2doc_aspect: Dict[int, DocumentAspectORM] = {
+        sdoc_id2doc_aspect: dict[int, DocumentAspectORM] = {
             da.sdoc_id: da for da in doc_aspects
         }
 
@@ -1390,9 +1390,9 @@ class PerspectivesService:
                 cluster2accepted_docs[dt.cluster_id].append(dt.sdoc_id)
 
         # Build training_data
-        train_labels: List[str] = []
-        train_docs: List[str] = []
-        train_doc_ids: List[int] = []
+        train_labels: list[str] = []
+        train_docs: list[str] = []
+        train_doc_ids: list[int] = []
         for cluster in all_clusters:
             if cluster.is_outlier:
                 continue

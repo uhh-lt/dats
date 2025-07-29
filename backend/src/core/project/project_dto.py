@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -18,8 +17,8 @@ class ProjectCreate(ProjectBaseDTO):
 
 # Properties for updating
 class ProjectUpdate(BaseModel, UpdateDTOBase):
-    title: Optional[str] = Field(description="Title of the Project", default=None)
-    description: Optional[str] = Field(
+    title: str | None = Field(description="Title of the Project", default=None)
+    description: str | None = Field(
         description="Description of the Project", default=None
     )
 

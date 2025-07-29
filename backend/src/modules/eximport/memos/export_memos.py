@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -26,7 +25,7 @@ def export_selected_memos(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    memo_ids: List[int],
+    memo_ids: list[int],
 ) -> Path:
     memos = crud_memo.read_by_ids(db=db, ids=memo_ids)
     return __export_memos(
@@ -55,7 +54,7 @@ def __export_memos(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    memos: List[MemoORM],
+    memos: list[MemoORM],
 ) -> Path:
     if len(memos) == 0:
         raise NoDataToExportError("No memos to export.")
@@ -69,7 +68,7 @@ def __export_memos(
 
 def __generate_export_df_for_memos(
     db: Session,
-    memos: List[MemoORM],
+    memos: list[MemoORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(memos)} Memos ...")
 

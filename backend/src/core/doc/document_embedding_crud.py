@@ -1,5 +1,3 @@
-from typing import Optional
-
 from core.doc.document_collection import DocumentCollection
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
@@ -20,7 +18,7 @@ class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollectio
         sdoc_id: int,
         k: int,
         threshold: float,
-        sdoc_ids: Optional[list[int]] = None,
+        sdoc_ids: list[int] | None = None,
     ):
         """
         Search for documents near a SourceDocument

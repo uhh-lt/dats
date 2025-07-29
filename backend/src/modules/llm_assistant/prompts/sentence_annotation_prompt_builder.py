@@ -1,5 +1,4 @@
 import random
-from typing import Dict, List, Optional
 
 from config import conf
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -23,7 +22,7 @@ class OllamaSentenceAnnotationResult(BaseModel):
 
 
 class OllamaSentenceAnnotationResults(BaseModel):
-    data: List[OllamaSentenceAnnotationResult]
+    data: list[OllamaSentenceAnnotationResult]
 
 
 # ENGLISH
@@ -97,8 +96,8 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         self.codeid2name_dict = {code.id: code.name for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}
 
-    def _build_example(self, language: str, code_ids: List[int]) -> str:
-        examples: List[str] = []
+    def _build_example(self, language: str, code_ids: list[int]) -> str:
+        examples: list[str] = []
         for code_id in code_ids:
             if code_id not in self.codeid2name_dict:
                 continue
@@ -119,8 +118,8 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         self,
         *,
         language: str,
-        code_ids: List[int],
-        example_ids: Optional[List[int]] = None,
+        code_ids: list[int],
+        example_ids: list[int] | None = None,
         **kwargs,
     ) -> str:
         if self.is_fewshot:
@@ -143,7 +142,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                     db=self.db, ids=example_ids
                 )
 
-            code_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {
+            code_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {
                 code_id: [] for code_id in code_ids
             }
             for sa in sentence_annotations:
@@ -200,7 +199,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
 
     def parse_result(
         self, result: OllamaSentenceAnnotationResults
-    ) -> List[OllamaParsedSentenceAnnotationResult]:
+    ) -> list[OllamaParsedSentenceAnnotationResult]:
         parsed_results = []
         for annotation in result.data:
             if annotation.category.lower() not in self.codename2id_dict:

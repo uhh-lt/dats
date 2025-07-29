@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -126,7 +124,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db: Session,
         *,
         project_id: int,
-    ) -> List[MemoORM]:
+    ) -> list[MemoORM]:
         query = db.query(self.model).where(
             self.model.project_id == project_id,
         )
@@ -138,7 +136,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         *,
         project_id: int,
         uuid: str,
-    ) -> Optional[MemoORM]:
+    ) -> MemoORM | None:
         query = db.query(self.model).where(
             self.model.project_id == project_id,
             self.model.uuid == uuid,
@@ -150,8 +148,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         db: Session,
         user_id: int,
         proj_id: int,
-        only_starred: Optional[bool],
-    ) -> List[MemoORM]:
+        only_starred: bool | None,
+    ) -> list[MemoORM]:
         if only_starred:
             return (
                 db.query(self.model)
@@ -197,7 +195,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     def delete_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int
-    ) -> List[int]:
+    ) -> list[int]:
         # find all memos to be removed
         query = db.query(self.model).filter(
             self.model.user_id == user_id, self.model.project_id == proj_id

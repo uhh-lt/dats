@@ -1,5 +1,3 @@
-from typing import List
-
 from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 from pydantic import BaseModel
@@ -7,12 +5,12 @@ from sqlalchemy.orm import Session
 
 
 class OllamaParsedDocumentTaggingResult(BaseModel):
-    tag_ids: List[int]
+    tag_ids: list[int]
     reasoning: str
 
 
 class OllamaDocumentTaggingResult(BaseModel):
-    categories: List[str]
+    categories: list[str]
     reasoning: str
 
 
@@ -90,7 +88,7 @@ class TaggingPromptBuilder(PromptBuilder):
         return self.example_templates[language].format(tag.name, tag.name)
 
     def _build_user_prompt_template(
-        self, *, language: str, tag_ids: List[int], **kwargs
+        self, *, language: str, tag_ids: list[int], **kwargs
     ) -> str:
         # create task data (the list of tags to use for classification)
         task_data = "\n".join(

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, List, Set, TypeVar, Union
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
@@ -35,16 +35,16 @@ class LogicalOperator(str, Enum):
 
 class FilterExpression(BaseModel, Generic[T]):
     id: str
-    column: Union[T, int]
-    operator: Union[
-        IDOperator,
-        NumberOperator,
-        StringOperator,
-        IDListOperator,
-        ListOperator,
-        DateOperator,
-        BooleanOperator,
-    ]
+    column: T | int
+    operator: (
+        IDOperator
+        | NumberOperator
+        | StringOperator
+        | IDListOperator
+        | ListOperator
+        | DateOperator
+        | BooleanOperator
+    )
     value: FilterValue
 
     def get_sqlalchemy_expression(self, subquery_dict):
@@ -151,7 +151,7 @@ class Filter(BaseModel, Generic[T]):
     comparisons."""
 
     id: str
-    items: List[Union[FilterExpression[T], "Filter[T]"]]
+    items: list[FilterExpression[T] | "Filter[T]"]
     logic_operator: LogicalOperator
 
     def get_sqlalchemy_expression(self, subquery_dict):
@@ -169,7 +169,7 @@ class Filter(BaseModel, Generic[T]):
         """
 
         resolved = filter.model_copy(deep=True)
-        resolved_items: List[Union[FilterExpression[T], "Filter[T]"]] = []
+        resolved_items: list[FilterExpression[T] | "Filter[T]"] = []
 
         # Resolve IDs for each FilterExpression in the filter
         for item in filter.items:
@@ -195,7 +195,7 @@ class Filter(BaseModel, Generic[T]):
         """
 
         resolved = filter.model_copy(deep=True)
-        resolved_items: List[Union[FilterExpression[T], "Filter[T]"]] = []
+        resolved_items: list[FilterExpression[T] | "Filter[T]"] = []
 
         # Resolve names for each FilterExpression in the filter
         for item in filter.items:
@@ -221,8 +221,8 @@ def apply_filtering(
     return query.filter(filter.get_sqlalchemy_expression(subquery_dict))
 
 
-def get_columns_affected_by_filter(filter: Filter[T]) -> Set[Union[T, int]]:
-    columns: Set[Union[T, int]] = set()
+def get_columns_affected_by_filter(filter: Filter[T]) -> set[T | int]:
+    columns: set[T | int] = set()
     for item in filter.items:
         if isinstance(item, FilterExpression):
             columns.add(item.column)

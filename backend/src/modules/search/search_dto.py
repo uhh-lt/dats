@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from core.code.code_dto import CodeRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
@@ -15,15 +13,15 @@ class SpanAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SpanAnnotation refers to"
     )
-    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
-    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 
 class SpanAnnotationSearchResult(BaseModel):
     total_results: int = Field(
         description="The total number of span_annotation_ids. Used for pagination."
     )
-    data: List[SpanAnnotationRow] = Field(description="The Annotations.")
+    data: list[SpanAnnotationRow] = Field(description="The Annotations.")
 
 
 class SentenceAnnotationRow(BaseModel):
@@ -34,15 +32,15 @@ class SentenceAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SentenceAnnotation refers to"
     )
-    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
-    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 
 class SentenceAnnotationSearchResult(BaseModel):
     total_results: int = Field(
         description="The total number of sentence_annotation_ids. Used for pagination."
     )
-    data: List[SentenceAnnotationRow] = Field(description="The Annotations.")
+    data: list[SentenceAnnotationRow] = Field(description="The Annotations.")
 
 
 class BBoxAnnotationRow(BaseModel):
@@ -57,37 +55,37 @@ class BBoxAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the BBoxAnnotation refers to"
     )
-    tag_ids: List[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
-    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 
 class BBoxAnnotationSearchResult(BaseModel):
     total_results: int = Field(
         description="The total number of bbox_annotation_ids. Used for pagination."
     )
-    data: List[BBoxAnnotationRow] = Field(description="The Annotations.")
+    data: list[BBoxAnnotationRow] = Field(description="The Annotations.")
 
 
 class PaginatedSDocHits(BaseModel):
-    hits: List[ElasticSearchHit] = Field(
+    hits: list[ElasticSearchHit] = Field(
         description=(
             "The IDs, scores and (optional) highlights of Document search results on "
             "the requested page."
         )
     )
-    sdocs: Dict[int, SourceDocumentRead] = Field(
+    sdocs: dict[int, SourceDocumentRead] = Field(
         description=(
             "A dictionary with the additional information about the documents. The key is the "
             "document ID and the value is a dictionary with the additional information."
         )
     )
-    annotators: Dict[int, List[int]] = Field(
+    annotators: dict[int, list[int]] = Field(
         description=(
             "A dictionary with the additional information about the documents. The key is the "
             "document ID and the value is a dictionary with the additional information."
         )
     )
-    tags: Dict[int, List[int]] = Field(
+    tags: dict[int, list[int]] = Field(
         description=(
             "A dictionary with the additional information about the documents. The key is the "
             "document ID and the value is a dictionary with the additional information."

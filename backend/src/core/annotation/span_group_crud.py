@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_group_dto import (
@@ -40,7 +38,7 @@ class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdat
         sdoc_id: int,
         skip: int = 0,
         limit: int = 1000,
-    ) -> List[SpanGroupORM]:
+    ) -> list[SpanGroupORM]:
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
@@ -55,7 +53,7 @@ class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdat
         return query.all()
 
     def link_groups_spans_batch(
-        self, db: Session, *, links: Dict[int, List[int]]
+        self, db: Session, *, links: dict[int, list[int]]
     ) -> int:
         """
         Links the spans to their groups

@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_orm import DocumentTagORM
@@ -10,8 +8,8 @@ from sqlalchemy import and_, case, func
 
 
 def document_sampler_by_tags(
-    project_id: int, tag_ids: List[List[int]], n: int, frac: float
-) -> List[SampledSdocsResults]:
+    project_id: int, tag_ids: list[list[int]], n: int, frac: float
+) -> list[SampledSdocsResults]:
     all_tag_ids = [tag_id for group in tag_ids for tag_id in group]
     tag2group = {tag_id: idx for idx, group in enumerate(tag_ids) for tag_id in group}
 
@@ -73,7 +71,7 @@ def document_sampler_by_tags(
             .to_dict()
         )
 
-        result: List[SampledSdocsResults] = []
+        result: list[SampledSdocsResults] = []
         for group in counts.keys():
             result.append(
                 SampledSdocsResults(

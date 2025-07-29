@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.doc_type import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -21,7 +19,7 @@ from systems.search_system.sorting import Sort
 
 def find_span_annotations_info(
     project_id,
-) -> List[ColumnInfo[SpanColumns]]:
+) -> list[ColumnInfo[SpanColumns]]:
     with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -41,9 +39,9 @@ def find_span_annotations_info(
 def find_span_annotations(
     project_id: int,
     filter: Filter[SpanColumns],
-    sorts: List[Sort[SpanColumns]],
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    sorts: list[Sort[SpanColumns]],
+    page: int | None = None,
+    page_size: int | None = None,
 ) -> SpanAnnotationSearchResult:
     with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)

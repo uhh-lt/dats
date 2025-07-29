@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, List, Set, TypeVar, Union
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import asc, desc
@@ -24,7 +24,7 @@ class SortDirection(str, Enum):
 class Sort(BaseModel, Generic[T]):
     """A sort expressions for sorting on many database columns"""
 
-    column: Union[T, int]
+    column: T | int
     direction: SortDirection
 
     def get_sqlalchemy_expression(self, subquery_dict):
@@ -35,7 +35,7 @@ class Sort(BaseModel, Generic[T]):
         return self.direction.apply(self.column.get_sort_column())
 
 
-def apply_sorting(query, sorts: List[Sort], subquery_dict):
+def apply_sorting(query, sorts: list[Sort], subquery_dict):
     if len(sorts) == 0:
         return query
     return query.order_by(
@@ -43,8 +43,8 @@ def apply_sorting(query, sorts: List[Sort], subquery_dict):
     )
 
 
-def get_columns_affected_by_sorts(sorts: List[Sort[T]]) -> Set[Union[T, int]]:
-    columns: Set[Union[T, int]] = set()
+def get_columns_affected_by_sorts(sorts: list[Sort[T]]) -> set[T | int]:
+    columns: set[T | int] = set()
     for sort in sorts:
         columns.add(sort.column)
     return columns

@@ -1,12 +1,10 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 
 # Properties for creation
 class ClusterCreate(BaseModel):
-    parent_cluster_id: Optional[int] = Field(
+    parent_cluster_id: int | None = Field(
         default=None, description="ID of the parent cluster, if any"
     )
     aspect_id: int = Field(description="ID of the aspect this cluster belongs to")
@@ -20,11 +18,11 @@ class ClusterCreateIntern(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this cluster belongs to")
     is_outlier: bool = Field(description="Whether the cluster is an outlier")
     level: int = Field(description="Hierarchical level of the cluster")
-    name: Optional[str] = Field(default=None, description="Name of the cluster")
-    description: Optional[str] = Field(
+    name: str | None = Field(default=None, description="Name of the cluster")
+    description: str | None = Field(
         default=None, description="Description of the cluster"
     )
-    parent_cluster_id: Optional[int] = Field(
+    parent_cluster_id: int | None = Field(
         default=None, description="ID of the parent cluster, if any"
     )
 
@@ -36,26 +34,26 @@ class ClusterUpdate(BaseModel, UpdateDTOBase):
 
 # Properties for internal update
 class ClusterUpdateIntern(ClusterUpdate):
-    parent_cluster_id: Optional[int] = Field(
+    parent_cluster_id: int | None = Field(
         default=None, description="Updated ID of the parent cluster"
     )
-    name: Optional[str] = Field(default=None, description="New name of the cluster")
-    description: Optional[str] = Field(
+    name: str | None = Field(default=None, description="New name of the cluster")
+    description: str | None = Field(
         default=None, description="New description of the cluster"
     )
-    x: Optional[float] = Field(
+    x: float | None = Field(
         default=None, description="Updated X coordinate for visualization"
     )
-    y: Optional[float] = Field(
+    y: float | None = Field(
         default=None, description="Updated Y coordinate for visualization"
     )
-    top_words: Optional[List[str]] = Field(
+    top_words: list[str] | None = Field(
         default=None, description="Updated top words for the cluster"
     )
-    top_word_scores: Optional[List[float]] = Field(
+    top_word_scores: list[float] | None = Field(
         default=None, description="Updated scores of the top words"
     )
-    top_docs: Optional[List[int]] = Field(
+    top_docs: list[int] | None = Field(
         default=None, description="Updated IDs of top documents for the cluster"
     )
 
@@ -64,7 +62,7 @@ class ClusterUpdateIntern(ClusterUpdate):
 class ClusterRead(BaseModel):
     id: int = Field(description="ID of the cluster")
     aspect_id: int = Field(description="ID of the aspect this cluster belongs to")
-    parent_cluster_id: Optional[int] = Field(
+    parent_cluster_id: int | None = Field(
         description="ID of the parent cluster, if any"
     )
 
@@ -76,13 +74,11 @@ class ClusterRead(BaseModel):
     x: float = Field(description="X coordinate for visualization")
     y: float = Field(description="Y coordinate for visualization")
 
-    top_words: Optional[List[str]] = Field(
+    top_words: list[str | None] = Field(
         description="Top words associated with the cluster"
     )
-    top_word_scores: Optional[List[float]] = Field(
-        description="Scores of the top words"
-    )
-    top_docs: Optional[List[int]] = Field(
+    top_word_scores: list[float | None] = Field(description="Scores of the top words")
+    top_docs: list[int | None] = Field(
         description="IDs of top documents for the cluster"
     )
 

@@ -1,5 +1,3 @@
-from typing import List
-
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
@@ -101,7 +99,7 @@ def delete_project(
 def upload_project_sdoc(
     *,
     proj_id: int,
-    uploaded_files: List[UploadFile] = File(
+    uploaded_files: list[UploadFile] = File(
         ...,
         description=(
             "File(s) that get uploaded and represented by the SourceDocument(s)"
@@ -146,13 +144,13 @@ def resolve_filename(
 
 @router.get(
     "/user/projects",
-    response_model=List[ProjectRead],
+    response_model=list[ProjectRead],
     summary="Returns all Projects of the logged-in User",
 )
 def get_user_projects(
     *,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[ProjectRead]:
+) -> list[ProjectRead]:
     db_obj = crud_user.read(db=db, id=authz_user.user.id)
     return [ProjectRead.model_validate(proj) for proj in db_obj.projects]

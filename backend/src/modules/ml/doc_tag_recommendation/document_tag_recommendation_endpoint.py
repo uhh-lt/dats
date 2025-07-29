@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.tag.document_tag_crud import crud_document_tag
@@ -35,7 +33,7 @@ router = APIRouter(
 
 @router.get(
     "/{project_id}",
-    response_model=List[MLJobRead],
+    response_model=list[MLJobRead],
     summary="Retrieve all finished document tag recommendation MLJobs.",
 )
 def get_all_doctagrecommendation_jobs(
@@ -43,7 +41,7 @@ def get_all_doctagrecommendation_jobs(
     db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[MLJobRead]:
+) -> list[MLJobRead]:
     authz_user.assert_in_project(project_id)
 
     ml_jobs = mls.get_all_ml_jobs(project_id=project_id)
@@ -59,7 +57,7 @@ def get_all_doctagrecommendation_jobs(
 
 @router.get(
     "/job/{ml_job_id}",
-    response_model=List[DocumentTagRecommendationResult],
+    response_model=list[DocumentTagRecommendationResult],
     summary="Retrieve all (non-reviewed) document tag recommendations for the given ml job ID.",
 )
 def get_all_doctagrecommendations_from_job(
@@ -67,7 +65,7 @@ def get_all_doctagrecommendations_from_job(
     db: Session = Depends(get_db_session),
     ml_job_id: str,
     authz_user: AuthzUser = Depends(),
-) -> List[DocumentTagRecommendationResult]:
+) -> list[DocumentTagRecommendationResult]:
     recommendations = crud_document_tag_recommendation_link.read_by_ml_job_id(
         db=db, ml_job_id=ml_job_id, exclude_reviewed=True
     )
@@ -75,7 +73,7 @@ def get_all_doctagrecommendations_from_job(
         return []
     authz_user.assert_in_project(recommendations[0].source_document.project_id)
 
-    sdoc2recommendations: Dict[int, List[DocumentTagRecommendationLinkORM]] = {}
+    sdoc2recommendations: dict[int, list[DocumentTagRecommendationLinkORM]] = {}
     for recommendation in recommendations:
         sdoc2recommendations.setdefault(recommendation.source_document_id, []).append(
             recommendation
@@ -107,15 +105,15 @@ def get_all_doctagrecommendations_from_job(
 
 @router.patch(
     "/review_recommendations",
-    response_model=List[DocumentTagRecommendationLinkRead],
+    response_model=list[DocumentTagRecommendationLinkRead],
     summary="The endpoint receives IDs of wrongly and correctly tagged document recommendations and sets `is_accepted` to `true` or `false`, while setting the corresponding document tags if `true`.",
 )
 def update_recommendations(
     *,
     db: Session = Depends(get_db_session),
-    reviewd_recommendation_ids: List[int],
+    reviewd_recommendation_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> List[DocumentTagRecommendationLinkRead]:
+) -> list[DocumentTagRecommendationLinkRead]:
     modifications = crud_document_tag_recommendation_link.update_multi(
         db=db,
         ids=reviewd_recommendation_ids,

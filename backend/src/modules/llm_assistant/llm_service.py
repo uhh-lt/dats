@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Type
 
 from common.singleton_meta import SingletonMeta
 from config import conf
@@ -84,7 +84,7 @@ lac = conf.llm_assistant
 
 
 class LLMJobPreparationError(Exception):
-    def __init__(self, cause: Union[Exception, str]) -> None:
+    def __init__(self, cause: Exception | str) -> None:
         super().__init__(f"Cannot prepare and create the LLMJob! {cause}")
 
 
@@ -113,8 +113,8 @@ class LLMService(metaclass=SingletonMeta):
         cls.weaviate: WeaviateRepo = WeaviateRepo()
 
         # map from job_type to function
-        cls.llm_method_for_job_approach_type: Dict[
-            TaskType, Dict[ApproachType, Callable[..., LLMJobResult]]
+        cls.llm_method_for_job_approach_type: dict[
+            TaskType, dict[ApproachType, Callable[..., LLMJobResult]]
         ] = {
             TaskType.DOCUMENT_TAGGING: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_document_tagging,
@@ -139,7 +139,7 @@ class LLMService(metaclass=SingletonMeta):
         }
 
         # map from job_type to promt builder
-        cls.llm_prompt_builder_for_job_type: Dict[TaskType, Type[PromptBuilder]] = {
+        cls.llm_prompt_builder_for_job_type: dict[TaskType, Type[PromptBuilder]] = {
             TaskType.DOCUMENT_TAGGING: TaggingPromptBuilder,
             TaskType.METADATA_EXTRACTION: MetadataPromptBuilder,
             TaskType.ANNOTATION: AnnotationPromptBuilder,
@@ -181,7 +181,7 @@ class LLMService(metaclass=SingletonMeta):
 
         return llmj
 
-    def get_all_llm_jobs(self, project_id: int) -> List[LLMJobRead]:
+    def get_all_llm_jobs(self, project_id: int) -> list[LLMJobRead]:
         return self.redis.get_all_llm_jobs(project_id=project_id)
 
     def _update_llm_job(self, llm_job_id: str, update: LLMJobUpdate) -> LLMJobRead:
@@ -351,7 +351,7 @@ class LLMService(metaclass=SingletonMeta):
                 reasoning += f"\nThe code with the least labeled sentences ({min_labeled_sentences}) is {code_id2name[code_with_min_labeled_sentences]}. Based on this, I recommend the following approach:"
 
                 # 4.3 determine the available approaches based on thresholds
-                available_approaches: Dict[ApproachType, bool] = {
+                available_approaches: dict[ApproachType, bool] = {
                     ApproachType.LLM_ZERO_SHOT: True,
                     ApproachType.LLM_FEW_SHOT: min_labeled_sentences
                     >= lac.sentence_annotation.few_shot_threshold,
@@ -379,10 +379,10 @@ class LLMService(metaclass=SingletonMeta):
     def count_existing_assistant_annotations(
         self,
         task_type: TaskType,
-        code_ids: List[int],
-        sdoc_ids: List[int],
+        code_ids: list[int],
+        sdoc_ids: list[int],
         approach_type: ApproachType,
-    ) -> Dict[int, int]:
+    ) -> dict[int, int]:
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:
                 # 1. Find existing annotations
@@ -421,8 +421,8 @@ class LLMService(metaclass=SingletonMeta):
         self,
         llm_job_params: LLMJobParameters,
         approach_type: ApproachType,
-        example_ids: Optional[List[int]] = None,
-    ) -> List[LLMPromptTemplates]:
+        example_ids: list[int] | None = None,
+    ) -> list[LLMPromptTemplates]:
         with self.sqlr.db_session() as db:
             # get the llm method based on the jobtype
             llm_prompt_builder = self.llm_prompt_builder_for_job_type.get(
@@ -445,8 +445,8 @@ class LLMService(metaclass=SingletonMeta):
             )
 
     def construct_prompt_dict(
-        self, prompts: List[LLMPromptTemplates], prompt_builder: PromptBuilder
-    ) -> Dict[str, Dict[str, str]]:
+        self, prompts: list[LLMPromptTemplates], prompt_builder: PromptBuilder
+    ) -> dict[str, dict[str, str]]:
         prompt_dict = {}
         for prompt in prompts:
             # validate prompts
@@ -501,7 +501,7 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic document tagging
-        result: List[DocumentTaggingResult] = []
+        result: list[DocumentTaggingResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -626,7 +626,7 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic metadata extraction
-        result: List[MetadataExtractionResult] = []
+        result: list[MetadataExtractionResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -773,7 +773,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # automatic annotation
         annotation_id = 0
-        result: List[AnnotationResult] = []
+        result: list[AnnotationResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -823,7 +823,7 @@ class LLMService(metaclass=SingletonMeta):
                 parsed_response = prompt_builder.parse_result(result=response)
 
                 # validate the response and create the suggested annotation
-                suggested_annotations: List[SpanAnnotationRead] = []
+                suggested_annotations: list[SpanAnnotationRead] = []
                 for x in parsed_response:
                     code_id = x.code_id
                     span_text = x.text
@@ -910,7 +910,7 @@ class LLMService(metaclass=SingletonMeta):
         db: Session,
         llm_job_id: str,
         project_id: int,
-        approach_parameters: Union[ZeroShotParams, FewShotParams],
+        approach_parameters: ZeroShotParams | FewShotParams,
         task_parameters: SentenceAnnotationParams,
     ) -> LLMJobResult:
         assert isinstance(task_parameters, SentenceAnnotationParams), (
@@ -961,7 +961,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # automatic annotation
         annotation_id = 0
-        results: List[SentenceAnnotationResult] = []
+        results: list[SentenceAnnotationResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -1032,7 +1032,7 @@ class LLMService(metaclass=SingletonMeta):
                 ]
 
                 # create the suggested annotation
-                suggested_annotations: List[SentenceAnnotationCreate] = []
+                suggested_annotations: list[SentenceAnnotationCreate] = []
                 start = parsed_items[0][0]
                 previous_sentence_id = parsed_items[0][0]
                 previous_code_id = parsed_items[0][1]
@@ -1164,7 +1164,7 @@ class LLMService(metaclass=SingletonMeta):
                 if sa.user_id
                 not in SYSTEM_USER_IDS  # Filter out annotations of the system users
             ]
-            sdoc_id2sentence_annotations: Dict[int, List[SentenceAnnotationORM]] = {}
+            sdoc_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {}
             for sa in sentence_annotations:
                 if sa.sdoc_id not in sdoc_id2sentence_annotations:
                     sdoc_id2sentence_annotations[sa.sdoc_id] = []
@@ -1207,7 +1207,7 @@ class LLMService(metaclass=SingletonMeta):
                     f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
                 )
 
-            sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+            sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
             for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
                 if sdoc_id not in sdoc_id2sent_embs:
                     sdoc_id2sent_embs[sdoc_id] = []
@@ -1223,7 +1223,7 @@ class LLMService(metaclass=SingletonMeta):
             logger.debug(f"Found the {len(codes)} codes.")
 
         # 1.5 - Build the training data
-        training_dataset: List[SeqSentTaggerDoc] = []
+        training_dataset: list[SeqSentTaggerDoc] = []
         for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
             sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
 
@@ -1286,7 +1286,7 @@ class LLMService(metaclass=SingletonMeta):
                         for sent_id, sdoc_id in search_tuples
                     ],
                 )
-                test_sdoc_id2sent_embs: Dict[int, List[List[float]]] = {}
+                test_sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
                 for sent_emb, (sent_id, sdoc_id) in zip(
                     test_sentence_embeddings, search_tuples
                 ):
@@ -1295,7 +1295,7 @@ class LLMService(metaclass=SingletonMeta):
                     test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
 
         # Build the test data
-        test_dataset: List[SeqSentTaggerDoc] = []
+        test_dataset: list[SeqSentTaggerDoc] = []
         for sdoc_data in test_sdocs:
             sentence_embeddings = test_sdoc_id2sent_embs.get(sdoc_data.id, [])
 
@@ -1377,11 +1377,11 @@ class LLMService(metaclass=SingletonMeta):
         if len(response.pred_data) != len(test_sdocs):
             raise ValueError("Prediction mismatch!")
 
-        results: List[SentenceAnnotationResult] = []
+        results: list[SentenceAnnotationResult] = []
         for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
             try:
                 # we have list of labels, we need to convert them to sentence annotations
-                suggested_annotations: List[SentenceAnnotationCreate] = []
+                suggested_annotations: list[SentenceAnnotationCreate] = []
                 start = 0
                 previous_label = prediction.sent_labels[0]
 

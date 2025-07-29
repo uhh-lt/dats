@@ -1,5 +1,4 @@
 from collections import Counter
-from typing import Dict, List, Optional, Set
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -13,8 +12,8 @@ from sqlalchemy.orm import Session
 
 
 def compute_tag_statistics(
-    db: Session, sdoc_ids: Set[int], top_k: int = 20
-) -> List[TagStat]:
+    db: Session, sdoc_ids: set[int], top_k: int = 20
+) -> list[TagStat]:
     # tag statistics for the sdoc_ids
     count = func.count().label("count")
     query = (
@@ -54,9 +53,9 @@ def compute_tag_statistics(
 
 
 def __count_keywords(
-    keyword_metadata: List[SourceDocumentMetadataORM],
-    top_k: Optional[int] = None,
-) -> Dict[str, int]:
+    keyword_metadata: list[SourceDocumentMetadataORM],
+    top_k: int | None = None,
+) -> dict[str, int]:
     # get keyword lists per sdoc
     keywords_list = [x.list_value for x in keyword_metadata if x.list_value is not None]
     # flatten the list
@@ -69,8 +68,8 @@ def __count_keywords(
 
 
 def compute_keyword_statistics(
-    db: Session, proj_id: int, sdoc_ids: Set[int], top_k: int = 20
-) -> List[KeywordStat]:
+    db: Session, proj_id: int, sdoc_ids: set[int], top_k: int = 20
+) -> list[KeywordStat]:
     # 1. query keyword project metadadta
     project_metadata = crud_project_meta.read_by_project_and_key(
         db=db, project_id=proj_id, key="keywords"
@@ -112,9 +111,9 @@ def compute_keyword_statistics(
 def compute_code_statistics(
     db: Session,
     code_id: int,
-    sdoc_ids: Set[int],
+    sdoc_ids: set[int],
     top_k: int = 20,
-) -> List[SpanEntityStat]:
+) -> list[SpanEntityStat]:
     # code statistics for the sdoc_ids
     count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
         "count"

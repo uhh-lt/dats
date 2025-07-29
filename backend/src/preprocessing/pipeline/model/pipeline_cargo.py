@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from preprocessing.preprocessing_job_dto import PreprocessingJobPayloadRead
@@ -14,18 +14,18 @@ class PipelineCargo(BaseModel):
     )
     ppj_id: str = Field(description="UUID of the PreprocessingJob")
 
-    next_steps: List[SkipValidation] = (
+    next_steps: list[SkipValidation] = (
         Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
             description="Next Tasks to be executed.", default_factory=list
         )
     )
-    finished_steps: List[SkipValidation] = (
+    finished_steps: list[SkipValidation] = (
         Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
             description="Tasks that have been executed.", default_factory=list
         )
     )
 
-    data: Dict[str, Any] = Field(description="data", default_factory=dict)
+    data: dict[str, Any] = Field(description="data", default_factory=dict)
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def _flush_next_steps(self) -> None:

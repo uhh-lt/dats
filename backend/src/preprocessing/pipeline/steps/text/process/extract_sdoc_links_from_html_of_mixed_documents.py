@@ -1,5 +1,3 @@
-from typing import List
-
 from bs4 import BeautifulSoup
 from config import conf
 from core.doc.source_document_link_dto import SourceDocumentLinkCreate
@@ -16,7 +14,7 @@ def extract_sdoc_links_from_html_of_mixed_documents(
 ) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
 
-    create_dtos: List[SourceDocumentLinkCreate] = []
+    create_dtos: list[SourceDocumentLinkCreate] = []
     soup = BeautifulSoup(pptd.html, "html.parser")
 
     # extract and create text -> image links

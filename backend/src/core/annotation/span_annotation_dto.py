@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -49,10 +48,10 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
     sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
-    group_ids: List[int] = Field(
+    group_ids: list[int] = Field(
         description="The group ids this span annotations belongs to"
     )
-    memo_ids: List[int] = Field(description="Memo IDs attached to the SpanAnnotation")
+    memo_ids: list[int] = Field(description="Memo IDs attached to the SpanAnnotation")
     model_config = ConfigDict(from_attributes=True)
 
 

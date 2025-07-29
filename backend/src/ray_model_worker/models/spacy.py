@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 import spacy
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
@@ -34,7 +33,7 @@ class SpacyModel:
                 )
                 spacy.require_gpu(gpu_id=device_id)  # type: ignore
 
-        nlp: Dict[str, Language] = dict()
+        nlp: dict[str, Language] = dict()
 
         for lang, model in MODELS.items():
             if lang == "default":
@@ -61,7 +60,7 @@ class SpacyModel:
     def pipeline(self, input: SpacyInput) -> SpacyPipelineOutput:
         model = self._get_language_specific_model(input.language)
         doc = model(input.text)
-        tokens: List[SpacyToken] = [
+        tokens: list[SpacyToken] = [
             SpacyToken(
                 text=token.text,
                 start_char=token.idx,
@@ -76,7 +75,7 @@ class SpacyModel:
             for token in doc
         ]
 
-        ents: List[SpacySpan] = [
+        ents: list[SpacySpan] = [
             SpacySpan(
                 text=ent.text,
                 start_char=ent.start_char,
@@ -88,7 +87,7 @@ class SpacyModel:
             for ent in doc.ents
         ]
 
-        sents: List[SpacySpan] = [
+        sents: list[SpacySpan] = [
             SpacySpan(
                 text=sent.text,
                 start_char=sent.start_char,

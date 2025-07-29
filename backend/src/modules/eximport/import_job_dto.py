@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
@@ -37,7 +36,7 @@ class ImportJobBase(BaseModel):
     status: BackgroundJobStatus = Field(
         default=BackgroundJobStatus.WAITING, description="Status of the ImportJob"
     )
-    error: Optional[str] = Field(default=None, description="Error message (if any)")
+    error: str | None = Field(default=None, description="Error message (if any)")
 
 
 class ImportJobRead(ImportJobBase):

@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -34,7 +32,7 @@ from sqlalchemy.orm import Session
 class CRUDWhiteboard(
     CRUDBase[WhiteboardORM, WhiteboardCreateIntern, WhiteboardUpdateIntern]
 ):
-    def read_by_project(self, db: Session, *, project_id: int) -> List[WhiteboardORM]:
+    def read_by_project(self, db: Session, *, project_id: int) -> list[WhiteboardORM]:
         db_obj = (
             db.query(self.model)
             .filter(
@@ -49,7 +47,7 @@ class CRUDWhiteboard(
         whiteboard = WhiteboardRead.model_validate(db_obj)
 
         # group nodes by their type
-        whiteboard_nodes: Dict[str, List[WhiteboardNode]] = {
+        whiteboard_nodes: dict[str, list[WhiteboardNode]] = {
             node_type.value: [] for node_type in WhiteboardNodeType
         }
         for node in whiteboard.content.nodes:

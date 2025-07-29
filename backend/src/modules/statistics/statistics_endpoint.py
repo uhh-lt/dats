@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -19,7 +17,7 @@ router = APIRouter(
 
 @router.post(
     "/code",
-    response_model=List[SpanEntityStat],
+    response_model=list[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
 )
 def filter_code_stats(
@@ -31,8 +29,8 @@ def filter_code_stats(
     sort_by_global: bool = False,
     top_k: int = 20,
     # filter params
-    sdoc_ids: List[int],
-) -> List[SpanEntityStat]:
+    sdoc_ids: list[int],
+) -> list[SpanEntityStat]:
     if len(sdoc_ids) == 0:
         return []
 
@@ -48,7 +46,7 @@ def filter_code_stats(
 
 @router.post(
     "/keyword",
-    response_model=List[KeywordStat],
+    response_model=list[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
 )
 def filter_keyword_stats(
@@ -60,8 +58,8 @@ def filter_keyword_stats(
     sort_by_global: bool = False,
     top_k: int = 20,
     # filter params
-    sdoc_ids: List[int],
-) -> List[KeywordStat]:
+    sdoc_ids: list[int],
+) -> list[KeywordStat]:
     if len(sdoc_ids) == 0:
         return []
 
@@ -76,7 +74,7 @@ def filter_keyword_stats(
 
 @router.post(
     "/tag",
-    response_model=List[TagStat],
+    response_model=list[TagStat],
     summary="Returns Stat for the given SourceDocuments.",
 )
 def filter_tag_stats(
@@ -87,8 +85,8 @@ def filter_tag_stats(
     sort_by_global: bool = False,
     top_k: int = 20,
     # filter params
-    sdoc_ids: List[int],
-) -> List[TagStat]:
+    sdoc_ids: list[int],
+) -> list[TagStat]:
     if len(sdoc_ids) == 0:
         return []
 

@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -19,7 +17,7 @@ class SpacySpan(BaseModel):
     end_token: int = Field(
         description="The end token index of the span in the input text", examples=[2]
     )
-    label: Optional[str] = Field(
+    label: str | None = Field(
         description="The optional label of the span", examples=["GPE"], default=None
     )
 
@@ -56,7 +54,7 @@ class SpacyInput(BaseModel):
 
 
 class SpacyPipelineOutput(BaseModel):
-    tokens: List[SpacyToken] = Field(
+    tokens: list[SpacyToken] = Field(
         examples=[
             SpacyToken(
                 text="I",
@@ -106,7 +104,7 @@ class SpacyPipelineOutput(BaseModel):
         default_factory=list,
     )
 
-    ents: List[SpacySpan] = Field(
+    ents: list[SpacySpan] = Field(
         examples=[
             SpacySpan(
                 label="GPE",
@@ -120,7 +118,7 @@ class SpacyPipelineOutput(BaseModel):
         default_factory=list,
     )
 
-    sents: List[SpacySpan] = Field(
+    sents: list[SpacySpan] = Field(
         examples=[
             SpacySpan(
                 text="I love Hamburg!",

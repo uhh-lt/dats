@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from core.doc.sentence_collection import SentenceCollection
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
@@ -47,7 +45,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
         vector: list[float],
         k: int,
         threshold: float,
-        sdoc_ids: Optional[list[int]],
+        sdoc_ids: list[int] | None,
     ):
         """
         Search for sentences near a given vector in specific SourceDocument IDs
@@ -79,7 +77,7 @@ class CRUDSentenceEmbedding(CRUDBase[SentenceObjectIdentifier, SentenceCollectio
 
     def get_embeddings_by_sdoc_id(
         self, client: WeaviateClient, project_id: int, sdoc_id: int
-    ) -> List[EmbeddingSearchResult[SentenceObjectIdentifier]]:
+    ) -> list[EmbeddingSearchResult[SentenceObjectIdentifier]]:
         """
         Get all sentence embeddings for a given SourceDocument by sdoc_id
         Args:

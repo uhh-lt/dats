@@ -10,7 +10,7 @@ Create Date: 2023-11-27 09:26:21.487888
 """
 
 import json
-from typing import List, Sequence, Union
+from typing import Sequence
 
 from alembic import op
 from sqlalchemy import (
@@ -31,9 +31,9 @@ Base = declarative_base()
 
 # revision identifiers, used by Alembic.
 revision: str = "1d61abe5e5d6"
-down_revision: Union[str, None] = "dac9e104b3c2"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "dac9e104b3c2"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 class WordFrequency(Base):
@@ -56,13 +56,13 @@ class SourceDocument(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # one to many
-    metadata_: Mapped[List["SourceDocumentMetadata"]] = relationship(
+    metadata_: Mapped[list["SourceDocumentMetadata"]] = relationship(
         "SourceDocumentMetadata",
         back_populates="source_document",
         passive_deletes=True,
     )
 
-    word_frequencies: Mapped[List["WordFrequency"]] = relationship(
+    word_frequencies: Mapped[list["WordFrequency"]] = relationship(
         "WordFrequency",
         back_populates="source_document",
         passive_deletes=True,

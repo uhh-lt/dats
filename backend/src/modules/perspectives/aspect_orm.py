@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
@@ -16,11 +16,11 @@ class AspectORM(ORMBase):
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     doc_embedding_prompt: Mapped[str] = mapped_column(Text, nullable=False)
-    doc_modification_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    doc_modification_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_hierarchical: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
-    most_recent_job_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    most_recent_job_id: Mapped[str | None] = mapped_column(String, nullable=True)
     embedding_model: Mapped[str] = mapped_column(
         String, server_default="default", nullable=False
     )
@@ -35,15 +35,15 @@ class AspectORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
 
     # one to many
-    clusters: Mapped[List["ClusterORM"]] = relationship(
+    clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM", back_populates="aspect", cascade="all, delete-orphan"
     )
 
     # many to many
-    document_aspects: Mapped[List["DocumentAspectORM"]] = relationship(
+    document_aspects: Mapped[list["DocumentAspectORM"]] = relationship(
         "DocumentAspectORM", back_populates="aspect", cascade="all, delete-orphan"
     )
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+    source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="documentaspect",
         back_populates="aspects",

@@ -1,4 +1,4 @@
-from typing import Generic, List, Type, TypeVar
+from typing import Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -38,13 +38,13 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 
-    def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
+    def read_by_ids(self, db: Session, ids: list[int]) -> list[ORMModelType]:
         db_objects = db.query(self.model).filter(self.model.id.in_(ids)).all()
         return sorted(db_objects, key=lambda x: ids.index(x.id))
 
     def read_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> List[ORMModelType]:
+    ) -> list[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
     def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
@@ -62,8 +62,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[CreateDTOType]
-    ) -> List[ORMModelType]:
+        self, db: Session, *, create_dtos: list[CreateDTOType]
+    ) -> list[ORMModelType]:
         db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         db.add_all(db_objs)
         db.commit()
@@ -86,8 +86,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_obj
 
     def update_multi(
-        self, db: Session, *, ids: List[int], update_dtos: List[UpdateDTOType]
-    ) -> List[ORMModelType]:
+        self, db: Session, *, ids: list[int], update_dtos: list[UpdateDTOType]
+    ) -> list[ORMModelType]:
         if len(ids) != len(update_dtos):
             raise ValueError(
                 f"The number of IDs and Update DTO objects must equal! {len(ids)} IDs and {len(update_dtos)} Update DTOs received."
@@ -110,7 +110,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.commit()
         return db_obj
 
-    def remove_multi(self, db: Session, *, ids: List[int]) -> int:
+    def remove_multi(self, db: Session, *, ids: list[int]) -> int:
         count = db.query(self.model).filter(self.model.id.in_(ids)).delete()
         db.commit()
         return count

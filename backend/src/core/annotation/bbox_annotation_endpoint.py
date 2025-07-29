@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
@@ -56,7 +54,7 @@ def get_by_id(
 
 @router.get(
     "/sdoc/{sdoc_id}/user/{user_id}",
-    response_model=List[BBoxAnnotationRead],
+    response_model=list[BBoxAnnotationRead],
     summary="Returns all BBoxAnnotations of the User for the SourceDocument",
 )
 def get_by_sdoc_and_user(
@@ -65,7 +63,7 @@ def get_by_sdoc_and_user(
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[BBoxAnnotationRead]:
+) -> list[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     bboxes = crud_bbox_anno.read_by_user_and_sdoc(
@@ -95,16 +93,16 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
-    response_model=List[BBoxAnnotationRead],
+    response_model=list[BBoxAnnotationRead],
     summary="Updates BBoxAnnotation in Bulk",
 )
 def update_bbox_anno_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    bbox_annos: List[BBoxAnnotationUpdateBulk],
+    bbox_annos: list[BBoxAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> List[BBoxAnnotationRead]:
+) -> list[BBoxAnnotationRead]:
     for bbox_anno in bbox_annos:
         authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
         authz_user.assert_in_same_project_as(
@@ -143,15 +141,15 @@ def delete_by_id(
 
 @router.delete(
     "/bulk/delete",
-    response_model=List[BBoxAnnotationRead],
+    response_model=list[BBoxAnnotationRead],
     summary="Deletes all BBoxAnnotations with the given IDs.",
 )
 def delete_bulk_by_id(
     *,
     db: Session = Depends(get_db_session),
-    bbox_anno_ids: List[int],
+    bbox_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> List[BBoxAnnotationRead]:
+) -> list[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
 
     db_objs = crud_bbox_anno.delete_bulk(db=db, ids=bbox_anno_ids)
@@ -160,7 +158,7 @@ def delete_bulk_by_id(
 
 @router.get(
     "/code/{code_id}/user",
-    response_model=List[BBoxAnnotationRead],
+    response_model=list[BBoxAnnotationRead],
     summary=("Returns BBoxAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
@@ -168,7 +166,7 @@ def get_by_user_code(
     db: Session = Depends(get_db_session),
     code_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[BBoxAnnotationRead]:
+) -> list[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_objs = crud_bbox_anno.read_by_code_and_user(

@@ -2,7 +2,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, TypedDict
+from typing import TypedDict
 from uuid import uuid4
 
 import torch
@@ -23,16 +23,16 @@ from torchcrf import CRF
 
 
 class ValidationOutput(TypedDict):
-    loss: List[float]
-    predictions: List[List[int]]
-    tags: List[List[int]]
+    loss: list[float]
+    predictions: list[list[int]]
+    tags: list[list[int]]
 
 
 class SentenceTagger(LightningModule):
     def __init__(
         self,
         num_tags,
-        id2tag: Dict[int, str],
+        id2tag: dict[int, str],
         embedding_dim=512,
         hidden_dim=256,
         use_lstm=True,
@@ -135,12 +135,12 @@ class SentenceTagger(LightningModule):
 
 
 class SentenceTaggingDataset(Dataset):
-    def __init__(self, data: List[SeqSentTaggerDoc]):
+    def __init__(self, data: list[SeqSentTaggerDoc]):
         self.embeddings = [d.sent_embeddings for d in data]
         labels = [d.sent_labels for d in data]
 
         # compute unique tags and create tag2id and id2tag mappings
-        unique_tags: Set[str] = set()
+        unique_tags: set[str] = set()
         for ls in labels:
             unique_tags.update(ls)
         unique_tags.update("O")  # Add the "O" tag
@@ -155,13 +155,13 @@ class SentenceTaggingDataset(Dataset):
     def __len__(self) -> int:
         return len(self.labels)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, List[int]]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, list[int]]:
         labels = self.labels[idx]
         embeddings = torch.tensor(self.embeddings[idx])
         return embeddings, labels
 
 
-def collate_fn(batch: List[Tuple[torch.Tensor, List[int]]]):
+def collate_fn(batch: list[tuple[torch.Tensor, list[int]]]):
     embeddings, labels = zip(*batch)
 
     # Pad labels
@@ -321,8 +321,8 @@ class SeqSentTaggerModel:
         return model_path / "best-model.ckpt"
 
     def __test_model(
-        self, test_data: List[SeqSentTaggerDoc], model_path: Path, tmp_id: str
-    ) -> List[List[str]]:
+        self, test_data: list[SeqSentTaggerDoc], model_path: Path, tmp_id: str
+    ) -> list[list[str]]:
         # 1. Create the test data
         test_dataset = SentenceTaggingDataset(test_data)
         test_dataloader = DataLoader(
@@ -354,7 +354,7 @@ class SeqSentTaggerModel:
         logger.info(f"Showing the first prediction as ids: {preds[0]}")
 
         # 4. Convert the prediction ids to strings
-        pred_tags: List[List[str]] = []
+        pred_tags: list[list[str]] = []
         for pred in preds:
             pred_tags.append([model.id2tag[i] for i in pred])
         logger.info(f"Showing the first prediction as strings: {pred_tags[0]}")

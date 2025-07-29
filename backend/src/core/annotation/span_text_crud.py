@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 import tenacity
 from core.annotation.span_text_dto import SpanTextCreate
 from core.annotation.span_text_orm import SpanTextORM
@@ -25,8 +23,8 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         reraise=True,
     )
     def create_multi(
-        self, db: Session, *, create_dtos: List[SpanTextCreate]
-    ) -> List[SpanTextORM]:
+        self, db: Session, *, create_dtos: list[SpanTextCreate]
+    ) -> list[SpanTextORM]:
         text_to_create_dto = {create_dto.text: create_dto for create_dto in create_dtos}
         unique_create_dtos = list(text_to_create_dto.values())
         dtos_to_create = []
@@ -35,7 +33,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         #  the unique constraint on the text field is violated due to the non-atomic check for
         #  unique create DTOs below! (Line 37-44)
         # Hence, as a quick-and-dirty fix, we retry the method on UniqueViolation...
-        text_to_db_obj_map: Dict[str, SpanTextORM] = {}
+        text_to_db_obj_map: dict[str, SpanTextORM] = {}
         for unique_create_dto in unique_create_dtos:
             # TODO: this is very inefficient. Can't we read all at once?
             db_obj = self.read_by_text(db=db, text=unique_create_dto.text)
@@ -56,7 +54,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
     ### READ OPERATIONS ###
 
-    def read_by_text(self, db: Session, *, text: str) -> Optional[SpanTextORM]:
+    def read_by_text(self, db: Session, *, text: str) -> SpanTextORM | None:
         return db.query(self.model).filter(self.model.text == text).first()
 
     ### UPDATE OPERATIONS ###

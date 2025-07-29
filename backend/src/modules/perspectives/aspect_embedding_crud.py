@@ -1,5 +1,3 @@
-from typing import Optional
-
 from modules.perspectives.aspect_collection import AspectCollection
 from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
@@ -57,7 +55,7 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
         vector: list[float],
         aspect_id: int,
         k: int,
-        threshold: Optional[float] = None,
+        threshold: float | None = None,
     ):
         """
         Search for aspect documents near a given vector in all embeddings of a specific aspect

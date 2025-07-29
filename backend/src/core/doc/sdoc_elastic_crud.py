@@ -1,5 +1,3 @@
-from typing import Optional, Set
-
 from core.doc.sdoc_elastic_dto import (
     ElasticSearchDocument,
     ElasticSearchDocumentCreate,
@@ -29,12 +27,12 @@ class CRUDElasticSdoc(
         *,
         client: Elasticsearch,
         proj_id: int,
-        sdoc_ids: Optional[Set[int]],
+        sdoc_ids: set[int] | None,
         query: str,
         use_simple_query: bool = True,
         highlight: bool = False,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
+        limit: int | None = None,
+        skip: int | None = None,
     ) -> PaginatedElasticSearchHits:
         if use_simple_query:
             q = {

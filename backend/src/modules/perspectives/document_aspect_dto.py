@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
 
@@ -13,8 +11,8 @@ class DocumentAspectCreate(BaseModel):
 
 # Properties for updating
 class DocumentAspectUpdate(BaseModel, UpdateDTOBase):
-    content: Optional[str] = Field(
+    content: str | None = Field(
         default=None, description="Updated content of the document aspect"
     )
-    x: Optional[float] = Field(default=None, description="Updated current X coordinate")
-    y: Optional[float] = Field(default=None, description="Updated current Y coordinate")
+    x: float | None = Field(default=None, description="Updated current X coordinate")
+    y: float | None = Field(default=None, description="Updated current Y coordinate")

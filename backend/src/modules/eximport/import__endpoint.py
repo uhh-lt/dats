@@ -1,4 +1,4 @@
-from typing import Dict, List, TypedDict
+from typing import TypedDict
 
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
@@ -23,7 +23,7 @@ fsr: FilesystemRepo = FilesystemRepo()
 class FileFormat(TypedDict):
     """File format definition for import jobs."""
 
-    mime_types: List[str]
+    mime_types: list[str]
     suffix: str
 
 
@@ -50,7 +50,7 @@ CSV_FILE_FORMAT: FileFormat = {
 }
 
 # Single mapping for file format information by import job type
-import_job_file_formats: Dict[ImportJobType, FileFormat] = {
+import_job_file_formats: dict[ImportJobType, FileFormat] = {
     ImportJobType.PROJECT: ZIP_FILE_FORMAT,
     ImportJobType.DOCUMENTS: ZIP_FILE_FORMAT,
     ImportJobType.CODES: CSV_FILE_FORMAT,
@@ -140,12 +140,12 @@ def get_import_job(
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[ImportJobRead],
+    response_model=list[ImportJobRead],
     summary="Returns all ImportJobs for the given project ID if it exists",
 )
 def get_all_import_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[ImportJobRead]:
+) -> list[ImportJobRead]:
     authz_user.assert_in_project(project_id)
     import_jobs = ims.get_all_import_jobs(project_id=project_id)
     import_jobs.sort(key=lambda x: x.created, reverse=True)

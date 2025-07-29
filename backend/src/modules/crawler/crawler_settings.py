@@ -7,7 +7,7 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any
 
 __settings = {
     "BOT_NAME": "crawler",
@@ -35,10 +35,10 @@ __settings = {
 
 
 def get_settings(
-    images_store_path: Union[str, Path],
-    videos_store_path: Union[str, Path],
-    audios_store_path: Union[str, Path],
-) -> Dict[str, Any]:
+    images_store_path: str | Path,
+    videos_store_path: str | Path,
+    audios_store_path: str | Path,
+) -> dict[str, Any]:
     images_store_path = Path(images_store_path)
     if not images_store_path.exists():
         raise ValueError(f"IMAGES_STORE {images_store_path} does not exists!")

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import (
@@ -22,11 +22,11 @@ if TYPE_CHECKING:
 class SourceDocumentMetadataORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    int_value: Mapped[Optional[int]] = mapped_column(Integer)
-    str_value: Mapped[Optional[str]] = mapped_column(String)
-    boolean_value: Mapped[Optional[bool]] = mapped_column(Boolean)
-    date_value: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    list_value: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String))
+    int_value: Mapped[int | None] = mapped_column(Integer)
+    str_value: Mapped[str | None] = mapped_column(String)
+    boolean_value: Mapped[bool | None] = mapped_column(Boolean)
+    date_value: Mapped[datetime | None] = mapped_column(DateTime)
+    list_value: Mapped[list[str] | None] = mapped_column(ARRAY(String))
 
     # many to one
     project_metadata_id: Mapped[int] = mapped_column(

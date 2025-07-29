@@ -7,7 +7,7 @@ Create Date: 2025-05-12 13:21:59.222409
 """
 
 import json
-from typing import Sequence, Union
+from typing import Sequence
 
 from alembic import op
 from sqlalchemy import Integer, String
@@ -15,9 +15,9 @@ from sqlalchemy.orm import Mapped, Session, declarative_base, mapped_column
 
 # revision identifiers, used by Alembic.
 revision: str = "42c759c92f5b"
-down_revision: Union[str, None] = "d65a359603c3"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "d65a359603c3"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 Base = declarative_base()
 

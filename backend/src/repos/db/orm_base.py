@@ -1,4 +1,4 @@
-from typing import Any, Set
+from typing import Any
 
 from sqlalchemy import inspect
 from sqlalchemy.orm import DeclarativeBase, declared_attr
@@ -13,7 +13,7 @@ class ORMBase(DeclarativeBase):
     def __tablename__(cls) -> str:
         return cls.__name__.replace("ORM", "").lower()
 
-    def as_dict(self, exclude: Set = set()):
+    def as_dict(self, exclude: set = set()):
         return {
             c.key: getattr(self, c.key)
             for c in inspect(self).mapper.column_attrs

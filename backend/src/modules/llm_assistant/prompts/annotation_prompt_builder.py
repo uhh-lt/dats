@@ -1,5 +1,4 @@
 import random
-from typing import Dict, List
 
 from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
@@ -18,7 +17,7 @@ class OllamaAnnotationResult(BaseModel):
 
 
 class OllamaAnnotationResults(BaseModel):
-    data: List[OllamaAnnotationResult]
+    data: list[OllamaAnnotationResult]
 
 
 # ENGLISH
@@ -90,7 +89,7 @@ class AnnotationPromptBuilder(PromptBuilder):
         self.codeids2code_dict = {code.id: code for code in self.codes}
 
         # get one example annotation per code
-        examples: Dict[str, Dict[int, str]] = {
+        examples: dict[str, dict[int, str]] = {
             "en": {},
             "de": {},
         }
@@ -106,8 +105,8 @@ class AnnotationPromptBuilder(PromptBuilder):
                 )
         self.examples = examples
 
-    def _build_example(self, language: str, code_ids: List[int]) -> str:
-        examples: List[str] = []
+    def _build_example(self, language: str, code_ids: list[int]) -> str:
+        examples: list[str] = []
         for code_id in code_ids:
             if code_id not in self.examples:
                 continue
@@ -120,7 +119,7 @@ class AnnotationPromptBuilder(PromptBuilder):
         return "\n".join(examples)
 
     def _build_user_prompt_template(
-        self, *, language: str, code_ids: List[int], **kwargs
+        self, *, language: str, code_ids: list[int], **kwargs
     ) -> str:
         task_data = "\n".join(
             [
@@ -133,7 +132,7 @@ class AnnotationPromptBuilder(PromptBuilder):
 
     def parse_result(
         self, result: OllamaAnnotationResults
-    ) -> List[OllamaParsedAnnotationResult]:
+    ) -> list[OllamaParsedAnnotationResult]:
         parsed_results = []
         for annotation in result.data:
             if annotation.category.lower() not in self.codename2id_dict:

@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -22,7 +20,7 @@ class SegmentTranscription(BaseModel):
     end_ms: int = Field(
         description="The end time of the word in milliseconds.", examples=[1000]
     )
-    words: List[WordTranscription] = Field(
+    words: list[WordTranscription] = Field(
         description="The words of the transcription segment.",
         examples=[{"text": "word", "start_ms": 0, "end_ms": 1000}],
         default_factory=list,
@@ -30,7 +28,7 @@ class SegmentTranscription(BaseModel):
 
 
 class WhisperTranscriptionOutput(BaseModel):
-    segments: List[SegmentTranscription] = Field(
+    segments: list[SegmentTranscription] = Field(
         description="The transcription of the audio file.",
         examples=[
             {

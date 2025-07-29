@@ -1,6 +1,5 @@
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 import magic
 from frozendict import frozendict
@@ -55,7 +54,7 @@ __mime_type_to_doc_type_map = frozendict(
 __archive_mime_types__ = frozenset({"application/zip"})
 
 
-def get_doc_type(mime_type: str) -> Optional[DocType]:
+def get_doc_type(mime_type: str) -> DocType | None:
     if mime_type in __mime_type_to_doc_type_map:
         return __mime_type_to_doc_type_map[mime_type]
     return None

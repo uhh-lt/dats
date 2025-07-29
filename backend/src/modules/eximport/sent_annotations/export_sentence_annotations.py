@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -19,7 +18,7 @@ def export_selected_sentence_annotations(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    sentence_annotation_ids: List[int],
+    sentence_annotation_ids: list[int],
 ) -> Path:
     sentence_annotations = crud_sentence_anno.read_by_ids(
         db=db, ids=sentence_annotation_ids
@@ -52,7 +51,7 @@ def __export_sentence_annotations(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    sentence_annotations: List[SentenceAnnotationORM],
+    sentence_annotations: list[SentenceAnnotationORM],
 ) -> Path:
     if len(sentence_annotations) == 0:
         raise NoDataToExportError("No sentence annotations to export.")
@@ -68,7 +67,7 @@ def __export_sentence_annotations(
 
 def __generate_export_df_for_sentence_annotations(
     db: Session,
-    sentence_annotations: List[SentenceAnnotationORM],
+    sentence_annotations: list[SentenceAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(sentence_annotations)} Sentence Annotations ...")
 

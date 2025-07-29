@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +13,7 @@ class ElasticSearchModelBase(BaseModel):
 
 class ElasticSearchHit(BaseModel):
     id: int = Field(description="The ID of the Document")
-    score: Optional[float] = Field(
+    score: float | None = Field(
         description="The score of the Document that was found by a ES Query",
         default=None,
     )

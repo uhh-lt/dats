@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
@@ -8,7 +6,7 @@ from repos.db.dto_base import UpdateDTOBase
 class AspectBase(BaseModel):
     name: str = Field(description="Name of the aspect")
     doc_embedding_prompt: str = Field(description="Prompt for document embedding")
-    doc_modification_prompt: Optional[str] = Field(
+    doc_modification_prompt: str | None = Field(
         default=None, description="Prompt for document modification"
     )
     is_hierarchical: bool = Field(description="Whether the aspect is hierarchical")
@@ -21,15 +19,15 @@ class AspectCreate(AspectBase):
 
 # Properties for updating
 class AspectUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(default=None, description="New name of the aspect")
+    name: str | None = Field(default=None, description="New name of the aspect")
 
 
 # Properties for internal update
 class AspectUpdateIntern(AspectUpdate):
-    embedding_model: Optional[str] = Field(
+    embedding_model: str | None = Field(
         default=None, description="Updated embedding model"
     )
-    most_recent_job_id: Optional[str] = Field(
+    most_recent_job_id: str | None = Field(
         default=None, description="ID of the most recent job associated with the aspect"
     )
 
@@ -38,7 +36,7 @@ class AspectUpdateIntern(AspectUpdate):
 class AspectRead(AspectBase):
     id: int = Field(description="ID of the aspect")
     project_id: int = Field(description="ID of the project this aspect belongs to")
-    most_recent_job_id: Optional[str] = Field(
+    most_recent_job_id: str | None = Field(
         default=None, description="ID of the most recent job associated with the aspect"
     )
 

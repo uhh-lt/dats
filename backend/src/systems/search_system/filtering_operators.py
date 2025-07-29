@@ -1,10 +1,9 @@
 from enum import Enum
-from typing import List, Union
 
 from sqlalchemy import not_
 from sqlalchemy.orm import QueryableAttribute
 
-FilterValue = Union[bool, str, int, List[str], List[List[str]]]
+FilterValue = bool | str | int | list[str] | list[list[str]]
 
 
 class FilterValueType(Enum):
@@ -119,14 +118,14 @@ class IDListOperator(Enum):
     def apply(self, column, value: FilterValue):
         if not isinstance(value, (str, list, int)):
             raise ValueError(
-                "Invalid value type for IDListOperator (requires str, List[str], or int)!"
+                "Invalid value type for IDListOperator (requires str, list[str], or int)!"
             )
         if isinstance(value, list) and len(value) > 0 and not isinstance(value[0], str):
             raise ValueError(
-                "Invalid value type for IDListOperator (requires List[str])!"
+                "Invalid value type for IDListOperator (requires list[str])!"
             )
 
-        # value should be Union[str, List[str]]
+        # value should be str | list[str]
         if isinstance(column, tuple):
             if isinstance(value, (str, int)) and (len(column) == 2):
                 # Column is tuple of ORMs, e.g. (SourceDocumentORM.document_tags, DocumentTagORM.id)
@@ -166,11 +165,11 @@ class ListOperator(Enum):
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, list):
             raise ValueError(
-                "Invalid value type for ListOperator (requires List[str])!"
+                "Invalid value type for ListOperator (requires list[str])!"
             )
         if len(value) > 0 and not isinstance(value[0], str):
             raise ValueError(
-                "Invalid value type for ListOperator (requires List[str])!"
+                "Invalid value type for ListOperator (requires list[str])!"
             )
 
         match self:

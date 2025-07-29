@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -15,10 +13,10 @@ class BBoxAnnotationExportSchema(BaseModel):
     bbox_x_max: int = Field(description="Maximum X coordinate of the bounding box")
     bbox_y_min: int = Field(description="Minimum Y coordinate of the bounding box")
     bbox_y_max: int = Field(description="Maximum Y coordinate of the bounding box")
-    user_first_name: Optional[str] = Field(
+    user_first_name: str | None = Field(
         description="First name of the user", default=None
     )
-    user_last_name: Optional[str] = Field(
+    user_last_name: str | None = Field(
         description="Last name of the user", default=None
     )
 
@@ -40,7 +38,7 @@ class BBoxAnnotationExportSchema(BaseModel):
 class BBoxAnnotationExportCollection(BaseModel):
     """Collection of bbox annotations for export/import operations."""
 
-    annotations: List[BBoxAnnotationExportSchema]
+    annotations: list[BBoxAnnotationExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "BBoxAnnotationExportCollection":

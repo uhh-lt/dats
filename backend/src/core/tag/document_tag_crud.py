@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable
 
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.document_tag_dto import DocumentTagCreate, DocumentTagUpdate
@@ -13,7 +13,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
     def read_by_name_and_project(
         self, db: Session, name: str, project_id: int
-    ) -> Optional[DocumentTagORM]:
+    ) -> DocumentTagORM | None:
         return (
             db.query(self.model)
             .filter(self.model.name == name, self.model.project_id == project_id)
@@ -23,7 +23,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
     # Return a dictionary in the following format:
     # tag id => count of documents that have this tag
     # for all tags in the database
-    def read_tag_sdoc_counts(self, db: Session, sdoc_ids: List[int]) -> Dict[int, int]:
+    def read_tag_sdoc_counts(self, db: Session, sdoc_ids: list[int]) -> dict[int, int]:
         # Get the source documents matching the `sdoc_ids` parameter
         # and count how many of them have each tag
         sdocs_query = (
@@ -50,7 +50,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
     def read_tags_for_documents(
         self, db: Session, *, sdoc_ids: Iterable[int]
-    ) -> Dict[int, List[DocumentTagORM]]:
+    ) -> dict[int, list[DocumentTagORM]]:
         """
         Retrieves all tags associated with the given list of document IDs.
 
@@ -59,7 +59,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             sdoc_ids (Iterable[int]): A list of document IDs for which to retrieve tags.
 
         Returns:
-            Dict[int, List[DocumentTagORM]]: A dictionary mapping each document ID to a list of associated tags.
+            dict[int, list[DocumentTagORM]]: A dictionary mapping each document ID to a list of associated tags.
         """
         if not sdoc_ids:
             return {}
@@ -80,7 +80,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         )
 
         # Organize results into a dictionary {sdoc_id: [tag1, tag2, ...]}
-        result: Dict[int, List[DocumentTagORM]] = {}
+        result: dict[int, list[DocumentTagORM]] = {}
         for sdoc_id, tag_id, tag_name in query:
             tag = DocumentTagORM(id=tag_id, name=tag_name)
             if sdoc_id not in result:
@@ -103,7 +103,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
     ### OTHER OPERATIONS ###
 
     def exists_by_project_and_tag_name_and_parent_id(
-        self, db: Session, tag_name: str, project_id: int, parent_id: Optional[int]
+        self, db: Session, tag_name: str, project_id: int, parent_id: int | None
     ) -> bool:
         if parent_id:
             return (
@@ -127,7 +127,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             )
 
     def link_multiple_document_tags(
-        self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
+        self, db: Session, *, sdoc_ids: list[int], tag_ids: list[int]
     ) -> int:
         """
         Links all SDocs with all DocTags
@@ -156,7 +156,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         return len(new_rows)
 
     def unlink_multiple_document_tags(
-        self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
+        self, db: Session, *, sdoc_ids: list[int], tag_ids: list[int]
     ) -> int:
         """
         Unlinks all DocTags with all SDocs
@@ -178,7 +178,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         return len(del_rows)
 
     def set_document_tags(
-        self, db: Session, *, sdoc_id: int, tag_ids: List[int]
+        self, db: Session, *, sdoc_id: int, tag_ids: list[int]
     ) -> int:
         """
         Link/Unlink DocTags so that sdoc has exactly the tags
@@ -204,7 +204,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         return modifications
 
     def set_document_tags_batch(
-        self, db: Session, *, links: Dict[int, List[int]]
+        self, db: Session, *, links: dict[int, list[int]]
     ) -> int:
         modifications = 0
         for sdoc_id, tag_ids in links.items():

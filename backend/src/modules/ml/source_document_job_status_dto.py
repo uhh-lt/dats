@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -26,7 +25,7 @@ class SourceDocumentJobStatusBaseDTO(BaseModel):
     id: int = Field(description="ID of the SourceDocument")
     type: JobType = Field(description="Type of the job")
     status: JobStatus = Field(description="Status of the job")
-    timestamp: Optional[datetime] = Field(
+    timestamp: datetime | None = Field(
         description="timestamp when quotation attribution was performed on this document"
     )
 

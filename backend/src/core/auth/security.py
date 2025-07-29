@@ -1,6 +1,5 @@
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Dict, Tuple
 
 from config import conf
 from core.user.user_orm import UserORM
@@ -23,7 +22,7 @@ def generate_password_hash(password: str) -> str:
     return __password_ctx.hash(password)
 
 
-def generate_jwt(user: UserORM) -> Tuple[str, datetime]:
+def generate_jwt(user: UserORM) -> tuple[str, datetime]:
     expire = datetime.now(UTC) + timedelta(seconds=__access_ttl)
 
     payload = {
@@ -37,7 +36,7 @@ def generate_jwt(user: UserORM) -> Tuple[str, datetime]:
     return (token, expire)
 
 
-def decode_jwt(token: str) -> Dict:
+def decode_jwt(token: str) -> dict:
     try:
         return jwt.decode(
             token, __jwt_secret, algorithms=__algo, options={"verify_aud": False}

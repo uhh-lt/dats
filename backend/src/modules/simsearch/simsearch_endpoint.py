@@ -1,5 +1,3 @@
-from typing import List, Union
-
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
@@ -15,17 +13,17 @@ router = APIRouter(
 
 @router.post(
     "/sentences",
-    response_model=List[SimSearchSentenceHit],
+    response_model=list[SimSearchSentenceHit],
     summary="Returns similar sentences according to a textual or visual query.",
 )
 def find_similar_sentences(
     proj_id: int,
-    query: Union[str, List[str], int],
+    query: str | list[str] | int,
     top_k: int,
     threshold: float,
     filter: Filter[SdocColumns],
     authz_user: AuthzUser = Depends(),
-) -> List[SimSearchSentenceHit]:
+) -> list[SimSearchSentenceHit]:
     authz_user.assert_in_project(proj_id)
 
     return SimSearchService().find_similar_sentences_with_filter(
@@ -35,17 +33,17 @@ def find_similar_sentences(
 
 @router.post(
     "/images",
-    response_model=List[SimSearchImageHit],
+    response_model=list[SimSearchImageHit],
     summary="Returns similar images according to a textual or visual query.",
 )
 def find_similar_images(
     proj_id: int,
-    query: Union[str, List[str], int],
+    query: str | list[str] | int,
     top_k: int,
     threshold: float,
     filter: Filter[SdocColumns],
     authz_user: AuthzUser = Depends(),
-) -> List[SimSearchImageHit]:
+) -> list[SimSearchImageHit]:
     authz_user.assert_in_project(proj_id)
 
     return SimSearchService().find_similar_images_with_filter(

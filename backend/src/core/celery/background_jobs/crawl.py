@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from loguru import logger
 from modules.crawler.crawler_job_dto import CrawlerJobRead
@@ -8,7 +7,7 @@ from modules.crawler.crawler_service import CrawlerService
 cs: CrawlerService = CrawlerService()
 
 
-def start_crawler_job_(crawler_job: CrawlerJobRead) -> Tuple[Path, int]:
+def start_crawler_job_(crawler_job: CrawlerJobRead) -> tuple[Path, int]:
     urls = list(set(crawler_job.parameters.urls))
     logger.info(
         f"Starting CrawlerJob with {urls} URLs for Project {crawler_job.parameters.project_id}"

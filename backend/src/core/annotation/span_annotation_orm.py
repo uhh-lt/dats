@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
@@ -79,7 +79,7 @@ class SpanAnnotationORM(ORMBase):
     )
 
     # many to many
-    span_groups: Mapped[List["SpanGroupORM"]] = relationship(
+    span_groups: Mapped[list["SpanGroupORM"]] = relationship(
         "SpanGroupORM",
         secondary="SpanAnnotationSpanGroupLinkTable".lower(),
         back_populates="span_annotations",
@@ -110,7 +110,7 @@ class SpanAnnotationORM(ORMBase):
         return [group.id for group in self.span_groups]
 
     @property
-    def memo_ids(self) -> List[int]:
+    def memo_ids(self) -> list[int]:
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]

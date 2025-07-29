@@ -1,5 +1,4 @@
 import inspect
-from typing import Dict
 
 from celery import Celery
 from config import conf
@@ -21,8 +20,8 @@ class CeleryConfig:
         "core.celery.background_jobs.tasks.*": {"queue": "bgJobsQ"},
     }
 
-    def to_dict(self) -> Dict[str, str]:
-        d: Dict[str, str] = {}
+    def to_dict(self) -> dict[str, str]:
+        d: dict[str, str] = {}
         for attr in dir(self):
             value = getattr(self, attr)
             if not attr.startswith("__") and not inspect.ismethod(value):

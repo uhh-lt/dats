@@ -1,5 +1,5 @@
 import time
-from typing import Dict, List, Optional, Tuple, Type, TypedDict, TypeVar
+from typing import Type, TypedDict, TypeVar
 from uuid import uuid4
 
 import numpy as np
@@ -19,9 +19,9 @@ class ModelDict(TypedDict):
 
 
 class ModelParams(TypedDict):
-    llm: Dict
-    vlm: Dict
-    emb: Dict
+    llm: dict
+    vlm: dict
+    emb: dict
 
 
 class OllamaRepo(metaclass=SingletonMeta):
@@ -75,13 +75,13 @@ class OllamaRepo(metaclass=SingletonMeta):
                     f"Default parameters for {model_type} {model_name}: {cls.__default_kwargs[model_type]}"
                 )
 
-            cls.__llm_chat_sessions: Dict[str, List[Dict]] = dict()
-            cls.__llm_chat_session_timestamps: Dict[str, float] = dict()
+            cls.__llm_chat_sessions: dict[str, list[dict]] = dict()
+            cls.__llm_chat_session_timestamps: dict[str, float] = dict()
             cls.__max_llm_chat_sessions = 50
             cls.__max_llm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
-            cls.__vlm_chat_sessions: Dict[str, List[Dict]] = dict()
-            cls.__vlm_chat_session_timestamps: Dict[str, float] = dict()
+            cls.__vlm_chat_sessions: dict[str, list[dict]] = dict()
+            cls.__vlm_chat_session_timestamps: dict[str, float] = dict()
             cls.__max_vlm_chat_sessions = 50
             cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
@@ -128,7 +128,7 @@ class OllamaRepo(metaclass=SingletonMeta):
 
         return session_id
 
-    def _get_llm_chat_session(self, session_id: str) -> List[Dict]:
+    def _get_llm_chat_session(self, session_id: str) -> list[dict]:
         history = self.__llm_chat_sessions.get(session_id, [])
         if len(history) == 0:
             logger.warning(f"Session ID {session_id} does not exist.")
@@ -137,11 +137,11 @@ class OllamaRepo(metaclass=SingletonMeta):
     def llm_chat_with_session(
         self,
         user_prompt: str,
-        system_prompt: Optional[str] = None,
-        response_model: Optional[Type[T]] = None,
-        gen_kwargs: Optional[Dict[str, str]] = None,
-        session_id: Optional[str] = None,
-    ) -> Tuple[str | T, str]:
+        system_prompt: str | None = None,
+        response_model: Type[T] | None = None,
+        gen_kwargs: dict[str, str] | None = None,
+        session_id: str | None = None,
+    ) -> tuple[str | T, str]:
         if gen_kwargs is None:
             gen_kwargs = self.__default_kwargs["llm"]
 
@@ -166,7 +166,7 @@ class OllamaRepo(metaclass=SingletonMeta):
                 }
             )
         # build user message
-        user_message: Dict = {
+        user_message: dict = {
             "role": "user",
             "content": user_prompt.strip(),
         }
@@ -215,7 +215,7 @@ class OllamaRepo(metaclass=SingletonMeta):
         system_prompt: str,
         user_prompt: str,
         response_model: Type[T],
-        gen_kwargs: Optional[Dict[str, str]] = None,
+        gen_kwargs: dict[str, str] | None = None,
     ) -> T:
         if gen_kwargs is None:
             gen_kwargs = self.__default_kwargs["llm"]
@@ -266,7 +266,7 @@ class OllamaRepo(metaclass=SingletonMeta):
 
         return session_id
 
-    def _get_vlm_chat_session(self, session_id: str) -> List[Dict]:
+    def _get_vlm_chat_session(self, session_id: str) -> list[dict]:
         history = self.__vlm_chat_sessions.get(session_id, [])
         if len(history) == 0:
             logger.warning(f"Session ID {session_id} is does not exist.")
@@ -275,12 +275,12 @@ class OllamaRepo(metaclass=SingletonMeta):
     def vlm_chat(
         self,
         user_prompt: str,
-        b64_images: Optional[List[str]] = None,
-        system_prompt: Optional[str] = None,
-        response_model: Optional[Type[T]] = None,
-        gen_kwargs: Optional[Dict[str, str]] = None,
-        session_id: Optional[str] = None,
-    ) -> Tuple[str | T, str]:
+        b64_images: list[str] | None = None,
+        system_prompt: str | None = None,
+        response_model: Type[T] | None = None,
+        gen_kwargs: dict[str, str] | None = None,
+        session_id: str | None = None,
+    ) -> tuple[str | T, str]:
         if gen_kwargs is None:
             gen_kwargs = self.__default_kwargs["vlm"]
 
@@ -305,7 +305,7 @@ class OllamaRepo(metaclass=SingletonMeta):
                 }
             )
         # build user message
-        user_message: Dict = {
+        user_message: dict = {
             "role": "user",
             "content": user_prompt.strip(),
         }
@@ -344,7 +344,7 @@ class OllamaRepo(metaclass=SingletonMeta):
     def llm_embed(
         self,
         inputs: list[str],
-        options: Optional[Dict[str, str]] = None,
+        options: dict[str, str] | None = None,
     ) -> np.ndarray:
         if options is None:
             options = self.__default_kwargs["emb"]

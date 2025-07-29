@@ -1,5 +1,3 @@
-from typing import Union
-
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -99,19 +97,19 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
 
     def resolve_handled_object(
         self, db: Session, handle: ObjectHandleORM
-    ) -> Union[
-        CodeORM,
-        DocumentTagORM,
-        ProjectORM,
-        SourceDocumentORM,
-        SpanAnnotationORM,
-        SentenceAnnotationORM,
-        BBoxAnnotationORM,
-        SpanGroupORM,
-        UserORM,
-        MemoORM,
-        None,
-    ]:
+    ) -> (
+        CodeORM
+        | DocumentTagORM
+        | ProjectORM
+        | SourceDocumentORM
+        | SpanAnnotationORM
+        | SentenceAnnotationORM
+        | BBoxAnnotationORM
+        | SpanGroupORM
+        | UserORM
+        | MemoORM
+        | None
+    ):
         target_id = None
         for target_id in self.__obj_id_crud_map.keys():
             if getattr(handle, target_id):

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from modules.concept_over_time_analysis.cota_dto import (
     COTARefinementJobRead,
@@ -12,19 +12,19 @@ from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 class Cargo(BaseModel):
     job: COTARefinementJobRead = Field(description="The COTARefinementJob")
 
-    next_steps: List[SkipValidation] = (
+    next_steps: list[SkipValidation] = (
         Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
             description="Next Tasks to be executed.", default_factory=list
         )
     )
 
-    finished_steps: List[SkipValidation] = (
+    finished_steps: list[SkipValidation] = (
         Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
             description="Tasks that have been executed.", default_factory=list
         )
     )
 
-    data: Dict[str, Any] = Field(description="data", default_factory=dict)
+    data: dict[str, Any] = Field(description="data", default_factory=dict)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -35,23 +34,17 @@ class MemoBaseDTO(BaseModel):
 
 # Properties to update
 class MemoUpdate(BaseModel, UpdateDTOBase):
-    title: Optional[str] = Field(description="Title of the Memo", default=None)
-    content: Optional[str] = Field(
-        description="Textual content of the Memo", default=None
-    )
-    content_json: Optional[str] = Field(
+    title: str | None = Field(description="Title of the Memo", default=None)
+    content: str | None = Field(description="Textual content of the Memo", default=None)
+    content_json: str | None = Field(
         description="JSON content of the Memo", default=None
     )
-    starred: Optional[bool] = Field(
-        description="Starred flag of the Memo", default=None
-    )
+    starred: bool | None = Field(description="Starred flag of the Memo", default=None)
 
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
-    starred: Optional[bool] = Field(
-        description="Starred flag of the Memo", default=False
-    )
+    starred: bool | None = Field(description="Starred flag of the Memo", default=False)
 
 
 class MemoCreateIntern(MemoCreate):

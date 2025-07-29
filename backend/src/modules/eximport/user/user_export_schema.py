@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -8,10 +6,8 @@ class UserExportSchema(BaseModel):
     """Schema definition for user export/import operations."""
 
     email: str = Field(description="Email of the user")
-    first_name: Optional[str] = Field(
-        description="First name of the user", default=None
-    )
-    last_name: Optional[str] = Field(description="Last name of the user", default=None)
+    first_name: str | None = Field(description="First name of the user", default=None)
+    last_name: str | None = Field(description="Last name of the user", default=None)
 
     @field_validator("email")
     @classmethod
@@ -24,7 +20,7 @@ class UserExportSchema(BaseModel):
 class UserExportCollection(BaseModel):
     """Collection of users for export/import operations."""
 
-    users: List[UserExportSchema]
+    users: list[UserExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "UserExportCollection":

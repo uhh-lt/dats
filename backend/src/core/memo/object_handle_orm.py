@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
@@ -22,7 +22,7 @@ class ObjectHandleORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # one to many
-    attached_memos: Mapped[List["MemoORM"]] = relationship(
+    attached_memos: Mapped[list["MemoORM"]] = relationship(
         "MemoORM",
         back_populates="attached_to",
         cascade="all, delete-orphan",
@@ -31,66 +31,66 @@ class ObjectHandleORM(ORMBase):
     )
 
     # one to one (ObjectHandle is child)
-    user_id: Mapped[Optional[int]] = mapped_column(
+    user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="object_handle")
 
-    project_id: Mapped[Optional[int]] = mapped_column(
+    project_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("project.id", ondelete="CASCADE"), index=True
     )
     project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="object_handle"
     )
 
-    memo_id: Mapped[Optional[int]] = mapped_column(
+    memo_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("memo.id", ondelete="CASCADE"), index=True
     )
     memo: Mapped["MemoORM"] = relationship(
         "MemoORM", back_populates="object_handle", foreign_keys="objecthandle.c.memo_id"
     )
 
-    code_id: Mapped[Optional[int]] = mapped_column(
+    code_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("code.id", ondelete="CASCADE"), index=True
     )
     code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="object_handle")
 
-    source_document_id: Mapped[Optional[int]] = mapped_column(
+    source_document_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="object_handle"
     )
 
-    span_annotation_id: Mapped[Optional[int]] = mapped_column(
+    span_annotation_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("spanannotation.id", ondelete="CASCADE"), index=True
     )
     span_annotation: Mapped["SpanAnnotationORM"] = relationship(
         "SpanAnnotationORM", back_populates="object_handle"
     )
 
-    span_group_id: Mapped[Optional[int]] = mapped_column(
+    span_group_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("spangroup.id", ondelete="CASCADE"), index=True
     )
     span_group: Mapped["SpanGroupORM"] = relationship(
         "SpanGroupORM", back_populates="object_handle"
     )
 
-    bbox_annotation_id: Mapped[Optional[int]] = mapped_column(
+    bbox_annotation_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("bboxannotation.id", ondelete="CASCADE"), index=True
     )
     bbox_annotation: Mapped["BBoxAnnotationORM"] = relationship(
         "BBoxAnnotationORM", back_populates="object_handle"
     )
 
-    sentence_annotation_id: Mapped[Optional[int]] = mapped_column(
+    sentence_annotation_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("sentenceannotation.id", ondelete="CASCADE"), index=True
     )
     sentence_annotation: Mapped["SentenceAnnotationORM"] = relationship(
         "SentenceAnnotationORM", back_populates="object_handle"
     )
 
-    document_tag_id: Mapped[Optional[int]] = mapped_column(
+    document_tag_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), index=True
     )
     document_tag: Mapped["DocumentTagORM"] = relationship(

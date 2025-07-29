@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 import pandas as pd
 from common.doc_type import DocType
@@ -40,7 +39,7 @@ fsr = FilesystemRepo()
 
 
 class ImportSourceDocumentsError(Exception):
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing source documents: {errors}")
 
 
@@ -48,7 +47,7 @@ def import_sdocs_to_proj(
     db: Session,
     path_to_dir: Path,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import source documents from a zip file into a project.
     Validates input data and ensures all required references exist.
@@ -99,7 +98,7 @@ def import_sdocs_to_proj(
     project = crud_project.read(db=db, id=project_id)
 
     # 1. Check if the source document file exists for each document in the collection
-    source_file_by_name: Dict[str, Path] = {}
+    source_file_by_name: dict[str, Path] = {}
     for source_file in source_files:
         source_file_by_name[source_file.name] = source_file
 
@@ -120,7 +119,7 @@ def import_sdocs_to_proj(
             )
 
     # 3. Check if all tags exist
-    needed_tags: Set[str] = set()
+    needed_tags: set[str] = set()
     for sdoc in sdoc_collection.source_documents:
         needed_tags.update(sdoc.tags)
     existing_tags = {tag.name: tag for tag in project.document_tags}
@@ -131,7 +130,7 @@ def import_sdocs_to_proj(
             )
 
     # 4. Check if all links exist
-    needed_links: Set[str] = set()
+    needed_links: set[str] = set()
     for sdoc in sdoc_collection.source_documents:
         needed_links.update(sdoc.links)
     existing_sdocs = {sdoc.filename: sdoc for sdoc in project.source_documents}
@@ -143,13 +142,13 @@ def import_sdocs_to_proj(
             )
 
     # 5. Check if all metadata keys exist
-    needed_metadata_keys: Dict[DocType, Set[str]] = {}
+    needed_metadata_keys: dict[DocType, set[str]] = {}
     for sdoc in sdoc_collection.source_documents:
         for key, _ in sdoc.metadata:
             if DocType(sdoc.doctype) not in needed_metadata_keys:
                 needed_metadata_keys[DocType(sdoc.doctype)] = set()
             needed_metadata_keys[DocType(sdoc.doctype)].add(key)
-    existing_metadata: Dict[Tuple[DocType, str], ProjectMetadataORM] = {}
+    existing_metadata: dict[tuple[DocType, str], ProjectMetadataORM] = {}
     for metadata in project.metadata_:
         existing_metadata[(DocType(metadata.doctype), metadata.key)] = metadata
     for doctype, keys in needed_metadata_keys.items():

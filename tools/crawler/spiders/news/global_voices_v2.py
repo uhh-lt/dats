@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from typing import Set
 
 import requests
 import scrapy
@@ -54,7 +53,7 @@ class GlobalVoicesSpider(SpiderBase):
 
         self.max_pages = int(max_pages)
         self.start_urls = self._build_start_urls()
-        self.all_article_urls: Set[str] = set()
+        self.all_article_urls: set[str] = set()
 
     def _get_available_topics(self) -> list[str]:
         topics_url = "https://globalvoices.org/all-topics/"

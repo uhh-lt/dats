@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Tuple
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field
 
@@ -24,30 +24,30 @@ class Span(NamedTuple):
 class QuoteInputDoc(BaseModel):
     id: int
     text: str = Field(description="Full text of the document")
-    sentences: List[Span] = Field(description="sentences as spans")
-    tokens: List[Token] = Field(description="tokens with offsets")
+    sentences: list[Span] = Field(description="sentences as spans")
+    tokens: list[Token] = Field(description="tokens with offsets")
 
 
 class QuoteTuple(BaseModel):
-    quote: List[Tuple[int, int]]
-    speaker: List[Tuple[int, int]]
-    cue: List[Tuple[int, int]]
-    addressee: List[Tuple[int, int]]
-    frame: List[Tuple[int, int]]
+    quote: list[tuple[int, int]]
+    speaker: list[tuple[int, int]]
+    cue: list[tuple[int, int]]
+    addressee: list[tuple[int, int]]
+    frame: list[tuple[int, int]]
     typ: str
 
 
 class QuoteOutputDoc(BaseModel):
     id: int
-    quotes: List[QuoteTuple]
+    quotes: list[QuoteTuple]
 
 
 class QuoteJobInput(QuoteBase):
     id: int = Field(description="ID of the QuoteJob")
     project_id: int = Field(description="Project the QuoteJob belongs to")
-    documents: List[QuoteInputDoc]
+    documents: list[QuoteInputDoc]
 
 
 class QuoteJobOutput(QuoteBase):
-    documents: List[QuoteOutputDoc]
-    info: List[dict]
+    documents: list[QuoteOutputDoc]
+    info: list[dict]

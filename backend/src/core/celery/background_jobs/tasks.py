@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from core.celery.background_jobs.cota import start_cota_refinement_job_
 from core.celery.background_jobs.crawl import start_crawler_job_
@@ -55,7 +54,7 @@ def start_import_job(import_job: ImportJobRead) -> None:
 
 
 @celery_worker.task(acks_late=True)
-def start_crawler_job(crawler_job: CrawlerJobRead) -> Tuple[Path, int]:
+def start_crawler_job(crawler_job: CrawlerJobRead) -> tuple[Path, int]:
     archive_file_path, project_id = start_crawler_job_(crawler_job=crawler_job)
     return archive_file_path, project_id
 
@@ -126,7 +125,7 @@ def execute_video_preprocessing_pipeline_task(
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def import_uploaded_archive(archive_file_path_and_project_id: Tuple[Path, int]) -> None:
+def import_uploaded_archive(archive_file_path_and_project_id: tuple[Path, int]) -> None:
     # we need a tuple to chain the task since chaining only allows for one return object
     archive_file_path, project_id = archive_file_path_and_project_id
     import_uploaded_archive_(archive_file_path=archive_file_path, project_id=project_id)
