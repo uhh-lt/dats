@@ -74,11 +74,11 @@ class ClusterRead(BaseModel):
     x: float = Field(description="X coordinate for visualization")
     y: float = Field(description="Y coordinate for visualization")
 
-    top_words: list[str | None] = Field(
+    top_words: list[str] | None = Field(
         description="Top words associated with the cluster"
     )
-    top_word_scores: list[float | None] = Field(description="Scores of the top words")
-    top_docs: list[int | None] = Field(
+    top_word_scores: list[float] | None = Field(description="Scores of the top words")
+    top_docs: list[int] | None = Field(
         description="IDs of top documents for the cluster"
     )
 
