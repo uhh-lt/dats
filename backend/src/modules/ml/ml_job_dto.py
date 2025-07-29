@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
     DocumentTagRecommendationMethod,
@@ -63,14 +63,14 @@ class SentenceEmbeddingParams(BaseModel):
 class MLJobParameters(BaseModel):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
-    specific_ml_job_parameters: Union[
-        QuotationAttributionParams,
-        DocTagRecommendationParams,
-        CoreferenceResolutionParams,
-        DocumentEmbeddingParams,
-        SentenceEmbeddingParams,
-        None,
-    ] = Field(
+    specific_ml_job_parameters: (
+        QuotationAttributionParams
+        | DocTagRecommendationParams
+        | CoreferenceResolutionParams
+        | DocumentEmbeddingParams
+        | SentenceEmbeddingParams
+        | None
+    ) = Field(
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
@@ -80,7 +80,7 @@ class MLJobBase(BaseModel):
     status: BackgroundJobStatus = Field(
         default=BackgroundJobStatus.WAITING, description="Status of the MLJob"
     )
-    error: Optional[str] = Field(default=None, description="Error message (if any)")
+    error: str | None = Field(default=None, description="Error message (if any)")
 
 
 class MLJobRead(MLJobBase):

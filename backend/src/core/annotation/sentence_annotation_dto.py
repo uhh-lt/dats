@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict, List
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -48,13 +47,13 @@ class SentenceAnnotationRead(SentenceAnnotationBaseDTO):
     sdoc_id: int = Field(description="SourceDocument the SentenceAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SentenceAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SentenceAnnotation")
-    memo_ids: List[int] = Field(
+    memo_ids: list[int] = Field(
         description="Memo IDs attached to the SentenceAnnotation"
     )
     model_config = ConfigDict(from_attributes=True)
 
 
 class SentenceAnnotatorResult(BaseModel):
-    sentence_annotations: Dict[int, List[SentenceAnnotationRead]] = Field(
+    sentence_annotations: dict[int, list[SentenceAnnotationRead]] = Field(
         description="A mapping of sentence IDs to their annotations"
     )

@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -52,7 +50,7 @@ def get_by_id(
 
 @router.get(
     "/project/{proj_id}",
-    response_model=List[CodeRead],
+    response_model=list[CodeRead],
     summary="Returns all Codes of the Project with the given ID",
 )
 def get_by_project(
@@ -60,7 +58,7 @@ def get_by_project(
     proj_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[CodeRead]:
+) -> list[CodeRead]:
     authz_user.assert_in_project(proj_id)
 
     proj_db_obj = crud_project.read(db=db, id=proj_id)

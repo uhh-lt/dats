@@ -2,7 +2,7 @@ import logging
 import math
 import re
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 from uuid import uuid4
 
 import requests
@@ -39,7 +39,7 @@ class CNNSearchResultsSpider(NewsSearchResultsSpiderBase):
 
         return f"{self.web_search_base_url}{query_terms}"
 
-    def _call_cnn_api(self, response) -> Dict[str, Any] | None:
+    def _call_cnn_api(self, response) -> dict[str, Any] | None:
         query_terms = response.url.replace(self.web_search_base_url, "")
         fake_request_id = str(uuid4())
         api_call_url = (
@@ -74,7 +74,7 @@ class CNNSearchResultsSpider(NewsSearchResultsSpiderBase):
 
         return 0
 
-    def _get_article_urls(self, response) -> List[str]:
+    def _get_article_urls(self, response) -> list[str]:
         data = self._call_cnn_api(response)
         if data is not None:
             return list(map(lambda r: r["path"], data["result"]))

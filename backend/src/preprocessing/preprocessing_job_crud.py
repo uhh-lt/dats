@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from fastapi.encoders import jsonable_encoder
 from preprocessing.preprocessing_job_dto import (
     PreprocessingJobCreate,
@@ -44,8 +42,8 @@ class CRUDPreprocessingJob(
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: List[PreprocessingJobCreate]
-    ) -> List[PreprocessingJobORM]:
+        self, db: Session, *, create_dtos: list[PreprocessingJobCreate]
+    ) -> list[PreprocessingJobORM]:
         raise NotImplementedError()
 
     ### READ OPERATIONS ###
@@ -56,13 +54,13 @@ class CRUDPreprocessingJob(
             raise NoSuchElementError(self.model, id=uuid)
         return db_obj
 
-    def read_by_ids(self, db: Session, uuids: List[str]) -> List[PreprocessingJobORM]:
+    def read_by_ids(self, db: Session, uuids: list[str]) -> list[PreprocessingJobORM]:
         return db.query(self.model).filter(self.model.id.in_(uuids)).all()
 
-    def read_by_proj_id(self, db: Session, proj_id: int) -> List[PreprocessingJobORM]:
+    def read_by_proj_id(self, db: Session, proj_id: int) -> list[PreprocessingJobORM]:
         return db.query(self.model).filter(self.model.project_id == proj_id).all()
 
-    def read_ids_by_proj_id(self, db: Session, proj_id: int) -> List[str]:
+    def read_ids_by_proj_id(self, db: Session, proj_id: int) -> list[str]:
         res = db.query(self.model.id).filter(self.model.project_id == proj_id).all()
         if res is None or len(res) == 0:
             return []
@@ -70,7 +68,7 @@ class CRUDPreprocessingJob(
 
     def read_ids_by_proj_id_and_status(
         self, db: Session, proj_id: int, status: BackgroundJobStatus
-    ) -> List[str]:
+    ) -> list[str]:
         res = (
             db.query(self.model.id)
             .filter(self.model.project_id == proj_id, self.model.status == str(status))
@@ -121,7 +119,7 @@ class CRUDPreprocessingJob(
 
     def update(
         self, db: Session, *, uuid: str, update_dto: PreprocessingJobUpdate
-    ) -> Optional[PreprocessingJobORM]:
+    ) -> PreprocessingJobORM | None:
         db_obj = self.read(db=db, uuid=uuid)
         obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.model_dump(exclude_unset=True)

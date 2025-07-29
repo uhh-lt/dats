@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
@@ -26,7 +24,7 @@ from sqlalchemy.orm import Session
 class ImportTimelineAnalysisError(Exception):
     """Exception raised when timeline analysis import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing timeline analyses: {errors}")
         self.errors = errors
 
@@ -35,7 +33,7 @@ def import_timeline_analysis_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import timeline analyses from a DataFrame into a project.
     Validates input data and ensures all required references (user) exist.
@@ -68,7 +66,7 @@ def import_timeline_analysis_to_proj(
     error_messages = []
 
     # Transform the timeline analyses for import
-    transformed_tas: List[TimelineAnalysisCreateIntern] = []
+    transformed_tas: list[TimelineAnalysisCreateIntern] = []
     for ta in analysis_collection.timeline_analyses:
         try:
             # 1. Transform concepts for import - resolving names to IDs
@@ -119,7 +117,7 @@ def import_timeline_analysis_to_proj(
         raise ImportTimelineAnalysisError(errors=error_messages)
 
     # Everything is fine, we can create the timeline analyses
-    imported_timeline_analysis_ids: List[int] = []
+    imported_timeline_analysis_ids: list[int] = []
     for ta in transformed_tas:
         created_analysis = crud_timeline_analysis.create(
             db=db,

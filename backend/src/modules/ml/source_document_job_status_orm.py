@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from modules.ml.source_document_job_status_dto import JobStatus, JobType
 from repos.db.orm_base import ORMBase
@@ -23,7 +23,7 @@ class SourceDocumentJobStatusORM(ORMBase):
         Integer, nullable=False, index=False, primary_key=True
     )
     status: Mapped[JobStatus] = mapped_column(Integer, nullable=False, index=False)
-    timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    timestamp: Mapped[datetime | None] = mapped_column(DateTime)
 
     def get_project_id(self) -> int:
         return self.source_document.get_project_id()

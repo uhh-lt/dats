@@ -2,7 +2,6 @@ import os
 import subprocess
 import zipfile
 from pathlib import Path
-from typing import List, Optional
 
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
@@ -53,7 +52,7 @@ class UnknownCrawlerJobError(Exception):
 # https://stackoverflow.com/questions/70961319/how-to-run-scrapy-spiders-in-celery
 # https://stackoverflow.com/questions/22116493/run-a-scrapy-spider-in-a-celery-task?noredirect=1&lq=1
 # class _ScrapyHelperBilliardProcess(Process):
-#     def __init__(self, settings: Dict[str, Any], cj: CrawlerJobRead):
+#     def __init__(self, settings: dict[str, Any], cj: CrawlerJobRead):
 #         Process.__init__(self)
 #         self.crawler = Crawler(ListOfURLSSpider, settings)
 #         # self.crawler.signals.connect(reactor.stop, signal=signals.spider_closed)
@@ -66,7 +65,7 @@ class UnknownCrawlerJobError(Exception):
 #         return d
 
 
-# def _run_spider(settings: Dict[str, Any], cj: CrawlerJobRead):
+# def _run_spider(settings: dict[str, Any], cj: CrawlerJobRead):
 #     crawler = Crawler(ListOfURLSSpider, settings)
 #     crawler.signals.connect(reactor.stop, signal=signals.spider_closed)
 #     crawler.crawl(cj.parameters.urls, cj.output_dir)
@@ -185,14 +184,14 @@ class CrawlerService(metaclass=SingletonMeta):
 
         return cj
 
-    def get_all_crawler_jobs(self, project_id: Optional[int]) -> List[CrawlerJobRead]:
+    def get_all_crawler_jobs(self, project_id: int | None) -> list[CrawlerJobRead]:
         return self.redis.get_all_crawler_jobs(project_id=project_id)
 
     def _update_crawler_job(
         self,
         crawler_job_id: str,
-        status: Optional[BackgroundJobStatus] = None,
-        crawled_data_zip_path: Optional[str] = None,
+        status: BackgroundJobStatus | None = None,
+        crawled_data_zip_path: str | None = None,
     ) -> CrawlerJobRead:
         update = CrawlerJobUpdate(
             status=status, crawled_data_zip_path=crawled_data_zip_path

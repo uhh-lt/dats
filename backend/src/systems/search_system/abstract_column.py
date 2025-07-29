@@ -1,5 +1,5 @@
 from enum import Enum, EnumMeta
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
@@ -31,10 +31,10 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
     def add_query_filter_statements(self, query_builder: "SearchBuilder"):
         raise NotImplementedError
 
-    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+    def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         raise NotImplementedError
 
     def resolve_names(
-        self, db: Session, project_id: int, names: List[str]
-    ) -> List[int]:
+        self, db: Session, project_id: int, names: list[str]
+    ) -> list[int]:
         raise NotImplementedError

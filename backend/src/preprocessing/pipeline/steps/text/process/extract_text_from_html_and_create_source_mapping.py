@@ -1,7 +1,7 @@
 import re
 from html.parser import HTMLParser
 from itertools import accumulate
-from typing import List, Optional, TypedDict
+from typing import TypedDict
 
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
@@ -14,7 +14,7 @@ class Text(TypedDict):
 
 
 class CustomLineHTMLParser(HTMLParser):
-    result: List[Text]
+    result: list[Text]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,7 +29,7 @@ class CustomLineHTMLParser(HTMLParser):
         line, char = self.getpos()
         return self.line_lengths[line - 1] + char
 
-    def __call__(self, data: str) -> List[Text]:
+    def __call__(self, data: str) -> list[Text]:
         self.reset()
         self.line_lengths = [0] + list(
             accumulate(len(line) for line in data.splitlines(keepends=True))
@@ -43,7 +43,7 @@ class HTMLTextMapper(CustomLineHTMLParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = []
-        self.text: Optional[Text] = None
+        self.text: Text | None = None
         self.end_spaces = 0
 
     def reset(self):
@@ -101,7 +101,7 @@ def extract_text_from_html_and_create_source_mapping(
 
     text = " ".join([str(r["text"]) for r in results])
     pptd.text = text
-    text2html_character_offsets: List[int] = []
+    text2html_character_offsets: list[int] = []
     for result in results:
         text2html_character_offsets.extend(
             range(int(result["start"]), int(result["end"]) + 1)

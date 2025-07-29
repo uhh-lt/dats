@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Literal
 
 import numpy as np
 import scipy.sparse as sp
@@ -45,7 +45,7 @@ class ClassTfidfTransformer(TfidfTransformer):
         self,
         bm25_weighting: bool = False,
         reduce_frequent_words: bool = False,
-        seed_words: Optional[List[str]] = None,
+        seed_words: list[str] | None = None,
         seed_multiplier: float = 2,
         # Parameters for the parent TfidfTransformer
         norm: Literal["l1", "l2"] = "l2",
@@ -62,7 +62,7 @@ class ClassTfidfTransformer(TfidfTransformer):
         self.seed_words = seed_words
         self.seed_multiplier = seed_multiplier
 
-    def fit(self, X: sp.csr_matrix, multiplier: Optional[np.ndarray] = None):
+    def fit(self, X: sp.csr_matrix, multiplier: np.ndarray | None = None):
         """Learn the idf vector (global term weights).
 
         Arguments:

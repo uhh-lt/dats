@@ -1,7 +1,6 @@
 import logging
 import shutil
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 from datasets import Dataset
@@ -50,12 +49,12 @@ class CotaModel:
         )
         return response
 
-    def __finetune(self, input: RayCOTAJobInput) -> Tuple[SetFitModel, List[str]]:
-        search_space: List[RayCOTASentenceBase] = input.search_space
-        sentences: List[str] = [ss.text for ss in search_space]
+    def __finetune(self, input: RayCOTAJobInput) -> tuple[SetFitModel, list[str]]:
+        search_space: list[RayCOTASentenceBase] = input.search_space
+        sentences: list[str] = [ss.text for ss in search_space]
 
         # 1. Create the training data
-        conceptid2label: Dict[str, int] = {
+        conceptid2label: dict[str, int] = {
             id: idx for idx, id in enumerate(input.concept_ids)
         }
 
@@ -128,8 +127,8 @@ class CotaModel:
         return model, sentences
 
     def __apply_st(
-        self, model: SetFitModel, sentences: List[str]
-    ) -> Tuple[np.ndarray, List[List[float]]]:
+        self, model: SetFitModel, sentences: list[str]
+    ) -> tuple[np.ndarray, list[list[float]]]:
         # 2. Embedd the search space sentences
         sentence_transformer = model.model_body
         if sentence_transformer is None:
@@ -153,14 +152,14 @@ class CotaModel:
         self,
         input: RayCOTAJobInput,
         search_space_embeddings: np.ndarray,
-    ) -> Tuple[List[List[float]], Dict[str, List[float]]]:
+    ) -> tuple[list[list[float]], dict[str, list[float]]]:
         # 2. rank search space sentences for each concept
         # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
         # 2.1 compute representation for each concept
         annotation_indices = self.__get_annotation_sentence_indices(input)
-        concept_embeddings: Dict[str, np.ndarray] = (
+        concept_embeddings: dict[str, np.ndarray] = (
             dict()
-        )  # Dict[concept_id, concept_embedding]
+        )  # dict[concept_id, concept_embedding]
         for concept_id in input.concept_ids:
             # the concept representation is the average of all annotated concept sentences
             concept_embeddings[concept_id] = search_space_embeddings[
@@ -168,9 +167,9 @@ class CotaModel:
             ].mean(axis=0)  # TODO: normalize??
 
         # 2.2  compute similarity of average representation to each sentence
-        concept_similarities: Dict[str, List[float]] = (
+        concept_similarities: dict[str, list[float]] = (
             dict()
-        )  # Dict[concept_id, List[similarity]]
+        )  # dict[concept_id, list[similarity]]
         for concept_id, concept_embedding in concept_embeddings.items():
             sims = concept_embedding @ search_space_embeddings.T
             concept_similarities[concept_id] = sims.tolist()  # TODO normalize?
@@ -186,9 +185,9 @@ class CotaModel:
 
     def __get_concept_sentence_annotations(
         self, job: RayCOTAJobInput
-    ) -> Dict[str, List[RayCOTASentenceBase]]:
+    ) -> dict[str, list[RayCOTASentenceBase]]:
         """Returns the sentences in the search space that are annotated with a concept, for each concept"""
-        annotations: Dict[str, List[RayCOTASentenceBase]] = {
+        annotations: dict[str, list[RayCOTASentenceBase]] = {
             id: [] for id in job.concept_ids
         }
         for sentence in job.search_space:
@@ -198,10 +197,10 @@ class CotaModel:
 
     def __get_annotation_sentence_indices(
         self, job: RayCOTAJobInput
-    ) -> Dict[str, List[int]]:
+    ) -> dict[str, list[int]]:
         """Returns the indices of the sentences in the search space that are annotated with a concept, for each concept"""
 
-        annotations: Dict[str, List[int]] = {
+        annotations: dict[str, list[int]] = {
             concept_id: [] for concept_id in job.concept_ids
         }
         for idx, sentence in enumerate(job.search_space):
@@ -220,7 +219,7 @@ class CotaModel:
         self,
         embs: np.ndarray,
         n_components: int,
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         reducer = UMAP(n_components=n_components)
         reduced_embs = reducer.fit_transform(embs)
         if not isinstance(reduced_embs, np.ndarray):

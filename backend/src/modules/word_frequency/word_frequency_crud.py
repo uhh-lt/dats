@@ -1,5 +1,3 @@
-from typing import List
-
 from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.word_frequency.word_frequency_dto import (
@@ -22,7 +20,7 @@ class CRUDWordFrequency(
 
     def read_by_project_and_doctype(
         self, db: Session, *, project_id: int, doctype: DocType
-    ) -> List[WordFrequencyRead]:
+    ) -> list[WordFrequencyRead]:
         wf_orms = (
             db.query(WordFrequencyORM)
             .join(WordFrequencyORM.source_document)

@@ -1,7 +1,6 @@
 import html
 import re
 from collections.abc import Callable
-from typing import Dict, List
 
 import lxml.html.clean as clean
 import magic
@@ -13,9 +12,9 @@ from readability import Document
 
 
 def clean_html_tags_and_attrs(
-    tags_to_kill: List[str],
-    tags_to_remove: List[str],
-    attrs_to_keep: List[str],
+    tags_to_kill: list[str],
+    tags_to_remove: list[str],
+    attrs_to_keep: list[str],
 ) -> Callable[[str], str]:
     def x(html: str) -> str:
         # use cleaner to only include relevant attributes and to remove unwanted tags
@@ -30,7 +29,7 @@ def clean_html_tags_and_attrs(
     return x
 
 
-def string_replace(replace: Dict[str, str]) -> Callable[[str], str]:
+def string_replace(replace: dict[str, str]) -> Callable[[str], str]:
     def x(html: str) -> str:
         rep = dict((re.escape(k), v) for k, v in replace.items())
         pattern = re.compile("|".join(rep.keys()))
@@ -92,7 +91,7 @@ def add_readability_watermark(html_content: str) -> str:
 
 
 def build_html_cleaning_pipeline(
-    pipeline: List[Callable[[str], str]],
+    pipeline: list[Callable[[str], str]],
 ) -> Callable[[str], str]:
     def x(html_content: str) -> str:
         for f in pipeline:

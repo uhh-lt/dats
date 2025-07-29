@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -19,7 +17,7 @@ class DETRImageInput(BaseModel):
 
 
 class DETRObjectDetectionOutput(BaseModel):
-    bboxes: List[ObjectBBox] = Field(
+    bboxes: list[ObjectBBox] = Field(
         examples=[
             ObjectBBox(
                 label="PERSON",

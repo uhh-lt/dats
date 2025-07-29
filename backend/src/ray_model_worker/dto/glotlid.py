@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -27,7 +25,7 @@ class GlotLIDOutput(BaseModel):
             DetectedLanguage(lang_code="eng_Latn", lang_name="English", confidence=0.9)
         ]
     )
-    detected_languages: List[DetectedLanguage] = Field(
+    detected_languages: list[DetectedLanguage] = Field(
         examples=[
             [
                 DetectedLanguage(

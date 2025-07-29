@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 import srsly
@@ -32,7 +31,7 @@ def export_selected_cota(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    cota_ids: List[int],
+    cota_ids: list[int],
 ) -> Path:
     """
     Export selected concept over time analyses to a CSV file.
@@ -90,7 +89,7 @@ def __export_cota(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    cota_analyses: List[ConceptOverTimeAnalysisORM],
+    cota_analyses: list[ConceptOverTimeAnalysisORM],
 ) -> Path:
     """
     Export concept over time analyses to a CSV file.
@@ -119,7 +118,7 @@ def __export_cota(
 
 def __generate_export_df_for_cota(
     db: Session,
-    cota_analyses: List[ConceptOverTimeAnalysisORM],
+    cota_analyses: list[ConceptOverTimeAnalysisORM],
 ) -> pd.DataFrame:
     """
     Generate a DataFrame for exporting concept over time analyses.

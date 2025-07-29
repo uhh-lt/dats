@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple
-
 import numpy as np
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
@@ -26,7 +24,7 @@ weaviate: WeaviateRepo = WeaviateRepo()
 
 def finetune_apply_compute(cargo: Cargo) -> Cargo:
     # 1. get required data
-    search_space: List[COTASentence] = cargo.data["search_space"]
+    search_space: list[COTASentence] = cargo.data["search_space"]
 
     # 2. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
@@ -82,11 +80,11 @@ def finetune_apply_compute(cargo: Cargo) -> Cargo:
 def __ray_cota_finetune_apply_compute(
     cota_id: int,
     project_id: int,
-    concepts: List[COTAConcept],
-    search_space: List[COTASentence],
-) -> Tuple[List[List[float]], Dict[str, List[float]], List[List[float]]]:
-    concept_ids: List[str] = [concept.id for concept in concepts]
-    ray_search_space: List[RayCOTASentenceBase] = [
+    concepts: list[COTAConcept],
+    search_space: list[COTASentence],
+) -> tuple[list[list[float]], dict[str, list[float]], list[list[float]]]:
+    concept_ids: list[str] = [concept.id for concept in concepts]
+    ray_search_space: list[RayCOTASentenceBase] = [
         RayCOTASentenceBase(
             concept_annotation=sentence.concept_annotation, text=sentence.text
         )
@@ -109,16 +107,16 @@ def __ray_cota_finetune_apply_compute(
 def __apply_umap(
     embs: np.ndarray,
     n_components: int,
-) -> List[List[float]]:
+) -> list[list[float]]:
     reducer = UMAP(n_components=n_components)
     reduced_embs = reducer.fit_transform(embs)
     assert isinstance(reduced_embs, np.ndarray)
     return reduced_embs.tolist()
 
 
-def __get_concept_sentence_annotations(cargo: Cargo) -> Dict[str, List[COTASentence]]:
+def __get_concept_sentence_annotations(cargo: Cargo) -> dict[str, list[COTASentence]]:
     """Returns the sentences in the search space that are annotated with a concept, for each concept"""
-    annotations: Dict[str, List[COTASentence]] = {
+    annotations: dict[str, list[COTASentence]] = {
         concept.id: [] for concept in cargo.job.cota.concepts
     }
     for sentence in cargo.data["search_space"]:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional, Union
 
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
@@ -9,19 +8,17 @@ from repos.db.dto_base import UpdateDTOBase
 
 # Properties shared across all DTOs
 class SourceDocumentMetadataBaseDTO(BaseModel):
-    int_value: Optional[int] = Field(
-        description="Int Value of the SourceDocumentMetadata"
-    )
-    str_value: Optional[str] = Field(
+    int_value: int | None = Field(description="Int Value of the SourceDocumentMetadata")
+    str_value: str | None = Field(
         description="String Value of the SourceDocumentMetadata"
     )
-    boolean_value: Optional[bool] = Field(
+    boolean_value: bool | None = Field(
         description="Boolean Value of the SourceDocumentMetadata"
     )
-    date_value: Optional[datetime] = Field(
+    date_value: datetime | None = Field(
         description="Date Value of the SourceDocumentMetadata"
     )
-    list_value: Optional[List[str]] = Field(
+    list_value: list[str] | None = Field(
         description="List Value of the SourceDocumentMetadata"
     )
 
@@ -134,7 +131,7 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
     )
     model_config = ConfigDict(from_attributes=True)
 
-    def get_value(self) -> Union[str, int, datetime, bool, List, None]:
+    def get_value(self) -> str | int | datetime | bool | list | None:
         match self.project_metadata.metatype:
             case MetaType.STRING:
                 return self.str_value
@@ -147,7 +144,7 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
             case MetaType.LIST:
                 return self.list_value
 
-    def get_value_serializable(self) -> Union[str, int, bool, List, None]:
+    def get_value_serializable(self) -> str | int | bool | list | None:
         match self.project_metadata.metatype:
             case MetaType.STRING:
                 return self.str_value

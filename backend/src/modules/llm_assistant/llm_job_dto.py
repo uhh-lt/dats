@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal
 
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
@@ -26,33 +26,33 @@ class SpecificTaskParameters(BaseModel):
 
 
 class DocumentBasedTaskParams(SpecificTaskParameters):
-    sdoc_ids: List[int] = Field(description="IDs of the source documents to analyse")
+    sdoc_ids: list[int] = Field(description="IDs of the source documents to analyse")
 
 
 class DocumentTaggingParams(DocumentBasedTaskParams):
     llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
-    tag_ids: List[int] = Field(
+    tag_ids: list[int] = Field(
         description="IDs of the tags to use for the document tagging"
     )
 
 
 class MetadataExtractionParams(DocumentBasedTaskParams):
     llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
-    project_metadata_ids: List[int] = Field(
+    project_metadata_ids: list[int] = Field(
         description="IDs of the project metadata to use for the metadata extraction"
     )
 
 
 class AnnotationParams(DocumentBasedTaskParams):
     llm_job_type: Literal[TaskType.ANNOTATION]
-    code_ids: List[int] = Field(
+    code_ids: list[int] = Field(
         description="IDs of the codes to use for the annotation"
     )
 
 
 class SentenceAnnotationParams(DocumentBasedTaskParams):
     llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
-    code_ids: List[int] = Field(
+    code_ids: list[int] = Field(
         description="IDs of the codes to use for the sentence annotation"
     )
     delete_existing_annotations: bool = Field(
@@ -63,12 +63,12 @@ class SentenceAnnotationParams(DocumentBasedTaskParams):
 class LLMJobParameters(BaseModel):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
     project_id: int = Field(description="The ID of the Project to analyse")
-    specific_task_parameters: Union[
-        DocumentTaggingParams,
-        MetadataExtractionParams,
-        AnnotationParams,
-        SentenceAnnotationParams,
-    ] = Field(
+    specific_task_parameters: (
+        DocumentTaggingParams
+        | MetadataExtractionParams
+        | AnnotationParams
+        | SentenceAnnotationParams
+    ) = Field(
         description="Specific parameters for the LLMJob w.r.t it's type",
         discriminator="llm_job_type",
     )
@@ -100,14 +100,14 @@ class SpecificApproachParameters(BaseModel):
 
 class ZeroShotParams(SpecificApproachParameters):
     llm_approach_type: Literal[ApproachType.LLM_ZERO_SHOT]
-    prompts: List[LLMPromptTemplates] = Field(
+    prompts: list[LLMPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
 
 
 class FewShotParams(SpecificApproachParameters):
     llm_approach_type: Literal[ApproachType.LLM_FEW_SHOT]
-    prompts: List[LLMPromptTemplates] = Field(
+    prompts: list[LLMPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
 
@@ -132,11 +132,9 @@ class LLMJobParameters2(LLMJobParameters):
     llm_approach_type: ApproachType = Field(
         description="The approach to use for the LLMJob"
     )
-    specific_approach_parameters: Union[
-        ZeroShotParams,
-        FewShotParams,
-        ModelTrainingParams,
-    ] = Field(
+    specific_approach_parameters: (
+        ZeroShotParams | FewShotParams | ModelTrainingParams
+    ) = Field(
         description="Specific parameters for the approach w.r.t it's type",
         discriminator="llm_approach_type",
     )
@@ -156,10 +154,10 @@ class LLMResultWithStatus(BaseModel):
 
 class DocumentTaggingResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    current_tag_ids: List[int] = Field(
+    current_tag_ids: list[int] = Field(
         description="IDs of the tags currently assigned to the document"
     )
-    suggested_tag_ids: List[int] = Field(
+    suggested_tag_ids: list[int] = Field(
         description="IDs of the tags suggested by the LLM to assign to the document"
     )
     reasoning: str = Field(description="Reasoning for the tagging")
@@ -167,56 +165,56 @@ class DocumentTaggingResult(LLMResultWithStatus):
 
 class DocumentTaggingLLMJobResult(BaseModel):
     llm_job_type: Literal[TaskType.DOCUMENT_TAGGING]
-    results: List[DocumentTaggingResult]
+    results: list[DocumentTaggingResult]
 
 
 class MetadataExtractionResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    current_metadata: List[SourceDocumentMetadataReadResolved] = Field(
+    current_metadata: list[SourceDocumentMetadataReadResolved] = Field(
         description="Current metadata"
     )
-    suggested_metadata: List[SourceDocumentMetadataReadResolved] = Field(
+    suggested_metadata: list[SourceDocumentMetadataReadResolved] = Field(
         description="Suggested metadata"
     )
 
 
 class MetadataExtractionLLMJobResult(BaseModel):
     llm_job_type: Literal[TaskType.METADATA_EXTRACTION]
-    results: List[MetadataExtractionResult]
+    results: list[MetadataExtractionResult]
 
 
 class AnnotationResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    suggested_annotations: List[SpanAnnotationRead] = Field(
+    suggested_annotations: list[SpanAnnotationRead] = Field(
         description="Suggested annotations"
     )
 
 
 class AnnotationLLMJobResult(BaseModel):
     llm_job_type: Literal[TaskType.ANNOTATION]
-    results: List[AnnotationResult]
+    results: list[AnnotationResult]
 
 
 class SentenceAnnotationResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
-    suggested_annotations: List[SentenceAnnotationRead] = Field(
+    suggested_annotations: list[SentenceAnnotationRead] = Field(
         description="Suggested annotations"
     )
 
 
 class SentenceAnnotationLLMJobResult(BaseModel):
     llm_job_type: Literal[TaskType.SENTENCE_ANNOTATION]
-    results: List[SentenceAnnotationResult]
+    results: list[SentenceAnnotationResult]
 
 
 class LLMJobResult(BaseModel):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
-    specific_task_result: Union[
-        DocumentTaggingLLMJobResult,
-        MetadataExtractionLLMJobResult,
-        AnnotationLLMJobResult,
-        SentenceAnnotationLLMJobResult,
-    ] = Field(
+    specific_task_result: (
+        DocumentTaggingLLMJobResult
+        | MetadataExtractionLLMJobResult
+        | AnnotationLLMJobResult
+        | SentenceAnnotationLLMJobResult
+    ) = Field(
         description="Specific result for the LLMJob w.r.t it's type",
         discriminator="llm_job_type",
     )
@@ -237,7 +235,7 @@ class LLMJobBaseDTO(BaseModel):
     current_step_description: str = Field(
         description="Description of the current step."
     )
-    result: Optional[LLMJobResult] = Field(
+    result: LLMJobResult | None = Field(
         default=None, description="Results of the LLMJob."
     )
 
@@ -251,17 +249,17 @@ class LLMJobCreate(LLMJobBaseDTO):
 
 # Properties to update
 class LLMJobUpdate(BaseModel, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         default=None, description="Status of the LLMJob"
     )
-    num_steps_total: Optional[int] = Field(
+    num_steps_total: int | None = Field(
         default=None, description="Number of total steps."
     )
-    current_step: Optional[int] = Field(default=None, description="The current step.")
-    current_step_description: Optional[str] = Field(
+    current_step: int | None = Field(default=None, description="The current step.")
+    current_step_description: str | None = Field(
         default=None, description="Description of the current step."
     )
-    result: Optional[LLMJobResult] = Field(
+    result: LLMJobResult | None = Field(
         default=None, description="Result of the LLMJob."
     )
 
@@ -284,7 +282,7 @@ class LLMJobRead(LLMJobBaseDTO):
 class ApproachRecommendation(BaseModel):
     recommended_approach: ApproachType = Field(description="Recommended approach")
     reasoning: str = Field(description="Reasoning for the recommendation")
-    available_approaches: Dict[ApproachType, bool] = Field(
+    available_approaches: dict[ApproachType, bool] = Field(
         description="Available approaches"
     )
 

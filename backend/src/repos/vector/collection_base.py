@@ -1,5 +1,3 @@
-from typing import Dict
-
 from loguru import logger
 from weaviate import WeaviateClient
 from weaviate.classes.config import Configure, Property, VectorDistances
@@ -8,7 +6,7 @@ from weaviate.classes.config import Configure, Property, VectorDistances
 class BaseCollection:
     name: str
     description: str
-    properties: Dict[str, Property]
+    properties: dict[str, Property]
 
     @classmethod
     def create_collection(cls, client: WeaviateClient):

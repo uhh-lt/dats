@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -70,7 +68,7 @@ async def get_by_id(
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[COTARead],
+    response_model=list[COTARead],
     summary="Returns COTAs of the Project",
     description="Returns the COTA of the Project with the given ID if it exists",
 )
@@ -79,7 +77,7 @@ async def get_by_project(
     db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[COTARead]:
+) -> list[COTARead]:
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_cota.read_by_project(db=db, project_id=project_id)
@@ -134,8 +132,8 @@ async def annotate_cota_sentence(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
-    cota_sentence_ids: List[COTASentenceID],
-    concept_id: Optional[str] = None,
+    cota_sentence_ids: list[COTASentenceID],
+    concept_id: str | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:  # noqa: F821
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
@@ -157,7 +155,7 @@ async def remove_cota_sentence(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
-    cota_sentence_ids: List[COTASentenceID],
+    cota_sentence_ids: list[COTASentenceID],
     authz_user: AuthzUser = Depends(),
 ) -> COTARead:  # noqa: F821
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
@@ -179,7 +177,7 @@ async def refine_cota_by_id(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
-    hyperparams: Optional[COTARefinementHyperparameters] = None,
+    hyperparams: COTARefinementHyperparameters | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> COTARefinementJobRead:  # noqa: F821
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
@@ -228,7 +226,7 @@ async def get_cota_job(
 
 @router.get(
     "/refine/most_recent/{cota_id}",
-    response_model=Optional[COTARefinementJobRead],
+    response_model=COTARefinementJobRead | None,
     summary="Returns the most recent COTA Refinement Job for the given COTA ID",
     description="Returns the most recent COTA Refinement Job for the given COTA ID",
 )
@@ -236,7 +234,7 @@ async def get_most_recent_cota_job(
     *,
     cota_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Optional[COTARefinementJobRead]:
+) -> COTARefinementJobRead | None:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
 
     return redis.get_most_recent_cota_job_by_cota_id(cota_id=cota_id)

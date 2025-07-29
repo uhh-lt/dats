@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,7 +29,7 @@ class BackgroundJobBaseCreate(BackgroundJobBase):
 
 # Properties to update
 class BackgroundJobBaseUpdate(BaseModel):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         default=None, description="Status of the BackgroundJob"
     )
 

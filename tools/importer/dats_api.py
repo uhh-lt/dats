@@ -1,6 +1,6 @@
 import json
 from time import sleep
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from urllib.parse import quote
 
 import requests
@@ -104,7 +104,7 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
-    def read_project_status(self, proj_id: int) -> Dict[str, Any]:
+    def read_project_status(self, proj_id: int) -> dict[str, Any]:
         r = requests.get(
             self.BASE_PATH + f"prepro/project/{proj_id}/status",
             headers={"Authorization": f"Bearer {self.access_token}"},
@@ -114,7 +114,7 @@ class DATSAPI:
 
     # PREPROCESSING JOB
 
-    def read_preprocessing_job_status(self, preprojob_id: int) -> Dict[str, Any]:
+    def read_preprocessing_job_status(self, preprojob_id: int) -> dict[str, Any]:
         r = requests.get(
             self.BASE_PATH + f"prepro/{preprojob_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
@@ -126,7 +126,7 @@ class DATSAPI:
 
     def resolve_sdoc_id_from_proj_and_filename(
         self, proj_id: int, filename: str
-    ) -> Optional[int]:
+    ) -> int | None:
         try:
             r = requests.get(
                 self.BASE_PATH
@@ -155,7 +155,7 @@ class DATSAPI:
         hits = r.json()["hits"]
         return [hit["id"] for hit in hits]
 
-    def read_all_sdoc_ids_by_tags(self, proj_id: int, tags: List[int]):
+    def read_all_sdoc_ids_by_tags(self, proj_id: int, tags: list[int]):
         # get all sdoc ids
         r = requests.post(
             self.BASE_PATH
@@ -187,9 +187,9 @@ class DATSAPI:
     def upload_files(
         self,
         proj_id: int,
-        files: List[Tuple[str, Tuple[str, bytes, str]]],
+        files: list[tuple[str, tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool = False,
-    ) -> Dict[str, Any] | None:
+    ) -> dict[str, Any] | None:
         # upload files
         if filter_duplicate_files_before_upload:
             logger.info("Filtering files to upload ...")
@@ -221,7 +221,7 @@ class DATSAPI:
     def upload_file_batch(
         self,
         project_id: int,
-        file_batch: List[Tuple[str, Tuple[str, bytes, str]]],
+        file_batch: list[tuple[str, tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool,
     ) -> list[int]:
         # file upload
@@ -325,7 +325,7 @@ class DATSAPI:
         except ValueError:
             return None
 
-    def bulk_apply_tags(self, sdoc_ids: List[int], tag_ids: List[int]):
+    def bulk_apply_tags(self, sdoc_ids: list[int], tag_ids: list[int]):
         if len(sdoc_ids) == 0 or len(tag_ids) == 0:
             logger.info(f"Could not apply tags {tag_ids} to documents {sdoc_ids}!")
             return
@@ -384,7 +384,7 @@ class DATSAPI:
         self,
         sdoc_id: int,
         key: str,
-        value: Union[str, int, bool, List[str]],
+        value: str | int | bool | list[str],
         metatype: str,
     ):
         sdoc_metadata = self.read_sdoc_metadata_by_key(sdoc_id=sdoc_id, key=key)
@@ -458,7 +458,7 @@ if __name__ == "__main__":
 
     import magic
 
-    files: List[Tuple[str, Tuple[str, bytes, str]]] = []
+    files: list[tuple[str, tuple[str, bytes, str]]] = []
     for file in Path(Path(__file__).parent / "test_files").iterdir():
         if not file.is_file() or file.suffix != ".txt":
             continue

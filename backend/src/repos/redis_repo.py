@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional, Union
 
 import redis
 from common.singleton_meta import SingletonMeta
@@ -105,7 +104,7 @@ class RedisRepo(metaclass=SingletonMeta):
         client.save()
 
     def store_export_job(
-        self, export_job: Union[ExportJobCreate, ExportJobRead]
+        self, export_job: ExportJobCreate | ExportJobRead
     ) -> ExportJobRead:
         client = self._get_client("export")
 
@@ -158,7 +157,7 @@ class RedisRepo(metaclass=SingletonMeta):
         return exj
 
     def store_import_job(
-        self, import_job: Union[ImportJobCreate, ImportJobRead]
+        self, import_job: ImportJobCreate | ImportJobRead
     ) -> ImportJobRead:
         client = self._get_client("import_")
 
@@ -183,9 +182,9 @@ class RedisRepo(metaclass=SingletonMeta):
 
         return imj
 
-    def get_all_import_jobs(self, project_id: int) -> List[ImportJobRead]:
+    def get_all_import_jobs(self, project_id: int) -> list[ImportJobRead]:
         client = self._get_client("import_")
-        all_import_jobs: List[ImportJobRead] = [
+        all_import_jobs: list[ImportJobRead] = [
             self.load_import_job(str(key, "utf-8")) for key in client.keys()
         ]
         return [
@@ -223,7 +222,7 @@ class RedisRepo(metaclass=SingletonMeta):
         return imj
 
     def store_crawler_job(
-        self, crawler_job: Union[CrawlerJobCreate, CrawlerJobRead]
+        self, crawler_job: CrawlerJobCreate | CrawlerJobRead
     ) -> CrawlerJobRead:
         client = self._get_client("crawler")
 
@@ -277,10 +276,10 @@ class RedisRepo(metaclass=SingletonMeta):
         return cj
 
     def get_all_crawler_jobs(
-        self, project_id: Optional[int] = None
-    ) -> List[CrawlerJobRead]:
+        self, project_id: int | None = None
+    ) -> list[CrawlerJobRead]:
         client = self._get_client("crawler")
-        all_crawler_jobs: List[CrawlerJobRead] = [
+        all_crawler_jobs: list[CrawlerJobRead] = [
             self.load_crawler_job(str(key, "utf-8")) for key in client.keys()
         ]
         if project_id is None:
@@ -293,7 +292,7 @@ class RedisRepo(metaclass=SingletonMeta):
             ]
 
     def store_trainer_job(
-        self, trainer_job: Union[TrainerJobCreate, TrainerJobRead]
+        self, trainer_job: TrainerJobCreate | TrainerJobRead
     ) -> TrainerJobRead:
         client = self._get_client("trainer")
 
@@ -347,10 +346,10 @@ class RedisRepo(metaclass=SingletonMeta):
         return tj
 
     def get_all_trainer_jobs(
-        self, project_id: Optional[int] = None
-    ) -> List[TrainerJobRead]:
+        self, project_id: int | None = None
+    ) -> list[TrainerJobRead]:
         client = self._get_client("trainer")
-        all_trainer_jobs: List[TrainerJobRead] = [
+        all_trainer_jobs: list[TrainerJobRead] = [
             self.load_trainer_job(str(key, "utf-8")) for key in client.keys()
         ]
         if project_id is None:
@@ -363,7 +362,7 @@ class RedisRepo(metaclass=SingletonMeta):
             ]
 
     def store_cota_job(
-        self, cota_job: Union[COTARefinementJobCreate, COTARefinementJobRead]
+        self, cota_job: COTARefinementJobCreate | COTARefinementJobRead
     ) -> COTARefinementJobRead:
         client = self._get_client("cota")
 
@@ -430,17 +429,17 @@ class RedisRepo(metaclass=SingletonMeta):
 
     def delete_all_cota_job_by_cota_id(
         self, cota_id: int
-    ) -> List[COTARefinementJobRead]:
+    ) -> list[COTARefinementJobRead]:
         all_cota_jobs_by_cota_id = self.get_all_cota_jobs_by_cota_id(cota_id=cota_id)
         for cota_job in all_cota_jobs_by_cota_id:
             self.delete_cota_job(cota_job.id)
         return all_cota_jobs_by_cota_id
 
     def get_all_cota_jobs(
-        self, project_id: Optional[int] = None
-    ) -> List[COTARefinementJobRead]:
+        self, project_id: int | None = None
+    ) -> list[COTARefinementJobRead]:
         client = self._get_client("cota")
-        all_cota_jobs: List[COTARefinementJobRead] = [
+        all_cota_jobs: list[COTARefinementJobRead] = [
             self.load_cota_job(str(key, "utf-8")) for key in client.keys()
         ]
         if project_id is None:
@@ -448,7 +447,7 @@ class RedisRepo(metaclass=SingletonMeta):
         else:
             return [job for job in all_cota_jobs if job.cota.project_id == project_id]
 
-    def get_all_cota_jobs_by_cota_id(self, cota_id: int) -> List[COTARefinementJobRead]:
+    def get_all_cota_jobs_by_cota_id(self, cota_id: int) -> list[COTARefinementJobRead]:
         all_cota_jobs = self.get_all_cota_jobs()
         all_cota_jobs_by_cota_id = [
             job for job in all_cota_jobs if job.cota.id == cota_id
@@ -457,14 +456,14 @@ class RedisRepo(metaclass=SingletonMeta):
 
     def get_most_recent_cota_job_by_cota_id(
         self, cota_id: int
-    ) -> Optional[COTARefinementJobRead]:
+    ) -> COTARefinementJobRead | None:
         all_cota_jobs_by_cota_id = self.get_all_cota_jobs_by_cota_id(cota_id=cota_id)
         if len(all_cota_jobs_by_cota_id) == 0:
             return None
         else:
             return sorted(all_cota_jobs_by_cota_id, key=lambda x: x.updated)[-1]
 
-    def store_llm_job(self, llm_job: Union[LLMJobCreate, LLMJobRead]) -> LLMJobRead:
+    def store_llm_job(self, llm_job: LLMJobCreate | LLMJobRead) -> LLMJobRead:
         client = self._get_client("llm")
 
         if isinstance(llm_job, LLMJobCreate):
@@ -488,9 +487,9 @@ class RedisRepo(metaclass=SingletonMeta):
 
         return llmj
 
-    def get_all_llm_jobs(self, project_id: int) -> List[LLMJobRead]:
+    def get_all_llm_jobs(self, project_id: int) -> list[LLMJobRead]:
         client = self._get_client("llm")
-        all_llm_jobs: List[LLMJobRead] = [
+        all_llm_jobs: list[LLMJobRead] = [
             self.load_llm_job(str(key, "utf-8")) for key in client.keys()
         ]
         return [job for job in all_llm_jobs if job.parameters.project_id == project_id]
@@ -525,7 +524,7 @@ class RedisRepo(metaclass=SingletonMeta):
         logger.debug(f"Deleted LLMJob {key}")
         return llmj
 
-    def store_ml_job(self, ml_job: Union[MLJobCreate, MLJobRead]) -> MLJobRead:
+    def store_ml_job(self, ml_job: MLJobCreate | MLJobRead) -> MLJobRead:
         client = self._get_client("ml")
 
         if isinstance(ml_job, MLJobCreate):
@@ -549,9 +548,9 @@ class RedisRepo(metaclass=SingletonMeta):
 
         return mlj
 
-    def get_all_ml_jobs(self, project_id: int) -> List[MLJobRead]:
+    def get_all_ml_jobs(self, project_id: int) -> list[MLJobRead]:
         client = self._get_client("ml")
-        all_ml_jobs: List[MLJobRead] = [
+        all_ml_jobs: list[MLJobRead] = [
             self.load_ml_job(str(key, "utf-8")) for key in client.keys()
         ]
         return [job for job in all_ml_jobs if job.parameters.project_id == project_id]
@@ -587,7 +586,7 @@ class RedisRepo(metaclass=SingletonMeta):
         return mlj
 
     def store_perspectives_job(
-        self, perspectives_job: Union[PerspectivesJobCreate, PerspectivesJobRead]
+        self, perspectives_job: PerspectivesJobCreate | PerspectivesJobRead
     ) -> PerspectivesJobRead:
         client = self._get_client("perspectives")
 
@@ -615,9 +614,9 @@ class RedisRepo(metaclass=SingletonMeta):
         logger.debug(f"Successfully stored PerspectivesJob {key}!")
         return pj
 
-    def get_all_perspectives_jobs(self, project_id: int) -> List[PerspectivesJobRead]:
+    def get_all_perspectives_jobs(self, project_id: int) -> list[PerspectivesJobRead]:
         client = self._get_client("perspectives")
-        all_perspectives_jobs: List[PerspectivesJobRead] = [
+        all_perspectives_jobs: list[PerspectivesJobRead] = [
             self.load_perspectives_job(str(key, "utf-8")) for key in client.keys()
         ]
         return [job for job in all_perspectives_jobs if job.project_id == project_id]

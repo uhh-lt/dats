@@ -1,5 +1,3 @@
-from typing import List
-
 from common.doc_type import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -20,10 +18,10 @@ from sqlalchemy import and_, func
 
 def find_code_frequencies(
     project_id: int,
-    user_ids: List[int],
-    code_ids: List[int],
-    doctypes: List[DocType],
-) -> List[CodeFrequency]:
+    user_ids: list[int],
+    code_ids: list[int],
+    doctypes: list[DocType],
+) -> list[CodeFrequency]:
     with SQLRepo().db_session() as db:
         # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
         proj_db_obj = crud_project.read(db=db, id=project_id)
@@ -132,8 +130,8 @@ def find_code_frequencies(
 
 
 def find_code_occurrences(
-    project_id: int, user_ids: List[int], code_id: int
-) -> List[CodeOccurrence]:
+    project_id: int, user_ids: list[int], code_id: int
+) -> list[CodeOccurrence]:
     with SQLRepo().db_session() as db:
         # 1. query all span annotation occurrences of the code
         query = (
@@ -215,7 +213,7 @@ def find_code_occurrences(
             CodeORM.id,
         )
         res = query.all()
-        sent_code_occurrences: List[CodeOccurrence] = []
+        sent_code_occurrences: list[CodeOccurrence] = []
         for x in res:
             sdoc = SourceDocumentRead.model_validate(x[0])
             sdata = SourceDocumentDataRead.model_validate(x[1])

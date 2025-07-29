@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 from elasticsearch import Elasticsearch
 
@@ -6,8 +6,8 @@ from elasticsearch import Elasticsearch
 class IndexBase:
     name: str
     description: str
-    mappings: Dict[str, Any]
-    settings: Optional[Dict[str, Any]] = None
+    mappings: dict[str, Any]
+    settings: dict[str, Any] | None = None
 
     @classmethod
     def get_index_name(cls, proj_id: int) -> str:

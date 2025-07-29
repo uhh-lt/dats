@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Dict, Optional
+from typing import AsyncGenerator
 
 from config import conf
 from core.auth.auth_exceptions import credentials_exception
@@ -19,21 +19,21 @@ reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_u
 
 
 async def skip_limit_params(
-    skip: Optional[int] = Query(
+    skip: int | None = Query(
         title="Skip",
         description="The number of elements to skip (offset)",
         ge=0,
         le=10e6,
         default=None,
     ),
-    limit: Optional[int] = Query(
+    limit: int | None = Query(
         title="Limit",
         description="The maximum number of returned elements",
         ge=1,
         le=1000,
         default=None,
     ),
-) -> Dict[str, int]:
+) -> dict[str, int]:
     result = {}
     if skip is not None:
         result["skip"] = skip
@@ -66,7 +66,7 @@ def get_current_user(
 ) -> UserORM:
     try:
         payload = decode_jwt(token=token)
-        email: Optional[str] = payload.get("sub")
+        email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
     except (JWTError, ValidationError):

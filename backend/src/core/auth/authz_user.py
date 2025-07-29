@@ -1,4 +1,4 @@
-from typing import List, NoReturn
+from typing import NoReturn
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
@@ -44,7 +44,7 @@ class AuthzUser:
         self.assert_in_project(project_id)
 
     def assert_in_same_project_as_many(
-        self, crud: Crud, object_ids: List[int] | List[str]
+        self, crud: Crud, object_ids: list[int] | list[str]
     ):
         if len(object_ids) == 0:
             return

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -19,12 +18,10 @@ class UserCreate(UserBaseDTO):
 
 # Properties for updating
 class UserUpdate(BaseModel, UpdateDTOBase):
-    email: Optional[str] = Field(description="E-Mail of the User", default=None)
-    first_name: Optional[str] = Field(
-        description="First name of the User", default=None
-    )
-    last_name: Optional[str] = Field(description="Last name of the User", default=None)
-    password: Optional[str] = Field(
+    email: str | None = Field(description="E-Mail of the User", default=None)
+    first_name: str | None = Field(description="First name of the User", default=None)
+    last_name: str | None = Field(description="Last name of the User", default=None)
+    password: str | None = Field(
         description="Hashed password of the User", default=None
     )
 

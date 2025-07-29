@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import torch
@@ -39,7 +39,7 @@ class WhisperModel:
         logger.debug(
             f"Generating automatic transcription using Whisper '{WHISPER_MODEL}'!"
         )
-        transcribe_options: Dict[str, Any] = dict(
+        transcribe_options: dict[str, Any] = dict(
             task="transcribe", **WHISPER_TRANSCRIBE_OPTIONS
         )
 
@@ -47,9 +47,9 @@ class WhisperModel:
             result = self.model.transcribe(audio=audio_array, **transcribe_options)
             transcriptions = list(result[0])
 
-        segments: List[SegmentTranscription] = []
+        segments: list[SegmentTranscription] = []
         for segment in transcriptions:
-            words: List[WordTranscription] = []
+            words: list[WordTranscription] = []
             st = SegmentTranscription(
                 start_ms=int(segment.start * 1000),
                 end_ms=int(segment.end * 1000),

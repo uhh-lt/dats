@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
@@ -18,7 +18,7 @@ class ProjectMetadataORM(ORMBase):
     description: Mapped[str] = mapped_column(String, nullable=False, index=False)
 
     # one to many
-    sdoc_metadata: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
+    sdoc_metadata: Mapped[list["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="project_metadata",
         cascade="all, delete-orphan",

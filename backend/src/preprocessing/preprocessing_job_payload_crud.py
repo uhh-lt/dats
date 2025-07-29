@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from fastapi.encoders import jsonable_encoder
 from preprocessing.preprocessing_job_payload_dto import (
     PreprocessingJobPayloadCreate,
@@ -25,8 +23,8 @@ class CRUDPreprocessingJobPayload(
         return db_obj
 
     def read_by_ids(
-        self, db: Session, uuids: List[str]
-    ) -> List[PreprocessingJobPayloadORM]:
+        self, db: Session, uuids: list[str]
+    ) -> list[PreprocessingJobPayloadORM]:
         return db.query(self.model).filter(self.model.id.in_(uuids)).all()
 
     def read_by_ppj_id_and_status(
@@ -34,7 +32,7 @@ class CRUDPreprocessingJobPayload(
         db: Session,
         ppj_uuid: str,
         status: BackgroundJobStatus,
-    ) -> List[PreprocessingJobPayloadORM]:
+    ) -> list[PreprocessingJobPayloadORM]:
         return (
             db.query(self.model)
             .filter(
@@ -49,7 +47,7 @@ class CRUDPreprocessingJobPayload(
         db: Session,
         ppj_uuid: str,
         status: BackgroundJobStatus,
-    ) -> List[str]:
+    ) -> list[str]:
         res = (
             db.query(self.model.id)
             .filter(
@@ -62,7 +60,7 @@ class CRUDPreprocessingJobPayload(
 
     def update(
         self, db: Session, *, uuid: str, update_dto: PreprocessingJobPayloadUpdate
-    ) -> Optional[PreprocessingJobPayloadORM]:
+    ) -> PreprocessingJobPayloadORM | None:
         db_obj = self.read(db=db, uuid=uuid)
         obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.model_dump(exclude_unset=True)

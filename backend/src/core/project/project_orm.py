@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
@@ -43,91 +43,91 @@ class ProjectORM(ORMBase):
     )
 
     # one to many
-    codes: Mapped[List["CodeORM"]] = relationship(
+    codes: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+    source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    folders: Mapped[List["FolderORM"]] = relationship(
+    folders: Mapped[list["FolderORM"]] = relationship(
         "FolderORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    memos: Mapped[List["MemoORM"]] = relationship(
+    memos: Mapped[list["MemoORM"]] = relationship(
         "MemoORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
+    document_tags: Mapped[list["DocumentTagORM"]] = relationship(
         "DocumentTagORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+    span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+    sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
         "SentenceAnnotationORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
+    bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    whiteboards: Mapped[List["WhiteboardORM"]] = relationship(
+    whiteboards: Mapped[list["WhiteboardORM"]] = relationship(
         "WhiteboardORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    preprocessing_jobs: Mapped[List["PreprocessingJobORM"]] = relationship(
+    preprocessing_jobs: Mapped[list["PreprocessingJobORM"]] = relationship(
         "PreprocessingJobORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    preprocessing_payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
+    preprocessing_payloads: Mapped[list["PreprocessingJobPayloadORM"]] = relationship(
         "PreprocessingJobPayloadORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    metadata_: Mapped[List["ProjectMetadataORM"]] = relationship(
+    metadata_: Mapped[list["ProjectMetadataORM"]] = relationship(
         "ProjectMetadataORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    aspects: Mapped[List["AspectORM"]] = relationship(
+    aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
         back_populates="project",
         cascade="all, delete-orphan",
@@ -135,7 +135,7 @@ class ProjectORM(ORMBase):
     )
 
     # many to many
-    users: Mapped[List["UserORM"]] = relationship(
+    users: Mapped[list["UserORM"]] = relationship(
         "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"
     )
 

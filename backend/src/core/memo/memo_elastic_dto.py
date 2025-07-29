@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from core.memo.memo_dto import AttachedObjectType
 from pydantic import BaseModel, Field
@@ -11,9 +10,7 @@ from repos.elastic.elastic_dto_base import (
 class ElasticSearchMemo(ElasticSearchModelBase):
     title: str = Field(description="The title of the Memo")
     content: str = Field(description="The content of the Memo")
-    starred: Optional[bool] = Field(
-        description="Starred flag of the Memo", default=False
-    )
+    starred: bool | None = Field(description="Starred flag of the Memo", default=False)
     memo_id: int = Field(description="The ID of the Memo as it is in the SQL DB")
     project_id: int = Field(description="The ID of the Project the Memo belongs to")
     user_id: int = Field(description="The ID of the User the Memo belongs to")
@@ -42,8 +39,6 @@ class ElasticSearchMemoCreate(ElasticSearchMemo):
 
 
 class ElasticSearchMemoUpdate(BaseModel):
-    title: Optional[str] = Field(description="The title of the Memo", default=None)
-    content: Optional[str] = Field(description="The content of the Memo", default=None)
-    starred: Optional[bool] = Field(
-        description="Starred flag of the Memo", default=None
-    )
+    title: str | None = Field(description="The title of the Memo", default=None)
+    content: str | None = Field(description="The content of the Memo", default=None)
+    starred: bool | None = Field(description="Starred flag of the Memo", default=None)

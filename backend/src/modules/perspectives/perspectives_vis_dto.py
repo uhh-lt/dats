@@ -1,5 +1,3 @@
-from typing import List
-
 from modules.perspectives.cluster_dto import ClusterRead
 from pydantic import BaseModel, Field
 
@@ -22,19 +20,19 @@ class PerspectivesDoc(BaseModel):
 
 class PerspectivesVisualization(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this visualization belongs to")
-    clusters: List[ClusterRead] = Field(
+    clusters: list[ClusterRead] = Field(
         description="List of clusters in the visualization"
     )
-    docs: List[PerspectivesDoc] = Field(
+    docs: list[PerspectivesDoc] = Field(
         description="List of documents in the visualization",
     )
 
 
 class PerspectivesClusterSimilarities(BaseModel):
     aspect_id: int = Field(description="ID of the aspect this visualization belongs to")
-    clusters: List[ClusterRead] = Field(
+    clusters: list[ClusterRead] = Field(
         description="List of clusters in the visualization"
     )
-    similarities: List[List[float]] = Field(
+    similarities: list[list[float]] = Field(
         description="Matrix of cluster similarities, where similarities[i][j] is the similarity between clusters[i] and clusters[j]",
     )

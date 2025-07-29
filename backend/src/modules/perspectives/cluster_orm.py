@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import ARRAY, Boolean, Float, ForeignKey, Integer, String, Text
@@ -14,30 +14,30 @@ class ClusterORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    top_words: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String), nullable=True)
-    top_word_scores: Mapped[Optional[List[float]]] = mapped_column(
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    top_words: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    top_word_scores: Mapped[list[float] | None] = mapped_column(
         ARRAY(Float), nullable=True
     )
     level: Mapped[int] = mapped_column(Integer)
-    top_docs: Mapped[Optional[List[int]]] = mapped_column(ARRAY(Integer), nullable=True)
+    top_docs: Mapped[list[int] | None] = mapped_column(ARRAY(Integer), nullable=True)
 
     # 2D coordinates for visualization
     x: Mapped[float] = mapped_column(Float, nullable=True)
     y: Mapped[float] = mapped_column(Float, nullable=True)
 
     # many to one
-    parent_cluster_id: Mapped[Optional[int]] = mapped_column(
+    parent_cluster_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("cluster.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
-    parent_cluster: Mapped[Optional["ClusterORM"]] = relationship(
+    parent_cluster: Mapped["ClusterORM | None"] = relationship(
         "ClusterORM", remote_side=[id], back_populates="child_clusters"
     )
-    child_clusters: Mapped[List["ClusterORM"]] = relationship(
+    child_clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM", back_populates="parent_cluster"
     )
 
@@ -47,10 +47,10 @@ class ClusterORM(ORMBase):
     aspect: Mapped["AspectORM"] = relationship("AspectORM", back_populates="clusters")
 
     # many to many
-    document_clusters: Mapped[List["DocumentClusterORM"]] = relationship(
+    document_clusters: Mapped[list["DocumentClusterORM"]] = relationship(
         "DocumentClusterORM", back_populates="cluster", cascade="all, delete-orphan"
     )
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+    source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="documentcluster",
         back_populates="clusters",

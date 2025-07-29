@@ -1,5 +1,3 @@
-from typing import List
-
 from crawler.spiders.news.news_search_results_spider_base import (
     NewsSearchResultsSpiderBase,
 )
@@ -22,7 +20,7 @@ class ZeitSearchResultsSpider(NewsSearchResultsSpiderBase):
     def _get_num_result_pages(self, response) -> int:
         return int(response.css("ul.pager__pages > li:last-child ::text").get())
 
-    def _get_article_urls(self, response) -> List[str]:
+    def _get_article_urls(self, response) -> list[str]:
         urls = response.css(
             (
                 "div.page div.page__content main section.cp-area.cp-area--paginated "

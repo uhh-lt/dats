@@ -1,5 +1,4 @@
 from enum import StrEnum
-from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -30,16 +29,16 @@ class DocumentTagRecommendationLinkUpdate(BaseModel, UpdateDTOBase):
 
 class DocumentTagRecommendationResult(BaseModel):
     sdoc_id: int = Field(description="ID of the source document")
-    recommendation_ids: List[int] = Field(
+    recommendation_ids: list[int] = Field(
         description="List of the corresponding DocumentTagRecommendationLinks"
     )
-    current_tag_ids: List[int] = Field(
+    current_tag_ids: list[int] = Field(
         description="List of current tag IDs for the source document"
     )
-    suggested_tag_ids: List[int] = Field(
+    suggested_tag_ids: list[int] = Field(
         description="List of suggested tag IDs for the source document"
     )
-    scores: List[float] = Field(description="List of the scores of the suggested tags")
+    scores: list[float] = Field(description="List of the scores of the suggested tags")
 
 
 class DocumentTagRecommendationMethod(StrEnum):

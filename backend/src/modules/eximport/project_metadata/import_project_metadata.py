@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 from common.doc_type import DocType
 from common.meta_type import MetaType
@@ -13,7 +11,7 @@ from sqlalchemy.orm import Session
 
 
 class ImportProjectMetadataError(Exception):
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing project metadata: {errors}")
 
 
@@ -21,7 +19,7 @@ def import_project_metadata_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import project metadata from a DataFrame into a project.
     Validates input data and ensures all required references exist.

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -46,5 +45,5 @@ class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     sdoc_id: int = Field(description="SourceDocument the BBoxAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
-    memo_ids: List[int] = Field(description="Memo IDs attached to the BBoxAnnotation")
+    memo_ids: list[int] = Field(description="Memo IDs attached to the BBoxAnnotation")
     model_config = ConfigDict(from_attributes=True)

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import Integer, String
@@ -14,6 +14,6 @@ class SpanTextORM(ORMBase):
     text: Mapped[str] = mapped_column(String, index=True, unique=True)
 
     # one to many
-    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+    span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM", back_populates="span_text", passive_deletes=True
     )

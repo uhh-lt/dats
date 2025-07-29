@@ -1,5 +1,5 @@
 from time import perf_counter_ns
-from typing import Any, Callable, Dict, Iterable, List, Tuple, TypeVar
+from typing import Any, Callable, Iterable, TypeVar
 
 import numpy as np
 from common.singleton_meta import SingletonMeta
@@ -36,8 +36,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
         user_id: int,
         code_id: int,
         reject_code_id: int,
-        accept: List[Tuple[int, int]],
-        reject: List[Tuple[int, int]],
+        accept: list[tuple[int, int]],
+        reject: list[tuple[int, int]],
     ):
         sdoc_ids = {sdoc for sdoc, _ in accept + reject}
 
@@ -86,12 +86,12 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __suggest_similar_sentences(
         self,
         proj_id: int,
-        pos_sdoc_sent_ids: List[Tuple[int, int]],
-        neg_sdoc_sent_ids: List[Tuple[int, int]],
+        pos_sdoc_sent_ids: list[tuple[int, int]],
+        neg_sdoc_sent_ids: list[tuple[int, int]],
         top_k: int,
-    ) -> List[SimSearchSentenceHit]:
+    ) -> list[SimSearchSentenceHit]:
         # suggest
-        hits: List[SimSearchSentenceHit] = []
+        hits: list[SimSearchSentenceHit] = []
 
         with self.weaviate.weaviate_session() as client:
             for sdoc_id, sent_id in pos_sdoc_sent_ids:
@@ -128,7 +128,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
 
             # suggest
-            nearest: List[SimSearchSentenceHit] = []
+            nearest: list[SimSearchSentenceHit] = []
             for sdoc_id, sent_id in candidates:
                 search_result = crud_sentence_embedding.search_near_sentence(
                     client=client,
@@ -157,8 +157,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
             return results[0 : min(len(results), top_k)]
 
     def __unique_consecutive(
-        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], Any]
-    ) -> List[SimSearchHit]:
+        self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]
+    ) -> list[SimSearchHit]:
         if len(hits) == 0:
             return []
         current = hits[0]
@@ -172,11 +172,11 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def suggest(
         self,
         project_id: int,
-        user_ids: List[int],
+        user_ids: list[int],
         code_id: int,
         reject_code_id: int,
         top_k: int,
-    ) -> List[Tuple[int, int, str]]:
+    ) -> list[tuple[int, int, str]]:
         start_time = perf_counter_ns()
         # takes 4ms (small project)
         occurrences = self.__get_annotations(project_id, user_ids, code_id)
@@ -218,9 +218,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def __get_sdoc_sent_ids(
         self,
-        spans: List[Tuple[int, int, int]],
-        sdoc_sentences: Dict[int, Tuple[List[int], List[int], str]],
-    ) -> List[Tuple[int, int]]:
+        spans: list[tuple[int, int, int]],
+        sdoc_sentences: dict[int, tuple[list[int], list[int], str]],
+    ) -> list[tuple[int, int]]:
         sdoc_sent_ids = []
         # takes around 0.1ms per annotation
         for start, end, sdoc_id in spans:
@@ -233,8 +233,8 @@ class AnnoScalingService(metaclass=SingletonMeta):
         return sdoc_sent_ids
 
     def __get_annotations(
-        self, project_id: int, user_ids: List[int], code_id: int
-    ) -> List[Tuple[int, int, int]]:
+        self, project_id: int, user_ids: list[int], code_id: int
+    ) -> list[tuple[int, int, int]]:
         with self.sqlr.db_session() as db:
             query = (
                 db.query(
@@ -262,7 +262,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def __get_sentences(
         self, sdoc_ids: Iterable[int]
-    ) -> Dict[int, Tuple[List[int], List[int], str]]:
+    ) -> dict[int, tuple[list[int], list[int], str]]:
         with self.sqlr.db_session() as db:
             query = db.query(
                 SourceDocumentDataORM.id,
@@ -273,7 +273,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             res = query.all()
             return {r[0]: (r[1], r[2], r[3]) for r in res}
 
-    def __best_match(self, starts: List[int], ends: List[int], begin: int, end: int):
+    def __best_match(self, starts: list[int], ends: list[int], begin: int, end: int):
         overlap = [self.__overlap(s, e, begin, end) for s, e in zip(starts, ends)]
         return np.asarray(overlap).argmax().item()
 

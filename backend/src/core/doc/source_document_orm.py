@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
@@ -74,21 +74,21 @@ class SourceDocumentORM(ORMBase):
     )
 
     # one to many
-    metadata_: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
+    metadata_: Mapped[list["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
+    annotation_documents: Mapped[list["AnnotationDocumentORM"]] = relationship(
         "AnnotationDocumentORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-    source_document_links: Mapped[List["SourceDocumentLinkORM"]] = relationship(
+    source_document_links: Mapped[list["SourceDocumentLinkORM"]] = relationship(
         "SourceDocumentLinkORM",
         back_populates="parent_source_document",
         cascade="all, delete-orphan",
@@ -96,7 +96,7 @@ class SourceDocumentORM(ORMBase):
         foreign_keys="sourcedocumentlink.c.parent_source_document_id",
     )
 
-    word_frequencies: Mapped[List["WordFrequencyORM"]] = relationship(
+    word_frequencies: Mapped[list["WordFrequencyORM"]] = relationship(
         "WordFrequencyORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
@@ -104,7 +104,7 @@ class SourceDocumentORM(ORMBase):
     )
 
     # many to many
-    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
+    document_tags: Mapped[list["DocumentTagORM"]] = relationship(
         "DocumentTagORM",
         secondary="SourceDocumentDocumentTagLinkTable".lower(),
         back_populates="source_documents",
@@ -112,31 +112,31 @@ class SourceDocumentORM(ORMBase):
     )
 
     document_tag_recommendation_link: Mapped[
-        List["DocumentTagRecommendationLinkORM"]
+        list["DocumentTagRecommendationLinkORM"]
     ] = relationship(
         "DocumentTagRecommendationLinkORM",
         back_populates="source_document",
         passive_deletes=True,
     )
 
-    document_aspects: Mapped[List["DocumentAspectORM"]] = relationship(
+    document_aspects: Mapped[list["DocumentAspectORM"]] = relationship(
         "DocumentAspectORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
     )
-    aspects: Mapped[List["AspectORM"]] = relationship(
+    aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
         secondary="documentaspect",
         back_populates="source_documents",
         overlaps="document_aspects,aspect,source_document",
     )
 
-    document_clusters: Mapped[List["DocumentClusterORM"]] = relationship(
+    document_clusters: Mapped[list["DocumentClusterORM"]] = relationship(
         "DocumentClusterORM",
         back_populates="source_document",
         cascade="all, delete-orphan",
     )
-    clusters: Mapped[List["ClusterORM"]] = relationship(
+    clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM",
         secondary="documentcluster",
         back_populates="source_documents",

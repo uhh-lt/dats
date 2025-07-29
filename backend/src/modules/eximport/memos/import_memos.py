@@ -1,4 +1,4 @@
-from typing import List, Optional, Set, TypedDict
+from typing import TypedDict
 
 import pandas as pd
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 class ImportMemosError(Exception):
     """Exception raised when memo import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing memos: {errors}")
         self.errors = errors
 
@@ -34,7 +34,7 @@ def import_memos_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import memos from a DataFrame into a project.
     Validates input data and ensures all required references (user) exist.
@@ -64,7 +64,7 @@ def import_memos_to_proj(
     project = crud_project.read(db=db, id=project_id)
 
     # Memos need a User. We need to check if all users exist in the database
-    user_emails: Set[str] = set()
+    user_emails: set[str] = set()
     for memo in memo_collection.memos:
         user_emails.add(memo.user_email)
     project_user_emails = {user.email: user for user in project.users}
@@ -85,7 +85,7 @@ def import_memos_to_proj(
             )
 
     # Resolve attached_to unique identifiers
-    resolved_memos: List[MemoCreateData] = []
+    resolved_memos: list[MemoCreateData] = []
     for memo in memo_collection.memos:
         user = project_user_emails.get(memo.user_email, None)
         if user is None:
@@ -101,7 +101,7 @@ def import_memos_to_proj(
             starred=memo.starred,
         )
         attached_type = AttachedObjectType(memo.attached_type)
-        attached_to: Optional[int] = None
+        attached_to: int | None = None
 
         match attached_type:
             case AttachedObjectType.project:
@@ -259,7 +259,7 @@ def import_memos_to_proj(
         raise ImportMemosError(errors=error_messages)
 
     # Everything is fine, we can create the memos
-    imported_memo_ids: List[int] = []
+    imported_memo_ids: list[int] = []
     for memo in resolved_memos:
         created_memo = crud_memo.create_for_attached_object(
             db=db,

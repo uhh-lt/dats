@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
@@ -14,7 +12,7 @@ class OllamaMetadataExtractionResult(BaseModel):
 
 
 class OllamaMetadataExtractionResults(BaseModel):
-    data: List[OllamaMetadataExtractionResult]
+    data: list[OllamaMetadataExtractionResult]
 
 
 # ENGLISH
@@ -80,9 +78,9 @@ class MetadataPromptBuilder(PromptBuilder):
             metadata.key.lower(): metadata for metadata in self.project_metadata
         }
 
-    def _build_answer_template(self, project_metadata_ids: List[int]) -> str:
+    def _build_answer_template(self, project_metadata_ids: list[int]) -> str:
         # The example will be a list of metadata keys and some example values
-        answer_templates: Dict[MetaType, str] = {
+        answer_templates: dict[MetaType, str] = {
             MetaType.STRING: "<extracted text>",
             MetaType.NUMBER: "<extracted number>",
             MetaType.DATE: "<extracted date>",
@@ -100,9 +98,9 @@ class MetadataPromptBuilder(PromptBuilder):
             ]
         )
 
-    def _build_example(self, project_metadata_ids: List[int]) -> str:
+    def _build_example(self, project_metadata_ids: list[int]) -> str:
         # The example will be a list of metadata keys and some example values
-        example_values: Dict[MetaType, str] = {
+        example_values: dict[MetaType, str] = {
             MetaType.STRING: "relevant information here",
             MetaType.NUMBER: "42",
             MetaType.DATE: "2024-01-01",
@@ -121,7 +119,7 @@ class MetadataPromptBuilder(PromptBuilder):
         )
 
     def _build_user_prompt_template(
-        self, *, language: str, project_metadata_ids: List[int], **kwargs
+        self, *, language: str, project_metadata_ids: list[int], **kwargs
     ) -> str:
         task_data = "\n".join(
             [
@@ -135,8 +133,8 @@ class MetadataPromptBuilder(PromptBuilder):
             task_data, answer_template, answer_example
         )
 
-    def parse_result(self, result: OllamaMetadataExtractionResults) -> Dict[int, str]:
-        out_dict: Dict[int, str] = {}
+    def parse_result(self, result: OllamaMetadataExtractionResults) -> dict[int, str]:
+        out_dict: dict[int, str] = {}
         for metadata in result.data:
             metadata_name = metadata.key.lower()
             if metadata_name in self.metadataname2metadata:

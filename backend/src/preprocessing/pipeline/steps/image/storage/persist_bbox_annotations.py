@@ -1,5 +1,3 @@
-from typing import Dict, Set
-
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.code.code_crud import crud_code
@@ -41,7 +39,7 @@ def __persist_bbox_annotations(db: Session, sdoc_id: int, ppid: PreProImageDoc) 
             db_code = crud_code.create(db, create_dto=create_dto)
 
         # group by user
-        grouped_by_user_bboxes: Dict[int, Set[AutoBBox]] = dict()
+        grouped_by_user_bboxes: dict[int, set[AutoBBox]] = dict()
         for bbox in ppid.bboxes[code_name]:
             if bbox.user_id not in grouped_by_user_bboxes:
                 grouped_by_user_bboxes[bbox.user_id] = set()

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 import requests
 from common.singleton_meta import SingletonMeta
@@ -44,7 +44,7 @@ class RayRepo(metaclass=SingletonMeta):
                 logger.error(msg)
                 raise Exception(msg)
 
-            cls.base_routes: List[str] = list(response.json().keys())
+            cls.base_routes: list[str] = list(response.json().keys())
             logger.info(
                 f"RayModelService detected the following base routes:"
                 f"\n{cls.base_routes}"
@@ -69,7 +69,7 @@ class RayRepo(metaclass=SingletonMeta):
         raise Exception(msg)
 
     def _make_post_request_with_json_data(
-        self, endpoint: str, data: Dict[str, Any]
+        self, endpoint: str, data: dict[str, Any]
     ) -> Response:
         url = f"{self.base_url}{endpoint}"
         logger.debug(f"Making POST request to {url} with data: {data}"[:1000])

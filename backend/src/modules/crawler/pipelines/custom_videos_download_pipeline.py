@@ -1,6 +1,5 @@
 import mimetypes
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
 from modules.crawler.crawled_item import CrawledItem
@@ -23,7 +22,7 @@ class CustomVideosDownloadPipeline(FilesPipeline):
     # Override this method for custom video filenames
     # https://docs.scrapy.org/en/latest/topics/media-pipeline.html#custom-file-naming
     def file_path(
-        self, request, response=None, info=None, *, item: Optional[CrawledItem] = None
+        self, request, response=None, info=None, *, item: CrawledItem | None = None
     ):
         if item is not None:
             # the name of the html page (without .html)

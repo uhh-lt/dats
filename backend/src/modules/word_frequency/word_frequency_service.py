@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
@@ -22,7 +20,7 @@ from systems.search_system.sorting import Sort
 
 def word_frequency_info(
     project_id: int,
-) -> List[ColumnInfo[WordFrequencyColumns]]:
+) -> list[ColumnInfo[WordFrequencyColumns]]:
     with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -43,9 +41,9 @@ def word_frequency_info(
 def word_frequency(
     project_id: int,
     filter: Filter[WordFrequencyColumns],
-    sorts: List[Sort[WordFrequencyColumns]],
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    sorts: list[Sort[WordFrequencyColumns]],
+    page: int | None = None,
+    page_size: int | None = None,
 ) -> WordFrequencyResult:
     with SQLRepo().db_session() as db:
         # count all words, all sdocs query (uses filtering)

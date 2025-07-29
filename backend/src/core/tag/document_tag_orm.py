@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
@@ -17,12 +17,12 @@ if TYPE_CHECKING:
 class DocumentTagORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    description: Mapped[Optional[str]] = mapped_column(String, index=False)
-    color: Mapped[Optional[str]] = mapped_column(String, index=False)
-    created: Mapped[Optional[datetime]] = mapped_column(
+    description: Mapped[str | None] = mapped_column(String, index=False)
+    color: Mapped[str | None] = mapped_column(String, index=False)
+    created: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
-    updated: Mapped[Optional[datetime]] = mapped_column(
+    updated: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
@@ -48,7 +48,7 @@ class DocumentTagORM(ORMBase):
 
     # one to many
     document_tag_recommendation_links: Mapped[
-        List["DocumentTagRecommendationLinkORM"]
+        list["DocumentTagRecommendationLinkORM"]
     ] = relationship(
         "DocumentTagRecommendationLinkORM",
         back_populates="predicted_tag",
@@ -57,7 +57,7 @@ class DocumentTagORM(ORMBase):
     )
 
     # many to many
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+    source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="SourceDocumentDocumentTagLinkTable".lower(),
         back_populates="document_tags",
@@ -65,14 +65,14 @@ class DocumentTagORM(ORMBase):
     )
 
     # hierarchy reference
-    parent_id: Mapped[Optional[int]] = mapped_column(
+    parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("documenttag.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
     parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
-    children: Mapped[List["DocumentTagORM"]] = relationship(
+    children: Mapped[list["DocumentTagORM"]] = relationship(
         "DocumentTagORM",
         back_populates="parent",
         cascade="all, delete-orphan",
@@ -88,7 +88,7 @@ class DocumentTagORM(ORMBase):
     )
 
     @property
-    def memo_ids(self) -> List[int]:
+    def memo_ids(self) -> list[int]:
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]

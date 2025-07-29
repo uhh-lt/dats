@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -26,7 +24,7 @@ class ProjectMetadataExportSchema(BaseModel):
 class ProjectMetadataExportCollection(BaseModel):
     """Collection of project metadata for export/import operations."""
 
-    metadata_items: List[ProjectMetadataExportSchema]
+    metadata_items: list[ProjectMetadataExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "ProjectMetadataExportCollection":

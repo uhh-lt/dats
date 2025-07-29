@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from typing import Sequence
 
 from common.crud_enum import Crud
 from common.dependencies import get_db_session
@@ -23,7 +23,7 @@ class Validate:
     ):
         self.db = db
 
-    def validate_objects_in_same_project(self, specs: Sequence[Tuple[Crud, int | str]]):
+    def validate_objects_in_same_project(self, specs: Sequence[tuple[Crud, int | str]]):
         orms = [self.read_crud(spec[0], spec[1]) for spec in specs]
 
         project_ids = {orm.get_project_id() for orm in orms}
@@ -36,7 +36,7 @@ class Validate:
             "Objects need to be in the same project",
         )
 
-    def validate_condition(self, condition: bool, note: Optional[str] = None):
+    def validate_condition(self, condition: bool, note: str | None = None):
         if not condition:
             raise InvalidError(note)
 

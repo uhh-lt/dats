@@ -1,6 +1,6 @@
 import os
 import time
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 from common.doc_type import DocType
 from loguru import logger
@@ -26,8 +26,8 @@ class PreprocessingPipeline:
         doc_type: DocType,
     ):
         self._dt: DocType = doc_type
-        self._steps_by_ordering: Dict[int, PipelineStep] = dict()
-        self._steps_by_name: Dict[str, PipelineStep] = dict()
+        self._steps_by_ordering: dict[int, PipelineStep] = dict()
+        self._steps_by_name: dict[str, PipelineStep] = dict()
         self.sqlr: SQLRepo = SQLRepo()
 
         self.__is_frozen = False
@@ -262,9 +262,9 @@ class PreprocessingPipeline:
     def _update_ppj_payload_of_cargo(
         self,
         cargo: PipelineCargo,
-        current_step_name: Optional[str] = None,
-        status: Optional[BackgroundJobStatus] = None,
-        error_msg: Optional[str] = None,
+        current_step_name: str | None = None,
+        status: BackgroundJobStatus | None = None,
+        error_msg: str | None = None,
     ) -> PipelineCargo:
         # we have to set the members explicitly due to pydantic default value behavior
         update_dto = PreprocessingJobPayloadUpdate()
@@ -290,7 +290,7 @@ class PreprocessingPipeline:
     def register_step(
         self,
         func: Callable[[PipelineCargo], PipelineCargo],
-        required_data: List[str] = [],
+        required_data: list[str] = [],
     ):
         if self.__is_frozen:
             msg = (
@@ -310,7 +310,7 @@ class PreprocessingPipeline:
     def join_pipeline(
         self,
         pipeline: "PreprocessingPipeline",
-        skip_steps_with_name: List[str] = [],
+        skip_steps_with_name: list[str] = [],
     ) -> None:
         if self.__is_frozen:
             msg = (

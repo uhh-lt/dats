@@ -6,7 +6,7 @@ Create Date: 2025-02-26 15:28:35.202746
 
 """
 
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -16,16 +16,16 @@ from utils.color_utils import get_next_color
 
 # revision identifiers, used by Alembic.
 revision: str = "c970e0892bef"
-down_revision: Union[str, None] = "c970e0892bee"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "c970e0892bee"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 class CodeCreate(BaseModel):
     name: str = Field(description="Name of the Code")
     color: str = Field(description="Color of the Code")
     description: str = Field(description="Description of the Code")
-    parent_id: Optional[int] = Field(description="Parent of the Code", default=None)
+    parent_id: int | None = Field(description="Parent of the Code", default=None)
     project_id: int = Field(description="Project the Code belongs to")
     color: str = Field(description="Color of the Code", default_factory=get_next_color)
     is_system: bool = Field(description="Is the Code a system code")
@@ -108,9 +108,9 @@ def create_code(db: Session, create_dto: CodeCreate) -> int:
 
 def create_codes_recursively(
     db: Session,
-    code_dict: Dict[str, Dict[str, Any]],
+    code_dict: dict[str, dict[str, Any]],
     proj_id: int,
-    parent_code_id: Optional[int] = None,
+    parent_code_id: int | None = None,
 ):
     for code_name in code_dict.keys():
         create_dto = CodeCreate(

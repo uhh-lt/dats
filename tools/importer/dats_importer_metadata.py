@@ -1,7 +1,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from dats_api import DATSAPI
 from tqdm import tqdm
@@ -110,7 +110,7 @@ if directory.is_file():
     exit()
 
 # read and check files
-json_data: Dict[int, Any] = dict()
+json_data: dict[int, Any] = dict()
 sdoc_ids = []
 files_in_dir = list(directory.glob("**/*.json"))
 for idx, file in enumerate(
@@ -126,8 +126,8 @@ for idx, file in enumerate(
     filename = file.name.replace(".json", ".html")
     try:
         data = json.loads(file.read_bytes())
-        if data.get('filename'):
-            filename = data['filename']
+        if data.get("filename"):
+            filename = data["filename"]
         sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
             proj_id=project["id"], filename=filename
         )

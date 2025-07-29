@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -18,7 +17,7 @@ def export_selected_span_annotations(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    span_annotation_ids: List[int],
+    span_annotation_ids: list[int],
 ) -> Path:
     span_annotations = crud_span_anno.read_by_ids(db=db, ids=span_annotation_ids)
     return __export_span_annotations(
@@ -47,7 +46,7 @@ def __export_span_annotations(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    span_annotations: List[SpanAnnotationORM],
+    span_annotations: list[SpanAnnotationORM],
 ) -> Path:
     if len(span_annotations) == 0:
         raise NoDataToExportError("No span annotations to export.")
@@ -62,7 +61,7 @@ def __export_span_annotations(
 
 
 def __generate_export_df_for_span_annotations(
-    span_annotations: List[SpanAnnotationORM],
+    span_annotations: list[SpanAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(span_annotations)} Span Annotations ...")
 

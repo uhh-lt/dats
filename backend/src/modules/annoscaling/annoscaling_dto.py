@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field
 
 
@@ -19,10 +17,10 @@ class AnnoscalingConfirmSuggest(BaseModel):
     project_id: int = Field(description="Project to apply suggestions")
     code_id: int = Field(description="Code to apply on accepted spans")
     reject_code_id: int = Field(description="Code to apply on rejected spans")
-    accept: List[SdocSentencePair] = Field(
+    accept: list[SdocSentencePair] = Field(
         description="Suggested annotations to accept"
     )
-    reject: List[SdocSentencePair] = Field(
+    reject: list[SdocSentencePair] = Field(
         description="Suggested annotations to reject"
     )
 

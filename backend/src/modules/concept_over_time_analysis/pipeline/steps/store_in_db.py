@@ -1,5 +1,3 @@
-from typing import List
-
 import srsly
 from fastapi.encoders import jsonable_encoder
 from modules.concept_over_time_analysis.cota_crud import (
@@ -17,7 +15,7 @@ sqlr: SQLRepo = SQLRepo()
 
 def store_in_db(cargo: Cargo) -> Cargo:
     # 1. read the required data
-    search_space: List[COTASentence] = cargo.data["search_space"]
+    search_space: list[COTASentence] = cargo.data["search_space"]
 
     # 2. Store search_space in db
     with sqlr.db_session() as db:

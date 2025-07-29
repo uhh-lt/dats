@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.project.project_crud import crud_project
@@ -29,7 +28,7 @@ def __export_tags(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    tags: List[DocumentTagORM],
+    tags: list[DocumentTagORM],
 ) -> Path:
     if len(tags) == 0:
         raise NoDataToExportError("No tags to export.")
@@ -40,7 +39,7 @@ def __export_tags(
     )
 
 
-def __generate_export_df_for_tags(tags: List[DocumentTagORM]) -> pd.DataFrame:
+def __generate_export_df_for_tags(tags: list[DocumentTagORM]) -> pd.DataFrame:
     logger.info(f"Exporting {len(tags)} Tags ...")
     tag_export_items = []
     for tag in tags:

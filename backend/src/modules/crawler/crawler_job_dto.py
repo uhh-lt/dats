@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -12,7 +11,7 @@ class CrawlerJobParameters(BaseModel):
     project_id: int = Field(
         description="The ID of the Project to import the crawled data."
     )
-    urls: List[str] = Field(description="List of URLs to crawl.")
+    urls: list[str] = Field(description="List of URLs to crawl.")
 
 
 # Properties shared across all DTOs
@@ -43,10 +42,10 @@ class CrawlerJobCreate(CrawlerJobBaseDTO):
 
 # Properties to update
 class CrawlerJobUpdate(BaseModel, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         default=None, description="Status of the CrawlerJob"
     )
-    crawled_data_zip_path: Optional[str] = Field(
+    crawled_data_zip_path: str | None = Field(
         default=None,
         description="Path to the ZIP that contains the data of the CrawlerJob",
     )
@@ -70,7 +69,7 @@ class CrawlerJobRead(CrawlerJobBaseDTO):
     audios_store_path: str = Field(
         description="Internal temporary output directory for the crawled audios."
     )
-    crawled_data_zip_path: Optional[str] = Field(
+    crawled_data_zip_path: str | None = Field(
         default=None,
         description="Path to the ZIP that contains the data of the CrawlerJob",
     )

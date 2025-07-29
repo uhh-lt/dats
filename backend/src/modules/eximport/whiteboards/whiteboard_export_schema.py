@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import pandas as pd
 from modules.whiteboard.whiteboard_dto import (
@@ -26,7 +26,7 @@ class MemoNodeDataForExport(WhiteboardBackgroundColorData):
 class CodeNodeDataForExport(WhiteboardBackgroundColorData):
     type: Literal[WhiteboardNodeType.CODE]
     code_name: str = Field(description="Name of the code")
-    parent_code_name: Optional[str] = Field(
+    parent_code_name: str | None = Field(
         description="Name of the parent code",
         default=None,
     )
@@ -59,25 +59,25 @@ class BBoxAnnotationNodeDataForExport(WhiteboardBackgroundColorData):
 
 
 class WhiteboardNodeForExport(WhiteboardNode):
-    data: Union[
-        TextNodeData,
-        NoteNodeData,
-        BorderNodeData,
-        SdocNodeDataForExport,
-        MemoNodeDataForExport,
-        CodeNodeDataForExport,
-        TagNodeDataForExport,
-        SpanAnnotationNodeDataForExport,
-        SentenceAnnotationNodeDataForExport,
-        BBoxAnnotationNodeDataForExport,
-    ] = Field(
+    data: (
+        TextNodeData
+        | NoteNodeData
+        | BorderNodeData
+        | SdocNodeDataForExport
+        | MemoNodeDataForExport
+        | CodeNodeDataForExport
+        | TagNodeDataForExport
+        | SpanAnnotationNodeDataForExport
+        | SentenceAnnotationNodeDataForExport
+        | BBoxAnnotationNodeDataForExport
+    ) = Field(
         description="Data of the node",
         discriminator="type",
     )
 
 
 class WhiteboardContentForExport(WhiteboardContent):
-    nodes: List[WhiteboardNodeForExport] = Field(
+    nodes: list[WhiteboardNodeForExport] = Field(
         description="List of nodes in the whiteboard content",
     )
 
@@ -115,7 +115,7 @@ class WhiteboardExportSchema(BaseModel):
 class WhiteboardExportCollection(BaseModel):
     """Collection of whiteboards for export/import operations."""
 
-    whiteboards: List[WhiteboardExportSchema]
+    whiteboards: list[WhiteboardExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "WhiteboardExportCollection":

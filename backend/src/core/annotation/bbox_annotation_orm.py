@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from core.code.code_orm import CodeORM
 from repos.db.orm_base import ORMBase
@@ -83,7 +83,7 @@ class BBoxAnnotationORM(ORMBase):
         return self.annotation_document.source_document_id
 
     @property
-    def memo_ids(self) -> List[int]:
+    def memo_ids(self) -> list[int]:
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]

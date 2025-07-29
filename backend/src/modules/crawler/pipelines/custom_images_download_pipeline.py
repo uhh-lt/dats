@@ -1,6 +1,5 @@
 import mimetypes
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
 from modules.crawler.crawled_item import CrawledItem
@@ -17,7 +16,7 @@ class CustomImagesDownloadPipeline(ImagesPipeline):
         response=None,
         info=None,
         *,
-        item: Optional[CrawledItem] = None,
+        item: CrawledItem | None = None,
     ) -> str:
         if item is not None:
             # the name of the html page (without .html)

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 import numpy as np
 from common.doc_type import DocType
@@ -41,7 +40,7 @@ class EmbeddingService(metaclass=SingletonMeta):
     def encode_document(self, text: str) -> np.ndarray:
         return self.ollama.llm_embed([text])
 
-    def encode_sentences(self, sentences: List[str]) -> np.ndarray:
+    def encode_sentences(self, sentences: list[str]) -> np.ndarray:
         encoded_query = self.ray.clip_text_embedding(
             ClipTextEmbeddingInput(text=sentences)
         )

@@ -2,15 +2,14 @@ import argparse
 import os
 from pathlib import Path
 from pprint import pprint
-from typing import List
 
 import srsly
 
 
 def get_all_apps(
     apps_path: Path,
-    ignore_apps: List[str] = [],
-) -> List[str]:
+    ignore_apps: list[str] = [],
+) -> list[str]:
     apps = []
     for app in apps_path.glob("./*.py"):
         if app.stem in ignore_apps:
@@ -36,7 +35,7 @@ def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path):
 
 
 def run_build_cmd(
-    apps: List[str],
+    apps: list[str],
     spec_out_fp: Path,
 ) -> Path:
     gen_spec_fn = spec_out_fp.with_suffix(".generated")
@@ -53,7 +52,7 @@ def generate(
     apps_path: str | Path = "./apps",
     spec_out_fp: str | Path = "./spec.yaml",
     overwrite_existing: bool = True,
-    ignore_apps: List[str] = [],
+    ignore_apps: list[str] = [],
 ):
     print("Generating ray serve spec file...")
 

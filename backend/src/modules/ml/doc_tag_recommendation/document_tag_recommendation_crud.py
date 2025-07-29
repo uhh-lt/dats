@@ -1,5 +1,3 @@
-from typing import List
-
 from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
     DocumentTagRecommendationLinkCreate,
     DocumentTagRecommendationLinkUpdate,
@@ -26,7 +24,7 @@ class CRUDDocumentTagRecommendationLink(
         *,
         ml_job_id: str,
         exclude_reviewed: bool = False,
-    ) -> List[DocumentTagRecommendationLinkORM]:
+    ) -> list[DocumentTagRecommendationLinkORM]:
         query = db.query(self.model).filter(self.model.ml_job_id == ml_job_id)
 
         if exclude_reviewed:

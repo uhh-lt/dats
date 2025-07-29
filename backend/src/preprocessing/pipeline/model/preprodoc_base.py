@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Union
 
 from core.doc.source_document_link_dto import SourceDocumentLinkCreate
 from pydantic import BaseModel, Field
@@ -29,7 +28,7 @@ class PreProDocBase(BaseModel):
         )
     )
 
-    metadata: Dict[str, Union[str, List[str], bool, int, datetime]] = Field(
+    metadata: dict[str, str | list[str] | bool | int | datetime] = Field(
         description=(
             "A container to store all metadata generated during the preprocessing "
             "that will be persisted in the database."
@@ -37,12 +36,12 @@ class PreProDocBase(BaseModel):
         default_factory=dict,
     )
 
-    sdoc_link_create_dtos: List[SourceDocumentLinkCreate] = Field(
+    sdoc_link_create_dtos: list[SourceDocumentLinkCreate] = Field(
         description="A list of sdoc link create dtos that is used by every import pipeline to import sdoc links.",
         default_factory=list,
     )
 
-    tags: List[int] = Field(
+    tags: list[int] = Field(
         description="A list of tag ids that is used by every import pipeline to import tags on sdocs.",
         default_factory=list,
     )

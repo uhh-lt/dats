@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 from celery import Task, group
 from celery.result import GroupResult
@@ -152,7 +152,7 @@ def prepare_and_start_perspectives_job_async(
 
 
 def execute_text_preprocessing_pipeline_apply_async(
-    cargos: List[PipelineCargo],
+    cargos: list[PipelineCargo],
 ) -> GroupResult:
     from core.celery.background_jobs.tasks import (
         execute_text_preprocessing_pipeline_task,
@@ -169,7 +169,7 @@ def execute_text_preprocessing_pipeline_apply_async(
 
 
 def execute_image_preprocessing_pipeline_apply_async(
-    cargos: List[PipelineCargo],
+    cargos: list[PipelineCargo],
 ) -> None:
     from core.celery.background_jobs.tasks import (
         execute_image_preprocessing_pipeline_task,
@@ -184,7 +184,7 @@ def execute_image_preprocessing_pipeline_apply_async(
 
 
 def execute_audio_preprocessing_pipeline_apply_async(
-    cargos: List[PipelineCargo],
+    cargos: list[PipelineCargo],
 ) -> None:
     from core.celery.background_jobs.tasks import (
         execute_audio_preprocessing_pipeline_task,
@@ -199,7 +199,7 @@ def execute_audio_preprocessing_pipeline_apply_async(
 
 
 def execute_video_preprocessing_pipeline_apply_async(
-    cargos: List[PipelineCargo],
+    cargos: list[PipelineCargo],
 ) -> None:
     from core.celery.background_jobs.tasks import (
         execute_video_preprocessing_pipeline_task,

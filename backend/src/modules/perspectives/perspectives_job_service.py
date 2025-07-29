@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Union
+from typing import Callable
 
 from common.singleton_meta import SingletonMeta
 from loguru import logger
@@ -24,7 +24,7 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class PerspectivesJobPreparationError(Exception):
-    def __init__(self, cause: Union[Exception, str]) -> None:
+    def __init__(self, cause: Exception | str) -> None:
         super().__init__(f"Cannot prepare and create the PerspectivesJob! {cause}")
 
 
@@ -42,11 +42,11 @@ class NoSuchPerspectivesJobError(Exception):
         )
 
 
-TMJUpdateFN = Callable[[Optional[int], Optional[str]], PerspectivesJobRead]
+TMJUpdateFN = Callable[[int | None, str | None], PerspectivesJobRead]
 
 
 class PerspectivesJobService(metaclass=SingletonMeta):
-    perspectives_job_steps: dict[PerspectivesJobType, List[str]] = {
+    perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
         PerspectivesJobType.CREATE_ASPECT: [
             "Document Modification",
             "Document Embedding",
@@ -120,7 +120,7 @@ class PerspectivesJobService(metaclass=SingletonMeta):
 
         return pj_read
 
-    def get_all_perspectives_jobs(self, project_id: int) -> List[PerspectivesJobRead]:
+    def get_all_perspectives_jobs(self, project_id: int) -> list[PerspectivesJobRead]:
         return self.redis.get_all_perspectives_jobs(project_id=project_id)
 
     def get_perspectives_job(self, perspectives_job_id: str) -> PerspectivesJobRead:
@@ -142,9 +142,7 @@ class PerspectivesJobService(metaclass=SingletonMeta):
         return pj
 
     def update_status_callback(self, perspectives_job_id: str) -> TMJUpdateFN:
-        def callback(
-            step: Optional[int], status_msg: Optional[str]
-        ) -> PerspectivesJobRead:
+        def callback(step: int | None, status_msg: str | None) -> PerspectivesJobRead:
             if step is None and status_msg is None:
                 raise ValueError("At least one of step or status_msg must be provided.")
 

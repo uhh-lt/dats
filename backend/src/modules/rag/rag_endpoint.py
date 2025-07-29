@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
@@ -20,12 +18,12 @@ router = APIRouter(
 )
 def rag_session(
     proj_id: int,
-    query: Union[str, List[str], int],
+    query: str | list[str] | int,
     top_k: int,
     threshold: float,
-    sdoc_ids: Optional[List[int]],
+    sdoc_ids: list[int] | None,
     authz_user: AuthzUser = Depends(),
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     db: Session = Depends(get_db_session),
 ) -> ChatSessionResponse:
     authz_user.assert_in_project(proj_id)
@@ -53,7 +51,7 @@ def rag_session(
 def chat_session(
     *,
     prompt: str,
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
     response, session_id = OllamaRepo().llm_chat_with_session(

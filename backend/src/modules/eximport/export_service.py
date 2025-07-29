@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
@@ -76,7 +76,7 @@ class ExportService(metaclass=SingletonMeta):
         cls.sqlr: SQLRepo = SQLRepo()
 
         # map from job_type to function
-        cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., Path]] = {
+        cls.export_method_for_job_type: dict[ExportJobType, Callable[..., Path]] = {
             ExportJobType.ALL_DATA: export_project,
             # all
             ExportJobType.ALL_USERS: export_all_users,
@@ -130,8 +130,8 @@ class ExportService(metaclass=SingletonMeta):
     def _update_export_job(
         self,
         export_job_id: str,
-        status: Optional[BackgroundJobStatus] = None,
-        url: Optional[str] = None,
+        status: BackgroundJobStatus | None = None,
+        url: str | None = None,
     ) -> ExportJobRead:
         update = ExportJobUpdate(status=status, results_url=url)
         try:

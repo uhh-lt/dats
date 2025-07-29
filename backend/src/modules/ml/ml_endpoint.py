@@ -1,5 +1,3 @@
-from typing import List
-
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_ml_job_async
@@ -39,12 +37,12 @@ def get_ml_job(*, ml_job_id: str, authz_user: AuthzUser = Depends()) -> MLJobRea
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[MLJobRead],
+    response_model=list[MLJobRead],
     summary="Returns all MLJobRead for the given project ID if it exists",
 )
 def get_all_ml_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[MLJobRead]:
+) -> list[MLJobRead]:
     authz_user.assert_in_project(project_id)
 
     ml_jobs = mls.get_all_ml_jobs(project_id=project_id)

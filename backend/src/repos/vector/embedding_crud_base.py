@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from loguru import logger
 from repos.vector.collection_base import BaseCollection
@@ -59,7 +59,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         return collection.tenants.exists(tenant)
 
     def _validate_properties(
-        self, properties: Dict[str, Any], must_identify_object: bool
+        self, properties: dict[str, Any], must_identify_object: bool
     ) -> None:
         """
         Validate the properties dictionary: Properties must have the correct keys and types as defined in the collection
@@ -91,7 +91,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
                 )
 
     def add_embedding(
-        self, client: WeaviateClient, project_id: int, id: ID, embedding: List[float]
+        self, client: WeaviateClient, project_id: int, id: ID, embedding: list[float]
     ) -> None:
         """
         Add a single embedding to Weaviate
@@ -111,9 +111,9 @@ class CRUDBase(Generic[ID, COLLECTION]):
         self,
         client: WeaviateClient,
         project_id: int,
-        ids: List[ID],
-        embeddings: List[List[float]],
-    ) -> List[UUID]:
+        ids: list[ID],
+        embeddings: list[list[float]],
+    ) -> list[UUID]:
         """
         Add multiple embeddings to Weaviate in a batch
         Args:
@@ -133,7 +133,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             raise ValueError("Length of ids and embeddings must be the same")
 
         # Prepare batch objects
-        uuids: List[UUID] = []
+        uuids: list[UUID] = []
         with collection.batch.dynamic() as batch:
             for id, embedding in zip(ids, embeddings):
                 obj_uuid = batch.add_object(
@@ -176,7 +176,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
     def get_embedding(
         self, client: WeaviateClient, project_id: int, id: ID
-    ) -> List[float]:
+    ) -> list[float]:
         """
         Get an embedding from Weaviate
         Args:
@@ -192,8 +192,8 @@ class CRUDBase(Generic[ID, COLLECTION]):
         return obj.vector["default"]  # type: ignore
 
     def get_embeddings(
-        self, client: WeaviateClient, project_id: int, ids: List[ID]
-    ) -> List[List[float]]:
+        self, client: WeaviateClient, project_id: int, ids: list[ID]
+    ) -> list[list[float]]:
         """
         Get multiple embeddings from Weaviate
         Args:
@@ -208,7 +208,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
             include_vector=True,
             limit=len(ids),
         )
-        uuid2vector: Dict[str, List[float]] = {
+        uuid2vector: dict[str, list[float]] = {
             str(obj.uuid): obj.vector["default"]  # type: ignore
             for obj in objs.objects
         }
@@ -225,7 +225,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
 
     def find_embeddings_by_filters(
         self, client: WeaviateClient, project_id: int, filters: _Filters
-    ) -> List[EmbeddingSearchResult[ID]]:
+    ) -> list[EmbeddingSearchResult[ID]]:
         """
         Get embeddings from Weaviate based on filters
         Args:
@@ -245,7 +245,7 @@ class CRUDBase(Generic[ID, COLLECTION]):
         # TODO: How can I circumvent the limit?
 
         # Map each result to its ID and embedding
-        embeddings: List[EmbeddingSearchResult[ID]] = []
+        embeddings: list[EmbeddingSearchResult[ID]] = []
         for obj in result.objects:
             obj_id = self.object_identifier.model_validate(obj.properties)
             vector = obj.vector["default"]
@@ -272,8 +272,8 @@ class CRUDBase(Generic[ID, COLLECTION]):
         id: ID,
         k: int,
         threshold: float,
-        filters: Optional[_Filters] = None,
-    ) -> List[SimSearchResult[ID]]:
+        filters: _Filters | None = None,
+    ) -> list[SimSearchResult[ID]]:
         """
         Finds up-to k objects near (cosine-similarity) the given object in Weaviate using its UUID
         Args:
@@ -313,11 +313,11 @@ class CRUDBase(Generic[ID, COLLECTION]):
         self,
         client: WeaviateClient,
         project_id: int,
-        vector: List[float],
+        vector: list[float],
         k: int,
-        threshold: Optional[float] = None,
-        filters: Optional[_Filters] = None,
-    ) -> List[SimSearchResult[ID]]:
+        threshold: float | None = None,
+        filters: _Filters | None = None,
+    ) -> list[SimSearchResult[ID]]:
         """
         Finds up-to k objects near (cosine-similarity) the given vector in Weaviate
         Args:

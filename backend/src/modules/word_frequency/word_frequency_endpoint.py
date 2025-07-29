@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -28,14 +26,14 @@ router = APIRouter(
 
 @router.get(
     "/info/{project_id}",
-    response_model=List[ColumnInfo[WordFrequencyColumns]],
+    response_model=list[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
 )
 def word_frequency_analysis_info(
     *,
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[ColumnInfo[WordFrequencyColumns]]:
+) -> list[ColumnInfo[WordFrequencyColumns]]:
     authz_user.assert_in_project(project_id)
 
     return word_frequency_info(
@@ -55,7 +53,7 @@ def word_frequency_analysis(
     filter: Filter[WordFrequencyColumns],
     page: int,
     page_size: int,
-    sorts: List[Sort[WordFrequencyColumns]],
+    sorts: list[Sort[WordFrequencyColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> WordFrequencyResult:
     authz_user.assert_in_project(project_id)
@@ -79,7 +77,7 @@ def word_frequency_analysis_export(
     db: Session = Depends(get_db_session),
     project_id: int,
     filter: Filter[WordFrequencyColumns],
-    sorts: List[Sort[WordFrequencyColumns]],
+    sorts: list[Sort[WordFrequencyColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> str:
     authz_user.assert_in_project(project_id)
@@ -92,7 +90,7 @@ def word_frequency_analysis_export(
 
 @router.get(
     "/sdoc/{sdoc_id}",
-    response_model=List[WordFrequencyRead],
+    response_model=list[WordFrequencyRead],
     summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
 )
 def get_word_frequencies(
@@ -100,7 +98,7 @@ def get_word_frequencies(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[WordFrequencyRead]:
+) -> list[WordFrequencyRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     sdoc = Crud.SOURCE_DOCUMENT.value.read(db=db, id=sdoc_id)

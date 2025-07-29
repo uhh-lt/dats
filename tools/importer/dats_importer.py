@@ -2,7 +2,6 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import magic
 from dats_api import DATSAPI
@@ -205,8 +204,8 @@ if directory.is_file():
 
 # read files from directory
 #           dict_key        name, content, mime
-files: List[Tuple[str, Tuple[str, bytes, str]]] = []
-tags: Set[str] = set()
+files: list[tuple[str, tuple[str, bytes, str]]] = []
+tags: set[str] = set()
 json_data = dict()
 files_in_dir = list(directory.glob(f"**/*.{args.file_extension}"))
 for file in tqdm(files_in_dir, f"Reading and checking files from {directory}!"):

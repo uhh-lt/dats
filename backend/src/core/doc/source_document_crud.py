@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
@@ -88,8 +86,8 @@ class CRUDSourceDocument(
         return SourceDocumentDataRead.model_validate(db_obj)
 
     def read_data_batch(
-        self, db: Session, *, ids: List[int]
-    ) -> List[Optional[SourceDocumentDataORM]]:
+        self, db: Session, *, ids: list[int]
+    ) -> list[SourceDocumentDataORM | None]:
         db_objs = (
             db.query(SourceDocumentDataORM)
             .filter(SourceDocumentDataORM.id.in_(ids))
@@ -106,9 +104,9 @@ class CRUDSourceDocument(
         proj_id: int,
         tag_id: int,
         only_finished: bool = True,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
-    ) -> List[SourceDocumentORM]:
+        skip: int | None = None,
+        limit: int | None = None,
+    ) -> list[SourceDocumentORM]:
         query = db.query(self.model).join(
             SourceDocumentORM, DocumentTagORM.source_documents
         )
@@ -136,9 +134,9 @@ class CRUDSourceDocument(
         *,
         proj_id: int,
         only_finished: bool = True,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
-    ) -> List[SourceDocumentORM]:
+        skip: int | None = None,
+        limit: int | None = None,
+    ) -> list[SourceDocumentORM]:
         query = db.query(self.model)
 
         if only_finished:
@@ -158,7 +156,7 @@ class CRUDSourceDocument(
 
     def read_by_filename(
         self, db: Session, *, proj_id: int, only_finished: bool = True, filename: str
-    ) -> Optional[SourceDocumentORM]:
+    ) -> SourceDocumentORM | None:
         query = db.query(self.model)
 
         if only_finished:
@@ -174,8 +172,8 @@ class CRUDSourceDocument(
         return query.first()
 
     def read_all_without_tags(
-        self, db: Session, *, project_id: int, tag_ids: List[int] = []
-    ) -> List[SourceDocumentORM]:
+        self, db: Session, *, project_id: int, tag_ids: list[int] = []
+    ) -> list[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
@@ -189,8 +187,8 @@ class CRUDSourceDocument(
         )
 
     def read_all_with_tags(
-        self, db: Session, *, project_id: int, tag_ids: List[int] = []
-    ) -> List[SourceDocumentORM]:
+        self, db: Session, *, project_id: int, tag_ids: list[int] = []
+    ) -> list[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
             .filter(SourceDocumentORM.project_id == project_id)
@@ -204,8 +202,8 @@ class CRUDSourceDocument(
         )
 
     def read_annotators(
-        self, db: Session, *, sdoc_ids: List[int]
-    ) -> Dict[int, List[int]]:
+        self, db: Session, *, sdoc_ids: list[int]
+    ) -> dict[int, list[int]]:
         user_ids_agg = aggregate_ids(AnnotationDocumentORM.user_id, label="user_ids")
         rows = (
             db.query(SourceDocumentORM.id, user_ids_agg)
@@ -219,7 +217,7 @@ class CRUDSourceDocument(
         )
         return {row[0]: row[1] for row in rows}
 
-    def read_tags(self, db: Session, *, sdoc_ids: List[int]) -> Dict[int, List[int]]:
+    def read_tags(self, db: Session, *, sdoc_ids: list[int]) -> dict[int, list[int]]:
         tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
         rows = (
             db.query(SourceDocumentORM.id, tag_ids_agg)
@@ -265,7 +263,7 @@ class CRUDSourceDocument(
     ### OTHER OPERATIONS ###
 
     def count_by_project(
-        self, db: Session, *, proj_id: int, status: Optional[SDocStatus] = None
+        self, db: Session, *, proj_id: int, status: SDocStatus | None = None
     ) -> int:
         query = db.query(self.model)
         if status is not None:
@@ -276,7 +274,7 @@ class CRUDSourceDocument(
             query = query.filter(self.model.project_id == proj_id)
         return query.with_entities(func.count()).scalar()
 
-    def collect_linked_sdoc_ids(self, db: Session, *, sdoc_id: int) -> List[int]:
+    def collect_linked_sdoc_ids(self, db: Session, *, sdoc_id: int) -> list[int]:
         # SELECT * FROM sourcedocumentlink sl
         # WHERE (sl.linked_source_document_id = 1 OR
         #       sl.parent_source_document_id = 1) and sl.linked_source_document_id IS NOT NULL

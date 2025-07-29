@@ -1,5 +1,3 @@
-from typing import List
-
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.code.code_orm import CodeORM
@@ -149,7 +147,7 @@ class SentAnnoColumns(str, AbstractColumns):
                     == SentenceAnnotationORM.annotation_document_id,
                 )
 
-    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+    def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 result = (
@@ -182,8 +180,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
     def resolve_names(
-        self, db: Session, project_id: int, names: List[str]
-    ) -> List[int]:
+        self, db: Session, project_id: int, names: list[str]
+    ) -> list[int]:
         match self:
             case SentAnnoColumns.DOCUMENT_TAG_ID_LIST:
                 result = (

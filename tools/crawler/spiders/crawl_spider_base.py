@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import scrapy
@@ -14,9 +13,9 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
 
     def __init__(
         self,
-        output_dir: Optional[str] = None,
-        prefix: Optional[str] = None,
-        cookies: Optional[str] = None,
+        output_dir: str | None = None,
+        prefix: str | None = None,
+        cookies: str | None = None,
         use_playwright: bool = False,
         *args,
         **kwargs,
@@ -47,7 +46,7 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
         return filename
 
     def write_raw_response(
-        self, response: Response, filename: Optional[str] = None
+        self, response: Response, filename: str | None = None
     ) -> None:
         if not filename:
             filename = self.generate_filename(response=response)
@@ -60,7 +59,7 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
 
         self.log(f"Saved raw html {filename_with_extension}")
 
-    def _create_cookies_dict(self, cookie: str) -> Dict[str, str]:
+    def _create_cookies_dict(self, cookie: str) -> dict[str, str]:
         if cookie.startswith("Cookie: "):
             cookie = cookie[8:]
         cookies = cookie.replace(" ", "").split(";")
@@ -80,8 +79,8 @@ class CrawlSpiderBase(scrapy.spiders.CrawlSpider):
     def init_item(
         self,
         response: Response,
-        html: Optional[str] = None,
-        filename: Optional[str] = None,
+        html: str | None = None,
+        filename: str | None = None,
         **kwargs,
     ) -> GenericWebsiteItem:
         item = GenericWebsiteItem()

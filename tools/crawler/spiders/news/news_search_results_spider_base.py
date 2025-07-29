@@ -1,6 +1,5 @@
 import datetime
 import random
-from typing import List, Set
 
 import scrapy
 import srsly
@@ -65,7 +64,7 @@ class NewsSearchResultsSpiderBase(SpiderBase):
         self.start_urls = [self._build_current_search_results_url(results_page=1)]
         self.scrape_articles = self.__str_to_bool(scrape_articles)
         self.random_page_traversal = self.__str_to_bool(random_page_traversal)
-        self.all_article_urls: Set[str] = set()
+        self.all_article_urls: set[str] = set()
 
     def _build_current_search_results_url(self, results_page: int) -> str:
         raise NotImplementedError
@@ -76,7 +75,7 @@ class NewsSearchResultsSpiderBase(SpiderBase):
     def _is_search_results_page(self, response) -> bool:
         raise NotImplementedError
 
-    def _get_article_urls(self, response) -> List[str]:
+    def _get_article_urls(self, response) -> list[str]:
         raise NotImplementedError
 
     def _get_article_title(self, response) -> str:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from pydantic import BaseModel, ConfigDict, Field
@@ -24,7 +23,7 @@ class SpanGroupCreate(SpanGroupBaseDTO):
 
 # Properties for updating
 class SpanGroupUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(description="Name of the SpanGroup", default=None)
+    name: str | None = Field(description="Name of the SpanGroup", default=None)
 
 
 # Properties for reading (as in ORM)
@@ -38,7 +37,7 @@ class SpanGroupRead(SpanGroupBaseDTO):
 
 
 class SpanGroupWithAnnotationsRead(SpanGroupRead):
-    span_annotations: List[SpanAnnotationRead] = Field(
+    span_annotations: list[SpanAnnotationRead] = Field(
         description="Annotations of the SpanGroup"
     )
 

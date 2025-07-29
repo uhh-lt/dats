@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import (
@@ -26,12 +26,12 @@ class CodeORM(ORMBase):
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     is_system: Mapped[bool] = mapped_column(Boolean, index=False, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, index=False, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String, index=False)
-    color: Mapped[Optional[str]] = mapped_column(String, index=False)
-    created: Mapped[Optional[datetime]] = mapped_column(
+    description: Mapped[str | None] = mapped_column(String, index=False)
+    color: Mapped[str | None] = mapped_column(String, index=False)
+    created: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
-    updated: Mapped[Optional[datetime]] = mapped_column(
+    updated: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
@@ -53,7 +53,7 @@ class CodeORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
     # one to many
-    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
+    span_annotations: Mapped[list["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM",
         back_populates="code",
         cascade="all, delete-orphan",
@@ -61,7 +61,7 @@ class CodeORM(ORMBase):
     )
 
     # one to many
-    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
+    bbox_annotations: Mapped[list["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM",
         back_populates="code",
         cascade="all, delete-orphan",
@@ -69,7 +69,7 @@ class CodeORM(ORMBase):
     )
 
     # one to many
-    sentence_annotations: Mapped[List["SentenceAnnotationORM"]] = relationship(
+    sentence_annotations: Mapped[list["SentenceAnnotationORM"]] = relationship(
         "SentenceAnnotationORM",
         back_populates="code",
         cascade="all, delete-orphan",
@@ -77,14 +77,14 @@ class CodeORM(ORMBase):
     )
 
     # hierarchy reference
-    parent_id: Mapped[Optional[int]] = mapped_column(
+    parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("code.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
     parent: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
-    children: Mapped[List["CodeORM"]] = relationship(
+    children: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
         back_populates="parent",
         cascade="all, delete-orphan",
@@ -100,7 +100,7 @@ class CodeORM(ORMBase):
     )
 
     @property
-    def memo_ids(self) -> List[int]:
+    def memo_ids(self) -> list[int]:
         if self.object_handle is None:
             return []
         return [memo.id for memo in self.object_handle.attached_memos]

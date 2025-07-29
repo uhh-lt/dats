@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from common.meta_type import MetaType
 from core.doc.source_document_orm import SourceDocumentORM
@@ -32,15 +32,15 @@ T = TypeVar("T", bound="AbstractColumns")
 
 
 class SearchBuilder:
-    def __init__(self, db: Session, filter: Filter[T], sorts: List[Sort[T]]) -> None:
+    def __init__(self, db: Session, filter: Filter[T], sorts: list[Sort[T]]) -> None:
         self.db = db
         self.filter = filter
         self.sorts = sorts
-        self.joined_subquery_tables: List[str] = []
-        self.joined_query_tables: List[str] = []
-        self.selected_columns: List[str] = []
-        self.subquery: Optional[Union[Query, Subquery]] = None
-        self.query: Optional[Query] = None
+        self.joined_subquery_tables: list[str] = []
+        self.joined_query_tables: list[str] = []
+        self.selected_columns: list[str] = []
+        self.subquery: Query | Subquery | None = None
+        self.query: Query | None = None
 
         affected_columns = get_columns_affected_by_filter(self.filter)
         affected_columns.update(get_columns_affected_by_sorts(self.sorts))
@@ -199,8 +199,8 @@ class SearchBuilder:
         return self.query
 
     def execute_query(
-        self, page_number: Optional[int], page_size: Optional[int]
-    ) -> Tuple[list, int]:
+        self, page_number: int | None, page_size: int | None
+    ) -> tuple[list, int]:
         if self.query is None:
             raise ValueError("Query is not initialized")
 

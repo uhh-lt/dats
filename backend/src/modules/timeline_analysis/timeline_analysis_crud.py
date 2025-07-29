@@ -1,5 +1,3 @@
-from typing import List
-
 from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisCreateIntern,
     TimelineAnalysisType,
@@ -17,7 +15,7 @@ class CRUDTimelineAnalysis(
 ):
     def read_by_project(
         self, db: Session, *, project_id: int
-    ) -> List[TimelineAnalysisORM]:
+    ) -> list[TimelineAnalysisORM]:
         db_obj = (
             db.query(self.model)
             .filter(

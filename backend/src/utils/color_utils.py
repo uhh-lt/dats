@@ -1,6 +1,6 @@
 import random
 from itertools import cycle
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from frozendict import frozendict
 
@@ -445,8 +445,8 @@ def get_next_color() -> str:
     return next(__fynns_color_palette__)
 
 
-SYSTEM_COLORS: Mapping[str, Tuple[float, float, float]] = __matplotlib_css_colors__
+SYSTEM_COLORS: Mapping[str, tuple[float, float, float]] = __matplotlib_css_colors__
 
 
-def get_random_color() -> Tuple[str, Tuple[float, float, float]]:
+def get_random_color() -> tuple[str, tuple[float, float, float]]:
     return random.choice(list(SYSTEM_COLORS.items()))

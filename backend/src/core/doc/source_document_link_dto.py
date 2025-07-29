@@ -1,16 +1,14 @@
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class SourceDocumentLinkCreate(BaseModel):
-    parent_source_document_id: Optional[int] = Field(
+    parent_source_document_id: int | None = Field(
         description="ID of the parent SourceDocument."
     )
     linked_source_document_filename: str = Field(
         description="The filename of the linked SourceDocument."
     )
-    linked_source_document_id: Optional[int] = Field(
+    linked_source_document_id: int | None = Field(
         description="ID of the linked SourceDocument.",
         default=None,
     )

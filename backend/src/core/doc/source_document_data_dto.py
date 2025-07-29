@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -16,22 +14,22 @@ class SourceDocumentDataBase(BaseModel):
         description="Relative ppath to the the SourceDocument in the repository"
     )
     html: str = Field(description="Processed HTML of the SourceDocument")
-    token_starts: List[int] = Field(
+    token_starts: list[int] = Field(
         description="Start of each token in character offsets in content"
     )
-    token_ends: List[int] = Field(
+    token_ends: list[int] = Field(
         description="End of each token in character offsets in content"
     )
-    sentence_starts: List[int] = Field(
+    sentence_starts: list[int] = Field(
         description="Start of each sentence in character offsets in content"
     )
-    sentence_ends: List[int] = Field(
+    sentence_ends: list[int] = Field(
         description="End of each sentence in character offsets in content"
     )
-    token_time_starts: Optional[List[int]] = Field(
+    token_time_starts: list[int] | None = Field(
         description="Start times of each token in transcript", default=None
     )
-    token_time_ends: Optional[List[int]] = Field(
+    token_time_ends: list[int] | None = Field(
         description="End times of each token in transcript", default=None
     )
 
@@ -45,12 +43,12 @@ class SourceDocumentDataRead(BaseModel):
         description="Relative path to the SourceDocument in the repository"
     )
     html: str = Field(description="Processed HTML of the SourceDocument")
-    tokens: List[str] = Field(description="List of tokens in the SourceDocument")
-    token_character_offsets: List[Tuple[int, int]] = Field(
+    tokens: list[str] = Field(description="List of tokens in the SourceDocument")
+    token_character_offsets: list[tuple[int, int]] = Field(
         description="List of character offsets of each token"
     )
-    sentences: List[str] = Field(description="List of sentences in the SourceDocument")
-    word_level_transcriptions: Optional[List[WordLevelTranscription]] = Field(
+    sentences: list[str] = Field(description="List of sentences in the SourceDocument")
+    word_level_transcriptions: list[WordLevelTranscription | None] = Field(
         description="word level transcriptions, with tokens, start times and end times",
     )
 

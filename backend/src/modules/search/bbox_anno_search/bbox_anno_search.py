@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.doc_type import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -21,7 +19,7 @@ from systems.search_system.sorting import Sort
 repo_service = FilesystemRepo()
 
 
-def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
+def find_bbox_annotations_info(project_id) -> list[ColumnInfo[BBoxColumns]]:
     with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -44,9 +42,9 @@ def find_bbox_annotations_info(project_id) -> List[ColumnInfo[BBoxColumns]]:
 def find_bbox_annotations(
     project_id: int,
     filter: Filter[BBoxColumns],
-    sorts: List[Sort[BBoxColumns]],
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    sorts: list[Sort[BBoxColumns]],
+    page: int | None = None,
+    page_size: int | None = None,
 ) -> BBoxAnnotationSearchResult:
     with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)

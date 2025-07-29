@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 import pandas as pd
 from core.tag.document_tag_crud import crud_document_tag
 from core.tag.document_tag_dto import DocumentTagCreate
@@ -12,7 +10,7 @@ from utils.color_utils import get_next_color
 class ImportTagsError(Exception):
     """Exception raised when tag import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing tags: {errors}")
         self.errors = errors
 
@@ -26,9 +24,9 @@ class TagImporter:
     def __init__(self, db: Session, project_id: int):
         self.db = db
         self.project_id = project_id
-        self.tag_id_mapping: Dict[str, int] = {}
+        self.tag_id_mapping: dict[str, int] = {}
 
-    def import_tags(self, df: pd.DataFrame, validate_only: bool) -> Dict[str, int]:
+    def import_tags(self, df: pd.DataFrame, validate_only: bool) -> dict[str, int]:
         """
         Import tags from DataFrame into the project.
 
@@ -54,7 +52,7 @@ class TagImporter:
             )
 
             # Process each layer in order
-            create_dtos: List[DocumentTagCreate] = []
+            create_dtos: list[DocumentTagCreate] = []
             for layer in sorted_layers:
                 for tag in layer:
                     create_dto = self._prepare_create_if_not_exists(tag)
@@ -83,8 +81,8 @@ class TagImporter:
         return self.tag_id_mapping
 
     def _sort_tags_by_hierarchy(
-        self, tags: List[TagExportSchema]
-    ) -> List[List[TagExportSchema]]:
+        self, tags: list[TagExportSchema]
+    ) -> list[list[TagExportSchema]]:
         """
         Sort tags by hierarchy using breadth-first search.
         Returns:
@@ -92,7 +90,7 @@ class TagImporter:
         """
         # Copy tags to avoid modifying the input
         remaining_tags = tags.copy()
-        layers: List[List[TagExportSchema]] = []
+        layers: list[list[TagExportSchema]] = []
 
         # Process root tags first (those without parent)
         root_tags = [t for t in remaining_tags if t.parent_tag_name is None]
@@ -137,7 +135,7 @@ class TagImporter:
 
     def _prepare_create_if_not_exists(
         self, tag: TagExportSchema
-    ) -> Optional[DocumentTagCreate]:
+    ) -> DocumentTagCreate | None:
         """
         Prepare the creation of a tag if it doesn't exist.
         Args:
@@ -172,7 +170,7 @@ class TagImporter:
         self,
         existing_tag,
         imported_tag: TagExportSchema,
-        expected_parent_id: Optional[int],
+        expected_parent_id: int | None,
     ) -> None:
         """
         Validate that an existing tag matches the imported tag.
@@ -192,7 +190,7 @@ def import_tags_to_proj(
     df: pd.DataFrame,
     project_id: int,
     validate_only: bool = False,
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """
     Import tags from a DataFrame into a project.
     Args:

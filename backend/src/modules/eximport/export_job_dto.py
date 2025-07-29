@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 from pydantic import BaseModel, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -35,50 +35,50 @@ class ExportJobType(str, Enum):
 
 class ExportSelectedSdocsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SDOCS]
-    sdoc_ids: List[int] = Field(description="IDs of the source documents to export")
+    sdoc_ids: list[int] = Field(description="IDs of the source documents to export")
 
 
 class ExportSelectedSpanAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SPAN_ANNOTATIONS]
-    span_annotation_ids: List[int] = Field(
+    span_annotation_ids: list[int] = Field(
         description="IDs of the span annotations to export"
     )
 
 
 class ExportSelectedSentenceAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_SENTENCE_ANNOTATIONS]
-    sentence_annotation_ids: List[int] = Field(
+    sentence_annotation_ids: list[int] = Field(
         description="IDs of the sentence annotations to export"
     )
 
 
 class ExportSelectedBboxAnnotationsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_BBOX_ANNOTATIONS]
-    bbox_annotation_ids: List[int] = Field(
+    bbox_annotation_ids: list[int] = Field(
         description="IDs of the bbox annotations to export"
     )
 
 
 class ExportSelectedMemosParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_MEMOS]
-    memo_ids: List[int] = Field(description="IDs of the memos to export")
+    memo_ids: list[int] = Field(description="IDs of the memos to export")
 
 
 class ExportSelectedWhiteboardsParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_WHITEBOARDS]
-    whiteboard_ids: List[int] = Field(description="IDs of the whiteboards to export")
+    whiteboard_ids: list[int] = Field(description="IDs of the whiteboards to export")
 
 
 class ExportSelectedTimelineAnalysesParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_TIMELINE_ANALYSES]
-    timeline_analysis_ids: List[int] = Field(
+    timeline_analysis_ids: list[int] = Field(
         description="IDs of the timeline analyses to export"
     )
 
 
 class ExportSelectedCotaParams(BaseModel):
     export_job_type: Literal[ExportJobType.SELECTED_COTA]
-    cota_ids: List[int] = Field(description="IDs of the cota to export")
+    cota_ids: list[int] = Field(description="IDs of the cota to export")
 
 
 class ExportJobParameters(BaseModel):
@@ -88,17 +88,17 @@ class ExportJobParameters(BaseModel):
     project_id: int = Field(
         description="The ID of the Project to export from",
     )
-    specific_export_job_parameters: Union[
-        None,
-        ExportSelectedSdocsParams,
-        ExportSelectedSpanAnnotationsParams,
-        ExportSelectedSentenceAnnotationsParams,
-        ExportSelectedBboxAnnotationsParams,
-        ExportSelectedMemosParams,
-        ExportSelectedWhiteboardsParams,
-        ExportSelectedTimelineAnalysesParams,
-        ExportSelectedCotaParams,
-    ] = Field(
+    specific_export_job_parameters: (
+        None
+        | ExportSelectedSdocsParams
+        | ExportSelectedSpanAnnotationsParams
+        | ExportSelectedSentenceAnnotationsParams
+        | ExportSelectedBboxAnnotationsParams
+        | ExportSelectedMemosParams
+        | ExportSelectedWhiteboardsParams
+        | ExportSelectedTimelineAnalysesParams
+        | ExportSelectedCotaParams
+    ) = Field(
         description="Specific parameters for the export job w.r.t it's type",
         discriminator="export_job_type",
     )
@@ -109,7 +109,7 @@ class ExportJobBaseDTO(BaseModel):
     status: BackgroundJobStatus = Field(
         default=BackgroundJobStatus.WAITING, description="Status of the ExportJob"
     )
-    results_url: Optional[str] = Field(
+    results_url: str | None = Field(
         default=None, description="URL to download the results when done."
     )
 
@@ -123,10 +123,10 @@ class ExportJobCreate(ExportJobBaseDTO):
 
 # Properties to update
 class ExportJobUpdate(BaseModel, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         default=None, description="Status of the ExportJob"
     )
-    results_url: Optional[str] = Field(
+    results_url: str | None = Field(
         default=None, description="URL to download the results when done."
     )
 

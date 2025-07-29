@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from core.doc.folder_dto import FolderType
 from repos.db.orm_base import ORMBase
@@ -48,7 +48,7 @@ class FolderORM(ORMBase):
     )
 
     # one to many
-    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
+    source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         back_populates="folder",
         cascade="all, delete-orphan",
@@ -56,16 +56,16 @@ class FolderORM(ORMBase):
     )
 
     # hierarchy reference
-    parent_id: Mapped[Optional[int]] = mapped_column(
+    parent_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("folder.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
-    parent: Mapped[Optional["FolderORM"]] = relationship(
+    parent: Mapped["FolderORM | None"] = relationship(
         "FolderORM", remote_side=[id], back_populates="children"
     )
-    children: Mapped[List["FolderORM"]] = relationship(
+    children: Mapped[list["FolderORM"]] = relationship(
         "FolderORM",
         back_populates="parent",
         cascade="all, delete-orphan",

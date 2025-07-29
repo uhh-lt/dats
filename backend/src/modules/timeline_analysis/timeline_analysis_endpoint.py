@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -68,7 +66,7 @@ def get_by_id(
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[TimelineAnalysisRead],
+    response_model=list[TimelineAnalysisRead],
     summary="Returns the TimelineAnalysis of the Project with the given ID if it exists",
 )
 def get_by_project(
@@ -76,7 +74,7 @@ def get_by_project(
     db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[TimelineAnalysisRead]:
+) -> list[TimelineAnalysisRead]:
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_timeline_analysis.read_by_project(db=db, project_id=project_id)

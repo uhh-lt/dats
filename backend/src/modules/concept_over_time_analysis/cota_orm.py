@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
@@ -42,10 +41,10 @@ class ConceptOverTimeAnalysisORM(ORMBase):
         index=False,
     )
 
-    created: Mapped[Optional[datetime]] = mapped_column(
+    created: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now(), index=False
     )
-    updated: Mapped[Optional[datetime]] = mapped_column(
+    updated: Mapped[datetime | None] = mapped_column(
         DateTime,
         server_default=func.now(),
         onupdate=func.current_timestamp(),

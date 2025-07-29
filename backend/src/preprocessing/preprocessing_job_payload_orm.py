@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from repos.db.orm_base import ORMBase
 from sqlalchemy import ForeignKey, Integer, String
@@ -19,8 +19,8 @@ class PreprocessingJobPayloadORM(ORMBase):
     status = mapped_column(
         String, nullable=False, index=True, default=BackgroundJobStatus.WAITING
     )
-    current_pipeline_step: Mapped[Optional[str]] = mapped_column(String, default=None)
-    error_message: Mapped[Optional[str]] = mapped_column(String, default=None)
+    current_pipeline_step: Mapped[str | None] = mapped_column(String, default=None)
+    error_message: Mapped[str | None] = mapped_column(String, default=None)
 
     # many to one
     project_id: Mapped[int] = mapped_column(
@@ -42,7 +42,7 @@ class PreprocessingJobPayloadORM(ORMBase):
         "PreprocessingJobORM", back_populates="payloads"
     )
 
-    source_document_id: Mapped[Optional[int]] = mapped_column(
+    source_document_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
         default=None,

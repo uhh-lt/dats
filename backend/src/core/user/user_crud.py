@@ -1,5 +1,3 @@
-from typing import Optional
-
 from core.auth.security import generate_password_hash, verify_password
 from core.user.user_dto import UserCreate, UserLogin, UserUpdate
 from core.user.user_orm import UserORM
@@ -57,7 +55,7 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
             raise NoSuchElementError(self.model, email=email)
         return user
 
-    def read_by_email_if_exists(self, db: Session, *, email: str) -> Optional[UserORM]:
+    def read_by_email_if_exists(self, db: Session, *, email: str) -> UserORM | None:
         user = (
             db.query(self.model)
             .options(joinedload(self.model.projects))
@@ -77,7 +75,7 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
 
     ### OTHER OPERATIONS ###
 
-    def authenticate(self, db: Session, user_login: UserLogin) -> Optional[UserORM]:
+    def authenticate(self, db: Session, user_login: UserLogin) -> UserORM | None:
         try:
             user = self.read_by_email(db=db, email=user_login.username)
         except NoSuchElementError:

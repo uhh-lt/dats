@@ -1,5 +1,4 @@
 import shutil
-from typing import Dict, List, Optional
 
 import srsly
 from common.doc_type import DocType
@@ -89,7 +88,7 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         project_id: int,
-    ) -> List[COTARead]:
+    ) -> list[COTARead]:
         db_objs = crud_cota.read_by_project(db=db, project_id=project_id)
         return [COTARead.model_validate(db_obj) for db_obj in db_objs]
 
@@ -173,7 +172,7 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         cota_id: int,
-        hyperparams: Optional[COTARefinementHyperparameters],
+        hyperparams: COTARefinementHyperparameters | None,
     ) -> COTARefinementJobRead:
         # make sure the cota exists!
         cota = self.read_by_id(db=db, cota_id=cota_id)
@@ -223,13 +222,13 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         cota_id: int,
-        cota_sentence_ids: List[COTASentenceID],
-        concept_id: Optional[str] = None,
+        cota_sentence_ids: list[COTASentenceID],
+        concept_id: str | None = None,
     ) -> COTARead:  # noqa: F821
         cota = self.read_by_id(db=db, cota_id=cota_id)
 
         # create map
-        cota_sentence_id2_cota_sentence: Dict[str, COTASentence] = dict()
+        cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
         for cota_sentence in cota.search_space:
             cota_sentence_id2_cota_sentence[
                 f"{cota_sentence.sdoc_id}_{cota_sentence.sentence_id}"
@@ -262,12 +261,12 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         cota_id: int,
-        cota_sentence_ids: List[COTASentenceID],
+        cota_sentence_ids: list[COTASentenceID],
     ) -> COTARead:  # noqa: F821
         cota = self.read_by_id(db=db, cota_id=cota_id)
 
         # create map
-        cota_sentence_id2_cota_sentence: Dict[str, COTASentence] = dict()
+        cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
         for cota_sentence in cota.search_space:
             cota_sentence_id2_cota_sentence[
                 f"{cota_sentence.sdoc_id}_{cota_sentence.sentence_id}"

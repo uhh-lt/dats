@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -68,7 +66,7 @@ def get_by_id(
 
 @router.get(
     "/sdoc/{sdoc_id}",
-    response_model=List[SourceDocumentMetadataRead],
+    response_model=list[SourceDocumentMetadataRead],
     summary="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
 def get_by_sdoc(
@@ -76,7 +74,7 @@ def get_by_sdoc(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SourceDocumentMetadataRead]:
+) -> list[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
@@ -126,15 +124,15 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
-    response_model=List[SourceDocumentMetadataRead],
+    response_model=list[SourceDocumentMetadataRead],
     summary="Updates multiple metadata objects at once.",
 )
 def update_bulk(
     *,
     db: Session = Depends(get_db_session),
-    metadatas: List[SourceDocumentMetadataBulkUpdate],
+    metadatas: list[SourceDocumentMetadataBulkUpdate],
     authz_user: AuthzUser = Depends(),
-) -> List[SourceDocumentMetadataRead]:
+) -> list[SourceDocumentMetadataRead]:
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
     )

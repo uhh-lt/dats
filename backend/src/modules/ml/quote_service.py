@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, NamedTuple, Tuple
+from typing import NamedTuple
 from uuid import uuid4
 
 from common.doc_type import DocType
@@ -183,9 +183,9 @@ class QuoteService(metaclass=SingletonMeta):
                     SpanAnnotationORM.id.in_(subquery)
                 ).delete()
 
-            span_dtos: List[SpanAnnotationCreateIntern] = []
-            group_dtos: List[SpanGroupCreateIntern] = []
-            group2annos: List[Tuple[int, int]] = []
+            span_dtos: list[SpanAnnotationCreateIntern] = []
+            group_dtos: list[SpanGroupCreateIntern] = []
+            group2annos: list[tuple[int, int]] = []
             last_anno_count = 0
             for doc in quote_output.documents:
                 adoc = crud_adoc.exists_or_create(
@@ -213,7 +213,7 @@ class QuoteService(metaclass=SingletonMeta):
                     last_anno_count = len(span_dtos)
             spans = crud_span_anno.create_multi(db, create_dtos=span_dtos)
             groups = crud_span_group.create_multi(db, create_dtos=group_dtos)
-            links: Dict[int, List[int]] = {
+            links: dict[int, list[int]] = {
                 g.id: [spans[i].id for i in range(s, e)]
                 for g, (s, e) in zip(groups, group2annos)
             }
@@ -235,10 +235,10 @@ class QuoteService(metaclass=SingletonMeta):
     def _make_span_anno(
         self,
         code_id: int,
-        spans: List[Tuple[int, int]],
+        spans: list[tuple[int, int]],
         adoc_id: int,
         sdoc: SourceDocumentDataORM,
-        dtos: List[SpanAnnotationCreateIntern],
+        dtos: list[SpanAnnotationCreateIntern],
     ):
         for start, end in spans:
             char_begin = sdoc.token_starts[start]

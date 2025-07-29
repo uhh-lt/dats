@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import List, Optional, Union
 
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
@@ -18,12 +17,12 @@ class RAGService(metaclass=SingletonMeta):
     def retrieval_augmented_generation_with_session(
         self,
         proj_id: int,
-        query: Union[str, List[str], int],
+        query: str | list[str] | int,
         top_k: int,
         threshold: float,
         db: Session,
-        session_id: Optional[str] = None,
-        sdoc_ids: Optional[List[int]] = None,
+        session_id: str | None = None,
+        sdoc_ids: list[int] | None = None,
     ) -> tuple[str, str]:
         # Retrieve top-k similar sentences using vector search
         similar_sentences = self.sims.find_similar_sentences(

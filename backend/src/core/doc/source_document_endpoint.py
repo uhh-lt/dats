@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -93,7 +91,7 @@ def update_sdoc(
 
 @router.get(
     "/{sdoc_id}/linked_sdocs",
-    response_model=List[int],
+    response_model=list[int],
     summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
 )
 def get_linked_sdocs(
@@ -101,7 +99,7 @@ def get_linked_sdocs(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[int]:
+) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
@@ -135,7 +133,7 @@ def get_file_url(
 
 @router.get(
     "/{sdoc_id}/annotators",
-    response_model=List[int],
+    response_model=list[int],
     summary="Returns IDs of users that annotated that SourceDocument.",
 )
 def get_annotators(
@@ -143,7 +141,7 @@ def get_annotators(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[int]:
+) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     return [

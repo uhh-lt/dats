@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
@@ -18,7 +17,7 @@ def export_selected_bbox_annotations(
     db: Session,
     fsr: FilesystemRepo,
     project_id: int,
-    bbox_annotation_ids: List[int],
+    bbox_annotation_ids: list[int],
 ) -> Path:
     bbox_annotations = crud_bbox_anno.read_by_ids(db=db, ids=bbox_annotation_ids)
     return __export_bbox_annotations(
@@ -47,7 +46,7 @@ def __export_bbox_annotations(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    bbox_annotations: List[BBoxAnnotationORM],
+    bbox_annotations: list[BBoxAnnotationORM],
 ) -> Path:
     if len(bbox_annotations) == 0:
         raise NoDataToExportError("No bbox annotations to export.")
@@ -62,7 +61,7 @@ def __export_bbox_annotations(
 
 
 def __generate_export_df_for_bbox_annotations(
-    bbox_annotations: List[BBoxAnnotationORM],
+    bbox_annotations: list[BBoxAnnotationORM],
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(bbox_annotations)} BBox Annotations ...")
 

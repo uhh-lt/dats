@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.annotation.span_annotation_dto import SpanAnnotationRead
@@ -21,7 +19,7 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Optional[SpanGroupRead],
+    response_model=SpanGroupRead | None,
     summary="Creates a new SpanGroup and returns it with the generated ID.",
 )
 def create_new_span_group(
@@ -29,7 +27,7 @@ def create_new_span_group(
     db: Session = Depends(get_db_session),
     span_group: SpanGroupCreate,
     authz_user: AuthzUser = Depends(),
-) -> Optional[SpanGroupRead]:
+) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, span_group.sdoc_id)
 
     db_obj = crud_span_group.create(
@@ -40,7 +38,7 @@ def create_new_span_group(
 
 @router.get(
     "/{span_group_id}",
-    response_model=Optional[SpanGroupRead],
+    response_model=SpanGroupRead | None,
     summary="Returns the SpanGroup with the given ID.",
 )
 def get_by_id(
@@ -48,7 +46,7 @@ def get_by_id(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Optional[SpanGroupRead]:
+) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
     db_obj = crud_span_group.read(db=db, id=span_group_id)
@@ -57,7 +55,7 @@ def get_by_id(
 
 @router.patch(
     "/{span_group_id}",
-    response_model=Optional[SpanGroupRead],
+    response_model=SpanGroupRead | None,
     summary="Updates the SpanGroup with the given ID.",
 )
 def update_by_id(
@@ -66,7 +64,7 @@ def update_by_id(
     span_group_id: int,
     span_anno: SpanGroupUpdate,
     authz_user: AuthzUser = Depends(),
-) -> Optional[SpanGroupRead]:
+) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
     db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
@@ -75,7 +73,7 @@ def update_by_id(
 
 @router.delete(
     "/{span_group_id}",
-    response_model=Optional[SpanGroupRead],
+    response_model=SpanGroupRead | None,
     summary="Deletes the SpanGroup with the given ID.",
 )
 def delete_by_id(
@@ -83,7 +81,7 @@ def delete_by_id(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
-) -> Optional[SpanGroupRead]:
+) -> SpanGroupRead | None:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
     db_obj = crud_span_group.delete(db=db, id=span_group_id)
@@ -92,7 +90,7 @@ def delete_by_id(
 
 @router.get(
     "/{span_group_id}/span_annotations",
-    response_model=List[SpanAnnotationRead],
+    response_model=list[SpanAnnotationRead],
     summary="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
 )
 def get_annotations(
@@ -100,7 +98,7 @@ def get_annotations(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanAnnotationRead]:
+) -> list[SpanAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
@@ -110,16 +108,16 @@ def get_annotations(
 
 @router.get(
     "/sdoc/{sdoc_id}",
-    response_model=List[SpanGroupRead],
+    response_model=list[SpanGroupRead],
     summary="Returns all SpanGroups of the logged-in User if it exists",
 )
 def get_by_sdoc(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    skip_limit: dict[str, int] = Depends(skip_limit_params),
     authz_user: AuthzUser = Depends(),
-) -> List[SpanGroupRead]:
+) -> list[SpanGroupRead]:
     return [
         SpanGroupRead.model_validate(group)
         for group in crud_span_group.read_by_user_and_sdoc(
@@ -130,7 +128,7 @@ def get_by_sdoc(
 
 @router.get(
     "/sdoc/{sdoc}/user/{user_id}",
-    response_model=List[SpanGroupWithAnnotationsRead],
+    response_model=list[SpanGroupWithAnnotationsRead],
     summary="Returns all SpanGroupWithAnnotations of the User in the sDoc",
 )
 def get_by_sdoc_and_user(
@@ -139,7 +137,7 @@ def get_by_sdoc_and_user(
     sdoc_id: int,
     user_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SpanGroupWithAnnotationsRead]:
+) -> list[SpanGroupWithAnnotationsRead]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     span_group_db_obj = crud_span_group.read_by_user_and_sdoc(

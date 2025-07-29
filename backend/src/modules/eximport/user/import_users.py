@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import pandas as pd
 from core.project.project_crud import crud_project
 from core.user.user_crud import crud_user
@@ -10,7 +8,7 @@ from sqlalchemy.orm import Session
 
 
 class ImportUsersError(Exception):
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing users: {errors}")
 
 
@@ -19,7 +17,7 @@ def import_users_to_proj(
     df: pd.DataFrame,
     project_id: int,
     validate_only: bool = False,
-) -> List[int]:
+) -> list[int]:
     """
     Import users from a DataFrame into a project.
     Validates input data and links existing users to the project.
@@ -48,7 +46,7 @@ def import_users_to_proj(
     error_messages = []
 
     # Check if the Users exists
-    user_dict: Dict[str, UserORM] = {}
+    user_dict: dict[str, UserORM] = {}
     for user_schema in user_collection.users:
         user = crud_user.read_by_email(db=db, email=user_schema.email)
         if user is None:
@@ -73,7 +71,7 @@ def import_users_to_proj(
     project_user_emails = {
         user.email for user in crud_project.read(db=db, id=project_id).users
     }
-    imported_user_ids: List[int] = []
+    imported_user_ids: list[int] = []
     for user_email, user in user_dict.items():
         # Check if the user is already associated with the project
         if user.email in project_user_emails:

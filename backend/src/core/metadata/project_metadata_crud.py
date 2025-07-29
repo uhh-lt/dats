@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from config import conf
@@ -56,8 +54,8 @@ class CRUDProjectMetadata(
 
     def create_project_metadata_for_project(
         self, db: Session, proj_id: int
-    ) -> List[ProjectMetadataORM]:
-        created: List[ProjectMetadataORM] = []
+    ) -> list[ProjectMetadataORM]:
+        created: list[ProjectMetadataORM] = []
 
         for project_metadata in conf.project_metadata.values():
             create_dto = ProjectMetadataCreate(
@@ -77,7 +75,7 @@ class CRUDProjectMetadata(
 
     def read_by_project_and_key(
         self, db: Session, project_id: int, key: str
-    ) -> List[ProjectMetadataORM]:
+    ) -> list[ProjectMetadataORM]:
         db_objs = (
             db.query(self.model)
             .filter(
@@ -90,7 +88,7 @@ class CRUDProjectMetadata(
 
     def read_by_project_and_key_and_metatype_and_doctype(
         self, db: Session, project_id: int, key: str, metatype: str, doctype: str
-    ) -> Optional[ProjectMetadataORM]:
+    ) -> ProjectMetadataORM | None:
         return (
             db.query(self.model)
             .filter(
@@ -107,9 +105,9 @@ class CRUDProjectMetadata(
         db: Session,
         *,
         proj_id: int,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
-    ) -> List[ProjectMetadataORM]:
+        skip: int | None = None,
+        limit: int | None = None,
+    ) -> list[ProjectMetadataORM]:
         query = db.query(self.model).filter(self.model.project_id == proj_id)
         if skip is not None:
             query = query.offset(skip)

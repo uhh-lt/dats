@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple, Union
-
 import pandas as pd
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
@@ -11,57 +9,57 @@ class SourceDocumentExportSchema(BaseModel):
 
     # Info about the source document itself
     filename: str = Field(description="Filename of the source document")
-    name: Optional[str] = Field(description="Name of the source document", default=None)
+    name: str | None = Field(description="Name of the source document", default=None)
     doctype: str = Field(description="Document type of the source document")
     status: str = Field(description="Status of the source document")
 
     # Data attached to the source document
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         description="List of tags (tag names) associated with the source document"
     )
-    links: List[str] = Field(
+    links: list[str] = Field(
         description="List of links (source document filenames) associated with the source document"
     )
-    word_frequencies: List[Tuple[str, int]] = Field(
+    word_frequencies: list[tuple[str, int]] = Field(
         description="List of word frequencies (word, frequency) associated with the source document"
     )
-    metadata: List[Tuple[str, Union[str, int, bool, List]]] = Field(
+    metadata: list[tuple[str, (str | int | bool | list)]] = Field(
         description="List of metadata (key, value) associated with the source document"
     )
 
     # Processed data of the source document
-    content: Optional[str] = Field(description="Content of the source document")
+    content: str | None = Field(description="Content of the source document")
     html: str = Field(description="HTML representation of the source document")
-    token_starts: List[int] = Field(
+    token_starts: list[int] = Field(
         description="List of start positions of tokens in the source document"
     )
-    token_ends: List[int] = Field(
+    token_ends: list[int] = Field(
         description="List of end positions of tokens in the source document"
     )
-    sentence_starts: List[int] = Field(
+    sentence_starts: list[int] = Field(
         description="List of start positions of sentences in the source document"
     )
-    sentence_ends: List[int] = Field(
+    sentence_ends: list[int] = Field(
         description="List of end positions of sentences in the source document"
     )
-    token_time_starts: Optional[List[int]] = Field(
+    token_time_starts: list[int] | None = Field(
         description="List of start times of tokens in the source document. (Only for audio/video files)",
         default=None,
     )
-    token_time_ends: Optional[List[int]] = Field(
+    token_time_ends: list[int] | None = Field(
         description="List of end times of tokens in the source document. (Only for audio/video files)",
         default=None,
     )
 
     # Embeddings of the source document
-    document_embedding: List[float] = Field(
+    document_embedding: list[float] = Field(
         description="Document embedding of the source document"
     )
-    image_embedding: Optional[List[float]] = Field(
+    image_embedding: list[float] | None = Field(
         description="Image embedding of the source document (Only for image files)",
         default=None,
     )
-    sentence_embeddings: List[List[float]] = Field(
+    sentence_embeddings: list[list[float]] = Field(
         description="List of sentence embeddings of the source document"
     )
 
@@ -232,7 +230,7 @@ class SourceDocumentExportSchema(BaseModel):
 class SourceDocumentExportCollection(BaseModel):
     """Collection of source documents for export/import operations."""
 
-    source_documents: List[SourceDocumentExportSchema]
+    source_documents: list[SourceDocumentExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "SourceDocumentExportCollection":

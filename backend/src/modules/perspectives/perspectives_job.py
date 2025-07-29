@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from modules.perspectives.cluster_dto import ClusterCreate
 from pydantic import BaseModel, Field
@@ -86,7 +86,7 @@ class SplitClusterParams(BaseModel):
         description="Type of the PerspectivesJob",
     )
     cluster_id: int = Field(description="ID of the cluster to split.")
-    split_into: Optional[int] = Field(
+    split_into: int | None = Field(
         description="Number of clusters to split the cluster into. Must be greater than 1. If not set, the cluster will be split automatically."
     )
 
@@ -118,30 +118,30 @@ class ResetModelParams(BaseModel):
     )
 
 
-PerspectivesJobParamsNoCreate = Union[
-    AddMissingDocsToAspectParams,
-    CreateClusterWithNameParams,
-    CreateClusterWithSdocsParams,
-    RemoveClusterParams,
-    MergeClustersParams,
-    SplitClusterParams,
-    ChangeClusterParams,
-    RefineModelParams,
-    ResetModelParams,
-]
+PerspectivesJobParamsNoCreate = (
+    AddMissingDocsToAspectParams
+    | CreateClusterWithNameParams
+    | CreateClusterWithSdocsParams
+    | RemoveClusterParams
+    | MergeClustersParams
+    | SplitClusterParams
+    | ChangeClusterParams
+    | RefineModelParams
+    | ResetModelParams
+)
 
-PerspectivesJobParams = Union[
-    CreateAspectParams,
-    AddMissingDocsToAspectParams,
-    CreateClusterWithNameParams,
-    CreateClusterWithSdocsParams,
-    RemoveClusterParams,
-    MergeClustersParams,
-    SplitClusterParams,
-    ChangeClusterParams,
-    RefineModelParams,
-    ResetModelParams,
-]
+PerspectivesJobParams = (
+    CreateAspectParams
+    | AddMissingDocsToAspectParams
+    | CreateClusterWithNameParams
+    | CreateClusterWithSdocsParams
+    | RemoveClusterParams
+    | MergeClustersParams
+    | SplitClusterParams
+    | ChangeClusterParams
+    | RefineModelParams
+    | ResetModelParams
+)
 
 
 class PerspectivesJobBase(BaseModel):
@@ -169,11 +169,11 @@ class PerspectivesJobCreate(BackgroundJobBaseCreate, PerspectivesJobBase):
 
 
 class PerspectivesJobUpdate(BackgroundJobBaseUpdate):
-    step: Optional[int] = Field(
+    step: int | None = Field(
         default=None,
         description="Current step of the PerspectivesJob. Starts at 0 and increments with each major step.",
     )
-    status_msg: Optional[str] = Field(
+    status_msg: str | None = Field(
         default=None, description="Status message of the PerspectivesJob"
     )
 
@@ -191,7 +191,7 @@ class PerspectivesJobRead(BackgroundJobBaseRead, PerspectivesJobBase):
 #
 # aspect_id: int
 # step: int
-# steps: List[str]
+# steps: list[str]
 # status_msg: str
 # perspectives_job_type: PerspectivesJobType
 # parameters: PerspectivesJobParams

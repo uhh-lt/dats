@@ -1,12 +1,10 @@
-from typing import List
-
 from modules.crawler.crawled_item import CrawledItem
 from scrapy import Selector
 
 
 class ReplaceMediaUrlsWithDownloadedNamesPipeline:
     def remove_failed_media(
-        self, selector: str, html: str, names: list, urls: List[str]
+        self, selector: str, html: str, names: list, urls: list[str]
     ):
         # find all media elements in the html
         media_elements = Selector(text=html).css(selector).getall()
@@ -32,7 +30,7 @@ class ReplaceMediaUrlsWithDownloadedNamesPipeline:
         return html
 
     def replace_successful_media_urls_with_downloaded_names(
-        self, html: str, names: list, urls: List[str]
+        self, html: str, names: list, urls: list[str]
     ):
         for name, url in zip(names, urls):
             # this media was downloaded successfully, replace url

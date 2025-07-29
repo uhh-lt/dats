@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 import pandas as pd
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
@@ -15,7 +13,7 @@ from utils.color_utils import get_next_color
 class ImportCodesError(Exception):
     """Exception raised when code import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing codes: {errors}")
         self.errors = errors
 
@@ -29,9 +27,9 @@ class CodeImporter:
     def __init__(self, db: Session, project_id: int):
         self.db = db
         self.project_id = project_id
-        self.code_id_mapping: Dict[str, int] = {}
+        self.code_id_mapping: dict[str, int] = {}
 
-    def import_codes(self, df: pd.DataFrame, validate_only: bool) -> Dict[str, int]:
+    def import_codes(self, df: pd.DataFrame, validate_only: bool) -> dict[str, int]:
         """
         Import codes from DataFrame into the project.
 
@@ -58,7 +56,7 @@ class CodeImporter:
             )
 
             # Process each layer in order
-            create_dtos: List[CodeCreate] = []
+            create_dtos: list[CodeCreate] = []
             for layer in sorted_layers:
                 for code in layer:
                     create_dto = self._prepare_create_if_not_exists(code)
@@ -87,8 +85,8 @@ class CodeImporter:
         return self.code_id_mapping
 
     def _sort_codes_by_hierarchy(
-        self, codes: List[CodeExportSchema]
-    ) -> List[List[CodeExportSchema]]:
+        self, codes: list[CodeExportSchema]
+    ) -> list[list[CodeExportSchema]]:
         """
         Sort codes by hierarchy using breadth-first search.
 
@@ -97,7 +95,7 @@ class CodeImporter:
         """
         # Copy codes to avoid modifying the input
         remaining_codes = codes.copy()
-        layers: List[List[CodeExportSchema]] = []
+        layers: list[list[CodeExportSchema]] = []
 
         # Process root codes first (those without parent)
         root_codes = [c for c in remaining_codes if c.parent_code_name is None]
@@ -142,7 +140,7 @@ class CodeImporter:
 
     def _prepare_create_if_not_exists(
         self, code: CodeExportSchema
-    ) -> Optional[CodeCreate]:
+    ) -> CodeCreate | None:
         """
         Prepare the creation of a code if it doesn't exist.
 
@@ -180,7 +178,7 @@ class CodeImporter:
         self,
         existing_code,
         imported_code: CodeExportSchema,
-        expected_parent_id: Optional[int],
+        expected_parent_id: int | None,
     ) -> None:
         """
         Validate that an existing code matches the imported code.
@@ -206,7 +204,7 @@ def import_codes_to_proj(
     df: pd.DataFrame,
     project_id: int,
     validate_only: bool = False,
-) -> Dict[str, int]:
+) -> dict[str, int]:
     """
     Import codes from a DataFrame into a project.
 

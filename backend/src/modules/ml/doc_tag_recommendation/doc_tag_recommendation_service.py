@@ -1,6 +1,6 @@
 import statistics
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Sequence, Set, TypeVar
+from typing import Any, Callable, Iterable, Iterator, Sequence, TypeVar
 
 from common.singleton_meta import SingletonMeta
 from core.doc.document_embedding_crud import crud_document_embedding
@@ -51,7 +51,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         self,
         ml_job_id: str,
         project_id: int,
-        tag_ids: List[int] = [],
+        tag_ids: list[int] = [],
         method: DocumentTagRecommendationMethod = DocumentTagRecommendationMethod.KNN,
         multi_class: bool = False,
     ):
@@ -65,7 +65,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         Args:
             task_id (int): The ID of the classification task.
             project_id (int): The project ID to limit the documents and tags.
-            tag_ids (List[int]): The IDs of the tags to consider
+            tag_ids (list[int]): The IDs of the tags to consider
             exclusive (bool): Whether tags are mutually exclusive, either A or B
         """
         with self.sqlr.db_session() as db:
@@ -111,15 +111,15 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         self,
         client: WeaviateClient,
         proj_id: int,
-        pos_sdoc_ids: Set[int],
-        neg_sdoc_ids: Set[int],
+        pos_sdoc_ids: set[int],
+        neg_sdoc_ids: set[int],
         top_k: int,
         unique: bool,
-    ) -> List[SimSearchDocumentHit]:
+    ) -> list[SimSearchDocumentHit]:
         marked_sdoc_ids = pos_sdoc_ids.union(neg_sdoc_ids)
 
         # suggest
-        hits: List[SimSearchDocumentHit] = []
+        hits: list[SimSearchDocumentHit] = []
         for sdoc_id in pos_sdoc_ids:
             search_result = crud_document_embedding.search_near_sdoc(
                 client=client,
@@ -149,7 +149,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             candidates = {h.sdoc_id for h in hits}
 
             # suggest
-            nearest: List[SimSearchDocumentHit] = []
+            nearest: list[SimSearchDocumentHit] = []
             for sdoc_id in candidates:
                 search_result = crud_document_embedding.search_near_sdoc(
                     client=client,
@@ -179,8 +179,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         return hits
 
     def __unique_consecutive(
-        self, hits: List[SimSearchHit], key: Callable[[SimSearchHit], Any]
-    ) -> List[SimSearchHit]:
+        self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]
+    ) -> list[SimSearchHit]:
         if len(hits) == 0:
             return []
         current = hits[0]
@@ -197,7 +197,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Iterable[int],
-        sdocs_and_tags: Dict[int, List[DocumentTagORM]],
+        sdocs_and_tags: dict[int, list[DocumentTagORM]],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """get suggestions for each tag using documents with that tag as positive examples
         and all documents with another tag as negative examples"""
@@ -240,8 +240,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Sequence[int],
-        sdocs_and_tags: Dict[int, List[DocumentTagORM]],
-        tag_ids: List[int],
+        sdocs_and_tags: dict[int, list[DocumentTagORM]],
+        tag_ids: list[int],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """create suggestions using k-nearest neighbors"""
         with self.sqlr.db_session() as db:
@@ -250,7 +250,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             )
         sdoc_ids_to_classify = [sdoc.id for sdoc in sdocs_without_tags]
 
-        nns: List[List[SimSearchResult[DocumentObjectIdentifier]]] = []
+        nns: list[list[SimSearchResult[DocumentObjectIdentifier]]] = []
 
         for sdoc_id in sdoc_ids_to_classify:
             # 1. Find k-nearest neighbors for the current sdoc_id
@@ -287,8 +287,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         client: WeaviateClient,
         ml_job_id: str,
         project_id: int,
-        sdoc_ids: Set[int],
-        sdocs_and_tags: Dict[int, List[DocumentTagORM]],
+        sdoc_ids: set[int],
+        sdocs_and_tags: dict[int, list[DocumentTagORM]],
     ) -> Iterator[DocumentTagRecommendationLinkCreate]:
         """simply get suggestions only using positive examples"""
         similar_docs = self.__suggest_similar_documents(
@@ -324,7 +324,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         self,
         dtos: Iterable[DocumentTagRecommendationLinkCreate],
         multi_class: bool,
-    ) -> List[DocumentTagRecommendationLinkCreate]:
+    ) -> list[DocumentTagRecommendationLinkCreate]:
         """
         Deduplicates document tag classification recommendations.
 
@@ -335,7 +335,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         combination of source document (and predicted tag).
 
         Args:
-            dtos (List[DocumentTagRecommendationLinkCreate]):
+            dtos (list[DocumentTagRecommendationLinkCreate]):
                 A list of DocumentTagRecommendationLinkCreate DTOs representing
                 the predicted tag classifications for documents.
             multi_class (bool):
@@ -343,7 +343,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                 else only the single best tag per source document.
 
         Returns:
-            List[DocumentTagRecommendationLinkCreate]:
+            list[DocumentTagRecommendationLinkCreate]:
                 A list of deduplicated DocumentTagRecommendationLinkCreate DTOs,
                 containing only the unique recommendations with the highest prediction scores.
         """

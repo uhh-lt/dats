@@ -6,7 +6,7 @@ This module defines tools for extracting tables from PDFs, converting them to HT
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import typer
 from docling.backend.docling_parse_v2_backend import DoclingParseV2DocumentBackend
@@ -42,7 +42,7 @@ class ToolBase(ABC):
         pass
 
     @abstractmethod
-    def convert_to_html(self, tables: Any) -> Optional[str]:
+    def convert_to_html(self, tables: Any) -> str | None:
         """Convert the extracted table data to HTML format."""
         pass
 
@@ -68,7 +68,7 @@ class UnstructuredTool(ToolBase):
                 tables.append(el)
         return tables
 
-    def convert_to_html(self, tables: Table) -> Optional[str]:
+    def convert_to_html(self, tables: Table) -> str | None:
         """Convert extracted table data using Unstructured Tool to HTML format."""
         try:
             tables_html = tables.metadata.text_as_html
@@ -103,7 +103,7 @@ class GMFTTool(ToolBase):
         """Extract tables from a PDF file using GMFT."""
         return self.ingest_pdf(pdf_file)
 
-    def convert_to_html(self, tables: list[CroppedTable]) -> Optional[str]:
+    def convert_to_html(self, tables: list[CroppedTable]) -> str | None:
         """Convert extracted table data using GMFT Tool to HTML format."""
         ft = self.formatter.extract(tables)
         try:
@@ -128,7 +128,7 @@ class Img2TableTool(ToolBase):
         )
         return extracted_tables[0]
 
-    def convert_to_html(self, tables: Any) -> Optional[str]:
+    def convert_to_html(self, tables: Any) -> str | None:
         """Convert extracted table data using Img2Table Tool to HTML format."""
         try:
             tables_html = tables.html_repr()

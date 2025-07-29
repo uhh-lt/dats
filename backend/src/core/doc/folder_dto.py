@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
@@ -23,7 +22,7 @@ class FolderBaseDTO(BaseModel):
     folder_type: FolderType = Field(
         description="Type of the folder (normal, sdoc_folder)"
     )
-    parent_id: Optional[int] = Field(
+    parent_id: int | None = Field(
         default=None, description="ID of the parent folder (nullable)"
     )
     project_id: int = Field(
@@ -36,10 +35,8 @@ class FolderCreate(FolderBaseDTO):
 
 
 class FolderUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(default=None, description="Updated name of the folder")
-    parent_id: Optional[int] = Field(
-        default=None, description="Updated parent folder ID"
-    )
+    name: str | None = Field(default=None, description="Updated name of the folder")
+    parent_id: int | None = Field(default=None, description="Updated parent folder ID")
 
 
 class FolderRead(FolderBaseDTO):
@@ -50,7 +47,7 @@ class FolderRead(FolderBaseDTO):
 
 
 class FolderTreeRead(FolderRead):
-    children: List["FolderTreeRead"] = Field(description="Children folders")
+    children: list["FolderTreeRead"] = Field(description="Children folders")
     model_config = ConfigDict(from_attributes=True)
 
 

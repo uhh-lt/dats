@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_orm import SourceDocumentDataORM
@@ -25,7 +24,7 @@ def init_search_space(cargo: Cargo) -> Cargo:
         return cargo
 
     # the search space is empty, we build the search space with simsearch
-    search_space_dict: Dict[str, COTASentence] = (
+    search_space_dict: dict[str, COTASentence] = (
         dict()
     )  # we use a dict here to prevent duplicates in the search space
     for concept in cota.concepts:
@@ -77,8 +76,8 @@ def init_search_space(cargo: Cargo) -> Cargo:
 
 
 def add_sentences_to_search_space(
-    search_space: List[COTASentence],
-) -> List[COTASentence]:
+    search_space: list[COTASentence],
+) -> list[COTASentence]:
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # get the data from the database
@@ -86,7 +85,7 @@ def add_sentences_to_search_space(
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
 
     # map the data
-    sdoc_id2sdocdata: Dict[int, SourceDocumentDataORM] = {
+    sdoc_id2sdocdata: dict[int, SourceDocumentDataORM] = {
         sdoc_data_read.id: sdoc_data_read
         for sdoc_data_read in sdoc_datas
         if sdoc_data_read is not None
@@ -115,12 +114,12 @@ def add_sentences_to_search_space(
 
 
 def add_dates_to_search_space(
-    date_metadata_id: Optional[int], search_space: List[COTASentence]
-) -> List[COTASentence]:
+    date_metadata_id: int | None, search_space: list[COTASentence]
+) -> list[COTASentence]:
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # 2. find the date for every sdoc that is in the search space
-    sdoc_id_to_date: Dict[int, datetime] = dict()
+    sdoc_id_to_date: dict[int, datetime] = dict()
 
     # this is only possible if the cota has a date_metadata_id
     if date_metadata_id is not None:

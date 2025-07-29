@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
@@ -25,7 +23,7 @@ from sqlalchemy.orm import Session
 class ImportCOTAError(Exception):
     """Exception raised when COTA import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(
             f"Errors occurred while importing concept over time analyses: {errors}"
         )
@@ -36,7 +34,7 @@ def import_cota_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import concept over time analyses from a DataFrame into a project.
     Validates input data and ensures all required references (user) exist.
@@ -68,7 +66,7 @@ def import_cota_to_proj(
     error_messages = []
 
     # Transform the COTA analyses for import
-    transformed_cotas: List[COTACreateIntern] = []
+    transformed_cotas: list[COTACreateIntern] = []
     for cota in cota_collection.cota_analyses:
         try:
             # 1. Transform concepts for import
@@ -124,7 +122,7 @@ def import_cota_to_proj(
         raise ImportCOTAError(errors=error_messages)
 
     # Everything is fine, we can create the COTA analyses
-    imported_cota_ids: List[int] = []
+    imported_cota_ids: list[int] = []
     for cota in transformed_cotas:
         created_analysis = crud_cota.create(
             db=db,

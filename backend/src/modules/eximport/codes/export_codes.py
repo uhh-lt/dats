@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from core.code.code_orm import CodeORM
@@ -32,7 +31,7 @@ def __export_codes(
     db: Session,
     fsr: FilesystemRepo,
     fn: str,
-    codes: List[CodeORM],
+    codes: list[CodeORM],
 ) -> Path:
     if len(codes) == 0:
         raise NoDataToExportError("No codes to export.")
@@ -44,7 +43,7 @@ def __export_codes(
     )
 
 
-def __generate_export_df_for_codes(codes: List[CodeORM]) -> pd.DataFrame:
+def __generate_export_df_for_codes(codes: list[CodeORM]) -> pd.DataFrame:
     logger.info(f"Exporting {len(codes)} Codes ...")
 
     code_export_items = []

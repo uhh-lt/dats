@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from common.doc_type import DocType
 from pydantic import BaseModel, ConfigDict, Field
@@ -37,15 +36,15 @@ class PreprocessingJobPayloadCreate(PreprocessingJobPayloadCreateWithoutPreproJo
 
 
 class PreprocessingJobPayloadUpdate(PreprocessingJobPayloadBaseDTO, UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
+    status: BackgroundJobStatus | None = Field(
         description="The current status of the payload.",
         default=None,
     )
-    current_pipeline_step: Optional[str] = Field(
+    current_pipeline_step: str | None = Field(
         description="The current step in the preprocessing pipeline.",
         default=None,
     )
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         description="The error message if the payload failed.",
         default=None,
     )
@@ -59,7 +58,7 @@ class PreprocessingJobPayloadRead(PreprocessingJobPayloadBaseDTO):
     project_id: int = Field(
         description="ID of the Project of the PreprocessingJobPayload"
     )
-    source_document_id: Optional[int] = Field(
+    source_document_id: int | None = Field(
         description="ID of the SourceDocument that was created from the payload.",
         default=None,
     )
@@ -73,11 +72,11 @@ class PreprocessingJobPayloadRead(PreprocessingJobPayloadBaseDTO):
     )
     mime_type: str = Field(description="The MIME type of the payload file.")
     doc_type: DocType = Field(description="The DocType of the payload file.")
-    current_pipeline_step: Optional[str] = Field(
+    current_pipeline_step: str | None = Field(
         description="The current step in the preprocessing pipeline.",
         default=None,
     )
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         description="The error message if the payload failed.",
         default=None,
     )

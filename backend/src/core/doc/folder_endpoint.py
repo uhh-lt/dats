@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -37,14 +35,14 @@ def get_tree_by_id(
 
 @router.get(
     "/project/{project_id}/tree",
-    response_model=List[FolderTreeRead],
+    response_model=list[FolderTreeRead],
     summary="Returns the folder tree of the project with the given ID",
 )
 def get_tree_by_project(
     project_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[FolderTreeRead]:
+) -> list[FolderTreeRead]:
     authz_user.assert_in_project(project_id)
 
     folders = crud_folder.read_by_project(db=db, proj_id=project_id)
@@ -83,12 +81,12 @@ def update_folder(
     return FolderRead.model_validate(db_obj)
 
 
-@router.get("/subfolders/{folder_id}", response_model=List[FolderRead])
+@router.get("/subfolders/{folder_id}", response_model=list[FolderRead])
 def get_subfolders(
     folder_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[FolderRead]:
+) -> list[FolderRead]:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
     subfolders = crud_folder.read_subfolders(db=db, parent_folder_id=folder_id)
     return [FolderRead.model_validate(folder) for folder in subfolders]

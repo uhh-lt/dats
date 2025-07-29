@@ -1,5 +1,4 @@
 import datetime
-from typing import List, Optional
 
 from core.annotation.annotation_document_dto import (
     AnnotationDocumentCreate,
@@ -15,7 +14,7 @@ class CRUDAnnotationDocument(
 ):
     ### READ OPERATIONS ###
 
-    def read_by_user(self, db: Session, *, user_id: int) -> List[AnnotationDocumentORM]:
+    def read_by_user(self, db: Session, *, user_id: int) -> list[AnnotationDocumentORM]:
         return db.query(self.model).filter(self.model.user_id == user_id).all()
 
     def read_by_sdoc_and_user(
@@ -36,9 +35,7 @@ class CRUDAnnotationDocument(
 
     ### UPDATE OPERATIONS ###
 
-    def update_timestamp(
-        self, db: Session, *, id: int
-    ) -> Optional[AnnotationDocumentORM]:
+    def update_timestamp(self, db: Session, *, id: int) -> AnnotationDocumentORM | None:
         self.update(
             db=db,
             id=id,
@@ -47,7 +44,7 @@ class CRUDAnnotationDocument(
 
     ### DELETE OPERATIONS ###
 
-    def delete_by_sdoc(self, db: Session, *, sdoc_id: int) -> List[int]:
+    def delete_by_sdoc(self, db: Session, *, sdoc_id: int) -> list[int]:
         # find all adocs to be removed
         query = db.query(self.model).filter(self.model.source_document_id == sdoc_id)
         removed_orms = query.all()

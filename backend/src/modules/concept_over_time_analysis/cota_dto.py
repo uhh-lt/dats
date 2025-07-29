@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
 
 import srsly
 from modules.analysis.analysis_dto import DateGroupBy
@@ -26,13 +25,13 @@ class COTASentenceID(BaseModel):
 
 
 class COTASentence(COTASentenceID):
-    concept_similarities: Dict[str, float] = Field(
+    concept_similarities: dict[str, float] = Field(
         description="Dictionary of Concept IDs and their similarity score"
     )
-    concept_probabilities: Dict[str, float] = Field(
+    concept_probabilities: dict[str, float] = Field(
         description="Dictionary of Concept IDs and their probability score"
     )
-    concept_annotation: Optional[str] = Field(
+    concept_annotation: str | None = Field(
         description="Concept ID this sentence belongs to"
     )
     x: float = Field(description="X coordinate of the Sentence in the search space")
@@ -51,7 +50,7 @@ class COTAConcept(BaseModel):
 
 class COTATimelineSettings(BaseModel):
     group_by: DateGroupBy = Field(description="Group by date", default=DateGroupBy.YEAR)
-    date_metadata_id: Optional[int] = Field(
+    date_metadata_id: int | None = Field(
         description="ID of the Project Date Metadata that is used for the ConceptOverTimeAnalysis",
         default=None,
     )
@@ -109,15 +108,15 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
 
 
 class COTACreateIntern(COTACreate, UpdateDTOBase):
-    timeline_settings: Optional[str] = Field(
+    timeline_settings: str | None = Field(
         description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    training_settings: Optional[str] = Field(
+    training_settings: str | None = Field(
         description="JSON Representation of the Training Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    concepts: Optional[str] = Field(
+    concepts: str | None = Field(
         description=(
             "JSON Representation of the list of Concepts that are "
             "part of the ConceptOverTimeAnalysis"
@@ -127,19 +126,19 @@ class COTACreateIntern(COTACreate, UpdateDTOBase):
 
 
 class COTAUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(
+    name: str | None = Field(
         description="Name of the ConceptOverTimeAnalysis",
         default=None,
     )
-    timeline_settings: Optional[COTATimelineSettings] = Field(
+    timeline_settings: COTATimelineSettings | None = Field(
         description="Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    training_settings: Optional[COTATrainingSettings] = Field(
+    training_settings: COTATrainingSettings | None = Field(
         description="Training Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    concepts: Optional[List[COTAConcept]] = Field(
+    concepts: list[COTAConcept] | None = Field(
         description="List of Concepts that are part of the ConceptOverTimeAnalysis",
         default=None,
     )
@@ -147,26 +146,26 @@ class COTAUpdate(BaseModel, UpdateDTOBase):
 
 
 class COTAUpdateIntern(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(
+    name: str | None = Field(
         description="Name of the ConceptOverTimeAnalysis",
         default=None,
     )
-    timeline_settings: Optional[str] = Field(
+    timeline_settings: str | None = Field(
         description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    training_settings: Optional[str] = Field(
+    training_settings: str | None = Field(
         description="JSON Representation of the Training Settings of the ConceptOverTimeAnalysis.",
         default=None,
     )
-    concepts: Optional[str] = Field(
+    concepts: str | None = Field(
         description=(
             "JSON Representation of the list of Concepts that are "
             "part of the ConceptOverTimeAnalysis"
         ),
         default=None,
     )
-    search_space: Optional[str] = Field(
+    search_space: str | None = Field(
         description=(
             "JSON Representation of the list of Sentences that form the search space "
             "of the ConceptOverTimeAnalysis"
@@ -186,10 +185,10 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
     training_settings: COTATrainingSettings = Field(
         description="Timeline Training Settings of the ConceptOverTimeAnalysis."
     )
-    concepts: List[COTAConcept] = Field(
+    concepts: list[COTAConcept] = Field(
         description="List of Concepts that are part of the ConceptOverTimeAnalysis"
     )
-    search_space: List[COTASentence] = Field(
+    search_space: list[COTASentence] = Field(
         description=(
             "List of Sentences that form the search space "
             "of the ConceptOverTimeAnalysis"
@@ -204,16 +203,16 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
 
     @field_validator("concepts", mode="before")
     @classmethod
-    def json_loads_concepts(cls, v: Union[str, List]) -> List[COTAConcept]:
+    def json_loads_concepts(cls, v: str | list) -> list[COTAConcept]:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)
-            if isinstance(data, List):
+            if isinstance(data, list):
                 if len(data) == 0:
                     return []
                 elif isinstance(data[0], dict):
                     return [COTAConcept(**concept) for concept in data]
-        elif isinstance(v, List):
+        elif isinstance(v, list):
             if len(v) == 0:
                 return []
             elif isinstance(v[0], dict):
@@ -228,16 +227,16 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
 
     @field_validator("search_space", mode="before")
     @classmethod
-    def json_loads_ss(cls, v: Union[str, List]) -> List[COTASentence]:
+    def json_loads_ss(cls, v: str | list) -> list[COTASentence]:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)
-            if isinstance(data, List):
+            if isinstance(data, list):
                 if len(data) == 0:
                     return []
                 elif isinstance(data[0], dict):
                     return [COTASentence(**sentence) for sentence in data]
-        elif isinstance(v, List):
+        elif isinstance(v, list):
             if len(v) == 0:
                 return []
             elif isinstance(v[0], dict):
@@ -252,7 +251,7 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
 
     @field_validator("timeline_settings", mode="before")
     @classmethod
-    def json_loads_timeline_settings(cls, v: Union[str, dict]) -> COTATimelineSettings:
+    def json_loads_timeline_settings(cls, v: str | dict) -> COTATimelineSettings:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)
@@ -268,7 +267,7 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
 
     @field_validator("training_settings", mode="before")
     @classmethod
-    def json_loads_training_settings(cls, v: Union[str, dict]) -> COTATrainingSettings:
+    def json_loads_training_settings(cls, v: str | dict) -> COTATrainingSettings:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)
@@ -321,12 +320,12 @@ class COTARefinementJobCreate(COTARefinementJobBase):
 
 
 class COTARefinementJobUpdate(BackgroundJobBaseUpdate):
-    current_pipeline_step: Optional[str] = Field(
+    current_pipeline_step: str | None = Field(
         description="Current Pipeline Step of the COTARefinementJob",
         default=None,
     )
 
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         description="Optional ErrorMessage of the COTARefinementJob",
         default=None,
     )
@@ -338,12 +337,12 @@ class COTARefinementJobRead(COTARefinementJobCreate):
         default_factory=lambda: str(uuid.uuid4()),
     )
 
-    current_pipeline_step: Optional[str] = Field(
+    current_pipeline_step: str | None = Field(
         description="Current Pipeline Step of the COTARefinementJob",
         default=None,
     )
 
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         description="Optional ErrorMessage of the COTARefinementJob",
         default=None,
     )

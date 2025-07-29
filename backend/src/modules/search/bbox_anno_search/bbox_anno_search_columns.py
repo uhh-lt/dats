@@ -1,5 +1,3 @@
-from typing import List
-
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
@@ -118,7 +116,7 @@ class BBoxColumns(str, AbstractColumns):
                     isouter=True,
                 )
 
-    def resolve_ids(self, db: Session, ids: List[int]) -> List[str]:
+    def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
             case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 result = (
@@ -142,8 +140,8 @@ class BBoxColumns(str, AbstractColumns):
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
     def resolve_names(
-        self, db: Session, project_id: int, names: List[str]
-    ) -> List[int]:
+        self, db: Session, project_id: int, names: list[str]
+    ) -> list[int]:
         match self:
             case BBoxColumns.DOCUMENT_TAG_ID_LIST:
                 result = (

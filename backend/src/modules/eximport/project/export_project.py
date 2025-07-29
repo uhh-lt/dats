@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Union
 
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
@@ -94,7 +93,7 @@ def __export_project_details(fsr: FilesystemRepo, project: ProjectORM) -> Path:
 
 def __generate_export_json_for_project_details(
     project: ProjectORM,
-) -> Dict[str, Union[str, int, datetime]]:
+) -> dict[str, str | int | datetime]:
     logger.info("Exporting project details ...")
 
     data = {

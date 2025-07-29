@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -32,6 +30,6 @@ class WordFrequencyResult(BaseModel):
     )
     sdocs_total: int = Field(description="The total number of SourceDocuments.")
     words_total: int = Field(description="The total number of words.")
-    word_frequencies: List[WordFrequencyStat] = Field(
+    word_frequencies: list[WordFrequencyStat] = Field(
         description="The WordFrequencies."
     )

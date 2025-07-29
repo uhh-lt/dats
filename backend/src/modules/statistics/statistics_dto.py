@@ -1,5 +1,3 @@
-from typing import Set
-
 from core.tag.document_tag_dto import DocumentTagRead
 from pydantic import BaseModel, Field
 
@@ -42,12 +40,12 @@ class SpanEntityStatsQueryParameters(BaseModel):
     proj_id: int = Field(
         description="The ID of the Project the SourceDocuments have to belong to."
     )
-    sdoc_ids: Set[int] = Field(
+    sdoc_ids: set[int] = Field(
         description="List of IDs of SourceDocuments the stats are computed for."
     )
 
 
 class TagStatsQueryParameters(BaseModel):
-    sdoc_ids: Set[int] = Field(
+    sdoc_ids: set[int] = Field(
         description="List of IDs of SourceDocuments the stats are computed for."
     )

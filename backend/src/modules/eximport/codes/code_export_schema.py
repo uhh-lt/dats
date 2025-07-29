@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 
@@ -9,8 +7,8 @@ class CodeExportSchema(BaseModel):
 
     code_name: str = Field(description="Unique name of the code within a project")
     description: str = Field(description="Description of the code", default="")
-    color: Optional[str] = Field(description="Color of the code", default=None)
-    parent_code_name: Optional[str] = Field(
+    color: str | None = Field(description="Color of the code", default=None)
+    parent_code_name: str | None = Field(
         description="Name of the parent code", default=None
     )
 
@@ -25,7 +23,7 @@ class CodeExportSchema(BaseModel):
 class CodeExportCollection(BaseModel):
     """Collection of codes for export/import operations."""
 
-    codes: List[CodeExportSchema]
+    codes: list[CodeExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "CodeExportCollection":

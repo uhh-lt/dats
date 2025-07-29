@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -48,16 +46,16 @@ def add_sentence_annotation(
 
 @router.put(
     "/bulk/create",
-    response_model=List[SentenceAnnotationRead],
+    response_model=list[SentenceAnnotationRead],
     summary="Creates SentenceAnnotations in Bulk",
 )
 def add_sentence_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    sentence_annotations: List[SentenceAnnotationCreate],
+    sentence_annotations: list[SentenceAnnotationCreate],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> List[SentenceAnnotationRead]:
+) -> list[SentenceAnnotationRead]:
     for sa in sentence_annotations:
         authz_user.assert_in_same_project_as(Crud.CODE, sa.code_id)
         authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sa.sdoc_id)
@@ -119,7 +117,7 @@ def get_by_sdoc_and_user(
     ]
 
     # build result object: sentence_id -> [sentence_annotations]
-    result: Dict[int, List[SentenceAnnotationRead]] = {
+    result: dict[int, list[SentenceAnnotationRead]] = {
         idx: [] for idx in range(len(sdoc_data.sentences))
     }
     for sent_anno in sentence_annos:
@@ -159,16 +157,16 @@ def update_by_id(
 
 @router.patch(
     "/bulk/update",
-    response_model=List[SentenceAnnotationRead],
+    response_model=list[SentenceAnnotationRead],
     summary="Updates SentenceAnnotation in Bulk",
 )
 def update_sent_anno_annotations_bulk(
     *,
     db: Session = Depends(get_db_session),
-    sent_annos: List[SentenceAnnotationUpdateBulk],
+    sent_annos: list[SentenceAnnotationUpdateBulk],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
-) -> List[SentenceAnnotationRead]:
+) -> list[SentenceAnnotationRead]:
     for sent_anno in sent_annos:
         authz_user.assert_in_same_project_as(Crud.CODE, sent_anno.code_id)
         authz_user.assert_in_same_project_as(
@@ -207,15 +205,15 @@ def delete_by_id(
 
 @router.delete(
     "/bulk/delete",
-    response_model=List[SentenceAnnotationRead],
+    response_model=list[SentenceAnnotationRead],
     summary="Deletes all SentenceAnnotations with the given IDs.",
 )
 def delete_bulk_by_id(
     *,
     db: Session = Depends(get_db_session),
-    sentence_anno_ids: List[int],
+    sentence_anno_ids: list[int],
     authz_user: AuthzUser = Depends(),
-) -> List[SentenceAnnotationRead]:
+) -> list[SentenceAnnotationRead]:
     authz_user.assert_in_same_project_as_many(
         Crud.SENTENCE_ANNOTATION, sentence_anno_ids
     )
@@ -226,7 +224,7 @@ def delete_bulk_by_id(
 
 @router.get(
     "/code/{code_id}/user",
-    response_model=List[SentenceAnnotationRead],
+    response_model=list[SentenceAnnotationRead],
     summary=("Returns SentenceAnnotations with the given Code of the logged-in User"),
 )
 def get_by_user_code(
@@ -234,7 +232,7 @@ def get_by_user_code(
     db: Session = Depends(get_db_session),
     code_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[SentenceAnnotationRead]:
+) -> list[SentenceAnnotationRead]:
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
 
     db_objs = crud_sentence_anno.read_by_code_and_user(

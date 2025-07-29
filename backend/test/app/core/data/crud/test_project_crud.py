@@ -1,6 +1,6 @@
 import random
 import string
-from typing import Any, Dict
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 def get_number_of_system_codes() -> int:
     def __count_codes_recursively(
-        code_dict: Dict[str, Dict[str, Any]], num: int, names
+        code_dict: dict[str, dict[str, Any]], num: int, names
     ):
         for code_name in code_dict.keys():
             num += 1

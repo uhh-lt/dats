@@ -1,10 +1,8 @@
-from typing import Dict, List, Optional
-
 from pydantic import BaseModel, Field
 
 
 class RayCOTASentenceBase(BaseModel):
-    concept_annotation: Optional[str] = Field(
+    concept_annotation: str | None = Field(
         description="Concept ID this sentence belongs to"
     )
     text: str = Field(description="text of the sentence")
@@ -18,10 +16,10 @@ class RayCOTAJob(BaseModel):
 
 
 class RayCOTAJobInput(RayCOTAJob):
-    concept_ids: List[str] = Field(
+    concept_ids: list[str] = Field(
         description="List of Concepts Ids that are part of the ConceptOverTimeAnalysis"
     )
-    search_space: List[RayCOTASentenceBase] = Field(
+    search_space: list[RayCOTASentenceBase] = Field(
         description=(
             "List of Sentences that form the search space of the ConceptOverTimeAnalysis"
         ),
@@ -29,14 +27,14 @@ class RayCOTAJobInput(RayCOTAJob):
 
 
 class RayCOTAJobResponse(RayCOTAJob):
-    visual_refined_embeddings: List[List[float]] = Field(
+    visual_refined_embeddings: list[list[float]] = Field(
         description=(
             "List of Tuples of the x and y coordinates of the sentence in the Search Space"
         ),
     )
-    concept_similarities: Dict[str, List[float]] = Field(
+    concept_similarities: dict[str, list[float]] = Field(
         description="DDictionary of Concept IDs and their similarity score to each sentence"
     )
-    probabilities: List[List[float]] = Field(
+    probabilities: list[list[float]] = Field(
         description="List of concept classification probability scores for each sentence"
     )

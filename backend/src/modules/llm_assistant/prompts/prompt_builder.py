@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from core.project.project_crud import crud_project
 from modules.llm_assistant.llm_job_dto import LLMPromptTemplates
 from sqlalchemy.orm import Session
@@ -81,18 +79,18 @@ class PromptBuilder:
         return self.system_prompt_templates[language]
 
     def _build_user_prompt_template(
-        self, *, language: str, example_ids: Optional[List[int]] = None, **kwargs
+        self, *, language: str, example_ids: list[int] | None = None, **kwargs
     ) -> str:
         raise NotImplementedError()
 
     def build_prompt_templates(
-        self, example_ids: Optional[List[int]] = None, **kwargs
-    ) -> List[LLMPromptTemplates]:
+        self, example_ids: list[int] | None = None, **kwargs
+    ) -> list[LLMPromptTemplates]:
         if example_ids is not None and not self.is_fewshot:
             raise ValueError("Example IDs are only allowed for few-shot learning!")
 
         # create the prompt templates for all supported languages
-        result: List[LLMPromptTemplates] = []
+        result: list[LLMPromptTemplates] = []
         for language in self.supported_languages:
             result.append(
                 LLMPromptTemplates(

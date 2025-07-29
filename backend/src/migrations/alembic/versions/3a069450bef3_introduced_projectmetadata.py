@@ -7,7 +7,7 @@ Create Date: 2023-11-27 14:08:57.066581
 """
 
 from datetime import datetime
-from typing import List, Optional, Sequence, Union
+from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -35,19 +35,19 @@ Base = declarative_base()
 
 # revision identifiers, used by Alembic.
 revision: str = "3a069450bef3"
-down_revision: Union[str, None] = "28048c9fa4b0"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "28048c9fa4b0"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 class Project(Base):
     __tablename__ = "project"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    source_documents: Mapped[List["SourceDocument"]] = relationship(
+    source_documents: Mapped[list["SourceDocument"]] = relationship(
         "SourceDocument", back_populates="project", passive_deletes=True
     )
-    metadata_: Mapped[List["ProjectMetadata"]] = relationship(
+    metadata_: Mapped[list["ProjectMetadata"]] = relationship(
         "ProjectMetadata",
         back_populates="project",
         passive_deletes=True,
@@ -73,7 +73,7 @@ class SourceDocument(Base):
     )
 
     # one to many
-    metadata_: Mapped[List["SourceDocumentMetadata"]] = relationship(
+    metadata_: Mapped[list["SourceDocumentMetadata"]] = relationship(
         "SourceDocumentMetadata",
         back_populates="source_document",
         passive_deletes=True,
@@ -90,7 +90,7 @@ class ProjectMetadata(Base):
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=False)
 
     # one to many
-    sdoc_metadata: Mapped[List["SourceDocumentMetadata"]] = relationship(
+    sdoc_metadata: Mapped[list["SourceDocumentMetadata"]] = relationship(
         "SourceDocumentMetadata",
         back_populates="project_metadata",
         passive_deletes=True,
@@ -126,11 +126,11 @@ class SourceDocumentMetadata(Base):
     read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
 
     # new fields
-    int_value: Mapped[Optional[int]] = mapped_column(Integer)
-    str_value: Mapped[Optional[str]] = mapped_column(String)
-    boolean_value: Mapped[Optional[bool]] = mapped_column(Boolean)
-    date_value: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    list_value: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String))
+    int_value: Mapped[int | None] = mapped_column(Integer)
+    str_value: Mapped[str | None] = mapped_column(String)
+    boolean_value: Mapped[bool | None] = mapped_column(Boolean)
+    date_value: Mapped[datetime | None] = mapped_column(DateTime)
+    list_value: Mapped[list[str | None]] = mapped_column(ARRAY(String))
 
     # many to one
     project_metadata_id: Mapped[int] = mapped_column(

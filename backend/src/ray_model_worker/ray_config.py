@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, TypedDict
+from typing import TypedDict
 
 from omegaconf import DictConfig, OmegaConf
 
@@ -15,8 +15,8 @@ logger.info(f"Loaded config '{__conf_file__}'")
 
 
 class RayDeploymentConfig(TypedDict):
-    ray_actor_options: Dict
-    autoscaling_config: Dict
+    ray_actor_options: dict
+    autoscaling_config: dict
 
 
 def build_ray_model_deployment_config(name: str) -> RayDeploymentConfig:

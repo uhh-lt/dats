@@ -1,5 +1,3 @@
-from typing import List
-
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
@@ -28,7 +26,7 @@ async def suggest(
     *,
     dto: AnnoscalingSuggest,
     authz_user: AuthzUser = Depends(),
-) -> List[AnnoscalingResult]:
+) -> list[AnnoscalingResult]:
     authz_user.assert_in_project(dto.project_id)
 
     result = ass.suggest(

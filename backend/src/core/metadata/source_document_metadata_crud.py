@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -69,9 +67,9 @@ class CRUDSourceDocumentMetadata(
         db: Session,
         *,
         proj_id: int,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
-    ) -> List[SourceDocumentMetadataORM]:
+        skip: int | None = None,
+        limit: int | None = None,
+    ) -> list[SourceDocumentMetadataORM]:
         query = (
             db.query(self.model)
             .join(SourceDocumentMetadataORM.project_metadata)
@@ -91,8 +89,8 @@ class CRUDSourceDocumentMetadata(
         *,
         key: str,
         sdoc_id: int,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
+        skip: int | None = None,
+        limit: int | None = None,
     ) -> SourceDocumentMetadataORM:
         query = (
             db.query(self.model)
@@ -114,7 +112,7 @@ class CRUDSourceDocumentMetadata(
 
     def read_by_sdoc(
         self, db: Session, sdoc_id: int
-    ) -> List[SourceDocumentMetadataORM]:
+    ) -> list[SourceDocumentMetadataORM]:
         db_objs = (
             db.query(self.model)
             .filter(SourceDocumentMetadataORM.source_document_id == sdoc_id)
@@ -152,8 +150,8 @@ class CRUDSourceDocumentMetadata(
             return metadata_orm
 
     def update_bulk(
-        self, db: Session, *, update_dtos: List[SourceDocumentMetadataBulkUpdate]
-    ) -> List[SourceDocumentMetadataORM]:
+        self, db: Session, *, update_dtos: list[SourceDocumentMetadataBulkUpdate]
+    ) -> list[SourceDocumentMetadataORM]:
         db_objs = []
         for update_dto in update_dtos:
             db_obj = self.update(

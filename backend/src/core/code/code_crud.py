@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from config import conf
 from core.code.code_dto import CodeCreate, CodeUpdate
@@ -24,11 +24,11 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     def create_system_codes_for_project(
         self, db: Session, proj_id: int
-    ) -> List[CodeORM]:
-        created: List[CodeORM] = []
+    ) -> list[CodeORM]:
+        created: list[CodeORM] = []
 
         def __create_recursively(
-            code_dict: Dict[str, Dict[str, Any]], parent_code_id: Optional[int] = None
+            code_dict: dict[str, dict[str, Any]], parent_code_id: int | None = None
         ):
             for code_name in code_dict.keys():
                 create_dto = CodeCreate(
@@ -64,12 +64,12 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     ### READ OPERATIONS ###
 
-    def read_by_name(self, db: Session, code_name: str) -> List[CodeORM]:
+    def read_by_name(self, db: Session, code_name: str) -> list[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name).all()
 
     def read_by_name_and_project(
         self, db: Session, code_name: str, proj_id: int
-    ) -> Optional[CodeORM]:
+    ) -> CodeORM | None:
         return (
             db.query(self.model)
             .filter(self.model.name == code_name, self.model.project_id == proj_id)
@@ -86,7 +86,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         )
         return code_id[0] if code_id else None
 
-    def read_with_children(self, db: Session, *, code_id) -> List[CodeORM]:
+    def read_with_children(self, db: Session, *, code_id) -> list[CodeORM]:
         topq = (
             db.query(self.model.id)
             .filter(self.model.id == code_id)

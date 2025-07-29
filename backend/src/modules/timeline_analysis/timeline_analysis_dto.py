@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import srsly
 from modules.analysis.analysis_dto import DateGroupBy
@@ -20,7 +20,7 @@ from systems.search_system.filtering import Filter
 
 class TimelineAnalysisResult(BaseModel):
     date: str = Field(description="The date.")
-    data_ids: List[int] = Field(description="The data IDs used for provenance.")
+    data_ids: list[int] = Field(description="The data IDs used for provenance.")
     count: int = Field(description="The count / value used for plotting.")
 
 
@@ -66,12 +66,12 @@ class TimelineAnalysisConceptForExport(BaseModel):
     description: str = Field(description="Description of the Concept")
     color: str = Field(description="Color of the Concept")
     visible: bool = Field(description="Visibility of the Concept")
-    ta_specific_filter: Union[
-        SdocTimelineAnalysisFilter,
-        SentAnnoTimelineAnalysisFilter,
-        SpanAnnoTimelineAnalysisFilter,
-        BBoxAnnoTimelineAnalysisFilter,
-    ] = Field(
+    ta_specific_filter: (
+        SdocTimelineAnalysisFilter
+        | SentAnnoTimelineAnalysisFilter
+        | SpanAnnoTimelineAnalysisFilter
+        | BBoxAnnoTimelineAnalysisFilter
+    ) = Field(
         description="List of Concepts that are part of the TimelineAnalysis",
         discriminator="timeline_analysis_type",
     )
@@ -79,7 +79,7 @@ class TimelineAnalysisConceptForExport(BaseModel):
 
 class TimelineAnalysisConcept(TimelineAnalysisConceptForExport):
     filter_hash: int = Field(description="Hash of the filter to identify changes")
-    results: List[TimelineAnalysisResult] = Field(
+    results: list[TimelineAnalysisResult] = Field(
         description="List of Results of the TimelineAnalysis"
     )
 
@@ -90,12 +90,12 @@ class TimelineAnalysisConceptUpdate(BaseModel):
     description: str = Field(description="Description of the Concept")
     color: str = Field(description="Color of the Concept")
     visible: bool = Field(description="Visibility of the Concept")
-    ta_specific_filter: Union[
-        SdocTimelineAnalysisFilter,
-        SentAnnoTimelineAnalysisFilter,
-        SpanAnnoTimelineAnalysisFilter,
-        BBoxAnnoTimelineAnalysisFilter,
-    ] = Field(
+    ta_specific_filter: (
+        SdocTimelineAnalysisFilter
+        | SentAnnoTimelineAnalysisFilter
+        | SpanAnnoTimelineAnalysisFilter
+        | BBoxAnnoTimelineAnalysisFilter
+    ) = Field(
         description="List of Concepts that are part of the TimelineAnalysis",
         discriminator="timeline_analysis_type",
     )
@@ -103,14 +103,14 @@ class TimelineAnalysisConceptUpdate(BaseModel):
 
 class TimelineAnalysisSettingsForExport(BaseModel):
     group_by: DateGroupBy = Field(description="Group by date", default=DateGroupBy.YEAR)
-    annotation_aggregation_type: Optional[TAAnnotationAggregationType] = Field(
+    annotation_aggregation_type: TAAnnotationAggregationType | None = Field(
         description="The type of the annotation aggregation (only for TimelineAnalysisType != DOCUMENT)",
         default=TAAnnotationAggregationType.ANNOTATION,
     )
 
 
 class TimelineAnalysisSettings(TimelineAnalysisSettingsForExport):
-    date_metadata_id: Optional[int] = Field(
+    date_metadata_id: int | None = Field(
         description="ID of the Project Date Metadata that is used for the TimelineAnalysis",
         default=None,
     )
@@ -133,11 +133,11 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
 
 
 class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
-    settings: Optional[str] = Field(
+    settings: str | None = Field(
         description="JSON Representation of the TimelineAnalysisSettings.",
         default=None,
     )
-    concepts: Optional[str] = Field(
+    concepts: str | None = Field(
         description=(
             "JSON Representation of the list of Concepts that are "
             "part of the TimelineAnalysis"
@@ -147,30 +147,30 @@ class TimelineAnalysisCreateIntern(TimelineAnalysisCreate, UpdateDTOBase):
 
 
 class TimelineAnalysisUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(
+    name: str | None = Field(
         description="Name of the TimelineAnalysis",
         default=None,
     )
-    settings: Optional[TimelineAnalysisSettings] = Field(
+    settings: TimelineAnalysisSettings | None = Field(
         description="Settings of the TimelineAnalysis.",
         default=None,
     )
-    concepts: Optional[List[TimelineAnalysisConceptUpdate]] = Field(
+    concepts: list[TimelineAnalysisConceptUpdate] | None = Field(
         description="List of Concepts that are part of the TimelineAnalysis",
         default=None,
     )
 
 
 class TimelineAnalysisUpdateIntern(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(
+    name: str | None = Field(
         description="Name of the TimelineAnalysis",
         default=None,
     )
-    settings: Optional[str] = Field(
+    settings: str | None = Field(
         description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
         default=None,
     )
-    concepts: Optional[str] = Field(
+    concepts: str | None = Field(
         description=(
             "JSON Representation of the list of Concepts that are "
             "part of the TimelineAnalysis"
@@ -185,7 +185,7 @@ class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
     settings: TimelineAnalysisSettings = Field(
         description="Timeline Analysis Settings of the TimelineAnalysis."
     )
-    concepts: List[TimelineAnalysisConcept] = Field(
+    concepts: list[TimelineAnalysisConcept] = Field(
         description="List of Concepts that are part of the TimelineAnalysis"
     )
     created: datetime = Field(description="Created timestamp of the TimelineAnalysis")
@@ -193,16 +193,16 @@ class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
 
     @field_validator("concepts", mode="before")
     @classmethod
-    def json_loads_concepts(cls, v: Union[str, List]) -> List[TimelineAnalysisConcept]:
+    def json_loads_concepts(cls, v: str | list) -> list[TimelineAnalysisConcept]:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)
-            if isinstance(data, List):
+            if isinstance(data, list):
                 if len(data) == 0:
                     return []
                 elif isinstance(data[0], dict):
                     return [TimelineAnalysisConcept(**concept) for concept in data]
-        elif isinstance(v, List):
+        elif isinstance(v, list):
             if len(v) == 0:
                 return []
             elif isinstance(v[0], dict):
@@ -217,7 +217,7 @@ class TimelineAnalysisRead(TimelineAnalysisBaseDTO):
 
     @field_validator("settings", mode="before")
     @classmethod
-    def json_loads_settings(cls, v: Union[str, dict]) -> TimelineAnalysisSettings:
+    def json_loads_settings(cls, v: str | dict) -> TimelineAnalysisSettings:
         if isinstance(v, str):
             # v is a JSON string from the DB
             data = srsly.json_loads(v)

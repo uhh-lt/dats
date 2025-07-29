@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
@@ -30,7 +30,7 @@ class WhiteboardBorderData(BaseModel):
 
 class WhiteboardBackgroundColorData(BaseModel):
     bgcolor: str = Field(description="Background color of the text")
-    bgalpha: Optional[float] = Field(description="Background color alpha of the text")
+    bgalpha: float | None = Field(description="Background color alpha of the text")
 
 
 class HorizontalAlign(str, Enum):
@@ -106,7 +106,7 @@ class MemoNodeData(WhiteboardBackgroundColorData):
 class CodeNodeData(WhiteboardBackgroundColorData):
     type: Literal[WhiteboardNodeType.CODE]
     codeId: int = Field(description="ID of the code")
-    parentCodeId: Optional[int] = Field(
+    parentCodeId: int | None = Field(
         description="ID of the parent code",
         default=None,
     )
@@ -145,36 +145,36 @@ class XYPosition(BaseModel):
 
 class WhiteboardNode(BaseModel):
     id: str = Field(description="ID of the node")
-    type: Union[WhiteboardNodeType, str] = Field(
+    type: WhiteboardNodeType | str = Field(
         description="Type of the node", default=WhiteboardNodeType.TEXT
     )
-    data: Union[
-        TextNodeData,
-        NoteNodeData,
-        BorderNodeData,
-        SdocNodeData,
-        MemoNodeData,
-        CodeNodeData,
-        TagNodeData,
-        SpanAnnotationNodeData,
-        SentenceAnnotationNodeData,
-        BBoxAnnotationNodeData,
-    ] = Field(
+    data: (
+        TextNodeData
+        | NoteNodeData
+        | BorderNodeData
+        | SdocNodeData
+        | MemoNodeData
+        | CodeNodeData
+        | TagNodeData
+        | SpanAnnotationNodeData
+        | SentenceAnnotationNodeData
+        | BBoxAnnotationNodeData
+    ) = Field(
         description="Data of the node",
         discriminator="type",
     )
     position: XYPosition = Field(
         description="Position of the node",
     )
-    width: Optional[float] = Field(
+    width: float | None = Field(
         description="Width of the node",
         default=None,
     )
-    height: Optional[float] = Field(
+    height: float | None = Field(
         description="Height of the node",
         default=None,
     )
-    style: Dict[str, Any] = Field(
+    style: dict[str, Any] = Field(
         description="Style of the node",
         default={},
     )
@@ -208,28 +208,24 @@ class WhiteboardEdgeData(BaseModel):
 
 class WhiteboardEdge(BaseModel):
     id: str = Field(description="ID of the edge")
-    type: Optional[str] = Field(description="Type of the edge", default=None)
+    type: str | None = Field(description="Type of the edge", default=None)
     source: str = Field(description="Source node ID")
-    sourceHandle: Optional[str] = Field(
-        description="Source handle position", default=None
-    )
+    sourceHandle: str | None = Field(description="Source handle position", default=None)
     target: str = Field(description="Target node ID")
-    targetHandle: Optional[str] = Field(
-        description="Target handle position", default=None
-    )
-    data: Optional[WhiteboardEdgeData] = Field(
+    targetHandle: str | None = Field(description="Target handle position", default=None)
+    data: WhiteboardEdgeData | None = Field(
         description="Data of the edge", default=None
     )
 
-    style: Optional[Dict[str, Any]] = Field(
+    style: dict[str, Any] | None = Field(
         description="Style of the edge",
         default=None,
     )
-    markerEnd: Union[Dict[str, Any], str] = Field(
+    markerEnd: dict[str, Any] | str = Field(
         description="Marker end of the edge",
         default="",
     )
-    markerStart: Union[Dict[str, Any], str] = Field(
+    markerStart: dict[str, Any] | str = Field(
         description="Marker start of the edge",
         default="",
     )
@@ -246,25 +242,25 @@ class WhiteboardEdge(BaseModel):
 
 
 class WhiteboardData(BaseModel):
-    sdocs: List[SourceDocumentRead] = Field(
+    sdocs: list[SourceDocumentRead] = Field(
         description="List of source documents",
     )
-    codes: List[CodeRead] = Field(
+    codes: list[CodeRead] = Field(
         description="List of codes",
     )
-    tags: List[DocumentTagRead] = Field(
+    tags: list[DocumentTagRead] = Field(
         description="List of tags",
     )
-    span_annotations: List[SpanAnnotationRead] = Field(
+    span_annotations: list[SpanAnnotationRead] = Field(
         description="List of span annotations",
     )
-    sent_annotations: List[SentenceAnnotationRead] = Field(
+    sent_annotations: list[SentenceAnnotationRead] = Field(
         description="List of sentence annotations",
     )
-    bbox_annotations: List[BBoxAnnotationRead] = Field(
+    bbox_annotations: list[BBoxAnnotationRead] = Field(
         description="List of bbox annotations",
     )
-    memos: List[MemoRead] = Field(
+    memos: list[MemoRead] = Field(
         description="List of memos",
     )
 
@@ -275,8 +271,8 @@ class WhiteboardData(BaseModel):
 
 
 class WhiteboardContent(BaseModel):
-    nodes: List[WhiteboardNode] = Field(description="Nodes of the Whiteboard")
-    edges: List[WhiteboardEdge] = Field(description="Edges of the Whiteboard")
+    nodes: list[WhiteboardNode] = Field(description="Nodes of the Whiteboard")
+    edges: list[WhiteboardEdge] = Field(description="Edges of the Whiteboard")
 
 
 # Properties shared across all DTOs
@@ -290,28 +286,26 @@ class WhiteboardCreate(WhiteboardBaseDTO):
 
 
 class WhiteboardCreateIntern(WhiteboardCreate):
-    content: Optional[str] = Field(
-        description="Content of the Whiteboard", default=None
-    )
+    content: str | None = Field(description="Content of the Whiteboard", default=None)
 
 
 # Properties for updating
 class WhiteboardUpdate(BaseModel, UpdateDTOBase):
-    title: Optional[str] = Field(
+    title: str | None = Field(
         description="Title of the Whiteboard",
         default=None,
     )
-    content: Optional[WhiteboardContent] = Field(
+    content: WhiteboardContent | None = Field(
         description="Conten of the Whiteboard", default=None
     )
 
 
 class WhiteboardUpdateIntern(BaseModel, UpdateDTOBase):
-    title: Optional[str] = Field(
+    title: str | None = Field(
         description="Title of the Whiteboard",
         default=None,
     )
-    content: Optional[str] = Field(
+    content: str | None = Field(
         description="Content of the Whiteboard",
         default=None,
     )

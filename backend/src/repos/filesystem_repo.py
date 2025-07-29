@@ -6,7 +6,7 @@ import uuid
 import zipfile
 from http.client import BAD_REQUEST
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from zipfile import ZipFile
 
 import magic
@@ -29,7 +29,7 @@ from loguru import logger
 
 
 class SourceDocumentNotFoundInFilesystemError(Exception):
-    def __init__(self, sdoc: SourceDocumentRead, dst: Union[str, Path]):
+    def __init__(self, sdoc: SourceDocumentRead, dst: str | Path):
         super().__init__(
             (
                 f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
@@ -39,14 +39,14 @@ class SourceDocumentNotFoundInFilesystemError(Exception):
 
 
 class FileNotFoundInFilesystemError(Exception):
-    def __init__(self, proj_id: int, filename: Union[str, Path], dst: Union[str, Path]):
+    def __init__(self, proj_id: int, filename: str | Path, dst: str | Path):
         super().__init__(
             f"The file '{filename}' of Project {proj_id} cannot be found in the DATS Filesystem at {dst}"
         )
 
 
 class FileAlreadyExistsInFilesystemError(Exception):
-    def __init__(self, proj_id: int, filename: Union[str, Path]):
+    def __init__(self, proj_id: int, filename: str | Path):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
             f"same name in the DATS Filesystem associated with a SourceDocument!"
@@ -54,9 +54,7 @@ class FileAlreadyExistsInFilesystemError(Exception):
 
 
 class FileDeletionNotAllowedError(Exception):
-    def __init__(
-        self, proj_id: int, sdoc_id: int, filename: Union[str, Path], dst: str
-    ):
+    def __init__(self, proj_id: int, sdoc_id: int, filename: str | Path, dst: str):
         super().__init__(
             f"Cannot remove the file '{filename}' of Project {proj_id} because it is associated"
             f" with SourceDocument {sdoc_id}!"
@@ -64,7 +62,7 @@ class FileDeletionNotAllowedError(Exception):
 
 
 class FileRemovalError(Exception):
-    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
+    def __init__(self, proj_id: int, filename: str | Path, dst: str):
         super().__init__(
             f"Cannot remove the file '{filename}' of Project {proj_id} at {dst}!"
         )
@@ -85,7 +83,7 @@ class UnsupportedDocTypeForSourceDocument(Exception):
 
 
 class ErroneousArchiveException(Exception):
-    def __init__(self, archive_path: Path, msg: Optional[str] = None):
+    def __init__(self, archive_path: Path, msg: str | None = None):
         super().__init__(
             f"Error with Archive {archive_path}{' :' + msg if msg else ''}"
         )
@@ -110,7 +108,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
         return super(FilesystemRepo, cls).__new__(cls)
 
     @staticmethod
-    def truncate_filename(filename: Union[str, Path]) -> str:
+    def truncate_filename(filename: str | Path) -> str:
         # convert to path if str
         filename = Path(filename)
         if len(filename.name) > SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH:
@@ -209,7 +207,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
     def generate_sdoc_filename(
         self,
-        filename: Union[str, Path],
+        filename: str | Path,
         webp: bool = False,
         thumbnail: bool = False,
     ) -> str:
@@ -274,30 +272,28 @@ class FilesystemRepo(metaclass=SingletonMeta):
         return self.get_project_root_dir_path(proj_id=proj_id).joinpath("docs/")
 
     def _get_dst_path_for_project_sdoc_file(
-        self, proj_id: int, filename: Union[str, Path]
+        self, proj_id: int, filename: str | Path
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
         return self._get_project_dir_sdocs_root_path(proj_id=proj_id).joinpath(
             f"{filename}"
         )
 
-    def get_dst_path_for_temp_file(self, filename: Union[str, Path]) -> Path:
+    def get_dst_path_for_temp_file(self, filename: str | Path) -> Path:
         filename = Path(self.truncate_filename(filename))
         return self.temp_files_root.joinpath(f"{filename}")
 
-    def _project_sdoc_file_exists(
-        self, proj_id: int, filename: Union[str, Path]
-    ) -> bool:
+    def _project_sdoc_file_exists(self, proj_id: int, filename: str | Path) -> bool:
         return (
             self._get_project_dir_sdocs_root_path(proj_id=proj_id)
             .joinpath(f"{filename}")
             .exists()
         )
 
-    def _temp_file_exists(self, filename: Union[str, Path]) -> bool:
+    def _temp_file_exists(self, filename: str | Path) -> bool:
         return self.get_dst_path_for_temp_file(filename).exists()
 
-    def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
+    def create_directory_structure_for_project(self, proj_id: int) -> Path | None:
         paths = [
             self.get_models_root_path(proj_id=proj_id),
             self.get_plots_root_path(proj_id=proj_id),
@@ -319,7 +315,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
         return paths[-1]
 
     def _create_directory_structure_for_project_file(
-        self, proj_id: int, filename: Union[str, Path]
+        self, proj_id: int, filename: str | Path
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
         dst_path = self._get_dst_path_for_project_sdoc_file(
@@ -344,7 +340,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
         return dst_path
 
-    def create_temp_file(self, fn: Optional[Union[str, Path]] = None) -> Path:
+    def create_temp_file(self, fn: str | Path | None = None) -> Path:
         if fn is None:
             fn = str(uuid.uuid4())
 
@@ -360,8 +356,8 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
     def write_files_to_temp_zip_file(
         self,
-        files: List[Path],
-        fn: Optional[str] = None,
+        files: list[Path],
+        fn: str | None = None,
     ) -> Path:
         if len(files) == 0:
             raise ValueError("No files to export!")
@@ -387,7 +383,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
     def write_df_to_temp_file(
         self,
         df: pd.DataFrame,
-        fn: Optional[str] = None,
+        fn: str | None = None,
     ) -> Path:
         temp_file = self.create_temp_file(fn=fn)
         temp_file = temp_file.parent / (temp_file.name + ".csv")
@@ -399,7 +395,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
     def write_text_to_temp_file(
         self,
         text: str,
-        fn: Optional[str] = None,
+        fn: str | None = None,
     ) -> Path:
         temp_file = self.create_temp_file(fn=fn)
         temp_file = temp_file.parent / (temp_file.name + ".txt")
@@ -411,8 +407,8 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
     def write_json_to_temp_file(
         self,
-        json_obj: Union[List[Dict[str, Any]], Dict[str, Any]],
-        fn: Optional[str] = None,
+        json_obj: list[dict[str, Any]] | dict[str, Any],
+        fn: str | None = None,
     ) -> Path:
         temp_file = self.create_temp_file(fn=fn)
         temp_file = temp_file.parent / (temp_file.name + ".json")
@@ -423,7 +419,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
         return temp_file
 
-    def create_temp_dir(self, name: Optional[Union[str, Path]] = None) -> Path:
+    def create_temp_dir(self, name: str | Path | None = None) -> Path:
         if name is None:
             name = str(uuid.uuid4())
 
@@ -439,7 +435,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
         return p
 
-    def get_temp_file_url(self, fn: Union[str, Path], relative: bool = True) -> str:
+    def get_temp_file_url(self, fn: str | Path, relative: bool = True) -> str:
         fn = Path(self.truncate_filename(fn))
         p = self.temp_files_root / fn
         if not p.exists():
@@ -468,7 +464,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
 
     def extract_archive_in_project(
         self, proj_id: int, archive_path: Path
-    ) -> List[Path]:
+    ) -> list[Path]:
         archive_path_in_project = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=archive_path.name
         )
@@ -527,7 +523,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
         return in_project_dst
 
     def _safe_remove_file_from_project_dir(
-        self, proj_id: int, filename: Union[str, Path]
+        self, proj_id: int, filename: str | Path
     ) -> None:
         # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
         from core.doc.source_document_crud import crud_sdoc
@@ -622,8 +618,8 @@ class FilesystemRepo(metaclass=SingletonMeta):
             raise e
 
     def build_source_document_create_dto_from_file(
-        self, proj_id: int, filename: Union[str, Path], **extra_data
-    ) -> Tuple[Path, SourceDocumentCreate]:
+        self, proj_id: int, filename: str | Path, **extra_data
+    ) -> tuple[Path, SourceDocumentCreate]:
         filename = self.truncate_filename(filename)
         dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=filename

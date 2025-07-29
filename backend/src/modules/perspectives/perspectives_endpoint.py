@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import numpy as np
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, get_weaviate_session
@@ -149,7 +147,7 @@ def create_aspect(
 
 @router.get(
     "/project/{proj_id}/aspects",
-    response_model=List[AspectRead],
+    response_model=list[AspectRead],
     summary="Returns all Aspects of the Project with the given ID if it exists",
 )
 def get_all_aspects(
@@ -157,7 +155,7 @@ def get_all_aspects(
     db: Session = Depends(get_db_session),
     proj_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[AspectRead]:
+) -> list[AspectRead]:
     authz_user.assert_in_project(proj_id)
 
     project = crud_project.read(db=db, id=proj_id)
@@ -304,7 +302,7 @@ def visualize_documents(
     aspect_id: int,
     search_query: str,
     filter: Filter[SdocColumns],
-    sorts: List[Sort[SdocColumns]],
+    sorts: list[Sort[SdocColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesVisualization:
     authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
@@ -335,7 +333,7 @@ def visualize_documents(
     )
 
     # Search documents
-    sdoc_id_in_search_result: Dict[int, bool]
+    sdoc_id_in_search_result: dict[int, bool]
     if len(filter.items) > 0 or search_query.strip() != "":
         hits = SdocSearchService().search_ids(
             search_query=search_query,
@@ -347,8 +345,8 @@ def visualize_documents(
             page_number=None,
             page_size=None,
         )
-        sdoc_id_in_search_result: Dict[int, bool] = {hit.id: True for hit in hits.hits}
-        docs: List[PerspectivesDoc] = []
+        sdoc_id_in_search_result: dict[int, bool] = {hit.id: True for hit in hits.hits}
+        docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dt = sdoc_id2dt[doc.sdoc_id]
             cluster_id2cluster[dt.cluster_id]
@@ -364,7 +362,7 @@ def visualize_documents(
                 )
             )
     else:
-        docs: List[PerspectivesDoc] = []
+        docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
             dt = sdoc_id2dt[doc.sdoc_id]
             cluster_id2cluster[dt.cluster_id]

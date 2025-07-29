@@ -1,5 +1,3 @@
-from typing import Dict, List, Optional
-
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from core.celery.background_jobs import prepare_and_start_llm_job_async
@@ -50,12 +48,12 @@ def get_llm_job(*, llm_job_id: str, authz_user: AuthzUser = Depends()) -> LLMJob
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[LLMJobRead],
+    response_model=list[LLMJobRead],
     summary="Returns all LLMJobRead for the given project ID if it exists",
 )
 def get_all_llm_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
-) -> List[LLMJobRead]:
+) -> list[LLMJobRead]:
     authz_user.assert_in_project(project_id)
 
     llm_jobs = llms.get_all_llm_jobs(project_id=project_id)
@@ -65,16 +63,16 @@ def get_all_llm_jobs(
 
 @router.post(
     "/create_prompt_templates",
-    response_model=List[LLMPromptTemplates],
+    response_model=list[LLMPromptTemplates],
     summary="Returns the system and user prompt templates for the given llm task in all supported languages",
 )
 def create_prompt_templates(
     *,
     llm_job_params: LLMJobParameters,
     approach_type: ApproachType,
-    example_ids: Optional[List[int]] = None,
+    example_ids: list[int] | None = None,
     authz_user: AuthzUser = Depends(),
-) -> List[LLMPromptTemplates]:
+) -> list[LLMPromptTemplates]:
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.create_prompt_templates(
@@ -112,17 +110,17 @@ def determine_approach(
 
 @router.post(
     "/count_existing_assistant_annotations",
-    response_model=Dict[int, int],
+    response_model=dict[int, int],
     summary="Based on the approach, count the number of existing assistant annotations",
 )
 def count_existing_assistant_annotations(
     *,
-    sdoc_ids: List[int],
-    code_ids: List[int],
+    sdoc_ids: list[int],
+    code_ids: list[int],
     task_type: TaskType,
     approach_type: ApproachType,
     authz_user: AuthzUser = Depends(),
-) -> Dict[int, int]:
+) -> dict[int, int]:
     return llms.count_existing_assistant_annotations(
         approach_type=approach_type,
         task_type=task_type,

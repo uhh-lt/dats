@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 from loguru import logger
 from modules.eximport.whiteboards.whiteboard_export_schema import (
@@ -17,7 +15,7 @@ from sqlalchemy.orm import Session
 class ImportWhiteboardsError(Exception):
     """Exception raised when whiteboard import fails."""
 
-    def __init__(self, errors: List[str]) -> None:
+    def __init__(self, errors: list[str]) -> None:
         super().__init__(f"Errors occurred while importing whiteboards: {errors}")
         self.errors = errors
 
@@ -26,7 +24,7 @@ def import_whiteboards_to_proj(
     db: Session,
     df: pd.DataFrame,
     project_id: int,
-) -> List[int]:
+) -> list[int]:
     """
     Import whiteboards from a DataFrame into a project.
     Validates input data and ensures all required references (user) exist.
@@ -56,7 +54,7 @@ def import_whiteboards_to_proj(
     error_messages = []
 
     # Transform the whiteboards for import
-    transformed_wbs: List[WhiteboardCreateIntern] = []
+    transformed_wbs: list[WhiteboardCreateIntern] = []
     for wb in whiteboard_collection.whiteboards:
         try:
             content = WhiteboardContentForExport.model_validate_json(wb.content)
@@ -85,7 +83,7 @@ def import_whiteboards_to_proj(
         raise ImportWhiteboardsError(errors=error_messages)
 
     # Everything is fine, we can create the whiteboards
-    imported_whiteboard_ids: List[int] = []
+    imported_whiteboard_ids: list[int] = []
     for wb in transformed_wbs:
         created_whiteboard = crud_whiteboard.create(
             db=db,

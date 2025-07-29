@@ -1,5 +1,3 @@
-from typing import List
-
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTAUpdateIntern,
@@ -16,7 +14,7 @@ class CRUDConceptOverTimeAnalysis(
 ):
     def read_by_project(
         self, db: Session, *, project_id: int
-    ) -> List[ConceptOverTimeAnalysisORM]:
+    ) -> list[ConceptOverTimeAnalysisORM]:
         db_objs = (
             db.query(self.model)
             .filter(

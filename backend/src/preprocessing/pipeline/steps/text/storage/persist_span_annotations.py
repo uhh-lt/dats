@@ -1,5 +1,4 @@
 import traceback
-from typing import Dict, Set
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -45,7 +44,7 @@ def persist_span_annotations(cargo: PipelineCargo) -> PipelineCargo:
                     db_code = crud_code.create(db, create_dto=create_dto)
 
                 # group by user
-                grouped_by_user_spans: Dict[int, Set[AutoSpan]] = dict()
+                grouped_by_user_spans: dict[int, set[AutoSpan]] = dict()
                 for aspan in pptd.spans[code_name]:
                     if aspan.user_id not in grouped_by_user_spans:
                         grouped_by_user_spans[aspan.user_id] = set()

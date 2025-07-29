@@ -1,5 +1,4 @@
 import logging
-from typing import List, Set, Union
 
 from modules.crawler.spiders.spider_base import SpiderBase
 
@@ -8,7 +7,7 @@ class ListOfURLSSpider(SpiderBase):
     name = "list_of_urls"
 
     def __init__(
-        self, list_of_urls: Union[List[str], Set[str]], output_dir: str, *args, **kwargs
+        self, list_of_urls: list[str] | set[str], output_dir: str, *args, **kwargs
     ):
         super().__init__(output_dir, *args, **kwargs)
         if len(list_of_urls) == 0:

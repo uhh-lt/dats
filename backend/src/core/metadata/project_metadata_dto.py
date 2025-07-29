@@ -1,5 +1,3 @@
-from typing import Optional
-
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,11 +28,11 @@ class ProjectMetadataCreate(ProjectMetadataBaseDTO):
 
 # Properties for updating
 class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
-    key: Optional[str] = Field(description="Key of the ProjectMetadata", default=None)
-    metatype: Optional[MetaType] = Field(
+    key: str | None = Field(description="Key of the ProjectMetadata", default=None)
+    metatype: MetaType | None = Field(
         description="Type of the ProjectMetadata", default=None
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         description="Description of the ProjectMetadata", default=None
     )
 

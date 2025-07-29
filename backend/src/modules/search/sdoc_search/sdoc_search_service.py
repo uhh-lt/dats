@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple
-
 from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
@@ -27,7 +25,7 @@ class SdocSearchService(metaclass=SingletonMeta):
         cls.sqlr = SQLRepo()
         return super(SdocSearchService, cls).__new__(cls)
 
-    def search_info(self, project_id: int) -> List[ColumnInfo[SdocColumns]]:
+    def search_info(self, project_id: int) -> list[ColumnInfo[SdocColumns]]:
         with self.sqlr.db_session() as db:
             project_metadata = [
                 ProjectMetadataRead.model_validate(pm)
@@ -54,10 +52,10 @@ class SdocSearchService(metaclass=SingletonMeta):
         db: Session,
         project_id: int,
         filter: Filter[SdocColumns],
-        sorts: List[Sort[SdocColumns]] = [],
-        page_number: Optional[int] = None,
-        page_size: Optional[int] = None,
-    ) -> Tuple[List[int], int]:
+        sorts: list[Sort[SdocColumns]] = [],
+        page_number: int | None = None,
+        page_size: int | None = None,
+    ) -> tuple[list[int], int]:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that just queries all sdoc_ids of the project
         subquery = builder.init_subquery(
@@ -86,9 +84,9 @@ class SdocSearchService(metaclass=SingletonMeta):
         expert_mode: bool,
         highlight: bool,
         filter: Filter[SdocColumns],
-        sorts: List[Sort[SdocColumns]],
-        page_number: Optional[int] = None,
-        page_size: Optional[int] = None,
+        sorts: list[Sort[SdocColumns]],
+        page_number: int | None = None,
+        page_size: int | None = None,
     ) -> PaginatedElasticSearchHits:
         if search_query.strip() == "":
             with SQLRepo().db_session() as db:
@@ -140,9 +138,9 @@ class SdocSearchService(metaclass=SingletonMeta):
         expert_mode: bool,
         highlight: bool,
         filter: Filter[SdocColumns],
-        sorts: List[Sort[SdocColumns]],
-        page_number: Optional[int] = None,
-        page_size: Optional[int] = None,
+        sorts: list[Sort[SdocColumns]],
+        page_number: int | None = None,
+        page_size: int | None = None,
     ) -> PaginatedSDocHits:
         data = self.search_ids(
             project_id,

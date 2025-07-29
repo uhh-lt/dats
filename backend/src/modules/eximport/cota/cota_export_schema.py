@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 import srsly
 from modules.concept_over_time_analysis.cota_dto import (
@@ -86,7 +84,7 @@ class COTAExportSchema(BaseModel):
 class COTAExportCollection(BaseModel):
     """Collection of concept over time analyses for export/import operations."""
 
-    cota_analyses: List[COTAExportSchema]
+    cota_analyses: list[COTAExportSchema]
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame) -> "COTAExportCollection":

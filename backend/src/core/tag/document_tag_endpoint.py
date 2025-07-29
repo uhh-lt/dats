@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -121,7 +119,7 @@ def unlink_multiple_tags(
 def set_document_tags_batch(
     *,
     db: Session = Depends(get_db_session),
-    links: List[SourceDocumentDocumentTagLinks],
+    links: list[SourceDocumentDocumentTagLinks],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> int:
@@ -151,9 +149,9 @@ def set_document_tags_batch(
 def update_document_tags_batch(
     *,
     db: Session = Depends(get_db_session),
-    sdoc_ids: List[int],
-    unlink_tag_ids: List[int],
-    link_tag_ids: List[int],
+    sdoc_ids: list[int],
+    unlink_tag_ids: list[int],
+    link_tag_ids: list[int],
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> int:
@@ -197,7 +195,7 @@ def get_by_id(
 
 @router.get(
     "/project/{proj_id}",
-    response_model=List[DocumentTagRead],
+    response_model=list[DocumentTagRead],
     summary="Returns all DocumentTags of the Project with the given ID",
 )
 def get_by_project(
@@ -205,7 +203,7 @@ def get_by_project(
     proj_id: int,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[DocumentTagRead]:
+) -> list[DocumentTagRead]:
     authz_user.assert_in_project(proj_id)
 
     proj_db_obj = crud_project.read(db=db, id=proj_id)
@@ -214,7 +212,7 @@ def get_by_project(
 
 @router.get(
     "/sdoc/{sdoc_id}",
-    response_model=List[int],
+    response_model=list[int],
     summary="Returns all DocumentTagIDs linked with the SourceDocument.",
 )
 def get_by_sdoc(
@@ -222,7 +220,7 @@ def get_by_sdoc(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[int]:
+) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
@@ -264,7 +262,7 @@ def delete_by_id(
 
 @router.get(
     "/{tag_id}/sdocs",
-    response_model=List[int],
+    response_model=list[int],
     summary=(
         "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
     ),
@@ -274,7 +272,7 @@ def get_sdoc_ids_by_tag_id(
     db: Session = Depends(get_db_session),
     tag_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[int]:
+) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
 
     db_obj = crud_document_tag.read(db=db, id=tag_id)
@@ -283,11 +281,11 @@ def get_sdoc_ids_by_tag_id(
 
 @router.post(
     "/sdoc_counts",
-    response_model=Dict[int, int],
+    response_model=dict[int, int],
     summary="Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
 )
 async def get_sdoc_counts(
-    *, db: Session = Depends(get_db_session), sdoc_ids: List[int]
-) -> Dict[int, int]:
+    *, db: Session = Depends(get_db_session), sdoc_ids: list[int]
+) -> dict[int, int]:
     # TODO only if the user has access
     return crud_document_tag.read_tag_sdoc_counts(db, sdoc_ids)

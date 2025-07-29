@@ -1,4 +1,3 @@
-from typing import Dict, List
 from uuid import uuid4
 
 from common.crud_enum import Crud, MemoCrud
@@ -24,7 +23,7 @@ router = APIRouter(
 )
 
 
-attachedObject2Crud: Dict[AttachedObjectType, MemoCrud] = {
+attachedObject2Crud: dict[AttachedObjectType, MemoCrud] = {
     AttachedObjectType.document_tag: MemoCrud.DOCUMENT_TAG,
     AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
     AttachedObjectType.code: MemoCrud.CODE,
@@ -101,7 +100,7 @@ def get_by_id(
 
 @router.get(
     "/attached_obj/{attached_obj_type}/to/{attached_obj_id}",
-    response_model=List[MemoRead],
+    response_model=list[MemoRead],
     summary="Returns all Memos attached to the object if it exists",
 )
 def get_memos_by_attached_object_id(
@@ -110,7 +109,7 @@ def get_memos_by_attached_object_id(
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
+) -> list[MemoRead]:
     crud = attachedObject2Crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")

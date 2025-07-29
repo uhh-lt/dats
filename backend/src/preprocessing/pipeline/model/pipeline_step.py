@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable
 
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from pydantic import BaseModel, Field
@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class PipelineStep(BaseModel):
     name: str = Field(description="Name of the PipelineStep")
     ordering: int = Field(description="Ordering of the PipelineStep")
-    required_data: List[str] = Field(
+    required_data: list[str] = Field(
         description="Required data the PipelineStep needs to access.",
         default_factory=list,
     )

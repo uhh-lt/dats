@@ -1,5 +1,3 @@
-from typing import List
-
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
@@ -57,7 +55,7 @@ def abort_prepro_job(
 
 @router.get(
     "/project/{project_id}",
-    response_model=List[PreprocessingJobRead],
+    response_model=list[PreprocessingJobRead],
     summary="Returns all PreprocessingJobs for the given project ID if it exists",
 )
 def get_all_prepro_jobs(
@@ -65,7 +63,7 @@ def get_all_prepro_jobs(
     db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[PreprocessingJobRead]:
+) -> list[PreprocessingJobRead]:
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_prepro_job.read_by_proj_id(db=db, proj_id=project_id)

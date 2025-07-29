@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from common.doc_type import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -23,7 +21,7 @@ from systems.search_system.sorting import Sort
 
 def find_sentence_annotations_info(
     project_id,
-) -> List[ColumnInfo[SentAnnoColumns]]:
+) -> list[ColumnInfo[SentAnnoColumns]]:
     with SQLRepo().db_session() as db:
         project_metadata = [
             ProjectMetadataRead.model_validate(pm)
@@ -43,9 +41,9 @@ def find_sentence_annotations_info(
 def find_sentence_annotations(
     project_id: int,
     filter: Filter[SentAnnoColumns],
-    sorts: List[Sort[SentAnnoColumns]],
-    page: Optional[int] = None,
-    page_size: Optional[int] = None,
+    sorts: list[Sort[SentAnnoColumns]],
+    page: int | None = None,
+    page_size: int | None = None,
 ) -> SentenceAnnotationSearchResult:
     with SQLRepo().db_session() as db:
         builder = SearchBuilder(db, filter, sorts)

@@ -1,5 +1,4 @@
 import traceback
-from typing import Optional
 
 from common.doc_type import DocType
 from core.annotation.annotation_document_crud import crud_adoc
@@ -106,7 +105,7 @@ def __persist_sdoc_data(
     db: Session,
     sdoc_db_obj: SourceDocumentORM,
     pptd: PreProTextDoc,
-    ppad: Optional[PreProAudioDoc] = None,
+    ppad: PreProAudioDoc | None = None,
 ) -> None:
     additional_parameters = {}
     if ppad is not None:
@@ -148,9 +147,7 @@ def __persist_sdoc_data(
 
 def persist_sdoc_info(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
-    ppad: Optional[PreProAudioDoc] = (
-        cargo.data["ppad"] if "ppad" in cargo.data else None
-    )
+    ppad: PreProAudioDoc | None = cargo.data["ppad"] if "ppad" in cargo.data else None
     doctype: DocType = cargo.ppj_payload.doc_type
 
     match doctype:
