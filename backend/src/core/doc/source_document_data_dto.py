@@ -48,7 +48,7 @@ class SourceDocumentDataRead(BaseModel):
         description="List of character offsets of each token"
     )
     sentences: list[str] = Field(description="List of sentences in the SourceDocument")
-    word_level_transcriptions: list[WordLevelTranscription | None] = Field(
+    word_level_transcriptions: list[WordLevelTranscription] | None = Field(
         description="word level transcriptions, with tokens, start times and end times",
     )
 
