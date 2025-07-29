@@ -1,13 +1,9 @@
 from typing import List
-from uuid import uuid4
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
-from core.memo.memo_utils import get_object_memo_for_user
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
     ProjectCreate,
@@ -118,47 +114,6 @@ def upload_project_sdoc(
     pps: PreprocessingService = PreprocessingService()
     return pps.prepare_and_start_preprocessing_job_async(
         proj_id=proj_id, uploaded_files=uploaded_files
-    )
-
-
-@router.get(
-    "/{proj_id}/memo/user",
-    response_model=MemoRead,
-    summary=(
-        "Gets or creates the Memo attached to the Project with the given ID of the logged-in User."
-    ),
-)
-def get_or_create_user_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> MemoRead:
-    authz_user.assert_in_project(proj_id)
-
-    db_obj = crud_project.read(db=db, id=proj_id)
-    try:
-        return get_object_memo_for_user(db_obj=db_obj, user_id=authz_user.user.id)
-    except NoSuchElementError:
-        db_obj = crud_memo.create_for_attached_object(
-            db=db,
-            attached_object_id=proj_id,
-            attached_object_type=AttachedObjectType.project,
-            create_dto=MemoCreateIntern(
-                uuid=str(uuid4()),
-                title="Project Memo",
-                content="",
-                content_json="",
-                starred=False,
-                user_id=authz_user.user.id,
-                project_id=proj_id,
-            ),
-        )
-    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-    return MemoRead(
-        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=proj_id,
-        attached_object_type=AttachedObjectType.project,
     )
 
 
