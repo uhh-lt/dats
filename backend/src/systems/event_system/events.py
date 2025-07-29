@@ -8,3 +8,6 @@ project_deleted = signal("project_deleted")
 
 # sends project_id: int, sdoc_id: int
 source_document_deleted = signal("source_document_deleted")
+
+# sends project_id: int, user_id: int
+user_added_to_project = signal("user_added_to_project")

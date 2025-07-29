@@ -24,6 +24,7 @@ from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from sqlalchemy.orm import Session
+from systems.event_system.events import user_added_to_project
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
@@ -280,3 +281,26 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
 
 crud_memo = CRUDMemo(MemoORM)
+
+
+@user_added_to_project.connect
+def user_added_to_project_handler(sender, project_id: int, user_id: int):
+    from uuid import uuid4
+
+    from repos.db.sql_repo import SQLRepo
+
+    with SQLRepo().db_session() as db:
+        crud_memo.create_for_attached_object(
+            db=db,
+            attached_object_id=project_id,
+            attached_object_type=AttachedObjectType.project,
+            create_dto=MemoCreateIntern(
+                uuid=str(uuid4()),
+                title="Project Memo",
+                content="",
+                content_json="",
+                starred=False,
+                user_id=user_id,
+                project_id=project_id,
+            ),
+        )

@@ -14,7 +14,11 @@ from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
-from systems.event_system.events import project_created, project_deleted
+from systems.event_system.events import (
+    project_created,
+    project_deleted,
+    user_added_to_project,
+)
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -72,13 +76,17 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         return proj_db_obj
 
     def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+        # 1) read project
         proj_db_obj = self.read(db=db, id=proj_id)
 
-        # add user to project
+        # 2) add user to project
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.append(user_db_obj)
         db.add(proj_db_obj)
         db.commit()
+
+        # 3) emit user associated event
+        user_added_to_project.send(sender=self, project_id=proj_id, user_id=user_id)
 
         return user_db_obj
 
