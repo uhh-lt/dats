@@ -39,6 +39,9 @@ def upgrade() -> None:
 
     # Rename column in objecthandle
     op.alter_column("objecthandle", "document_tag_id", new_column_name="tag_id")
+    op.alter_column(
+        "sourcedocumenttaglinktable", "document_tag_id", new_column_name="tag_id"
+    )
 
     # Rename indexes for tag table (formerly documenttag)
     op.execute("ALTER INDEX ix_documenttag_id RENAME TO ix_tag_id")
