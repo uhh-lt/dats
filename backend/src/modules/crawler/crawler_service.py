@@ -208,13 +208,13 @@ class CrawlerService(metaclass=SingletonMeta):
             # FIXME find a more elegant and clear way (maybe just create the dirs here and update the job?!)
             # do we even need the dirs in the job?!
             script_env = os.environ.copy()
-            script_env["PYTHONPATH"] = os.getcwd()
+            script_env["PYTHONPATH"] = os.path.join(os.getcwd(), "src")
 
             logger.info("Starting Scrapy Crawler Script! ... ")
             output = subprocess.Popen(
                 [
                     "python",
-                    "modules/crawler/crawler_script.py",
+                    "src/modules/crawler/crawler_script.py",
                     crawler_job_id,
                 ],
                 env=script_env,
