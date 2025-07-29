@@ -148,7 +148,7 @@ export class ProjectService {
   public static getUserProjects(): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/user",
+      url: "/project/user/projects",
     });
   }
 }

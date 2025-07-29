@@ -3064,7 +3064,7 @@
         }
       }
     },
-    "/project/user": {
+    "/project/user/projects": {
       "get": {
         "tags": ["project"],
         "summary": "Returns all Projects of the logged-in User",
