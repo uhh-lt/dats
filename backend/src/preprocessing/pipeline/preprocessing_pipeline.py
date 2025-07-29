@@ -113,11 +113,11 @@ class PreprocessingPipeline:
 
     def _set_ppj_status_to_finished(self, cargo: PipelineCargo) -> None:
         with self.sqlr.db_session() as db:
-            ppj_status = crud_prepro_job.get_status_by_id(
+            ppj_status = crud_prepro_job.read_status_by_id(
                 db=db, uuid=cargo.ppj_payload.prepro_job_id
             )
             running_or_waiting = (
-                crud_prepro_job.get_number_of_running_or_waiting_payloads(
+                crud_prepro_job.read_number_of_running_or_waiting_payloads(
                     db=db, uuid=cargo.ppj_payload.prepro_job_id
                 )
             )
@@ -128,7 +128,7 @@ class PreprocessingPipeline:
 
     def _set_ppj_status_to_running(self, cargo: PipelineCargo) -> None:
         with self.sqlr.db_session() as db:
-            ppj_status = crud_prepro_job.get_status_by_id(
+            ppj_status = crud_prepro_job.read_status_by_id(
                 db=db, uuid=cargo.ppj_payload.prepro_job_id
             )
             if (

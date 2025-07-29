@@ -178,7 +178,7 @@ def delete_by_id(
     db_obj = crud_span_anno.read(db=db, id=span_id)
     anno_read = SpanAnnotationDeleted.model_validate(db_obj)
 
-    crud_span_anno.remove(db=db, id=span_id)
+    crud_span_anno.delete(db=db, id=span_id)
     return anno_read
 
 

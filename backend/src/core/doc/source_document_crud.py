@@ -32,6 +32,8 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
 class CRUDSourceDocument(
     CRUDBase[SourceDocumentORM, SourceDocumentCreate, SourceDocumentUpdate]
 ):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, create_dto: SourceDocumentCreate
     ) -> SourceDocumentORM:
@@ -61,17 +63,9 @@ class CRUDSourceDocument(
             db.rollback()
             raise e
 
-    def update_status(
-        self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
-    ) -> SourceDocumentORM:
-        sdoc_db_obj = self.read(db=db, id=sdoc_id)
-        sdoc_db_obj.status = sdoc_status.value
-        db.add(sdoc_db_obj)
-        db.commit()
-        db.refresh(sdoc_db_obj)
-        return sdoc_db_obj
+    ### READ OPERATIONS ###
 
-    def get_status(
+    def read_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
         if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
@@ -104,21 +98,6 @@ class CRUDSourceDocument(
         # create id, data map
         id2data = {db_obj.id: db_obj for db_obj in db_objs}
         return [id2data.get(id) for id in ids]
-
-    def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
-        sdoc_db_obj = super().remove(db=db, id=id)
-
-        # remove file from filesystem
-        FilesystemRepo().remove_sdoc_file(
-            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-        )
-
-        # emit event
-        source_document_deleted.send(
-            self, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
-        )
-
-        return sdoc_db_obj
 
     def read_by_project_and_document_tag(
         self,
@@ -194,6 +173,97 @@ class CRUDSourceDocument(
             )
         return query.first()
 
+    def read_all_without_tags(
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .outerjoin(SourceDocumentORM.document_tags)
+            .filter(
+                SourceDocumentORM.document_tags == None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.notin_(tag_ids)
+            )
+            .all()
+        )
+
+    def read_all_with_tags(
+        self, db: Session, *, project_id: int, tag_ids: List[int] = []
+    ) -> List[SourceDocumentORM]:
+        return (
+            db.query(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .join(SourceDocumentORM.document_tags)
+            .filter(
+                SourceDocumentORM.document_tags != None  # noqa: E711
+                if len(tag_ids) == 0
+                else DocumentTagORM.id.in_(tag_ids)
+            )
+            .all()
+        )
+
+    def read_annotators(
+        self, db: Session, *, sdoc_ids: List[int]
+    ) -> Dict[int, List[int]]:
+        user_ids_agg = aggregate_ids(AnnotationDocumentORM.user_id, label="user_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, user_ids_agg)
+            .join(
+                SourceDocumentORM.annotation_documents,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
+
+    def read_tags(self, db: Session, *, sdoc_ids: List[int]) -> Dict[int, List[int]]:
+        tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
+        rows = (
+            db.query(SourceDocumentORM.id, tag_ids_agg)
+            .join(
+                SourceDocumentORM.document_tags,
+                isouter=True,
+            )
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(SourceDocumentORM.id)
+            .all()
+        )
+        return {row[0]: row[1] for row in rows}
+
+    ### UPDATE OPERATIONS ###
+
+    def update_status(
+        self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
+    ) -> SourceDocumentORM:
+        sdoc_db_obj = self.read(db=db, id=sdoc_id)
+        sdoc_db_obj.status = sdoc_status.value
+        db.add(sdoc_db_obj)
+        db.commit()
+        db.refresh(sdoc_db_obj)
+        return sdoc_db_obj
+
+    ### DELETE OPERATIONS ###
+
+    def delete(self, db: Session, *, id: int) -> SourceDocumentORM:
+        sdoc_db_obj = super().delete(db=db, id=id)
+
+        # remove file from filesystem
+        FilesystemRepo().remove_sdoc_file(
+            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
+        )
+
+        # emit event
+        source_document_deleted.send(
+            self, project_id=sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+        )
+
+        return sdoc_db_obj
+
+    ### OTHER OPERATIONS ###
+
     def count_by_project(
         self, db: Session, *, proj_id: int, status: Optional[SDocStatus] = None
     ) -> int:
@@ -234,66 +304,6 @@ class CRUDSourceDocument(
             for (parent_sdoc_id, linked_sdoc_id) in res
             if linked_sdoc_id is not None
         ]
-
-    def read_all_without_tags(
-        self, db: Session, *, project_id: int, tag_ids: List[int] = []
-    ) -> List[SourceDocumentORM]:
-        return (
-            db.query(SourceDocumentORM)
-            .filter(SourceDocumentORM.project_id == project_id)
-            .outerjoin(SourceDocumentORM.document_tags)
-            .filter(
-                SourceDocumentORM.document_tags == None  # noqa: E711
-                if len(tag_ids) == 0
-                else DocumentTagORM.id.notin_(tag_ids)
-            )
-            .all()
-        )
-
-    def read_all_with_tags(
-        self, db: Session, *, project_id: int, tag_ids: List[int] = []
-    ) -> List[SourceDocumentORM]:
-        return (
-            db.query(SourceDocumentORM)
-            .filter(SourceDocumentORM.project_id == project_id)
-            .join(SourceDocumentORM.document_tags)
-            .filter(
-                SourceDocumentORM.document_tags != None  # noqa: E711
-                if len(tag_ids) == 0
-                else DocumentTagORM.id.in_(tag_ids)
-            )
-            .all()
-        )
-
-    def get_annotators(
-        self, db: Session, *, sdoc_ids: List[int]
-    ) -> Dict[int, List[int]]:
-        user_ids_agg = aggregate_ids(AnnotationDocumentORM.user_id, label="user_ids")
-        rows = (
-            db.query(SourceDocumentORM.id, user_ids_agg)
-            .join(
-                SourceDocumentORM.annotation_documents,
-                isouter=True,
-            )
-            .filter(SourceDocumentORM.id.in_(sdoc_ids))
-            .group_by(SourceDocumentORM.id)
-            .all()
-        )
-        return {row[0]: row[1] for row in rows}
-
-    def get_tags(self, db: Session, *, sdoc_ids: List[int]) -> Dict[int, List[int]]:
-        tag_ids_agg = aggregate_ids(DocumentTagORM.id, label="tag_ids")
-        rows = (
-            db.query(SourceDocumentORM.id, tag_ids_agg)
-            .join(
-                SourceDocumentORM.document_tags,
-                isouter=True,
-            )
-            .filter(SourceDocumentORM.id.in_(sdoc_ids))
-            .group_by(SourceDocumentORM.id)
-            .all()
-        )
-        return {row[0]: row[1] for row in rows}
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

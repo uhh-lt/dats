@@ -137,7 +137,7 @@ def delete_by_id(
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     bbox_read = BBoxAnnotationRead.model_validate(db_obj)
 
-    crud_bbox_anno.remove(db=db, id=bbox_id)
+    crud_bbox_anno.delete(db=db, id=bbox_id)
     return bbox_read
 
 
@@ -154,7 +154,7 @@ def delete_bulk_by_id(
 ) -> List[BBoxAnnotationRead]:
     authz_user.assert_in_same_project_as_many(Crud.BBOX_ANNOTATION, bbox_anno_ids)
 
-    db_objs = crud_bbox_anno.remove_bulk(db=db, ids=bbox_anno_ids)
+    db_objs = crud_bbox_anno.delete_bulk(db=db, ids=bbox_anno_ids)
     return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]
 
 

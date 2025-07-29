@@ -13,6 +13,43 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
     CRUD operations for document aspect embeddings in Weaviate
     """
 
+    ### DELETE OPERATIONS ###
+
+    def delete_embeddings_by_aspect(
+        self, client: WeaviateClient, project_id: int, aspect_id: int
+    ) -> None:
+        """
+        Remove all cluster embeddings of a certain Aspect from Weaviate
+        :param project_id: The project ID
+        :param aspect_id: The Aspect ID
+        """
+        collection = self._get_collection(client=client, project_id=project_id)
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["aspect_id"].name
+                ).equal(aspect_id),
+            )
+
+    def delete_by_sdoc_id(
+        self, client: WeaviateClient, project_id: int, sdoc_id: int
+    ) -> None:
+        """
+        Remove all embeddings for a given SourceDocument by sdoc_id
+        Args:
+            project_id: The project ID
+            sdoc_id: The SourceDocument ID
+        """
+        collection = self._get_collection(client=client, project_id=project_id)
+        if self._tenant_exists(client=client, project_id=project_id):
+            collection.data.delete_many(
+                where=Filter.by_property(
+                    self.collection_class.properties["sdoc_id"].name
+                ).equal(sdoc_id)
+            )
+
+    ### OTHER OPERATIONS ###
+
     def search_near_vector_in_aspect(
         self,
         client: WeaviateClient,
@@ -45,39 +82,6 @@ class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
             ).equal(aspect_id),
         )
 
-    def remove_embeddings_by_aspect(
-        self, client: WeaviateClient, project_id: int, aspect_id: int
-    ) -> None:
-        """
-        Remove all cluster embeddings of a certain Aspect from Weaviate
-        :param project_id: The project ID
-        :param aspect_id: The Aspect ID
-        """
-        collection = self._get_collection(client=client, project_id=project_id)
-        if self._tenant_exists(client=client, project_id=project_id):
-            collection.data.delete_many(
-                where=Filter.by_property(
-                    self.collection_class.properties["aspect_id"].name
-                ).equal(aspect_id),
-            )
-
-    def remove_by_sdoc_id(
-        self, client: WeaviateClient, project_id: int, sdoc_id: int
-    ) -> None:
-        """
-        Remove all embeddings for a given SourceDocument by sdoc_id
-        Args:
-            project_id: The project ID
-            sdoc_id: The SourceDocument ID
-        """
-        collection = self._get_collection(client=client, project_id=project_id)
-        if self._tenant_exists(client=client, project_id=project_id):
-            collection.data.delete_many(
-                where=Filter.by_property(
-                    self.collection_class.properties["sdoc_id"].name
-                ).equal(sdoc_id)
-            )
-
 
 crud_aspect_embedding = CRUDAspectEmbedding(
     collection_class=AspectCollection,
@@ -92,7 +96,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
     from repos.vector.weaviate_repo import WeaviateRepo
 
     with WeaviateRepo().weaviate_session() as client:
-        crud_aspect_embedding.remove_by_sdoc_id(
+        crud_aspect_embedding.delete_by_sdoc_id(
             client=client, project_id=project_id, sdoc_id=sdoc_id
         )
 

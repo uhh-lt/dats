@@ -138,9 +138,6 @@ def update_bulk(
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT_METADATA, [m.id for m in metadatas]
     )
-
-    print("HI!")
-
     db_objs = crud_sdoc_meta.update_bulk(db=db, update_dtos=metadatas)
     return [SourceDocumentMetadataRead.model_validate(db_obj) for db_obj in db_objs]
 
@@ -157,6 +154,5 @@ def delete_by_id(
     authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
-
-    db_obj = crud_sdoc_meta.remove(db=db, id=metadata_id)
+    db_obj = crud_sdoc_meta.delete(db=db, id=metadata_id)
     return SourceDocumentMetadataRead.model_validate(db_obj)

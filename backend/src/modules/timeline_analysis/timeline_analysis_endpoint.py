@@ -152,5 +152,5 @@ def delete_by_id(
 ) -> TimelineAnalysisRead:
     authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
 
-    db_obj = crud_timeline_analysis.remove(db=db, id=timeline_analysis_id)
+    db_obj = crud_timeline_analysis.delete(db=db, id=timeline_analysis_id)
     return TimelineAnalysisRead.model_validate(db_obj)

@@ -32,5 +32,5 @@ def remove_erroneous_or_unfinished_sdocs(cargo: PipelineCargo) -> PipelineCargo:
                     logger.info(
                         f"Removing erroneous or unfinished SourceDocument {filename}!"
                     )
-                    sdoc = crud_sdoc.remove(db=db, id=sdoc.id)
+                    sdoc = crud_sdoc.delete(db=db, id=sdoc.id)
     return cargo

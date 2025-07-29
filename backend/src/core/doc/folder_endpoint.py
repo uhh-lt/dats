@@ -101,5 +101,5 @@ def delete_folder(
     authz_user: AuthzUser = Depends(),
 ) -> FolderRead:
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    db_obj = crud_folder.remove(db=db, id=folder_id)
+    db_obj = crud_folder.delete(db=db, id=folder_id)
     return FolderRead.model_validate(db_obj)

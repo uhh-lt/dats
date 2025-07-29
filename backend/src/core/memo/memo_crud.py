@@ -28,79 +28,10 @@ from systems.event_system.events import user_added_to_project
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(self, db: Session, *, create_dto: MemoCreateIntern) -> MemoORM:
         raise NotImplementedError()
-
-    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
-        updated_memo = super().update(db, id=id, update_dto=update_dto)
-        self.update_memo_in_elasticsearch(updated_memo)
-        return updated_memo
-
-    def read_by_project_and_uuid(
-        self,
-        db: Session,
-        *,
-        project_id: int,
-        uuid: str,
-    ) -> Optional[MemoORM]:
-        query = db.query(self.model).where(
-            self.model.project_id == project_id,
-            self.model.uuid == uuid,
-        )
-        return query.first()
-
-    def read_by_user_and_project(
-        self,
-        db: Session,
-        user_id: int,
-        proj_id: int,
-        only_starred: Optional[bool],
-    ) -> List[MemoORM]:
-        if only_starred:
-            return (
-                db.query(self.model)
-                .filter(
-                    self.model.user_id == user_id,
-                    self.model.project_id == proj_id,
-                    self.model.starred == only_starred,
-                )
-                .all()
-            )
-
-        return (
-            db.query(self.model)
-            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .all()
-        )
-
-    def remove_by_user_and_project(
-        self, db: Session, user_id: int, proj_id: int
-    ) -> List[int]:
-        # find all memos to be removed
-        query = db.query(self.model).filter(
-            self.model.user_id == user_id, self.model.project_id == proj_id
-        )
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the memos
-        query.delete()
-        db.commit()
-
-        return ids
-
-    def exists_for_user_and_object_handle(
-        self, db: Session, *, user_id: int, attached_to_id: int
-    ) -> bool:
-        return (
-            db.query(self.model.id)
-            .filter(
-                self.model.user_id == user_id,
-                self.model.attached_to_id == attached_to_id,
-            )
-            .first()
-            is not None
-        )
 
     def __create_memo(
         self, create_dto: MemoCreateIntern, db: Session, oh_db_obj: ObjectHandleORM
@@ -160,12 +91,35 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.add_memo_to_elasticsearch(
+        self.create_memo_elasticsearch(
             memo_orm=db_obj,
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
         )
         return db_obj
+
+    @staticmethod
+    def create_memo_elasticsearch(
+        memo_orm: MemoORM,
+        attached_object_id: int,
+        attached_object_type: AttachedObjectType,
+    ):
+        esmemo = ElasticSearchMemoCreate(
+            title=memo_orm.title,
+            content=memo_orm.content,
+            memo_id=memo_orm.id,
+            project_id=memo_orm.project_id,
+            user_id=memo_orm.user_id,
+            attached_object_id=attached_object_id,
+            attached_object_type=attached_object_type,
+        )
+        crud_elastic_memo.create(
+            client=ElasticSearchRepo().client,
+            create_dto=esmemo,
+            proj_id=memo_orm.project_id,
+        )
+
+    ### READ OPERATIONS ###
 
     def read_by_project(
         self,
@@ -177,6 +131,100 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             self.model.project_id == project_id,
         )
         return query.all()
+
+    def read_by_project_and_uuid(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        uuid: str,
+    ) -> Optional[MemoORM]:
+        query = db.query(self.model).where(
+            self.model.project_id == project_id,
+            self.model.uuid == uuid,
+        )
+        return query.first()
+
+    def read_by_user_and_project(
+        self,
+        db: Session,
+        user_id: int,
+        proj_id: int,
+        only_starred: Optional[bool],
+    ) -> List[MemoORM]:
+        if only_starred:
+            return (
+                db.query(self.model)
+                .filter(
+                    self.model.user_id == user_id,
+                    self.model.project_id == proj_id,
+                    self.model.starred == only_starred,
+                )
+                .all()
+            )
+
+        return (
+            db.query(self.model)
+            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
+            .all()
+        )
+
+    ### UPDATE OPERATIONS ###
+
+    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
+        updated_memo = super().update(db, id=id, update_dto=update_dto)
+        self.update_memo_elasticsearch(updated_memo)
+        return updated_memo
+
+    @staticmethod
+    def update_memo_elasticsearch(
+        memo_orm: MemoORM,
+    ):
+        update_es_dto = ElasticSearchMemoUpdate(
+            title=memo_orm.title,
+            content=memo_orm.content,
+            starred=memo_orm.starred,
+        )
+
+        crud_elastic_memo.update(
+            client=ElasticSearchRepo().client,
+            id=memo_orm.id,
+            update_dto=update_es_dto,
+            proj_id=memo_orm.project_id,
+        )
+
+    ### DELETE OPERATIONS ###
+
+    def delete_by_user_and_project(
+        self, db: Session, user_id: int, proj_id: int
+    ) -> List[int]:
+        # find all memos to be removed
+        query = db.query(self.model).filter(
+            self.model.user_id == user_id, self.model.project_id == proj_id
+        )
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # delete the memos
+        query.delete()
+        db.commit()
+
+        return ids
+
+    ### OTHER OPERATIONS ###
+
+    def exists_for_user_and_object_handle(
+        self, db: Session, *, user_id: int, attached_to_id: int
+    ) -> bool:
+        return (
+            db.query(self.model.id)
+            .filter(
+                self.model.user_id == user_id,
+                self.model.attached_to_id == attached_to_id,
+            )
+            .first()
+            is not None
+        )
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
@@ -240,44 +288,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             raise NotImplementedError(
                 f"Unknown AttachedObjectType: {type(attached_to)}"
             )
-
-    @staticmethod
-    def add_memo_to_elasticsearch(
-        memo_orm: MemoORM,
-        attached_object_id: int,
-        attached_object_type: AttachedObjectType,
-    ):
-        esmemo = ElasticSearchMemoCreate(
-            title=memo_orm.title,
-            content=memo_orm.content,
-            memo_id=memo_orm.id,
-            project_id=memo_orm.project_id,
-            user_id=memo_orm.user_id,
-            attached_object_id=attached_object_id,
-            attached_object_type=attached_object_type,
-        )
-        crud_elastic_memo.create(
-            client=ElasticSearchRepo().client,
-            create_dto=esmemo,
-            proj_id=memo_orm.project_id,
-        )
-
-    @staticmethod
-    def update_memo_in_elasticsearch(
-        memo_orm: MemoORM,
-    ):
-        update_es_dto = ElasticSearchMemoUpdate(
-            title=memo_orm.title,
-            content=memo_orm.content,
-            starred=memo_orm.starred,
-        )
-
-        crud_elastic_memo.update(
-            client=ElasticSearchRepo().client,
-            id=memo_orm.id,
-            update_dto=update_es_dto,
-            proj_id=memo_orm.project_id,
-        )
 
 
 crud_memo = CRUDMemo(MemoORM)

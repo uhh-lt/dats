@@ -11,13 +11,15 @@ from repos.db.crud_base import CRUDBase
 from sqlalchemy.orm import Session
 
 
-class CrudDocumentTagRecommendationLink(
+class CRUDDocumentTagRecommendationLink(
     CRUDBase[
         DocumentTagRecommendationLinkORM,
         DocumentTagRecommendationLinkCreate,
         DocumentTagRecommendationLinkUpdate,
     ]
 ):
+    ### READ OPERATIONS ###
+
     def read_by_ml_job_id(
         self,
         db: Session,
@@ -33,6 +35,6 @@ class CrudDocumentTagRecommendationLink(
         return query.all()
 
 
-crud_document_tag_recommendation_link = CrudDocumentTagRecommendationLink(
+crud_document_tag_recommendation_link = CRUDDocumentTagRecommendationLink(
     DocumentTagRecommendationLinkORM
 )

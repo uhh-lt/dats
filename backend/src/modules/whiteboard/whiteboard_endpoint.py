@@ -149,5 +149,5 @@ def delete_by_id(
 ) -> WhiteboardRead:
     authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
 
-    db_obj = crud_whiteboard.remove(db=db, id=whiteboard_id)
+    db_obj = crud_whiteboard.delete(db=db, id=whiteboard_id)
     return WhiteboardRead.model_validate(db_obj)

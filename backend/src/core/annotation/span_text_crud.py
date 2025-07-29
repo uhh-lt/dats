@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session
 
 
 class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
-    def update(self, db: Session, *, id: int, update_dto):
-        # Flo: We no not want to update SpanText
-        raise NotImplementedError()
+    ### CREATE OPERATIONS ###
 
     def create(self, db: Session, *, create_dto: SpanTextCreate) -> SpanTextORM:
         # Only create when not already present
@@ -56,8 +54,16 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
         return [text_to_db_obj_map[create_dto.text] for create_dto in create_dtos]
 
+    ### READ OPERATIONS ###
+
     def read_by_text(self, db: Session, *, text: str) -> Optional[SpanTextORM]:
         return db.query(self.model).filter(self.model.text == text).first()
+
+    ### UPDATE OPERATIONS ###
+
+    def update(self, db: Session, *, id: int, update_dto):
+        # Flo: We no not want to update SpanText
+        raise NotImplementedError()
 
 
 crud_span_text = CRUDSpanText(SpanTextORM)

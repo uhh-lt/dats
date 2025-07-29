@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session, joinedload
 
 
 class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
-    def generate(self, db: Session, user_id: int) -> RefreshTokenORM:
+    ### CREATE OPERATIONS ###
+
+    def create(self, db: Session, user_id: int) -> RefreshTokenORM:
         dto = RefreshTokenCreate(
             token=genereate_refresh_token(),
             expires_at=datetime.now(UTC)
@@ -20,6 +22,11 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
             user_id=user_id,
         )
         return super().create(db, create_dto=dto)
+
+    ### READ OPERATIONS ###
+
+    def read(self, _db: Session, _id: int) -> RefreshTokenORM:
+        raise Exception("Use read_and_verify instead")
 
     def read_and_verify(self, db: Session, token_str: str) -> RefreshTokenORM:
         token = (
@@ -53,17 +60,9 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
 
         return token
 
-    def read(self, _db: Session, _id: int) -> RefreshTokenORM:
-        raise Exception("Use read_and_verify instead")
+    ### DELETE OPERATIONS ###
 
-    def revoke(self, db: Session, token: RefreshTokenORM) -> RefreshTokenORM:
-        token.revoked_at = datetime.now(UTC)
-        db.add(token)
-        db.commit()
-        db.refresh(token)
-        return token
-
-    def remove_old_refresh_tokens(self, db: Session, user_id: int):
+    def delete_old_refresh_tokens(self, db: Session, user_id: int):
         remove_tokens_older_than = datetime.now(UTC) - timedelta(
             seconds=int(conf.api.auth.jwt.refresh_ttl) * 3
         )
@@ -79,6 +78,15 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
         db.execute(query)
 
         db.commit()
+
+    ### OTHER OPERATIONS ###
+
+    def revoke(self, db: Session, token: RefreshTokenORM) -> RefreshTokenORM:
+        token.revoked_at = datetime.now(UTC)
+        db.add(token)
+        db.commit()
+        db.refresh(token)
+        return token
 
 
 crud_refresh_token = CRUDRefreshToken(RefreshTokenORM)

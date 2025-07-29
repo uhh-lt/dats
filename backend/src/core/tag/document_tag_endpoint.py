@@ -258,7 +258,7 @@ def delete_by_id(
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     tag_read = DocumentTagRead.model_validate(db_obj)
 
-    crud_document_tag.remove(db=db, id=tag_id)
+    crud_document_tag.delete(db=db, id=tag_id)
     return tag_read
 
 
@@ -290,4 +290,4 @@ async def get_sdoc_counts(
     *, db: Session = Depends(get_db_session), sdoc_ids: List[int]
 ) -> Dict[int, int]:
     # TODO only if the user has access
-    return crud_document_tag.get_tag_sdoc_counts(db, sdoc_ids)
+    return crud_document_tag.read_tag_sdoc_counts(db, sdoc_ids)

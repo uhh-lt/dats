@@ -81,7 +81,7 @@ def login(
         raise credentials_exception
 
     (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.generate(db, user.id)
+    refresh_token = crud_refresh_token.create(db, user.id)
 
     response.set_cookie(
         AUTHORIZATION,
@@ -129,10 +129,10 @@ def refresh_access_token(
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
     crud_refresh_token.revoke(db, token)
     # Remove very old refresh tokens to prevent our database from filling up
-    crud_refresh_token.remove_old_refresh_tokens(db, token.user_id)
+    crud_refresh_token.delete_old_refresh_tokens(db, token.user_id)
 
     (access_token, access_token_expires) = generate_jwt(token.user)
-    new_token = crud_refresh_token.generate(db, token.user.id)
+    new_token = crud_refresh_token.create(db, token.user.id)
 
     response.set_cookie(
         AUTHORIZATION,
@@ -196,7 +196,7 @@ async def oidc_callback(
         raise HTTPException(status_code=401, detail=str(e))
 
     (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.generate(db, user.id)
+    refresh_token = crud_refresh_token.create(db, user.id)
 
     auth_data = UserAuthorizationHeaderData(
         access_token=access_token,

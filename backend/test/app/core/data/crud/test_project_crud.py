@@ -110,7 +110,7 @@ def test_create_remove_project(db: Session) -> None:
     assert project.description == description
 
     # remove project and check database
-    crud_project.remove(db=db, id=id)
+    crud_project.delete(db=db, id=id)
     dbs = crud_project.read_multi(db=db)
     all_projects = [ProjectRead.model_validate(proj) for proj in dbs]
 
@@ -118,7 +118,7 @@ def test_create_remove_project(db: Session) -> None:
 
     # try remove project second time
     with pytest.raises(NoSuchElementError):
-        crud_project.remove(db=db, id=id)
+        crud_project.delete(db=db, id=id)
 
 
 # project user
@@ -150,7 +150,7 @@ def test_project_users(db: Session, project: ProjectORM, user: UserORM) -> None:
     assert len(project_users) == 6
     assert project_users[5].id == user_six_orm.id
 
-    crud_user.remove(db=db, id=user_six_orm.id)
+    crud_user.delete(db=db, id=user_six_orm.id)
 
     proj_db_obj = crud_project.read(db=db, id=project.id)
     project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
@@ -269,7 +269,7 @@ def test_get_add_remove_memos_project(
     assert len(memo_list_starred) == 1
 
     # remove memos
-    crud_memo.remove_by_user_and_project(db=db, user_id=user.id, proj_id=project.id)
+    crud_memo.delete_by_user_and_project(db=db, user_id=user.id, proj_id=project.id)
     db_objs = crud_memo.read_by_user_and_project(
         db=db, user_id=user.id, proj_id=project.id, only_starred=False
     )

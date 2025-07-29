@@ -86,7 +86,7 @@ def delete_by_id(
 ) -> Optional[SpanGroupRead]:
     authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
 
-    db_obj = crud_span_group.remove(db=db, id=span_group_id)
+    db_obj = crud_span_group.delete(db=db, id=span_group_id)
     return SpanGroupRead.model_validate(db_obj)
 
 

@@ -167,10 +167,10 @@ class SdocSearchService(metaclass=SingletonMeta):
             }
 
             # 2. the annotators
-            annotators = crud_sdoc.get_annotators(db=db, sdoc_ids=sdoc_ids)  #
+            annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)  #
 
             # 3. the tags
-            tags = crud_sdoc.get_tags(db=db, sdoc_ids=sdoc_ids)
+            tags = crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids)
 
         return PaginatedSDocHits(
             hits=data.hits,

@@ -20,6 +20,8 @@ from sqlalchemy.orm import Session
 class CRUDBBoxAnnotation(
     CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreateIntern, BBoxAnnotationUpdate]
 ):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, user_id: int, create_dto: BBoxAnnotationCreate
     ) -> BBoxAnnotationORM:
@@ -96,6 +98,8 @@ class CRUDBBoxAnnotation(
                 for create_dto in create_dtos
             ],
         )
+
+    ### READ OPERATIONS ###
 
     def read_by_project(
         self,
@@ -195,6 +199,8 @@ class CRUDBBoxAnnotation(
 
         return query.all()
 
+    ### UPDATE OPERATIONS ###
+
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
     ) -> BBoxAnnotationORM:
@@ -216,17 +222,19 @@ class CRUDBBoxAnnotation(
             for update_dto in update_dtos
         ]
 
-    def remove(self, db: Session, *, id: int) -> BBoxAnnotationORM:
-        bbox_anno = super().remove(db, id=id)
+    ### DELETE OPERATIONS ###
+
+    def delete(self, db: Session, *, id: int) -> BBoxAnnotationORM:
+        bbox_anno = super().delete(db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
         return bbox_anno
 
-    def remove_bulk(self, db: Session, *, ids: List[int]) -> List[BBoxAnnotationORM]:
+    def delete_bulk(self, db: Session, *, ids: List[int]) -> List[BBoxAnnotationORM]:
         bbox_annos = []
         for id in ids:
-            bbox_annos.append(self.remove(db, id=id))
+            bbox_annos.append(self.delete(db, id=id))
 
         # find the annotation document ids
         adoc_ids = {bbox_anno.annotation_document_id for bbox_anno in bbox_annos}
@@ -237,7 +245,7 @@ class CRUDBBoxAnnotation(
 
         return bbox_annos
 
-    def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
+    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all bbox annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id

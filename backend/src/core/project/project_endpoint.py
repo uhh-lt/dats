@@ -86,7 +86,7 @@ def delete_project(
     authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
-    db_obj = crud_project.remove(db=db, id=proj_id)
+    db_obj = crud_project.delete(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
 
 

@@ -10,6 +10,8 @@ from utils.color_utils import get_next_color
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
@@ -39,7 +41,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     enabled=code_dict[code_name].get("enabled", True),
                 )
 
-                existing_code_id = self.get_by_name_and_project(
+                existing_code_id = self.read_id_by_name_and_project(
                     db,
                     code_name=create_dto.name,
                     proj_id=create_dto.project_id,
@@ -60,6 +62,8 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         return created
 
+    ### READ OPERATIONS ###
+
     def read_by_name(self, db: Session, code_name: str) -> List[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name).all()
 
@@ -72,13 +76,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .first()
         )
 
-    def exists_by_name(self, db: Session, *, code_name: str) -> bool:
-        return (
-            db.query(self.model.id).filter(self.model.name == code_name).first()
-            is not None
-        )
-
-    def get_by_name_and_project(
+    def read_id_by_name_and_project(
         self, db: Session, *, code_name: str, proj_id: int
     ) -> int | None:
         code_id = (
@@ -88,7 +86,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         )
         return code_id[0] if code_id else None
 
-    def get_with_children(self, db: Session, *, code_id) -> List[CodeORM]:
+    def read_with_children(self, db: Session, *, code_id) -> List[CodeORM]:
         topq = (
             db.query(self.model.id)
             .filter(self.model.id == code_id)
@@ -102,12 +100,14 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             .all()
         )
 
+    ### UPDATE OPERATIONS ###
+
     def update_with_children(
         self, db: Session, *, code_id, update_dto: CodeUpdate
     ) -> CodeORM:
         if update_dto.enabled is None:
             return self.update(db, id=code_id, update_dto=update_dto)
-        codes = self.get_with_children(db, code_id=code_id)
+        codes = self.read_with_children(db, code_id=code_id)
         obj_data = jsonable_encoder(codes[0].as_dict())
         update_data = update_dto.model_dump(exclude_unset=True)
         for field in obj_data:
@@ -118,6 +118,14 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.add_all(codes)
         db.commit()
         return codes[0]
+
+    ### OTHER OPERATIONS ###
+
+    def exists_by_name(self, db: Session, *, code_name: str) -> bool:
+        return (
+            db.query(self.model.id).filter(self.model.name == code_name).first()
+            is not None
+        )
 
 
 crud_code = CRUDCode(CodeORM)

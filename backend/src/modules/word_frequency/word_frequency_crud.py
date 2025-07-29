@@ -11,15 +11,14 @@ from repos.db.crud_base import CRUDBase, UpdateNotAllowed
 from sqlalchemy.orm import Session
 
 
-class CrudWordFrequency(
+class CRUDWordFrequency(
     CRUDBase[
         WordFrequencyORM,
         WordFrequencyCreate,
         UpdateNotAllowed,
     ]
 ):
-    def update(self, db: Session, *, id: int, update_dto):
-        raise NotImplementedError()
+    ### READ OPERATIONS ###
 
     def read_by_project_and_doctype(
         self, db: Session, *, project_id: int, doctype: DocType
@@ -35,5 +34,10 @@ class CrudWordFrequency(
         )
         return [WordFrequencyRead.model_validate(wf) for wf in wf_orms]
 
+    ### UPDATE OPERATIONS ###
 
-crud_word_frequency = CrudWordFrequency(WordFrequencyORM)
+    def update(self, db: Session, *, id: int, update_dto):
+        raise NotImplementedError()
+
+
+crud_word_frequency = CRUDWordFrequency(WordFrequencyORM)

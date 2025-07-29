@@ -1175,7 +1175,7 @@ class PerspectivesService:
 
                 # 2. Cluster Removal: Remove the cluster from the database
                 self._log_status_step(1)
-                crud_cluster.remove(db=db, id=params.cluster_id)
+                crud_cluster.delete(db=db, id=params.cluster_id)
                 crud_cluster_embedding.remove_embedding(
                     client=client,
                     project_id=aspect.project_id,
@@ -1221,7 +1221,7 @@ class PerspectivesService:
 
                 # 2. Delete the merged cluster from the database
                 self._log_status_step(1)
-                crud_cluster.remove(db=db, id=params.cluster_to_merge)
+                crud_cluster.delete(db=db, id=params.cluster_to_merge)
                 crud_cluster_embedding.remove_embedding(
                     client=client,
                     project_id=aspect.project_id,
@@ -1268,7 +1268,7 @@ class PerspectivesService:
 
                 # 1. Remove the cluster from the database
                 self._log_status_step(0)
-                crud_cluster.remove(db=db, id=params.cluster_id)
+                crud_cluster.delete(db=db, id=params.cluster_id)
                 crud_cluster_embedding.remove_embedding(
                     client=client,
                     project_id=aspect.project_id,

@@ -165,7 +165,7 @@ class COTAService(metaclass=SingletonMeta):
         return COTARead.model_validate(db_obj)
 
     def delete_by_id(self, *, db: Session, cota_id: int) -> COTARead:
-        db_obj = crud_cota.remove(db=db, id=cota_id)
+        db_obj = crud_cota.delete(db=db, id=cota_id)
         return COTARead.model_validate(db_obj)
 
     def create_and_start_refinement_job_async(

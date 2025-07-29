@@ -9,6 +9,88 @@ from sqlalchemy.orm import Session
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
+    ### READ OPERATIONS ###
+
+    def read_by_name_and_project(
+        self, db: Session, name: str, project_id: int
+    ) -> Optional[DocumentTagORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == name, self.model.project_id == project_id)
+            .first()
+        )
+
+    # Return a dictionary in the following format:
+    # tag id => count of documents that have this tag
+    # for all tags in the database
+    def read_tag_sdoc_counts(self, db: Session, sdoc_ids: List[int]) -> Dict[int, int]:
+        # Get the source documents matching the `sdoc_ids` parameter
+        # and count how many of them have each tag
+        sdocs_query = (
+            select(DocumentTagORM.id, func.count(SourceDocumentORM.id).label("count"))
+            .join(DocumentTagORM.source_documents)
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(DocumentTagORM.id)
+            .subquery()
+        )
+
+        # Get *all* tags in the database and join the matching sdoc count from the subquery,
+        # using 0 as a default instead of `NULL`
+        query = select(
+            DocumentTagORM.id, func.coalesce(sdocs_query.c.count, 0)
+        ).join_from(
+            DocumentTagORM,
+            sdocs_query,
+            DocumentTagORM.id == sdocs_query.c.id,
+            isouter=True,
+        )
+        rows = db.execute(query)
+
+        return dict((tag_id, count) for tag_id, count in rows)
+
+    def read_tags_for_documents(
+        self, db: Session, *, sdoc_ids: Iterable[int]
+    ) -> Dict[int, List[DocumentTagORM]]:
+        """
+        Retrieves all tags associated with the given list of document IDs.
+
+        Args:
+            db (Session): The current database session used for querying.
+            sdoc_ids (Iterable[int]): A list of document IDs for which to retrieve tags.
+
+        Returns:
+            Dict[int, List[DocumentTagORM]]: A dictionary mapping each document ID to a list of associated tags.
+        """
+        if not sdoc_ids:
+            return {}
+
+        # Query to get all tags linked to the provided sdoc_ids
+        query = (
+            db.query(
+                SourceDocumentDocumentTagLinkTable.source_document_id,
+                DocumentTagORM.id,
+                DocumentTagORM.name,
+            )
+            .join(
+                DocumentTagORM,
+                SourceDocumentDocumentTagLinkTable.document_tag_id == DocumentTagORM.id,
+            )
+            .filter(SourceDocumentDocumentTagLinkTable.source_document_id.in_(sdoc_ids))
+            .all()
+        )
+
+        # Organize results into a dictionary {sdoc_id: [tag1, tag2, ...]}
+        result: Dict[int, List[DocumentTagORM]] = {}
+        for sdoc_id, tag_id, tag_name in query:
+            tag = DocumentTagORM(id=tag_id, name=tag_name)
+            if sdoc_id not in result:
+                result[sdoc_id] = []
+            result[sdoc_id].append(tag)
+
+        return result
+
+    ### UPDATE OPERATIONS ###
+
     def update(
         self, db: Session, *, id: int, update_dto: DocumentTagUpdate
     ) -> DocumentTagORM:
@@ -17,6 +99,8 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             raise ValueError("A tag cannot be its own parent")
 
         return super().update(db, id=id, update_dto=update_dto)
+
+    ### OTHER OPERATIONS ###
 
     def exists_by_project_and_tag_name_and_parent_id(
         self, db: Session, tag_name: str, project_id: int, parent_id: Optional[int]
@@ -41,15 +125,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 .first()
                 is not None
             )
-
-    def read_by_name_and_project(
-        self, db: Session, name: str, project_id: int
-    ) -> Optional[DocumentTagORM]:
-        return (
-            db.query(self.model)
-            .filter(self.model.name == name, self.model.project_id == project_id)
-            .first()
-        )
 
     def link_multiple_document_tags(
         self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
@@ -137,75 +212,6 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 db, sdoc_id=sdoc_id, tag_ids=tag_ids
             )
         return modifications
-
-    # Return a dictionary in the following format:
-    # tag id => count of documents that have this tag
-    # for all tags in the database
-    def get_tag_sdoc_counts(self, db: Session, sdoc_ids: List[int]) -> Dict[int, int]:
-        # Get the source documents matching the `sdoc_ids` parameter
-        # and count how many of them have each tag
-        sdocs_query = (
-            select(DocumentTagORM.id, func.count(SourceDocumentORM.id).label("count"))
-            .join(DocumentTagORM.source_documents)
-            .filter(SourceDocumentORM.id.in_(sdoc_ids))
-            .group_by(DocumentTagORM.id)
-            .subquery()
-        )
-
-        # Get *all* tags in the database and join the matching sdoc count from the subquery,
-        # using 0 as a default instead of `NULL`
-        query = select(
-            DocumentTagORM.id, func.coalesce(sdocs_query.c.count, 0)
-        ).join_from(
-            DocumentTagORM,
-            sdocs_query,
-            DocumentTagORM.id == sdocs_query.c.id,
-            isouter=True,
-        )
-        rows = db.execute(query)
-
-        return dict((tag_id, count) for tag_id, count in rows)
-
-    def get_tags_for_documents(
-        self, db: Session, *, sdoc_ids: Iterable[int]
-    ) -> Dict[int, List[DocumentTagORM]]:
-        """
-        Retrieves all tags associated with the given list of document IDs.
-
-        Args:
-            db (Session): The current database session used for querying.
-            sdoc_ids (Iterable[int]): A list of document IDs for which to retrieve tags.
-
-        Returns:
-            Dict[int, List[DocumentTagORM]]: A dictionary mapping each document ID to a list of associated tags.
-        """
-        if not sdoc_ids:
-            return {}
-
-        # Query to get all tags linked to the provided sdoc_ids
-        query = (
-            db.query(
-                SourceDocumentDocumentTagLinkTable.source_document_id,
-                DocumentTagORM.id,
-                DocumentTagORM.name,
-            )
-            .join(
-                DocumentTagORM,
-                SourceDocumentDocumentTagLinkTable.document_tag_id == DocumentTagORM.id,
-            )
-            .filter(SourceDocumentDocumentTagLinkTable.source_document_id.in_(sdoc_ids))
-            .all()
-        )
-
-        # Organize results into a dictionary {sdoc_id: [tag1, tag2, ...]}
-        result: Dict[int, List[DocumentTagORM]] = {}
-        for sdoc_id, tag_id, tag_name in query:
-            tag = DocumentTagORM(id=tag_id, name=tag_name)
-            if sdoc_id not in result:
-                result[sdoc_id] = []
-            result[sdoc_id].append(tag)
-
-        return result
 
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)

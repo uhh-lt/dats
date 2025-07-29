@@ -186,7 +186,7 @@ def delete_by_id(
 ) -> MemoRead:
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
 
-    memo = crud_memo.remove(db=db, id=memo_id)
+    memo = crud_memo.delete(db=db, id=memo_id)
 
     return crud_memo.get_memo_read_dto_from_orm(db, memo)
 

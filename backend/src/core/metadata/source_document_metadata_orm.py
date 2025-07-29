@@ -69,3 +69,6 @@ class SourceDocumentMetadataORM(ORMBase):
             name="UC_unique_metadata_sdoc_id_project_metadata_id",
         ),
     )
+
+    def get_project_id(self) -> int:
+        return self.project_metadata.get_project_id()
