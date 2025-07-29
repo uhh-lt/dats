@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash";
 import { Node } from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 import { IDataTree } from "./IDataTree.ts";
 
 interface FilterProps {
@@ -9,14 +9,14 @@ interface FilterProps {
   dataFilter: string;
 }
 
-export function dataToTree(data: (DocumentTagRead | CodeRead)[]): IDataTree {
+export function dataToTree(data: (TagRead | CodeRead)[]): IDataTree {
   // map input to IDataTree
   const newData: IDataTree[] = data.map((subset) => {
     return { data: subset };
   });
 
   // create a dummy root node that will hold the results
-  const dummyRootNode: DocumentTagRead | CodeRead = {
+  const dummyRootNode: TagRead | CodeRead = {
     created: "",
     description: "This is the root node",
     name: "root",
@@ -52,7 +52,7 @@ function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[]): IDataTree {
   return root;
 }
 
-export function flatTreeWithRoot(tree: IDataTree | null): (DocumentTagRead | CodeRead)[] {
+export function flatTreeWithRoot(tree: IDataTree | null): (TagRead | CodeRead)[] {
   if (!tree) {
     return [];
   }
@@ -61,8 +61,8 @@ export function flatTreeWithRoot(tree: IDataTree | null): (DocumentTagRead | Cod
   return [tree.data, ...allChildren];
 }
 
-export function flatTree(tree: IDataTree | null): (DocumentTagRead | CodeRead)[] {
-  let result: (DocumentTagRead | CodeRead)[] = [];
+export function flatTree(tree: IDataTree | null): (TagRead | CodeRead)[] {
+  let result: (TagRead | CodeRead)[] = [];
   if (tree && tree.children) {
     result = [...tree.children.map((value) => value.data), ...result];
     tree.children.forEach((value) => {

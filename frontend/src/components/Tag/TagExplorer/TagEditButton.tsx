@@ -1,11 +1,11 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React, { memo, useCallback } from "react";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 
-function TagEditButton({ tag, ...props }: IconButtonProps & { tag: DocumentTagRead }) {
+function TagEditButton({ tag, ...props }: IconButtonProps & { tag: TagRead }) {
   const dispatch = useAppDispatch();
 
   const handleClickOpen = useCallback(

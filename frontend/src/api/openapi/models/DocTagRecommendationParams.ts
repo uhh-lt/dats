@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocumentTagRecommendationMethod } from "./DocumentTagRecommendationMethod";
+import type { TagRecommendationMethod } from "./TagRecommendationMethod";
 export type DocTagRecommendationParams = {
   ml_job_type: string;
   /**
@@ -16,5 +16,5 @@ export type DocTagRecommendationParams = {
   /**
    * Method to use for suggestions
    */
-  method?: DocumentTagRecommendationMethod;
+  method?: TagRecommendationMethod;
 };

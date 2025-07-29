@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { RootState } from "../../../store/store.ts";
 import { ChartDataPoint } from "./ChartDataPoint.ts";
 
 export interface DocumentSamplerState {
-  aggregationGroups: Record<string, DocumentTagRead[]>;
+  aggregationGroups: Record<string, TagRead[]>;
   isFixedSamplingStrategy: boolean;
   fixedSamplingValue: number;
   maxFixedSamplingValue: number;
@@ -49,7 +49,7 @@ export const documentSamplerSlice = createSlice({
       newState[newName] = currentGroupTags;
       state.aggregationGroups = newState;
     },
-    onUpdateGroupTags: (state, action: PayloadAction<{ groupName: string; tags: DocumentTagRead[] }>) => {
+    onUpdateGroupTags: (state, action: PayloadAction<{ groupName: string; tags: TagRead[] }>) => {
       const { groupName, tags } = action.payload;
       state.aggregationGroups[groupName] = tags;
     },

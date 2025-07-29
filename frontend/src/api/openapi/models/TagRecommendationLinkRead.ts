@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagRecommendationLinkRead = {
+export type TagRecommendationLinkRead = {
   /**
    * Identifier of the corresponding ML Job.
    */

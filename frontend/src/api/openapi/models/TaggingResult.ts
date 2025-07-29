@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-export type DocumentTaggingResult = {
+export type TaggingResult = {
   /**
    * Status of the Result
    */

@@ -2,8 +2,8 @@ import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import LLMHooks from "../../../../api/LLMHooks.ts";
-import { DocumentTaggingLLMJobResult } from "../../../../api/openapi/models/DocumentTaggingLLMJobResult.ts";
-import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import { TaggingLLMJobResult } from "../../../../api/openapi/models/TaggingLLMJobResult.ts";
+import { TagRead } from "../../../../api/openapi/models/TagRead.ts";
 import TagHooks from "../../../../api/TagHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
@@ -22,7 +22,7 @@ function DocumentTagResultStep() {
   if (llmJob.isSuccess && llmJob.data.result && documentTags.isSuccess) {
     return (
       <DocumentTagResultStepContent
-        jobResult={llmJob.data.result.specific_task_result as DocumentTaggingLLMJobResult}
+        jobResult={llmJob.data.result.specific_task_result as TaggingLLMJobResult}
         tags={documentTags.data}
       />
     );
@@ -41,13 +41,7 @@ function DocumentTagResultStep() {
   }
 }
 
-function DocumentTagResultStepContent({
-  jobResult,
-  tags,
-}: {
-  jobResult: DocumentTaggingLLMJobResult;
-  tags: DocumentTagRead[];
-}) {
+function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingLLMJobResult; tags: TagRead[] }) {
   // local client state
   const [rows, setRows] = useState<DocumentTaggingResultRow[]>(() => {
     const tagId2Tag = tags.reduce(
@@ -55,7 +49,7 @@ function DocumentTagResultStepContent({
         acc[tag.id] = tag;
         return acc;
       },
-      {} as Record<number, DocumentTagRead>,
+      {} as Record<number, TagRead>,
     );
     return jobResult.results.map((result) => {
       return {
@@ -77,13 +71,13 @@ function DocumentTagResultStepContent({
     dispatch(CRUDDialogActions.closeLLMDialog());
   }, [dispatch]);
 
-  const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetDocumentTags();
+  const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetTags();
   const handleApplyNewTags = useCallback(() => {
     applyTagsMutation(
       {
         requestBody: rows.map((row) => ({
           source_document_id: row.sdocId,
-          document_tag_ids: row.merged_tags.map((tag) => tag.id),
+          tag_ids: row.merged_tags.map((tag) => tag.id),
         })),
       },
       {

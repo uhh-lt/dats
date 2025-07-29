@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
-import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
+import { TagCreate } from "../../api/openapi/models/TagCreate.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
@@ -45,7 +45,7 @@ function TagCreateDialog() {
     formState: { errors },
     control,
     reset,
-  } = useForm<DocumentTagCreate>();
+  } = useForm<TagCreate>();
 
   // reset form when dialog opens
   const tagName = useAppSelector((state) => state.dialog.tagName);
@@ -63,7 +63,7 @@ function TagCreateDialog() {
 
   // form actions
   const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();
-  const handleTagCreation = useCallback<SubmitHandler<DocumentTagCreate>>(
+  const handleTagCreation = useCallback<SubmitHandler<TagCreate>>(
     (data) => {
       createTagMutation(
         {
@@ -94,7 +94,7 @@ function TagCreateDialog() {
     },
     [createTagMutation, dispatch, handleClose, projectId, tags.data],
   );
-  const handleError: SubmitErrorHandler<DocumentTagCreate> = (data) => console.error(data);
+  const handleError: SubmitErrorHandler<TagCreate> = (data) => console.error(data);
 
   return (
     <Dialog

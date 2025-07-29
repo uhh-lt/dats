@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagRecommendationResult = {
+export type TagRecommendationResult = {
   /**
    * ID of the source document
    */
   sdoc_id: number;
   /**
-   * List of the corresponding DocumentTagRecommendationLinks
+   * List of the corresponding TagRecommendationLinks
    */
   recommendation_ids: Array<number>;
   /**

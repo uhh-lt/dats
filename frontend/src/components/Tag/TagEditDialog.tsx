@@ -6,7 +6,7 @@ import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/mate
 import { useCallback, useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import TagHooks from "../../api/TagHooks.ts";
-import { DocumentTagUpdate } from "../../api/openapi/models/DocumentTagUpdate.ts";
+import { TagUpdate } from "../../api/openapi/models/TagUpdate.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
@@ -47,7 +47,7 @@ function TagEditDialog() {
     formState: { errors },
     control,
     reset,
-  } = useForm<DocumentTagUpdate>();
+  } = useForm<TagUpdate>();
 
   // reset form when dialog opens
   useEffect(() => {
@@ -63,7 +63,7 @@ function TagEditDialog() {
 
   // form actions
   const { mutate: updateTagMutation, isPending: isUpdateLoading } = TagHooks.useUpdateTag();
-  const handleTagUpdate = useCallback<SubmitHandler<DocumentTagUpdate>>(
+  const handleTagUpdate = useCallback<SubmitHandler<TagUpdate>>(
     (data) => {
       if (tag) {
         updateTagMutation(
@@ -108,7 +108,7 @@ function TagEditDialog() {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag is available!");
     }
   }, [deleteTagMutation, handleClose, tag]);
-  const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
+  const handleError: SubmitErrorHandler<TagUpdate> = (data) => console.error(data);
 
   return (
     <Dialog

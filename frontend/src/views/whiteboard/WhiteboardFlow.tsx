@@ -171,7 +171,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // mutations
-  const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
+  const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
@@ -222,10 +222,10 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // tag can be manually connected to document
         if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-          const mutation = bulkLinkDocumentTagsMutation.mutate;
+          const mutation = bulkLinkTagsMutation.mutate;
           mutation({
             requestBody: {
-              document_tag_ids: [sourceNode.data.tagId],
+              tag_ids: [sourceNode.data.tagId],
               source_document_ids: [targetNode.data.sdocId],
             },
           });
@@ -280,7 +280,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
     },
     [
       reactFlowInstance,
-      bulkLinkDocumentTagsMutation.mutate,
+      bulkLinkTagsMutation.mutate,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
       updateBBoxAnnotationMutation.mutate,

@@ -79,7 +79,7 @@ function SdocTable({
             flex: 2,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case SdocColumns.SD_DOCUMENT_TAG_ID_LIST:
+        case SdocColumns.SD_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,

@@ -2,7 +2,7 @@ import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material"
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import TagTable from "../../../components/Tag/TagTable.tsx";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
@@ -37,7 +37,7 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
   };
 
   const handleConfirmSelection = useCallback(
-    (tags: DocumentTagRead[]) => {
+    (tags: TagRead[]) => {
       const addTagNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
         reactFlowService.addNodes(createTagNodes({ tags, position: position }));
       onClick(addTagNode);
@@ -48,7 +48,7 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
 
   // rendering
   const renderBottomToolbar = useCallback(
-    (props: { selectedTags: DocumentTagRead[] }) => (
+    (props: { selectedTags: TagRead[] }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
         <Box flexGrow={1} />
         <Button onClick={() => handleConfirmSelection(props.selectedTags)} disabled={props.selectedTags.length === 0}>

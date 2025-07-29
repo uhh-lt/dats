@@ -27,7 +27,7 @@ export type SentenceAnnotationRow = {
    */
   sdoc: SourceDocumentRead;
   /**
-   * The DocumentTagIDs of the SourceDocument.
+   * The TagIDs of the SourceDocument.
    */
   tag_ids: Array<number>;
   /**

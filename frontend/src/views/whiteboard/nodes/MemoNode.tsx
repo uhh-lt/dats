@@ -12,7 +12,6 @@ import { BBoxAnnotationNodeData } from "../../../api/openapi/models/BBoxAnnotati
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeNodeData } from "../../../api/openapi/models/CodeNodeData.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { MemoNodeData } from "../../../api/openapi/models/MemoNodeData.ts";
 import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData.ts";
 import { SentenceAnnotationNodeData } from "../../../api/openapi/models/SentenceAnnotationNodeData.ts";
@@ -21,6 +20,7 @@ import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRe
 import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
 import { TagNodeData } from "../../../api/openapi/models/TagNodeData.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import GenericPositionMenu, { GenericPositionMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 import { attachedObjectTypeToText } from "../../../components/Memo/attachedObjectTypeToText.ts";
 import MemoRenderer from "../../../components/Memo/MemoRenderer.tsx";
@@ -57,7 +57,7 @@ import BaseCardNode from "./BaseCardNode.tsx";
 
 const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return isMemoTagEdge;
     case AttachedObjectType.CODE:
       return isMemoCodeEdge;
@@ -76,7 +76,7 @@ const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
 
 const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return isTagNode;
     case AttachedObjectType.CODE:
       return isCodeNode;
@@ -95,7 +95,7 @@ const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
 
 const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (node: Node<DATSNodeData>) => {
   switch (attachedObjectType) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return (node as Node<TagNodeData>).data.tagId;
     case AttachedObjectType.CODE:
       return (node as Node<CodeNodeData>).data.codeId;
@@ -118,7 +118,7 @@ const createMemoAttachedObjectEdge = (
   memoId: number,
 ): Edge | undefined => {
   switch (attachedObjectType) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return createMemoTagEdge({
         memoId,
         tagId: attachedObjectId,
@@ -156,7 +156,7 @@ const createMemoAttachedObjectEdge = (
 const createAttachedObjectNodes = (
   attachedObjectType: AttachedObjectType,
   attachedObject:
-    | DocumentTagRead
+    | TagRead
     | CodeRead
     | SpanAnnotationRead
     | BBoxAnnotationRead
@@ -165,9 +165,9 @@ const createAttachedObjectNodes = (
   position: XYPosition,
 ): Node<DATSNodeData>[] => {
   switch (attachedObjectType) {
-    case AttachedObjectType.DOCUMENT_TAG:
+    case AttachedObjectType.TAG:
       return createTagNodes({
-        tags: [attachedObject as DocumentTagRead],
+        tags: [attachedObject as TagRead],
         position,
       });
     case AttachedObjectType.CODE:

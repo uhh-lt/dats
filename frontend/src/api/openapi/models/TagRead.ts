@@ -2,41 +2,41 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagRead = {
+export type TagRead = {
   /**
-   * Title of the DocumentTag
+   * Title of the Tag
    */
   name: string;
   /**
-   * Color of the DocumentTag
+   * Color of the Tag
    */
   color: string;
   /**
-   * Description of the DocumentTag
+   * Description of the Tag
    */
   description?: string | null;
   /**
-   * Parent of the DocumentTag
+   * Parent of the Tag
    */
   parent_id?: number | null;
   /**
-   * ID of the DocumentTag
+   * ID of the Tag
    */
   id: number;
   /**
-   * Project the DocumentTag belongs to
+   * Project the Tag belongs to
    */
   project_id: number;
   /**
-   * Created timestamp of the DocumentTag
+   * Created timestamp of the Tag
    */
   created: string;
   /**
-   * Updated timestamp of the DocumentTag
+   * Updated timestamp of the Tag
    */
   updated: string;
   /**
-   * Memo IDs attached to the DocumentTag
+   * Memo IDs attached to the Tag
    */
   memo_ids: Array<number>;
 };

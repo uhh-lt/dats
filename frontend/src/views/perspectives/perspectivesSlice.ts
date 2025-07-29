@@ -228,7 +228,7 @@ export const perspectivesSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: SdocColumns.SD_DOCUMENT_TAG_ID_LIST,
+          column: SdocColumns.SD_TAG_ID_LIST,
           operator: IDListOperator.ID_LIST_CONTAINS,
           value: action.payload.tagId,
         },

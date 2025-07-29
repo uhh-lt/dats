@@ -16,7 +16,7 @@ import {
 import { isEqual } from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
@@ -62,7 +62,7 @@ function TagMenuContent({
   popoverOrigin,
   tags,
   initialChecked,
-}: { tags: DocumentTagRead[]; initialChecked: Map<number, CheckboxState> } & TagMenuProps) {
+}: { tags: TagRead[]; initialChecked: Map<number, CheckboxState> } & TagMenuProps) {
   // menu state
   const open = Boolean(anchorEl);
   const handleClose = useCallback(() => {
@@ -89,7 +89,7 @@ function TagMenuContent({
 
   // filter feature
   const [search, setSearch] = useState<string>("");
-  const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
+  const filteredTags: TagRead[] | undefined = useMemo(() => {
     return tags.filter((tag) => tag.name.toLowerCase().startsWith(search.toLowerCase()));
   }, [tags, search]);
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,28 +97,28 @@ function TagMenuContent({
   };
 
   // actions
-  const { mutate: addTagsMutation } = TagHooks.useBulkLinkDocumentTags();
-  const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkDocumentTags();
+  const { mutate: addTagsMutation } = TagHooks.useBulkLinkTags();
+  const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkTags();
   const handleClickTag = (tagId: number) => () => {
     if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
       removeTagsMutation({
         requestBody: {
           source_document_ids: sdocIds,
-          document_tag_ids: [tagId],
+          tag_ids: [tagId],
         },
       });
     } else {
       addTagsMutation({
         requestBody: {
           source_document_ids: sdocIds,
-          document_tag_ids: [tagId],
+          tag_ids: [tagId],
         },
       });
     }
     handleClose();
   };
 
-  const { mutate: updateTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkUpdateDocumentTags();
+  const { mutate: updateTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkUpdateTags();
   const handleApplyTags = useCallback(() => {
     updateTagsMutation({
       requestBody: {

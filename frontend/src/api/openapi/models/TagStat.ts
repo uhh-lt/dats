@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocumentTagRead } from "./DocumentTagRead";
+import type { TagRead } from "./TagRead";
 export type TagStat = {
   /**
    * The counted document tag.
    */
-  tag: DocumentTagRead;
+  tag: TagRead;
   /**
    * Number of occurrences of the document tag in the filtered documents
    */

@@ -1,10 +1,10 @@
 import { Stack, StackProps, Typography } from "@mui/material";
 import TagHooks from "../../api/TagHooks.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 
 interface TagRendererProps {
-  tag: number | DocumentTagRead;
+  tag: number | TagRead;
 }
 
 function TagRenderer({ tag, ...props }: TagRendererProps & Omit<StackProps, "direction" | "alignItems">) {
@@ -27,10 +27,7 @@ function TagRendererWithoutData({ tagId, ...props }: { tagId: number } & Omit<St
   }
 }
 
-function TagRendererWithData({
-  tag,
-  ...props
-}: { tag: DocumentTagRead } & Omit<StackProps, "direction" | "alignItems">) {
+function TagRendererWithData({ tag, ...props }: { tag: TagRead } & Omit<StackProps, "direction" | "alignItems">) {
   return (
     <Stack spacing={1} direction="row" alignItems="center" {...props}>
       {getIconComponent(Icon.TAG, { style: { color: tag.color } })}

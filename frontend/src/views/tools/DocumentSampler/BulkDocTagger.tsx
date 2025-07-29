@@ -18,7 +18,7 @@ function BulkDocTagger() {
   const [selectedDocumentTagId, setSelectedDocumentTagId] = useState(-1);
 
   // mutation
-  const { mutate: linkDocumentTags, isPending: isLinkingDocumentTags } = TagHooks.useBulkLinkDocumentTags();
+  const { mutate: linkTags, isPending: isLinkingTags } = TagHooks.useBulkLinkTags();
 
   // actions
   const handleSelectChange = useCallback((event: { target: { value: string } }) => {
@@ -26,15 +26,15 @@ function BulkDocTagger() {
   }, []);
 
   const bulkTagDocuments = useCallback(() => {
-    linkDocumentTags({
+    linkTags({
       requestBody: {
         source_document_ids: chartData
           .map((x) => (isFixedSamplingStrategy ? x.fixedSampleSdocIds : x.relativeSampleSdocIds))
           .flat(),
-        document_tag_ids: [selectedDocumentTagId],
+        tag_ids: [selectedDocumentTagId],
       },
     });
-  }, [chartData, isFixedSamplingStrategy, linkDocumentTags, selectedDocumentTagId]);
+  }, [chartData, isFixedSamplingStrategy, linkTags, selectedDocumentTagId]);
 
   return (
     <Stack direction="row" spacing={1}>
@@ -55,7 +55,7 @@ function BulkDocTagger() {
       <LoadingButton
         onClick={bulkTagDocuments}
         disabled={selectedDocumentTagId === -1 || chartData.length === 0}
-        loading={isLinkingDocumentTags}
+        loading={isLinkingTags}
         loadingPosition="start"
         startIcon={<CheckIcon />}
       >

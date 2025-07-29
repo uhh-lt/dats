@@ -1,5 +1,5 @@
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 
 export interface ITree<T = void> {
   isRoot?: boolean;
@@ -8,4 +8,4 @@ export interface ITree<T = void> {
   data: T;
 }
 
-export type IDataTree = ITree<DocumentTagRead | CodeRead>;
+export type IDataTree = ITree<TagRead | CodeRead>;

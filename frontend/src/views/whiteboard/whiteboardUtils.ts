@@ -6,7 +6,6 @@ import { BorderNodeData } from "../../api/openapi/models/BorderNodeData.ts";
 import { BorderStyle } from "../../api/openapi/models/BorderStyle.ts";
 import { CodeNodeData } from "../../api/openapi/models/CodeNodeData.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { HorizontalAlign } from "../../api/openapi/models/HorizontalAlign.ts";
 import { MemoNodeData } from "../../api/openapi/models/MemoNodeData.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
@@ -18,6 +17,7 @@ import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.
 import { SpanAnnotationNodeData } from "../../api/openapi/models/SpanAnnotationNodeData.ts";
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
 import { TagNodeData } from "../../api/openapi/models/TagNodeData.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 import { TextNodeData } from "../../api/openapi/models/TextNodeData.ts";
 import { VerticalAlign } from "../../api/openapi/models/VerticalAlign.ts";
 import { WhiteboardNodeType } from "../../api/openapi/models/WhiteboardNodeType.ts";
@@ -193,7 +193,7 @@ export const createTagNodes = ({
   tags,
   position,
 }: {
-  tags: number[] | DocumentTagRead[];
+  tags: number[] | TagRead[];
   position?: XYPosition;
 }): Node<TagNodeData>[] => {
   const tagIds = tags.map((tag) => (typeof tag === "number" ? tag : tag.id));

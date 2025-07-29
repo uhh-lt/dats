@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export enum DocumentTagRecommendationMethod {
+export enum TagRecommendationMethod {
   SIMPLE = "SIMPLE",
   KNN = "KNN",
   EXCLUSIVE = "EXCLUSIVE",

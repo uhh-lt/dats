@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type DocumentTagCreate = {
+export type TagCreate = {
   /**
-   * Title of the DocumentTag
+   * Title of the Tag
    */
   name: string;
   /**
@@ -12,15 +12,15 @@ export type DocumentTagCreate = {
    */
   color?: string;
   /**
-   * Description of the DocumentTag
+   * Description of the Tag
    */
   description?: string | null;
   /**
-   * Parent of the DocumentTag
+   * Parent of the Tag
    */
   parent_id?: number | null;
   /**
-   * Project the DocumentTag belongs to
+   * Project the Tag belongs to
    */
   project_id: number;
 };

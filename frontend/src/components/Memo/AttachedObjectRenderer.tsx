@@ -2,11 +2,11 @@ import { memo } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
 import { SentenceAnnotationRead } from "../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
+import { TagRead } from "../../api/openapi/models/TagRead.ts";
 import BBoxAnnotationRenderer from "../BBoxAnnotation/BBoxAnnotationRenderer.tsx";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import ProjectRenderer from "../Project/ProjectRenderer.tsx";
@@ -17,7 +17,7 @@ import TagRenderer from "../Tag/TagRenderer.tsx";
 
 interface AttachedObjectRendererProps {
   attachedObject:
-    | DocumentTagRead
+    | TagRead
     | SourceDocumentRead
     | CodeRead
     | SpanAnnotationRead
@@ -53,8 +53,8 @@ function AttachedObjectRenderer({ attachedObject, attachedObjectType, link }: At
           showSpanText
         />
       );
-    case AttachedObjectType.DOCUMENT_TAG:
-      return <TagRenderer tag={attachedObject as DocumentTagRead | number} />;
+    case AttachedObjectType.TAG:
+      return <TagRenderer tag={attachedObject as TagRead | number} />;
     case AttachedObjectType.CODE:
       return <CodeRenderer code={attachedObject as CodeRead | number} />;
     case AttachedObjectType.SOURCE_DOCUMENT:

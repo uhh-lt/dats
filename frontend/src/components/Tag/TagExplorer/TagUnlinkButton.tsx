@@ -2,12 +2,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 
-function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: DocumentTagRead }) {
+function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: TagRead }) {
   // mutations
-  const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkDocumentTags();
+  const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkTags();
 
   // actions
   const handleDeleteDocumentTag = useCallback(() => {
@@ -17,7 +17,7 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
         removeTagMutation({
           requestBody: {
             source_document_ids: [sdocId],
-            document_tag_ids: [tag.id],
+            tag_ids: [tag.id],
           },
         });
       },

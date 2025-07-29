@@ -40,7 +40,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
   const sdocIds = SdocHooks.useGetSdocIdsByTagId(props.data.tagId);
-  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.DOCUMENT_TAG, props.data.tagId);
+  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.TAG, props.data.tagId);
 
   // effects
   useEffect(() => {
@@ -114,7 +114,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
     if (memo.data) return;
 
     MemoDialogAPI.openMemo({
-      attachedObjectType: AttachedObjectType.DOCUMENT_TAG,
+      attachedObjectType: AttachedObjectType.TAG,
       attachedObjectId: props.data.tagId,
       onCreateSuccess: (memo) => {
         reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));

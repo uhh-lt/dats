@@ -103,7 +103,7 @@ function BBoxAnnotationTable({
             ...colDef,
             accessorFn: (row) => row.sdoc.filename,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_DOCUMENT_DOCUMENT_TAG_ID_LIST:
+        case BBoxColumns.BB_TAG_ID_LIST:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
