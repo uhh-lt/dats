@@ -98,7 +98,7 @@ class DATSAPI:
 
     def read_all_projects(self):
         r = requests.get(
-            self.BASE_PATH + "user/project",
+            self.BASE_PATH + "project/user/projects",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -311,7 +311,7 @@ class DATSAPI:
 
     def read_all_tags(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"project/{proj_id}/tag",
+            self.BASE_PATH + f"doctag/project/{proj_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -366,7 +366,7 @@ class DATSAPI:
 
     def read_all_project_metadata(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"project/{proj_id}/metadata",
+            self.BASE_PATH + f"projmeta/project/{proj_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -374,7 +374,7 @@ class DATSAPI:
 
     def read_sdoc_metadata_by_key(self, sdoc_id: int, key: str):
         r = requests.get(
-            self.BASE_PATH + f"sdoc/{sdoc_id}/metadata/{key}",
+            self.BASE_PATH + f"sdocmeta/sdoc/{sdoc_id}/metadata/{key}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
