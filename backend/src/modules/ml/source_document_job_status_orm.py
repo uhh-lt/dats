@@ -1,29 +1,13 @@
 from datetime import datetime
-from enum import IntEnum
 from typing import TYPE_CHECKING, Optional
 
+from modules.ml.source_document_job_status_dto import JobStatus, JobType
 from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
-
-
-class JobType(IntEnum):
-    QUOTATION_ATTRIBUTION = 100
-    COREFERENCE_RESOLUTION = 101
-    DOCUMENT_EMBEDDING = 102
-    SENTENCE_EMBEDDING = 103
-
-
-class JobStatus(IntEnum):
-    UNQUEUED = 0  # (not queued/planned)
-    WAITING = 1  # (not started yet)
-    RUNNING = 2  # (currently in progress)
-    FINISHED = 3  # (successfully finished)
-    ERROR = 4  # (failed to finish)
-    ABORTED = 5  # (aborted by user)
 
 
 class SourceDocumentJobStatusORM(ORMBase):
