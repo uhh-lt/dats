@@ -21,7 +21,7 @@ class SentAnnoColumns(str, AbstractColumns):
     USER_ID = "SentAnno_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    TAG_ID_LIST = "SentAnno_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "SentAnno_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
