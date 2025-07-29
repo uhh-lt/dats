@@ -87,6 +87,23 @@ export class FolderService {
     });
   }
   /**
+   * Returns the folder tree of the project with the given ID
+   * @returns FolderTreeRead Successful Response
+   * @throws ApiError
+   */
+  public static getTreeByProject({ projectId }: { projectId: number }): CancelablePromise<Array<FolderTreeRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/folder/project/{project_id}/tree",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Create Folder
    * @returns FolderRead Successful Response
    * @throws ApiError

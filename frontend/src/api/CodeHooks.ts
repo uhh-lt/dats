@@ -6,7 +6,6 @@ import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { CodeService } from "./openapi/services/CodeService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 // CODE QUERIES
 
@@ -21,7 +20,7 @@ const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQ
   return useQuery({
     queryKey: [QueryKey.PROJECT_CODES, projectId],
     queryFn: async () => {
-      const codes = await ProjectService.getProjectCodes({
+      const codes = await CodeService.getByProject({
         projId: projectId!,
       });
       return codes.reduce((acc, code) => {

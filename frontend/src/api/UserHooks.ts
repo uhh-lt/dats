@@ -5,7 +5,6 @@ import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { UserRead } from "./openapi/models/UserRead.ts";
 import { AuthenticationService } from "./openapi/services/AuthenticationService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { UserService } from "./openapi/services/UserService.ts";
 
 // USER QUERIES
@@ -19,7 +18,7 @@ const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUse
   return useQuery({
     queryKey: [QueryKey.PROJECT_USERS, projectId],
     queryFn: () =>
-      ProjectService.getProjectUsers({
+      UserService.getByProject({
         projId: projectId!,
       }),
     staleTime: 1000 * 60 * 5,
@@ -57,7 +56,7 @@ const useUpdate = () =>
 
 const useAddUserToProject = () =>
   useMutation({
-    mutationFn: ProjectService.associateUserToProject,
+    mutationFn: UserService.associateUserToProject,
     onSuccess: (data, variables) => {
       queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, variables.projId], (oldData) =>
         oldData ? [...oldData, data] : [data],
@@ -70,7 +69,7 @@ const useAddUserToProject = () =>
 
 const useRemoveUserFromProject = () =>
   useMutation({
-    mutationFn: ProjectService.dissociateUserFromProject,
+    mutationFn: UserService.dissociateUserFromProject,
     onSuccess: (data, variables) => {
       queryClient.setQueryData<UserRead[]>([QueryKey.PROJECT_USERS, variables.projId], (oldData) =>
         oldData ? oldData.filter((user) => user.id !== data.id) : oldData,

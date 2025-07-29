@@ -506,6 +506,36 @@
         }
       }
     },
+    "/bbox/sdoc/{sdoc_id}/user/{user_id}": {
+      "get": {
+        "tags": ["bboxAnnotation"],
+        "summary": "Returns all BBoxAnnotations of the User for the SourceDocument",
+        "operationId": "get_by_sdoc_and_user",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
+                  "title": "Response Bboxannotation-Get By Sdoc And User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/bbox/bulk/update": {
       "patch": {
         "tags": ["bboxAnnotation"],
@@ -684,6 +714,35 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/project/{proj_id}": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns all Codes of the Project with the given ID",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
+                  "title": "Response Code-Get By Project"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -1306,6 +1365,64 @@
         }
       }
     },
+    "/doctag/project/{proj_id}": {
+      "get": {
+        "tags": ["documentTag"],
+        "summary": "Returns all DocumentTags of the Project with the given ID",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+                  "title": "Response Documenttag-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/doctag/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["documentTag"],
+        "summary": "Returns all DocumentTagIDs linked with the SourceDocument.",
+        "operationId": "get_by_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "title": "Response Documenttag-Get By Sdoc"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/doctag/{tag_id}/sdocs": {
       "get": {
         "tags": ["documentTag"],
@@ -1588,6 +1705,40 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderTreeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/folder/project/{project_id}/tree": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Returns the folder tree of the project with the given ID",
+        "operationId": "get_tree_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderTreeRead" },
+                  "title": "Response Folder-Get Tree By Project"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -2163,9 +2314,9 @@
         }
       }
     },
-    "/memo_generation/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
+    "/memo/generate_suggestion/{attached_obj_type}/{attached_obj_id}": {
       "get": {
-        "tags": ["memo_generation"],
+        "tags": ["memo"],
         "summary": "Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
         "operationId": "generate_memo_suggestion",
         "security": [{ "OAuth2PasswordBearer": [] }],
@@ -2187,9 +2338,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
-                "schema": { "type": "string", "title": "Response Memo Generation-Generate Memo Suggestion" }
-              }
+              "application/json": { "schema": { "type": "string", "title": "Response Memo-Generate Memo Suggestion" } }
             }
           },
           "422": {
@@ -2885,200 +3034,6 @@
         }
       }
     },
-    "/project/{proj_id}/user": {
-      "patch": {
-        "tags": ["project"],
-        "summary": "Associates an existing User to the Project with the given ID if it exists",
-        "operationId": "associate_user_to_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectAddUser" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Users of the Project with the given ID",
-        "operationId": "get_project_users",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserRead" },
-                  "title": "Response Project-Get Project Users"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/user/{user_id}": {
-      "delete": {
-        "tags": ["project"],
-        "summary": "Dissociates the Users with the Project with the given ID if it exists",
-        "operationId": "dissociate_user_from_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/code": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Codes of the Project with the given ID",
-        "operationId": "get_project_codes",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CodeRead" },
-                  "title": "Response Project-Get Project Codes"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/tag": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all DocumentTags of the Project with the given ID",
-        "operationId": "get_project_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/DocumentTagRead" },
-                  "title": "Response Project-Get Project Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/user/memo": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns all Memos of the Project from the logged-in User",
-        "operationId": "get_user_memos_of_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "only_starred",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "boolean" }, { "type": "null" }],
-              "title": "Only Starred",
-              "description": "If true only starred Memos are returned",
-              "default": false
-            },
-            "description": "If true only starred Memos are returned"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" },
-                  "title": "Response Project-Get User Memos Of Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/memo/user": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Gets or creates the Memo attached to the Project with the given ID of the logged-in User.",
-        "operationId": "get_or_create_user_memo",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project/{proj_id}/resolve_filename/{filename}": {
       "get": {
         "tags": ["project"],
@@ -3109,67 +3064,26 @@
         }
       }
     },
-    "/project/{proj_id}/metadata": {
+    "/project/user": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
-        "operationId": "get_all_metadata",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
+        "summary": "Returns all Projects of the logged-in User",
+        "operationId": "get_user_projects",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "items": { "$ref": "#/components/schemas/ProjectRead" },
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
-                  "title": "Response Project-Get All Metadata"
+                  "title": "Response Project-Get User Projects"
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
-      }
-    },
-    "/project/tree/{project_id}": {
-      "get": {
-        "tags": ["project"],
-        "summary": "Returns the folder tree of the project with the given ID",
-        "operationId": "get_folder_tree",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/FolderTreeRead" },
-                  "title": "Response Project-Get Folder Tree"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/projmeta": {
@@ -3264,6 +3178,35 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/projmeta/project/{proj_id}": {
+      "get": {
+        "tags": ["projectMetadata"],
+        "summary": "Returns all ProjectMetadata of the Project with the given ID if it exists",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" },
+                  "title": "Response Projectmetadata-Get By Project"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -3899,6 +3842,28 @@
         }
       }
     },
+    "/sentence/sdoc/{sdoc_id}/user/{user_id}": {
+      "get": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Returns all SentenceAnnotations of the User for the SourceDocument",
+        "operationId": "get_by_sdoc_and_user",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotatorResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sentence/bulk/update": {
       "patch": {
         "tags": ["sentenceAnnotation"],
@@ -4240,64 +4205,6 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/metadata": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
-        "operationId": "get_all_metadata",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
-                  "title": "Response Sourcedocument-Get All Metadata"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/metadata/{metadata_key}": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocumentMetadata with the given Key if it exists.",
-        "operationId": "read_metadata_by_key",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "metadata_key",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Metadata Key" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/sdoc/{sdoc_id}/annotators": {
       "get": {
         "tags": ["sourceDocument"],
@@ -4316,220 +4223,6 @@
                   "type": "array",
                   "items": { "type": "integer" },
                   "title": "Response Sourcedocument-Get Annotators"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/tags": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all DocumentTagIDs linked with the SourceDocument.",
-        "operationId": "get_all_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Sourcedocument-Get All Tags"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/span_annotations/{user_id}}": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SpanAnnotations of the Users with the given ID if it exists",
-        "operationId": "get_all_span_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
-                  "title": "Response Sourcedocument-Get All Span Annotations Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc}/span_groups/{user_id}": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SpanGroupWithAnnotations of the User in the sDoc",
-        "operationId": "get_sdoc_groups_with_annotations",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
-          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanGroupWithAnnotationsRead" },
-                  "title": "Response Sourcedocument-Get Sdoc Groups With Annotations"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/bbox_annotations/{user_id}": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all BBoxAnnotations of the Users with the given ID if it exists",
-        "operationId": "get_all_bbox_annotations_bulk",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" },
-                  "title": "Response Sourcedocument-Get All Bbox Annotations Bulk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/sentence_annotator": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SentenceAnnotations of the User for the SourceDocument",
-        "operationId": "get_sentence_annotator",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentenceAnnotatorResult" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/user/span_groups": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns all SpanGroups of the logged-in User if it exists",
-        "operationId": "get_all_span_groups",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
-              "title": "Skip",
-              "description": "The number of elements to skip (offset)"
-            },
-            "description": "The number of elements to skip (offset)"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
-              "title": "Limit",
-              "description": "The maximum number of returned elements"
-            },
-            "description": "The maximum number of returned elements"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanGroupRead" },
-                  "title": "Response Sourcedocument-Get All Span Groups"
                 }
               }
             }
@@ -4637,6 +4330,64 @@
             "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Metadata Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sdocmeta/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["sdocMetadata"],
+        "summary": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
+        "operationId": "get_by_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+                  "title": "Response Sdocmetadata-Get By Sdoc"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}": {
+      "get": {
+        "tags": ["sdocMetadata"],
+        "summary": "Returns the SourceDocumentMetadata with the given Key if it exists.",
+        "operationId": "get_by_sdoc_and_key",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "metadata_key",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Metadata Key" }
           }
         ],
         "responses": {
@@ -4806,6 +4557,36 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationDeleted" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/span/sdoc/{sdoc_id}/user/{user_id}}": {
+      "get": {
+        "tags": ["spanAnnotation"],
+        "summary": "Returns all SpanAnnotations of the User for the SourceDocument",
+        "operationId": "get_by_sdoc_and_user",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
+                  "title": "Response Spanannotation-Get By Sdoc And User"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5156,6 +4937,87 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spangroup-Get Annotations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/spangroup/sdoc/{sdoc_id}": {
+      "get": {
+        "tags": ["spanGroup"],
+        "summary": "Returns all SpanGroups of the logged-in User if it exists",
+        "operationId": "get_by_sdoc",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 10000000, "minimum": 0 }, { "type": "null" }],
+              "title": "Skip",
+              "description": "The number of elements to skip (offset)"
+            },
+            "description": "The number of elements to skip (offset)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer", "maximum": 1000, "minimum": 1 }, { "type": "null" }],
+              "title": "Limit",
+              "description": "The maximum number of returned elements"
+            },
+            "description": "The maximum number of returned elements"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanGroupRead" },
+                  "title": "Response Spangroup-Get By Sdoc"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/spangroup/sdoc/{sdoc}/user/{user_id}": {
+      "get": {
+        "tags": ["spanGroup"],
+        "summary": "Returns all SpanGroupWithAnnotations of the User in the sDoc",
+        "operationId": "get_by_sdoc_and_user",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          { "name": "sdoc_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanGroupWithAnnotationsRead" },
+                  "title": "Response Spangroup-Get By Sdoc And User"
                 }
               }
             }
@@ -5625,6 +5487,58 @@
         }
       }
     },
+    "/user/{proj_id}/user": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all Users of the Project with the given ID",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserRead" },
+                  "title": "Response User-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["user"],
+        "summary": "Associates an existing User to the Project with the given ID if it exists",
+        "operationId": "associate_user_to_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectAddUser" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/user/all": {
       "get": {
         "tags": ["user"],
@@ -5709,26 +5623,26 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/user/project": {
-      "get": {
+    "/user/{proj_id}/user/{user_id}": {
+      "delete": {
         "tags": ["user"],
-        "summary": "Returns all Projects of the logged-in User",
-        "operationId": "get_user_projects",
+        "summary": "Dissociates the Users with the Project with the given ID if it exists",
+        "operationId": "dissociate_user_from_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": { "$ref": "#/components/schemas/ProjectRead" },
-                  "type": "array",
-                  "title": "Response User-Get User Projects"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/whiteboard": {

@@ -112,6 +112,30 @@ export class SpanAnnotationService {
     });
   }
   /**
+   * Returns all SpanAnnotations of the User for the SourceDocument
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdocAndUser({
+    sdocId,
+    userId,
+  }: {
+    sdocId: number;
+    userId: number;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/span/sdoc/{sdoc_id}/user/{user_id}}",
+      path: {
+        sdoc_id: sdocId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates SpanAnnotations in Bulk
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError

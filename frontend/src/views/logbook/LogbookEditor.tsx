@@ -5,6 +5,7 @@ import "@blocknote/mantine/style.css";
 import { CardHeader, CircularProgress } from "@mui/material";
 import { useCallback } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import CardContainer from "../../components/MUI/CardContainer.tsx";
 import MemoBlockEditorView from "../../components/Memo/MemoBlockEditorView.tsx";
 
@@ -14,7 +15,7 @@ interface LogbookEditorProps {
 
 function LogbookEditor({ projectId }: LogbookEditorProps) {
   // global client state
-  const projectMemo = MemoHooks.useGetOrCreateProjectUserMemo(projectId);
+  const projectMemo = MemoHooks.useGetUserMemo(AttachedObjectType.PROJECT, projectId);
 
   // update memo
   const { mutate: updateMemo } = MemoHooks.useUpdateMemo();

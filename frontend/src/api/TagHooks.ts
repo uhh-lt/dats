@@ -7,8 +7,6 @@ import { Body_documentTag_update_document_tags_batch } from "./openapi/models/Bo
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { SourceDocumentDocumentTagMultiLink } from "./openapi/models/SourceDocumentDocumentTagMultiLink.ts";
 import { DocumentTagService } from "./openapi/services/DocumentTagService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 
 // TAG QUERIES
 interface UseProjectTagsQueryParams<T> {
@@ -21,7 +19,7 @@ const useProjectTagsQuery = <T = DocumentTagRead[]>({ select, enabled }: UseProj
   return useQuery({
     queryKey: [QueryKey.PROJECT_TAGS, projectId],
     queryFn: () =>
-      ProjectService.getProjectTags({
+      DocumentTagService.getByProject({
         projId: projectId!,
       }),
     staleTime: 1000 * 60 * 5,
@@ -42,7 +40,7 @@ const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
     queryKey: [QueryKey.SDOC_TAGS, sdocId],
     queryFn: () =>
-      SourceDocumentService.getAllTags({
+      DocumentTagService.getBySdoc({
         sdocId: sdocId!,
       }),
     staleTime: 1000 * 60 * 5,

@@ -6,7 +6,6 @@ import { SpanAnnotationCreate } from "./openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationDeleted } from "./openapi/models/SpanAnnotationDeleted.ts";
 import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
 import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
 
 export const FAKE_ANNOTATION_ID = -1;
@@ -37,7 +36,7 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
   return useQuery<SpanAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
     queryFn: () =>
-      SourceDocumentService.getAllSpanAnnotationsBulk({
+      SpanAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
       }) as Promise<SpanAnnotationRead[]>,

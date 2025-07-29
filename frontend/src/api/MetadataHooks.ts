@@ -6,9 +6,7 @@ import { QueryKey } from "./QueryKey.ts";
 import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataRead } from "./openapi/models/SourceDocumentMetadataRead.ts";
 import { ProjectMetadataService } from "./openapi/services/ProjectMetadataService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
 import { SdocMetadataService } from "./openapi/services/SdocMetadataService.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
 
 // PROJECT METADATA QUERIES
 
@@ -24,7 +22,7 @@ const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: Us
   return useQuery({
     queryKey: [QueryKey.PROJECT_METADATAS, projectId],
     queryFn: async () => {
-      const metadata = await ProjectService.getAllMetadata({
+      const metadata = await ProjectMetadataService.getByProject({
         projId: projectId!,
       });
       return metadata.reduce((acc, metadata) => {
@@ -123,7 +121,7 @@ const useSdocMetadataQuery = <T = SdocMetadataMap>({ sdocId, select }: UseSdocMe
   useQuery({
     queryKey: [QueryKey.SDOC_METADATAS, sdocId],
     queryFn: async () => {
-      const metadata = await SourceDocumentService.getAllMetadata({
+      const metadata = await SdocMetadataService.getBySdoc({
         sdocId: sdocId!,
       });
       return metadata.reduce((acc, metadata) => {
@@ -153,7 +151,7 @@ const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string)
   useQuery<SourceDocumentMetadataRead, Error>({
     queryKey: [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
     queryFn: () =>
-      SourceDocumentService.readMetadataByKey({
+      SdocMetadataService.getBySdocAndKey({
         sdocId: sdocId!,
         metadataKey: key,
       }),

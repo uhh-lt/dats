@@ -84,4 +84,21 @@ export class CodeService {
       },
     });
   }
+  /**
+   * Returns all Codes of the Project with the given ID
+   * @returns CodeRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projId }: { projId: number }): CancelablePromise<Array<CodeRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/code/project/{proj_id}",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

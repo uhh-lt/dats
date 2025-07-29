@@ -4,7 +4,6 @@ import { QueryKey } from "./QueryKey.ts";
 import { AttachedObjectType } from "./openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
 import { MemoService } from "./openapi/services/MemoService.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 // MEMO QUERIES
 const useGetMemo = (memoId: number | null | undefined) =>
@@ -20,18 +19,6 @@ const useGetUserMemo = (attachedObjType: AttachedObjectType, attachedObjId: numb
     queryKey: [QueryKey.USER_MEMO, attachedObjType, attachedObjId],
     queryFn: () => MemoService.getUserMemoByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
     enabled: !!attachedObjId,
-    retry: false,
-    staleTime: 1000 * 60 * 5,
-  });
-
-const useGetOrCreateProjectUserMemo = (projectId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.USER_MEMO, AttachedObjectType.PROJECT, projectId],
-    queryFn: () =>
-      ProjectService.getOrCreateUserMemo({
-        projId: projectId!,
-      }),
-    enabled: !!projectId,
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
@@ -144,7 +131,6 @@ const useDeleteMemos = () =>
 const MemoHooks = {
   useGetMemo,
   useGetObjectMemos,
-  useGetOrCreateProjectUserMemo,
   useGetUserMemo,
   useCreateMemo,
   useUpdateMemo,

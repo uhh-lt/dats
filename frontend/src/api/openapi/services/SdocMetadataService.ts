@@ -90,6 +90,47 @@ export class SdocMetadataService {
     });
   }
   /**
+   * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SourceDocumentMetadata with the given Key if it exists.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdocAndKey({
+    sdocId,
+    metadataKey,
+  }: {
+    sdocId: number;
+    metadataKey: string;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}",
+      path: {
+        sdoc_id: sdocId,
+        metadata_key: metadataKey,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Updates multiple metadata objects at once.
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
