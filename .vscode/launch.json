@@ -80,7 +80,7 @@
       "name": "Alembic: migrate",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/src/migration/run_migrations.py",
+      "program": "${workspaceFolder}/backend/src/migrations/run_migrations.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}/backend",

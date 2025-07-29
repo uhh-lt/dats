@@ -39,10 +39,11 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONHASHSEED=random
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV CUPY_CACHE_IN_MEMORY=1
+ENV PYTHONPATH=/dats_code/src
 
 # allow running celery workers as superuser
 ENV C_FORCE_ROOT=1
 
 # copy the actual dats source code into the image
 COPY . /dats_code
-WORKDIR /dats_code/src
+WORKDIR /dats_code
