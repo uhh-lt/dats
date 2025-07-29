@@ -1,6 +1,5 @@
 from common.singleton_meta import SingletonMeta
 from config import conf
-from core.user.user_dto import UserRead
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from loguru import logger
 from pydantic import EmailStr
@@ -35,11 +34,11 @@ class MailRepo(metaclass=SingletonMeta):
             )
             await self.fast_mail.send_message(message)
 
-    async def send_welcome_mail(self, user: UserRead):
-        logger.info(f"Sending welcome mail to {user.email}")
+    async def send_welcome_mail(self, email: EmailStr, first_name: str, last_name: str):
+        logger.info(f"Sending welcome mail to {email}")
         subject = "Welcome to Discourse Analysis Tool Suite"
         body = f"""
-            <p>Hi {user.first_name} {user.last_name},</p>
+            <p>Hi {first_name} {last_name},</p>
             <p>Thanks for using Discourse Analysis Tool Suite!</p>
             <p>
             For your first steps, we highly recommend you to take a look at our <a href="https://github.com/uhh-lt/dats/wiki/User-Guide">Wiki & User Guide</a>.
@@ -48,4 +47,4 @@ class MailRepo(metaclass=SingletonMeta):
             </p>
             <p>Best regards,<br>The DATS Team</p>
             """
-        await self.send_mail(email=user.email, subject=subject, body=body)
+        await self.send_mail(email=email, subject=subject, body=body)

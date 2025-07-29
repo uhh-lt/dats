@@ -52,7 +52,9 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
-    await MailRepo().send_welcome_mail(user=UserRead.model_validate(db_user))
+    await MailRepo().send_welcome_mail(
+        email=db_user.email, first_name=db_user.first_name, last_name=db_user.last_name
+    )
     return UserRead.model_validate(db_user)
 
 
