@@ -182,7 +182,8 @@ def test_get_add_remove_memos_project(
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
 
-    assert len(memo_list) == 0
+    # there is already one memo auto created for each user and project
+    assert len(memo_list) == 1
 
     # add memo1
     title1 = "".join(random.choices(string.ascii_letters, k=30))
@@ -263,7 +264,7 @@ def test_get_add_remove_memos_project(
         for db_obj in db_objs_starred
     ]
 
-    assert len(memo_list_unstarred) == 2
+    assert len(memo_list_unstarred) == 3
 
     assert len(memo_list_starred) == 1
 
