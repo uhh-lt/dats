@@ -2,9 +2,6 @@ from typing import List
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
@@ -16,6 +13,8 @@ from core.annotation.span_annotation_dto import (
 from core.annotation.span_group_dto import SpanGroupRead
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/span", dependencies=[Depends(get_current_user)], tags=["spanAnnotation"]
@@ -90,6 +89,26 @@ def get_by_id(
 
     db_obj = crud_span_anno.read(db=db, id=span_id)
     return SpanAnnotationRead.model_validate(db_obj)
+
+
+@router.get(
+    "/sdoc/{sdoc_id}/user/{user_id}}",
+    response_model=List[SpanAnnotationRead],
+    summary="Returns all SpanAnnotations of the User for the SourceDocument",
+)
+def get_by_sdoc_and_user(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    spans = crud_span_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id
+    )
+    return [SpanAnnotationRead.model_validate(span) for span in spans]
 
 
 @router.patch(

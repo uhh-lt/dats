@@ -1,19 +1,21 @@
-from typing import List
+from typing import Dict, List
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
     SentenceAnnotationUpdate,
     SentenceAnnotationUpdateBulk,
+    SentenceAnnotatorResult,
 )
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from core.doc.source_document_crud import crud_sdoc
+from fastapi import APIRouter, Depends
+from loguru import logger
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/sentence",
@@ -87,6 +89,51 @@ def get_by_id(
 
     db_obj = crud_sentence_anno.read(db=db, id=sentence_anno_id)
     return SentenceAnnotationRead.model_validate(db_obj)
+
+
+@router.get(
+    "/sdoc/{sdoc_id}/user/{user_id}",
+    response_model=SentenceAnnotatorResult,
+    summary="Returns all SentenceAnnotations of the User for the SourceDocument",
+)
+def get_by_sdoc_and_user(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> SentenceAnnotatorResult:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    # read sentences
+    sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+    if sdoc_data is None:
+        raise ValueError("SourceDocument is not a text document")
+
+    # read sentence annotations
+    sentence_annos = [
+        SentenceAnnotationRead.model_validate(sent_anno)
+        for sent_anno in crud_sentence_anno.read_by_users_and_sdoc(
+            db=db, user_ids=[user_id], sdoc_id=sdoc_id
+        )
+    ]
+
+    # build result object: sentence_id -> [sentence_annotations]
+    result: Dict[int, List[SentenceAnnotationRead]] = {
+        idx: [] for idx in range(len(sdoc_data.sentences))
+    }
+    for sent_anno in sentence_annos:
+        for sent_idx in range(
+            sent_anno.sentence_id_start, sent_anno.sentence_id_end + 1
+        ):
+            if sent_idx >= len(result):
+                logger.warning(f"Invalid sentence index {sent_idx} for sdoc {sdoc_id}")
+                continue
+            result[sent_idx].append(sent_anno)
+
+    return SentenceAnnotatorResult(
+        sentence_annotations=result,
+    )
 
 
 @router.patch(

@@ -4,6 +4,8 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from core.doc.source_document_crud import crud_sdoc
+from core.project.project_crud import crud_project
 from core.tag.document_tag_crud import crud_document_tag
 from core.tag.document_tag_dto import (
     DocumentTagCreate,
@@ -191,6 +193,40 @@ def get_by_id(
 
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
+
+
+@router.get(
+    "/project/{proj_id}",
+    response_model=List[DocumentTagRead],
+    summary="Returns all DocumentTags of the Project with the given ID",
+)
+def get_by_project(
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[DocumentTagRead]:
+    authz_user.assert_in_project(proj_id)
+
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
+
+
+@router.get(
+    "/sdoc/{sdoc_id}",
+    response_model=List[int],
+    summary="Returns all DocumentTagIDs linked with the SourceDocument.",
+)
+def get_by_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[int]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return [doc_tag_db_obj.id for doc_tag_db_obj in sdoc_db_obj.document_tags]
 
 
 @router.patch(

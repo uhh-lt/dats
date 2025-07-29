@@ -1,18 +1,18 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from common.crud_enum import Crud
-from common.dependencies import get_current_user, get_db_session
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
+from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import (
     SpanGroupCreate,
     SpanGroupRead,
     SpanGroupUpdate,
+    SpanGroupWithAnnotationsRead,
 )
 from core.auth.authz_user import AuthzUser
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]
@@ -106,3 +106,46 @@ def get_annotations(
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
     spans = span_group_db_obj.span_annotations
     return [SpanAnnotationRead.model_validate(span) for span in spans]
+
+
+@router.get(
+    "/sdoc/{sdoc_id}",
+    response_model=List[SpanGroupRead],
+    summary="Returns all SpanGroups of the logged-in User if it exists",
+)
+def get_by_sdoc(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanGroupRead]:
+    return [
+        SpanGroupRead.model_validate(group)
+        for group in crud_span_group.read_by_user_and_sdoc(
+            db=db, user_id=authz_user.user.id, sdoc_id=sdoc_id, **skip_limit
+        )
+    ]
+
+
+@router.get(
+    "/sdoc/{sdoc}/user/{user_id}",
+    response_model=List[SpanGroupWithAnnotationsRead],
+    summary="Returns all SpanGroupWithAnnotations of the User in the sDoc",
+)
+def get_by_sdoc_and_user(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanGroupWithAnnotationsRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    span_group_db_obj = crud_span_group.read_by_user_and_sdoc(
+        db, user_id=user_id, sdoc_id=sdoc_id
+    )
+    return [
+        SpanGroupWithAnnotationsRead.model_validate(group)
+        for group in span_group_db_obj
+    ]
