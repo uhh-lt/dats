@@ -4,14 +4,13 @@ import string
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from common.singleton_meta import SingletonMeta
 from config import conf
+from core.user.user_crud import crud_user
+from core.user.user_dto import UserCreate
+from core.user.user_orm import UserORM
 from fastapi import Request
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.mail_repo import MailRepo
-
-from core.user.user_crud import crud_user
-from core.user.user_dto import UserCreate, UserRead
-from core.user.user_orm import UserORM
 
 
 class OAuthService(metaclass=SingletonMeta):
@@ -75,8 +74,10 @@ class OAuthService(metaclass=SingletonMeta):
                             ),
                         ),
                     )
-                    await self.mail_repo.send_welcome_mail(
-                        user=UserRead.model_validate(user)
+                    await MailRepo().send_welcome_mail(
+                        email=user.email,
+                        first_name=user.first_name,
+                        last_name=user.last_name,
                     )
                     return user
         except Exception as e:

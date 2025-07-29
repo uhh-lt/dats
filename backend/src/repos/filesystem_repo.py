@@ -531,7 +531,6 @@ class FilesystemRepo(metaclass=SingletonMeta):
     ) -> None:
         # We need to check whether an SDoc with that filename exists in the DB. If not, we can overwrite it.
         from core.doc.source_document_crud import crud_sdoc
-
         from repos.db.sql_repo import SQLRepo
 
         dst_path = self._get_dst_path_for_project_sdoc_file(
