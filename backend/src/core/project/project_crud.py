@@ -59,7 +59,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         FilesystemRepo().create_directory_structure_for_project(proj_id=project_id)
 
         # 7) emit project created event
-        project_created.send(sender=self, project_id=project_id)
+        project_created.send(self, project_id=project_id)
 
         return db_obj
 
@@ -71,7 +71,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         FilesystemRepo().purge_project_data(proj_id=id)
 
         # 3) Emit project deleted event
-        project_deleted.send(sender=self, project_id=id)
+        project_deleted.send(self, project_id=id)
 
         return proj_db_obj
 
@@ -86,7 +86,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         db.commit()
 
         # 3) emit user associated event
-        user_added_to_project.send(sender=self, project_id=proj_id, user_id=user_id)
+        user_added_to_project.send(self, project_id=proj_id, user_id=user_id)
 
         return user_db_obj
 

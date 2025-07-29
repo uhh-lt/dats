@@ -145,7 +145,7 @@ def resolve_filename(
 
 
 @router.get(
-    "/user",
+    "/user/projects",
     response_model=List[ProjectRead],
     summary="Returns all Projects of the logged-in User",
 )
