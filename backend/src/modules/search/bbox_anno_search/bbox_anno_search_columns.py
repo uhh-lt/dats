@@ -16,7 +16,7 @@ class BBoxColumns(str, AbstractColumns):
     CODE_ID = "BB_CODE_ID"
     MEMO_CONTENT = "BB_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "BB_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    TAG_ID_LIST = "BB_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "BB_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:

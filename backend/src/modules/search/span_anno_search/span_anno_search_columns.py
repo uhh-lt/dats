@@ -20,7 +20,7 @@ class SpanColumns(str, AbstractColumns):
     USER_ID = "SP_USER_ID"
     MEMO_CONTENT = "SP_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "SP_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    TAG_ID_LIST = "SP_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "SP_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
