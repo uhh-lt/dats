@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
     from core.memo.memo_orm import MemoORM
     from core.project.project_orm import ProjectORM
-    from core.tag.document_tag_orm import DocumentTagORM
+    from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
 
 
@@ -90,12 +90,10 @@ class ObjectHandleORM(ORMBase):
         "SentenceAnnotationORM", back_populates="object_handle"
     )
 
-    document_tag_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), index=True
+    tag_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("tag.id", ondelete="CASCADE"), index=True
     )
-    document_tag: Mapped["DocumentTagORM"] = relationship(
-        "DocumentTagORM", back_populates="object_handle"
-    )
+    tag: Mapped["TagORM"] = relationship("TagORM", back_populates="object_handle")
 
     # Flo: https://stackoverflow.com/questions/60207228/postgres-unique-constraint-with-multiple-columns-and-null-values
     Index(
@@ -108,7 +106,7 @@ class ObjectHandleORM(ORMBase):
         coalesce(bbox_annotation_id, 0),
         coalesce(sentence_annotation_id, 0),
         coalesce(span_group_id, 0),
-        coalesce(document_tag_id, 0),
+        coalesce(tag_id, 0),
         coalesce(memo_id, 0),
         unique=True,
     )
@@ -126,7 +124,7 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN sentence_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN tag_id IS NULL THEN 0 ELSE 1 END
                     ) = 1
                     """,
             name="CC_object_handle_refers_to_exactly_one_instance",
@@ -141,7 +139,7 @@ class ObjectHandleORM(ORMBase):
             "bbox_annotation_id",
             "sentence_annotation_id",
             "span_group_id",
-            "document_tag_id",
+            "tag_id",
             name="UC_only_one_object_handle_per_instance",
         ),
     )
@@ -163,8 +161,8 @@ class ObjectHandleORM(ORMBase):
             return self.sentence_annotation.get_project_id()
         elif self.span_group_id is not None:
             return self.span_group.get_project_id()
-        elif self.document_tag_id is not None:
-            return self.document_tag.get_project_id()
+        elif self.tag_id is not None:
+            return self.tag.get_project_id()
         else:
             raise ValueError(
                 "No project ID available for this ObjectHandleORM instance."

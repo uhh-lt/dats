@@ -8,7 +8,7 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from loguru import logger
 from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
@@ -46,8 +46,8 @@ def summarize_sdoc(
         raise NotImplementedError(f"Can't summarize this DocType: {obj.doctype}")
 
 
-def summarize_document_tag(
-    obj: DocumentTagORM,
+def summarize_tag(
+    obj: TagORM,
     db=None,
 ) -> tuple[bool, str]:
     return (
@@ -123,7 +123,7 @@ def summarize_span_group(
 
 SUMMARY_FUNCTIONS = {
     SourceDocumentORM: summarize_sdoc,
-    DocumentTagORM: summarize_document_tag,
+    TagORM: summarize_tag,
     CodeORM: summarize_code,
     ProjectORM: summarize_project,
     BBoxAnnotationORM: summarize_bbox_anno,
@@ -137,7 +137,7 @@ MEMO_GEN_PROMPT = "Don't use imperative form. Generate a concise, 1-2 sentence h
 def generate_memo_ollama(
     obj: (
         SourceDocumentORM
-        | DocumentTagORM
+        | TagORM
         | CodeORM
         | ProjectORM
         | BBoxAnnotationORM

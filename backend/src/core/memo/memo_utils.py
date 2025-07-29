@@ -7,7 +7,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_dto import AttachedObjectType, MemoInDB, MemoRead
 from core.memo.memo_orm import MemoORM
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from loguru import logger
 from repos.db.crud_base import NoSuchElementError
 
@@ -15,7 +15,7 @@ from repos.db.crud_base import NoSuchElementError
 def get_object_memos(
     db_obj: (
         SourceDocumentORM
-        | DocumentTagORM
+        | TagORM
         | CodeORM
         | ProjectORM
         | BBoxAnnotationORM
@@ -34,7 +34,7 @@ def get_object_memos(
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,
-        DocumentTagORM: AttachedObjectType.document_tag,
+        TagORM: AttachedObjectType.tag,
         CodeORM: AttachedObjectType.code,
         ProjectORM: AttachedObjectType.project,
         BBoxAnnotationORM: AttachedObjectType.bbox_annotation,
@@ -58,7 +58,7 @@ def get_object_memos(
 def get_object_memo_for_user(
     db_obj: (
         SourceDocumentORM
-        | DocumentTagORM
+        | TagORM
         | CodeORM
         | ProjectORM
         | BBoxAnnotationORM
@@ -84,7 +84,7 @@ def get_object_memo_for_user(
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,
-        DocumentTagORM: AttachedObjectType.document_tag,
+        TagORM: AttachedObjectType.tag,
         CodeORM: AttachedObjectType.code,
         ProjectORM: AttachedObjectType.project,
         BBoxAnnotationORM: AttachedObjectType.bbox_annotation,

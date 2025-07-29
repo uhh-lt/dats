@@ -4,7 +4,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from repos.db.sql_utils import aggregate_ids
 from sqlalchemy.orm import Session
 from systems.search_system.column_info import AbstractColumns
@@ -16,14 +16,14 @@ class BBoxColumns(str, AbstractColumns):
     CODE_ID = "BB_CODE_ID"
     MEMO_CONTENT = "BB_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "BB_SOURCE_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "BB_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "BB_DOCUMENT_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[BBoxColumns.DOCUMENT_TAG_ID_LIST.value]
+            case BBoxColumns.TAG_ID_LIST:
+                return subquery_dict[BBoxColumns.TAG_ID_LIST.value]
             case BBoxColumns.CODE_ID:
                 return BBoxAnnotationORM.code_id
             case BBoxColumns.MEMO_CONTENT:
@@ -33,7 +33,7 @@ class BBoxColumns(str, AbstractColumns):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case BBoxColumns.CODE_ID:
                 return FilterOperator.ID
@@ -44,7 +44,7 @@ class BBoxColumns(str, AbstractColumns):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case BBoxColumns.CODE_ID:
                 return FilterValueType.CODE_ID
@@ -55,7 +55,7 @@ class BBoxColumns(str, AbstractColumns):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 return None
             case BBoxColumns.CODE_ID:
                 return CodeORM.name
@@ -66,7 +66,7 @@ class BBoxColumns(str, AbstractColumns):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 return "Tags"
             case BBoxColumns.CODE_ID:
                 return "Code"
@@ -75,11 +75,11 @@ class BBoxColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        DocumentTagORM.id,
-                        label=BBoxColumns.DOCUMENT_TAG_ID_LIST.value,
+                        TagORM.id,
+                        label=BBoxColumns.TAG_ID_LIST.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -91,9 +91,7 @@ class BBoxColumns(str, AbstractColumns):
                     SourceDocumentORM,
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
-                query_builder._join_subquery(
-                    SourceDocumentORM.document_tags, isouter=True
-                )
+                query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -118,11 +116,11 @@ class BBoxColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.id.in_(ids),
+                        TagORM.id.in_(ids),
                     )
                     .all()
                 )
@@ -143,12 +141,12 @@ class BBoxColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case BBoxColumns.DOCUMENT_TAG_ID_LIST:
+            case BBoxColumns.TAG_ID_LIST:
                 result = (
-                    db.query(DocumentTagORM)
+                    db.query(TagORM)
                     .filter(
-                        DocumentTagORM.project_id == project_id,
-                        DocumentTagORM.name.in_(names),
+                        TagORM.project_id == project_id,
+                        TagORM.name.in_(names),
                     )
                     .all()
                 )

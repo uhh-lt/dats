@@ -8,7 +8,7 @@ from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.code.code_dto import CodeRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
-from core.tag.document_tag_dto import DocumentTagRead
+from core.tag.tag_dto import TagRead
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from repos.db.dto_base import UpdateDTOBase
 
@@ -248,7 +248,7 @@ class WhiteboardData(BaseModel):
     codes: list[CodeRead] = Field(
         description="List of codes",
     )
-    tags: list[DocumentTagRead] = Field(
+    tags: list[TagRead] = Field(
         description="List of tags",
     )
     span_annotations: list[SpanAnnotationRead] = Field(

@@ -31,9 +31,6 @@ from modules.llm_assistant.llm_job_dto import (
     AnnotationResult,
     ApproachRecommendation,
     ApproachType,
-    DocumentTaggingLLMJobResult,
-    DocumentTaggingParams,
-    DocumentTaggingResult,
     FewShotParams,
     LLMJobCreate,
     LLMJobParameters,
@@ -49,6 +46,9 @@ from modules.llm_assistant.llm_job_dto import (
     SentenceAnnotationLLMJobResult,
     SentenceAnnotationParams,
     SentenceAnnotationResult,
+    TaggingLLMJobResult,
+    TaggingParams,
+    TaggingResult,
     TaskType,
     TrainingParameters,
     ZeroShotParams,
@@ -67,7 +67,7 @@ from modules.llm_assistant.prompts.sentence_annotation_prompt_builder import (
     SentenceAnnotationPromptBuilder,
 )
 from modules.llm_assistant.prompts.tagging_prompt_builder import (
-    OllamaDocumentTaggingResult,
+    OllamaTaggingResult,
     TaggingPromptBuilder,
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
@@ -116,10 +116,10 @@ class LLMService(metaclass=SingletonMeta):
         cls.llm_method_for_job_approach_type: dict[
             TaskType, dict[ApproachType, Callable[..., LLMJobResult]]
         ] = {
-            TaskType.DOCUMENT_TAGGING: {
-                ApproachType.LLM_ZERO_SHOT: cls._llm_document_tagging,
-                ApproachType.LLM_FEW_SHOT: cls._llm_document_tagging,
-                ApproachType.MODEL_TRAINING: cls._llm_document_tagging,
+            TaskType.TAGGING: {
+                ApproachType.LLM_ZERO_SHOT: cls._llm_tagging,
+                ApproachType.LLM_FEW_SHOT: cls._llm_tagging,
+                ApproachType.MODEL_TRAINING: cls._llm_tagging,
             },
             TaskType.METADATA_EXTRACTION: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_metadata_extraction,
@@ -140,7 +140,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # map from job_type to promt builder
         cls.llm_prompt_builder_for_job_type: dict[TaskType, Type[PromptBuilder]] = {
-            TaskType.DOCUMENT_TAGGING: TaggingPromptBuilder,
+            TaskType.TAGGING: TaggingPromptBuilder,
             TaskType.METADATA_EXTRACTION: MetadataPromptBuilder,
             TaskType.ANNOTATION: AnnotationPromptBuilder,
             TaskType.SENTENCE_ANNOTATION: SentenceAnnotationPromptBuilder,
@@ -272,7 +272,7 @@ class LLMService(metaclass=SingletonMeta):
         self, llm_job_params: LLMJobParameters
     ) -> ApproachRecommendation:
         match llm_job_params.llm_job_type:
-            case TaskType.DOCUMENT_TAGGING:
+            case TaskType.TAGGING:
                 return ApproachRecommendation(
                     recommended_approach=ApproachType.LLM_ZERO_SHOT,
                     available_approaches={
@@ -463,18 +463,16 @@ class LLMService(metaclass=SingletonMeta):
             }
         return prompt_dict
 
-    def _llm_document_tagging(
+    def _llm_tagging(
         self,
         *,
         db: Session,
         llm_job_id: str,
         project_id: int,
         approach_parameters: ZeroShotParams,
-        task_parameters: DocumentTaggingParams,
+        task_parameters: TaggingParams,
     ) -> LLMJobResult:
-        assert isinstance(task_parameters, DocumentTaggingParams), (
-            "Wrong task parameters!"
-        )
+        assert isinstance(task_parameters, TaggingParams), "Wrong task parameters!"
         assert isinstance(approach_parameters, ZeroShotParams), (
             "Wrong approach parameters!"
         )
@@ -501,7 +499,7 @@ class LLMService(metaclass=SingletonMeta):
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic document tagging
-        result: list[DocumentTaggingResult] = []
+        result: list[TaggingResult] = []
         for idx, (sdoc_id, sdoc_data) in enumerate(
             zip(task_parameters.sdoc_ids, sdoc_datas)
         ):
@@ -521,8 +519,7 @@ class LLMService(metaclass=SingletonMeta):
 
                 # get current tag ids
                 current_tag_ids = [
-                    tag.id
-                    for tag in crud_sdoc.read(db=db, id=sdoc_data.id).document_tags
+                    tag.id for tag in crud_sdoc.read(db=db, id=sdoc_data.id).tags
                 ]
 
                 # get language
@@ -549,7 +546,7 @@ class LLMService(metaclass=SingletonMeta):
                 response = self.ollama.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
-                    response_model=OllamaDocumentTaggingResult,
+                    response_model=OllamaTaggingResult,
                 )
                 logger.info(
                     f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
@@ -559,7 +556,7 @@ class LLMService(metaclass=SingletonMeta):
                 parsed_result = prompt_builder.parse_result(result=response)
 
                 result.append(
-                    DocumentTaggingResult(
+                    TaggingResult(
                         status=BackgroundJobStatus.FINISHED,
                         status_message="Document tagging successful",
                         sdoc_id=sdoc_data.id,
@@ -571,7 +568,7 @@ class LLMService(metaclass=SingletonMeta):
 
             except Exception as e:
                 result.append(
-                    DocumentTaggingResult(
+                    TaggingResult(
                         status=BackgroundJobStatus.ERROR,
                         status_message=str(e),
                         sdoc_id=sdoc_id,
@@ -582,9 +579,9 @@ class LLMService(metaclass=SingletonMeta):
                 )
 
         return LLMJobResult(
-            llm_job_type=TaskType.DOCUMENT_TAGGING,
-            specific_task_result=DocumentTaggingLLMJobResult(
-                llm_job_type=TaskType.DOCUMENT_TAGGING, results=result
+            llm_job_type=TaskType.TAGGING,
+            specific_task_result=TaggingLLMJobResult(
+                llm_job_type=TaskType.TAGGING, results=result
             ),
         )
 

@@ -5,7 +5,7 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from core.tag.document_tag_orm import DocumentTagORM, SourceDocumentDocumentTagLinkTable
+from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -17,15 +17,13 @@ def compute_tag_statistics(
     # tag statistics for the sdoc_ids
     count = func.count().label("count")
     query = (
-        db.query(DocumentTagORM, count)
+        db.query(TagORM, count)
         .join(
-            SourceDocumentDocumentTagLinkTable,
-            SourceDocumentDocumentTagLinkTable.document_tag_id == DocumentTagORM.id,
+            SourceDocumentTagLinkTable,
+            SourceDocumentTagLinkTable.tag_id == TagORM.id,
         )
-        .filter(
-            SourceDocumentDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids))
-        )
-        .group_by(DocumentTagORM.id)
+        .filter(SourceDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)))
+        .group_by(TagORM.id)
         .order_by(count.desc())
         .limit(top_k)
     )
@@ -35,14 +33,10 @@ def compute_tag_statistics(
     # global tag statistics
     count = func.count().label("count")
     query = (
-        db.query(SourceDocumentDocumentTagLinkTable.document_tag_id, count)
-        .filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
-        .group_by(SourceDocumentDocumentTagLinkTable.document_tag_id)
-        .order_by(
-            func.array_position(
-                tag_ids, SourceDocumentDocumentTagLinkTable.document_tag_id
-            )
-        )
+        db.query(SourceDocumentTagLinkTable.tag_id, count)
+        .filter(SourceDocumentTagLinkTable.tag_id.in_(tag_ids))
+        .group_by(SourceDocumentTagLinkTable.tag_id)
+        .order_by(func.array_position(tag_ids, SourceDocumentTagLinkTable.tag_id))
     )
     global_res = query.all()
 

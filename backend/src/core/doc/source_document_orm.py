@@ -13,9 +13,9 @@ if TYPE_CHECKING:
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
     from core.project.project_orm import ProjectORM
-    from core.tag.document_tag_orm import DocumentTagORM
-    from modules.ml.doc_tag_recommendation.document_tag_recommendation_orm import (
-        DocumentTagRecommendationLinkORM,
+    from core.tag.tag_orm import TagORM
+    from modules.ml.tag_recommendation.tag_recommendation_orm import (
+        TagRecommendationLinkORM,
     )
     from modules.perspectives.aspect_orm import AspectORM
     from modules.perspectives.cluster_orm import ClusterORM
@@ -104,17 +104,15 @@ class SourceDocumentORM(ORMBase):
     )
 
     # many to many
-    document_tags: Mapped[list["DocumentTagORM"]] = relationship(
-        "DocumentTagORM",
-        secondary="SourceDocumentDocumentTagLinkTable".lower(),
+    tags: Mapped[list["TagORM"]] = relationship(
+        "TagORM",
+        secondary="SourceDocumentTagLinkTable".lower(),
         back_populates="source_documents",
         passive_deletes=True,
     )
 
-    document_tag_recommendation_link: Mapped[
-        list["DocumentTagRecommendationLinkORM"]
-    ] = relationship(
-        "DocumentTagRecommendationLinkORM",
+    tag_recommendation_link: Mapped[list["TagRecommendationLinkORM"]] = relationship(
+        "TagRecommendationLinkORM",
         back_populates="source_document",
         passive_deletes=True,
     )

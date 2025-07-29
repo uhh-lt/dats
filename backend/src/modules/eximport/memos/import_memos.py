@@ -10,7 +10,7 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
 from core.memo.memo_utils import get_object_memo_for_user
 from core.project.project_crud import crud_project
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from loguru import logger
 from modules.eximport.memos.memo_export_schema import MemoExportCollection
 from sqlalchemy.orm import Session
@@ -131,8 +131,8 @@ def import_memos_to_proj(
                     except Exception:
                         attached_to = sdoc.id
 
-            case AttachedObjectType.document_tag:
-                tag = crud_document_tag.read_by_name_and_project(
+            case AttachedObjectType.tag:
+                tag = crud_tag.read_by_name_and_project(
                     db=db, project_id=project_id, name=memo.attached_to
                 )
                 if tag is None:

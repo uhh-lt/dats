@@ -9,12 +9,12 @@ if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
-    from modules.ml.doc_tag_recommendation.document_tag_recommendation_orm import (
-        DocumentTagRecommendationLinkORM,
+    from modules.ml.tag_recommendation.tag_recommendation_orm import (
+        TagRecommendationLinkORM,
     )
 
 
-class DocumentTagORM(ORMBase):
+class TagORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(String, index=False)
@@ -30,7 +30,7 @@ class DocumentTagORM(ORMBase):
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
-        back_populates="document_tag",
+        back_populates="tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
@@ -42,15 +42,11 @@ class DocumentTagORM(ORMBase):
         nullable=False,
         index=True,
     )
-    project: Mapped["ProjectORM"] = relationship(
-        "ProjectORM", back_populates="document_tags"
-    )
+    project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="tags")
 
     # one to many
-    document_tag_recommendation_links: Mapped[
-        list["DocumentTagRecommendationLinkORM"]
-    ] = relationship(
-        "DocumentTagRecommendationLinkORM",
+    tag_recommendation_links: Mapped[list["TagRecommendationLinkORM"]] = relationship(
+        "TagRecommendationLinkORM",
         back_populates="predicted_tag",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -59,21 +55,21 @@ class DocumentTagORM(ORMBase):
     # many to many
     source_documents: Mapped[list["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
-        secondary="SourceDocumentDocumentTagLinkTable".lower(),
-        back_populates="document_tags",
+        secondary="SourceDocumentTagLinkTable".lower(),
+        back_populates="tags",
         passive_deletes=True,
     )
 
     # hierarchy reference
     parent_id: Mapped[int | None] = mapped_column(
         Integer,
-        ForeignKey("documenttag.id", ondelete="CASCADE"),
+        ForeignKey("tag.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
-    parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
-    children: Mapped[list["DocumentTagORM"]] = relationship(
-        "DocumentTagORM",
+    parent: Mapped["TagORM"] = relationship("TagORM", remote_side=[id])
+    children: Mapped[list["TagORM"]] = relationship(
+        "TagORM",
         back_populates="parent",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -97,10 +93,10 @@ class DocumentTagORM(ORMBase):
         return self.project_id
 
 
-class SourceDocumentDocumentTagLinkTable(ORMBase):
+class SourceDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True
     )
-    document_tag_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), primary_key=True
+    tag_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tag.id", ondelete="CASCADE"), primary_key=True
     )

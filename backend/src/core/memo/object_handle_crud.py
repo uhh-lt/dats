@@ -16,8 +16,8 @@ from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_crud import crud_document_tag
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_crud import crud_tag
+from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from psycopg2.errors import UniqueViolation
@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):
     __obj_id_crud_map = {
         "code_id": crud_code,
-        "document_tag_id": crud_document_tag,
+        "tag_id": crud_tag,
         "project_id": crud_project,
         "source_document_id": crud_sdoc,
         "span_annotation_id": crud_span_anno,
@@ -43,7 +43,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
 
     __obj_id_orm_type_map = {
         "code_id": CodeORM,
-        "document_tag_id": DocumentTagORM,
+        "tag_id": TagORM,
         "project_id": ProjectORM,
         "source_document_id": SourceDocumentORM,
         "span_annotation_id": SpanAnnotationORM,
@@ -99,7 +99,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         self, db: Session, handle: ObjectHandleORM
     ) -> (
         CodeORM
-        | DocumentTagORM
+        | TagORM
         | ProjectORM
         | SourceDocumentORM
         | SpanAnnotationORM

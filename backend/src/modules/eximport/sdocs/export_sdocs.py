@@ -64,7 +64,7 @@ def __export_sdocs(
     # 2. Data that is attached to the source document
     # 2.1. Info about the source document itself (name, filename, doctype, status) [SourceDocumentORM]
     # 2.2. The source document's metadata (sdoc metadata) [SourceDocumentMetadataORM]
-    # 2.3. The source document's tags (sdoc tags) [DocumentTagORM]
+    # 2.3. The source document's tags (sdoc tags) [TagORM]
     # 2.4. The source document's links (sdoc links) [SourceDocumentLinkORM]
     # 2.5. The source document's word frequencies (sdoc word frequencies) [WordFrequencyORM]
     # 3. Processed data of the source document (content, html, tokens, sentences, times) [SourceDocumentDataORM]
@@ -92,7 +92,7 @@ def __export_sdocs(
             raise ValueError(f"SourceDocument {sdoc.id} has no data, cannot export.")
 
         # Document tags
-        tags = [tag.name for tag in sdoc.document_tags]
+        tags = [tag.name for tag in sdoc.tags]
 
         # Document links
         # We only want the resolved links, i.e., the ones that have a linked_source_document_id

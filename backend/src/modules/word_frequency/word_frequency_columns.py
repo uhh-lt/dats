@@ -3,7 +3,7 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
 from core.doc.source_document_orm import SourceDocumentORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
 from sqlalchemy import String, cast, func
@@ -20,7 +20,7 @@ class WordFrequencyColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_FREQUENCY = "WF_SOURCE_DOCUMENT_FREQUENCY"
     SOURCE_DOCUMENT_PERCENT = "WF_SOURCE_DOCUMENT_PERCENT"
     SOURCE_DOCUMENT_FILENAME = "WF_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "WF_DOCUMENT_TAG_ID_LIST"
+    TAG_ID_LIST = "WF_TAG_ID_LIST"
     CODE_ID_LIST = "WF_CODE_ID_LIST"
     USER_ID_LIST = "WF_USER_ID_LIST"
     SPAN_ANNOTATIONS = "WF_SPAN_ANNOTATIONS"
@@ -39,8 +39,8 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[WordFrequencyColumns.DOCUMENT_TAG_ID_LIST]
+            case WordFrequencyColumns.TAG_ID_LIST:
+                return subquery_dict[WordFrequencyColumns.TAG_ID_LIST]
             case WordFrequencyColumns.CODE_ID_LIST:
                 return subquery_dict[WordFrequencyColumns.CODE_ID_LIST]
             case WordFrequencyColumns.USER_ID_LIST:
@@ -62,7 +62,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return FilterOperator.NUMBER
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+            case WordFrequencyColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case WordFrequencyColumns.CODE_ID_LIST:
                 return FilterOperator.ID_LIST
@@ -85,7 +85,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+            case WordFrequencyColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case WordFrequencyColumns.CODE_ID_LIST:
                 return FilterValueType.CODE_ID
@@ -108,7 +108,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+            case WordFrequencyColumns.TAG_ID_LIST:
                 return None
             case WordFrequencyColumns.CODE_ID_LIST:
                 return None
@@ -131,7 +131,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return "Document %"
             case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+            case WordFrequencyColumns.TAG_ID_LIST:
                 return "Tags"
             case WordFrequencyColumns.CODE_ID_LIST:
                 return "Codes"
@@ -142,16 +142,14 @@ class WordFrequencyColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case WordFrequencyColumns.DOCUMENT_TAG_ID_LIST:
+            case WordFrequencyColumns.TAG_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_ids(
-                        DocumentTagORM.id,
-                        label=WordFrequencyColumns.DOCUMENT_TAG_ID_LIST.value,
+                        TagORM.id,
+                        label=WordFrequencyColumns.TAG_ID_LIST.value,
                     )
                 )
-                query_builder._join_subquery(
-                    SourceDocumentORM.document_tags, isouter=True
-                )
+                query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
             case WordFrequencyColumns.CODE_ID_LIST:
                 query_builder._add_subquery_column(
                     aggregate_two_ids(

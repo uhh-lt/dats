@@ -1,4 +1,4 @@
-from core.tag.document_tag_dto import DocumentTagRead
+from core.tag.tag_dto import TagRead
 from pydantic import BaseModel, Field
 
 
@@ -27,7 +27,7 @@ class KeywordStat(BaseModel):
 
 
 class TagStat(BaseModel):
-    tag: DocumentTagRead = Field(description="The counted document tag.")
+    tag: TagRead = Field(description="The counted document tag.")
     filtered_count: int = Field(
         description="Number of occurrences of the document tag in the filtered documents"
     )

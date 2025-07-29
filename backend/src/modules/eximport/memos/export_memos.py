@@ -10,7 +10,7 @@ from core.memo.memo_crud import crud_memo
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_crud import crud_object_handle
 from core.project.project_orm import ProjectORM
-from core.tag.document_tag_orm import DocumentTagORM
+from core.tag.tag_orm import TagORM
 from loguru import logger
 from modules.eximport.memos.memo_export_schema import (
     MemoExportCollection,
@@ -102,7 +102,7 @@ def __generate_export_df_for_memos(
                 exported_memo.attached_to = "project"
             case CodeORM():
                 exported_memo.attached_to = attached_to.name
-            case DocumentTagORM():
+            case TagORM():
                 exported_memo.attached_to = attached_to.name
             case SourceDocumentORM():
                 exported_memo.attached_to = attached_to.filename

@@ -6,10 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
-    from core.tag.document_tag_orm import DocumentTagORM
+    from core.tag.tag_orm import TagORM
 
 
-class DocumentTagRecommendationLinkORM(ORMBase):
+class TagRecommendationLinkORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     ml_job_id: Mapped[str] = mapped_column(String, index=True, nullable=True)
     prediction_score: Mapped[float] = mapped_column(Float, index=True, nullable=True)
@@ -23,17 +23,17 @@ class DocumentTagRecommendationLinkORM(ORMBase):
         index=True,
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
-        "SourceDocumentORM", back_populates="document_tag_recommendation_link"
+        "SourceDocumentORM", back_populates="tag_recommendation_link"
     )
     predicted_tag_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("documenttag.id", ondelete="CASCADE"),
+        ForeignKey("tag.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    predicted_tag: Mapped["DocumentTagORM"] = relationship(
-        "DocumentTagORM",
-        back_populates="document_tag_recommendation_links",
+    predicted_tag: Mapped["TagORM"] = relationship(
+        "TagORM",
+        back_populates="tag_recommendation_links",
     )
 
     def get_project_id(self) -> int:

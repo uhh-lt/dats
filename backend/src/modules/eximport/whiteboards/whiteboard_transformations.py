@@ -4,7 +4,7 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.project.project_crud import crud_project
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     BBoxAnnotationNodeDataForExport,
     CodeNodeDataForExport,
@@ -188,7 +188,7 @@ def transform_nodes_for_export(
                 assert isinstance(node.data, TagNodeData), "Expected TagNodeData type"
                 tag_ids.append(node.data.tagId)
 
-            tags = crud_document_tag.read_by_ids(db=db, ids=tag_ids)
+            tags = crud_tag.read_by_ids(db=db, ids=tag_ids)
             tag_id_to_name: dict[int, str] = {tag.id: tag.name for tag in tags}
 
             for node in nodes:
@@ -506,7 +506,7 @@ def transform_nodes_for_import(
 
         case WhiteboardNodeType.TAG:
             # Resolve tag_name to tagId
-            project_tags = crud_project.read(db=db, id=project_id).document_tags
+            project_tags = crud_project.read(db=db, id=project_id).tags
             tag_name_to_id: dict[str, int] = {tag.name: tag.id for tag in project_tags}
             # Check if all tags exist in the project
             for node in nodes:

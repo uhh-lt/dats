@@ -10,7 +10,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import MemoRead
 from core.project.project_crud import crud_project
-from core.tag.document_tag_dto import DocumentTagRead
+from core.tag.tag_dto import TagRead
 from modules.whiteboard.whiteboard_dto import (
     BBoxAnnotationNodeData,
     MemoNodeData,
@@ -126,10 +126,10 @@ class CRUDWhiteboard(
                 case WhiteboardNodeType.TAG:
                     if len(nodes) > 0:
                         result.tags = [
-                            DocumentTagRead.model_validate(c)
+                            TagRead.model_validate(c)
                             for c in crud_project.read(
                                 db=db, id=whiteboard.project_id
-                            ).document_tags
+                            ).tags
                         ]
 
         return result

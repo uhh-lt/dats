@@ -6,14 +6,14 @@ from common.singleton_meta import SingletonMeta
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
-from core.tag.document_tag_crud import crud_document_tag
-from core.tag.document_tag_orm import DocumentTagORM
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_crud import (
-    crud_document_tag_recommendation_link,
+from core.tag.tag_crud import crud_tag
+from core.tag.tag_orm import TagORM
+from modules.ml.tag_recommendation.tag_recommendation_crud import (
+    crud_tag_recommendation_link,
 )
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
-    DocumentTagRecommendationLinkCreate,
-    DocumentTagRecommendationMethod,
+from modules.ml.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationLinkCreate,
+    TagRecommendationMethod,
 )
 from modules.simsearch.simsearch_dto import SimSearchDocumentHit
 from repos.db.sql_repo import SQLRepo
@@ -52,7 +52,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         tag_ids: list[int] = [],
-        method: DocumentTagRecommendationMethod = DocumentTagRecommendationMethod.KNN,
+        method: TagRecommendationMethod = TagRecommendationMethod.KNN,
         multi_class: bool = False,
     ):
         """
@@ -60,7 +60,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
         For each untagged document (determined by comparing against the IDs of documents that already have tags),
         the method finds similar (tagged) documents and uses their tags as predictions.
-        A DocumentTagRecommendationLinkCreate DTO is created for each predicted tag.
+        A TagRecommendationLinkCreate DTO is created for each predicted tag.
 
         Args:
             task_id (int): The ID of the classification task.
@@ -76,19 +76,17 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             # Extract IDs from the tagged documents
             sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
 
-            # Retrieve a mapping: document_id -> list of associated DocumentTagORM objects
-            sdocs_and_tags = crud_document_tag.read_tags_for_documents(
-                db, sdoc_ids=sdoc_ids
-            )
+            # Retrieve a mapping: document_id -> list of associated TagORM objects
+            sdocs_and_tags = crud_tag.read_tags_for_documents(db, sdoc_ids=sdoc_ids)
 
         # Suggest similar documents based on the already tagged documents
         with self.weaviate.weaviate_session() as client:
             match method:
-                case DocumentTagRecommendationMethod.EXCLUSIVE:
+                case TagRecommendationMethod.EXCLUSIVE:
                     dto_iter = self._exclusive_suggestions(
                         client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
                     )
-                case DocumentTagRecommendationMethod.KNN:
+                case TagRecommendationMethod.KNN:
                     dto_iter = self._knn_suggestions(
                         client,
                         ml_job_id,
@@ -97,7 +95,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                         sdocs_and_tags,
                         tag_ids,
                     )
-                case DocumentTagRecommendationMethod.SIMPLE:
+                case TagRecommendationMethod.SIMPLE:
                     dto_iter = self._simple_suggestions(
                         client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
                     )
@@ -105,7 +103,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
 
         # Insert all generated tag recommendation DTOs into the database at once.
-        crud_document_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
+        crud_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)
 
     def __suggest_similar_documents(
         self,
@@ -197,8 +195,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Iterable[int],
-        sdocs_and_tags: dict[int, list[DocumentTagORM]],
-    ) -> Iterator[DocumentTagRecommendationLinkCreate]:
+        sdocs_and_tags: dict[int, list[TagORM]],
+    ) -> Iterator[TagRecommendationLinkCreate]:
         """get suggestions for each tag using documents with that tag as positive examples
         and all documents with another tag as negative examples"""
         tag_to_docs = defaultdict[int, list[int]](list[int])
@@ -226,7 +224,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         # sdocs_and_tags = crud_sdoc.get_tags(db, sdoc_ids=all_suggested_sdoc_ids)
         for tag, similar_docs_per_tag in tag_to_similar.items():
             for hit in similar_docs_per_tag:
-                yield DocumentTagRecommendationLinkCreate(
+                yield TagRecommendationLinkCreate(
                     ml_job_id=ml_job_id,
                     source_document_id=hit.sdoc_id,
                     predicted_tag_id=tag,
@@ -240,9 +238,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         sdoc_ids: Sequence[int],
-        sdocs_and_tags: dict[int, list[DocumentTagORM]],
+        sdocs_and_tags: dict[int, list[TagORM]],
         tag_ids: list[int],
-    ) -> Iterator[DocumentTagRecommendationLinkCreate]:
+    ) -> Iterator[TagRecommendationLinkCreate]:
         """create suggestions using k-nearest neighbors"""
         with self.sqlr.db_session() as db:
             sdocs_without_tags = crud_sdoc.read_all_without_tags(
@@ -274,7 +272,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             for id, score in pairs:
                 scores[id].append(score)
             best = max(scores.items(), key=lambda x: sum(x[1]))
-            yield DocumentTagRecommendationLinkCreate(
+            yield TagRecommendationLinkCreate(
                 ml_job_id=ml_job_id,
                 source_document_id=sdoc,
                 predicted_tag_id=best[0],
@@ -288,8 +286,8 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         ml_job_id: str,
         project_id: int,
         sdoc_ids: set[int],
-        sdocs_and_tags: dict[int, list[DocumentTagORM]],
-    ) -> Iterator[DocumentTagRecommendationLinkCreate]:
+        sdocs_and_tags: dict[int, list[TagORM]],
+    ) -> Iterator[TagRecommendationLinkCreate]:
         """simply get suggestions only using positive examples"""
         similar_docs = self.__suggest_similar_documents(
             client=client,
@@ -312,7 +310,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
             # For each tag associated with the compared (tagged) document, create a prediction.
             for tag in tags:
-                yield DocumentTagRecommendationLinkCreate(
+                yield TagRecommendationLinkCreate(
                     ml_job_id=ml_job_id,
                     source_document_id=similar_doc.sdoc_id,
                     predicted_tag_id=tag.id,
@@ -322,9 +320,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _deduplicate_document_classifications(
         self,
-        dtos: Iterable[DocumentTagRecommendationLinkCreate],
+        dtos: Iterable[TagRecommendationLinkCreate],
         multi_class: bool,
-    ) -> list[DocumentTagRecommendationLinkCreate]:
+    ) -> list[TagRecommendationLinkCreate]:
         """
         Deduplicates document tag classification recommendations.
 
@@ -335,16 +333,16 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         combination of source document (and predicted tag).
 
         Args:
-            dtos (list[DocumentTagRecommendationLinkCreate]):
-                A list of DocumentTagRecommendationLinkCreate DTOs representing
+            dtos (list[TagRecommendationLinkCreate]):
+                A list of TagRecommendationLinkCreate DTOs representing
                 the predicted tag classifications for documents.
             multi_class (bool):
                 Allow multiple tags per source document if `True`,
                 else only the single best tag per source document.
 
         Returns:
-            list[DocumentTagRecommendationLinkCreate]:
-                A list of deduplicated DocumentTagRecommendationLinkCreate DTOs,
+            list[TagRecommendationLinkCreate]:
+                A list of deduplicated TagRecommendationLinkCreate DTOs,
                 containing only the unique recommendations with the highest prediction scores.
         """
         # Create a dictionary to store the deduplicated entries

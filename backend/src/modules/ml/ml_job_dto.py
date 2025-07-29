@@ -2,8 +2,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from modules.ml.doc_tag_recommendation.document_tag_recommendation_dto import (
-    DocumentTagRecommendationMethod,
+from modules.ml.tag_recommendation.tag_recommendation_dto import (
+    TagRecommendationMethod,
 )
 from pydantic import BaseModel, Field
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
@@ -11,7 +11,7 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 class MLJobType(StrEnum):
     QUOTATION_ATTRIBUTION = "QUOTATION_ATTRIBUTION"
-    DOC_TAG_RECOMMENDATION = "DOC_TAG_RECOMMENDATION"
+    TAG_RECOMMENDATION = "TAG_RECOMMENDATION"
     COREFERENCE_RESOLUTION = "COREFERENCE_RESOLUTION"
     DOCUMENT_EMBEDDING = "DOCUMENT_EMBEDDING"
     SENTENCE_EMBEDDING = "SENTENCE_EMBEDDING"
@@ -25,7 +25,7 @@ class QuotationAttributionParams(BaseModel):
 
 
 class DocTagRecommendationParams(BaseModel):
-    ml_job_type: Literal[MLJobType.DOC_TAG_RECOMMENDATION]
+    ml_job_type: Literal[MLJobType.TAG_RECOMMENDATION]
     multi_class: bool = Field(
         default=False, description="Tags are mutually exclusive if `False`"
     )
@@ -33,8 +33,8 @@ class DocTagRecommendationParams(BaseModel):
         default=[],
         description="Tags to consider. If empty, all tags applied to any document are considered.",
     )
-    method: DocumentTagRecommendationMethod = Field(
-        default=DocumentTagRecommendationMethod.KNN,
+    method: TagRecommendationMethod = Field(
+        default=TagRecommendationMethod.KNN,
         description="Method to use for suggestions",
     )
 

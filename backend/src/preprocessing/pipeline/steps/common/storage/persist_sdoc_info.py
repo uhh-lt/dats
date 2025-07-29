@@ -11,7 +11,7 @@ from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
-from core.tag.document_tag_crud import crud_document_tag
+from core.tag.tag_crud import crud_tag
 from core.user.user_crud import SYSTEM_USER_ID
 from loguru import logger
 from preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
@@ -87,7 +87,7 @@ def __persist_tags(
     tags = ppdb.tags
     if len(tags) > 0:
         logger.info(f"Persisting SourceDocument Tags for {ppdb.filename}...")
-        crud_document_tag.link_multiple_document_tags(
+        crud_tag.link_multiple_tags(
             db=db,
             sdoc_ids=[sdoc_db_obj.id],
             tag_ids=tags,

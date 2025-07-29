@@ -13,7 +13,7 @@ class SpanAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SpanAnnotation refers to"
     )
-    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
     memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 
@@ -32,7 +32,7 @@ class SentenceAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the SentenceAnnotation refers to"
     )
-    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
     memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 
@@ -55,7 +55,7 @@ class BBoxAnnotationRow(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="SourceDocument the BBoxAnnotation refers to"
     )
-    tag_ids: list[int] = Field(description="The DocumentTagIDs of the SourceDocument.")
+    tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
     memo: MemoRead | None = Field(description="The Memo of the Annotation.")
 
 

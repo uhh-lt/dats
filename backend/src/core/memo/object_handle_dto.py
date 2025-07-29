@@ -11,7 +11,7 @@ class ObjectHandleBaseDTO(BaseModel):
     sentence_annotation_id: int | None = None
     span_group_id: int | None = None
     bbox_annotation_id: int | None = None
-    document_tag_id: int | None = None
+    tag_id: int | None = None
     memo_id: int | None = None
 
     @model_validator(mode="after")

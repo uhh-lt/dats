@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.project_metadata_orm import ProjectMetadataORM
-    from core.tag.document_tag_orm import DocumentTagORM
+    from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
@@ -71,8 +71,8 @@ class ProjectORM(ORMBase):
         passive_deletes=True,
     )
 
-    document_tags: Mapped[list["DocumentTagORM"]] = relationship(
-        "DocumentTagORM",
+    tags: Mapped[list["TagORM"]] = relationship(
+        "TagORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
