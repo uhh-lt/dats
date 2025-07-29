@@ -2,31 +2,40 @@
 
 # Ensure that the script is run from the root directory of the project
 if [ ! -d ".git" ]; then
-    echo "This script must be run from the root directory of the project."
-    exit 1
+	echo "This script must be run from the root directory of the project."
+	exit 1
 fi
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --project_name) PROJECT_NAME="$2"; shift ;;
-        --port_prefix) PORT_PREFIX="$2"; shift ;;
-        --help)
-            echo "Usage: $0 --project_name <name> --port_prefix <prefix>"
-            echo "  --project_name  The name of the project."
-            echo "  --port_prefix   The port prefix to use."
-            echo "  --help          Display this help message."
-            exit 0
-            ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
-    esac
-    shift
+	case $1 in
+	--project_name)
+		PROJECT_NAME="$2"
+		shift
+		;;
+	--port_prefix)
+		PORT_PREFIX="$2"
+		shift
+		;;
+	--help)
+		echo "Usage: $0 --project_name <name> --port_prefix <prefix>"
+		echo "  --project_name  The name of the project."
+		echo "  --port_prefix   The port prefix to use."
+		echo "  --help          Display this help message."
+		exit 0
+		;;
+	*)
+		echo "Unknown parameter passed: $1"
+		exit 1
+		;;
+	esac
+	shift
 done
 
 # Ensure that the --project_name and --port_prefix parameters are provided
 if [ -z "$PROJECT_NAME" ] || [ -z "$PORT_PREFIX" ]; then
-    echo "--project_name and --port_prefix parameters are required."
-    exit 1
+	echo "--project_name and --port_prefix parameters are required."
+	exit 1
 fi
 
 JWT_SECRET=$(pwgen 32 1)

@@ -2,9 +2,8 @@ from pathlib import Path
 from typing import List
 
 from core.doc.source_document_data_dto import WordLevelTranscription
-from pydantic import Field
-
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
+from pydantic import Field
 
 
 class PreProVideoDoc(PreProDocBase):

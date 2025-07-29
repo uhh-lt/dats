@@ -1,12 +1,11 @@
 from typing import Dict, List, Optional
 
 import tenacity
+from core.annotation.span_text_dto import SpanTextCreate
+from core.annotation.span_text_orm import SpanTextORM
 from psycopg2.errors import UniqueViolation
 from repos.db.crud_base import CRUDBase, UpdateNotAllowed
 from sqlalchemy.orm import Session
-
-from core.annotation.span_text_dto import SpanTextCreate
-from core.annotation.span_text_orm import SpanTextORM
 
 
 class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
