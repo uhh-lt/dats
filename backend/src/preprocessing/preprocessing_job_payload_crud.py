@@ -75,7 +75,7 @@ class CRUDPreprocessingJobPayload(
 
         return db_obj
 
-    def remove(self, db: Session, *, uuid: str) -> PreprocessingJobPayloadORM:
+    def delete(self, db: Session, *, uuid: str) -> PreprocessingJobPayloadORM:
         db_obj = self.read(db=db, uuid=uuid)
         db.delete(db_obj)
         db.commit()

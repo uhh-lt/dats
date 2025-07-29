@@ -22,6 +22,8 @@ class CRUDProjectMetadata(
         ProjectMetadataUpdate,
     ]
 ):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, create_dto: ProjectMetadataCreate
     ) -> ProjectMetadataORM:
@@ -51,6 +53,72 @@ class CRUDProjectMetadata(
             if sdoc.doctype == project_metadata.doctype
         ]
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
+
+    def create_project_metadata_for_project(
+        self, db: Session, proj_id: int
+    ) -> List[ProjectMetadataORM]:
+        created: List[ProjectMetadataORM] = []
+
+        for project_metadata in conf.project_metadata.values():
+            create_dto = ProjectMetadataCreate(
+                project_id=proj_id,
+                key=project_metadata["key"],
+                metatype=project_metadata["metatype"],
+                read_only=project_metadata["read_only"],
+                doctype=project_metadata["doctype"],
+                description=project_metadata["description"],
+            )
+            db_obj = self.create(db=db, create_dto=create_dto)
+            created.append(db_obj)
+
+        return created
+
+    ### READ OPERATIONS ###
+
+    def read_by_project_and_key(
+        self, db: Session, project_id: int, key: str
+    ) -> List[ProjectMetadataORM]:
+        db_objs = (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.key == key,
+            )
+            .all()
+        )
+        return db_objs
+
+    def read_by_project_and_key_and_metatype_and_doctype(
+        self, db: Session, project_id: int, key: str, metatype: str, doctype: str
+    ) -> Optional[ProjectMetadataORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.key == key,
+                self.model.metatype == metatype,
+                self.model.doctype == doctype,
+            )
+            .first()
+        )
+
+    def read_by_project(
+        self,
+        db: Session,
+        *,
+        proj_id: int,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> List[ProjectMetadataORM]:
+        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
+
+    ### UPDATE OPERATIONS ###
 
     def update(
         self, db: Session, *, metadata_id: int, update_dto: ProjectMetadataUpdate
@@ -90,32 +158,7 @@ class CRUDProjectMetadata(
 
             return metadata_orm
 
-    def read_by_project_and_key(
-        self, db: Session, project_id: int, key: str
-    ) -> List[ProjectMetadataORM]:
-        db_objs = (
-            db.query(self.model)
-            .filter(
-                self.model.project_id == project_id,
-                self.model.key == key,
-            )
-            .all()
-        )
-        return db_objs
-
-    def read_by_project_and_key_and_metatype_and_doctype(
-        self, db: Session, project_id: int, key: str, metatype: str, doctype: str
-    ) -> Optional[ProjectMetadataORM]:
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.project_id == project_id,
-                self.model.key == key,
-                self.model.metatype == metatype,
-                self.model.doctype == doctype,
-            )
-            .first()
-        )
+    ### OTHER OPERATIONS ###
 
     def exists_by_project_and_key_and_metatype_and_doctype(
         self,
@@ -136,44 +179,6 @@ class CRUDProjectMetadata(
             .first()
             is not None
         )
-
-    def read_by_project(
-        self,
-        db: Session,
-        *,
-        proj_id: int,
-        skip: Optional[int] = None,
-        limit: Optional[int] = None,
-    ) -> List[ProjectMetadataORM]:
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
-        if skip is not None:
-            query = query.offset(skip)
-        if limit is not None:
-            query = query.limit(limit)
-
-        return query.all()
-
-    def create_project_metadata_for_project(
-        self, db: Session, proj_id: int
-    ) -> List[ProjectMetadataORM]:
-        created: List[ProjectMetadataORM] = []
-
-        for project_metadata in conf.project_metadata.values():
-            create_dto = ProjectMetadataCreate(
-                project_id=proj_id,
-                key=project_metadata["key"],
-                metatype=project_metadata["metatype"],
-                read_only=project_metadata["read_only"],
-                doctype=project_metadata["doctype"],
-                description=project_metadata["description"],
-            )
-            db_obj = self.create(db=db, create_dto=create_dto)
-            created.append(db_obj)
-
-        return created
-
-
-crud_project_meta = CRUDProjectMetadata(ProjectMetadataORM)
 
 
 crud_project_meta = CRUDProjectMetadata(ProjectMetadataORM)

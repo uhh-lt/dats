@@ -16,7 +16,7 @@ from systems.event_system.events import (
 )
 
 
-class MemoElasticCrud(
+class CRUDElasticMemo(
     ElasticCrudBase[
         MemoIndex,
         ElasticSearchMemo,
@@ -24,6 +24,8 @@ class MemoElasticCrud(
         ElasticSearchMemoUpdate,
     ]
 ):
+    ### OTHER OPERATIONS ###
+
     def search_memos_by_title_query(
         self,
         *,
@@ -77,7 +79,7 @@ class MemoElasticCrud(
         )
 
 
-crud_elastic_memo = MemoElasticCrud(index=MemoIndex, model=ElasticSearchMemo)
+crud_elastic_memo = CRUDElasticMemo(index=MemoIndex, model=ElasticSearchMemo)
 
 
 @source_document_deleted.connect

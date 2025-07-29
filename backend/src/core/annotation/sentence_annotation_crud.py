@@ -21,6 +21,8 @@ class CRUDSentenceAnnotation(
         SentenceAnnotationORM, SentenceAnnotationCreateIntern, SentenceAnnotationUpdate
     ]
 ):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, user_id: int, create_dto: SentenceAnnotationCreate
     ) -> SentenceAnnotationORM:
@@ -81,6 +83,8 @@ class CRUDSentenceAnnotation(
                 for create_dto in create_dtos
             ],
         )
+
+    ### READ OPERATIONS ###
 
     def read_by_project(
         self,
@@ -191,6 +195,8 @@ class CRUDSentenceAnnotation(
         )
         return query.all()
 
+    ### UPDATE OPERATIONS ###
+
     def update(
         self, db: Session, *, id: int, update_dto: SentenceAnnotationUpdate
     ) -> SentenceAnnotationORM:
@@ -212,19 +218,21 @@ class CRUDSentenceAnnotation(
             for update_dto in update_dtos
         ]
 
-    def remove(self, db: Session, *, id: int) -> SentenceAnnotationORM:
-        sentence_anno = super().remove(db, id=id)
+    ### DELETE OPERATIONS ###
+
+    def delete(self, db: Session, *, id: int) -> SentenceAnnotationORM:
+        sentence_anno = super().delete(db, id=id)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
 
         return sentence_anno
 
-    def remove_bulk(
+    def delete_bulk(
         self, db: Session, *, ids: List[int]
     ) -> List[SentenceAnnotationORM]:
         sentence_annos = []
         for id in ids:
-            sentence_annos.append(self.remove(db, id=id))
+            sentence_annos.append(self.delete(db, id=id))
 
         # find the annotation document ids
         adoc_ids = {
@@ -237,7 +245,7 @@ class CRUDSentenceAnnotation(
 
         return sentence_annos
 
-    def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
+    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         # find all sentence annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id

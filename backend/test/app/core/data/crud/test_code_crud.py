@@ -44,7 +44,7 @@ def test_create_get_delete_code(
     assert get_code[0].color == color
 
     # delete code
-    crud_code.remove(db=db, id=code_id)
+    crud_code.delete(db=db, id=code_id)
 
     # try to get already removed code
     with pytest.raises(NoSuchElementError):

@@ -104,7 +104,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.commit()
         return db_objects
 
-    def remove(self, db: Session, *, id: int) -> ORMModelType:
+    def delete(self, db: Session, *, id: int) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         db.delete(db_obj)
         db.commit()

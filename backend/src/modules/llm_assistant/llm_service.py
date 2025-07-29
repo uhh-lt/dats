@@ -955,7 +955,7 @@ class LLMService(metaclass=SingletonMeta):
             msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
             logger.info(msg)
 
-            crud_sentence_anno.remove_bulk(
+            crud_sentence_anno.delete_bulk(
                 db=db, ids=[sa.id for sa in previous_annotations]
             )
 
@@ -1355,7 +1355,7 @@ class LLMService(metaclass=SingletonMeta):
                 )
                 logger.info(msg)
 
-                crud_sentence_anno.remove_bulk(
+                crud_sentence_anno.delete_bulk(
                     db=db, ids=[sa.id for sa in previous_annotations]
                 )
         else:

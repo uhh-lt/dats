@@ -77,7 +77,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
 
             # Retrieve a mapping: document_id -> list of associated DocumentTagORM objects
-            sdocs_and_tags = crud_document_tag.get_tags_for_documents(
+            sdocs_and_tags = crud_document_tag.read_tags_for_documents(
                 db, sdoc_ids=sdoc_ids
             )
 

@@ -16,7 +16,7 @@ from systems.event_system.events import (
 )
 
 
-class SdocElasticCrud(
+class CRUDElasticSdoc(
     ElasticCrudBase[
         SdocIndex,
         ElasticSearchDocument,
@@ -66,7 +66,7 @@ class SdocElasticCrud(
         )
 
 
-crud_elastic_sdoc = SdocElasticCrud(index=SdocIndex, model=ElasticSearchDocument)
+crud_elastic_sdoc = CRUDElasticSdoc(index=SdocIndex, model=ElasticSearchDocument)
 
 # Handle events
 

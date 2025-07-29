@@ -89,7 +89,7 @@ def delete_me(
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    db_user = crud_user.remove(db=db, id=authz_user.user.id)
+    db_user = crud_user.delete(db=db, id=authz_user.user.id)
     return UserRead.model_validate(db_user)
 
 

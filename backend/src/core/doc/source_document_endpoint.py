@@ -30,7 +30,7 @@ def get_by_id(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     if not only_if_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
     return SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
 
@@ -50,7 +50,7 @@ def get_by_id_with_data(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     if not only_if_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
     sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
     return SourceDocumentDataRead.model_validate(sdoc_data)
@@ -69,7 +69,7 @@ def delete_by_id(
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
+    db_obj = crud_sdoc.delete(db=db, id=sdoc_id)
     return SourceDocumentRead.model_validate(db_obj)
 
 

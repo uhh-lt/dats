@@ -35,7 +35,7 @@ def test_create_delete_user(db: Session) -> None:
     assert user.password != password  # password is hashed
 
     # delete user
-    crud_user.remove(db=db, id=user_new.id)
+    crud_user.delete(db=db, id=user_new.id)
 
     # try to delete user second time
     with pytest.raises(NoSuchElementError):

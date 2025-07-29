@@ -22,6 +22,8 @@ from systems.event_system.events import (
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, create_dto: ProjectCreate, creating_user: UserORM
     ) -> ProjectORM:
@@ -63,9 +65,11 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> ProjectORM:
+    ### DELETE OPERATIONS ###
+
+    def delete(self, db: Session, *, id: int) -> ProjectORM:
         # 1) delete the project and all connected data via cascading delete
-        proj_db_obj = super().remove(db=db, id=id)
+        proj_db_obj = super().delete(db=db, id=id)
 
         # 2) delete the files from filesystem
         FilesystemRepo().purge_project_data(proj_id=id)
@@ -74,6 +78,8 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         project_deleted.send(self, project_id=id)
 
         return proj_db_obj
+
+    ### OTHER OPERATIONS ###
 
     def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
         # 1) read project

@@ -235,13 +235,13 @@ def remove_aspect_by_id(
 
     aspect = crud_aspect.read(db=db, id=aspect_id)
 
-    crud_cluster_embedding.remove_embeddings_by_aspect(
+    crud_cluster_embedding.delete_embeddings_by_aspect(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
-    crud_aspect_embedding.remove_embeddings_by_aspect(
+    crud_aspect_embedding.delete_embeddings_by_aspect(
         client=weaviate, project_id=aspect.project_id, aspect_id=aspect_id
     )
-    db_obj = crud_aspect.remove(db=db, id=aspect_id)
+    db_obj = crud_aspect.delete(db=db, id=aspect_id)
     return AspectRead.model_validate(db_obj)
 
 

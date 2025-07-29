@@ -104,5 +104,5 @@ def delete_by_id(
 ) -> ProjectMetadataRead:
     authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, metadata_id)
 
-    db_obj = crud_project_meta.remove(db=db, id=metadata_id)
+    db_obj = crud_project_meta.delete(db=db, id=metadata_id)
     return ProjectMetadataRead.model_validate(db_obj)

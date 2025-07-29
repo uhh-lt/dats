@@ -11,7 +11,9 @@ class CRUDClusterEmbedding(CRUDBase[ClusterObjectIdentifier, ClusterCollection])
     CRUD operations for cluster embeddings in Weaviate
     """
 
-    def remove_embeddings_by_aspect(
+    ### DELETE OPERATIONS ###
+
+    def delete_embeddings_by_aspect(
         self, client: WeaviateClient, project_id: int, aspect_id: int
     ) -> None:
         """
@@ -26,6 +28,8 @@ class CRUDClusterEmbedding(CRUDBase[ClusterObjectIdentifier, ClusterCollection])
                     self.collection_class.properties["aspect_id"].name
                 ).equal(aspect_id),
             )
+
+    ### OTHER OPERATIONS ###
 
     def find_embeddings_by_aspect_id(
         self, client: WeaviateClient, project_id: int, aspect_id: int

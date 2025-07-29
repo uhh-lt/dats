@@ -39,6 +39,8 @@ class CRUDSourceDocumentMetadata(
         SourceDocumentMetadataUpdate,
     ]
 ):
+    ### CREATE OPERATIONS ###
+
     def create(
         self, db: Session, *, create_dto: SourceDocumentMetadataCreate
     ) -> SourceDocumentMetadataORM:
@@ -60,47 +62,7 @@ class CRUDSourceDocumentMetadata(
 
         return metadata_orm
 
-    def update(
-        self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
-    ) -> SourceDocumentMetadataORM:
-        db_obj = self.read(db=db, id=metadata_id)
-        if db_obj.project_metadata.read_only:
-            logger.warning(
-                (
-                    f"Cannot update read-only SourceDocumentMetadata {db_obj.project_metadata.key} from"
-                    f" SourceDocument {db_obj.source_document_id}!"
-                )
-            )
-            return db_obj
-        else:
-            # check if value has the correct type
-            project_metadata = ProjectMetadataRead.model_validate(
-                db_obj.project_metadata
-            )
-            if not is_correct_type(project_metadata.metatype, update_dto):
-                raise ValueError(
-                    f"provided value has the wrong type (need {project_metadata.metatype})"
-                )
-
-            # update metadata
-            metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
-
-            return metadata_orm
-
-    def update_bulk(
-        self, db: Session, *, update_dtos: List[SourceDocumentMetadataBulkUpdate]
-    ) -> List[SourceDocumentMetadataORM]:
-        db_objs = []
-        for update_dto in update_dtos:
-            db_obj = self.update(
-                db=db,
-                metadata_id=update_dto.id,
-                update_dto=SourceDocumentMetadataUpdate(
-                    **update_dto.model_dump(exclude={"id"})
-                ),
-            )
-            db_objs.append(db_obj)
-        return db_objs
+    ### READ OPERATIONS ###
 
     def read_by_project(
         self,
@@ -150,11 +112,6 @@ class CRUDSourceDocumentMetadata(
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, key=key)
         return db_obj
 
-    def delete_by_project_metadata(self, db: Session, *, project_metadata_id: int):
-        db.query(self.model).filter(
-            SourceDocumentMetadataORM.project_metadata_id == project_metadata_id
-        ).delete()
-
     def read_by_sdoc(
         self, db: Session, sdoc_id: int
     ) -> List[SourceDocumentMetadataORM]:
@@ -164,6 +121,57 @@ class CRUDSourceDocumentMetadata(
             .all()
         )
         return db_objs
+
+    ### UPDATE OPERATIONS ###
+
+    def update(
+        self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
+    ) -> SourceDocumentMetadataORM:
+        db_obj = self.read(db=db, id=metadata_id)
+        if db_obj.project_metadata.read_only:
+            logger.warning(
+                (
+                    f"Cannot update read-only SourceDocumentMetadata {db_obj.project_metadata.key} from"
+                    f" SourceDocument {db_obj.source_document_id}!"
+                )
+            )
+            return db_obj
+        else:
+            # check if value has the correct type
+            project_metadata = ProjectMetadataRead.model_validate(
+                db_obj.project_metadata
+            )
+            if not is_correct_type(project_metadata.metatype, update_dto):
+                raise ValueError(
+                    f"provided value has the wrong type (need {project_metadata.metatype})"
+                )
+
+            # update metadata
+            metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
+
+            return metadata_orm
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: List[SourceDocumentMetadataBulkUpdate]
+    ) -> List[SourceDocumentMetadataORM]:
+        db_objs = []
+        for update_dto in update_dtos:
+            db_obj = self.update(
+                db=db,
+                metadata_id=update_dto.id,
+                update_dto=SourceDocumentMetadataUpdate(
+                    **update_dto.model_dump(exclude={"id"})
+                ),
+            )
+            db_objs.append(db_obj)
+        return db_objs
+
+    ### DELETE OPERATIONS ###
+
+    def delete_by_project_metadata(self, db: Session, *, project_metadata_id: int):
+        db.query(self.model).filter(
+            SourceDocumentMetadataORM.project_metadata_id == project_metadata_id
+        ).delete()
 
 
 crud_sdoc_meta = CRUDSourceDocumentMetadata(SourceDocumentMetadataORM)

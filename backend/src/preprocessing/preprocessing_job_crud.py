@@ -17,72 +17,7 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 class CRUDPreprocessingJob(
     CRUDBase[PreprocessingJobORM, PreprocessingJobCreate, PreprocessingJobUpdate]
 ):
-    def read(self, db: Session, uuid: str) -> PreprocessingJobORM:
-        db_obj = db.query(self.model).filter(self.model.id == uuid).first()
-        if db_obj is None:
-            raise NoSuchElementError(self.model, id=uuid)
-        return db_obj
-
-    def read_by_ids(self, db: Session, uuids: List[str]) -> List[PreprocessingJobORM]:
-        return db.query(self.model).filter(self.model.id.in_(uuids)).all()
-
-    def read_by_proj_id(self, db: Session, proj_id: int) -> List[PreprocessingJobORM]:
-        return db.query(self.model).filter(self.model.project_id == proj_id).all()
-
-    def read_ids_by_proj_id(self, db: Session, proj_id: int) -> List[str]:
-        res = db.query(self.model.id).filter(self.model.project_id == proj_id).all()
-        if res is None or len(res) == 0:
-            return []
-        return list(map(lambda r: str(r[0]), res))
-
-    def read_ids_by_proj_id_and_status(
-        self, db: Session, proj_id: int, status: BackgroundJobStatus
-    ) -> List[str]:
-        res = (
-            db.query(self.model.id)
-            .filter(self.model.project_id == proj_id, self.model.status == str(status))
-            .all()
-        )
-        if res is None or len(res) == 0:
-            return []
-        return list(map(lambda r: str(r[0]), res))
-
-    def get_status_by_id(self, db: Session, uuid: str) -> BackgroundJobStatus:
-        db_str_obj = db.query(self.model.status).filter(self.model.id == uuid).scalar()
-        if not db_str_obj:
-            raise NoSuchElementError(self.model, id=uuid)
-        return BackgroundJobStatus(db_str_obj)
-
-    def get_number_of_running_or_waiting_payloads(self, db: Session, uuid: str) -> int:
-        from preprocessing.preprocessing_job_payload_orm import (
-            PreprocessingJobPayloadORM,
-        )
-
-        # SELECT COUNT(ppjp)
-        #  FROM preprocessingjob ppj
-        #  JOIN preprocessingjobpayload ppjp ON ppj.id = ppjp.prepro_job_id
-        #  WHERE ppjp.status = 'Running' OR ppjp.status = 'Waiting'
-
-        query = (
-            db.query(func.count(PreprocessingJobPayloadORM.id))
-            .join(
-                self.model,
-                self.model.id == PreprocessingJobPayloadORM.prepro_job_id,
-            )
-            .filter(
-                and_(
-                    self.model.id == uuid,
-                    or_(
-                        PreprocessingJobPayloadORM.status
-                        == BackgroundJobStatus.RUNNING.value,
-                        PreprocessingJobPayloadORM.status
-                        == BackgroundJobStatus.WAITING.value,
-                    ),
-                )
-            )
-        )
-
-        return query.scalar()
+    ### CREATE OPERATIONS ###
 
     def create(
         self, db: Session, *, create_dto: PreprocessingJobCreate
@@ -113,6 +48,77 @@ class CRUDPreprocessingJob(
     ) -> List[PreprocessingJobORM]:
         raise NotImplementedError()
 
+    ### READ OPERATIONS ###
+
+    def read(self, db: Session, uuid: str) -> PreprocessingJobORM:
+        db_obj = db.query(self.model).filter(self.model.id == uuid).first()
+        if db_obj is None:
+            raise NoSuchElementError(self.model, id=uuid)
+        return db_obj
+
+    def read_by_ids(self, db: Session, uuids: List[str]) -> List[PreprocessingJobORM]:
+        return db.query(self.model).filter(self.model.id.in_(uuids)).all()
+
+    def read_by_proj_id(self, db: Session, proj_id: int) -> List[PreprocessingJobORM]:
+        return db.query(self.model).filter(self.model.project_id == proj_id).all()
+
+    def read_ids_by_proj_id(self, db: Session, proj_id: int) -> List[str]:
+        res = db.query(self.model.id).filter(self.model.project_id == proj_id).all()
+        if res is None or len(res) == 0:
+            return []
+        return list(map(lambda r: str(r[0]), res))
+
+    def read_ids_by_proj_id_and_status(
+        self, db: Session, proj_id: int, status: BackgroundJobStatus
+    ) -> List[str]:
+        res = (
+            db.query(self.model.id)
+            .filter(self.model.project_id == proj_id, self.model.status == str(status))
+            .all()
+        )
+        if res is None or len(res) == 0:
+            return []
+        return list(map(lambda r: str(r[0]), res))
+
+    def read_status_by_id(self, db: Session, uuid: str) -> BackgroundJobStatus:
+        db_str_obj = db.query(self.model.status).filter(self.model.id == uuid).scalar()
+        if not db_str_obj:
+            raise NoSuchElementError(self.model, id=uuid)
+        return BackgroundJobStatus(db_str_obj)
+
+    def read_number_of_running_or_waiting_payloads(self, db: Session, uuid: str) -> int:
+        from preprocessing.preprocessing_job_payload_orm import (
+            PreprocessingJobPayloadORM,
+        )
+
+        # SELECT COUNT(ppjp)
+        #  FROM preprocessingjob ppj
+        #  JOIN preprocessingjobpayload ppjp ON ppj.id = ppjp.prepro_job_id
+        #  WHERE ppjp.status = 'Running' OR ppjp.status = 'Waiting'
+
+        query = (
+            db.query(func.count(PreprocessingJobPayloadORM.id))
+            .join(
+                self.model,
+                self.model.id == PreprocessingJobPayloadORM.prepro_job_id,
+            )
+            .filter(
+                and_(
+                    self.model.id == uuid,
+                    or_(
+                        PreprocessingJobPayloadORM.status
+                        == BackgroundJobStatus.RUNNING.value,
+                        PreprocessingJobPayloadORM.status
+                        == BackgroundJobStatus.WAITING.value,
+                    ),
+                )
+            )
+        )
+
+        return query.scalar()
+
+    ### UPDATE OPERATIONS ###
+
     def update(
         self, db: Session, *, uuid: str, update_dto: PreprocessingJobUpdate
     ) -> Optional[PreprocessingJobORM]:
@@ -128,7 +134,9 @@ class CRUDPreprocessingJob(
 
         return db_obj
 
-    def remove(self, db: Session, *, uuid: str) -> PreprocessingJobORM:
+    ### DELETE OPERATIONS ###
+
+    def delete(self, db: Session, *, uuid: str) -> PreprocessingJobORM:
         db_obj = self.read(db=db, uuid=uuid)
         # delete the ORM after the action created so that we can read its ID
         db.delete(db_obj)

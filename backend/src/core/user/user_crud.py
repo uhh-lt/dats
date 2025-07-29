@@ -19,6 +19,8 @@ SYSTEM_USER_IDS = [
 
 
 class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
+    ### CREATE OPERATIONS ###
+
     def create(self, db: Session, *, create_dto: UserCreate) -> UserORM:
         # Flo: hashes the PW before storing in DB
         hashed_pwd = generate_password_hash(create_dto.password)
@@ -41,12 +43,7 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def update(self, db: Session, *, id: int, update_dto: UserUpdate) -> UserORM:
-        # Flo: hashes the PW before storing in DB
-        if update_dto.password:
-            hashed_pwd = generate_password_hash(update_dto.password)
-            update_dto.password = hashed_pwd
-        return super().update(db=db, id=id, update_dto=update_dto)
+    ### READ OPERATIONS ###
 
     def read_by_email(self, db: Session, *, email: str) -> UserORM:
         # Flo: email is unique so there can be only one, which is why we use first() here
@@ -68,6 +65,17 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
             .first()
         )
         return user
+
+    ### UPDATE OPERATIONS ###
+
+    def update(self, db: Session, *, id: int, update_dto: UserUpdate) -> UserORM:
+        # Flo: hashes the PW before storing in DB
+        if update_dto.password:
+            hashed_pwd = generate_password_hash(update_dto.password)
+            update_dto.password = hashed_pwd
+        return super().update(db=db, id=id, update_dto=update_dto)
+
+    ### OTHER OPERATIONS ###
 
     def authenticate(self, db: Session, user_login: UserLogin) -> Optional[UserORM]:
         try:

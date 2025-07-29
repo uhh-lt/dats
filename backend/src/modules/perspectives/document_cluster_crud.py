@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 class CRUDDocumentCluster(
     CRUDBase[DocumentClusterORM, DocumentClusterCreate, DocumentClusterUpdate]
 ):
+    ### READ OPERATIONS ###
+
     def read(self, db: Session, id: tuple[int, int]) -> DocumentClusterORM:
         """
         Read a DocumentClusterORM by a tuple of (sdoc_id, cluster_id).
@@ -66,6 +68,8 @@ class CRUDDocumentCluster(
             .all()
         )
 
+    ### UPDATE OPERATIONS ###
+
     def update(
         self,
         db: Session,
@@ -116,6 +120,8 @@ class CRUDDocumentCluster(
         db.add_all(db_objects)
         db.commit()
         return db_objects
+
+    ### OTHER OPERATIONS ###
 
     def merge_clusters(
         self,
@@ -229,9 +235,6 @@ class CRUDDocumentCluster(
         db.commit()
 
         return results.rowcount if results.rowcount is not None else 0
-
-
-crud_document_cluster = CRUDDocumentCluster(DocumentClusterORM)
 
 
 crud_document_cluster = CRUDDocumentCluster(DocumentClusterORM)

@@ -82,7 +82,7 @@ def get_all_doctagrecommendations_from_job(
         )
 
     affected_sdoc_ids = list(sdoc2recommendations.keys())
-    sdoc2tags = crud_document_tag.get_tags_for_documents(
+    sdoc2tags = crud_document_tag.read_tags_for_documents(
         db=db, sdoc_ids=affected_sdoc_ids
     )
 
