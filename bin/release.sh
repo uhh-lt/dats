@@ -3,13 +3,13 @@
 set -euo pipefail
 
 if [ "${1:-}" = "" ]; then
-    echo "Please provide a version parameter, e.g. release.sh 0.0.3"
-    exit 1
+	echo "Please provide a version parameter, e.g. release.sh 0.0.3"
+	exit 1
 fi
 
 if [ "$(git diff-index --cached HEAD --)" ]; then
-    echo "There are staged changes. Please run this script in a clean working directory."
-    exit 1
+	echo "There are staged changes. Please run this script in a clean working directory."
+	exit 1
 fi
 
 # Update .env.example file with the new version

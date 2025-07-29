@@ -1,8 +1,7 @@
 from typing import Callable, List
 
-from pydantic import BaseModel, Field
-
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from pydantic import BaseModel, Field
 
 
 class PipelineStep(BaseModel):

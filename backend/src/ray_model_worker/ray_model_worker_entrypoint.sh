@@ -7,36 +7,36 @@ set -e
 #  the docker-compose.
 
 if [ -z "$SPACY_MODELS_DIR" ]; then
-  echo "Error: SPACY_MODELS_DIR environment variable is not set."
-  exit 1
+	echo "Error: SPACY_MODELS_DIR environment variable is not set."
+	exit 1
 fi
 MODEL_ROOT=$SPACY_MODELS_DIR
 mkdir -p $MODEL_ROOT
 
 function download_and_install_spacy_model() {
-  if [ $# -ne 3 ]; then
-    echo "Wrong number of arguments for $0 !"
-  fi
+	if [ $# -ne 3 ]; then
+		echo "Wrong number of arguments for $0 !"
+	fi
 
-  MODEL_BASE=$1
-  MODEL=$2
-  MODEL_TGZ="${MODEL}.tar.gz"
-  CHECKSUM_SHA_256_TGZ=$3
+	MODEL_BASE=$1
+	MODEL=$2
+	MODEL_TGZ="${MODEL}.tar.gz"
+	CHECKSUM_SHA_256_TGZ=$3
 
-  if [ ! -d "${MODEL_ROOT}/${MODEL}" ]; then
-    echo "Downloading spaCy model '${MODEL}' ..."
-    wget -q -P "${MODEL_ROOT}" "https://github.com/explosion/spacy-models/releases/download/${MODEL}/${MODEL_TGZ}"
-    if [ ! "$(sha256sum ${MODEL_ROOT}/"${MODEL_TGZ}" | awk '{print$1}')" == "${CHECKSUM_SHA_256_TGZ}" ]; then
-      echo "spaCy model '${MODEL}' downloaded is corrupt!"
-      rm "${MODEL_ROOT}/${MODEL_TGZ}"
-      exit 1
-    fi
-    echo "Installing spaCy model '${MODEL}' ..."
-    tar -xzf "${MODEL_ROOT}/${MODEL_TGZ}" -C "${MODEL_ROOT}" --strip-components=2 "${MODEL}/${MODEL_BASE}/${MODEL}"
-    rm "${MODEL_ROOT}/${MODEL_TGZ}"
-  else
-    echo "spaCy model '${MODEL}' already installed!"
-  fi
+	if [ ! -d "${MODEL_ROOT}/${MODEL}" ]; then
+		echo "Downloading spaCy model '${MODEL}' ..."
+		wget -q -P "${MODEL_ROOT}" "https://github.com/explosion/spacy-models/releases/download/${MODEL}/${MODEL_TGZ}"
+		if [ ! "$(sha256sum ${MODEL_ROOT}/"${MODEL_TGZ}" | awk '{print$1}')" == "${CHECKSUM_SHA_256_TGZ}" ]; then
+			echo "spaCy model '${MODEL}' downloaded is corrupt!"
+			rm "${MODEL_ROOT}/${MODEL_TGZ}"
+			exit 1
+		fi
+		echo "Installing spaCy model '${MODEL}' ..."
+		tar -xzf "${MODEL_ROOT}/${MODEL_TGZ}" -C "${MODEL_ROOT}" --strip-components=2 "${MODEL}/${MODEL_BASE}/${MODEL}"
+		rm "${MODEL_ROOT}/${MODEL_TGZ}"
+	else
+		echo "spaCy model '${MODEL}' already installed!"
+	fi
 }
 
 # Flo: checksums and model names from https://github.com/explosion/spacy-models/releases/

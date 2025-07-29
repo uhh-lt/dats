@@ -1,14 +1,6 @@
 from pathlib import Path
 from typing import Tuple
 
-from modules.crawler.crawler_job_dto import CrawlerJobRead
-from modules.eximport.export_job_dto import ExportJobRead
-from modules.eximport.import_job_dto import ImportJobRead
-from modules.llm_assistant.llm_job_dto import LLMJobRead
-from modules.ml.ml_job_dto import MLJobRead
-from modules.perspectives.perspectives_job import PerspectivesJobRead
-from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-
 from core.celery.background_jobs.cota import start_cota_refinement_job_
 from core.celery.background_jobs.crawl import start_crawler_job_
 from core.celery.background_jobs.export import start_export_job_
@@ -25,6 +17,13 @@ from core.celery.background_jobs.preprocess import (
 )
 from core.celery.background_jobs.trainer import start_trainer_job_
 from core.celery.celery_worker import celery_worker
+from modules.crawler.crawler_job_dto import CrawlerJobRead
+from modules.eximport.export_job_dto import ExportJobRead
+from modules.eximport.import_job_dto import ImportJobRead
+from modules.llm_assistant.llm_job_dto import LLMJobRead
+from modules.ml.ml_job_dto import MLJobRead
+from modules.perspectives.perspectives_job import PerspectivesJobRead
+from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
 @celery_worker.task(

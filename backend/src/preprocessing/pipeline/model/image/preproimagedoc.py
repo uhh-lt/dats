@@ -1,9 +1,8 @@
 from typing import Dict, Set
 
-from pydantic import Field
-
 from preprocessing.pipeline.model.image.autobbox import AutoBBox
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
+from pydantic import Field
 
 
 class PreProImageDoc(PreProDocBase):

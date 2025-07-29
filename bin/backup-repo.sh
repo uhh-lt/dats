@@ -2,19 +2,19 @@
 
 # Ensure that the script is run from the root directory of the project
 if [ ! -d ".git" ]; then
-    echo "This script must be run from the root directory of the project."
-    exit 1
+	echo "This script must be run from the root directory of the project."
+	exit 1
 fi
 
 # Ensure that the directory backups/repo exists
 if [ ! -d "backups/repo" ]; then
-    mkdir -p backups/repo
+	mkdir -p backups/repo
 fi
 
 # Ensure that repo exists
 if [ ! -d "docker/backend_repo" ]; then
-    echo "The docker/backend_repo directory does not exist. Nothing to backup!"
-    exit 1
+	echo "The docker/backend_repo directory does not exist. Nothing to backup!"
+	exit 1
 fi
 
 # Create a tarball of the repo

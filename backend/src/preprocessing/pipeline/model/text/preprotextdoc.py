@@ -1,13 +1,12 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
-from pydantic import Field
-from ray_model_worker.dto.spacy import SpacyPipelineOutput
-
 from preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from preprocessing.pipeline.model.text.autosentanno import AutoSentAnno
 from preprocessing.pipeline.model.text.autospan import AutoSpan
 from preprocessing.pipeline.model.text.sentence import Sentence
+from pydantic import Field
+from ray_model_worker.dto.spacy import SpacyPipelineOutput
 
 
 class PreProTextDoc(PreProDocBase):
