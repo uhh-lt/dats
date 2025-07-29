@@ -2,9 +2,9 @@ from typing import Dict, List
 
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
-from core.project.project_dto import ProjectRead
+from core.project.project_crud import crud_project
 from core.user.user_crud import crud_user
-from core.user.user_dto import PublicUserRead, UserRead, UserUpdate
+from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
 from core.user.user_orm import UserORM
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -31,6 +31,23 @@ def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
 def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicUserRead:
     db_user = crud_user.read(db=db, id=user_id)
     return PublicUserRead.model_validate(db_user)
+
+
+@router.get(
+    "/{proj_id}/user",
+    response_model=List[UserRead],
+    summary="Returns all Users of the Project with the given ID",
+)
+def get_by_project(
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[UserRead]:
+    authz_user.assert_in_project(proj_id)
+
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    return [UserRead.model_validate(user) for user in proj_db_obj.users]
 
 
 @router.get(
@@ -76,15 +93,38 @@ def delete_me(
     return UserRead.model_validate(db_user)
 
 
-@router.get(
-    "/project",
-    response_model=List[ProjectRead],
-    summary="Returns all Projects of the logged-in User",
+@router.patch(
+    "/{proj_id}/user",
+    response_model=UserRead,
+    summary="Associates an existing User to the Project with the given ID if it exists",
 )
-def get_user_projects(
+def associate_user_to_project(
     *,
+    proj_id: int,
+    user: ProjectAddUser,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-) -> List[ProjectRead]:
-    db_obj = crud_user.read(db=db, id=authz_user.user.id)
-    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
+) -> UserRead:
+    authz_user.assert_in_project(proj_id)
+
+    user_db_obj = crud_user.read_by_email(db=db, email=user.email)
+    crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
+    return UserRead.model_validate(user_db_obj)
+
+
+@router.delete(
+    "/{proj_id}/user/{user_id}",
+    response_model=UserRead,
+    summary="Dissociates the Users with the Project with the given ID if it exists",
+)
+def dissociate_user_from_project(
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> UserRead:
+    authz_user.assert_in_project(proj_id)
+
+    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
+    return UserRead.model_validate(user_db_obj)

@@ -2,9 +2,6 @@ from typing import List
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import (
     BBoxAnnotationCreate,
@@ -14,6 +11,8 @@ from core.annotation.bbox_annotation_dto import (
 )
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
@@ -53,6 +52,26 @@ def get_by_id(
 
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     return BBoxAnnotationRead.model_validate(db_obj)
+
+
+@router.get(
+    "/sdoc/{sdoc_id}/user/{user_id}",
+    response_model=List[BBoxAnnotationRead],
+    summary="Returns all BBoxAnnotations of the User for the SourceDocument",
+)
+def get_by_sdoc_and_user(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[BBoxAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    bboxes = crud_bbox_anno.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id
+    )
+    return [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
 
 
 @router.patch(

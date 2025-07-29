@@ -35,6 +35,33 @@ def get_tree_by_id(
     return FolderTreeRead.model_validate(folder)
 
 
+@router.get(
+    "/project/{project_id}/tree",
+    response_model=List[FolderTreeRead],
+    summary="Returns the folder tree of the project with the given ID",
+)
+def get_tree_by_project(
+    project_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[FolderTreeRead]:
+    authz_user.assert_in_project(project_id)
+
+    folders = crud_folder.read_by_project(db=db, proj_id=project_id)
+
+    folder_map = {
+        folder.id: FolderTreeRead.model_validate(folder) for folder in folders
+    }
+
+    for folder in folders:
+        if folder.parent_id is not None:
+            parent_tree = folder_map.get(folder.parent_id)
+            if parent_tree:
+                parent_tree.children.append(folder_map[folder.id])
+
+    return [folder_map[folder.id] for folder in folders if folder.parent_id is None]
+
+
 @router.post("/", response_model=FolderRead)
 def create_folder(
     folder: FolderCreate,

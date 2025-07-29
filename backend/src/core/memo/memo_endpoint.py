@@ -14,6 +14,7 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
+from core.memo.memo_generation_service import generate_memo_ollama
 from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -188,3 +189,29 @@ def delete_by_id(
     memo = crud_memo.remove(db=db, id=memo_id)
 
     return crud_memo.get_memo_read_dto_from_orm(db, memo)
+
+
+@router.get(
+    "/generate_suggestion/{attached_obj_type}/{attached_obj_id}",
+    response_model=str,
+    summary="Generates a 1–2 sentence memo suggestion using LLM based on the attached object",
+)
+def generate_memo_suggestion(
+    *,
+    db: Session = Depends(get_db_session),
+    attached_obj_id: int,
+    attached_obj_type: AttachedObjectType,
+    authz_user: AuthzUser = Depends(),
+) -> str:
+    crud = attachedObject2Crud.get(attached_obj_type)
+    if crud is None:
+        raise ValueError("Invalid attached_object_type")
+
+    attached_object = crud.value.read(db=db, id=attached_obj_id)
+    proj_id = attached_object.get_project_id()
+    if proj_id is None:
+        raise ValueError("Attached object has no project")
+
+    authz_user.assert_in_project(project_id=proj_id)
+
+    return generate_memo_ollama(attached_object, db)

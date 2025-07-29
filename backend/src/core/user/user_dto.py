@@ -59,3 +59,7 @@ class UserAuthorizationHeaderData(BaseModel):
     refresh_token: str = Field(description="For obtaining a new access token")
     refresh_token_expires: datetime
     token_type: str = Field(description="Type of the Token")
+
+
+class ProjectAddUser(BaseModel):
+    email: EmailStr = Field(description="E-Mail of the User")

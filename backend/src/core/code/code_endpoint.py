@@ -1,8 +1,11 @@
+from typing import List
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
+from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -45,6 +48,25 @@ def get_by_id(
 
     db_obj = crud_code.read(db=db, id=code_id)
     return CodeRead.model_validate(db_obj)
+
+
+@router.get(
+    "/project/{proj_id}",
+    response_model=List[CodeRead],
+    summary="Returns all Codes of the Project with the given ID",
+)
+def get_project_codes(
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> List[CodeRead]:
+    authz_user.assert_in_project(proj_id)
+
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    result = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
+    result.sort(key=lambda c: c.id)
+    return result
 
 
 @router.patch(

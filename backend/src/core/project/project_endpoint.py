@@ -1,30 +1,22 @@
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.code.code_dto import CodeRead
-from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderTreeRead
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
 from core.memo.memo_utils import get_object_memo_for_user
-from core.metadata.project_metadata_crud import crud_project_meta
-from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
 from core.project.project_dto import (
-    ProjectAddUser,
     ProjectCreate,
     ProjectRead,
     ProjectUpdate,
 )
-from core.tag.document_tag_dto import DocumentTagRead
 from core.user.user_crud import crud_user
-from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.crud_base import NoSuchElementError
@@ -129,122 +121,6 @@ def upload_project_sdoc(
     )
 
 
-@router.patch(
-    "/{proj_id}/user",
-    response_model=UserRead,
-    summary="Associates an existing User to the Project with the given ID if it exists",
-)
-def associate_user_to_project(
-    *,
-    proj_id: int,
-    user: ProjectAddUser,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> UserRead:
-    authz_user.assert_in_project(proj_id)
-
-    user_db_obj = crud_user.read_by_email(db=db, email=user.email)
-    crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
-    return UserRead.model_validate(user_db_obj)
-
-
-@router.delete(
-    "/{proj_id}/user/{user_id}",
-    response_model=UserRead,
-    summary="Dissociates the Users with the Project with the given ID if it exists",
-)
-def dissociate_user_from_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> UserRead:
-    authz_user.assert_in_project(proj_id)
-
-    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
-    return UserRead.model_validate(user_db_obj)
-
-
-@router.get(
-    "/{proj_id}/user",
-    response_model=List[UserRead],
-    summary="Returns all Users of the Project with the given ID",
-)
-def get_project_users(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[UserRead]:
-    authz_user.assert_in_project(proj_id)
-
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [UserRead.model_validate(user) for user in proj_db_obj.users]
-
-
-@router.get(
-    "/{proj_id}/code",
-    response_model=List[CodeRead],
-    summary="Returns all Codes of the Project with the given ID",
-)
-def get_project_codes(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[CodeRead]:
-    authz_user.assert_in_project(proj_id)
-
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
-    result = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
-    result.sort(key=lambda c: c.id)
-    return result
-
-
-@router.get(
-    "/{proj_id}/tag",
-    response_model=List[DocumentTagRead],
-    summary="Returns all DocumentTags of the Project with the given ID",
-)
-def get_project_tags(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[DocumentTagRead]:
-    authz_user.assert_in_project(proj_id)
-
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
-
-
-@router.get(
-    "/{proj_id}/user/memo",
-    response_model=List[MemoRead],
-    summary="Returns all Memos of the Project from the logged-in User",
-)
-def get_user_memos_of_project(
-    *,
-    proj_id: int,
-    only_starred: Optional[bool] = Query(
-        title="Only Starred",
-        description="If true only starred Memos are returned",
-        default=False,
-    ),
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[MemoRead]:
-    authz_user.assert_in_project(proj_id)
-
-    db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=authz_user.user.id, proj_id=proj_id, only_starred=only_starred
-    )
-    return [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
-    ]
-
-
 @router.get(
     "/{proj_id}/memo/user",
     response_model=MemoRead,
@@ -314,45 +190,14 @@ def resolve_filename(
 
 
 @router.get(
-    "/{proj_id}/metadata",
-    response_model=List[ProjectMetadataRead],
-    summary="Returns all ProjectMetadata of the Project with the given ID if it exists",
+    "/user",
+    response_model=List[ProjectRead],
+    summary="Returns all Projects of the logged-in User",
 )
-def get_all_metadata(
+def get_user_projects(
     *,
     db: Session = Depends(get_db_session),
-    proj_id: int,
     authz_user: AuthzUser = Depends(),
-) -> List[ProjectMetadataRead]:
-    authz_user.assert_in_project(proj_id)
-
-    db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
-    metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
-    return metadata
-
-
-@router.get(
-    "/tree/{project_id}",
-    response_model=List[FolderTreeRead],
-    summary="Returns the folder tree of the project with the given ID",
-)
-def get_folder_tree(
-    project_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> List[FolderTreeRead]:
-    authz_user.assert_in_project(project_id)
-
-    folders = crud_folder.read_by_project(db=db, proj_id=project_id)
-
-    folder_map = {
-        folder.id: FolderTreeRead.model_validate(folder) for folder in folders
-    }
-
-    for folder in folders:
-        if folder.parent_id is not None:
-            parent_tree = folder_map.get(folder.parent_id)
-            if parent_tree:
-                parent_tree.children.append(folder_map[folder.id])
-
-    return [folder_map[folder.id] for folder in folders if folder.parent_id is None]
+) -> List[ProjectRead]:
+    db_obj = crud_user.read(db=db, id=authz_user.user.id)
+    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
