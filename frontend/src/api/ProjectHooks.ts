@@ -5,7 +5,6 @@ import { QueryKey } from "./QueryKey.ts";
 import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
-import { AnalysisService } from "./openapi/services/AnalysisService.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 // PROJECT QUERIES
@@ -87,15 +86,6 @@ const useUploadDocument = () =>
     },
   });
 
-// duplicates
-const useFindDuplicateTextDocuments = () =>
-  useMutation({
-    mutationFn: AnalysisService.findDuplicateTextSdocs,
-    meta: {
-      successMessage: () => "Document duplicate search completed",
-    },
-  });
-
 const ProjectHooks = {
   // project
   useGetAllProjects,
@@ -105,8 +95,6 @@ const ProjectHooks = {
   useDeleteProject,
   // sdoc
   useUploadDocument,
-  // duplicates
-  useFindDuplicateTextDocuments,
 };
 
 export default ProjectHooks;

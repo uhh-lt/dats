@@ -131,6 +131,10 @@ export const QueryKey = {
   // all DocumentTagRecommendationLinkRead[] of a MLJob (by ml job id)
   TAG_RECOMMENDATIONS: "tagRecommendations",
 
+  // managed by JobHooks
+  // a single DuplicateFinderJobRead (by duplicate finder job id)
+  DUPLICATE_FINDER_JOB: "duplicateFinderJob",
+
   // tables
   SEARCH_TABLE: "search-document-table-data",
   SDOC_TABLE: "document-table-data",

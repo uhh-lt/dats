@@ -1,6 +1,6 @@
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, Card, CardContent, CardHeader, TextField } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -11,7 +11,8 @@ import {
 } from "material-react-table";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import JobHooks from "../../../api/JobHooks.ts";
+import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
@@ -47,11 +48,13 @@ function ProjectDuplicateDocuments() {
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
   // actions
-  const findDuplicateDocumentsMutation = ProjectHooks.useFindDuplicateTextDocuments();
+  const startDuplicateFinderJobMutation = JobHooks.useStartDuplicateFinderJob();
   const handleClickFindDuplicateTextDocuments = () => {
-    findDuplicateDocumentsMutation.mutate({
-      projId: projectId,
-      maxDifferentWords: maxDifferentWords,
+    startDuplicateFinderJobMutation.mutate({
+      requestBody: {
+        project_id: projectId,
+        max_different_words: maxDifferentWords,
+      },
     });
   };
   const deleteDocumentsMutation = SdocHooks.useDeleteDocuments();
@@ -63,9 +66,11 @@ function ProjectDuplicateDocuments() {
       {
         onSuccess: () => {
           setRowSelection({});
-          findDuplicateDocumentsMutation.mutate({
-            projId: projectId,
-            maxDifferentWords: maxDifferentWords,
+          startDuplicateFinderJobMutation.mutate({
+            requestBody: {
+              project_id: projectId,
+              max_different_words: maxDifferentWords,
+            },
           });
         },
       },
@@ -78,21 +83,28 @@ function ProjectDuplicateDocuments() {
         selectedSdocIds = selectedSdocIds.concat(duplicateDocGroup.subRows.map((subRow) => subRow.sdocId).slice(1));
       }
     });
-    console.log(data);
-    console.log(selectedSdocIds);
     setRowSelection(
       selectedSdocIds.reduce((acc, sdocId) => ({ ...acc, [sdocId]: true }), {} as Record<string, boolean>),
     );
   };
 
+  // job data
+  const duplicateFinderJob = JobHooks.usePollDuplicateFinderJob(
+    startDuplicateFinderJobMutation.data?.job_id,
+    undefined,
+  );
+
   // computed
   const data = useMemo(() => {
-    if (findDuplicateDocumentsMutation.data === undefined) {
+    if (duplicateFinderJob.data === undefined) {
+      return [];
+    }
+    if (!duplicateFinderJob.data.output) {
       return [];
     }
 
     const result: DuplicateDocumentData[] = [];
-    findDuplicateDocumentsMutation.data.forEach((duplicateDocGroup, index) => {
+    duplicateFinderJob.data.output.duplicates.forEach((duplicateDocGroup, index) => {
       const duplicateDocGroupData: DuplicateDocumentData = {
         sdocId: index.toString(),
         subRows: duplicateDocGroup.length > 0 ? [] : undefined,
@@ -106,7 +118,7 @@ function ProjectDuplicateDocuments() {
     });
 
     return result;
-  }, [findDuplicateDocumentsMutation.data]);
+  }, [duplicateFinderJob.data]);
 
   // table
   const table = useMaterialReactTable<DuplicateDocumentData>({
@@ -125,9 +137,12 @@ function ProjectDuplicateDocuments() {
     },
     onRowSelectionChange: setRowSelection, //connect internal row selection state to your own
     state: {
-      rowSelection,
-      isLoading: findDuplicateDocumentsMutation.isPending,
-    }, //pass our managed row selection state to the table to use
+      rowSelection, //pass our managed row selection state to the table to use
+      isLoading:
+        startDuplicateFinderJobMutation.isPending ||
+        duplicateFinderJob.isLoading ||
+        (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED),
+    },
     // other
     filterFromLeafRows: true, //apply filtering to all rows instead of just parent rows
     getSubRows: (row) => row.subRows, //default
@@ -155,6 +170,8 @@ function ProjectDuplicateDocuments() {
         <Button
           color="error"
           disabled={!table.getIsSomeRowsSelected()}
+          loadingPosition="start"
+          loading={deleteDocumentsMutation.isPending}
           onClick={() => {
             const selectedSdocIds = table
               .getSelectedRowModel()
@@ -185,7 +202,13 @@ function ProjectDuplicateDocuments() {
       >
         <CardHeader
           title="Duplicate Finder"
-          subheader="Find duplicate documents based on their text content"
+          subheader={
+            <Typography>
+              Find duplicate documents based on their text content.
+              {duplicateFinderJob.data &&
+                ` Status: ${duplicateFinderJob.data.status} - ${duplicateFinderJob.data.status_message}`}
+            </Typography>
+          }
           action={
             <>
               <TextField
@@ -194,7 +217,7 @@ function ProjectDuplicateDocuments() {
                 value={maxDifferentWords}
                 onChange={(event) => setMaxDifferentWords(parseInt(event.target.value))}
                 type="number"
-                inputProps={{ min: 1, max: 10000 }}
+                slotProps={{ htmlInput: { min: 1, max: 10000 } }}
                 size="small"
                 sx={{ width: 150 }}
               />
@@ -203,7 +226,11 @@ function ProjectDuplicateDocuments() {
                 startIcon={<TroubleshootIcon />}
                 sx={{ ml: 1 }}
                 onClick={handleClickFindDuplicateTextDocuments}
-                loading={findDuplicateDocumentsMutation.isPending}
+                loading={
+                  startDuplicateFinderJobMutation.isPending ||
+                  duplicateFinderJob.isLoading ||
+                  (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED)
+                }
                 loadingPosition="start"
               >
                 Start
