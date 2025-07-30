@@ -332,9 +332,7 @@ class DATSAPI:
 
         r = requests.patch(
             self.BASE_PATH + "tag/bulk/link",
-            data=json.dumps(
-                {"source_document_ids": sdoc_ids, "document_tag_ids": tag_ids}
-            ),
+            data=json.dumps({"source_document_ids": sdoc_ids, "tag_ids": tag_ids}),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
