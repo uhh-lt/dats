@@ -11,6 +11,21 @@
       "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
+        "BACKEND_TYPE": "api",
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
+    },
+    {
+      "name": "rq",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/worker.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "BACKEND_TYPE": "worker",
         "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
     },

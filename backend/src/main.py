@@ -61,8 +61,8 @@ from repos.filesystem_repo import (
     SourceDocumentNotFoundInFilesystemError,
 )
 
-# import all endpoints dynamically
-endpoint_modules = import_by_suffix("_endpoint.py")
+# import all jobs dynamically
+import_by_suffix("_jobs.py")
 
 
 # custom method to generate OpenApi function names
@@ -222,6 +222,9 @@ def forbidden_error_handler(_, exc: ForbiddenError):
 def invalid_error_handler(_, exc: InvalidError):
     return PlainTextResponse(str(exc), status_code=HTTPStatus.BAD_REQUEST)
 
+
+# import all endpoints dynamically
+endpoint_modules = import_by_suffix("_endpoint.py")
 
 # register all endpoints dynamically
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])

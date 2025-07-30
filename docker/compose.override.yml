@@ -66,6 +66,10 @@ services:
     volumes:
       - ../backend/src:/dats_code/src
 
+  rq-worker:
+    volumes:
+      - ../backend/src:/dats_code/src
+
   dats-backend-api:
     volumes:
       - ../backend/src:/dats_code/src

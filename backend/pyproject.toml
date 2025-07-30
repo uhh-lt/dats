@@ -61,6 +61,7 @@ dependencies = [
     "readability-lxml==0.8.1",
     "redis==4.3",
     "rope==1.9.0",
+    "rq>=2.4.1",
     "scikit-learn==1.3.2",
     "scrapy==2.10.0",
     "scrapy-playwright==0.0.31",

@@ -1,0 +1,133 @@
+from typing import Callable, Dict, TypedDict, TypeVar
+from uuid import uuid4
+
+import redis
+import rq
+from common.singleton_meta import SingletonMeta
+from config import conf
+from loguru import logger
+from pydantic import BaseModel
+from systems.job_system.job_dto import JobInputBase
+
+InputT = TypeVar("InputT", bound=JobInputBase)
+OutputT = TypeVar("OutputT", bound=BaseModel)
+
+
+class RegisteredJob(TypedDict):
+    handler: Callable
+    input_type: type[JobInputBase]
+    output_type: type[BaseModel]
+    generate_endpoints: bool
+
+
+class JobService(metaclass=SingletonMeta):
+    def __new__(cls, *args, **kwargs):
+        try:
+            # setup redis
+            r_host = conf.redis.host
+            r_port = conf.redis.port
+            r_pass = conf.redis.password
+            rq_idx = conf.redis.rq_idx
+
+            cls.redis_conn = redis.Redis(
+                host=r_host, port=r_port, db=rq_idx, password=r_pass
+            )
+            assert cls.redis_conn.ping(), (
+                f"Couldn't connect to Redis {str(cls.redis_conn)} "
+                f"DB #{rq_idx} at {r_host}:{r_port}!"
+            )
+            logger.info(
+                f"Successfully connected to Redis {str(cls.redis_conn)} DB #{rq_idx}"
+            )
+
+        except Exception as e:
+            msg = f"Cannot connect to Redis DB - Error '{e}'"
+            logger.error(msg)
+            raise SystemExit(msg)
+
+        # Define priority queues
+        cls.queues = {
+            "high": rq.Queue("high", connection=cls.redis_conn),
+            "default": rq.Queue("default", connection=cls.redis_conn),
+            "low": rq.Queue("low", connection=cls.redis_conn),
+        }
+
+        cls.job_registry: Dict[str, RegisteredJob] = {}
+        return super(JobService, cls).__new__(cls)
+
+    def register_job_type(
+        self,
+        job_type: str,
+        handler_func: Callable[[InputT], OutputT],
+        input_type: type[InputT],
+        output_type: type[OutputT],
+        generate_endpoints: bool,
+    ) -> None:
+        self.job_registry[job_type] = {
+            "handler": handler_func,
+            "input_type": input_type,
+            "output_type": output_type,
+            "generate_endpoints": generate_endpoints,
+        }
+
+    def start_job(
+        self,
+        job_type: str,
+        payload: JobInputBase,
+        priority: str = "default",
+    ) -> rq.job.Job:
+        job_info = self.job_registry.get(job_type)
+        if not job_info:
+            raise ValueError(f"Unknown job type: {job_type}")
+        handler = job_info["handler"]
+        input_type = job_info["input_type"]
+
+        queue = self.queues.get(priority, self.queues["default"])
+
+        # Validate payload is of correct subclass type
+        input_obj = input_type.model_validate(payload.model_dump())
+
+        job_id = str(uuid4())
+        rq_job = queue.enqueue(
+            handler,
+            payload=input_obj,
+            job_id=job_id,
+            meta={
+                "type": job_type,
+                "status_message": "Job enqueued",
+                "project_id": input_obj.project_id,
+            },
+        )
+        return rq_job
+
+    def get_job(self, job_id: str) -> rq.job.Job:
+        return rq.job.Job.fetch(job_id, connection=self.redis_conn)
+
+    def get_jobs_by_project(
+        self,
+        job_type: str,
+        project_id: int,
+    ) -> list[rq.job.Job]:
+        jobs = []
+        for queue in self.queues.values():
+            for job in queue.get_jobs():
+                if (
+                    job.meta.get("type") == job_type
+                    and job.meta.get("project_id") == project_id
+                ):
+                    jobs.append(job)
+        return jobs
+
+    def stop_job(self, job_id: str) -> bool:
+        job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
+        if job and job.is_started:
+            job.cancel()
+            return True
+        return False
+
+    def retry_job(self, job_id: str) -> bool:
+        job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
+        if job and job.is_failed:
+            job.requeue()
+            return True
+        return False
