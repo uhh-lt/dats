@@ -173,41 +173,6 @@
         }
       }
     },
-    "/analysis/{proj_id}/find_duplicate_text_sdocs": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Returns groups of duplicate sdoc ids.",
-        "operationId": "find_duplicate_text_sdocs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "max_different_words",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Max Different Words" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "array", "items": { "type": "integer" } },
-                  "title": "Response Analysis-Find Duplicate Text Sdocs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/annoscaling/suggest": {
       "post": {
         "tags": ["annoscaling"],
@@ -1505,6 +1470,133 @@
         "operationId": "root_to_docs",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+        }
+      }
+    },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job result",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/duplicate_finder/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort DuplicateFinder job",
+        "operationId": "abort_duplicate_finder_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Abort Duplicate Finder Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/duplicate_finder/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry DuplicateFinder job",
+        "operationId": "retry_duplicate_finder_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Retry Duplicate Finder Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/duplicate_finder/project/{project_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all DuplicateFinder jobs by project",
+        "operationId": "get_duplicate_finder_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DuplicateFinderJobRead" },
+                  "title": "Response Job-Get Duplicate Finder Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
         }
       }
     },
@@ -7502,6 +7594,61 @@
         "required": ["ml_job_type"],
         "title": "DocumentEmbeddingParams"
       },
+      "DuplicateFinderInput": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID to search for duplicates"
+          },
+          "max_different_words": {
+            "type": "integer",
+            "title": "Max Different Words",
+            "description": "Number of different words allowed between duplicates"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "max_different_words"],
+        "title": "DuplicateFinderInput"
+      },
+      "DuplicateFinderJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "input": { "$ref": "#/components/schemas/DuplicateFinderInput", "description": "Input for the job" },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/DuplicateFinderOutput" }, { "type": "null" }],
+            "description": "Output for the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "input"],
+        "title": "DuplicateFinderJobRead"
+      },
+      "DuplicateFinderOutput": {
+        "properties": {
+          "duplicates": {
+            "items": { "items": { "type": "integer" }, "type": "array" },
+            "type": "array",
+            "title": "Duplicates",
+            "description": "List of found duplicate clusters"
+          }
+        },
+        "type": "object",
+        "required": ["duplicates"],
+        "title": "DuplicateFinderOutput"
+      },
       "ElasticSearchHit": {
         "properties": {
           "id": { "type": "integer", "title": "Id", "description": "The ID of the Document" },
@@ -8368,6 +8515,11 @@
         "type": "object",
         "required": ["is_oidc_enabled", "oidc_provider_name", "is_stable"],
         "title": "InstanceInfo"
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": ["queued", "finished", "failed", "started", "deferred", "scheduled", "stopped", "canceled"],
+        "title": "JobStatus"
       },
       "KeywordStat": {
         "properties": {
