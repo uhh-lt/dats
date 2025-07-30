@@ -14,7 +14,7 @@
   "python.analysis.autoFormatStrings": true,
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
-  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "./backend/.venv", "./docker"],
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "**/.venv", "**/docker"],
 
   // pytest
   "python.testing.unittestEnabled": false,

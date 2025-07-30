@@ -98,6 +98,7 @@ redis:
   host: localhost
   port: ${oc.env:REDIS_PORT, 13124}
   password: ${oc.env:REDIS_PASSWORD, dats123}
+  rq_idx: 10
   clients:
     export: 2
     crawler: 3

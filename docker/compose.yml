@@ -157,6 +157,77 @@ services:
     profiles:
       - background
 
+  rq-worker:
+    image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    healthcheck:
+      test: "/dats_code/.venv/bin/python /dats_code/src/worker.py healthcheck"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: /dats_code/src/rq_worker_entrypoint.sh
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
+    environment:
+      DATS_BACKEND_MODE: production
+      LOG_LEVEL: ${RQ_LOG_LEVEL:-info}
+      UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid namespace required}
+      POSTGRES_DB: ${POSTGRES_DB:-dats}
+      POSTGRES_USER: ${POSTGRES_USER:-datsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
+      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
+      OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
+      OLLAMA_PORT: ${OLLAMA_PORT:-11434}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma3:27b}
+      OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL:-gemma3:27b}
+      OLLAMA_EMB_MODEL: ${OLLAMA_EMB_MODEL:-snowflake-arctic-embed2:568m}
+      RAY_HOST: ${RAY_HOST:-ray}
+      RAY_PORT: ${RAY_PORT:-8000}
+      NUMBA_CACHE_DIR: /rq_cache/numba_cache
+    volumes:
+      - ./backend_repo:/tmp/dats
+      - ./rq_cache:/rq_cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+      rabbitmq:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+      weaviate:
+        condition: service_healthy
+        restart: true
+      elasticsearch:
+        condition: service_healthy
+        restart: true
+    networks:
+      - dats_network
+      - ollama_network
+      - ray_network
+    profiles:
+      - rq
+
+  rq-dashboard:
+    image: cjlapao/rq-dashboard:0.8.4
+    environment:
+      RQ_DASHBOARD_REDIS_URL: redis://:${REDIS_PASSWORD:-dats123}@redis:6379/10
+      RQ_DASHBOARD_USERNAME: ${RQ_DASHBOARD_USERNAME:-datsuser}
+      RQ_DASHBOARD_PASSWORD: ${RQ_DASHBOARD_PASSWORD:-dats123}
+    depends_on:
+      rq-worker:
+        condition: service_healthy
+        restart: true
+    ports:
+      - "${RQ_DASHBOARD_EXPOSED:-13136}:9181"
+    networks:
+      - dats_network
+
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     build:
@@ -217,6 +288,9 @@ services:
         condition: service_healthy
         restart: true
       celery-background-jobs-worker:
+        condition: service_healthy
+        restart: true
+      rq-worker:
         condition: service_healthy
         restart: true
     ports:

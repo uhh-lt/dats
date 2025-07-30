@@ -98,6 +98,7 @@ redis:
   host: redis
   port: 6379
   password: ${oc.env:REDIS_PASSWORD, dats123}
+  rq_idx: 10
   clients:
     export: 2
     crawler: 3
