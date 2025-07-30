@@ -293,7 +293,7 @@ class DATSAPI:
 
     def create_tag(self, name: str, description: str, color: str, proj_id: int):
         r = requests.put(
-            self.BASE_PATH + "doctag",
+            self.BASE_PATH + "tag",
             data=json.dumps(
                 {
                     "name": name,
@@ -311,7 +311,7 @@ class DATSAPI:
 
     def read_all_tags(self, proj_id: int):
         r = requests.get(
-            self.BASE_PATH + f"doctag/project/{proj_id}",
+            self.BASE_PATH + f"tag/project/{proj_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -331,7 +331,7 @@ class DATSAPI:
             return
 
         r = requests.patch(
-            self.BASE_PATH + "doctag/bulk/link",
+            self.BASE_PATH + "tag/bulk/link",
             data=json.dumps(
                 {"source_document_ids": sdoc_ids, "document_tag_ids": tag_ids}
             ),
