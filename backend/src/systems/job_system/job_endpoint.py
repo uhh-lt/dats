@@ -1,6 +1,7 @@
 from typing import Type
 
-from fastapi import APIRouter
+from core.auth.authz_user import AuthzUser
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, create_model
 from systems.job_system.job_dto import JobInputBase, JobRead
 from systems.job_system.job_service import JobService
@@ -25,64 +26,81 @@ def register_job_endpoints(
     )
 
     # Start job
-    async def start_job(payload: input_model):  # type: ignore
+    async def start_job(
+        payload: input_model,  # type: ignore
+        authz_user: AuthzUser = Depends(),
+    ):
+        authz_user.assert_in_project(payload.project_id)
         job = job_service.start_job(job_type=job_type, payload=payload)
         return JobReadModel.from_rq_job(job)
 
     router.add_api_route(
         f"/{job_type}",
         start_job,
+        name=f"start_{job_type}_job",
         methods=["POST"],
         response_model=JobReadModel,
         summary=f"Start {job_name} job",
     )
 
     # Get job result
-    async def get_job_by_id(job_id: str):
+    async def get_job_by_id(
+        job_id: str,
+        authz_user: AuthzUser = Depends(),
+    ):
         job = job_service.get_job(job_id)
+        authz_user.assert_in_project(job.meta["project_id"])
         return JobReadModel.from_rq_job(job)
 
     router.add_api_route(
         f"/{job_type}/{{job_id}}",
         get_job_by_id,
+        name=f"get_{job_type}_job_by_id",
         methods=["GET"],
         response_model=JobReadModel,
         summary=f"Get {job_name} job result",
     )
 
     # Abort job
-    async def abort_job(job_id: str):
-        success = job_service.stop_job(job_id)
-        return success
+    async def abort_job(job_id: str, authz_user: AuthzUser = Depends()):
+        job = job_service.get_job(job_id)
+        authz_user.assert_in_project(job.meta["project_id"])
+        return job_service.stop_job(job_id)
 
     router.add_api_route(
         f"/{job_type}/{{job_id}}/abort",
         abort_job,
+        name=f"abort_{job_type}_job",
         methods=["POST"],
         response_model=bool,
         summary=f"Abort {job_name} job",
     )
 
     # Retry job
-    async def retry_job(job_id: str):
+    async def retry_job(job_id: str, authz_user: AuthzUser = Depends()):
+        job = job_service.get_job(job_id)
+        authz_user.assert_in_project(job.meta["project_id"])
         return job_service.retry_job(job_id)
 
     router.add_api_route(
         f"/{job_type}/{{job_id}}/retry",
         retry_job,
+        name=f"retry_{job_type}_job",
         methods=["POST"],
         response_model=bool,
         summary=f"Retry {job_name} job",
     )
 
     # Get all jobs by project
-    async def get_jobs_by_project(project_id: int):
+    async def get_jobs_by_project(project_id: int, authz_user: AuthzUser = Depends()):
+        authz_user.assert_in_project(project_id)
         jobs = job_service.get_jobs_by_project(job_type, project_id)
         return [JobReadModel.from_rq_job(job) for job in jobs]
 
     router.add_api_route(
         f"/{job_type}/project/{{project_id}}",
         get_jobs_by_project,
+        name=f"get_{job_type}_jobs_by_project",
         methods=["GET"],
         response_model=list[JobReadModel],
         summary=f"Get all {job_name} jobs by project",
