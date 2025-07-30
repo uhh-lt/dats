@@ -1103,7 +1103,7 @@ def test_tag_and_memo(client, api_user, api_document, api_project) -> None:
     assert tag1_memo_read_response["user_id"] == alice["id"]
     assert tag1_memo_read_response["project_id"] == tag1["project_id"]
     assert tag1_memo_read_response["attached_object_id"] == tag1["id"]
-    assert tag1_memo_read_response["attached_object_type"] == "tags"
+    assert tag1_memo_read_response["attached_object_type"] == "tag"
 
     # Alice removes the tag
     tag1_delete_response = client.delete(
