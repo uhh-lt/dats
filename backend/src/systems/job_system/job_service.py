@@ -8,7 +8,7 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
 from pydantic import BaseModel
-from systems.job_system.job_dto import EndpointGeneration, JobInputBase
+from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=BaseModel)
@@ -19,6 +19,7 @@ class RegisteredJob(TypedDict):
     input_type: type[JobInputBase]
     output_type: type[BaseModel]
     generate_endpoints: EndpointGeneration
+    priority: JobPriority
 
 
 class JobService(metaclass=SingletonMeta):
@@ -48,9 +49,9 @@ class JobService(metaclass=SingletonMeta):
 
         # Define priority queues
         cls.queues = {
-            "high": rq.Queue("high", connection=cls.redis_conn),
-            "default": rq.Queue("default", connection=cls.redis_conn),
-            "low": rq.Queue("low", connection=cls.redis_conn),
+            JobPriority.HIGH: rq.Queue("high", connection=cls.redis_conn),
+            JobPriority.DEFAULT: rq.Queue("default", connection=cls.redis_conn),
+            JobPriority.LOW: rq.Queue("low", connection=cls.redis_conn),
         }
 
         cls.job_registry: Dict[str, RegisteredJob] = {}
@@ -62,6 +63,7 @@ class JobService(metaclass=SingletonMeta):
         handler_func: Callable[[InputT], OutputT],
         input_type: type[InputT],
         output_type: type[OutputT],
+        priority: JobPriority,
         generate_endpoints: EndpointGeneration,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
@@ -77,13 +79,14 @@ class JobService(metaclass=SingletonMeta):
             "input_type": input_type,
             "output_type": output_type,
             "generate_endpoints": generate_endpoints,
+            "priority": priority,
         }
 
     def start_job(
         self,
         job_type: str,
         payload: JobInputBase,
-        priority: str = "default",
+        priority: JobPriority | None = None,
     ) -> rq.job.Job:
         job_info = self.job_registry.get(job_type)
         if not job_info:
@@ -91,7 +94,8 @@ class JobService(metaclass=SingletonMeta):
         handler = job_info["handler"]
         input_type = job_info["input_type"]
 
-        queue = self.queues.get(priority, self.queues["default"])
+        # priority can be used to override the registered priority level
+        queue = self.queues[job_info["priority"] if priority is None else priority]
 
         # Validate payload is of correct subclass type
         input_obj = input_type.model_validate(payload.model_dump())
