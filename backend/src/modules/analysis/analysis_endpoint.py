@@ -15,7 +15,6 @@ from modules.analysis.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
 from modules.analysis.document_sampler import document_sampler_by_tags
-from modules.analysis.duplicate_finder import find_duplicates
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -99,19 +98,3 @@ def sample_sdocs_by_tags(
     return document_sampler_by_tags(
         project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )
-
-
-@router.post(
-    "/{proj_id}/find_duplicate_text_sdocs",
-    response_model=list[list[int]],
-    summary="Returns groups of duplicate sdoc ids.",
-)
-def find_duplicate_text_sdocs(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    max_different_words: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[list[int]]:
-    authz_user.assert_in_project(proj_id)
-    return find_duplicates(project_id=proj_id, max_different_words=max_different_words)
