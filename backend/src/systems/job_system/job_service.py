@@ -7,7 +7,7 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
 from pydantic import BaseModel
-from systems.job_system.job_dto import JobInputBase
+from systems.job_system.job_dto import EndpointGeneration, JobInputBase
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=BaseModel)
@@ -17,7 +17,7 @@ class RegisteredJob(TypedDict):
     handler: Callable
     input_type: type[JobInputBase]
     output_type: type[BaseModel]
-    generate_endpoints: bool
+    generate_endpoints: EndpointGeneration
 
 
 class JobService(metaclass=SingletonMeta):
@@ -61,7 +61,7 @@ class JobService(metaclass=SingletonMeta):
         handler_func: Callable[[InputT], OutputT],
         input_type: type[InputT],
         output_type: type[OutputT],
-        generate_endpoints: bool,
+        generate_endpoints: EndpointGeneration,
     ) -> None:
         self.job_registry[job_type] = {
             "handler": handler_func,
