@@ -55,7 +55,7 @@ class JobService(metaclass=SingletonMeta):
         cls.job_registry: Dict[str, RegisteredJob] = {}
         return super(JobService, cls).__new__(cls)
 
-    def register_job_type(
+    def register_job(
         self,
         job_type: str,
         handler_func: Callable[[InputT], OutputT],

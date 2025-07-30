@@ -19,7 +19,7 @@ def register_job(
         if os.environ.get("BACKEND_TYPE") == "api":
             from systems.job_system.job_service import JobService
 
-            JobService().register_job_type(
+            JobService().register_job(
                 job_type,
                 func,
                 input_type=input_type,
