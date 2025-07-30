@@ -227,6 +227,8 @@ services:
       - "${RQ_DASHBOARD_EXPOSED:-13136}:9181"
     networks:
       - dats_network
+    profiles:
+      - rq
 
   dats-backend-api:
     image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
