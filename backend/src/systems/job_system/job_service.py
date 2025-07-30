@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable, Dict, TypedDict, TypeVar
 from uuid import uuid4
 
@@ -63,6 +64,14 @@ class JobService(metaclass=SingletonMeta):
         output_type: type[OutputT],
         generate_endpoints: EndpointGeneration,
     ) -> None:
+        # Enforce that the only parameter is named 'payload'
+        sig = inspect.signature(handler_func)
+        params = list(sig.parameters.values())
+        if not params or len(params) != 1 or params[0].name != "payload":
+            raise ValueError(
+                f"The only parameter of function '{handler_func.__name__}' must be named 'payload'."
+            )
+
         self.job_registry[job_type] = {
             "handler": handler_func,
             "input_type": input_type,
