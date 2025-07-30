@@ -10,14 +10,17 @@ if TYPE_CHECKING:
 
 class WordFrequencyORM(ORMBase):
     sdoc_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True
+        Integer,
+        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="word_frequencies"
     )
 
-    word: Mapped[str] = mapped_column(String, primary_key=True)
-    count: Mapped[int] = mapped_column(Integer)
+    word: Mapped[str] = mapped_column(String, primary_key=True, index=True)
+    count: Mapped[int] = mapped_column(Integer, index=True)
 
     def get_project_id(self) -> int:
         return self.source_document.get_project_id()
