@@ -17,6 +17,12 @@ class JobStatus(str, enum.Enum):
     CANCELED = "canceled"
 
 
+class JobPriority(str, enum.Enum):
+    LOW = "low"
+    DEFAULT = "default"
+    HIGH = "high"
+
+
 class EndpointGeneration(str, enum.Enum):
     ALL = "all"  # Generate all endpoints
     MINIMAL = "minimal"  # Generate start and get_by_id endpoints

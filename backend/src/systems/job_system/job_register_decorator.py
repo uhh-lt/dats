@@ -2,7 +2,7 @@ import os
 from typing import Callable, TypeVar
 
 from pydantic import BaseModel
-from systems.job_system.job_dto import EndpointGeneration, JobInputBase
+from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=BaseModel)
@@ -12,6 +12,7 @@ def register_job(
     job_type: str,
     input_type: type[InputT],
     output_type: type[OutputT],
+    priority: JobPriority,
     generate_endpoints: EndpointGeneration,
 ):
     def decorator(func: Callable[[InputT], OutputT]):
@@ -24,6 +25,7 @@ def register_job(
                 func,
                 input_type=input_type,
                 output_type=output_type,
+                priority=priority,
                 generate_endpoints=generate_endpoints,
             )
         return func
