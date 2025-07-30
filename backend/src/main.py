@@ -223,10 +223,13 @@ def invalid_error_handler(_, exc: InvalidError):
     return PlainTextResponse(str(exc), status_code=HTTPStatus.BAD_REQUEST)
 
 
-# import all endpoints dynamically
-endpoint_modules = import_by_suffix("_endpoint.py")
+# import & register all exception handlers dynamically
+exception_hanlders = import_by_suffix("_exception_handler.py")
+for eh in exception_hanlders:
+    eh.register_exception_handlers(app)
 
-# register all endpoints dynamically
+# import & register all endpoints dynamically
+endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
