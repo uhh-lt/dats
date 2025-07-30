@@ -167,7 +167,7 @@ class DATSAPI:
                         "items": [
                             {
                                 "id": "asdf2",
-                                "column": "SD_DOCUMENT_TAG_ID_LIST",
+                                "column": "SD_TAG_ID_LIST",
                                 "operator": "ID_LIST_CONTAINS",
                                 "value": tag,
                             }
