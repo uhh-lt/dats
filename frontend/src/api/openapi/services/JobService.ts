@@ -29,7 +29,7 @@ export class JobService {
     });
   }
   /**
-   * Get DuplicateFinder job result
+   * Get DuplicateFinder job
    * @returns DuplicateFinderJobRead Successful Response
    * @throws ApiError
    */
