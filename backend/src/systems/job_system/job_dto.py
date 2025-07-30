@@ -17,6 +17,12 @@ class JobStatus(str, enum.Enum):
     CANCELED = "canceled"
 
 
+class EndpointGeneration(str, enum.Enum):
+    ALL = "all"  # Generate all endpoints
+    MINIMAL = "minimal"  # Generate start and get_by_id endpoints
+    NONE = "none"  # Do not generate any endpoints
+
+
 class JobInputBase(BaseModel):
     project_id: int = Field(..., description="Project ID associated with the job")
 

@@ -13,6 +13,7 @@ from repos.db.sql_repo import SQLRepo
 from rq import get_current_job
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
+from systems.job_system.job_dto import EndpointGeneration
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -20,7 +21,7 @@ from systems.job_system.job_register_decorator import register_job
     job_type="duplicate_finder",
     input_type=DuplicateFinderInput,
     output_type=DuplicateFinderOutput,
-    generate_endpoints=True,
+    generate_endpoints=EndpointGeneration.MINIMAL,
 )
 def find_duplicates_job(
     payload: DuplicateFinderInput,
