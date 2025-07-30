@@ -20,6 +20,7 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/backend/src/worker.py",
+      "args": ["work"],
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}/backend",
