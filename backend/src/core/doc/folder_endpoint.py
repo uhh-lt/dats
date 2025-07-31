@@ -2,7 +2,13 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderRead, FolderTreeRead, FolderUpdate
+from core.doc.folder_dto import (
+    FolderCreate,
+    FolderRead,
+    FolderTreeRead,
+    FolderType,
+    FolderUpdate,
+)
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -58,6 +64,24 @@ def get_tree_by_project(
                 parent_tree.children.append(folder_map[folder.id])
 
     return [folder_map[folder.id] for folder in folders if folder.parent_id is None]
+
+
+@router.get(
+    "/project/{project_id}/folder/{folder_type}",
+    response_model=list[FolderRead],
+    summary="Returns the folders of the folder_type of the project with the given ID",
+)
+def get_folders_by_project_and_type(
+    project_id: int,
+    folder_type: FolderType,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> list[FolderRead]:
+    authz_user.assert_in_project(project_id)
+    folders = crud_folder.read_by_project_and_type(
+        db=db, proj_id=project_id, folder_type=folder_type
+    )
+    return [FolderRead.model_validate(folder) for folder in folders]
 
 
 @router.post("/", response_model=FolderRead)
