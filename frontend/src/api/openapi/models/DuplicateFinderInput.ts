@@ -4,7 +4,7 @@
 /* eslint-disable */
 export type DuplicateFinderInput = {
   /**
-   * Project ID to search for duplicates
+   * Project ID associated with the job
    */
   project_id: number;
   /**

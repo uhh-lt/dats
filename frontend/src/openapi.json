@@ -1291,6 +1291,46 @@
         }
       }
     },
+    "/folder/project/{project_id}/folder/{folder_type}": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Returns the folders of the folder_type of the project with the given ID",
+        "operationId": "get_folders_by_project_and_type",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "folder_type",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/FolderType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FolderRead" },
+                  "title": "Response Folder-Get Folders By Project And Type"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder/": {
       "post": {
         "tags": ["folder"],
@@ -1498,7 +1538,7 @@
     "/job/duplicate_finder/{job_id}": {
       "get": {
         "tags": ["job"],
-        "summary": "Get DuplicateFinder job result",
+        "summary": "Get DuplicateFinder job",
         "operationId": "get_duplicate_finder_job_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -7515,7 +7555,7 @@
           "project_id": {
             "type": "integer",
             "title": "Project Id",
-            "description": "Project ID to search for duplicates"
+            "description": "Project ID associated with the job"
           },
           "max_different_words": {
             "type": "integer",
