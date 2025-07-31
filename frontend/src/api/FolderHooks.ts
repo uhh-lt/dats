@@ -4,6 +4,7 @@ import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { FolderRead } from "./openapi/models/FolderRead.ts";
+import { FolderType } from "./openapi/models/FolderType.ts";
 import { FolderService } from "./openapi/services/FolderService.ts";
 
 // TAG QUERIES
@@ -17,8 +18,9 @@ const useProjectFoldersQuery = <T = FolderRead[]>({ select, enabled }: UseProjec
   return useQuery({
     queryKey: [QueryKey.PROJECT_FOLDERS, projectId],
     queryFn: () =>
-      FolderService.getTreeByProject({
+      FolderService.getFoldersByProjectAndType({
         projectId: projectId!,
+        folderType: FolderType.NORMAL,
       }),
     staleTime: 1000 * 60 * 5,
     select,
