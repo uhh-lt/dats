@@ -1,4 +1,5 @@
-import LabelIcon from "@mui/icons-material/Label";
+import FolderIcon from "@mui/icons-material/Folder";
+import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { FolderRead } from "../../../api/openapi/models/FolderRead.ts";
@@ -30,6 +31,19 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
     [dispatch],
   );
 
+  // Folder selection
+  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
+  const handleSelectedFolderIdChange = useCallback(
+    (_event: React.SyntheticEvent, folderId: string | string[] | null) => {
+      if (typeof folderId === "string") {
+        dispatch(SearchActions.setSelectedFolderId(parseInt(folderId)));
+      } else {
+        dispatch(SearchActions.setSelectedFolderId(-1)); // the root folder is -1
+      }
+    },
+    [dispatch],
+  );
+
   // local client state
   const [FolderFilter, setFolderFilter] = useState<string>("");
 
@@ -49,7 +63,7 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
       {folderTree && (
         <TreeExplorer
           sx={{ pt: 0 }}
-          dataIcon={LabelIcon}
+          dataIcon={FolderIcon}
           // data
           dataTree={folderTree}
           // filter
@@ -59,12 +73,20 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
           // expansion
           expandedItems={expandedFolderIds}
           onExpandedItemsChange={handleExpandedFolderIdsChange}
+          // selection
+          selectedItems={selectedFolderId}
+          onSelectedItemsChange={handleSelectedFolderIdChange}
           // actions
           onItemClick={onFolderClick ? handleFolderClick : undefined}
           // renderers
           renderActions={renderActions}
           // components
           listActions={<ListActions />}
+          // root node rendering
+          renderRoot={true}
+          disableRootActions={true}
+          // icons
+          rootIcon={InboxIcon}
         />
       )}
     </Box>

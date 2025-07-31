@@ -1,3 +1,4 @@
+import FolderIcon from "@mui/icons-material/Folder";
 import { AppBar, Box, BoxProps, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
@@ -47,6 +48,10 @@ function TreeExplorer<T extends NamedObjWithParent>({
   listActions = undefined,
   filterActions = undefined,
   dataIcon,
+  parentIcon = FolderIcon,
+  rootIcon = FolderIcon,
+  renderRoot = false,
+  disableRootActions = false,
   ...props
 }: TreeExplorerProps<T> & BoxProps) {
   // filter feature
@@ -151,7 +156,6 @@ function TreeExplorer<T extends NamedObjWithParent>({
         </TreeDataFilter>
       )}
       <DataTreeView
-        dataIcon={dataIcon}
         className="myFlexFillAllContainer"
         // data
         data={filteredDataTree.model}
@@ -171,6 +175,13 @@ function TreeExplorer<T extends NamedObjWithParent>({
         // renderers
         renderActions={wrapppedRenderActions}
         renderNode={renderNode}
+        // root node rendering
+        renderRoot={renderRoot}
+        disableRootActions={disableRootActions}
+        // icons
+        rootIcon={rootIcon}
+        parentIcon={parentIcon}
+        dataIcon={dataIcon}
       />
     </Box>
   );
