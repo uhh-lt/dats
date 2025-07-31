@@ -18,8 +18,8 @@ import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
+import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
-import { useCodesWithLevel } from "./useCodesWithLevel.ts";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -45,7 +45,7 @@ function CodeEditDialog() {
       return codes.data.filter((c) => c.id !== code?.id && !c.is_system);
     }
   }, [code, codes.data]);
-  const codeTree = useCodesWithLevel(parentCodes);
+  const codeTree = useWithLevel(parentCodes);
 
   // open/close dialog
   const isOpen = useAppSelector((state) => state.dialog.isCodeEditDialogOpen);

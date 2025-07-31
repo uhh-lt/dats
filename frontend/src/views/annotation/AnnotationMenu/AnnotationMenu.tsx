@@ -20,10 +20,10 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
-import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import MemoButton from "../../../components/Memo/MemoButton.tsx";
 import { CodeReadWithLevel } from "../../../components/TreeExplorer/CodeReadWithLevel.ts";
+import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { Annotation, Annotations } from "../Annotation.ts";
 import { ICode } from "../ICode.ts";
@@ -62,7 +62,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
     // computed
     const codes = useComputeCodesForSelection();
-    const codeTree = useCodesWithLevel(codes);
+    const codeTree = useWithLevel(codes);
     const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
       return codeTree.map((c) => ({
         ...c,

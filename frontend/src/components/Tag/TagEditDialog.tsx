@@ -15,9 +15,9 @@ import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
+import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
-import { useTagsWithLevel } from "./useTagsWithLevel.ts";
 
 function TagEditDialog() {
   const dispatch = useAppDispatch();
@@ -27,7 +27,7 @@ function TagEditDialog() {
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();
-  const tagTree = useTagsWithLevel(tags.data || []);
+  const tagTree = useWithLevel(tags.data || []);
 
   // open/close dialog
   const isOpen = useAppSelector((state) => state.dialog.isTagEditDialogOpen);

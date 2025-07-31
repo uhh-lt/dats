@@ -2,14 +2,14 @@ import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
 import TagHooks from "../../../../api/TagHooks.ts";
 import TagRenderer from "../../../Tag/TagRenderer.tsx";
-import { useTagsWithLevel } from "../../../Tag/useTagsWithLevel.ts";
+import { useWithLevel } from "../../../TreeExplorer/useWithLevel.ts";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
 const TagIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
   const projectTags = TagHooks.useGetAllTags();
   // transform flat list into hierarchical strcutre
-  const tagsWithLevel = useTagsWithLevel(projectTags.data || []);
+  const tagsWithLevel = useWithLevel(projectTags.data || []);
 
   const handleValueChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
