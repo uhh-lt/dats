@@ -24,7 +24,9 @@ function FolderExplorerActionMenu({ node }: FolderExplorerActionMenuProps) {
 
   return (
     <>
-      <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
+      <IconButton size="small" sx={{ p: 0 }} onClick={handleClick}>
+        {getIconComponent(Icon.CONTEXT_MENU)}
+      </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <MenuItem>
           <ListItemText>TODO {node.data.name}</ListItemText>

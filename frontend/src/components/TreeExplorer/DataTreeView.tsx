@@ -17,6 +17,10 @@ export interface DataTreeViewProps<T extends NamedObjWithParent> {
   renderNode?: (node: ITree<T>) => React.ReactNode;
   renderActions?: (node: ITree<T>) => React.ReactNode;
   dataIcon?: React.ElementType<SvgIconProps>;
+  renderRoot?: boolean;
+  disableRootActions?: boolean; // if true, the root node will not have actions
+  rootIcon?: React.ElementType<SvgIconProps>;
+  parentIcon?: React.ElementType<SvgIconProps>;
 }
 
 const defaultNodeRenderer = <T extends NamedObjWithParent>(node: ITree<T>) => (
@@ -30,12 +34,18 @@ function DataTreeView<T extends NamedObjWithParent>({
   renderActions,
   data,
   dataIcon,
+  renderRoot = false,
+  disableRootActions = false,
+  rootIcon = FolderIcon,
+  parentIcon = FolderIcon,
   ...props
 }: DataTreeViewProps<T> & TreeViewProps<boolean>) {
   const renderTree = useCallback(
-    (nodes: ITree<T>[]) => {
+    (nodes: ITree<T>[], isRoot = false) => {
       return nodes.map((node) => {
         const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+        // Use rootIcon for the root node if provided and isRoot is true
+        const iconToUse = isRoot ? rootIcon : hasChildren ? parentIcon : dataIcon ? dataIcon : AbcIcon;
         return (
           <TreeItem
             key={node.data.id}
@@ -46,22 +56,18 @@ function DataTreeView<T extends NamedObjWithParent>({
             }}
             label={
               <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0 }}>
-                <Box
-                  component={hasChildren ? FolderIcon : dataIcon ? dataIcon : AbcIcon}
-                  color={node.data.color}
-                  sx={{ mr: 1 }}
-                />
+                <Box component={iconToUse} color={node.data.color} sx={{ mr: 1 }} />
                 {renderNode(node)}
-                {renderActions ? renderActions(node) : undefined}
+                {renderActions && !(isRoot && disableRootActions) ? renderActions(node) : undefined}
               </Box>
             }
           >
-            {hasChildren && <React.Fragment> {renderTree(node.children!)}</React.Fragment>}
+            {hasChildren && <React.Fragment> {renderTree(node.children!, false)} </React.Fragment>}
           </TreeItem>
         );
       });
     },
-    [dataIcon, renderActions, renderNode],
+    [rootIcon, parentIcon, dataIcon, renderNode, renderActions, disableRootActions],
   );
 
   return (
@@ -73,7 +79,7 @@ function DataTreeView<T extends NamedObjWithParent>({
       }}
       {...props}
     >
-      {data.children && renderTree(data.children)}
+      {renderRoot ? renderTree([data], true) : data.children && renderTree(data.children)}
     </SimpleTreeView>
   );
 }
