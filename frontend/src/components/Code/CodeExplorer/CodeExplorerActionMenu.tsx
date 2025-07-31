@@ -4,12 +4,12 @@ import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectTy
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
 
 interface CodeExplorerActionMenuProps {
-  node: IDataTree;
+  node: ITree<CodeRead>;
 }
 
 function CodeExplorerActionMenu({ node }: CodeExplorerActionMenuProps) {

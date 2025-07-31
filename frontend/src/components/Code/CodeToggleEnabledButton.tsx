@@ -5,9 +5,9 @@ import Tooltip from "@mui/material/Tooltip";
 import React, { memo, useCallback } from "react";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { IDataTree } from "../TreeExplorer/IDataTree.ts";
+import { ITree } from "../TreeExplorer/ITree.ts";
 
-function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: IDataTree | null | undefined }) {
+function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> | null | undefined }) {
   const isDisabled = (code?.data as CodeRead).enabled === false;
   const updateCodeMutation = CodeHooks.useUpdateCode();
 

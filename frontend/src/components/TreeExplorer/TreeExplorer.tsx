@@ -4,12 +4,12 @@ import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Node } from "ts-tree-structure";
 import DataTreeView, { DataTreeViewProps } from "./DataTreeView.tsx";
-import { IDataTree } from "./IDataTree.ts";
+import { ITree, NamedObjWithParent } from "./ITree.ts";
 import TreeDataFilter from "./TreeDataFilter.tsx";
 import { filterTree, flatTree } from "./TreeUtils.ts";
 
-export interface TreeExplorerProps extends Omit<DataTreeViewProps, "data"> {
-  dataTree: Node<IDataTree>;
+export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<DataTreeViewProps<T>, "data"> {
+  dataTree: Node<ITree<T>>;
   toolbarTitle?: string;
   // checkboxes
   showCheckboxes?: boolean;
@@ -30,7 +30,7 @@ export interface TreeExplorerProps extends Omit<DataTreeViewProps, "data"> {
   filterActions?: React.ReactNode;
 }
 
-function TreeExplorer({
+function TreeExplorer<T extends NamedObjWithParent>({
   toolbarTitle,
   showCheckboxes,
   showFilter,
@@ -48,7 +48,7 @@ function TreeExplorer({
   filterActions = undefined,
   dataIcon,
   ...props
-}: TreeExplorerProps & BoxProps) {
+}: TreeExplorerProps<T> & BoxProps) {
   // filter feature
   const { dataTree: filteredDataTree, nodesToExpand } = useMemo(
     () =>
@@ -67,7 +67,7 @@ function TreeExplorer({
 
   // checkboxes feature
   const [checkedDataIds, setCheckedDataIds] = useState<number[]>([]);
-  const handleCheckboxChange = useCallback((event: React.ChangeEvent<HTMLInputElement>, node: IDataTree) => {
+  const handleCheckboxChange = useCallback((event: React.ChangeEvent<HTMLInputElement>, node: ITree<T>) => {
     event.stopPropagation();
     // get ids of the data and all its children
     const dataIds = [node.data.id];
@@ -86,14 +86,14 @@ function TreeExplorer({
     });
   }, []);
   const isChecked = useCallback(
-    (node: IDataTree): boolean => {
+    (node: ITree<T>): boolean => {
       // a node is checked if it's id as well as all of its children are in the checkedTagIds array
       return checkedDataIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
     },
     [checkedDataIds],
   );
   const isIndeterminate = useCallback(
-    (node: IDataTree) => {
+    (node: ITree<T>) => {
       if (!node.children) {
         return false;
       }
@@ -105,7 +105,7 @@ function TreeExplorer({
 
   // rendering
   const wrapppedRenderActions = useCallback(
-    (node: IDataTree) => (
+    (node: ITree<T>) => (
       <>
         {showCheckboxes && (
           <Checkbox

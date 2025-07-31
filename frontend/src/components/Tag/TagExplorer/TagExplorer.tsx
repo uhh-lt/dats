@@ -1,16 +1,17 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExportTagsButton from "../../Export/ExportTagsButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
 import TagExplorerActionMenu from "./TagExplorerActionMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
 
-const renderActions = (node: IDataTree) => <TagExplorerActionMenu node={node} />;
+const renderActions = (node: ITree<TagRead>) => <TagExplorerActionMenu node={node} />;
 
 interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;

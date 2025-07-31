@@ -1,38 +1,36 @@
 import { cloneDeep } from "lodash";
 import { Node } from "ts-tree-structure";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { TagRead } from "../../api/openapi/models/TagRead.ts";
-import { IDataTree } from "./IDataTree.ts";
+import { ITree, NamedObjWithParent } from "./ITree.ts";
 
-interface FilterProps {
-  dataTree: Node<IDataTree>;
+interface FilterProps<T extends NamedObjWithParent> {
+  dataTree: Node<ITree<T>>;
   dataFilter: string;
 }
 
-export function dataToTree(data: (TagRead | CodeRead)[]): IDataTree {
+export function dataToTree<T extends NamedObjWithParent>(data: T[], rootNode: T): ITree<T> {
   // map input to IDataTree
-  const newData: IDataTree[] = data.map((subset) => {
+  const newData: ITree<T>[] = data.map((subset) => {
     return { data: subset };
   });
 
-  // create a dummy root node that will hold the results
-  const dummyRootNode: TagRead | CodeRead = {
-    created: "",
-    description: "This is the root node",
-    name: "root",
-    project_id: -1,
-    updated: "",
-    id: -1,
-    color: "",
-    parent_id: undefined,
-    memo_ids: [],
-  };
+  // // create a dummy root node that will hold the results
+  // const dummyRootNode: TagRead | CodeRead = {
+  //   created: "",
+  //   description: "This is the root node",
+  //   name: "root",
+  //   project_id: -1,
+  //   updated: "",
+  //   id: -1,
+  //   color: "",
+  //   parent_id: undefined,
+  //   memo_ids: [],
+  // };
   // create children of the new root node (all nodes that have no parent!)
   const children = newData.filter((dataTree) => !dataTree.data.parent_id);
-  const root: IDataTree = { data: dummyRootNode, children: children };
+  const root: ITree<T> = { data: rootNode, children: children };
 
   // create the full tree using the other nodes
-  const nodes: IDataTree[] = newData.filter((dataTree) => dataTree.data.parent_id);
+  const nodes: ITree<T>[] = newData.filter((dataTree) => dataTree.data.parent_id);
 
   root.children!.forEach((tagTree) => {
     dataToTreeRecursion(tagTree, nodes);
@@ -41,7 +39,7 @@ export function dataToTree(data: (TagRead | CodeRead)[]): IDataTree {
   return root;
 }
 
-function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[]): IDataTree {
+function dataToTreeRecursion<T extends NamedObjWithParent>(root: ITree<T>, nodes: ITree<T>[]): ITree<T> {
   const otherNodes = nodes.filter((node) => node.data.parent_id !== root.data.id);
   root.children = nodes.filter((node) => node.data.parent_id === root.data.id);
 
@@ -52,7 +50,7 @@ function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[]): IDataTree {
   return root;
 }
 
-export function flatTreeWithRoot(tree: IDataTree | null): (TagRead | CodeRead)[] {
+export function flatTreeWithRoot<T extends NamedObjWithParent>(tree: ITree<T> | null): T[] {
   if (!tree) {
     return [];
   }
@@ -61,8 +59,8 @@ export function flatTreeWithRoot(tree: IDataTree | null): (TagRead | CodeRead)[]
   return [tree.data, ...allChildren];
 }
 
-export function flatTree(tree: IDataTree | null): (TagRead | CodeRead)[] {
-  let result: (TagRead | CodeRead)[] = [];
+export function flatTree<T extends NamedObjWithParent>(tree: ITree<T> | null): T[] {
+  let result: T[] = [];
   if (tree && tree.children) {
     result = [...tree.children.map((value) => value.data), ...result];
     tree.children.forEach((value) => {
@@ -72,7 +70,7 @@ export function flatTree(tree: IDataTree | null): (TagRead | CodeRead)[] {
   return result;
 }
 
-export function filterTree({ dataTree, dataFilter }: FilterProps) {
+export function filterTree<T extends NamedObjWithParent>({ dataTree, dataFilter }: FilterProps<T>) {
   const nodesToExpand = new Set<number>();
 
   // clone tree using lodash
@@ -106,12 +104,12 @@ export function filterTree({ dataTree, dataFilter }: FilterProps) {
     );
 
     // filter the dataTree
-    const nodes_to_remove = (dataTreeCopy as Node<IDataTree>).all((node) => !nodesToKeep.has(node.model.data.id));
+    const nodes_to_remove = (dataTreeCopy as Node<ITree<T>>).all((node) => !nodesToKeep.has(node.model.data.id));
 
     nodes_to_remove.forEach((node) => {
       node.drop();
     });
-    dataTreeCopy = dataTreeCopy as Node<IDataTree>;
+    dataTreeCopy = dataTreeCopy as Node<ITree<T>>;
   } else {
     dataTreeCopy = dataTree;
   }

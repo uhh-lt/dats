@@ -9,31 +9,31 @@ import * as React from "react";
 import AbcIcon from "@mui/icons-material/Abc";
 import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
-import { memo, useCallback } from "react";
-import { IDataTree } from "./IDataTree.ts";
+import { useCallback } from "react";
+import { ITree, NamedObjWithParent } from "./ITree.ts";
 
-export interface DataTreeViewProps {
-  data: IDataTree;
-  renderNode?: (node: IDataTree) => React.ReactNode;
-  renderActions?: (node: IDataTree) => React.ReactNode;
+export interface DataTreeViewProps<T extends NamedObjWithParent> {
+  data: ITree<T>;
+  renderNode?: (node: ITree<T>) => React.ReactNode;
+  renderActions?: (node: ITree<T>) => React.ReactNode;
   dataIcon?: React.ElementType<SvgIconProps>;
 }
 
-const defaultNodeRenderer = (node: IDataTree) => (
+const defaultNodeRenderer = <T extends NamedObjWithParent>(node: ITree<T>) => (
   <Typography variant="body2" sx={{ fontWeight: "inherit", flexGrow: 1 }}>
     {node.data.name}
   </Typography>
 );
 
-function DataTreeView({
+function DataTreeView<T extends NamedObjWithParent>({
   renderNode = defaultNodeRenderer,
   renderActions,
   data,
   dataIcon,
   ...props
-}: DataTreeViewProps & TreeViewProps<boolean>) {
+}: DataTreeViewProps<T> & TreeViewProps<boolean>) {
   const renderTree = useCallback(
-    (nodes: IDataTree[]) => {
+    (nodes: ITree<T>[]) => {
       return nodes.map((node) => {
         const hasChildren = Array.isArray(node.children) && node.children.length > 0;
         return (
@@ -78,4 +78,4 @@ function DataTreeView({
   );
 }
 
-export default memo(DataTreeView);
+export default DataTreeView;
