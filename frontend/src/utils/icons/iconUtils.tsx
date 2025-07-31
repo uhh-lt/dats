@@ -16,6 +16,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
 import EditIcon from "@mui/icons-material/Edit";
+import ExploreIcon from "@mui/icons-material/Explore";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import FilterIcon from "@mui/icons-material/Filter";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -46,8 +47,6 @@ import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-
-import ExploreIcon from "@mui/icons-material/Explore";
 import { SvgIconProps } from "@mui/material";
 
 import React from "react";
@@ -63,6 +62,7 @@ export enum Icon {
   SPAN_ANNOTATION = "span_annotation",
   SENTENCE_ANNOTATION = "sentence_annotation",
   BBOX_ANNOTATION = "bbox_annotation",
+  FOLDER = "folder",
 
   // Document types
   TEXT_DOCUMENT = "text_document",
@@ -169,6 +169,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SPAN_ANNOTATION]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION]: (iconProps) => <FilterIcon {...iconProps} />,
+  [Icon.FOLDER]: (iconProps) => <FolderIcon {...iconProps} />,
 
   // Document types
   [Icon.TEXT_DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,

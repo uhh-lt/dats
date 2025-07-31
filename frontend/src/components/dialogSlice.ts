@@ -3,6 +3,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
+import { FolderRead } from "../api/openapi/models/FolderRead.ts";
 import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
 import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
 import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
@@ -17,9 +18,14 @@ import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
 interface DialogState {
   // tags
   isTagCreateDialogOpen: boolean;
-  tagName?: string;
   isTagEditDialogOpen: boolean;
+  tagName?: string;
   tag?: TagRead;
+  // folder
+  isFolderCreateDialogOpen: boolean;
+  isFolderEditDialogOpen: boolean;
+  folderName?: string;
+  folder?: FolderRead;
   // codes
   isCodeCreateDialogOpen: boolean;
   codeName?: string;
@@ -72,6 +78,11 @@ const initialState: DialogState = {
   isTagCreateDialogOpen: false,
   tag: undefined,
   tagName: undefined,
+  // folder
+  isFolderEditDialogOpen: false,
+  isFolderCreateDialogOpen: false,
+  folder: undefined,
+  folderName: undefined,
   // codes
   isCodeCreateDialogOpen: false,
   isCodeEditDialogOpen: false,
@@ -133,6 +144,7 @@ export const dialogSlice = createSlice({
   name: "dialog",
   initialState,
   reducers: {
+    // span anno
     openSpanAnnotationEditDialog: (
       state,
       action: PayloadAction<{ spanAnnotationIds: number[]; onEdit?: () => void }>,
@@ -146,6 +158,7 @@ export const dialogSlice = createSlice({
       state.spanAnnotationIds = [];
       state.spanAnnotationEditDialogOnEdit = undefined;
     },
+    // sentence anno
     openSentenceAnnotationEditDialog: (
       state,
       action: PayloadAction<{ sentenceAnnotationIds: number[]; onEdit?: () => void }>,
@@ -159,6 +172,7 @@ export const dialogSlice = createSlice({
       state.sentenceAnnotationIds = [];
       state.sentenceAnnotationEditDialogOnEdit = undefined;
     },
+    // bbox anno
     openBBoxAnnotationEditDialog: (
       state,
       action: PayloadAction<{ bboxAnnotationIds: number[]; onEdit?: () => void }>,
@@ -172,6 +186,7 @@ export const dialogSlice = createSlice({
       state.bboxAnnotationIds = [];
       state.bboxAnnotationEditDialogOnEdit = undefined;
     },
+    // tag
     openTagEditDialog: (state, action: PayloadAction<{ tag: TagRead }>) => {
       state.isTagEditDialogOpen = true;
       state.tag = action.payload.tag;
@@ -188,6 +203,24 @@ export const dialogSlice = createSlice({
       state.isTagCreateDialogOpen = false;
       state.tagName = undefined;
     },
+    // folder
+    openFolderEditDialog: (state, action: PayloadAction<{ folder: FolderRead }>) => {
+      state.isFolderEditDialogOpen = true;
+      state.folder = action.payload.folder;
+    },
+    closeFolderEditDialog: (state) => {
+      state.isFolderEditDialogOpen = false;
+      state.folder = undefined;
+    },
+    openFolderCreateDialog: (state, action: PayloadAction<{ folderName?: string }>) => {
+      state.isFolderCreateDialogOpen = true;
+      state.folderName = action.payload.folderName;
+    },
+    closeFolderCreateDialog: (state) => {
+      state.isFolderCreateDialogOpen = false;
+      state.folderName = undefined;
+    },
+    // codes
     openCodeCreateDialog: (
       state,
       action: PayloadAction<{

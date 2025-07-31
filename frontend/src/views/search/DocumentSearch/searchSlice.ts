@@ -30,6 +30,7 @@ interface SearchState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
+  expandedFolderIds: string[]; // the ids of the folders that are expanded in the folder tree.
   scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
   // app state:
   expertSearchMode: boolean; // whether the expert search mode is enabled.
@@ -49,6 +50,7 @@ const initialState: FilterState & TableState & SearchState = {
   // project state:
   selectedDocumentId: undefined,
   expandedTagIds: [],
+  expandedFolderIds: [],
   scrollPosition: 0,
   // app state:
   expertSearchMode: false,
@@ -107,6 +109,17 @@ export const searchSlice = createSlice({
       for (const tagId of action.payload) {
         if (state.expandedTagIds.indexOf(tagId) === -1) {
           state.expandedTagIds.push(tagId);
+        }
+      }
+    },
+    // folder explorer
+    setExpandedFolderIds: (state, action: PayloadAction<string[]>) => {
+      state.expandedFolderIds = action.payload;
+    },
+    expandFolders: (state, action: PayloadAction<string[]>) => {
+      for (const folderId of action.payload) {
+        if (state.expandedFolderIds.indexOf(folderId) === -1) {
+          state.expandedFolderIds.push(folderId);
         }
       }
     },
