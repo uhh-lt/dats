@@ -135,6 +135,10 @@ export const QueryKey = {
   // a single DuplicateFinderJobRead (by duplicate finder job id)
   DUPLICATE_FINDER_JOB: "duplicateFinderJob",
 
+  // managed by FolderHooks
+  // all FolderRead[] of a Project (by project id)
+  PROJECT_FOLDERS: "projectFolders",
+
   // tables
   SEARCH_TABLE: "search-document-table-data",
   SDOC_TABLE: "document-table-data",
