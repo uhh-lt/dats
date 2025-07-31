@@ -6,13 +6,13 @@ import CodeCreateListItemButton from "../../Code/CodeCreateListItemButton.tsx";
 import CodeEditButton from "../../Code/CodeEditButton.tsx";
 import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import useComputeProjectCodeTree from "./useComputeProjectCodeTree.ts";
 
-const renderCodeActions = (node: IDataTree) => (
+const renderCodeActions = (node: ITree<CodeRead>) => (
   <>
-    <CodeEditButton code={node.data as CodeRead} />
+    <CodeEditButton code={node.data} />
     <CodeToggleVisibilityButton code={node} />
     <CodeToggleEnabledButton code={node} />
   </>

@@ -1,13 +1,14 @@
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import React, { memo, useCallback } from "react";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import { AnnoActions, isHiddenCodeId } from "../../views/annotation/annoSlice.ts";
-import { IDataTree } from "../TreeExplorer/IDataTree.ts";
+import { ITree } from "../TreeExplorer/ITree.ts";
 import { flatTree } from "../TreeExplorer/TreeUtils.ts";
 
-function CodeToggleVisibilityButton({ code, ...props }: IconButtonProps & { code: IDataTree }) {
+function CodeToggleVisibilityButton({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> }) {
   // redux (global client state)
   const isCodeHidden = useAppSelector(isHiddenCodeId(code.data.id));
   const dispatch = useAppDispatch();

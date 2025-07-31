@@ -1,13 +1,14 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import TagEditButton from "../../Tag/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../Tag/TagExplorer/useComputeTagTree.ts";
 import TagMenuCreateButton from "../../Tag/TagMenu/TagMenuCreateButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 
-const renderTagActions = (node: IDataTree) => <TagEditButton tag={node.data} />;
+const renderTagActions = (node: ITree<TagRead>) => <TagEditButton tag={node.data} />;
 
 function ProjectTags() {
   // custom hooks

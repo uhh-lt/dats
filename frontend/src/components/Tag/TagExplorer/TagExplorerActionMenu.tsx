@@ -1,13 +1,14 @@
 import { IconButton, Menu } from "@mui/material";
 import { useCallback, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
 interface TagExplorerActionMenuProps {
-  node: IDataTree;
+  node: ITree<TagRead>;
 }
 
 function TagExplorerActionMenu({ node }: TagExplorerActionMenuProps) {

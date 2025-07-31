@@ -2,18 +2,19 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { useCallback, useState } from "react";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import ExportCodesButton from "../../Export/ExportCodesButton.tsx";
-import { IDataTree } from "../../TreeExplorer/IDataTree.ts";
+import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
 import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
-const renderNode = (node: IDataTree) => <CodeExplorerNodeRenderer node={node} />;
-const renderActions = (node: IDataTree) => <CodeExplorerActionMenu node={node} />;
+const renderNode = (node: ITree<CodeRead>) => <CodeExplorerNodeRenderer node={node} />;
+const renderActions = (node: ITree<CodeRead>) => <CodeExplorerActionMenu node={node} />;
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks

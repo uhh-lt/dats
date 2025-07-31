@@ -21,7 +21,7 @@ import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import ExportChartButton from "../../../components/ExportChartButton.tsx";
-import { IDataTree } from "../../../components/TreeExplorer/IDataTree.ts";
+import { ITree } from "../../../components/TreeExplorer/ITree.ts";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
   return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;
@@ -32,12 +32,12 @@ interface CodeFrequencyViewProps {
   userIds: number[];
   docTypes: DocType[];
   setSelectedCode: Dispatch<SetStateAction<number | undefined>>;
-  data: Node<IDataTree>;
+  data: Node<ITree<CodeRead>>;
 }
 
 function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode }: CodeFrequencyViewProps) {
   // local state
-  const [selectedData, setSelectedData] = useState<Node<IDataTree>>();
+  const [selectedData, setSelectedData] = useState<Node<ITree<CodeRead>>>();
   const [showPieChart, toggleShowPieChart] = React.useReducer((previous) => !previous, false);
 
   // global server state (react-query)
