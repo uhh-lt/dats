@@ -2,13 +2,13 @@ import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
 import CodeRenderer from "../../../Code/CodeRenderer.tsx";
-import { useCodesWithLevel } from "../../../Code/useCodesWithLevel.ts";
+import { useWithLevel } from "../../../TreeExplorer/useWithLevel.ts";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
 const CodeIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
   const projectCodes = CodeHooks.useGetEnabledCodes();
-  const codeTree = useCodesWithLevel(projectCodes.data || []);
+  const codeTree = useWithLevel(projectCodes.data || []);
 
   const handleValueChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

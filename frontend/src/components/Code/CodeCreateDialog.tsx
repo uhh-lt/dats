@@ -15,9 +15,9 @@ import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormText from "../FormInputs/FormText.tsx";
 import FormTextMultiline from "../FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
+import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import CodeRenderer from "./CodeRenderer.tsx";
-import { useCodesWithLevel } from "./useCodesWithLevel.ts";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -35,7 +35,7 @@ function CodeCreateDialog() {
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
-  const codeTree = useCodesWithLevel(parentCodes);
+  const codeTree = useWithLevel(parentCodes);
 
   // open/close dialog
   const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);

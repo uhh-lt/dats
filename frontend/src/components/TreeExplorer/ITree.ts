@@ -11,3 +11,8 @@ export interface ITree<T extends NamedObjWithParent> {
   length?: number;
   data: T;
 }
+
+export interface NamedObjWithParentWithLevel<T extends NamedObjWithParent> {
+  data: T;
+  level: number;
+}

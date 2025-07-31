@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { useCodesWithLevel } from "../../../components/Code/useCodesWithLevel.ts";
+import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
 import { useDebounce } from "../../../utils/useDebounce.ts";
 
 interface StatisticsFilter {
@@ -42,7 +42,7 @@ function SearchStatisticsMenu({ menuItems, handleMenuItemClick, renderButton }: 
     setPosition(undefined);
   };
 
-  const codesWithLevel = useCodesWithLevel(menuItems);
+  const codesWithLevel = useWithLevel(menuItems);
 
   // filter feature
   const options: StatisticsFilter[] = useMemo(() => {
