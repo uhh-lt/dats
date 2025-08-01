@@ -9,13 +9,16 @@ import {
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
+  MRT_ToolbarAlertBanner,
   useMaterialReactTable,
 } from "material-react-table";
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { FolderMap } from "../../../api/FolderHooks.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
-import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
+import { FolderType } from "../../../api/openapi/models/FolderType.ts";
+import { HierarchicalElasticSearchHit } from "../../../api/openapi/models/HierarchicalElasticSearchHit.ts";
+import { PaginatedSDocHits } from "../../../api/openapi/models/PaginatedSDocHits.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
@@ -26,6 +29,7 @@ import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumen
 import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
+import FolderRenderer from "../../../components/Folder/FolderRenderer.tsx";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../../components/MUI/DATSToolbar.tsx";
@@ -50,7 +54,8 @@ import { SearchActions } from "./searchSlice.ts";
 const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
 
-const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
+const flatMapData = (page: PaginatedSDocHits) => page.hits;
+const lengthData = (hits: HierarchicalElasticSearchHit[]) => hits.reduce((acc, hit) => acc + hit.sub_rows.length, 0);
 
 interface DocumentTableProps {
   projectId: number;
@@ -102,7 +107,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     if (!tableInfo || !user) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
+      const colDef: MRT_ColumnDef<HierarchicalElasticSearchHit> = {
         id: column.column,
         accessorFn: () => null,
         header: column.label,
@@ -114,24 +119,34 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           return {
             ...colDef,
             size: 100,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+            Cell: ({ row }) =>
+              row.original.is_folder ? (
+                <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderIcon />
+              ) : (
+                <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />
+              ),
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+            Cell: ({ row }) =>
+              row.original.is_folder ? (
+                <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderName />
+              ) : (
+                <SdocRenderer sdoc={row.original.id} renderFilename />
+              ),
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+            Cell: ({ row }) => (row.original.is_folder ? null : <SdocTagsRenderer sdocId={row.original.id} />),
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+            Cell: ({ row }) => (row.original.is_folder ? null : <SdocAnnotatorsRenderer sdocId={row.original.id} />),
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_CODE_ID_LIST:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
@@ -141,27 +156,28 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           if (!isNaN(parseInt(column.column))) {
             return {
               ...colDef,
-              Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
-              ),
-            } as MRT_ColumnDef<ElasticSearchHit>;
+              Cell: ({ row }) =>
+                row.original.is_folder ? null : (
+                  <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
+                ),
+            } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
           } else {
             return {
               ...colDef,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<ElasticSearchHit>;
+            } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
           }
       }
     });
 
     // unwanted columns are set to null, so we filter those out
-    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo, user]);
 
   // search
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
   const filter = useAppSelector((state) => state.search.filter[filterName]);
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
     queryKey: [
       QueryKey.SEARCH_TABLE,
       projectId,
@@ -203,6 +219,16 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       Object.entries(data.tags).forEach(([sdocId, tags]) => {
         queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
       });
+
+      console.log("Initializing sdocs folder query cache");
+      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, projectId, FolderType.SDOC_FOLDER], (prev) => {
+        prev = prev || {};
+        Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
+          prev[parseInt(folderId)] = folder;
+        });
+        return prev;
+      });
+
       return data;
     },
     initialPageParam: 0,
@@ -215,6 +241,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   const { flatData, totalFetched, totalResults } = useTransformInfiniteData({
     data,
     flatMapData,
+    lengthData,
   });
 
   useEffect(() => {
@@ -222,10 +249,14 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   }, [onSearchResultsChange, flatData]);
 
   // table
-  const table = useMaterialReactTable<ElasticSearchHit>({
+  const table = useMaterialReactTable<HierarchicalElasticSearchHit>({
     data: flatData,
     columns: columns,
-    getRowId: (row) => `${row.id}`,
+    getRowId: (row) => (row.is_folder ? `folder-${row.id}` : `${row.id}`),
+    // sub rows / folders
+    enableExpanding: true,
+    getSubRows: (originalRow) => originalRow.sub_rows, //default, can customize
+    rowCount: totalResults,
     // state
     state: {
       globalFilter: searchQuery,
@@ -245,7 +276,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     // enableGlobalFilter: true,
     onGlobalFilterChange: setSearchQuery,
     // selection
-    enableRowSelection: true,
+    enableRowSelection: (row) => !row.original.is_folder, // disable selection for folders
     onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
@@ -270,7 +301,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     renderDetailPanel:
       searchQuery && searchQuery.trim().length > 0 && flatData.length > 0
         ? ({ row }) =>
-            row.original.highlights ? (
+            !row.original.is_folder && row.original.highlights ? (
               <Box className="search-result-highlight">
                 {row.original.highlights.map((highlight, index) => (
                   <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
@@ -281,27 +312,30 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             ) : null
         : undefined,
     // mui components
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: (event) => {
-        if (event.detail >= 2) {
-          navigate(`/project/${projectId}/annotation/${row.original.id}`);
-        } else {
-          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
-        }
-      },
-      sx: {
-        backgroundColor: selectedDocumentId === row.original.id ? "lightgrey !important" : undefined,
-      },
-    }),
+    muiTableBodyRowProps: ({ row }) =>
+      row.original.is_folder
+        ? {}
+        : {
+            onClick: (event) => {
+              if (event.detail >= 2) {
+                navigate(`/project/${projectId}/annotation/${row.original.id}`);
+              } else {
+                dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
+              }
+            },
+            sx: {
+              backgroundColor: selectedDocumentId === row.original.id ? "lightgrey !important" : undefined,
+            },
+          },
     renderEmptyRowsFallback: filter.items.length === 0 ? () => <NoDocumentsPlaceholder /> : undefined,
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
           children: "Error loading data",
         }
-      : { style: { width: "100%" }, className: "fixAlertBanner" },
+      : { style: { width: "100%", padding: 0 }, className: "fixAlertBanner" },
     // toolbar
-    positionToolbarAlertBanner: "head-overlay",
+    positionToolbarAlertBanner: "none",
   });
 
   // infinite scrolling
@@ -369,6 +403,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <ExportSdocsButton sdocIds={selectedDocumentIds} />
         <MRT_LinearProgressBar isTopToolbar={true} table={table} />
       </DATSToolbar>
+      <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
       <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer
           table={table}

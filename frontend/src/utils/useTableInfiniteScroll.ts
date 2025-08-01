@@ -8,16 +8,18 @@ interface TableData {
 interface UseTransformInfiniteDataProps<T, U> {
   data: InfiniteData<T> | undefined;
   flatMapData: (page: T) => U[];
+  lengthData?: (data: U[]) => number;
 }
 
 export const useTransformInfiniteData = <T extends TableData, U>({
   data,
   flatMapData,
+  lengthData = (data) => data.length,
 }: UseTransformInfiniteDataProps<T, U>) => {
   // create a flat array of data mapped from id to row
   const flatData = useMemo(() => data?.pages.flatMap(flatMapData) ?? [], [flatMapData, data]);
   const totalResults = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
+  const totalFetched = lengthData(flatData);
 
   return { flatData, totalResults, totalFetched };
 };
@@ -45,6 +47,7 @@ export const useTableFetchMoreOnScroll = ({
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
         // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
         if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalResults) {
+          console.log("Fetching more data on scroll");
           fetchNextPage();
         }
       }
@@ -65,6 +68,7 @@ interface UseTableInfiniteScrollProps<T, U> {
   isFetching: boolean;
   fetchNextPage: () => void;
   flatMapData: (page: T) => U[];
+  lengthData?: (data: U[]) => number;
 }
 
 export const useTableInfiniteScroll = <T extends TableData, U>({
@@ -73,8 +77,9 @@ export const useTableInfiniteScroll = <T extends TableData, U>({
   isFetching,
   fetchNextPage,
   flatMapData,
+  lengthData = (data) => data.length,
 }: UseTableInfiniteScrollProps<T, U>) => {
-  const { flatData, totalResults, totalFetched } = useTransformInfiniteData({ data, flatMapData });
+  const { flatData, totalResults, totalFetched } = useTransformInfiniteData({ data, flatMapData, lengthData });
   const fetchMoreOnScroll = useTableFetchMoreOnScroll({
     tableContainerRef,
     isFetching,
