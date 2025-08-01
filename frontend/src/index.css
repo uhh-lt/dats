@@ -104,3 +104,10 @@ code {
   margin-top: -0.737em;
   margin-left: -1.469em;
 }
+
+.dnd-dragging-valid {
+  cursor: copy !important;
+}
+.dnd-dragging-invalid {
+  cursor: no-drop !important;
+}
