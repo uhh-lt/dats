@@ -8380,6 +8380,37 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HierarchicalElasticSearchHit": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "The ID of the Document" },
+          "score": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score",
+            "description": "The score of the Document that was found by a ES Query"
+          },
+          "highlights": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Highlights",
+            "description": "The highlights found within the document.",
+            "default": []
+          },
+          "is_folder": {
+            "type": "boolean",
+            "title": "Is Folder",
+            "description": "Indicates if the hit is a folder (True) or a document (False)."
+          },
+          "sub_rows": {
+            "items": { "$ref": "#/components/schemas/HierarchicalElasticSearchHit" },
+            "type": "array",
+            "title": "Sub Rows",
+            "description": "Sub-rows of the hit, if it is a folder."
+          }
+        },
+        "type": "object",
+        "required": ["id", "is_folder", "sub_rows"],
+        "title": "HierarchicalElasticSearchHit"
+      },
       "HorizontalAlign": { "type": "string", "enum": ["left", "center", "right"], "title": "HorizontalAlign" },
       "IDListOperator": {
         "type": "string",
@@ -9139,7 +9170,7 @@
       "PaginatedSDocHits": {
         "properties": {
           "hits": {
-            "items": { "$ref": "#/components/schemas/ElasticSearchHit" },
+            "items": { "$ref": "#/components/schemas/HierarchicalElasticSearchHit" },
             "type": "array",
             "title": "Hits",
             "description": "The IDs, scores and (optional) highlights of Document search results on the requested page."
@@ -9148,19 +9179,25 @@
             "additionalProperties": { "$ref": "#/components/schemas/SourceDocumentRead" },
             "type": "object",
             "title": "Sdocs",
-            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+            "description": "A dictionary of sdoc_id and SourceDocumentRead."
+          },
+          "sdoc_folders": {
+            "additionalProperties": { "$ref": "#/components/schemas/FolderRead" },
+            "type": "object",
+            "title": "Sdoc Folders",
+            "description": "A dictionary of folder_id and FolderRead."
           },
           "annotators": {
             "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
             "type": "object",
             "title": "Annotators",
-            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+            "description": "A dictionary of sdoc_id and a list of annotator user IDs that annotated the document."
           },
           "tags": {
             "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
             "type": "object",
             "title": "Tags",
-            "description": "A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information."
+            "description": "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
           },
           "total_results": {
             "type": "integer",
@@ -9169,7 +9206,7 @@
           }
         },
         "type": "object",
-        "required": ["hits", "sdocs", "annotators", "tags", "total_results"],
+        "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "total_results"],
         "title": "PaginatedSDocHits"
       },
       "PerspectivesClusterSimilarities": {
