@@ -136,7 +136,7 @@ export const QueryKey = {
   DUPLICATE_FINDER_JOB: "duplicateFinderJob",
 
   // managed by FolderHooks
-  // all FolderRead[] of a Project (by project id)
+  // all FolderRead[] of a Project (by project id and folder type)
   PROJECT_FOLDERS: "projectFolders",
 
   // tables

@@ -7,21 +7,30 @@ import { FolderRead } from "./openapi/models/FolderRead.ts";
 import { FolderType } from "./openapi/models/FolderType.ts";
 import { FolderService } from "./openapi/services/FolderService.ts";
 
-// TAG QUERIES
+// Folder QUERIES
+
+export type FolderMap = Record<number, FolderRead>;
+
 interface UseProjectFoldersQueryParams<T> {
-  select?: (data: FolderRead[]) => T;
+  select?: (data: FolderMap) => T;
+  folderType: FolderType;
   enabled?: boolean;
 }
 
-const useProjectFoldersQuery = <T = FolderRead[]>({ select, enabled }: UseProjectFoldersQueryParams<T>) => {
+const useProjectFoldersQuery = <T = FolderMap>({ select, folderType, enabled }: UseProjectFoldersQueryParams<T>) => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_FOLDERS, projectId],
-    queryFn: () =>
-      FolderService.getFoldersByProjectAndType({
+    queryKey: [QueryKey.PROJECT_FOLDERS, projectId, folderType],
+    queryFn: async () => {
+      const folders = await FolderService.getFoldersByProjectAndType({
         projectId: projectId!,
-        folderType: FolderType.NORMAL,
-      }),
+        folderType: folderType,
+      });
+      return folders.reduce((acc, folder) => {
+        acc[folder.id] = folder;
+        return acc;
+      }, {} as FolderMap);
+    },
     staleTime: 1000 * 60 * 5,
     select,
     enabled: !!projectId && enabled,
@@ -30,11 +39,23 @@ const useProjectFoldersQuery = <T = FolderRead[]>({ select, enabled }: UseProjec
 
 const useGetFolder = (folderId: number | null | undefined) =>
   useProjectFoldersQuery({
-    select: (data) => data.find((tag) => tag.id === folderId)!,
+    select: (data) => data[folderId!],
+    folderType: FolderType.NORMAL,
     enabled: !!folderId,
   });
 
-const useGetAllFolders = () => useProjectFoldersQuery({});
+const useGetAllFolders = () =>
+  useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.NORMAL });
+
+const useGetSdocFolder = (folderId: number | null | undefined) =>
+  useProjectFoldersQuery({
+    select: (data) => data[folderId!],
+    folderType: FolderType.SDOC_FOLDER,
+    enabled: !!folderId,
+  });
+
+const useGetAllSdocFolders = () =>
+  useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.SDOC_FOLDER });
 
 // Folder MUTATIONS
 
@@ -80,6 +101,8 @@ const useDeleteFolder = () =>
 const FolderHooks = {
   useGetFolder,
   useGetAllFolders,
+  useGetSdocFolder,
+  useGetAllSdocFolders,
   useCreateFolder,
   useUpdateFolder,
   useDeleteFolder,

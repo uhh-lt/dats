@@ -2,23 +2,28 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ElasticSearchHit } from "./ElasticSearchHit";
+import type { FolderRead } from "./FolderRead";
+import type { HierarchicalElasticSearchHit } from "./HierarchicalElasticSearchHit";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
 export type PaginatedSDocHits = {
   /**
    * The IDs, scores and (optional) highlights of Document search results on the requested page.
    */
-  hits: Array<ElasticSearchHit>;
+  hits: Array<HierarchicalElasticSearchHit>;
   /**
-   * A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information.
+   * A dictionary of sdoc_id and SourceDocumentRead.
    */
   sdocs: Record<string, SourceDocumentRead>;
   /**
-   * A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information.
+   * A dictionary of folder_id and FolderRead.
+   */
+  sdoc_folders: Record<string, FolderRead>;
+  /**
+   * A dictionary of sdoc_id and a list of annotator user IDs that annotated the document.
    */
   annotators: Record<string, Array<number>>;
   /**
-   * A dictionary with the additional information about the documents. The key is the document ID and the value is a dictionary with the additional information.
+   * A dictionary of sdoc_id and a list of tag IDs that are associated with the document.
    */
   tags: Record<string, Array<number>>;
   /**
