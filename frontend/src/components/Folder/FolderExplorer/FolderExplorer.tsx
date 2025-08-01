@@ -13,6 +13,8 @@ import FolderMenuCreateButton from "./FolderMenuCreateButton.tsx";
 import useComputeFolderTree from "./useComputeFolderTree.ts";
 
 const renderActions = (node: ITree<FolderRead>) => <FolderExplorerActionMenu node={node} />;
+const isDroppable = (node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL && node.data.id !== -1;
+const getDroppableId = (node: ITree<FolderRead>) => `folder-${node.data.id}`;
 
 interface FolderExplorerProps {
   onFolderClick?: (FolderId: number) => void;
@@ -89,8 +91,8 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
           // icons
           rootIcon={InboxIcon}
           // dnd
-          droppable={(node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL && node.data.id !== -1}
-          droppableId={(node: ITree<FolderRead>) => `folder-${node.data.id}`}
+          droppable={isDroppable}
+          droppableId={getDroppableId}
         />
       )}
     </Box>
