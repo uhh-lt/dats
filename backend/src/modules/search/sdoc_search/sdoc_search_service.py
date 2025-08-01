@@ -1,5 +1,7 @@
 from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderRead
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
@@ -8,6 +10,7 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
+    HierarchicalElasticSearchHit,
     PaginatedSDocHits,
 )
 from repos.db.sql_repo import SQLRepo
@@ -164,16 +167,51 @@ class SdocSearchService(metaclass=SingletonMeta):
                 for sdoc in sdoc_db_objs
             }
 
+            # 2. the sdoc folders
+            folder_ids = [
+                sdoc.folder_id for sdoc in sdoc_db_objs if sdoc.folder_id is not None
+            ]
+            folders = crud_folder.read_by_ids(db=db, ids=list(set(folder_ids)))
+
             # 2. the annotators
             annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)  #
 
             # 3. the tags
             tags = crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids)
 
+        # construct the nested result object
+        hierarchical_hits: list[HierarchicalElasticSearchHit] = []
+        hits_by_folder: dict[int, list[HierarchicalElasticSearchHit]] = {}
+        for hit in data.hits:
+            sdoc = sdocs[hit.id]
+            hits_by_folder.setdefault(sdoc.folder_id, []).append(
+                HierarchicalElasticSearchHit(
+                    id=hit.id,
+                    score=hit.score,
+                    highlights=hit.highlights,
+                    is_folder=False,
+                    sub_rows=[],
+                )
+            )
+
+        hierarchical_hits = [
+            HierarchicalElasticSearchHit(
+                id=folder.id,
+                score=None,
+                highlights=[],
+                is_folder=True,
+                sub_rows=hits_by_folder.get(folder.id, []),
+            )
+            for folder in folders
+        ]
+
         return PaginatedSDocHits(
-            hits=data.hits,
+            hits=hierarchical_hits,
             sdocs=sdocs,
             annotators=annotators,
             tags=tags,
+            sdoc_folders={
+                folder.id: FolderRead.model_validate(folder) for folder in folders
+            },
             total_results=data.total_results,
         )

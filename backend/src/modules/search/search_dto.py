@@ -1,4 +1,5 @@
 from core.code.code_dto import CodeRead
+from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
 from pydantic import BaseModel, Field
@@ -66,31 +67,39 @@ class BBoxAnnotationSearchResult(BaseModel):
     data: list[BBoxAnnotationRow] = Field(description="The Annotations.")
 
 
+class HierarchicalElasticSearchHit(ElasticSearchHit):
+    is_folder: bool = Field(
+        description="Indicates if the hit is a folder (True) or a document (False).",
+    )
+    sub_rows: list["HierarchicalElasticSearchHit"] = Field(
+        description="Sub-rows of the hit, if it is a folder."
+    )
+
+
 class PaginatedSDocHits(BaseModel):
-    hits: list[ElasticSearchHit] = Field(
+    hits: list[HierarchicalElasticSearchHit] = Field(
         description=(
             "The IDs, scores and (optional) highlights of Document search results on "
             "the requested page."
         )
     )
     sdocs: dict[int, SourceDocumentRead] = Field(
-        description=(
-            "A dictionary with the additional information about the documents. The key is the "
-            "document ID and the value is a dictionary with the additional information."
-        )
+        description=("A dictionary of sdoc_id and SourceDocumentRead.")
+    )
+    sdoc_folders: dict[int, FolderRead] = Field(
+        description=("A dictionary of folder_id and FolderRead.")
     )
     annotators: dict[int, list[int]] = Field(
         description=(
-            "A dictionary with the additional information about the documents. The key is the "
-            "document ID and the value is a dictionary with the additional information."
+            "A dictionary of sdoc_id and a list of annotator user IDs that annotated the document."
         )
     )
     tags: dict[int, list[int]] = Field(
         description=(
-            "A dictionary with the additional information about the documents. The key is the "
-            "document ID and the value is a dictionary with the additional information."
+            "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
         )
     )
+
     total_results: int = Field(
         description="The total number of hits. Used for pagination."
     )
