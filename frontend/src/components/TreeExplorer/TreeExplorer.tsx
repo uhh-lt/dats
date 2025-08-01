@@ -29,6 +29,9 @@ export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<Da
   // components
   listActions?: React.ReactNode;
   filterActions?: React.ReactNode;
+  // dnd
+  droppable?: boolean | ((node: ITree<T>) => boolean);
+  droppableId?: (node: ITree<T>) => string;
 }
 
 function TreeExplorer<T extends NamedObjWithParent>({
@@ -52,6 +55,8 @@ function TreeExplorer<T extends NamedObjWithParent>({
   rootIcon = FolderIcon,
   renderRoot = false,
   disableRootActions = false,
+  droppable,
+  droppableId,
   ...props
 }: TreeExplorerProps<T> & BoxProps) {
   // filter feature
@@ -182,6 +187,9 @@ function TreeExplorer<T extends NamedObjWithParent>({
         rootIcon={rootIcon}
         parentIcon={parentIcon}
         dataIcon={dataIcon}
+        // dnd
+        droppable={droppable}
+        droppableId={droppableId}
       />
     </Box>
   );

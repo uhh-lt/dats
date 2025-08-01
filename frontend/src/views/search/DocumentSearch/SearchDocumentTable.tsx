@@ -24,6 +24,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import { Draggable } from "../../../components/DnD/Draggable.tsx";
 import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
 import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumentsPlaceholder.tsx";
 import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
@@ -121,7 +122,9 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             size: 100,
             Cell: ({ row }) =>
               row.original.is_folder ? (
-                <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderIcon />
+                <Draggable id={`sdoc-folder-${row.original.id}`} data={row.original} Element="span">
+                  <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderIcon />
+                </Draggable>
               ) : (
                 <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />
               ),

@@ -3,6 +3,7 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { FolderRead } from "../../../api/openapi/models/FolderRead.ts";
+import { FolderType } from "../../../api/openapi/models/FolderType.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import { ITree } from "../../TreeExplorer/ITree.ts";
@@ -87,6 +88,9 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
           disableRootActions={true}
           // icons
           rootIcon={InboxIcon}
+          // dnd
+          droppable={(node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL && node.data.id !== -1}
+          droppableId={(node: ITree<FolderRead>) => `folder-${node.data.id}`}
         />
       )}
     </Box>

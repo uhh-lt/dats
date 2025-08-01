@@ -55,7 +55,7 @@ function FolderRendererWithData({
   renderIcon,
 }: { folder: FolderRead } & FolderRendererSharedProps) {
   return (
-    <Stack spacing={1} direction="row" alignItems="center">
+    <Stack spacing={2} direction="row" alignItems="center" width="100%">
       {renderIcon && getIconComponent(Icon.FOLDER)}
       {renderName && <Typography>{folder.name}</Typography>}
     </Stack>
