@@ -8,8 +8,8 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
+import FolderCreateButton from "../FolderCreateButton.tsx";
 import FolderExplorerActionMenu from "./FolderExplorerActionMenu.tsx";
-import FolderMenuCreateButton from "./FolderMenuCreateButton.tsx";
 import useComputeFolderTree from "./useComputeFolderTree.ts";
 
 const renderActions = (node: ITree<FolderRead>) => <FolderExplorerActionMenu node={node} />;
@@ -100,7 +100,7 @@ function FolderExplorer({ onFolderClick, ...props }: FolderExplorerProps & BoxPr
 }
 
 function ListActions() {
-  return <FolderMenuCreateButton folderName="" />;
+  return <FolderCreateButton folderName="" />;
 }
 
 export default memo(FolderExplorer);

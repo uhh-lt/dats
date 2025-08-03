@@ -1,8 +1,8 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { memo, useCallback } from "react";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 interface FolderActionButtonCreateProps {
   folderName: string;
@@ -12,7 +12,7 @@ interface FolderActionButtonCreateProps {
  * A button that sends the 'open-folder' event to open the FolderCreationDialog
  * @param folderName The name of the DocumentFolder to be created. The button will display the name, and the FolderCreationDialog's form will be pre-filled with this name.
  */
-function FolderMenuCreateButton({ folderName, ...props }: FolderActionButtonCreateProps & ListItemButtonProps) {
+function FolderCreateButton({ folderName, ...props }: FolderActionButtonCreateProps & ListItemButtonProps) {
   const dispatch = useAppDispatch();
 
   const handleClick = useCallback(() => {
@@ -29,4 +29,4 @@ function FolderMenuCreateButton({ folderName, ...props }: FolderActionButtonCrea
   );
 }
 
-export default memo(FolderMenuCreateButton);
+export default memo(FolderCreateButton);
