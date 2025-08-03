@@ -4,7 +4,6 @@
 /* eslint-disable */
 import type { FolderCreate } from "../models/FolderCreate";
 import type { FolderRead } from "../models/FolderRead";
-import type { FolderTreeRead } from "../models/FolderTreeRead";
 import type { FolderType } from "../models/FolderType";
 import type { FolderUpdate } from "../models/FolderUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -71,40 +70,6 @@ export class FolderService {
     });
   }
   /**
-   * Get Tree By Id
-   * @returns FolderTreeRead Successful Response
-   * @throws ApiError
-   */
-  public static getTreeById({ folderId }: { folderId: number }): CancelablePromise<FolderTreeRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/folder/tree/{folder_id}",
-      path: {
-        folder_id: folderId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the folder tree of the project with the given ID
-   * @returns FolderTreeRead Successful Response
-   * @throws ApiError
-   */
-  public static getTreeByProject({ projectId }: { projectId: number }): CancelablePromise<Array<FolderTreeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/folder/project/{project_id}/tree",
-      path: {
-        project_id: projectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the folders of the folder_type of the project with the given ID
    * @returns FolderRead Successful Response
    * @throws ApiError
@@ -145,17 +110,25 @@ export class FolderService {
     });
   }
   /**
-   * Get Subfolders
+   * Move Folders
    * @returns FolderRead Successful Response
    * @throws ApiError
    */
-  public static getSubfolders({ folderId }: { folderId: number }): CancelablePromise<Array<FolderRead>> {
+  public static moveFolders({
+    targetFolderId,
+    requestBody,
+  }: {
+    targetFolderId: number;
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<FolderRead>> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/folder/subfolders/{folder_id}",
-      path: {
-        folder_id: folderId,
+      method: "POST",
+      url: "/folder/move_folders",
+      query: {
+        target_folder_id: targetFolderId,
       },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

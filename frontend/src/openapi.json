@@ -1236,61 +1236,6 @@
         }
       }
     },
-    "/folder/tree/{folder_id}": {
-      "get": {
-        "tags": ["folder"],
-        "summary": "Get Tree By Id",
-        "operationId": "get_tree_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FolderTreeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/folder/project/{project_id}/tree": {
-      "get": {
-        "tags": ["folder"],
-        "summary": "Returns the folder tree of the project with the given ID",
-        "operationId": "get_tree_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/FolderTreeRead" },
-                  "title": "Response Folder-Get Tree By Project"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/folder/project/{project_id}/folder/{folder_type}": {
       "get": {
         "tags": ["folder"],
@@ -1353,15 +1298,26 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/folder/subfolders/{folder_id}": {
-      "get": {
+    "/folder/move_folders": {
+      "post": {
         "tags": ["folder"],
-        "summary": "Get Subfolders",
-        "operationId": "get_subfolders",
+        "summary": "Move Folders",
+        "operationId": "move_folders",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+          {
+            "name": "target_folder_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Target Folder Id" }
+          }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Folder Ids" } }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1370,7 +1326,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/FolderRead" },
-                  "title": "Response Folder-Get Subfolders"
+                  "title": "Response Folder-Move Folders"
                 }
               }
             }
@@ -8314,47 +8270,6 @@
         "type": "object",
         "required": ["name", "folder_type", "project_id", "id", "created", "updated"],
         "title": "FolderRead"
-      },
-      "FolderTreeRead": {
-        "properties": {
-          "name": { "type": "string", "maxLength": 231, "title": "Name", "description": "Name of the folder" },
-          "folder_type": {
-            "$ref": "#/components/schemas/FolderType",
-            "description": "Type of the folder (normal, sdoc_folder)"
-          },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "ID of the parent folder (nullable)"
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the project this folder belongs to (nullable)"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the Folder" },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Creation timestamp of the folder"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Update timestamp of the folder"
-          },
-          "children": {
-            "items": { "$ref": "#/components/schemas/FolderTreeRead" },
-            "type": "array",
-            "title": "Children",
-            "description": "Children folders"
-          }
-        },
-        "type": "object",
-        "required": ["name", "folder_type", "project_id", "id", "created", "updated", "children"],
-        "title": "FolderTreeRead"
       },
       "FolderType": { "type": "string", "enum": ["normal", "sdoc_folder"], "title": "FolderType" },
       "FolderUpdate": {

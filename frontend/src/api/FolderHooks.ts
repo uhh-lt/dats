@@ -47,6 +47,8 @@ const useGetFolder = (folderId: number | null | undefined) =>
 const useGetAllFolders = () =>
   useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.NORMAL });
 
+const useGetAllFoldersMap = () => useProjectFoldersQuery({ folderType: FolderType.NORMAL });
+
 const useGetSdocFolder = (folderId: number | null | undefined) =>
   useProjectFoldersQuery({
     select: (data) => data[folderId!],
@@ -57,14 +59,16 @@ const useGetSdocFolder = (folderId: number | null | undefined) =>
 const useGetAllSdocFolders = () =>
   useProjectFoldersQuery({ select: (data) => Object.values(data), folderType: FolderType.SDOC_FOLDER });
 
+const useGetAllSdocFoldersMap = () => useProjectFoldersQuery({ folderType: FolderType.SDOC_FOLDER });
+
 // Folder MUTATIONS
 
 const useCreateFolder = () =>
   useMutation({
     mutationFn: FolderService.createFolder,
-    onSuccess: (folder) => {
-      queryClient.setQueryData<FolderRead[]>([QueryKey.PROJECT_FOLDERS, folder.project_id], (oldData) =>
-        oldData ? [...oldData, folder] : [folder],
+    onSuccess: (data) => {
+      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) =>
+        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
     },
     meta: {
@@ -75,9 +79,9 @@ const useCreateFolder = () =>
 const useUpdateFolder = () =>
   useMutation({
     mutationFn: FolderService.updateFolder,
-    onSuccess: (folder) => {
-      queryClient.setQueryData<FolderRead[]>([QueryKey.PROJECT_FOLDERS, folder.project_id], (oldData) =>
-        oldData ? oldData.map((f) => (f.id === folder.id ? folder : f)) : oldData,
+    onSuccess: (data) => {
+      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) =>
+        oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
     },
     meta: {
@@ -85,13 +89,37 @@ const useUpdateFolder = () =>
     },
   });
 
+const useMoveFolders = () =>
+  useMutation({
+    mutationFn: FolderService.moveFolders,
+    onSuccess: (datas) => {
+      queryClient.setQueryData<FolderMap>(
+        [QueryKey.PROJECT_FOLDERS, datas[0].project_id, datas[0].folder_type],
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newData = { ...oldData };
+          datas.forEach((data) => {
+            newData[data.id] = data;
+          });
+          return newData;
+        },
+      );
+    },
+    meta: {
+      successMessage: (data: FolderRead[]) => `Moved ${data.length} folder${data.length === 1 ? "" : "s"}!`,
+    },
+  });
+
 const useDeleteFolder = () =>
   useMutation({
     mutationFn: FolderService.deleteFolder,
     onSuccess: (data) => {
-      queryClient.setQueryData<FolderRead[]>([QueryKey.PROJECT_FOLDERS, data.project_id], (oldData) =>
-        oldData ? oldData.filter((folder) => folder.id !== data.id) : oldData,
-      );
+      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, data.project_id, FolderType.NORMAL], (oldData) => {
+        if (!oldData) return oldData;
+        const newData = { ...oldData };
+        delete newData[data.id];
+        return newData;
+      });
     },
     meta: {
       successMessage: (folder: FolderRead) => `Deleted folder ${folder.name}`,
@@ -101,10 +129,13 @@ const useDeleteFolder = () =>
 const FolderHooks = {
   useGetFolder,
   useGetAllFolders,
+  useGetAllFoldersMap,
   useGetSdocFolder,
   useGetAllSdocFolders,
+  useGetAllSdocFoldersMap,
   useCreateFolder,
   useUpdateFolder,
+  useMoveFolders,
   useDeleteFolder,
 };
 
