@@ -5,7 +5,6 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import (
     FolderCreate,
     FolderRead,
-    FolderTreeRead,
     FolderType,
     FolderUpdate,
 )
@@ -26,44 +25,6 @@ def get_folder_by_id(
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
     folder = crud_folder.read(db=db, id=folder_id)
     return FolderRead.model_validate(folder)
-
-
-@router.get("/tree/{folder_id}", response_model=FolderTreeRead)
-def get_tree_by_id(
-    folder_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> FolderTreeRead:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    folder = crud_folder.read(db=db, id=folder_id)
-    return FolderTreeRead.model_validate(folder)
-
-
-@router.get(
-    "/project/{project_id}/tree",
-    response_model=list[FolderTreeRead],
-    summary="Returns the folder tree of the project with the given ID",
-)
-def get_tree_by_project(
-    project_id: int,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> list[FolderTreeRead]:
-    authz_user.assert_in_project(project_id)
-
-    folders = crud_folder.read_by_project(db=db, proj_id=project_id)
-
-    folder_map = {
-        folder.id: FolderTreeRead.model_validate(folder) for folder in folders
-    }
-
-    for folder in folders:
-        if folder.parent_id is not None:
-            parent_tree = folder_map.get(folder.parent_id)
-            if parent_tree:
-                parent_tree.children.append(folder_map[folder.id])
-
-    return [folder_map[folder.id] for folder in folders if folder.parent_id is None]
 
 
 @router.get(
@@ -105,15 +66,20 @@ def update_folder(
     return FolderRead.model_validate(db_obj)
 
 
-@router.get("/subfolders/{folder_id}", response_model=list[FolderRead])
-def get_subfolders(
-    folder_id: int,
+@router.post("/move_folders", response_model=list[FolderRead])
+def move_folders(
+    folder_ids: list[int],
+    target_folder_id: int,  # -1 means root folder (parent_id is None)
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> list[FolderRead]:
-    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
-    subfolders = crud_folder.read_subfolders(db=db, parent_folder_id=folder_id)
-    return [FolderRead.model_validate(folder) for folder in subfolders]
+    for folder_id in folder_ids:
+        authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
+
+    db_obj = crud_folder.move_folders(
+        db=db, folder_ids=folder_ids, target_folder_id=target_folder_id
+    )
+    return [FolderRead.model_validate(folder) for folder in db_obj]
 
 
 @router.delete("/{folder_id}", response_model=FolderRead)
