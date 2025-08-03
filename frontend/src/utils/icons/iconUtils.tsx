@@ -25,6 +25,7 @@ import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBullet
 import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
+import InboxIcon from "@mui/icons-material/Inbox";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -161,7 +162,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.HOME]: (iconProps) => <HomeIcon {...iconProps} />,
 
   // Core objects
-  [Icon.PROJECT]: (iconProps) => <FolderIcon {...iconProps} />,
+  [Icon.PROJECT]: (iconProps) => <InboxIcon {...iconProps} />,
   [Icon.CODE]: (iconProps) => <SquareIcon {...iconProps} />,
   [Icon.TAG]: (iconProps) => <LabelIcon {...iconProps} />,
   [Icon.MEMO]: (iconProps) => <CommentIcon {...iconProps} />,
