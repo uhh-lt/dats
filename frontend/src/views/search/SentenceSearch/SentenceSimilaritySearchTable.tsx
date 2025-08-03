@@ -24,7 +24,7 @@ import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocSentenceRenderer from "../../../components/SourceDocument/SdocSentenceRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
-import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
+import { selectSelectedIds } from "../../../components/tableSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
@@ -85,7 +85,7 @@ function SentenceSimilaritySearchTable({
   );
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
   const dispatch = useAppDispatch();
-  const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.sentenceSearch));
+  const selectedDocumentIds = useAppSelector((state) => selectSelectedIds(state.sentenceSearch));
 
   // virtualization
   const toolbarRef = useRef<HTMLDivElement>(null);

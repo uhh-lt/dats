@@ -79,8 +79,13 @@ export const resetProjectTableState = (state: Draft<TableState>) => {
 // selectors
 export const selectRowSelectionModel = (state: TableState) => state.rowSelectionModel;
 
-export const selectSelectedDocumentIds = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
+export const selectSelectedRows = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
+  return Object.keys(rowSelectionModel).filter((key) => rowSelectionModel[key]);
+});
+
+export const selectSelectedIds = createSelector([selectRowSelectionModel], (rowSelectionModel) => {
   return Object.keys(rowSelectionModel)
     .filter((key) => rowSelectionModel[key])
-    .map((key) => parseInt(key));
+    .map((key) => parseInt(key))
+    .filter((id) => !isNaN(id));
 });
