@@ -44,11 +44,3 @@ class FolderRead(FolderBaseDTO):
     created: datetime = Field(description="Creation timestamp of the folder")
     updated: datetime = Field(description="Update timestamp of the folder")
     model_config = ConfigDict(from_attributes=True)
-
-
-class FolderTreeRead(FolderRead):
-    children: list["FolderTreeRead"] = Field(description="Children folders")
-    model_config = ConfigDict(from_attributes=True)
-
-
-FolderTreeRead.model_rebuild()

@@ -35,5 +35,33 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             .all()
         )
 
+    def move_folders(
+        self, db: Session, *, folder_ids: list[int], target_folder_id: int
+    ) -> list[FolderORM]:
+        """
+        Moves the specified folders to the target folder.
+
+        Args:
+            db (Session): The current database session used for querying.
+            folder_ids (list[int]): A list of folder IDs to be moved.
+            target_folder_id (int): The ID of the target folder where the folders will be moved. Special case: -1 means the root folder (parent_id is None).
+
+        Returns:
+            list[FolderORM]: A list of FolderORM objects representing the moved folders.
+        """
+        if target_folder_id == -1:
+            tfid = None
+        else:
+            # Ensure the target folder is of type NORMAL
+            target_folder = self.read(db=db, id=target_folder_id)
+            if target_folder.folder_type != FolderType.NORMAL:
+                raise ValueError("Target folder must be of type NORMAL")
+            tfid = target_folder_id
+
+        db.query(self.model).filter(self.model.id.in_(folder_ids)).update(
+            {self.model.parent_id: tfid}, synchronize_session=False
+        )
+        return db.query(self.model).filter(self.model.id.in_(folder_ids)).all()
+
 
 crud_folder = CRUDFolder(FolderORM)
