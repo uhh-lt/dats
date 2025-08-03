@@ -5,14 +5,17 @@ import {
   MRT_ColumnDef,
   MRT_GlobalFilterTextField,
   MRT_LinearProgressBar,
+  MRT_Row,
+  MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   MRT_ToolbarAlertBanner,
+  MRT_Updater,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderMap } from "../../../api/FolderHooks.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
@@ -30,6 +33,7 @@ import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumen
 import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
+import FolderMenuButton from "../../../components/Folder/FolderMenu/FolderMenuButton.tsx";
 import FolderRenderer from "../../../components/Folder/FolderRenderer.tsx";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
@@ -40,7 +44,7 @@ import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnot
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
-import { selectSelectedDocumentIds } from "../../../components/tableSlice.ts";
+import { selectSelectedIds, selectSelectedRows } from "../../../components/tableSlice.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
@@ -56,7 +60,27 @@ const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
 
 const flatMapData = (page: PaginatedSDocHits) => page.hits;
-const lengthData = (hits: HierarchicalElasticSearchHit[]) => hits.reduce((acc, hit) => acc + hit.sub_rows.length, 0);
+
+const lengthDataSdocs = (hits: HierarchicalElasticSearchHit[]) =>
+  hits.reduce((acc, hit) => acc + hit.sub_rows.length, 0);
+const lengthDataFolders = (hits: HierarchicalElasticSearchHit[]) => hits.length;
+
+enum FolderSelection {
+  FOLDER = "FOLDER",
+  SDOC = "SDOC",
+  UNKNOWN = "UNKNOWN",
+}
+
+const rowSelection = (fs: FolderSelection) => (row: MRT_Row<HierarchicalElasticSearchHit>) => {
+  switch (fs) {
+    case FolderSelection.FOLDER:
+      return row.original.is_folder;
+    case FolderSelection.SDOC:
+      return !row.original.is_folder;
+    default:
+      return true;
+  }
+};
 
 interface DocumentTableProps {
   projectId: number;
@@ -69,14 +93,42 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   // global client state (react router)
   const { user } = useAuth();
 
+  const dispatch = useAppDispatch();
+
+  // custom row selection state (it distinguishes between folders and source documents)
+  const [folderSelectionType, setFolderSelectionType] = useState<FolderSelection>(FolderSelection.UNKNOWN);
+  const rowSelectionModel = useAppSelector((state) => state.search.rowSelectionModel);
+  const setRowSelectionModel = useCallback(
+    (updater: MRT_Updater<MRT_RowSelectionState>) => {
+      const newState = updater instanceof Function ? updater(rowSelectionModel) : updater;
+      // if previous state was empty, we can determine the folder selection type:
+      // if it contains any numbers, it's SDOC, otherwise it's FOLDER
+      if (Object.keys(rowSelectionModel).length === 0) {
+        if (Object.keys(newState).some((key) => !isNaN(Number(key)))) {
+          setFolderSelectionType(FolderSelection.SDOC);
+          // remove all keys that are not numbers
+          Object.keys(newState).forEach((key) => {
+            if (isNaN(Number(key))) {
+              delete newState[key];
+            }
+          });
+        } else {
+          setFolderSelectionType(FolderSelection.FOLDER);
+        }
+      }
+      // if new state is empty, reset the folder selection type
+      if (Object.keys(newState).length === 0) {
+        setFolderSelectionType(FolderSelection.UNKNOWN);
+      }
+      dispatch(SearchActions.onRowSelectionChange(newState));
+    },
+    [dispatch, rowSelectionModel],
+  );
+
   // global client state (redux) connected to table state
   const [searchQuery, setSearchQuery] = useReduxConnector(
     (state) => state.search.searchQuery,
     SearchActions.onSearchQueryChange,
-  );
-  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.search.rowSelectionModel,
-    SearchActions.onRowSelectionChange,
   );
   const [sortingModel, setSortingModel] = useReduxConnector(
     (state) => state.search.sortingModel,
@@ -95,8 +147,8 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     SearchActions.onGridDensityChange,
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
-  const dispatch = useAppDispatch();
-  const selectedDocumentIds = useAppSelector((state) => selectSelectedDocumentIds(state.search));
+  const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
+  const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
   // virtualization
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -241,11 +293,17 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     },
     refetchOnWindowFocus: false,
   });
-  const { flatData, totalFetched, totalResults } = useTransformInfiniteData({
+
+  const {
+    flatData,
+    totalFetched: totalFetchedSdocs,
+    totalResults,
+  } = useTransformInfiniteData({
     data,
     flatMapData,
-    lengthData,
+    lengthData: lengthDataSdocs,
   });
+  const totalFetchedFolders = lengthDataFolders(flatData);
 
   useEffect(() => {
     onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
@@ -259,7 +317,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     // sub rows / folders
     enableExpanding: true,
     getSubRows: (originalRow) => originalRow.sub_rows, //default, can customize
-    rowCount: totalResults,
+    rowCount: folderSelectionType === FolderSelection.FOLDER ? totalFetchedFolders : totalFetchedSdocs,
     // state
     state: {
       globalFilter: searchQuery,
@@ -279,8 +337,9 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     // enableGlobalFilter: true,
     onGlobalFilterChange: setSearchQuery,
     // selection
-    enableRowSelection: (row) => !row.original.is_folder, // disable selection for folders
+    enableRowSelection: rowSelection(folderSelectionType),
     onRowSelectionChange: setRowSelectionModel,
+    enableSubRowSelection: false,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -347,7 +406,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     tableContainerRef: table.refs.tableContainerRef,
     isFetching,
     fetchNextPage,
-    totalFetched,
+    totalFetched: totalFetchedSdocs,
     totalResults,
   });
   // reset
@@ -374,6 +433,34 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const extraToolbarActions = useMemo(() => {
+    if (selectedRows.length === 0) return null;
+
+    const selectedSdocIds = selectedRows.map((id) => Number(id));
+    if (selectedSdocIds.every((id) => !isNaN(id))) {
+      return (
+        <>
+          <TagMenuButton
+            selectedSdocIds={selectedSdocIds}
+            popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+          />
+          <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
+          <LLMAssistanceButton sdocIds={selectedSdocIds} projectId={projectId} />
+          <OpenInTabsButton sdocIds={selectedSdocIds} projectId={projectId} />
+        </>
+      );
+    } else if (selectedRows.every((id) => id.startsWith("folder-"))) {
+      const selectedFolderIds = selectedRows.map((id) => parseInt(id.replace("folder-", "")));
+      return (
+        <FolderMenuButton
+          selectedFolderIds={selectedFolderIds}
+          popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+        />
+      );
+    }
+    return null;
+  }, [selectedRows, projectId]);
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={toolbarRef}>
@@ -386,24 +473,14 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />
-        {selectedDocumentIds.length > 0 && (
-          <>
-            <TagMenuButton
-              selectedSdocIds={selectedDocumentIds}
-              popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
-            />
-            <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
-            <LLMAssistanceButton sdocIds={selectedDocumentIds} projectId={projectId} />
-            <OpenInTabsButton sdocIds={selectedDocumentIds} projectId={projectId} />
-          </>
-        )}
+        {extraToolbarActions}
         <Box sx={{ flexGrow: 1 }} />
         <MRT_GlobalFilterTextField table={table} />
         <SearchOptionsMenu />
         <DocumentUploadButton />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
-        <ExportSdocsButton sdocIds={selectedDocumentIds} />
+        <ExportSdocsButton sdocIds={selectedSdocIds} />
         <MRT_LinearProgressBar isTopToolbar={true} table={table} />
       </DATSToolbar>
       <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
@@ -423,7 +500,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           <Divider />
           <Stack direction="row" alignItems="top" pt={0.5}>
             <Typography variant="body2" color="textSecondary" pt={0.5} mr={1}>
-              Fetched {totalFetched} of {totalResults} documents
+              Fetched {totalFetchedSdocs} of {totalResults} documents
             </Typography>
             <Button size="small" onClick={() => dispatch(SearchActions.onFetchSizeChange(totalResults))}>
               Fetch All
