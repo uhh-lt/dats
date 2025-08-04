@@ -226,6 +226,8 @@ export const searchSlice = createSlice({
         state.selectedDocumentId = initialState.selectedDocumentId;
         state.expandedTagIds = initialState.expandedTagIds;
         state.scrollPosition = initialState.scrollPosition;
+        state.expandedFolderIds = initialState.expandedFolderIds;
+        state.selectedFolderId = initialState.selectedFolderId;
         resetProjectTableState(state);
         resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })
