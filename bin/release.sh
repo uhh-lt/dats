@@ -28,7 +28,7 @@ cd ../frontend
 npm run update-api && npm run generate-api && npm run update-version
 
 cd ..
-git add backend/src/configs/version.yaml backend/pyproject.toml backend/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
+git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
 git commit -m "Release v$1"
 git tag v"$1"
 git push
