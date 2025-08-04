@@ -22,6 +22,7 @@ import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
 import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
 import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
 import documentSamplerReducer from "../views/tools/DocumentSampler/documentSamplerSlice.ts";
+import duplicateFinderReducer from "../views/tools/DuplicateFinder/duplicateFinderSlice.ts";
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +50,7 @@ export const store = configureStore({
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
     perspectives: perspectivesReducer,
+    duplicateFinder: duplicateFinderReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
