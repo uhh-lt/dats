@@ -315,8 +315,13 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   const totalFetchedFolders = lengthData(flatData);
 
   useEffect(() => {
-    onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
-  }, [onSearchResultsChange, flatData]);
+    // if show folders, the documents are nested (inside folders)
+    if (showFolders) {
+      onSearchResultsChange?.(flatData.flatMap((folder) => folder.sub_rows.map((sdoc) => sdoc.id)));
+    } else {
+      onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
+    }
+  }, [onSearchResultsChange, flatData, showFolders]);
 
   // table
   const table = useMaterialReactTable<HierarchicalElasticSearchHit>({

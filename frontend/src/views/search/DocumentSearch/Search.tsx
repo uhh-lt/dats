@@ -32,8 +32,6 @@ function Search() {
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
   const dispatch = useAppDispatch();
 
-  console.log("rowSelectionModel", rowSelectionModel);
-
   // filter
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
