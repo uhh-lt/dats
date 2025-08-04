@@ -128,6 +128,9 @@ export const searchSlice = createSlice({
     setSelectedFolderId: (state, action: PayloadAction<number>) => {
       state.selectedFolderId = action.payload;
     },
+    onMoveFolders: (state) => {
+      state.rowSelectionModel = initialTableState.rowSelectionModel; // reset row selection model after moving folders
+    },
     // search statistics
     onToggleSortStatsByGlobal: (state) => {
       state.sortStatsByGlobal = !state.sortStatsByGlobal;

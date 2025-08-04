@@ -59,8 +59,9 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             tfid = target_folder_id
 
         db.query(self.model).filter(self.model.id.in_(folder_ids)).update(
-            {self.model.parent_id: tfid}, synchronize_session=False
+            {self.model.parent_id: tfid}
         )
+        db.commit()
         return db.query(self.model).filter(self.model.id.in_(folder_ids)).all()
 
 
