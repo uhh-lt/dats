@@ -32,6 +32,7 @@ interface SearchState {
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
   expandedFolderIds: string[]; // the ids of the folders that are expanded in the folder tree.
   selectedFolderId: number; // the id of the selected folder. (the root folder is -1)
+  showFolders: boolean; // whether the folders are shown in search table.
   scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
   // app state:
   expertSearchMode: boolean; // whether the expert search mode is enabled.
@@ -53,6 +54,7 @@ const initialState: FilterState & TableState & SearchState = {
   expandedTagIds: [],
   expandedFolderIds: [],
   selectedFolderId: -1, // the root folder is -1
+  showFolders: true,
   scrollPosition: 0,
   // app state:
   expertSearchMode: false,
@@ -130,6 +132,9 @@ export const searchSlice = createSlice({
     },
     onMoveFolders: (state) => {
       state.rowSelectionModel = initialTableState.rowSelectionModel; // reset row selection model after moving folders
+    },
+    onToggleShowFolders: (state) => {
+      state.showFolders = !state.showFolders;
     },
     // search statistics
     onToggleSortStatsByGlobal: (state) => {
