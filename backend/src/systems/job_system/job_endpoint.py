@@ -17,6 +17,7 @@ def register_job_endpoints(
     input_model: Type[JobInputBase],
     output_model: Type[BaseModel],
     endpoint_generation: EndpointGeneration,
+    router: APIRouter,
 ):
     if endpoint_generation == EndpointGeneration.NONE:
         return
@@ -120,4 +121,5 @@ for job_type, job_info in job_service.job_registry.items():
         input_model=job_info["input_type"],
         output_model=job_info["output_type"],
         endpoint_generation=job_info["generate_endpoints"],
+        router=job_info["router"] or router,
     )

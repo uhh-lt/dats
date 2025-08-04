@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import Enum
 from typing import Literal
 
@@ -8,10 +7,10 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from pydantic import BaseModel, Field
-from repos.db.dto_base import UpdateDTOBase
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_dto import JobInputBase
 
-# --- START TASK PARAMETERS ---
+# --- START INPUT ---
 
 
 class TaskType(str, Enum):
@@ -60,9 +59,8 @@ class SentenceAnnotationParams(DocumentBasedTaskParams):
     )
 
 
-class LLMJobParameters(BaseModel):
+class LLMJobParameters(JobInputBase):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
-    project_id: int = Field(description="The ID of the Project to analyse")
     specific_task_parameters: (
         TaggingParams
         | MetadataExtractionParams
@@ -128,7 +126,7 @@ class ModelTrainingParams(SpecificApproachParameters):
     )
 
 
-class LLMJobParameters2(LLMJobParameters):
+class LLMJobInput(LLMJobParameters):
     llm_approach_type: ApproachType = Field(
         description="The approach to use for the LLMJob"
     )
@@ -140,9 +138,9 @@ class LLMJobParameters2(LLMJobParameters):
     )
 
 
-# --- END APPROACH PARAMETERS ---
+# --- END INPUT ---
 
-# --- START RESULTS ---
+# --- START OUTPUT ---
 
 
 class LLMResultWithStatus(BaseModel):
@@ -207,7 +205,7 @@ class SentenceAnnotationLLMJobResult(BaseModel):
     results: list[SentenceAnnotationResult]
 
 
-class LLMJobResult(BaseModel):
+class LLMJobOutput(BaseModel):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
     specific_task_result: (
         TaggingLLMJobResult
@@ -220,61 +218,8 @@ class LLMJobResult(BaseModel):
     )
 
 
-# --- END RESULTS ---
+# --- END OUTPUT ---
 
-# --- START CRUD ---
-
-
-# Properties shared across all DTOs
-class LLMJobBaseDTO(BaseModel):
-    status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING, description="Status of the LLMJob"
-    )
-    num_steps_total: int = Field(description="Number of total steps.")
-    current_step: int = Field(description="The current step.")
-    current_step_description: str = Field(
-        description="Description of the current step."
-    )
-    result: LLMJobResult | None = Field(
-        default=None, description="Results of the LLMJob."
-    )
-
-
-# Properties to create
-class LLMJobCreate(LLMJobBaseDTO):
-    parameters: LLMJobParameters2 = Field(
-        description="The parameters of the LLMJob that defines what to do!"
-    )
-
-
-# Properties to update
-class LLMJobUpdate(BaseModel, UpdateDTOBase):
-    status: BackgroundJobStatus | None = Field(
-        default=None, description="Status of the LLMJob"
-    )
-    num_steps_total: int | None = Field(
-        default=None, description="Number of total steps."
-    )
-    current_step: int | None = Field(default=None, description="The current step.")
-    current_step_description: str | None = Field(
-        default=None, description="Description of the current step."
-    )
-    result: LLMJobResult | None = Field(
-        default=None, description="Result of the LLMJob."
-    )
-
-
-# Properties to read
-class LLMJobRead(LLMJobBaseDTO):
-    id: str = Field(description="ID of the LLMJob")
-    parameters: LLMJobParameters2 = Field(
-        description="The parameters of the LLMJob that defines what to llm!"
-    )
-    created: datetime = Field(description="Created timestamp of the LLMJob")
-    updated: datetime = Field(description="Updated timestamp of the LLMJob")
-
-
-# --- END CRUD ---
 
 # --- START OTHER DTOs ---
 

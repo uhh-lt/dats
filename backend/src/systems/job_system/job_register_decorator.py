@@ -1,6 +1,7 @@
 import os
 from typing import Callable, TypeVar
 
+from fastapi import APIRouter
 from pydantic import BaseModel
 from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
 
@@ -14,6 +15,7 @@ def register_job(
     output_type: type[OutputT],
     priority: JobPriority,
     generate_endpoints: EndpointGeneration,
+    router: APIRouter | None = None,
 ):
     def decorator(func: Callable[[InputT], OutputT]):
         # Only register jobs if running in API context
@@ -27,6 +29,7 @@ def register_job(
                 output_type=output_type,
                 priority=priority,
                 generate_endpoints=generate_endpoints,
+                router=router,
             )
         return func
 
