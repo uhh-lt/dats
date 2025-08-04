@@ -340,6 +340,7 @@ def visualize_documents(
             expert_mode=False,
             highlight=False,
             project_id=aspect.project_id,
+            folder_id=None,
             filter=filter,
             sorts=sorts,
             page_number=None,
