@@ -17,6 +17,8 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { DuplicateFinderActions } from "./duplicateFinderSlice.ts";
 
 interface DuplicateDocumentData {
   sdocId: string;
@@ -47,15 +49,26 @@ function ProjectDuplicateDocuments() {
   const [maxDifferentWords, setMaxDifferentWords] = useState<number>(10);
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
+  // global client state
+  const dispatch = useAppDispatch();
+  const lastDuplicateFinderJobId = useAppSelector((state) => state.duplicateFinder.lastDuplicateFinderJobId);
+
   // actions
-  const startDuplicateFinderJobMutation = JobHooks.useStartDuplicateFinderJob();
+  const { mutate: startDuplicateFinderJob, isPending } = JobHooks.useStartDuplicateFinderJob();
   const handleClickFindDuplicateTextDocuments = () => {
-    startDuplicateFinderJobMutation.mutate({
-      requestBody: {
-        project_id: projectId,
-        max_different_words: maxDifferentWords,
+    startDuplicateFinderJob(
+      {
+        requestBody: {
+          project_id: projectId,
+          max_different_words: maxDifferentWords,
+        },
       },
-    });
+      {
+        onSuccess: (data) => {
+          dispatch(DuplicateFinderActions.setLastDuplicateFinderJobId(data.job_id));
+        },
+      },
+    );
   };
   const deleteDocumentsMutation = SdocHooks.useDeleteDocuments();
   const handleDeleteClick = (sdocIds: number[]) => {
@@ -66,12 +79,19 @@ function ProjectDuplicateDocuments() {
       {
         onSuccess: () => {
           setRowSelection({});
-          startDuplicateFinderJobMutation.mutate({
-            requestBody: {
-              project_id: projectId,
-              max_different_words: maxDifferentWords,
+          startDuplicateFinderJob(
+            {
+              requestBody: {
+                project_id: projectId,
+                max_different_words: maxDifferentWords,
+              },
             },
-          });
+            {
+              onSuccess: (data) => {
+                dispatch(DuplicateFinderActions.setLastDuplicateFinderJobId(data.job_id));
+              },
+            },
+          );
         },
       },
     );
@@ -89,10 +109,7 @@ function ProjectDuplicateDocuments() {
   };
 
   // job data
-  const duplicateFinderJob = JobHooks.usePollDuplicateFinderJob(
-    startDuplicateFinderJobMutation.data?.job_id,
-    undefined,
-  );
+  const duplicateFinderJob = JobHooks.usePollDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
 
   // computed
   const data = useMemo(() => {
@@ -139,7 +156,7 @@ function ProjectDuplicateDocuments() {
     state: {
       rowSelection, //pass our managed row selection state to the table to use
       isLoading:
-        startDuplicateFinderJobMutation.isPending ||
+        isPending ||
         duplicateFinderJob.isLoading ||
         (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED),
     },
@@ -227,7 +244,7 @@ function ProjectDuplicateDocuments() {
                 sx={{ ml: 1 }}
                 onClick={handleClickFindDuplicateTextDocuments}
                 loading={
-                  startDuplicateFinderJobMutation.isPending ||
+                  isPending ||
                   duplicateFinderJob.isLoading ||
                   (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED)
                 }
