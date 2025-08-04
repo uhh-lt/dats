@@ -63,17 +63,28 @@ class SdocSearchService(metaclass=SingletonMeta):
     ) -> tuple[list[int], int]:
         builder = SearchBuilder(db, filter, sorts)
         # build the initial subquery that just queries all sdoc_ids of the project
-        subquery = builder.init_subquery(
-            db.query(
-                SourceDocumentORM.id,
-            )
-            .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
-            .group_by(SourceDocumentORM.id)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                FolderORM.parent_id == folder_id,
-            )
-        ).build_subquery()
+        if folder_id is None:
+            subquery = builder.init_subquery(
+                db.query(
+                    SourceDocumentORM.id,
+                )
+                .group_by(SourceDocumentORM.id)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                )
+            ).build_subquery()
+        else:
+            subquery = builder.init_subquery(
+                db.query(
+                    SourceDocumentORM.id,
+                )
+                .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
+                .group_by(SourceDocumentORM.id)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    FolderORM.parent_id == folder_id,
+                )
+            ).build_subquery()
         # build the query, specifying the result columns and joining the subquery
         builder.init_query(
             db.query(
