@@ -41,7 +41,7 @@ e.g.
 This is the document, sentence by sentence:
 <document>
 
-Remember to provide a category for each sentence. You are NOT ALLOWED to use any category other than those provided.
+Remember you do not have to provide a category for each sentence. Only assign a category if you are sure that the category fits well to the sentence. Use only the provided categories!
 """
 
 en_example_template = """
@@ -66,7 +66,7 @@ e.g.
 Dies ist das Dokument, Satz für Satz:
 <document>
 
-Denke daran, dass du für jeden Satz eine Kategorie angeben musst. Du darfst KEINE andere Kategorie als die bereitgestellten verwenden.
+Denke daran, dass du nicht für jeden Satz eine Kategorie angeben musst. Vergebe nur eine Kategorie, wenn du dir sicher bist, dass die Kategorie gut zu dem Satz passt. Verwende ausschließlich die bereitgestellten Kategorien!
 """
 
 de_example_template = """
