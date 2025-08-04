@@ -26,7 +26,11 @@ function DocumentInformation({
 
   // the queries are disabled if sdocId is undefined => show the idle content
   if (sdocId === undefined || sdocId === null) {
-    return <Box {...props}>{isIdleContent}</Box>;
+    return (
+      <Box className="h100" {...props}>
+        {isIdleContent}
+      </Box>
+    );
   }
 
   return (
