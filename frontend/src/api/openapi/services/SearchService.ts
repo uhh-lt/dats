@@ -49,6 +49,7 @@ export class SearchService {
    */
   public static searchSdocs({
     projectId,
+    folderId,
     searchQuery,
     expertMode,
     highlight,
@@ -57,6 +58,7 @@ export class SearchService {
     pageSize,
   }: {
     projectId: number;
+    folderId: number | null;
     searchQuery: string;
     expertMode: boolean;
     highlight: boolean;
@@ -69,6 +71,7 @@ export class SearchService {
       url: "/search/sdoc",
       query: {
         project_id: projectId,
+        folder_id: folderId,
         search_query: searchQuery,
         expert_mode: expertMode,
         highlight: highlight,

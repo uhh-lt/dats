@@ -147,6 +147,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     SearchActions.onGridDensityChange,
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
+  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
@@ -236,6 +237,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     queryKey: [
       QueryKey.SEARCH_TABLE,
       projectId,
+      selectedFolderId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
       sortingModel, // refetch when sorting changes
@@ -245,6 +247,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       const data = await SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
+        folderId: selectedFolderId === -1 ? null : selectedFolderId, // -1 is the root folder -> search in all projects
         highlight: true,
         expertMode: false,
         requestBody: {

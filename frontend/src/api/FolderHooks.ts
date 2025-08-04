@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
+import { SearchActions } from "../views/search/DocumentSearch/searchSlice.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { FolderRead } from "./openapi/models/FolderRead.ts";
 import { FolderType } from "./openapi/models/FolderType.ts";
@@ -89,8 +90,9 @@ const useUpdateFolder = () =>
     },
   });
 
-const useMoveFolders = () =>
-  useMutation({
+const useMoveFolders = () => {
+  const dispatch = useAppDispatch();
+  return useMutation({
     mutationFn: FolderService.moveFolders,
     onSuccess: (datas) => {
       queryClient.setQueryData<FolderMap>(
@@ -104,11 +106,18 @@ const useMoveFolders = () =>
           return newData;
         },
       );
+      // query
+      queryClient.invalidateQueries({
+        queryKey: [QueryKey.SEARCH_TABLE],
+      });
+      // global client state notification
+      dispatch(SearchActions.onMoveFolders());
     },
     meta: {
       successMessage: (data: FolderRead[]) => `Moved ${data.length} folder${data.length === 1 ? "" : "s"}!`,
     },
   });
+};
 
 const useDeleteFolder = () =>
   useMutation({

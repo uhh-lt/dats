@@ -2911,6 +2911,12 @@
             "schema": { "type": "integer", "title": "Project Id" }
           },
           {
+            "name": "folder_id",
+            "in": "query",
+            "required": true,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Folder Id" }
+          },
+          {
             "name": "search_query",
             "in": "query",
             "required": true,

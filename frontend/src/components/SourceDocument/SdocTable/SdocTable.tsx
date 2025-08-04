@@ -131,6 +131,7 @@ function SdocTable({
       SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
+        folderId: null, // search in all folders / project
         highlight: true,
         expertMode: false,
         requestBody: {

@@ -2,6 +2,7 @@ from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
+from core.doc.folder_orm import FolderORM
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
@@ -54,6 +55,7 @@ class SdocSearchService(metaclass=SingletonMeta):
         self,
         db: Session,
         project_id: int,
+        folder_id: int | None,
         filter: Filter[SdocColumns],
         sorts: list[Sort[SdocColumns]] = [],
         page_number: int | None = None,
@@ -65,8 +67,12 @@ class SdocSearchService(metaclass=SingletonMeta):
             db.query(
                 SourceDocumentORM.id,
             )
+            .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
             .group_by(SourceDocumentORM.id)
-            .filter(SourceDocumentORM.project_id == project_id)
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+                FolderORM.parent_id == folder_id,
+            )
         ).build_subquery()
         # build the query, specifying the result columns and joining the subquery
         builder.init_query(
@@ -83,6 +89,7 @@ class SdocSearchService(metaclass=SingletonMeta):
     def search_ids(
         self,
         project_id: int,
+        folder_id: int | None,
         search_query: str,
         expert_mode: bool,
         highlight: bool,
@@ -96,6 +103,7 @@ class SdocSearchService(metaclass=SingletonMeta):
                 filtered_sdoc_ids, total_results = self.filter_sdoc_ids(
                     db,
                     project_id,
+                    folder_id,
                     filter,
                     sorts,
                     page_number=page_number,
@@ -112,7 +120,7 @@ class SdocSearchService(metaclass=SingletonMeta):
             else:
                 with SQLRepo().db_session() as db:
                     filtered_sdoc_ids, _ = self.filter_sdoc_ids(
-                        db, project_id, filter, sorts
+                        db, project_id, folder_id, filter, sorts
                     )
                     filtered_sdoc_ids = set(filtered_sdoc_ids)
 
@@ -137,6 +145,7 @@ class SdocSearchService(metaclass=SingletonMeta):
     def search(
         self,
         project_id: int,
+        folder_id: int | None,
         search_query: str,
         expert_mode: bool,
         highlight: bool,
@@ -147,6 +156,7 @@ class SdocSearchService(metaclass=SingletonMeta):
     ) -> PaginatedSDocHits:
         data = self.search_ids(
             project_id,
+            folder_id,
             search_query,
             expert_mode,
             highlight,
