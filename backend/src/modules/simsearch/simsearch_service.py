@@ -107,7 +107,9 @@ class SimSearchService(metaclass=SingletonMeta):
         filter: Filter[SdocColumns],
     ) -> list[SimSearchSentenceHit]:
         with self.sqlr.db_session() as db:
-            filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(db, proj_id, filter)
+            filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(
+                db=db, project_id=proj_id, folder_id=None, filter=filter
+            )
 
         return SimSearchService().find_similar_sentences(
             sdoc_ids_to_search=filtered_sdoc_ids,
@@ -156,7 +158,9 @@ class SimSearchService(metaclass=SingletonMeta):
         filter: Filter[SdocColumns],
     ) -> list[SimSearchImageHit]:
         with self.sqlr.db_session() as db:
-            filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(db, proj_id, filter)
+            filtered_sdoc_ids, _ = self.sdoc_search.filter_sdoc_ids(
+                db=db, project_id=proj_id, folder_id=None, filter=filter
+            )
 
         return SimSearchService().find_similar_images(
             sdoc_ids_to_search=filtered_sdoc_ids,
