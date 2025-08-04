@@ -28,7 +28,7 @@ function MetadataExtractionResultStep() {
       </LLMUtterance>
       {llmJob.isSuccess && (
         <MetadataExtractionResultStepTable
-          data={(llmJob.data.result?.specific_task_result as MetadataExtractionLLMJobResult).results || []}
+          data={(llmJob.data.output?.specific_task_result as MetadataExtractionLLMJobResult).results || []}
         />
       )}
     </>

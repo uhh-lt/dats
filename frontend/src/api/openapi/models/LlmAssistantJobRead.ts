@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DuplicateFinderInput } from "./DuplicateFinderInput";
-import type { DuplicateFinderOutput } from "./DuplicateFinderOutput";
 import type { JobStatus } from "./JobStatus";
-export type DuplicateFinderJobRead = {
+import type { LLMJobInput_Output } from "./LLMJobInput_Output";
+import type { LLMJobOutput } from "./LLMJobOutput";
+export type LlmAssistantJobRead = {
   /**
    * RQ job ID
    */
@@ -37,9 +37,9 @@ export type DuplicateFinderJobRead = {
   /**
    * Input for the job
    */
-  input: DuplicateFinderInput;
+  input: LLMJobInput_Output;
   /**
    * Output for the job
    */
-  output?: DuplicateFinderOutput | null;
+  output?: LLMJobOutput | null;
 };

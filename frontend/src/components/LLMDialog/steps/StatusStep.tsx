@@ -1,7 +1,7 @@
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
 import LLMHooks from "../../../api/LLMHooks.ts";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
+import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import LinearProgressWithLabel from "../../LinearProgressWithLabel.tsx";
@@ -20,8 +20,8 @@ function StatusStep() {
   }, [dispatch]);
 
   const handleNext = useCallback(() => {
-    if (llmJob.data && llmJob.data.status === BackgroundJobStatus.FINISHED && llmJob.data.result) {
-      dispatch(CRUDDialogActions.llmDialogGoToResult({ result: llmJob.data.result }));
+    if (llmJob.data && llmJob.data.status === JobStatus.FINISHED && llmJob.data.output) {
+      dispatch(CRUDDialogActions.llmDialogGoToResult({ result: llmJob.data.output }));
     } else {
       console.error("Job is not finished yet.");
     }
@@ -29,13 +29,13 @@ function StatusStep() {
 
   const progressTooltip = useMemo(() => {
     if (!llmJob.data) return "";
-    return llmJob.data.current_step === llmJob.data.num_steps_total
-      ? `Status: All ${llmJob.data?.num_steps_total} steps are done.`
-      : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.num_steps_total} steps are done.`;
+    return llmJob.data.current_step === llmJob.data.num_steps
+      ? `Status: All ${llmJob.data?.num_steps} steps are done.`
+      : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.num_steps} steps are done.`;
   }, [llmJob.data]);
 
   const isNextDisabled = useMemo(
-    () => !llmJob.data || llmJob.data.status !== BackgroundJobStatus.FINISHED || !llmJob.data.result,
+    () => !llmJob.data || llmJob.data.status !== JobStatus.FINISHED || !llmJob.data.output,
     [llmJob.data],
   );
 
@@ -50,21 +50,21 @@ function StatusStep() {
             sx={{ ml: 5 }}
             variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
             current={llmJob.isSuccess ? llmJob.data.current_step : 0}
-            max={llmJob.isSuccess ? llmJob.data.num_steps_total : 0}
+            max={llmJob.isSuccess ? llmJob.data.num_steps : 0}
             tooltip={progressTooltip}
           />
           {llmJob.isSuccess && (
             <>
               <Typography variant="caption" color="textSecondary" textAlign="center" mt={-3}>
-                Status: {llmJob.data.status} - {llmJob.data.current_step_description}
+                Status: {llmJob.data.status} - {llmJob.data.status_message}
               </Typography>
-              {llmJob.data.status === BackgroundJobStatus.FINISHED ? (
+              {llmJob.data.status === JobStatus.FINISHED ? (
                 <LLMUtterance>
                   <Typography>
-                    I am done with {llmJob.data.parameters.llm_job_type.toLowerCase()}. You can view the results now!
+                    I am done with {llmJob.data.input.llm_job_type.toLowerCase()}. You can view the results now!
                   </Typography>
                 </LLMUtterance>
-              ) : llmJob.data.status === BackgroundJobStatus.ERRORNEOUS ? (
+              ) : llmJob.data.status === JobStatus.FAILED ? (
                 <LLMUtterance>
                   <Typography>An error occurred! I am very sorry. You can close this dialog now...</Typography>
                 </LLMUtterance>
@@ -72,8 +72,8 @@ function StatusStep() {
             </>
           )}
           <Typography mt={4} fontSize="0.9em" color="textSecondary">
-            This may take a while. You can close the dialog and come back later. You can find all active LLM jobs in
-            Project Settings &gt; Background Tasks.
+            This may take a while. You can close the dialog and come back later. You can find all LLM jobs by opening
+            the LLM Assistant again.
           </Typography>
         </Stack>
       </DialogContent>

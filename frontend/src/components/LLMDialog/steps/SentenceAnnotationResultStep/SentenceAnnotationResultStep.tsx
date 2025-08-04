@@ -27,11 +27,11 @@ function SentenceAnnotationResultStep() {
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
-  if (llmJob.isSuccess && llmJob.data.result) {
+  if (llmJob.isSuccess && llmJob.data.output) {
     return (
       <SentenceAnnotationResultStepContent
-        jobResult={llmJob.data.result.specific_task_result as SentenceAnnotationLLMJobResult}
-        approachType={llmJob.data.parameters.llm_approach_type}
+        jobResult={llmJob.data.output.specific_task_result as SentenceAnnotationLLMJobResult}
+        approachType={llmJob.data.input.llm_approach_type}
       />
     );
   } else if (llmJob.isLoading) {

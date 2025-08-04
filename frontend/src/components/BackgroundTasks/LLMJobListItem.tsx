@@ -1,50 +1,32 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import LLMHooks from "../../api/LLMHooks.ts";
 import { ApproachType } from "../../api/openapi/models/ApproachType.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FewShotParams } from "../../api/openapi/models/FewShotParams.ts";
-import { LLMJobRead } from "../../api/openapi/models/LLMJobRead.ts";
-import { LLMJobResult } from "../../api/openapi/models/LLMJobResult.ts";
+import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
+import { LlmAssistantJobRead } from "../../api/openapi/models/LlmAssistantJobRead.ts";
+import { LLMJobOutput } from "../../api/openapi/models/LLMJobOutput.ts";
 import { LLMPromptTemplates } from "../../api/openapi/models/LLMPromptTemplates.ts";
 import { ModelTrainingParams } from "../../api/openapi/models/ModelTrainingParams.ts";
 import { ZeroShotParams } from "../../api/openapi/models/ZeroShotParams.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
-import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
+import JobListItem from "./JobListItem.tsx";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface LLMJobListItemProps {
-  initialLLMJob: LLMJobRead;
+  initialLLMJob: LlmAssistantJobRead;
 }
 
 function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
   // global server state (react-query)
-  const llmJob = LLMHooks.usePollLLMJob(initialLLMJob.id, initialLLMJob);
-
-  // compute date string
-  const subTitle = useMemo(() => {
-    if (!llmJob.data) {
-      return "";
-    }
-    const createdDate = dateToLocaleString(llmJob.data.created);
-    const updatedDate = dateToLocaleString(llmJob.data.updated);
-    let title = `${llmJob.data.parameters.specific_task_parameters.sdoc_ids.length} documents, started at ${createdDate}`;
-    if (llmJob.data.status === BackgroundJobStatus.FINISHED) {
-      title += `, finished at ${updatedDate}`;
-    } else if (llmJob.data.status === BackgroundJobStatus.ABORTED) {
-      title += `, aborted at ${updatedDate}`;
-    } else if (llmJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
-      title += `, failed at ${updatedDate}`;
-    }
-    return title;
-  }, [llmJob.data]);
+  const llmJob = LLMHooks.usePollLLMJob(initialLLMJob.job_id, initialLLMJob);
 
   // actions
   const dispatch = useAppDispatch();
@@ -62,11 +44,11 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
 
   if (llmJob.isSuccess) {
     return (
-      <BackgroundJobListItem
+      <JobListItem
         jobStatus={llmJob.data.status}
-        jobId={llmJob.data.id}
-        title={`LLM Job - ${llmJob.data.parameters.llm_job_type} - ${llmJob.data.parameters.llm_approach_type}`}
-        subTitle={subTitle}
+        jobId={llmJob.data.job_id}
+        title={`LLM Job - ${llmJob.data.input.llm_job_type} - ${llmJob.data.input.llm_approach_type}`}
+        subTitle={`This job processes ${llmJob.data.input.specific_task_parameters.sdoc_ids.length} documents.`}
       >
         <Stack sx={{ px: 9 }}>
           <TabContext value={tab}>
@@ -75,13 +57,13 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
                 <Tab key={"Status"} label={"Status"} value={"Status"} />
                 <Tab key={"Inputs"} label={"Inputs"} value={"Inputs"} />
                 <div style={{ flexGrow: 1 }} />
-                {llmJob.data.status === BackgroundJobStatus.FINISHED ? (
+                {llmJob.data.status === JobStatus.FINISHED ? (
                   <Button variant="contained" onClick={handleViewResults} sx={{ m: 0.5 }}>
-                    View {llmJob.data.parameters.llm_job_type} results
+                    View {llmJob.data.input.llm_job_type} results
                   </Button>
-                ) : llmJob.data.status === BackgroundJobStatus.RUNNING ? (
+                ) : llmJob.data.status === JobStatus.STARTED ? (
                   <Button variant="contained" onClick={handleViewResults} sx={{ m: 0.5 }}>
-                    View {llmJob.data.parameters.llm_job_type} progress
+                    View {llmJob.data.input.llm_job_type} progress
                   </Button>
                 ) : null}
               </TabList>
@@ -90,27 +72,25 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
               <InputViewer llmJob={llmJob.data} />
             </TabPanel>
             <TabPanel key={"Status"} value={"Status"} sx={{ p: 0 }}>
-              {llmJob.data.result ? <StatusViewer llmJobResult={llmJob.data.result} /> : "No results available"}
+              {llmJob.data.output ? <StatusViewer llmJobResult={llmJob.data.output} /> : "No results available"}
             </TabPanel>
           </TabContext>
         </Stack>
-      </BackgroundJobListItem>
+      </JobListItem>
     );
   } else {
     return null;
   }
 }
 
-function InputViewer({ llmJob }: { llmJob: LLMJobRead }) {
-  switch (llmJob.parameters.llm_approach_type) {
+function InputViewer({ llmJob }: { llmJob: LlmAssistantJobRead }) {
+  switch (llmJob.input.llm_approach_type) {
     case ApproachType.LLM_ZERO_SHOT:
-      return <PromptViewer prompts={(llmJob.parameters.specific_approach_parameters as ZeroShotParams).prompts} />;
+      return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
     case ApproachType.LLM_FEW_SHOT:
-      return <PromptViewer prompts={(llmJob.parameters.specific_approach_parameters as FewShotParams).prompts} />;
+      return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as FewShotParams).prompts} />;
     case ApproachType.MODEL_TRAINING:
-      return (
-        <TrainingParameterViewer parameters={llmJob.parameters.specific_approach_parameters as ModelTrainingParams} />
-      );
+      return <TrainingParameterViewer parameters={llmJob.input.specific_approach_parameters as ModelTrainingParams} />;
     default:
       return <>Approach is not supported!</>;
   }
@@ -168,7 +148,7 @@ function TrainingParameterViewer({ parameters }: { parameters: ModelTrainingPara
   );
 }
 
-function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobResult }) {
+function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobOutput }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: llmJobResult.specific_task_result.results.length,
