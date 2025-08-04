@@ -1,8 +1,9 @@
-import { IconButton, ListItemText, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu } from "@mui/material";
 import { useCallback, useState } from "react";
 import { FolderRead } from "../../../api/openapi/models/FolderRead.ts";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 import { ITree } from "../../TreeExplorer/ITree.ts";
+import FolderEditMenuItem from "./FolderEditMenuItem.tsx";
 
 interface FolderExplorerActionMenuProps {
   node: ITree<FolderRead>;
@@ -28,12 +29,7 @@ function FolderExplorerActionMenu({ node }: FolderExplorerActionMenuProps) {
         {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MenuItem>
-          <ListItemText>TODO {node.data.name}</ListItemText>
-        </MenuItem>
-        <MenuItem>
-          <ListItemText>Todo Test 2</ListItemText>
-        </MenuItem>
+        <FolderEditMenuItem folder={node.data} onClick={handleClose} />
       </Menu>
     </>
   );
