@@ -1512,88 +1512,6 @@
         }
       }
     },
-    "/llm": {
-      "post": {
-        "tags": ["llm"],
-        "summary": "Returns the LLMJob for the given Parameters",
-        "operationId": "start_llm_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters2-Input" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/llm/{llm_job_id}": {
-      "get": {
-        "tags": ["llm"],
-        "summary": "Returns the LLMJob for the given ID if it exists",
-        "operationId": "get_llm_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "llm_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Llm Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/llm/project/{project_id}": {
-      "get": {
-        "tags": ["llm"],
-        "summary": "Returns all LLMJobRead for the given project ID if it exists",
-        "operationId": "get_all_llm_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/LLMJobRead" },
-                  "title": "Response Llm-Get All Llm Jobs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/llm/create_prompt_templates": {
       "post": {
         "tags": ["llm"],
@@ -1715,6 +1633,129 @@
                   "type": "object",
                   "additionalProperties": { "type": "integer" },
                   "title": "Response Llm-Count Existing Assistant Annotations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/llm_assistant": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Start LlmAssistant job",
+        "operationId": "start_llm_assistant_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobInput-Input" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/llm/llm_assistant/{job_id}": {
+      "get": {
+        "tags": ["llm"],
+        "summary": "Get LlmAssistant job",
+        "operationId": "get_llm_assistant_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LlmAssistantJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/llm_assistant/{job_id}/abort": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Abort LlmAssistant job",
+        "operationId": "abort_llm_assistant_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Llm-Abort Llm Assistant Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/llm_assistant/{job_id}/retry": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Retry LlmAssistant job",
+        "operationId": "retry_llm_assistant_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Llm-Retry Llm Assistant Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/llm_assistant/project/{project_id}": {
+      "get": {
+        "tags": ["llm"],
+        "summary": "Get all LlmAssistant jobs by project",
+        "operationId": "get_llm_assistant_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LlmAssistantJobRead" },
+                  "title": "Response Llm-Get Llm Assistant Jobs By Project"
                 }
               }
             }
@@ -2911,12 +2952,6 @@
             "schema": { "type": "integer", "title": "Project Id" }
           },
           {
-            "name": "folder_id",
-            "in": "query",
-            "required": true,
-            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Folder Id" }
-          },
-          {
             "name": "search_query",
             "in": "query",
             "required": true,
@@ -2933,6 +2968,12 @@
             "in": "query",
             "required": true,
             "schema": { "type": "boolean", "title": "Highlight" }
+          },
+          {
+            "name": "folder_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Folder Id" }
           },
           {
             "name": "page_number",
@@ -7544,6 +7585,16 @@
             "title": "Status Message",
             "description": "Status message"
           },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "num_steps": {
+            "type": "integer",
+            "title": "Num Steps",
+            "description": "Total number of steps in the job process"
+          },
           "input": { "$ref": "#/components/schemas/DuplicateFinderInput", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/DuplicateFinderOutput" }, { "type": "null" }],
@@ -7551,7 +7602,7 @@
           }
         },
         "type": "object",
-        "required": ["job_id", "job_type", "project_id", "status", "input"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "num_steps", "input"],
         "title": "DuplicateFinderJobRead"
       },
       "DuplicateFinderOutput": {
@@ -8447,44 +8498,17 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
-      "LLMJobParameters": {
+      "LLMJobInput-Input": {
         "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
           "llm_job_type": {
             "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "specific_task_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/TaggingParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionParams" },
-              { "$ref": "#/components/schemas/AnnotationParams" },
-              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
-            ],
-            "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMJob w.r.t it's type",
-            "discriminator": {
-              "propertyName": "llm_job_type",
-              "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
-                "TAGGING": "#/components/schemas/TaggingParams"
-              }
-            }
-          }
-        },
-        "type": "object",
-        "required": ["llm_job_type", "project_id", "specific_task_parameters"],
-        "title": "LLMJobParameters"
-      },
-      "LLMJobParameters2-Input": {
-        "properties": {
-          "llm_job_type": {
-            "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMJob (what to llm)"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "specific_task_parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/TaggingParams" },
@@ -8528,21 +8552,25 @@
         },
         "type": "object",
         "required": [
-          "llm_job_type",
           "project_id",
+          "llm_job_type",
           "specific_task_parameters",
           "llm_approach_type",
           "specific_approach_parameters"
         ],
-        "title": "LLMJobParameters2"
+        "title": "LLMJobInput"
       },
-      "LLMJobParameters2-Output": {
+      "LLMJobInput-Output": {
         "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
           "llm_job_type": {
             "$ref": "#/components/schemas/TaskType",
             "description": "The type of the LLMJob (what to llm)"
           },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "specific_task_parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/TaggingParams" },
@@ -8586,63 +8614,15 @@
         },
         "type": "object",
         "required": [
-          "llm_job_type",
           "project_id",
+          "llm_job_type",
           "specific_task_parameters",
           "llm_approach_type",
           "specific_approach_parameters"
         ],
-        "title": "LLMJobParameters2"
+        "title": "LLMJobInput"
       },
-      "LLMJobRead": {
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the LLMJob",
-            "default": "Waiting"
-          },
-          "num_steps_total": { "type": "integer", "title": "Num Steps Total", "description": "Number of total steps." },
-          "current_step": { "type": "integer", "title": "Current Step", "description": "The current step." },
-          "current_step_description": {
-            "type": "string",
-            "title": "Current Step Description",
-            "description": "Description of the current step."
-          },
-          "result": {
-            "anyOf": [{ "$ref": "#/components/schemas/LLMJobResult" }, { "type": "null" }],
-            "description": "Results of the LLMJob."
-          },
-          "id": { "type": "string", "title": "Id", "description": "ID of the LLMJob" },
-          "parameters": {
-            "$ref": "#/components/schemas/LLMJobParameters2-Output",
-            "description": "The parameters of the LLMJob that defines what to llm!"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the LLMJob"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the LLMJob"
-          }
-        },
-        "type": "object",
-        "required": [
-          "num_steps_total",
-          "current_step",
-          "current_step_description",
-          "id",
-          "parameters",
-          "created",
-          "updated"
-        ],
-        "title": "LLMJobRead"
-      },
-      "LLMJobResult": {
+      "LLMJobOutput": {
         "properties": {
           "llm_job_type": {
             "$ref": "#/components/schemas/TaskType",
@@ -8670,7 +8650,42 @@
         },
         "type": "object",
         "required": ["llm_job_type", "specific_task_result"],
-        "title": "LLMJobResult"
+        "title": "LLMJobOutput"
+      },
+      "LLMJobParameters": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "llm_job_type": {
+            "$ref": "#/components/schemas/TaskType",
+            "description": "The type of the LLMJob (what to llm)"
+          },
+          "specific_task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TaggingParams" },
+              { "$ref": "#/components/schemas/MetadataExtractionParams" },
+              { "$ref": "#/components/schemas/AnnotationParams" },
+              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
+            ],
+            "title": "Specific Task Parameters",
+            "description": "Specific parameters for the LLMJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_job_type",
+              "mapping": {
+                "ANNOTATION": "#/components/schemas/AnnotationParams",
+                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
+                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
+                "TAGGING": "#/components/schemas/TaggingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "llm_job_type", "specific_task_parameters"],
+        "title": "LLMJobParameters"
       },
       "LLMPromptTemplates": {
         "properties": {
@@ -8691,6 +8706,41 @@
         "title": "LLMPromptTemplates"
       },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
+      "LlmAssistantJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "num_steps": {
+            "type": "integer",
+            "title": "Num Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/LLMJobInput-Output", "description": "Input for the job" },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/LLMJobOutput" }, { "type": "null" }],
+            "description": "Output for the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "num_steps", "input"],
+        "title": "LlmAssistantJobRead"
+      },
       "LogicalOperator": {
         "type": "string",
         "enum": ["or", "and"],

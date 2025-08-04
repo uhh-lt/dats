@@ -65,7 +65,7 @@ function TrainingParameterEditorStep() {
         onSuccess: (data) => {
           dispatch(
             CRUDDialogActions.llmDialogGoToWaiting({
-              jobId: data.id,
+              jobId: data.job_id,
               trainingParameters: trainingParameters,
             }),
           );

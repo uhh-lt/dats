@@ -18,9 +18,9 @@ function AnnotationResultStep() {
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
-  if (llmJob.isSuccess && llmJob.data.result) {
+  if (llmJob.isSuccess && llmJob.data.output) {
     return (
-      <AnnotationResultStepContent jobResult={llmJob.data.result.specific_task_result as AnnotationLLMJobResult} />
+      <AnnotationResultStepContent jobResult={llmJob.data.output.specific_task_result as AnnotationLLMJobResult} />
     );
   } else if (llmJob.isLoading) {
     return (

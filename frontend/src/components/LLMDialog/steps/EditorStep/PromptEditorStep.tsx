@@ -137,7 +137,7 @@ function PromptEditorStep() {
         onSuccess: (data) => {
           dispatch(
             CRUDDialogActions.llmDialogGoToWaiting({
-              jobId: data.id,
+              jobId: data.job_id,
               prompts: prompts,
             }),
           );

@@ -19,10 +19,10 @@ function DocumentTagResultStep() {
   const documentTags = TagHooks.useGetAllTags();
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
-  if (llmJob.isSuccess && llmJob.data.result && documentTags.isSuccess) {
+  if (llmJob.isSuccess && llmJob.data.output && documentTags.isSuccess) {
     return (
       <DocumentTagResultStepContent
-        jobResult={llmJob.data.result.specific_task_result as TaggingLLMJobResult}
+        jobResult={llmJob.data.output.specific_task_result as TaggingLLMJobResult}
         tags={documentTags.data}
       />
     );

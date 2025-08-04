@@ -11,15 +11,15 @@ import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
 import type { TaggingParams } from "./TaggingParams";
 import type { TaskType } from "./TaskType";
 import type { ZeroShotParams } from "./ZeroShotParams";
-export type LLMJobParameters2_Output = {
+export type LLMJobInput_Output = {
+  /**
+   * Project ID associated with the job
+   */
+  project_id: number;
   /**
    * The type of the LLMJob (what to llm)
    */
   llm_job_type: TaskType;
-  /**
-   * The ID of the Project to analyse
-   */
-  project_id: number;
   /**
    * Specific parameters for the LLMJob w.r.t it's type
    */

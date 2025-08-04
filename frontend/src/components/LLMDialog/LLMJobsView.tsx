@@ -33,7 +33,7 @@ function LLMJobsView() {
         {allLLMJobs.length > 0 && (
           <Stack spacing={1}>
             {allLLMJobs.map((job) => (
-              <LLMJobListItem key={job.id} initialLLMJob={job} />
+              <LLMJobListItem key={job.job_id} initialLLMJob={job} />
             ))}
           </Stack>
         )}

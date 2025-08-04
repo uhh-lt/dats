@@ -4,8 +4,8 @@ import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommenda
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { FolderRead } from "../api/openapi/models/FolderRead.ts";
-import { LLMJobRead } from "../api/openapi/models/LLMJobRead.ts";
-import { LLMJobResult } from "../api/openapi/models/LLMJobResult.ts";
+import { LlmAssistantJobRead } from "../api/openapi/models/LlmAssistantJobRead.ts";
+import { LLMJobOutput } from "../api/openapi/models/LLMJobOutput.ts";
 import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts";
 import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead.ts";
 import { TagRead } from "../api/openapi/models/TagRead.ts";
@@ -67,7 +67,7 @@ interface DialogState {
   llmPrompts: LLMPromptTemplates[];
   llmParameters: TrainingParameters;
   llmJobId?: string;
-  llmJobResult: LLMJobResult | null | undefined;
+  llmJobResult: LLMJobOutput | null | undefined;
   // quick command menu
   isQuickCommandMenuOpen: boolean;
 }
@@ -357,17 +357,17 @@ export const dialogSlice = createSlice({
       }
     },
     // Step 4 Variant C: We click on View Results from Background Tasks
-    llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LLMJobRead>) => {
+    llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
       state.isLLMDialogOpen = true;
       state.llmStep = 4;
 
-      state.llmProjectId = action.payload.parameters.project_id;
-      state.llmJobId = action.payload.id;
-      state.llmMethod = action.payload.parameters.llm_job_type;
-      state.llmApproach = action.payload.parameters.llm_approach_type;
+      state.llmProjectId = action.payload.input.project_id;
+      state.llmJobId = action.payload.job_id;
+      state.llmMethod = action.payload.input.llm_job_type;
+      state.llmApproach = action.payload.input.llm_approach_type;
     },
     // Step 5: Wait for the job to finish
-    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobResult }>) => {
+    llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobOutput }>) => {
       state.llmJobResult = action.payload.result;
       state.llmStep = 5;
     },

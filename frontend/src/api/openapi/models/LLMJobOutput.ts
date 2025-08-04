@@ -7,7 +7,7 @@ import type { MetadataExtractionLLMJobResult } from "./MetadataExtractionLLMJobR
 import type { SentenceAnnotationLLMJobResult } from "./SentenceAnnotationLLMJobResult";
 import type { TaggingLLMJobResult } from "./TaggingLLMJobResult";
 import type { TaskType } from "./TaskType";
-export type LLMJobResult = {
+export type LLMJobOutput = {
   /**
    * The type of the LLMJob (what to llm)
    */
