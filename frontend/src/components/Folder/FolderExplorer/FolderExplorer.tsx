@@ -13,7 +13,7 @@ import FolderExplorerActionMenu from "./FolderExplorerActionMenu.tsx";
 import useComputeFolderTree from "./useComputeFolderTree.ts";
 
 const renderActions = (node: ITree<FolderRead>) => <FolderExplorerActionMenu node={node} />;
-const isDroppable = (node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL && node.data.id !== -1;
+const isDroppable = (node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL;
 const getDroppableId = (node: ITree<FolderRead>) => `folder-${node.data.id}`;
 
 interface FolderExplorerProps {
