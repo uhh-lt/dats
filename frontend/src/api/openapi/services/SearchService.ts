@@ -49,20 +49,20 @@ export class SearchService {
    */
   public static searchSdocs({
     projectId,
-    folderId,
     searchQuery,
     expertMode,
     highlight,
     requestBody,
+    folderId,
     pageNumber,
     pageSize,
   }: {
     projectId: number;
-    folderId: number | null;
     searchQuery: string;
     expertMode: boolean;
     highlight: boolean;
     requestBody: Body_search_search_sdocs;
+    folderId?: number | null;
     pageNumber?: number | null;
     pageSize?: number | null;
   }): CancelablePromise<PaginatedSDocHits> {
@@ -71,10 +71,10 @@ export class SearchService {
       url: "/search/sdoc",
       query: {
         project_id: projectId,
-        folder_id: folderId,
         search_query: searchQuery,
         expert_mode: expertMode,
         highlight: highlight,
+        folder_id: folderId,
         page_number: pageNumber,
         page_size: pageSize,
       },
