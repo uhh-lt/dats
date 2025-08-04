@@ -43,6 +43,8 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
     project_id: int = Field(..., description="Project ID associated with the job")
     status: JobStatus = Field(..., description="Current status of the job")
     status_message: str | None = Field(None, description="Status message")
+    current_step: int = Field(..., description="Current step in the job process")
+    num_steps: int = Field(..., description="Total number of steps in the job process")
     input: InputT = Field(..., description="Input for the job")
     output: OutputT | None = Field(None, description="Output for the job")
 
@@ -54,6 +56,8 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
             project_id=job.meta.get("project_id", 0),
             status=JobStatus(job.get_status()),
             status_message=job.meta.get("status_message", ""),
+            current_step=job.meta.get("current_step", 0),
+            num_steps=job.meta.get("num_steps", 1),
             input=job.kwargs["payload"],
             output=job.return_value(),
         )

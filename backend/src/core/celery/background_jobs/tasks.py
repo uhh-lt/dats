@@ -4,7 +4,6 @@ from core.celery.background_jobs.cota import start_cota_refinement_job_
 from core.celery.background_jobs.crawl import start_crawler_job_
 from core.celery.background_jobs.export import start_export_job_
 from core.celery.background_jobs.import_ import start_import_job_
-from core.celery.background_jobs.llm import start_llm_job_
 from core.celery.background_jobs.ml import start_ml_job_
 from core.celery.background_jobs.perspectives import start_perspectives_job_
 from core.celery.background_jobs.preprocess import (
@@ -19,7 +18,6 @@ from core.celery.celery_worker import celery_worker
 from modules.crawler.crawler_job_dto import CrawlerJobRead
 from modules.eximport.export_job_dto import ExportJobRead
 from modules.eximport.import_job_dto import ImportJobRead
-from modules.llm_assistant.llm_job_dto import LLMJobRead
 from modules.ml.ml_job_dto import MLJobRead
 from modules.perspectives.perspectives_job import PerspectivesJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -57,11 +55,6 @@ def start_import_job(import_job: ImportJobRead) -> None:
 def start_crawler_job(crawler_job: CrawlerJobRead) -> tuple[Path, int]:
     archive_file_path, project_id = start_crawler_job_(crawler_job=crawler_job)
     return archive_file_path, project_id
-
-
-@celery_worker.task(acks_late=True)
-def start_llm_job(llm_job: LLMJobRead) -> None:
-    start_llm_job_(llm_job=llm_job)
 
 
 @celery_worker.task(acks_late=True)

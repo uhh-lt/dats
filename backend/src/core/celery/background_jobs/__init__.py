@@ -6,7 +6,6 @@ from celery.result import GroupResult
 from modules.crawler.crawler_job_dto import CrawlerJobParameters, CrawlerJobRead
 from modules.eximport.export_job_dto import ExportJobParameters, ExportJobRead
 from modules.eximport.import_job_dto import ImportJobParameters, ImportJobRead
-from modules.llm_assistant.llm_job_dto import LLMJobParameters2, LLMJobRead
 from modules.ml.ml_job_dto import MLJobParameters, MLJobRead
 from modules.perspectives.perspectives_job import (
     PerspectivesJobParams,
@@ -101,20 +100,6 @@ def prepare_and_start_crawling_job_async(
     start_export_job_chain.apply_async()
 
     return cj
-
-
-def prepare_and_start_llm_job_async(
-    llm_job_params: LLMJobParameters2,
-) -> LLMJobRead:
-    from core.celery.background_jobs.tasks import start_llm_job
-    from modules.llm_assistant.llm_service import LLMService
-
-    assert isinstance(start_llm_job, Task), "Not a Celery Task"
-
-    llms: LLMService = LLMService()
-    llm_job = llms.prepare_llm_job(llm_job_params)
-    start_llm_job.apply_async(kwargs={"llm_job": llm_job})
-    return llm_job
 
 
 def prepare_and_start_ml_job_async(

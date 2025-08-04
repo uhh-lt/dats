@@ -104,7 +104,6 @@ redis:
     crawler: 3
     trainer: 4
     cota: 5
-    llm: 6
     import_: 7
     ml: 8
     perspectives: 9

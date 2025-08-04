@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Callable, Type
 
+import rq
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -25,6 +26,7 @@ from core.user.user_crud import (
     SYSTEM_USER_IDS,
 )
 from loguru import logger
+from modules.llm_assistant.llm_exceptions import UnsupportedLLMJobTypeError
 from modules.llm_assistant.llm_job_dto import (
     AnnotationLLMJobResult,
     AnnotationParams,
@@ -32,12 +34,9 @@ from modules.llm_assistant.llm_job_dto import (
     ApproachRecommendation,
     ApproachType,
     FewShotParams,
-    LLMJobCreate,
+    LLMJobInput,
+    LLMJobOutput,
     LLMJobParameters,
-    LLMJobParameters2,
-    LLMJobRead,
-    LLMJobResult,
-    LLMJobUpdate,
     LLMPromptTemplates,
     MetadataExtractionLLMJobResult,
     MetadataExtractionParams,
@@ -72,10 +71,8 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
-from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
@@ -83,30 +80,8 @@ from systems.job_system.background_job_base_dto import BackgroundJobStatus
 lac = conf.llm_assistant
 
 
-class LLMJobPreparationError(Exception):
-    def __init__(self, cause: Exception | str) -> None:
-        super().__init__(f"Cannot prepare and create the LLMJob! {cause}")
-
-
-class LLMJobAlreadyStartedOrDoneError(Exception):
-    def __init__(self, llm_job_id: str) -> None:
-        super().__init__(f"The LLMJob with ID {llm_job_id} already started or is done!")
-
-
-class NoSuchLLMJobError(Exception):
-    def __init__(self, llm_job_id: str, cause: Exception) -> None:
-        super().__init__(f"There exists not LLMJob with ID {llm_job_id}! {cause}")
-
-
-class UnsupportedLLMJobTypeError(Exception):
-    def __init__(self, llm_job_type: TaskType) -> None:
-        super().__init__(f"LLMJobType {llm_job_type} is not supported! ")
-
-
-class LLMService(metaclass=SingletonMeta):
+class LLMAssistantService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
         cls.ollama: OllamaRepo = OllamaRepo()
         cls.ray: RayRepo = RayRepo()
@@ -114,7 +89,7 @@ class LLMService(metaclass=SingletonMeta):
 
         # map from job_type to function
         cls.llm_method_for_job_approach_type: dict[
-            TaskType, dict[ApproachType, Callable[..., LLMJobResult]]
+            TaskType, dict[ApproachType, Callable[..., LLMJobOutput]]
         ] = {
             TaskType.TAGGING: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_tagging,
@@ -146,127 +121,46 @@ class LLMService(metaclass=SingletonMeta):
             TaskType.SENTENCE_ANNOTATION: SentenceAnnotationPromptBuilder,
         }
 
-        return super(LLMService, cls).__new__(cls)
+        return super(LLMAssistantService, cls).__new__(cls)
 
-    def _assert_all_requested_data_exists(self, llm_params: LLMJobParameters) -> bool:
-        # TODO check all job type specific parameters
-        return True
+    def _next_llm_job_step(self, job: rq.job.Job, description: str) -> None:
+        job.meta["current_step"] = job.meta["current_step"] + 1
+        job.meta["status_message"] = description
+        job.save_meta()
 
-    def prepare_llm_job(self, llm_params: LLMJobParameters2) -> LLMJobRead:
-        if not self._assert_all_requested_data_exists(llm_params=llm_params):
-            raise LLMJobPreparationError(
-                cause="Not all requested data for the LLM job exists!"
+    def _update_llm_job_description(self, job: rq.job.Job, description: str) -> None:
+        job.meta["status_message"] = description
+        job.save_meta()
+
+    def handle_llm_job(self, job: rq.job.Job, payload: LLMJobInput) -> LLMJobOutput:
+        job.meta["num_steps"] = len(payload.specific_task_parameters.sdoc_ids) + 2
+        job.meta["current_step"] = 1
+        job.meta["status_message"] = "Started LLM Assistant!"
+        job.save_meta()
+
+        with self.sqlr.db_session() as db:
+            # get the llm method based on the jobtype
+            llm_method = self.llm_method_for_job_approach_type[payload.llm_job_type][
+                payload.llm_approach_type
+            ]
+            if llm_method is None:
+                raise UnsupportedLLMJobTypeError(payload.llm_job_type)
+
+            # execute the llm_method with the provided specific parameters
+            result = llm_method(
+                self=self,
+                db=db,
+                job=job,
+                project_id=payload.project_id,
+                approach_parameters=payload.specific_approach_parameters,
+                task_parameters=payload.specific_task_parameters,
             )
 
-        llmj_create = LLMJobCreate(
-            status=BackgroundJobStatus.WAITING,
-            parameters=llm_params,
-            num_steps_total=len(llm_params.specific_task_parameters.sdoc_ids)
-            + 2,  # +2 for the start and end
-            current_step=0,
-            current_step_description="Created new LLMJob",
-        )
-        try:
-            llmj_read = self.redis.store_llm_job(llm_job=llmj_create)
-        except Exception as e:
-            raise LLMJobPreparationError(cause=e)
+        job.meta["current_step"] = job.meta["num_steps"]
+        job.meta["status_message"] = "Finished LLMJob successfully!"
+        job.save_meta()
 
-        return llmj_read
-
-    def get_llm_job(self, llm_job_id: str) -> LLMJobRead:
-        try:
-            llmj = self.redis.load_llm_job(key=llm_job_id)
-        except Exception as e:
-            raise NoSuchLLMJobError(llm_job_id=llm_job_id, cause=e)
-
-        return llmj
-
-    def get_all_llm_jobs(self, project_id: int) -> list[LLMJobRead]:
-        return self.redis.get_all_llm_jobs(project_id=project_id)
-
-    def _update_llm_job(self, llm_job_id: str, update: LLMJobUpdate) -> LLMJobRead:
-        try:
-            llmj = self.redis.update_llm_job(key=llm_job_id, update=update)
-        except Exception as e:
-            raise NoSuchLLMJobError(llm_job_id=llm_job_id, cause=e)
-        return llmj
-
-    def _next_llm_job_step(self, llm_job_id: str, description: str) -> LLMJobRead:
-        llmj = self.get_llm_job(llm_job_id=llm_job_id)
-        llmj = self._update_llm_job(
-            llm_job_id=llm_job_id,
-            update=LLMJobUpdate(
-                current_step=llmj.current_step + 1, current_step_description=description
-            ),
-        )
-        return llmj
-
-    def _update_llm_job_description(
-        self, llm_job_id: str, description: str
-    ) -> LLMJobRead:
-        llmj = self.get_llm_job(llm_job_id=llm_job_id)
-        llmj = self._update_llm_job(
-            llm_job_id=llm_job_id,
-            update=LLMJobUpdate(current_step_description=description),
-        )
-        return llmj
-
-    def start_llm_job_sync(self, llm_job_id: str) -> LLMJobRead:
-        llmj = self.get_llm_job(llm_job_id=llm_job_id)
-        if llmj.status != BackgroundJobStatus.WAITING:
-            raise LLMJobAlreadyStartedOrDoneError(llm_job_id=llm_job_id)
-
-        llmj = self._update_llm_job(
-            llm_job_id=llm_job_id,
-            update=LLMJobUpdate(
-                status=BackgroundJobStatus.RUNNING,
-                current_step=1,
-                current_step_description="Starting LLMJob",
-            ),
-        )
-
-        try:
-            with self.sqlr.db_session() as db:
-                # get the llm method based on the jobtype
-                llm_method = self.llm_method_for_job_approach_type[
-                    llmj.parameters.llm_job_type
-                ][llmj.parameters.llm_approach_type]
-                if llm_method is None:
-                    raise UnsupportedLLMJobTypeError(llmj.parameters.llm_job_type)
-
-                # execute the llm_method with the provided specific parameters
-                result = llm_method(
-                    self=self,
-                    db=db,
-                    llm_job_id=llm_job_id,
-                    project_id=llmj.parameters.project_id,
-                    approach_parameters=llmj.parameters.specific_approach_parameters,
-                    task_parameters=llmj.parameters.specific_task_parameters,
-                )
-
-            llmj = self.get_llm_job(llm_job_id=llm_job_id)
-            llmj = self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(
-                    result=result,
-                    status=BackgroundJobStatus.FINISHED,
-                    current_step=llmj.num_steps_total,
-                    current_step_description="Finished LLMJob",
-                ),
-            )
-
-        except Exception as e:
-            logger.error(f"Cannot finish LLMJob: {e}")
-            llmj = self.get_llm_job(llm_job_id=llm_job_id)
-            self._update_llm_job(
-                llm_job_id=llm_job_id,
-                update=LLMJobUpdate(
-                    status=BackgroundJobStatus.ERROR,
-                    current_step_description=f"Error during LLMJob Step {llmj.current_step} {llmj.current_step_description}: {e}",
-                ),
-            )
-
-        return llmj
+        return result
 
     def determine_approach(
         self, llm_job_params: LLMJobParameters
@@ -467,11 +361,11 @@ class LLMService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        llm_job_id: str,
+        job: rq.job.Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: TaggingParams,
-    ) -> LLMJobResult:
+    ) -> LLMJobOutput:
         assert isinstance(task_parameters, TaggingParams), "Wrong task parameters!"
         assert isinstance(approach_parameters, ZeroShotParams), (
             "Wrong approach parameters!"
@@ -479,7 +373,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = f"Started LLMJob - Document Tagging, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -507,7 +401,7 @@ class LLMService(metaclass=SingletonMeta):
                 # update job status
                 msg = f"Processing SDOC id={sdoc_id}"
                 self._next_llm_job_step(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -578,7 +472,7 @@ class LLMService(metaclass=SingletonMeta):
                     )
                 )
 
-        return LLMJobResult(
+        return LLMJobOutput(
             llm_job_type=TaskType.TAGGING,
             specific_task_result=TaggingLLMJobResult(
                 llm_job_type=TaskType.TAGGING, results=result
@@ -589,11 +483,11 @@ class LLMService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        llm_job_id: str,
+        job: rq.job.Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
-    ) -> LLMJobResult:
+    ) -> LLMJobOutput:
         assert isinstance(task_parameters, MetadataExtractionParams), (
             "Wrong task parameters!"
         )
@@ -603,7 +497,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = f"Started LLMJob - Metadata Extraction, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -631,7 +525,7 @@ class LLMService(metaclass=SingletonMeta):
                 # update job status
                 msg = f"Processing SDOC id={sdoc_id}"
                 self._next_llm_job_step(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -725,7 +619,7 @@ class LLMService(metaclass=SingletonMeta):
                     )
                 )
 
-        return LLMJobResult(
+        return LLMJobOutput(
             llm_job_type=TaskType.METADATA_EXTRACTION,
             specific_task_result=MetadataExtractionLLMJobResult(
                 llm_job_type=TaskType.METADATA_EXTRACTION, results=result
@@ -736,11 +630,11 @@ class LLMService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        llm_job_id: str,
+        job: rq.job.Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: AnnotationParams,
-    ) -> LLMJobResult:
+    ) -> LLMJobOutput:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
         assert isinstance(approach_parameters, ZeroShotParams), (
             "Wrong approach parameters!"
@@ -748,7 +642,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -778,7 +672,7 @@ class LLMService(metaclass=SingletonMeta):
                 # update job status
                 msg = f"Processing SDOC id={sdoc_id}"
                 self._next_llm_job_step(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -894,7 +788,7 @@ class LLMService(metaclass=SingletonMeta):
                     )
                 )
 
-        return LLMJobResult(
+        return LLMJobOutput(
             llm_job_type=TaskType.ANNOTATION,
             specific_task_result=AnnotationLLMJobResult(
                 llm_job_type=TaskType.ANNOTATION, results=result
@@ -905,11 +799,11 @@ class LLMService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        llm_job_id: str,
+        job: rq.job.Job,
         project_id: int,
         approach_parameters: ZeroShotParams | FewShotParams,
         task_parameters: SentenceAnnotationParams,
-    ) -> LLMJobResult:
+    ) -> LLMJobOutput:
         assert isinstance(task_parameters, SentenceAnnotationParams), (
             "Wrong task parameters!"
         )
@@ -920,7 +814,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = f"Started LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -966,7 +860,7 @@ class LLMService(metaclass=SingletonMeta):
                 # update job status
                 msg = f"Processing SDOC id={sdoc_id}"
                 self._next_llm_job_step(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -1109,7 +1003,7 @@ class LLMService(metaclass=SingletonMeta):
                     )
                 )
 
-        return LLMJobResult(
+        return LLMJobOutput(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,
             specific_task_result=SentenceAnnotationLLMJobResult(
                 llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results
@@ -1120,11 +1014,11 @@ class LLMService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        llm_job_id: str,
+        job: rq.job.Job,
         project_id: int,
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
-    ) -> LLMJobResult:
+    ) -> LLMJobOutput:
         assert isinstance(task_parameters, SentenceAnnotationParams), (
             "Wrong task parameters!"
         )
@@ -1133,19 +1027,16 @@ class LLMService(metaclass=SingletonMeta):
         )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
-        self._update_llm_job(
-            llm_job_id=llm_job_id,
-            update=LLMJobUpdate(
-                current_step_description=msg,
-                num_steps_total=5 + 2,  # +1 for the start, end step
-            ),
-        )
+        job.meta["num_steps"] = 5 + 2  # +1 for the start, end step
+        job.meta["current_step"] = 1
+        job.meta["status_message"] = msg
+        job.save_meta()
         logger.info(msg)
 
         # Step: 1 - Building the training dataset
         msg = "Building training dataset."
         self._next_llm_job_step(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1245,7 +1136,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = f"Built training dataset consisting of {len(training_dataset)} documents with a total of {len(sentence_annotations)} annotations."
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1253,7 +1144,7 @@ class LLMService(metaclass=SingletonMeta):
         # Step: 2 - Building the test dataset
         msg = "Building test dataset."
         self._next_llm_job_step(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1307,7 +1198,7 @@ class LLMService(metaclass=SingletonMeta):
             )
         msg = f"Built test dataset consisting of {len(test_dataset)} documents."
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1315,7 +1206,7 @@ class LLMService(metaclass=SingletonMeta):
         # Step: 3 - Model Training
         msg = "Started model training and application with Ray."
         self._next_llm_job_step(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1330,7 +1221,7 @@ class LLMService(metaclass=SingletonMeta):
 
         msg = "Finished model training and application with Ray."
         self._update_llm_job_description(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1347,7 +1238,7 @@ class LLMService(metaclass=SingletonMeta):
 
                 msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
                 self._next_llm_job_step(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -1358,7 +1249,7 @@ class LLMService(metaclass=SingletonMeta):
         else:
             msg = "Keeping existing annotations."
             self._next_llm_job_step(
-                llm_job_id=llm_job_id,
+                job=job,
                 description=msg,
             )
             logger.info(msg)
@@ -1366,7 +1257,7 @@ class LLMService(metaclass=SingletonMeta):
         # Step: 5 - Apply the new predictions
         msg = "Applying suggested annotations."
         self._next_llm_job_step(
-            llm_job_id=llm_job_id,
+            job=job,
             description=msg,
         )
         logger.info(msg)
@@ -1428,7 +1319,7 @@ class LLMService(metaclass=SingletonMeta):
 
                 msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
                 self._update_llm_job_description(
-                    llm_job_id=llm_job_id,
+                    job=job,
                     description=msg,
                 )
                 logger.info(msg)
@@ -1443,7 +1334,7 @@ class LLMService(metaclass=SingletonMeta):
                     )
                 )
 
-        return LLMJobResult(
+        return LLMJobOutput(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,
             specific_task_result=SentenceAnnotationLLMJobResult(
                 llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results

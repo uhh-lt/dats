@@ -6,8 +6,16 @@ import redis
 import rq
 from common.singleton_meta import SingletonMeta
 from config import conf
+from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
+from rq.registry import (
+    CanceledJobRegistry,
+    DeferredJobRegistry,
+    FailedJobRegistry,
+    FinishedJobRegistry,
+    StartedJobRegistry,
+)
 from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -20,6 +28,7 @@ class RegisteredJob(TypedDict):
     output_type: type[BaseModel]
     generate_endpoints: EndpointGeneration
     priority: JobPriority
+    router: APIRouter | None
 
 
 class JobService(metaclass=SingletonMeta):
@@ -54,6 +63,23 @@ class JobService(metaclass=SingletonMeta):
             JobPriority.LOW: rq.Queue("low", connection=cls.redis_conn),
         }
 
+        # Configure job registries with custom TTL settings
+        # Custom TTL values (in seconds)
+        TTL_90_DAYS = 90 * 24 * 60 * 60  # 90 days
+
+        cls.registries = {
+            "started": StartedJobRegistry(connection=cls.redis_conn),
+            "finished": FinishedJobRegistry(connection=cls.redis_conn),
+            "failed": FailedJobRegistry(connection=cls.redis_conn),
+            "deferred": DeferredJobRegistry(connection=cls.redis_conn),
+            "canceled": CanceledJobRegistry(connection=cls.redis_conn),
+        }
+
+        # Configure custom TTL for registries
+        cls.registries["finished"].default_job_timeout = TTL_90_DAYS
+        cls.registries["failed"].default_job_timeout = TTL_90_DAYS
+        cls.registries["canceled"].default_job_timeout = TTL_90_DAYS
+
         cls.job_registry: Dict[str, RegisteredJob] = {}
         return super(JobService, cls).__new__(cls)
 
@@ -65,6 +91,7 @@ class JobService(metaclass=SingletonMeta):
         output_type: type[OutputT],
         priority: JobPriority,
         generate_endpoints: EndpointGeneration,
+        router: APIRouter | None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -80,6 +107,7 @@ class JobService(metaclass=SingletonMeta):
             "output_type": output_type,
             "generate_endpoints": generate_endpoints,
             "priority": priority,
+            "router": router,
         }
 
     def start_job(
@@ -122,6 +150,8 @@ class JobService(metaclass=SingletonMeta):
         project_id: int,
     ) -> list[rq.job.Job]:
         jobs = []
+
+        # Get jobs from all queues (pending/enqueued jobs)
         for queue in self.queues.values():
             for job in queue.get_jobs():
                 if (
@@ -129,6 +159,21 @@ class JobService(metaclass=SingletonMeta):
                     and job.meta.get("project_id") == project_id
                 ):
                     jobs.append(job)
+
+        # Get jobs from different registries (completed, failed, etc.)
+        for registry in self.registries.values():
+            for job_id in registry.get_job_ids():
+                try:
+                    job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
+                    if (
+                        job.meta.get("type") == job_type
+                        and job.meta.get("project_id") == project_id
+                    ):
+                        jobs.append(job)
+                except Exception:
+                    # Job might have been deleted or corrupted, skip it
+                    continue
+
         return jobs
 
     def stop_job(self, job_id: str) -> bool:
