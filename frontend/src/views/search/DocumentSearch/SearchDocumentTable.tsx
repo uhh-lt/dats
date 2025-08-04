@@ -60,10 +60,15 @@ const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
 
 const flatMapData = (page: PaginatedSDocHits) => page.hits;
+const flatMapDataNoFolders = (page: PaginatedSDocHits) =>
+  page.hits.reduce((acc, hit) => {
+    acc.push(...hit.sub_rows);
+    return acc;
+  }, [] as HierarchicalElasticSearchHit[]);
 
-const lengthDataSdocs = (hits: HierarchicalElasticSearchHit[]) =>
+const lengthDataChildren = (hits: HierarchicalElasticSearchHit[]) =>
   hits.reduce((acc, hit) => acc + hit.sub_rows.length, 0);
-const lengthDataFolders = (hits: HierarchicalElasticSearchHit[]) => hits.length;
+const lengthData = (hits: HierarchicalElasticSearchHit[]) => hits.length;
 
 enum FolderSelection {
   FOLDER = "FOLDER",
@@ -148,6 +153,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
+  const showFolders = useAppSelector((state: RootState) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
@@ -303,10 +309,10 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     totalResults,
   } = useTransformInfiniteData({
     data,
-    flatMapData,
-    lengthData: lengthDataSdocs,
+    flatMapData: showFolders ? flatMapData : flatMapDataNoFolders,
+    lengthData: showFolders ? lengthDataChildren : lengthData,
   });
-  const totalFetchedFolders = lengthDataFolders(flatData);
+  const totalFetchedFolders = lengthData(flatData);
 
   useEffect(() => {
     onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
@@ -318,8 +324,8 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     columns: columns,
     getRowId: (row) => (row.is_folder ? `folder-${row.id}` : `${row.id}`),
     // sub rows / folders
-    enableExpanding: true,
-    getSubRows: (originalRow) => originalRow.sub_rows, //default, can customize
+    enableExpanding: showFolders,
+    getSubRows: showFolders ? (originalRow) => originalRow.sub_rows : undefined, //default, can customize
     rowCount: folderSelectionType === FolderSelection.FOLDER ? totalFetchedFolders : totalFetchedSdocs,
     // state
     state: {
