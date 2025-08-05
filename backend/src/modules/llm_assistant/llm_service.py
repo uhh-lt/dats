@@ -133,7 +133,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
         job.save_meta()
 
     def handle_llm_job(self, job: rq.job.Job, payload: LLMJobInput) -> LLMJobOutput:
-        job.meta["num_steps"] = len(payload.specific_task_parameters.sdoc_ids) + 2
+        job.meta["steps"] = [
+            f"Step {i}"
+            for i in range(len(payload.specific_task_parameters.sdoc_ids) + 2)
+        ]
         job.meta["current_step"] = 1
         job.meta["status_message"] = "Started LLM Assistant!"
         job.save_meta()
@@ -156,7 +159,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 task_parameters=payload.specific_task_parameters,
             )
 
-        job.meta["current_step"] = job.meta["num_steps"]
+        job.meta["current_step"] = len(job.meta["steps"]) - 1
         job.meta["status_message"] = "Finished LLMJob successfully!"
         job.save_meta()
 
@@ -1027,7 +1030,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
         )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
-        job.meta["num_steps"] = 5 + 2  # +1 for the start, end step
+        job.meta["steps"] = [
+            f"Step {i}"
+            for i in range(5 + 2)  # +1 for the start, end step
+        ]
         job.meta["current_step"] = 1
         job.meta["status_message"] = msg
         job.save_meta()

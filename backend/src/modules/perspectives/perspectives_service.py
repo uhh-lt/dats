@@ -6,6 +6,7 @@ from typing import Callable
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
+import rq
 from hdbscan import HDBSCAN
 from loguru import logger
 from matplotlib.axes import Axes
@@ -31,14 +32,16 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from modules.perspectives.perspectives_job import (
+from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,
     ChangeClusterParams,
     CreateAspectParams,
     CreateClusterWithNameParams,
     CreateClusterWithSdocsParams,
     MergeClustersParams,
-    PerspectivesJobRead,
+    PerspectivesJobInput,
+    PerspectivesJobParams,
+    PerspectivesJobType,
     RefineModelParams,
     RemoveClusterParams,
     ResetModelParams,
@@ -56,24 +59,100 @@ from sqlalchemy.orm import Session
 from umap import UMAP
 from weaviate import WeaviateClient
 
-TMJUpdateFN = Callable[[int | None, str | None], PerspectivesJobRead]
-
 
 class PerspectivesService:
-    def __init__(self, update_status_clbk: TMJUpdateFN):
-        self.update_status_clbk: TMJUpdateFN = update_status_clbk
+    def __init__(self, job: rq.job.Job):
+        self.job = job
+
         self.ray: RayRepo = RayRepo()
         self.ollama: OllamaRepo = OllamaRepo()
         self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
 
+        self.perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
+            PerspectivesJobType.CREATE_ASPECT: [
+                "Document Modification",
+                "Document Embedding",
+                "Document Clustering",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.CREATE_CLUSTER_WITH_NAME: [
+                "Cluster Creation",
+                "Document Assignment",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS: [
+                "Cluster Creation",
+                "Document Assignment",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.REMOVE_CLUSTER: [
+                "Document Assignment",
+                "Cluster Removal",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.MERGE_CLUSTERS: [
+                "Merge Clusters",
+                "Cluster Removal",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.SPLIT_CLUSTER: [
+                "Remove Cluster",
+                "Document Clustering",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.CHANGE_CLUSTER: [
+                "Document Assignment",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.REFINE_MODEL: [
+                "Prepare Training Data",
+                "Train & Embedd",
+                "Document Clustering",
+                "Cluster Extraction",
+            ],
+            PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT: [
+                "Add Missing Docs to Aspect"
+            ],
+            PerspectivesJobType.RESET_MODEL: ["Reset Cluster Model"],
+        }
+        self.method_for_job_type: dict[
+            PerspectivesJobType, Callable[[int, PerspectivesJobParams], None]
+        ] = {
+            PerspectivesJobType.CREATE_ASPECT: self.create_aspect,
+            PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT: self.add_missing_docs_to_aspect,
+            PerspectivesJobType.CREATE_CLUSTER_WITH_NAME: self.create_cluster_with_name,
+            PerspectivesJobType.CREATE_CLUSTER_WITH_SDOCS: self.create_cluster_with_sdocs,
+            PerspectivesJobType.REMOVE_CLUSTER: self.remove_cluster,
+            PerspectivesJobType.MERGE_CLUSTERS: self.merge_clusters,
+            PerspectivesJobType.SPLIT_CLUSTER: self.split_cluster,
+            PerspectivesJobType.CHANGE_CLUSTER: self.change_cluster,
+            PerspectivesJobType.REFINE_MODEL: self.refine_cluster_model,
+            PerspectivesJobType.RESET_MODEL: self.reset_cluster_model,
+        }
+
+    def handle_perspectives_job(self, payload: PerspectivesJobInput):
+        # Set initial status
+        self.job.meta["current_step"] = 0
+        self.job.meta["status_msg"] = "Waiting..."
+        self.job.meta["steps"] = self.perspectives_job_steps.get(
+            payload.perspectives_job_type, []
+        )
+
+        # Execute the correct function
+        self.method_for_job_type[payload.perspectives_job_type](
+            payload.aspect_id, payload.parameters
+        )
+
     def _log_status_msg(self, status_msg: str):
-        self.update_status_clbk(None, status_msg)
+        self.job.meta["status_msg"] = status_msg
         logger.info(status_msg)
+        self.job.save_meta()
 
     def _log_status_step(self, step: int):
-        self.update_status_clbk(step, None)
+        self.job.meta["current_step"] = step
+        self.job.save_meta()
 
     def _modify_documents(self, db: Session, aspect_id: int):
         aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -851,8 +930,13 @@ class PerspectivesService:
     def create_aspect(
         self,
         aspect_id: int,
-        params: CreateAspectParams,
+        params: PerspectivesJobParams,
     ):
+        assert isinstance(
+            params,
+            CreateAspectParams,
+        ), "CreateAspectParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 1. Modify the documents based on the prompt
@@ -894,13 +978,21 @@ class PerspectivesService:
     def add_missing_docs_to_aspect(
         self,
         aspect_id: int,
-        params: AddMissingDocsToAspectParams,
+        params: PerspectivesJobParams,
     ):
+        assert isinstance(
+            params,
+            AddMissingDocsToAspectParams,
+        ), "AddMissingDocsToAspectParams expected"
+
         pass
 
-    def create_cluster_with_name(
-        self, aspect_id: int, params: CreateClusterWithNameParams
-    ):
+    def create_cluster_with_name(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            CreateClusterWithNameParams,
+        ), "CreateClusterWithNameParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Read the aspect
@@ -1012,9 +1104,12 @@ class PerspectivesService:
                     "Successfully created cluster with name&description!"
                 )
 
-    def create_cluster_with_sdocs(
-        self, aspect_id: int, params: CreateClusterWithSdocsParams
-    ):
+    def create_cluster_with_sdocs(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            CreateClusterWithSdocsParams,
+        ), "CreateClusterWithSdocsParams expected"
+
         with self.sqlr.db_session() as db:
             # Read the current document <-> cluster assignments
             document_clusters = crud_document_cluster.read_by_aspect_id(
@@ -1078,7 +1173,12 @@ class PerspectivesService:
 
             self._log_status_msg("Successfully created cluster with source documents!")
 
-    def remove_cluster(self, aspect_id: int, params: RemoveClusterParams):
+    def remove_cluster(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            RemoveClusterParams,
+        ), "RemoveClusterParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read all relevant data
@@ -1200,7 +1300,12 @@ class PerspectivesService:
 
                 self._log_status_msg("Successfully removed cluster!")
 
-    def merge_clusters(self, aspect_id: int, params: MergeClustersParams):
+    def merge_clusters(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            MergeClustersParams,
+        ), "MergeClustersParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the clusters to merge
@@ -1245,7 +1350,12 @@ class PerspectivesService:
 
                 self._log_status_msg("Successfully merged clusters!")
 
-    def split_cluster(self, aspect_id: int, params: SplitClusterParams):
+    def split_cluster(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            SplitClusterParams,
+        ), "SplitClusterParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # 0. Read the cluster to split
@@ -1302,7 +1412,12 @@ class PerspectivesService:
 
                 self._log_status_msg("Successfully split cluster!")
 
-    def change_cluster(self, aspect_id: int, params: ChangeClusterParams):
+    def change_cluster(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            ChangeClusterParams,
+        ), "ChangeClusterParams expected"
+
         with self.sqlr.db_session() as db:
             # 0. Read the cluster to change to
             if params.cluster_id == -1:
@@ -1413,7 +1528,12 @@ class PerspectivesService:
 
         return train_docs, train_labels, train_doc_ids
 
-    def refine_cluster_model(self, aspect_id: int, params: RefineModelParams):
+    def refine_cluster_model(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            RefineModelParams,
+        ), "RefineModelParams expected"
+
         with self.sqlr.db_session() as db:
             with self.weaviate.weaviate_session() as client:
                 # Update the model name, so that a new model is trained
@@ -1473,5 +1593,10 @@ class PerspectivesService:
 
                 self._log_status_msg("Successfully refined map!")
 
-    def reset_cluster_model(self, aspect_id: int, params: ResetModelParams):
+    def reset_cluster_model(self, aspect_id: int, params: PerspectivesJobParams):
+        assert isinstance(
+            params,
+            ResetModelParams,
+        ), "ResetModelParams expected"
+
         pass

@@ -18,6 +18,13 @@ class JobStatus(str, enum.Enum):
     CANCELED = "canceled"
 
 
+RUNNING_JOB_STATUS = [
+    JobStatus.QUEUED,
+    JobStatus.STARTED,
+    JobStatus.SCHEDULED,
+]
+
+
 class JobPriority(str, enum.Enum):
     LOW = "low"
     DEFAULT = "default"
@@ -31,7 +38,7 @@ class EndpointGeneration(str, enum.Enum):
 
 
 class JobInputBase(BaseModel):
-    project_id: int = Field(..., description="Project ID associated with the job")
+    project_id: int = Field(description="Project ID associated with the job")
 
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -39,16 +46,16 @@ OutputT = TypeVar("OutputT", bound=BaseModel | None)
 
 
 class JobRead(BaseModel, Generic[InputT, OutputT]):
-    job_id: str = Field(..., description="RQ job ID")
-    job_type: str = Field(..., description="Type of the job")
-    project_id: int = Field(..., description="Project ID associated with the job")
-    status: JobStatus = Field(..., description="Current status of the job")
+    job_id: str = Field(description="RQ job ID")
+    job_type: str = Field(description="Type of the job")
+    project_id: int = Field(description="Project ID associated with the job")
+    status: JobStatus = Field(description="Current status of the job")
     status_message: str | None = Field(None, description="Status message")
-    current_step: int = Field(..., description="Current step in the job process")
-    num_steps: int = Field(..., description="Total number of steps in the job process")
-    input: InputT = Field(..., description="Input for the job")
+    current_step: int = Field(description="Current step in the job process")
+    steps: list[str] = Field(description="Total number of steps in the job process")
+    input: InputT = Field(description="Input for the job")
     output: OutputT | None = Field(None, description="Output for the job")
-    created: datetime = Field(..., description="Created timestamp of the job")
+    created: datetime = Field(description="Created timestamp of the job")
     finished: datetime | None = Field(None, description="Finished timestamp of the job")
 
     @staticmethod
@@ -60,7 +67,7 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
             status=JobStatus(job.get_status()),
             status_message=job.meta.get("status_message", ""),
             current_step=job.meta.get("current_step", 0),
-            num_steps=job.meta.get("num_steps", 1),
+            steps=job.meta.get("steps", ["Initial step"]),
             input=job.kwargs["payload"],
             output=job.return_value(),
             created=job.meta.get("created", datetime.now()),

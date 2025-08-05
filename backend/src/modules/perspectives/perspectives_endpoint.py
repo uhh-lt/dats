@@ -2,7 +2,6 @@ import numpy as np
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, get_weaviate_session
 from core.auth.authz_user import AuthzUser
-from core.celery.background_jobs import prepare_and_start_perspectives_job_async
 from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
 from modules.perspectives.aspect_crud import crud_aspect
@@ -19,12 +18,12 @@ from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
-from modules.perspectives.perspectives_job import (
+from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
+    PerspectivesJobInput,
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
 )
-from modules.perspectives.perspectives_job_service import PerspectivesJobService
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,
     PerspectivesDoc,
@@ -33,12 +32,11 @@ from modules.perspectives.perspectives_vis_dto import (
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from sqlalchemy.orm import Session
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_dto import RUNNING_JOB_STATUS, JobStatus
+from systems.job_system.job_service import JobService
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 from weaviate import WeaviateClient
-
-pjs = PerspectivesJobService()
 
 router = APIRouter(
     prefix="/perspectives",
@@ -47,6 +45,8 @@ router = APIRouter(
 )
 
 # --- START JOBS --- #
+
+js = JobService()
 
 
 @router.post(
@@ -67,21 +67,24 @@ def start_perspectives_job(
 
     # Check if there is a job running already for this aspect
     if aspect.most_recent_job_id:
-        most_recent_job = pjs.get_perspectives_job(aspect.most_recent_job_id)
-        if most_recent_job and most_recent_job.status not in [
-            BackgroundJobStatus.ABORTED,
-            BackgroundJobStatus.ERROR,
-            BackgroundJobStatus.FINISHED,
-        ]:
+        most_recent_job = js.get_job(aspect.most_recent_job_id)
+        if (
+            most_recent_job
+            and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
+        ):
             raise Exception(
                 f"PerspectivesJob {most_recent_job.id} is still running. Please wait until it is finished."
             )
 
     # No job running, so we can start a new one
-    perspectives_job = prepare_and_start_perspectives_job_async(
-        project_id=aspect.project_id,
-        aspect_id=aspect_id,
-        perspectives_job_params=perspectives_job_params,
+    job = js.start_job(
+        "pespectives",
+        payload=PerspectivesJobInput(
+            project_id=aspect.project_id,
+            aspect_id=aspect_id,
+            perspectives_job_type=perspectives_job_params.perspectives_job_type,
+            parameters=perspectives_job_params,
+        ),
     )
 
     # Update the aspect with the new job ID
@@ -89,11 +92,11 @@ def start_perspectives_job(
         db=db,
         id=aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=perspectives_job.id,
+            most_recent_job_id=job.id,
         ),
     )
 
-    return perspectives_job
+    return PerspectivesJobRead.from_rq_job(job)
 
 
 @router.get(
@@ -103,13 +106,12 @@ def start_perspectives_job(
 )
 def get_perspectives_job(
     *,
-    db: Session = Depends(get_db_session),
     perspectives_job_id: str,
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesJobRead:
-    job = pjs.get_perspectives_job(perspectives_job_id)
-    authz_user.assert_in_project(job.project_id)
-    return job
+    job = js.get_job(perspectives_job_id)
+    authz_user.assert_in_project(job.meta["project_id"])
+    return PerspectivesJobRead.from_rq_job(job=job)
 
 
 # --- START ASPECTS --- #
@@ -129,16 +131,23 @@ def create_aspect(
     authz_user.assert_in_project(aspect.project_id)
 
     db_aspect = crud_aspect.create(db=db, create_dto=aspect)
-    perspectives_job = prepare_and_start_perspectives_job_async(
-        project_id=aspect.project_id,
-        aspect_id=db_aspect.id,
-        perspectives_job_params=CreateAspectParams(),
+
+    params = CreateAspectParams()
+    job = js.start_job(
+        "pespectives",
+        payload=PerspectivesJobInput(
+            project_id=aspect.project_id,
+            aspect_id=db_aspect.id,
+            perspectives_job_type=params.perspectives_job_type,
+            parameters=params,
+        ),
     )
+
     db_aspect = crud_aspect.update(
         db=db,
         id=db_aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=perspectives_job.id,
+            most_recent_job_id=job.id,
         ),
     )
 
@@ -313,8 +322,11 @@ def visualize_documents(
 
     # If a job is in progress, return early with empty visualization
     if aspect.most_recent_job_id:
-        most_recent_job = pjs.get_perspectives_job(aspect.most_recent_job_id)
-        if most_recent_job and most_recent_job.status != BackgroundJobStatus.FINISHED:
+        most_recent_job = js.get_job(aspect.most_recent_job_id)
+        if (
+            most_recent_job
+            and JobStatus(most_recent_job.get_status()) != JobStatus.FINISHED
+        ):
             return PerspectivesVisualization(
                 aspect_id=aspect.id,
                 clusters=[],
@@ -326,8 +338,8 @@ def visualize_documents(
     document_clusters = crud_document_cluster.read_by_aspect_id(
         db=db, aspect_id=aspect_id
     )
-    sdoc_id2dt = {dt.sdoc_id: dt for dt in document_clusters}
-    cluster_id2cluster = {t.id: t for t in clusters}
+    sdoc_id2dc = {dc.sdoc_id: dc for dc in document_clusters}
+    cluster_id2cluster = {c.id: c for c in clusters}
     assert len(document_aspects) == len(document_clusters), (
         "The number of DocumentAspects and DocumentClusters must match for visualization."
     )
@@ -349,15 +361,15 @@ def visualize_documents(
         sdoc_id_in_search_result: dict[int, bool] = {hit.id: True for hit in hits.hits}
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
-            dt = sdoc_id2dt[doc.sdoc_id]
-            cluster_id2cluster[dt.cluster_id]
+            dc = sdoc_id2dc[doc.sdoc_id]
+            cluster_id2cluster[dc.cluster_id]
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
-                    cluster_id=dt.cluster_id,
-                    is_accepted=dt.is_accepted,
+                    cluster_id=dc.cluster_id,
+                    is_accepted=dc.is_accepted,
                     in_searchresult=sdoc_id_in_search_result.get(doc.sdoc_id, False),
-                    is_outlier=cluster_id2cluster[dt.cluster_id].is_outlier,
+                    is_outlier=cluster_id2cluster[dc.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
                 )
@@ -365,15 +377,15 @@ def visualize_documents(
     else:
         docs: list[PerspectivesDoc] = []
         for doc in document_aspects:
-            dt = sdoc_id2dt[doc.sdoc_id]
-            cluster_id2cluster[dt.cluster_id]
+            dc = sdoc_id2dc[doc.sdoc_id]
+            cluster_id2cluster[dc.cluster_id]
             docs.append(
                 PerspectivesDoc(
                     sdoc_id=doc.sdoc_id,
-                    cluster_id=dt.cluster_id,
-                    is_accepted=dt.is_accepted,
+                    cluster_id=dc.cluster_id,
+                    is_accepted=dc.is_accepted,
                     in_searchresult=True,
-                    is_outlier=cluster_id2cluster[dt.cluster_id].is_outlier,
+                    is_outlier=cluster_id2cluster[dc.cluster_id].is_outlier,
                     x=doc.x,
                     y=doc.y,
                 )
@@ -489,4 +501,4 @@ def get_clusters_for_sdoc(
     document_clusters = crud_cluster.read_by_aspect_and_sdoc(
         db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
     )
-    return [ClusterRead.model_validate(dt) for dt in document_clusters]
+    return [ClusterRead.model_validate(dc) for dc in document_clusters]
