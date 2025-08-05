@@ -2,40 +2,51 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { COTARead } from "./COTARead";
-import type { COTARefinementHyperparameters } from "./COTARefinementHyperparameters";
+import type { COTARefinementJobInput } from "./COTARefinementJobInput";
+import type { JobStatus } from "./JobStatus";
 export type COTARefinementJobRead = {
   /**
-   * Status of the BackgroundJob
+   * RQ job ID
    */
-  status?: BackgroundJobStatus;
+  job_id: string;
   /**
-   * COTA that is used in the COTARefinementJob
+   * Type of the job
    */
-  cota: COTARead;
+  job_type: string;
   /**
-   * Hyperparameters of the COTARefinementJob
+   * Project ID associated with the job
    */
-  hyperparams: COTARefinementHyperparameters;
+  project_id: number;
   /**
-   * ID of the COTARefinementJob
+   * Current status of the job
    */
-  id?: string;
+  status: JobStatus;
   /**
-   * Current Pipeline Step of the COTARefinementJob
+   * Status message
    */
-  current_pipeline_step?: string | null;
+  status_message?: string | null;
   /**
-   * Optional ErrorMessage of the COTARefinementJob
+   * Current step in the job process
    */
-  error_message?: string | null;
+  current_step: number;
   /**
-   * Created timestamp of the COTARefinementJob
+   * Total number of steps in the job process
+   */
+  steps: Array<string>;
+  /**
+   * Input for the job
+   */
+  input: COTARefinementJobInput;
+  /**
+   * Output for the job
+   */
+  output?: null;
+  /**
+   * Created timestamp of the job
    */
   created: string;
   /**
-   * Updated timestamp of the COTARefinementJob
+   * Finished timestamp of the job
    */
-  updated: string;
+  finished?: string | null;
 };

@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { MLJobRead } from "../models/MLJobRead";
 import type { TagRecommendationLinkRead } from "../models/TagRecommendationLinkRead";
 import type { TagRecommendationResult } from "../models/TagRecommendationResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -11,10 +10,10 @@ import { request as __request } from "../core/request";
 export class TagRecommendationService {
   /**
    * Retrieve all finished tag recommendation MLJobs.
-   * @returns MLJobRead Successful Response
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getAllTagrecommendationJobs({ projectId }: { projectId: number }): CancelablePromise<Array<MLJobRead>> {
+  public static getAllTagrecommendationJobs({ projectId }: { projectId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/tagrecommendation/{project_id}",

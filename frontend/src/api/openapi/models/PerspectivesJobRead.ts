@@ -2,71 +2,51 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AddMissingDocsToAspectParams } from "./AddMissingDocsToAspectParams";
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { ChangeClusterParams } from "./ChangeClusterParams";
-import type { CreateAspectParams } from "./CreateAspectParams";
-import type { CreateClusterWithNameParams } from "./CreateClusterWithNameParams";
-import type { CreateClusterWithSdocsParams } from "./CreateClusterWithSdocsParams";
-import type { MergeClustersParams } from "./MergeClustersParams";
-import type { PerspectivesJobType } from "./PerspectivesJobType";
-import type { RefineModelParams } from "./RefineModelParams";
-import type { RemoveClusterParams } from "./RemoveClusterParams";
-import type { ResetModelParams } from "./ResetModelParams";
-import type { SplitClusterParams } from "./SplitClusterParams";
+import type { JobStatus } from "./JobStatus";
+import type { PerspectivesJobInput } from "./PerspectivesJobInput";
 export type PerspectivesJobRead = {
   /**
-   * Current step of the PerspectivesJob. Starts at 0 and increments with each major step.
+   * RQ job ID
    */
-  step: number;
+  job_id: string;
   /**
-   * List of steps that the PerspectivesJob consists of. Each step is a string describing the action taken.
+   * Type of the job
    */
-  steps: Array<string>;
+  job_type: string;
   /**
-   * Status message of the PerspectivesJob
-   */
-  status_msg: string;
-  /**
-   * Type of the PerspectivesJob
-   */
-  perspectives_job_type: PerspectivesJobType;
-  /**
-   * ID of the aspect associated with the PerspectivesJob. -1 if not applicable.
-   */
-  aspect_id: number;
-  /**
-   * Parameters for the PerspectivesJob. The type depends on the PerspectivesJobType.
-   */
-  parameters:
-    | CreateAspectParams
-    | AddMissingDocsToAspectParams
-    | CreateClusterWithNameParams
-    | CreateClusterWithSdocsParams
-    | RemoveClusterParams
-    | MergeClustersParams
-    | SplitClusterParams
-    | ChangeClusterParams
-    | RefineModelParams
-    | ResetModelParams;
-  /**
-   * Status of the BackgroundJob
-   */
-  status?: BackgroundJobStatus;
-  /**
-   * UUID of the BackgroundJob
-   */
-  id: string;
-  /**
-   * The ID of the Project for which the BackgroundJob is executed.
+   * Project ID associated with the job
    */
   project_id: number;
   /**
-   * Created timestamp of the BackgroundJob
+   * Current status of the job
+   */
+  status: JobStatus;
+  /**
+   * Status message
+   */
+  status_message?: string | null;
+  /**
+   * Current step in the job process
+   */
+  current_step: number;
+  /**
+   * Total number of steps in the job process
+   */
+  steps: Array<string>;
+  /**
+   * Input for the job
+   */
+  input: PerspectivesJobInput;
+  /**
+   * Output for the job
+   */
+  output?: null;
+  /**
+   * Created timestamp of the job
    */
   created: string;
   /**
-   * Updated timestamp of the BackgroundJob
+   * Finished timestamp of the job
    */
-  updated: string;
+  finished?: string | null;
 };

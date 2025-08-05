@@ -933,25 +933,37 @@
         }
       }
     },
+    "/cota/reset/{cota_id}": {
+      "post": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Resets the ConceptOverTimeAnalysis",
+        "description": "Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
+        "operationId": "reset_cota",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/cota/refine/{cota_id}": {
       "post": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Refines the ConceptOverTimeAnalysis",
         "description": "Refines the ConceptOverTimeAnalysis with the given ID if it exists",
         "operationId": "refine_cota_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
         "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [{ "$ref": "#/components/schemas/COTARefinementHyperparameters" }, { "type": "null" }],
-                "title": "Hyperparams"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobInput" } } },
+          "required": true
         },
         "responses": {
           "200": {
@@ -962,7 +974,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/cota/refine/{cota_job_id}": {
@@ -984,57 +997,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/cota/refine/most_recent/{cota_id}": {
-      "get": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Returns the most recent COTA Refinement Job for the given COTA ID",
-        "description": "Returns the most recent COTA Refinement Job for the given COTA ID",
-        "operationId": "get_most_recent_cota_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/COTARefinementJobRead" }, { "type": "null" }],
-                  "title": "Response Conceptovertimeanalysis-Get Most Recent Cota Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/cota/reset/{cota_id}": {
-      "post": {
-        "tags": ["conceptOverTimeAnalysis"],
-        "summary": "Resets the ConceptOverTimeAnalysis",
-        "description": "Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
-        "operationId": "reset_cota",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1117,54 +1079,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/export": {
-      "post": {
-        "tags": ["export"],
-        "summary": "Returns the ExportJob for the given Parameters",
-        "operationId": "start_export_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobParameters" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/export/{export_job_id}": {
-      "get": {
-        "tags": ["export"],
-        "summary": "Returns the ExportJob for the given ID if it exists",
-        "operationId": "get_export_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "export_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Export Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1469,6 +1383,125 @@
         }
       }
     },
+    "/job/ml": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start Ml job",
+        "operationId": "start_ml_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobInput-Input" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MlJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/ml/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Ml job",
+        "operationId": "get_ml_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MlJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/ml/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort Ml job",
+        "operationId": "abort_ml_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Ml Job" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/ml/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry Ml job",
+        "operationId": "retry_ml_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Ml Job" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/ml/project/{project_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all Ml jobs by project",
+        "operationId": "get_ml_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MlJobRead" },
+                  "title": "Response Job-Get Ml Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/job/duplicate_finder": {
       "post": {
         "tags": ["job"],
@@ -1504,6 +1537,49 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/export": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start Export job",
+        "operationId": "start_export_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/export/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Export job",
+        "operationId": "get_export_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1963,83 +2039,6 @@
             "description": "Successful Response",
             "content": {
               "application/json": { "schema": { "type": "string", "title": "Response Memo-Generate Memo Suggestion" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/ml": {
-      "post": {
-        "tags": ["ml"],
-        "summary": "Returns the MLJob for the given Parameters",
-        "operationId": "start_ml_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobParameters-Input" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/ml/{ml_job_id}": {
-      "get": {
-        "tags": ["ml"],
-        "summary": "Returns the MLJob for the given ID if it exists",
-        "operationId": "get_ml_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "ml_job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Ml Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/ml/project/{project_id}": {
-      "get": {
-        "tags": ["ml"],
-        "summary": "Returns all MLJobRead for the given project ID if it exists",
-        "operationId": "get_all_ml_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MLJobRead" },
-                  "title": "Response Ml-Get All Ml Jobs"
-                }
-              }
             }
           },
           "422": {
@@ -5135,7 +5134,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/MLJobRead" },
+                  "items": { "type": "integer" },
                   "title": "Response Tagrecommendation-Get All Tagrecommendation Jobs"
                 }
               }
@@ -5389,98 +5388,6 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/trainer/": {
-      "post": {
-        "tags": ["trainer"],
-        "summary": "Starts a TrainerJob",
-        "description": "Starts a TrainerJob with the given parameters",
-        "operationId": "start_trainer_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainerJobParameters" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainerJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/trainer/{trainer_job_id}": {
-      "get": {
-        "tags": ["trainer"],
-        "summary": "Returns the TrainerJob for the given ID",
-        "description": "Returns the TrainerJob for the given ID if it exists",
-        "operationId": "get_trainer_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "trainer_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Trainer Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [{ "$ref": "#/components/schemas/TrainerJobRead" }, { "type": "null" }],
-                  "title": "Response Trainer-Get Trainer Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/trainer/project/{project_id}": {
-      "get": {
-        "tags": ["trainer"],
-        "summary": "Returns all TrainerJobs for the given project ID",
-        "description": "Returns all TrainerJobs for the given project ID if it exists",
-        "operationId": "get_all_trainer_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TrainerJobRead" },
-                  "title": "Response Trainer-Get All Trainer Jobs"
-                }
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -6759,6 +6666,11 @@
             "title": "Project Id",
             "description": "Project the ConceptOverTimeAnalysis belongs to"
           },
+          "last_refinement_job_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Last Refinement Job Id",
+            "description": "ID of the last refinement job for the ConceptOverTimeAnalysis"
+          },
           "timeline_settings": {
             "$ref": "#/components/schemas/COTATimelineSettings",
             "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
@@ -6797,6 +6709,7 @@
           "name",
           "id",
           "project_id",
+          "last_refinement_job_id",
           "timeline_settings",
           "training_settings",
           "concepts",
@@ -6824,47 +6737,70 @@
         "type": "object",
         "title": "COTARefinementHyperparameters"
       },
-      "COTARefinementJobRead": {
+      "COTARefinementJobInput": {
         "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the BackgroundJob",
-            "default": "Waiting"
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
-          "cota": {
-            "$ref": "#/components/schemas/COTARead",
-            "description": "COTA that is used in the COTARefinementJob"
+          "cota_id": {
+            "type": "integer",
+            "title": "Cota Id",
+            "description": "ID of the COTA that is used in the COTARefinementJob"
           },
           "hyperparams": {
             "$ref": "#/components/schemas/COTARefinementHyperparameters",
-            "description": "Hyperparameters of the COTARefinementJob"
+            "description": "Hyperparameters of the COTARefinementJob",
+            "default": { "cem_training_epochs": 10, "cem_dimensions": 64 }
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "cota_id"],
+        "title": "COTARefinementJobInput"
+      },
+      "COTARefinementJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
-          "id": { "type": "string", "title": "Id", "description": "ID of the COTARefinementJob" },
-          "current_pipeline_step": {
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Current Pipeline Step",
-            "description": "Current Pipeline Step of the COTARefinementJob"
+            "title": "Status Message",
+            "description": "Status message"
           },
-          "error_message": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Error Message",
-            "description": "Optional ErrorMessage of the COTARefinementJob"
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
           },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/COTARefinementJobInput", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the COTARefinementJob"
+            "description": "Created timestamp of the job"
           },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the COTARefinementJob"
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": ["cota", "hyperparams", "created", "updated"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "COTARefinementJobRead"
       },
       "COTASentence": {
@@ -7590,19 +7526,31 @@
             "title": "Current Step",
             "description": "Current step in the job process"
           },
-          "num_steps": {
-            "type": "integer",
-            "title": "Num Steps",
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
             "description": "Total number of steps in the job process"
           },
           "input": { "$ref": "#/components/schemas/DuplicateFinderInput", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/DuplicateFinderOutput" }, { "type": "null" }],
             "description": "Output for the job"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": ["job_id", "job_type", "project_id", "status", "current_step", "num_steps", "input"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "DuplicateFinderJobRead"
       },
       "DuplicateFinderOutput": {
@@ -7638,16 +7586,16 @@
         "required": ["id"],
         "title": "ElasticSearchHit"
       },
-      "ExportJobParameters": {
+      "ExportJobInput": {
         "properties": {
-          "export_job_type": {
-            "$ref": "#/components/schemas/ExportJobType",
-            "description": "The type of the export job (what to export)"
-          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
-            "description": "The ID of the Project to export from"
+            "description": "Project ID associated with the job"
+          },
+          "export_job_type": {
+            "$ref": "#/components/schemas/ExportJobType",
+            "description": "The type of the export job (what to export)"
           },
           "specific_export_job_parameters": {
             "anyOf": [
@@ -7683,35 +7631,65 @@
           }
         },
         "type": "object",
-        "required": ["export_job_type", "project_id", "specific_export_job_parameters"],
-        "title": "ExportJobParameters"
+        "required": ["project_id", "export_job_type", "specific_export_job_parameters"],
+        "title": "ExportJobInput"
       },
-      "ExportJobRead": {
+      "ExportJobOutput": {
         "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the ExportJob",
-            "default": "Waiting"
-          },
           "results_url": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Results Url",
             "description": "URL to download the results when done."
+          }
+        },
+        "type": "object",
+        "title": "ExportJobOutput"
+      },
+      "ExportJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
-          "id": { "type": "string", "title": "Id", "description": "ID of the ExportJob" },
-          "parameters": {
-            "$ref": "#/components/schemas/ExportJobParameters",
-            "description": "The parameters of the export job that defines what to export!"
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/ExportJobInput", "description": "Input for the job" },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/ExportJobOutput" }, { "type": "null" }],
+            "description": "Output for the job"
           },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the ExportJob"
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": ["id", "parameters", "created"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "ExportJobRead"
       },
       "ExportJobType": {
@@ -8390,13 +8368,17 @@
         "title": "IDListOperator"
       },
       "IDOperator": { "type": "string", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "title": "IDOperator" },
-      "ImportJobParameters": {
+      "ImportJobInput": {
         "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
           "import_job_type": {
             "$ref": "#/components/schemas/ImportJobType",
             "description": "The type of the import job (what to import)"
           },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "ID of the Project" },
           "user_id": { "type": "integer", "title": "User Id", "description": "ID of the User, who started the job." },
           "file_name": {
             "type": "string",
@@ -8405,41 +8387,51 @@
           }
         },
         "type": "object",
-        "required": ["import_job_type", "project_id", "user_id", "file_name"],
-        "title": "ImportJobParameters"
+        "required": ["project_id", "import_job_type", "user_id", "file_name"],
+        "title": "ImportJobInput"
       },
       "ImportJobRead": {
         "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the ImportJob",
-            "default": "Waiting"
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
-          "error": {
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Error",
-            "description": "Error message (if any)"
+            "title": "Status Message",
+            "description": "Status message"
           },
-          "id": { "type": "string", "title": "Id", "description": "ID of the ImportJob" },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/ImportJobInput", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the ImportJob"
+            "description": "Created timestamp of the job"
           },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the ImportJob"
-          },
-          "parameters": {
-            "$ref": "#/components/schemas/ImportJobParameters",
-            "description": "The parameters of the import job that defines what to import!"
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": ["id", "created", "updated", "parameters"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "ImportJobRead"
       },
       "ImportJobType": {
@@ -8726,19 +8718,31 @@
             "title": "Current Step",
             "description": "Current step in the job process"
           },
-          "num_steps": {
-            "type": "integer",
-            "title": "Num Steps",
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
             "description": "Total number of steps in the job process"
           },
           "input": { "$ref": "#/components/schemas/LLMJobInput-Output", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/LLMJobOutput" }, { "type": "null" }],
             "description": "Output for the job"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": ["job_id", "job_type", "project_id", "status", "current_step", "num_steps", "input"],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "LlmAssistantJobRead"
       },
       "LogicalOperator": {
@@ -8747,10 +8751,10 @@
         "title": "LogicalOperator",
         "description": "This tells our filter how to combine multiple column expressions."
       },
-      "MLJobParameters-Input": {
+      "MLJobInput-Input": {
         "properties": {
-          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
           "specific_ml_job_parameters": {
             "anyOf": [
               {
@@ -8779,13 +8783,13 @@
           }
         },
         "type": "object",
-        "required": ["ml_job_type", "project_id", "specific_ml_job_parameters"],
-        "title": "MLJobParameters"
+        "required": ["project_id", "ml_job_type", "specific_ml_job_parameters"],
+        "title": "MLJobInput"
       },
-      "MLJobParameters-Output": {
+      "MLJobInput-Output": {
         "properties": {
-          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
+          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
           "specific_ml_job_parameters": {
             "anyOf": [
               {
@@ -8814,42 +8818,8 @@
           }
         },
         "type": "object",
-        "required": ["ml_job_type", "project_id", "specific_ml_job_parameters"],
-        "title": "MLJobParameters"
-      },
-      "MLJobRead": {
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the MLJob",
-            "default": "Waiting"
-          },
-          "error": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Error",
-            "description": "Error message (if any)"
-          },
-          "id": { "type": "string", "title": "Id", "description": "ID of the MLJob" },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the MLJob"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the MLJob"
-          },
-          "parameters": {
-            "$ref": "#/components/schemas/MLJobParameters-Output",
-            "description": "The parameters of the MLJob that defines what to do!"
-          }
-        },
-        "type": "object",
-        "required": ["id", "created", "updated", "parameters"],
-        "title": "MLJobRead"
+        "required": ["project_id", "ml_job_type", "specific_ml_job_parameters"],
+        "title": "MLJobInput"
       },
       "MLJobType": {
         "type": "string",
@@ -9055,6 +9025,50 @@
         "required": ["status", "status_message", "sdoc_id", "current_metadata", "suggested_metadata"],
         "title": "MetadataExtractionResult"
       },
+      "MlJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/MLJobInput-Output", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
+        "title": "MlJobRead"
+      },
       "ModelTrainingParams": {
         "properties": {
           "llm_approach_type": { "type": "string", "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
@@ -9234,32 +9248,21 @@
         "required": ["sdoc_id", "cluster_id", "x", "y", "is_accepted", "in_searchresult", "is_outlier"],
         "title": "PerspectivesDoc"
       },
-      "PerspectivesJobRead": {
+      "PerspectivesJobInput": {
         "properties": {
-          "step": {
+          "project_id": {
             "type": "integer",
-            "title": "Step",
-            "description": "Current step of the PerspectivesJob. Starts at 0 and increments with each major step."
-          },
-          "steps": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Steps",
-            "description": "List of steps that the PerspectivesJob consists of. Each step is a string describing the action taken."
-          },
-          "status_msg": {
-            "type": "string",
-            "title": "Status Msg",
-            "description": "Status message of the PerspectivesJob"
-          },
-          "perspectives_job_type": {
-            "$ref": "#/components/schemas/PerspectivesJobType",
-            "description": "Type of the PerspectivesJob"
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
           "aspect_id": {
             "type": "integer",
             "title": "Aspect Id",
             "description": "ID of the aspect associated with the PerspectivesJob. -1 if not applicable."
+          },
+          "perspectives_job_type": {
+            "$ref": "#/components/schemas/PerspectivesJobType",
+            "description": "Type of the PerspectivesJob"
           },
           "parameters": {
             "oneOf": [
@@ -9291,44 +9294,54 @@
                 "split_cluster": "#/components/schemas/SplitClusterParams"
               }
             }
-          },
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the BackgroundJob",
-            "default": "Waiting"
-          },
-          "id": { "type": "string", "title": "Id", "description": "UUID of the BackgroundJob" },
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "aspect_id", "perspectives_job_type", "parameters"],
+        "title": "PerspectivesJobInput"
+      },
+      "PerspectivesJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
-            "description": "The ID of the Project for which the BackgroundJob is executed."
+            "description": "Project ID associated with the job"
           },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/PerspectivesJobInput", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the BackgroundJob"
+            "description": "Created timestamp of the job"
           },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the BackgroundJob"
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": [
-          "step",
-          "steps",
-          "status_msg",
-          "perspectives_job_type",
-          "aspect_id",
-          "parameters",
-          "id",
-          "project_id",
-          "created",
-          "updated"
-        ],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "PerspectivesJobRead"
       },
       "PerspectivesJobType": {
@@ -11456,59 +11469,6 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
-      },
-      "TrainerJobParameters": {
-        "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project." },
-          "train_model_name": {
-            "type": "string",
-            "title": "Train Model Name",
-            "description": "The name of the model."
-          },
-          "train_dataloader_name": {
-            "type": "string",
-            "title": "Train Dataloader Name",
-            "description": "The name of the training dataloader."
-          },
-          "epochs": { "type": "integer", "title": "Epochs", "description": "The epochs to train." }
-        },
-        "type": "object",
-        "required": ["project_id", "train_model_name", "train_dataloader_name", "epochs"],
-        "title": "TrainerJobParameters"
-      },
-      "TrainerJobRead": {
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the TrainerJob",
-            "default": "Waiting"
-          },
-          "id": { "type": "string", "title": "Id", "description": "ID of the TrainerJob" },
-          "parameters": {
-            "$ref": "#/components/schemas/TrainerJobParameters",
-            "description": "The parameters of the TrainerJob that defines how to train!"
-          },
-          "saved_model_path": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Saved Model Path",
-            "description": "The path to the saved model."
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the TrainerJob"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the TrainerJob"
-          }
-        },
-        "type": "object",
-        "required": ["id", "parameters", "created", "updated"],
-        "title": "TrainerJobRead"
       },
       "TrainingParameters": {
         "properties": {

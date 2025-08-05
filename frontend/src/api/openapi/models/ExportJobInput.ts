@@ -11,15 +11,15 @@ import type { ExportSelectedSentenceAnnotationsParams } from "./ExportSelectedSe
 import type { ExportSelectedSpanAnnotationsParams } from "./ExportSelectedSpanAnnotationsParams";
 import type { ExportSelectedTimelineAnalysesParams } from "./ExportSelectedTimelineAnalysesParams";
 import type { ExportSelectedWhiteboardsParams } from "./ExportSelectedWhiteboardsParams";
-export type ExportJobParameters = {
+export type ExportJobInput = {
+  /**
+   * Project ID associated with the job
+   */
+  project_id: number;
   /**
    * The type of the export job (what to export)
    */
   export_job_type: ExportJobType;
-  /**
-   * The ID of the Project to export from
-   */
-  project_id: number;
   /**
    * Specific parameters for the export job w.r.t it's type
    */

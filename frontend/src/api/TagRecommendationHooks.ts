@@ -3,19 +3,23 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { MLJobRead } from "./openapi/models/MLJobRead.ts";
+import { MlJobRead } from "./openapi/models/MlJobRead.ts";
 import { TagRecommendationResult } from "./openapi/models/TagRecommendationResult.ts";
 import { TagRecommendationService } from "./openapi/services/TagRecommendationService.ts";
 
 // TAG RECOMMENDATION QUERIES
 const useGetAllTagRecommendationJobs = () => {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
-  return useQuery<MLJobRead[], Error>({
+  return useQuery<MlJobRead[], Error>({
     queryKey: [QueryKey.PROJECT_TAG_RECOMMENDATION_JOBS, projectId],
-    queryFn: () =>
-      TagRecommendationService.getAllTagrecommendationJobs({
-        projectId: projectId!,
-      }),
+    queryFn: () => {
+      return [];
+      // TODO: FIX ME!!!
+      // TagRecommendationService.getAllTagrecommendationJobs({
+      //   projectId: projectId!,
+      // })
+    },
+
     enabled: !!projectId,
   });
 };

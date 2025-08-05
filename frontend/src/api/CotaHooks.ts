@@ -3,9 +3,9 @@ import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
-import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { COTARead } from "./openapi/models/COTARead.ts";
 import { COTARefinementJobRead } from "./openapi/models/COTARefinementJobRead.ts";
+import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { ConceptOverTimeAnalysisService } from "./openapi/services/ConceptOverTimeAnalysisService.ts";
 
 // COTA QUERIES
@@ -118,7 +118,6 @@ const useResetCota = () =>
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
-      queryClient.invalidateQueries({ queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cota.id] });
     },
     meta: {
       successMessage: (cota: COTARead) => `Reset Concept Over Time Analysis "${cota.name}"`,
@@ -143,23 +142,27 @@ const useDeleteCota = () =>
   });
 
 // COTA REFINEMENT JOB QUERIES
-const usePollMostRecentRefinementJob = (cotaId: number | undefined) => {
+const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
   return useQuery<COTARefinementJobRead | null, Error>({
-    queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cotaId],
+    queryKey: [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJobId],
     queryFn: () =>
-      ConceptOverTimeAnalysisService.getMostRecentCotaJob({
-        cotaId: cotaId!,
+      ConceptOverTimeAnalysisService.getCotaJob({
+        cotaJobId: cotaRefinementJobId!,
       }),
-    enabled: !!cotaId,
+    enabled: !!cotaRefinementJobId,
     refetchInterval: (query) => {
       if (query.state.data?.status) {
         switch (query.state.data.status) {
-          case BackgroundJobStatus.ERRORNEOUS:
-          case BackgroundJobStatus.FINISHED:
+          case JobStatus.CANCELED:
+          case JobStatus.FAILED:
+          case JobStatus.FINISHED:
+          case JobStatus.STOPPED:
             // TODO: maybe invalidate the cota query here or set it directly (see CotaControl.tsx)
             return false;
-          case BackgroundJobStatus.WAITING:
-          case BackgroundJobStatus.RUNNING:
+          case JobStatus.DEFERRED:
+          case JobStatus.QUEUED:
+          case JobStatus.SCHEDULED:
+          case JobStatus.STARTED:
             return 1000;
         }
       }
@@ -173,12 +176,13 @@ const useRefineCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.refineCotaById,
     onSuccess: (cotaRefinementJob) => {
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.COTA_MOST_RECENT_REFINEMENT_JOB, cotaRefinementJob.cota.id],
-      });
+      queryClient.setQueryData<COTARefinementJobRead>(
+        [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJob.job_id],
+        cotaRefinementJob,
+      );
     },
     meta: {
-      successMessage: (job: COTARefinementJobRead) => `Started refinement job for "${job.cota.name}"`,
+      successMessage: (job: COTARefinementJobRead) => `Started refinement job for "COTA ${job.input.cota_id}"`,
     },
   });
 
@@ -192,7 +196,7 @@ const CotaHooks = {
   useRemoveCotaSentences,
   useResetCota,
   useDeleteCota,
-  usePollMostRecentRefinementJob,
+  usePollCOTARefinementJob,
   useRefineCota,
 };
 

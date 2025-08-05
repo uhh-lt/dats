@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ImportJobType } from "./ImportJobType";
-export type ImportJobParameters = {
+export type ImportJobInput = {
+  /**
+   * Project ID associated with the job
+   */
+  project_id: number;
   /**
    * The type of the import job (what to import)
    */
   import_job_type: ImportJobType;
-  /**
-   * ID of the Project
-   */
-  project_id: number;
   /**
    * ID of the User, who started the job.
    */
