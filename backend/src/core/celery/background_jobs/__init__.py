@@ -4,7 +4,6 @@ from typing import Any
 from celery import Task, group
 from celery.result import GroupResult
 from modules.crawler.crawler_job_dto import CrawlerJobParameters, CrawlerJobRead
-from modules.ml.ml_job_dto import MLJobParameters, MLJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -46,20 +45,6 @@ def prepare_and_start_crawling_job_async(
     start_export_job_chain.apply_async()
 
     return cj
-
-
-def prepare_and_start_ml_job_async(
-    ml_job_params: MLJobParameters,
-) -> MLJobRead:
-    from core.celery.background_jobs.tasks import start_ml_job
-    from modules.ml.ml_service import MLService
-
-    assert isinstance(start_ml_job, Task), "Not a Celery Task"
-
-    mls: MLService = MLService()
-    ml_job = mls.prepare_ml_job(ml_job_params)
-    start_ml_job.apply_async(kwargs={"ml_job": ml_job})
-    return ml_job
 
 
 def execute_text_preprocessing_pipeline_apply_async(

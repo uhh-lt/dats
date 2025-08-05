@@ -1,4 +1,3 @@
-from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
@@ -6,7 +5,7 @@ from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationMethod,
 )
 from pydantic import BaseModel, Field
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_dto import JobInputBase
 
 
 class MLJobType(StrEnum):
@@ -60,7 +59,7 @@ class SentenceEmbeddingParams(BaseModel):
     )
 
 
-class MLJobParameters(BaseModel):
+class MLJobInput(JobInputBase):
     ml_job_type: MLJobType = Field(description="The type of the MLJob")
     project_id: int = Field(description="The ID of the Project to analyse")
     specific_ml_job_parameters: (
@@ -74,29 +73,3 @@ class MLJobParameters(BaseModel):
         description="Specific parameters for the MLJob w.r.t it's type",
         discriminator="ml_job_type",
     )
-
-
-class MLJobBase(BaseModel):
-    status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING, description="Status of the MLJob"
-    )
-    error: str | None = Field(default=None, description="Error message (if any)")
-
-
-class MLJobRead(MLJobBase):
-    id: str = Field(description="ID of the MLJob")
-    created: datetime = Field(description="Created timestamp of the MLJob")
-    updated: datetime = Field(description="Updated timestamp of the MLJob")
-    parameters: MLJobParameters = Field(
-        description="The parameters of the MLJob that defines what to do!"
-    )
-
-
-class MLJobCreate(MLJobBase):
-    parameters: MLJobParameters = Field(
-        description="The parameters of the MLJob that defines what to do!"
-    )
-
-
-class MLJobUpdate(MLJobBase):
-    pass
