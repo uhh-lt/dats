@@ -15,7 +15,7 @@ job_service = JobService()
 def register_job_endpoints(
     job_type: str,
     input_model: Type[JobInputBase],
-    output_model: Type[BaseModel],
+    output_model: Type[BaseModel] | None,
     endpoint_generation: EndpointGeneration,
     router: APIRouter,
 ):

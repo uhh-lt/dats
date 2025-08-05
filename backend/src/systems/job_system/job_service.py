@@ -1,4 +1,5 @@
 import inspect
+from datetime import datetime
 from typing import Callable, Dict, TypedDict, TypeVar
 from uuid import uuid4
 
@@ -25,10 +26,25 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 class RegisteredJob(TypedDict):
     handler: Callable
     input_type: type[JobInputBase]
-    output_type: type[BaseModel]
+    output_type: type[BaseModel] | None
     generate_endpoints: EndpointGeneration
     priority: JobPriority
     router: APIRouter | None
+
+
+def handler_wrapper(handler: Callable) -> Callable:
+    def wrapper(payload):
+        output = handler(payload=payload)
+
+        # set finished time
+        job = rq.get_current_job()
+        assert job is not None, "Job must be running in a worker context"
+        job.meta["finished"] = datetime.now()
+        job.save_meta()
+
+        return output
+
+    return wrapper
 
 
 class JobService(metaclass=SingletonMeta):
@@ -86,9 +102,9 @@ class JobService(metaclass=SingletonMeta):
     def register_job(
         self,
         job_type: str,
-        handler_func: Callable[[InputT], OutputT],
+        handler_func: Callable[[InputT], OutputT | None],
         input_type: type[InputT],
-        output_type: type[OutputT],
+        output_type: type[OutputT] | None,
         priority: JobPriority,
         generate_endpoints: EndpointGeneration,
         router: APIRouter | None,
@@ -130,13 +146,17 @@ class JobService(metaclass=SingletonMeta):
 
         job_id = str(uuid4())
         rq_job = queue.enqueue(
-            handler,
+            handler_wrapper(handler),
             payload=input_obj,
             job_id=job_id,
             meta={
                 "type": job_type,
                 "status_message": "Job enqueued",
                 "project_id": input_obj.project_id,
+                "current_step": 0,
+                "num_steps": 1,
+                "created": datetime.now(),
+                "finished": None,
             },
         )
         return rq_job

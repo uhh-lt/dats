@@ -12,12 +12,12 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 def register_job(
     job_type: str,
     input_type: type[InputT],
-    output_type: type[OutputT],
+    output_type: type[OutputT] | None,
     priority: JobPriority,
     generate_endpoints: EndpointGeneration,
     router: APIRouter | None = None,
 ):
-    def decorator(func: Callable[[InputT], OutputT]):
+    def decorator(func: Callable[[InputT], OutputT | None]):
         # Only register jobs if running in API context
         if os.environ.get("BACKEND_TYPE") == "api":
             from systems.job_system.job_service import JobService
