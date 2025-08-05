@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime
 from typing import Generic, TypeVar
 
 import rq
@@ -34,7 +35,7 @@ class JobInputBase(BaseModel):
 
 
 InputT = TypeVar("InputT", bound=JobInputBase)
-OutputT = TypeVar("OutputT", bound=BaseModel)
+OutputT = TypeVar("OutputT", bound=BaseModel | None)
 
 
 class JobRead(BaseModel, Generic[InputT, OutputT]):
@@ -47,6 +48,8 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
     num_steps: int = Field(..., description="Total number of steps in the job process")
     input: InputT = Field(..., description="Input for the job")
     output: OutputT | None = Field(None, description="Output for the job")
+    created: datetime = Field(..., description="Created timestamp of the job")
+    finished: datetime | None = Field(None, description="Finished timestamp of the job")
 
     @staticmethod
     def from_rq_job(job: rq.job.Job) -> "JobRead[InputT, OutputT]":
@@ -60,4 +63,6 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
             num_steps=job.meta.get("num_steps", 1),
             input=job.kwargs["payload"],
             output=job.return_value(),
+            created=job.meta.get("created", datetime.now()),
+            finished=job.meta.get("finished", None),
         )
