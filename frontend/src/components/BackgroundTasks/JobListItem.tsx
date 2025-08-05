@@ -3,7 +3,6 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import PreProHooks from "../../api/PreProHooks.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { jobStatusToIcon } from "./StatusToIcon.tsx";
 
@@ -28,7 +27,8 @@ function JobListItem({ jobStatus, jobId, abortable = false, title, subTitle, chi
 
   const handleAbortClick = useCallback(() => {
     if (jobId) {
-      PreProHooks.abortPreProJob(jobId);
+      console.log(`Aborting job with ID: ${jobId}`);
+      console.warn("This feature is not implemented yet.");
     }
   }, [jobId]);
 

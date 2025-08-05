@@ -19,13 +19,13 @@ import {
 import { useEffect } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
+import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";
+import JobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";
 import CotaTrainingSettings from "./CotaTrainingSettings.tsx";
 import { CotaActions } from "./cotaSlice.ts";
 import {
@@ -45,13 +45,13 @@ function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = CotaHooks.usePollMostRecentRefinementJob(cota.id);
+  const refinementJob = CotaHooks.usePollCOTARefinementJob(cota.last_refinement_job_id);
 
   // track the status of the refinement job and refetch cota once it is finished
   useEffect(() => {
     if (!refinementJob.data) return;
-    if (refinementJob.data.status === BackgroundJobStatus.FINISHED) {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, refinementJob.data.cota.project_id] });
+    if (refinementJob.data.status === JobStatus.FINISHED) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, refinementJob.data.input.project_id] });
     }
   }, [refinementJob.data]);
 
@@ -59,7 +59,10 @@ function CotaControl({ cota }: CotaControlProps) {
   const refineCota = CotaHooks.useRefineCota();
   const handleRefineCota = () => {
     refineCota.mutate({
-      cotaId: cota.id,
+      requestBody: {
+        cota_id: cota.id,
+        project_id: cota.project_id,
+      },
     });
   };
 
@@ -188,13 +191,9 @@ function CotaControl({ cota }: CotaControlProps) {
           </List>
 
           {refinementJob.isSuccess ? (
-            <BackgroundJobStatusIndicator
+            <JobStatusIndicator
               status={refinementJob.data?.status}
-              infoText={
-                refinementJob.data?.current_pipeline_step === "None"
-                  ? undefined
-                  : refinementJob.data?.current_pipeline_step
-              }
+              infoText={refinementJob.data?.steps[refinementJob.data?.current_step] || null}
             />
           ) : refinementJob.isLoading ? (
             <Typography>Refinement Job: Loading...</Typography>

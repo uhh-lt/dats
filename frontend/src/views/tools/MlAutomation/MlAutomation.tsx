@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
-import MLHooks from "../../../api/MLHooks.ts";
+import JobHooks from "../../../api/JobHooks.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
@@ -28,7 +28,7 @@ function MlAutomation() {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // actions
-  const startMlJob = MLHooks.useStartMLJob();
+  const startMlJob = JobHooks.useStartMLJob();
 
   // quotation detection jobs
   const handleStartNewQuotationDetection = () => {

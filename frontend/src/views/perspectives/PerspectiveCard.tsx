@@ -6,26 +6,42 @@ import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, T
 import React from "react";
 import { Link } from "react-router-dom";
 import { AspectRead } from "../../api/openapi/models/AspectRead.ts";
-import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
+import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
-import BackgroundJobStatusBadge from "../../components/BackgroundTasks/BackgroundJobStatusBadge.tsx";
+import JobStatusBadge from "../../components/BackgroundTasks/JobStatusBadge.tsx";
 import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 
-const statusToIcon: Record<BackgroundJobStatus, React.ReactElement> = {
-  [BackgroundJobStatus.WAITING]: <HourglassTopIcon style={{ fontSize: 48 }} />,
-  [BackgroundJobStatus.RUNNING]: <ConstructionIcon style={{ fontSize: 48 }} />,
-  [BackgroundJobStatus.FINISHED]: <TaskAltIcon style={{ fontSize: 48 }} />,
-  [BackgroundJobStatus.ERRORNEOUS]: <WarningIcon style={{ fontSize: 48 }} />,
-  [BackgroundJobStatus.ABORTED]: <WarningIcon style={{ fontSize: 48 }} />,
+const statusToIcon: Record<JobStatus, React.ReactElement> = {
+  // waiting
+  [JobStatus.QUEUED]: <HourglassTopIcon style={{ fontSize: 48 }} />,
+  [JobStatus.DEFERRED]: <HourglassTopIcon style={{ fontSize: 48 }} />,
+  [JobStatus.SCHEDULED]: <HourglassTopIcon style={{ fontSize: 48 }} />,
+  // running
+  [JobStatus.STARTED]: <ConstructionIcon style={{ fontSize: 48 }} />,
+  // finished
+  [JobStatus.FINISHED]: <TaskAltIcon style={{ fontSize: 48 }} />,
+  // errors
+  [JobStatus.FAILED]: <WarningIcon style={{ fontSize: 48 }} />,
+  // aborted
+  [JobStatus.STOPPED]: <WarningIcon style={{ fontSize: 48 }} />,
+  [JobStatus.CANCELED]: <WarningIcon style={{ fontSize: 48 }} />,
 };
 
-const statusToText: Record<BackgroundJobStatus, string> = {
-  [BackgroundJobStatus.WAITING]: "Job is about to start. Please wait...",
-  [BackgroundJobStatus.RUNNING]: "Map Creation in progress! Please wait...",
-  [BackgroundJobStatus.FINISHED]: "Finished",
-  [BackgroundJobStatus.ERRORNEOUS]: "An error occurred while creating the map.",
-  [BackgroundJobStatus.ABORTED]: "An error occurred while creating the map.",
+const statusToText: Record<JobStatus, string> = {
+  // waiting
+  [JobStatus.QUEUED]: "Job is about to start. Please wait...",
+  [JobStatus.DEFERRED]: "Job is about to start. Please wait...",
+  [JobStatus.SCHEDULED]: "Job is about to start. Please wait...",
+  // running
+  [JobStatus.STARTED]: "Map Creation in progress! Please wait...",
+  // finished
+  [JobStatus.FINISHED]: "Finished",
+  // errors
+  [JobStatus.FAILED]: "An error occurred while creating the map.",
+  // aborted
+  [JobStatus.STOPPED]: "The map creation was stopped.",
+  [JobStatus.CANCELED]: "The map creation was canceled.",
 };
 
 interface PerspectiveCardProps {
@@ -52,10 +68,10 @@ function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
   return (
     <Card sx={{ flexShrink: 0, position: "relative", "&:hover .delete-button": { opacity: 1 } }}>
       <Box position={"absolute"} top={8} right={8} zIndex={1}>
-        <BackgroundJobStatusBadge status={perspectivesJob.data?.status} />
+        <JobStatusBadge status={perspectivesJob.data?.status} />
       </Box>
       <CardActionArea component={Link} to={to}>
-        {perspectivesJob.data.status === BackgroundJobStatus.FINISHED ? (
+        {perspectivesJob.data.status === JobStatus.FINISHED ? (
           <CardMedia
             sx={{ height: 360, width: 360, objectFit: "cover" }}
             component="img"

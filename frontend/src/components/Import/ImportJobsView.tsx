@@ -42,7 +42,7 @@ function ImportJobsView({ projectId }: ImportJobsViewProps) {
         {allImportJobs.length > 0 && (
           <Stack spacing={1}>
             {allImportJobs.map((job) => (
-              <ImportJobListItem key={job.id} initialImportJob={job} />
+              <ImportJobListItem key={job.job_id} initialImportJob={job} />
             ))}
           </Stack>
         )}
