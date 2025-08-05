@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 class ConceptOverTimeAnalysisORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    last_refinement_job_id: Mapped[str | None] = mapped_column(
+        String, nullable=True, index=False
+    )
 
     # JSON representation of a list of COTAConcepts (see DTO)
     concepts: Mapped[str] = mapped_column(

@@ -5,14 +5,6 @@ import redis
 from common.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
-from modules.concept_over_time_analysis.cota_dto import (
-    COTAConcept,
-    COTARead,
-    COTARefinementJobCreate,
-    COTARefinementJobRead,
-    COTARefinementJobUpdate,
-    COTASentence,
-)
 from modules.crawler.crawler_job_dto import (
     CrawlerJobCreate,
     CrawlerJobRead,
@@ -231,108 +223,6 @@ class RedisRepo(metaclass=SingletonMeta):
                 for job in all_trainer_jobs
                 if job.parameters.project_id == project_id
             ]
-
-    def store_cota_job(
-        self, cota_job: COTARefinementJobCreate | COTARefinementJobRead
-    ) -> COTARefinementJobRead:
-        client = self._get_client("cota")
-
-        if isinstance(cota_job, COTARefinementJobRead):
-            key = cota_job.id
-            tj = cota_job
-        elif isinstance(cota_job, COTARefinementJobCreate):
-            key = self._generate_random_key()
-            tj = COTARefinementJobRead(
-                id=key,
-                created=datetime.now(),
-                updated=datetime.now(),
-                **cota_job.model_dump(),
-            )
-
-        if client.set(key.encode("utf-8"), tj.model_dump_json()) != 1:
-            msg = "Cannot store COTARefinementJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Successfully stored COTARefinementJob {key}!")
-        return tj
-
-    def load_cota_job(self, key: str) -> COTARefinementJobRead:
-        client = self._get_client("cota")
-
-        tj = client.get(key.encode("utf-8"))
-        if tj is None:
-            msg = f"COTARefinementJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-        logger.debug(f"Successfully loaded COTARefinementJob {key}")
-        return COTARefinementJobRead.model_validate_json(tj)
-
-    def update_cota_job(
-        self, key: str, update: COTARefinementJobUpdate
-    ) -> COTARefinementJobRead:
-        tj = self.load_cota_job(key=key)
-        data = tj.model_dump(exclude={"updated"})
-        if len(data) >= 0:
-            data.update(**update.model_dump())
-            cota = data.pop("cota")
-            concepts = cota.pop("concepts")
-            search_space = cota.pop("search_space")
-            data["cota"] = COTARead(
-                **cota,
-                concepts=[COTAConcept(**concept) for concept in concepts],
-                search_space=[COTASentence(**sentence) for sentence in search_space],
-            )
-            data["updated"] = datetime.now()
-            tj = COTARefinementJobRead(**data)
-            tj = self.store_cota_job(cota_job=tj)
-            logger.debug(f"Updated COTARefinementJob {key}")
-        return tj
-
-    def delete_cota_job(self, key: str) -> COTARefinementJobRead:
-        tj = self.load_cota_job(key=key)
-        client = self._get_client("cota")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete COTARefinementJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted COTARefinementJob {key}")
-        return tj
-
-    def delete_all_cota_job_by_cota_id(
-        self, cota_id: int
-    ) -> list[COTARefinementJobRead]:
-        all_cota_jobs_by_cota_id = self.get_all_cota_jobs_by_cota_id(cota_id=cota_id)
-        for cota_job in all_cota_jobs_by_cota_id:
-            self.delete_cota_job(cota_job.id)
-        return all_cota_jobs_by_cota_id
-
-    def get_all_cota_jobs(
-        self, project_id: int | None = None
-    ) -> list[COTARefinementJobRead]:
-        client = self._get_client("cota")
-        all_cota_jobs: list[COTARefinementJobRead] = [
-            self.load_cota_job(str(key, "utf-8")) for key in client.keys()
-        ]
-        if project_id is None:
-            return all_cota_jobs
-        else:
-            return [job for job in all_cota_jobs if job.cota.project_id == project_id]
-
-    def get_all_cota_jobs_by_cota_id(self, cota_id: int) -> list[COTARefinementJobRead]:
-        all_cota_jobs = self.get_all_cota_jobs()
-        all_cota_jobs_by_cota_id = [
-            job for job in all_cota_jobs if job.cota.id == cota_id
-        ]
-        return all_cota_jobs_by_cota_id
-
-    def get_most_recent_cota_job_by_cota_id(
-        self, cota_id: int
-    ) -> COTARefinementJobRead | None:
-        all_cota_jobs_by_cota_id = self.get_all_cota_jobs_by_cota_id(cota_id=cota_id)
-        if len(all_cota_jobs_by_cota_id) == 0:
-            return None
-        else:
-            return sorted(all_cota_jobs_by_cota_id, key=lambda x: x.updated)[-1]
 
     def store_ml_job(self, ml_job: MLJobCreate | MLJobRead) -> MLJobRead:
         client = self._get_client("ml")

@@ -4,19 +4,16 @@ import srsly
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from common.singleton_meta import SingletonMeta
-from core.celery.background_jobs import start_cota_refinement_job_async
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from fastapi.encoders import jsonable_encoder
-from loguru import logger
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
-    COTARefinementHyperparameters,
-    COTARefinementJobCreate,
+    COTARefinementJobInput,
     COTARefinementJobRead,
     COTASentence,
     COTASentenceID,
@@ -24,31 +21,17 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
     COTAUpdateIntern,
 )
-from modules.concept_over_time_analysis.pipeline import (
-    build_cota_refinement_pipeline,
-)
-from modules.simsearch.simsearch_service import SimSearchService
-from modules.trainer.trainer_service import TrainerService
 from repos.db.sql_repo import SQLRepo
-from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_service import JobService
 
 
 class COTAService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.trainer: TrainerService = TrainerService()
-        cls.sims: SimSearchService = SimSearchService()
-        cls.es: ElasticSearchRepo = ElasticSearchRepo()
-        cls.redis: RedisRepo = RedisRepo()
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.sqlr: SQLRepo = SQLRepo()
-
-        cls.max_search_space_per_concept: int = 1000
-        cls.search_space_sim_search_threshold: float = 0.5
-
+        cls.js = JobService()
         return super(COTAService, cls).__new__(cls)
 
     def create(self, db: Session, cota_create: COTACreateIntern) -> COTARead:
@@ -79,19 +62,6 @@ class COTAService(metaclass=SingletonMeta):
 
         return COTARead.model_validate(db_obj)
 
-    def read_by_id(self, *, db: Session, cota_id: int) -> COTARead:
-        db_obj = crud_cota.read(db=db, id=cota_id)
-        return COTARead.model_validate(db_obj)
-
-    def read_by_project(
-        self,
-        *,
-        db: Session,
-        project_id: int,
-    ) -> list[COTARead]:
-        db_objs = crud_cota.read_by_project(db=db, project_id=project_id)
-        return [COTARead.model_validate(db_obj) for db_obj in db_objs]
-
     def update(
         self,
         *,
@@ -100,7 +70,7 @@ class COTAService(metaclass=SingletonMeta):
         cota_update: COTAUpdate,
     ) -> COTARead:
         # make sure that cota with cota_id exists
-        self.read_by_id(db=db, cota_id=cota_id)
+        crud_cota.read(db=db, id=cota_id)
 
         update_dto_as_in_db = COTAUpdateIntern(
             **cota_update.model_dump(
@@ -142,7 +112,8 @@ class COTAService(metaclass=SingletonMeta):
         cota_id: int,
     ) -> COTARead:
         # make sure that cota with cota_id exists
-        cota = self.read_by_id(db=db, cota_id=cota_id)
+        db_obj = crud_cota.read(db=db, id=cota_id)
+        cota = COTARead.model_validate(db_obj)
         # delete the model directories
         model_dir = self.fsr.get_model_dir(cota.project_id, str(cota.id))
         if model_dir.exists():
@@ -152,70 +123,17 @@ class COTAService(metaclass=SingletonMeta):
         )
         if best_model_dir.exists():
             shutil.rmtree(best_model_dir)
-        # delete the refinement jobs
-        self.redis.delete_all_cota_job_by_cota_id(cota_id=cota.id)
-        # reset the search space
-        update_dto_as_in_db = COTAUpdateIntern(
-            search_space=srsly.json_dumps(jsonable_encoder([]))
+        # reset the search space & refinement job
+        db_obj = crud_cota.update(
+            db=db,
+            id=cota_id,
+            update_dto=COTAUpdateIntern(
+                search_space=srsly.json_dumps(jsonable_encoder([])),
+                last_refinement_job_id=None,
+            ),
         )
-        # update the cota in db
-        db_obj = crud_cota.update(db=db, id=cota_id, update_dto=update_dto_as_in_db)
         # return the results
         return COTARead.model_validate(db_obj)
-
-    def delete_by_id(self, *, db: Session, cota_id: int) -> COTARead:
-        db_obj = crud_cota.delete(db=db, id=cota_id)
-        return COTARead.model_validate(db_obj)
-
-    def create_and_start_refinement_job_async(
-        self,
-        *,
-        db: Session,
-        cota_id: int,
-        hyperparams: COTARefinementHyperparameters | None,
-    ) -> COTARefinementJobRead:
-        # make sure the cota exists!
-        cota = self.read_by_id(db=db, cota_id=cota_id)
-
-        # make sure there is at least one concept
-        if len(cota.concepts) < 2:
-            raise ValueError("At least two concepts are required for refinement!")
-
-        if hyperparams is None:
-            hyperparams = COTARefinementHyperparameters()
-        create_dto = COTARefinementJobCreate(cota=cota, hyperparams=hyperparams)
-
-        job = self.redis.store_cota_job(create_dto)
-        logger.info(f"Created and prepared COTA Refinement job ID: {job.id}")
-
-        start_cota_refinement_job_async(cota_job_id=job.id)  # FIXME
-
-        return job
-
-    def _start_refinement_job_sync(
-        self,
-        *,
-        job_id: str,
-    ) -> COTARefinementJobRead:
-        # THIS IS EXECUTED IN THE BACKGROUND JOBS WORKER
-        pipeline = build_cota_refinement_pipeline()
-
-        job: COTARefinementJobRead = self.redis.load_cota_job(job_id)
-        logger.info(
-            f"Starting COTA Refinement job ID: {job.id} for COTA ID: {job.cota.id}"
-        )
-
-        job.status = BackgroundJobStatus.RUNNING
-        job = self.redis.store_cota_job(job)
-        try:
-            job = pipeline.execute(job)
-        except Exception as e:
-            logger.error(f"Error while executing COTA Refinement job: {job}")
-            job.status = BackgroundJobStatus.ERROR
-            job = self.redis.store_cota_job(job)
-            raise e
-
-        return job
 
     def annotate_sentences(
         self,
@@ -225,7 +143,8 @@ class COTAService(metaclass=SingletonMeta):
         cota_sentence_ids: list[COTASentenceID],
         concept_id: str | None = None,
     ) -> COTARead:  # noqa: F821
-        cota = self.read_by_id(db=db, cota_id=cota_id)
+        db_obj = crud_cota.read(db=db, id=cota_id)
+        cota = COTARead.model_validate(db_obj)
 
         # create map
         cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
@@ -262,8 +181,9 @@ class COTAService(metaclass=SingletonMeta):
         db: Session,
         cota_id: int,
         cota_sentence_ids: list[COTASentenceID],
-    ) -> COTARead:  # noqa: F821
-        cota = self.read_by_id(db=db, cota_id=cota_id)
+    ) -> COTARead:
+        db_obj = crud_cota.read(db=db, id=cota_id)
+        cota = COTARead.model_validate(db_obj)
 
         # create map
         cota_sentence_id2_cota_sentence: dict[str, COTASentence] = dict()
@@ -293,3 +213,30 @@ class COTAService(metaclass=SingletonMeta):
 
         # return the results
         return COTARead.model_validate(db_obj)
+
+    def start_refinement_job(
+        self,
+        *,
+        db: Session,
+        payload: COTARefinementJobInput,
+    ) -> COTARefinementJobRead:
+        # make sure the cota exists
+        db_obj = crud_cota.read(db=db, id=payload.cota_id)
+        cota = COTARead.model_validate(db_obj)
+
+        # start the refinement job
+        job = self.js.start_job(
+            job_type="cota_refinement",
+            payload=payload,
+        )
+
+        # update last refinement job id
+        crud_cota.update(
+            db=db,
+            id=cota.id,
+            update_dto=COTAUpdateIntern(
+                last_refinement_job_id=job.id,
+            ),
+        )
+
+        return COTARefinementJobRead.from_rq_job(job=job)

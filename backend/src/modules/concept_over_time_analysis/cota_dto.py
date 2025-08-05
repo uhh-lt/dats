@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime
 from enum import Enum
 
@@ -7,10 +6,7 @@ from modules.analysis.analysis_dto import DateGroupBy
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
 from repos.db.dto_base import UpdateDTOBase
-from systems.job_system.background_job_base_dto import (
-    BackgroundJobBase,
-    BackgroundJobBaseUpdate,
-)
+from systems.job_system.job_dto import JobInputBase, JobRead
 
 ####################
 # COTA Base Types
@@ -146,6 +142,10 @@ class COTAUpdate(BaseModel, UpdateDTOBase):
 
 
 class COTAUpdateIntern(BaseModel, UpdateDTOBase):
+    last_refinement_job_id: str | None = Field(
+        description="ID of the last refinement job for the ConceptOverTimeAnalysis",
+        default=None,
+    )
     name: str | None = Field(
         description="Name of the ConceptOverTimeAnalysis",
         default=None,
@@ -178,6 +178,9 @@ class COTARead(ConceptOverTimeAnalysisBaseDTO):
     id: int = Field(description="ID of the ConceptOverTimeAnalysis")
     project_id: int = Field(
         description="Project the ConceptOverTimeAnalysis belongs to"
+    )
+    last_refinement_job_id: str | None = Field(
+        description="ID of the last refinement job for the ConceptOverTimeAnalysis"
     )
     timeline_settings: COTATimelineSettings = Field(
         description="Timeline Analysis Settings of the ConceptOverTimeAnalysis."
@@ -307,47 +310,14 @@ class COTARefinementHyperparameters(BaseModel):
     )
 
 
-class COTARefinementJobBase(BackgroundJobBase):
-    pass
-
-
-class COTARefinementJobCreate(COTARefinementJobBase):
-    cota: COTARead = Field(description="COTA that is used in the COTARefinementJob")
-
+class COTARefinementJobInput(JobInputBase):
+    cota_id: int = Field(
+        description="ID of the COTA that is used in the COTARefinementJob"
+    )
     hyperparams: COTARefinementHyperparameters = Field(
-        description="Hyperparameters of the COTARefinementJob"
+        description="Hyperparameters of the COTARefinementJob",
+        default=COTARefinementHyperparameters(),
     )
 
 
-class COTARefinementJobUpdate(BackgroundJobBaseUpdate):
-    current_pipeline_step: str | None = Field(
-        description="Current Pipeline Step of the COTARefinementJob",
-        default=None,
-    )
-
-    error_message: str | None = Field(
-        description="Optional ErrorMessage of the COTARefinementJob",
-        default=None,
-    )
-
-
-class COTARefinementJobRead(COTARefinementJobCreate):
-    id: str = Field(
-        description="ID of the COTARefinementJob",
-        default_factory=lambda: str(uuid.uuid4()),
-    )
-
-    current_pipeline_step: str | None = Field(
-        description="Current Pipeline Step of the COTARefinementJob",
-        default=None,
-    )
-
-    error_message: str | None = Field(
-        description="Optional ErrorMessage of the COTARefinementJob",
-        default=None,
-    )
-
-    created: datetime = Field(description="Created timestamp of the COTARefinementJob")
-    updated: datetime = Field(description="Updated timestamp of the COTARefinementJob")
-
-    model_config = ConfigDict(from_attributes=True)
+COTARefinementJobRead = JobRead[COTARefinementJobInput, None]
