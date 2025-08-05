@@ -4,7 +4,6 @@ from typing import Any
 from celery import Task, group
 from celery.result import GroupResult
 from modules.crawler.crawler_job_dto import CrawlerJobParameters, CrawlerJobRead
-from modules.eximport.export_job_dto import ExportJobParameters, ExportJobRead
 from modules.ml.ml_job_dto import MLJobParameters, MLJobRead
 from modules.perspectives.perspectives_job import (
     PerspectivesJobParams,
@@ -43,21 +42,6 @@ def import_uploaded_archive_apply_async(
     return import_uploaded_archive.apply_async(
         kwargs={"archive_file_path_and_project_id": (archive_file_path, project_id)},
     )
-
-
-def prepare_and_start_export_job_async(
-    export_params: ExportJobParameters,
-) -> ExportJobRead:
-    from core.celery.background_jobs.tasks import start_export_job
-    from modules.eximport.export_service import ExportService
-
-    assert isinstance(start_export_job, Task), "Not a Celery Task"
-
-    exs: ExportService = ExportService()
-    ex_job = exs.prepare_export_job(export_params)
-    print("-----ex id", ex_job.id)
-    start_export_job.apply_async(kwargs={"export_job": ex_job})
-    return ex_job
 
 
 def prepare_and_start_crawling_job_async(

@@ -3,7 +3,6 @@ from typing import Callable
 
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
-from loguru import logger
 from modules.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
     export_selected_bbox_annotations,
@@ -11,11 +10,9 @@ from modules.eximport.bbox_annotations.export_bbox_annotations import (
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota, export_selected_cota
 from modules.eximport.export_job_dto import (
-    ExportJobCreate,
-    ExportJobParameters,
-    ExportJobRead,
+    ExportJobInput,
+    ExportJobOutput,
     ExportJobType,
-    ExportJobUpdate,
 )
 from modules.eximport.memos.export_memos import export_all_memos, export_selected_memos
 from modules.eximport.project.export_project import export_project
@@ -44,7 +41,6 @@ from modules.eximport.whiteboards.export_whiteboards import (
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 
 class ExportJobPreparationError(Exception):
@@ -104,89 +100,36 @@ class ExportService(metaclass=SingletonMeta):
 
         return super(ExportService, cls).__new__(cls)
 
-    def prepare_export_job(self, export_params: ExportJobParameters) -> ExportJobRead:
+    def handle_export_job(self, payload: ExportJobInput) -> ExportJobOutput:
         with self.sqlr.db_session() as db:
+            # Check project exists
             crud_project.exists(
                 db=db,
-                id=export_params.project_id,
+                id=payload.project_id,
                 raise_error=True,
             )
 
-        exj_create = ExportJobCreate(parameters=export_params)
-        try:
-            exj_read = self.redis.store_export_job(export_job=exj_create)
-        except Exception as e:
-            raise ExportJobPreparationError(cause=e)
+            # get the export method based on the jobtype
+            export_method = self.export_method_for_job_type.get(
+                payload.export_job_type, None
+            )
+            if export_method is None:
+                raise UnsupportedExportJobTypeError(payload.export_job_type)
 
-        return exj_read
-
-    def get_export_job(self, export_job_id: str) -> ExportJobRead:
-        try:
-            exj = self.redis.load_export_job(key=export_job_id)
-        except Exception as e:
-            raise NoSuchExportJobError(export_job_id=export_job_id, cause=e)
-        return exj
-
-    def _update_export_job(
-        self,
-        export_job_id: str,
-        status: BackgroundJobStatus | None = None,
-        url: str | None = None,
-    ) -> ExportJobRead:
-        update = ExportJobUpdate(status=status, results_url=url)
-        try:
-            exj = self.redis.update_export_job(key=export_job_id, update=update)
-        except Exception as e:
-            raise NoSuchExportJobError(export_job_id=export_job_id, cause=e)
-        return exj
-
-    def start_export_job_sync(self, export_job_id: str) -> ExportJobRead:
-        exj = self.get_export_job(export_job_id=export_job_id)
-        if exj.status != BackgroundJobStatus.WAITING:
-            raise ExportJobAlreadyStartedOrDoneError(export_job_id=export_job_id)
-
-        exj = self._update_export_job(
-            status=BackgroundJobStatus.RUNNING, export_job_id=export_job_id
-        )
-
-        try:
-            with self.sqlr.db_session() as db:
-                # get the export method based on the jobtype
-                export_method = self.export_method_for_job_type.get(
-                    exj.parameters.export_job_type, None
-                )
-                if export_method is None:
-                    raise UnsupportedExportJobTypeError(exj.parameters.export_job_type)
-
-                # execute the export_method with the provided specific parameters
-                results_path = export_method(
-                    db=db,
-                    fsr=self.fsr,
-                    project_id=exj.parameters.project_id,
-                    **(
-                        exj.parameters.specific_export_job_parameters.model_dump(
-                            exclude={"export_job_type"}
-                        )
-                        if exj.parameters.specific_export_job_parameters
-                        else {}
-                    ),
-                )
-                results_url = self.fsr.get_temp_file_url(
-                    results_path.name, relative=True
-                )
-
-            exj = self._update_export_job(
-                url=results_url,
-                status=BackgroundJobStatus.FINISHED,
-                export_job_id=export_job_id,
+            # execute the export_method with the provided specific parameters
+            results_path = export_method(
+                db=db,
+                fsr=self.fsr,
+                project_id=payload.project_id,
+                **(
+                    payload.specific_export_job_parameters.model_dump(
+                        exclude={"export_job_type"}
+                    )
+                    if payload.specific_export_job_parameters
+                    else {}
+                ),
             )
 
-        except Exception as e:
-            logger.error(f"Cannot finish export job: {e}")
-            self._update_export_job(  # There the exj has to be taken and passed back?
-                status=BackgroundJobStatus.ERROR,
-                url=None,
-                export_job_id=export_job_id,
+            return ExportJobOutput(
+                results_url=self.fsr.get_temp_file_url(results_path.name, relative=True)
             )
-
-        return exj

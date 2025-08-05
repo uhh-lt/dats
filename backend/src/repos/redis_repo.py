@@ -18,11 +18,6 @@ from modules.crawler.crawler_job_dto import (
     CrawlerJobRead,
     CrawlerJobUpdate,
 )
-from modules.eximport.export_job_dto import (
-    ExportJobCreate,
-    ExportJobRead,
-    ExportJobUpdate,
-)
 from modules.ml.ml_job_dto import MLJobCreate, MLJobRead, MLJobUpdate
 from modules.perspectives.perspectives_job import (
     PerspectivesJobCreate,
@@ -96,59 +91,6 @@ class RedisRepo(metaclass=SingletonMeta):
         logger.warning(f"Flushing Redis Client DB '{typ}'!")
         client.flushdb()
         client.save()
-
-    def store_export_job(
-        self, export_job: ExportJobCreate | ExportJobRead
-    ) -> ExportJobRead:
-        client = self._get_client("export")
-
-        if isinstance(export_job, ExportJobCreate):
-            key = self._generate_random_key()
-            exj = ExportJobRead(
-                id=key, created=datetime.now(), **export_job.model_dump()
-            )
-        elif isinstance(export_job, ExportJobRead):
-            key = export_job.id
-            exj = export_job
-
-        if client.set(key.encode("utf-8"), exj.model_dump_json()) != 1:
-            msg = "Cannot store ExportJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug(f"Successfully stored ExportJob {key}!")
-
-        return exj
-
-    def load_export_job(self, key: str) -> ExportJobRead:
-        client = self._get_client("export")
-        exj = client.get(key.encode("utf-8"))
-        if exj is None:
-            msg = f"ExportJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        logger.debug(f"Successfully loaded ExportJob {key}")
-        return ExportJobRead.model_validate_json(exj)
-
-    def update_export_job(self, key: str, update: ExportJobUpdate) -> ExportJobRead:
-        exj = self.load_export_job(key=key)
-        data = exj.model_dump()
-        data.update(**update.model_dump())
-        exj = ExportJobRead(**data)
-        exj = self.store_export_job(export_job=exj)
-        logger.debug(f"Updated ExportJob {key}")
-        return exj
-
-    def delete_export_job(self, key: str) -> ExportJobRead:
-        exj = self.load_export_job(key=key)
-        client = self._get_client("export")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete ExportJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted ExportJob {key}")
-        return exj
 
     def store_crawler_job(
         self, crawler_job: CrawlerJobCreate | CrawlerJobRead
