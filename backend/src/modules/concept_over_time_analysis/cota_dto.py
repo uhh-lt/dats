@@ -320,4 +320,5 @@ class COTARefinementJobInput(JobInputBase):
     )
 
 
-COTARefinementJobRead = JobRead[COTARefinementJobInput, None]
+class COTARefinementJobRead(JobRead[COTARefinementJobInput, None]):
+    pass

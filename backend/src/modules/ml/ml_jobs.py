@@ -24,7 +24,7 @@ from systems.job_system.job_register_decorator import register_job
     input_type=MLJobInput,
     output_type=None,
     priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.MINIMAL,
+    generate_endpoints=EndpointGeneration.ALL,
 )
 def ml_job(
     payload: MLJobInput,
