@@ -1,7 +1,9 @@
 import { Card, CardContent, CircularProgress, Stack, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
+import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import { PerspectivesJobRead } from "../../../api/openapi/models/PerspectivesJobRead.ts";
 import { PerspectivesJobType } from "../../../api/openapi/models/PerspectivesJobType.ts";
+
+const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 
 const perspectivesJobType2Title: Record<PerspectivesJobType, string> = {
   // Aspects
@@ -19,14 +21,6 @@ const perspectivesJobType2Title: Record<PerspectivesJobType, string> = {
   [PerspectivesJobType.RESET_MODEL]: "Reset Model",
 };
 
-const jobStatus2Title: Record<BackgroundJobStatus, string> = {
-  [BackgroundJobStatus.WAITING]: "Pending",
-  [BackgroundJobStatus.RUNNING]: "in Progress",
-  [BackgroundJobStatus.FINISHED]: "Finished",
-  [BackgroundJobStatus.ERRORNEOUS]: "Failed",
-  [BackgroundJobStatus.ABORTED]: "Canceled",
-};
-
 interface PerspectivesJobProgressCardProps {
   perspectivesJob: PerspectivesJobRead;
 }
@@ -38,18 +32,18 @@ function ClusterJobProgressCard({ perspectivesJob }: PerspectivesJobProgressCard
         <Stack spacing={4}>
           <Stack direction={"row"} spacing={2} alignItems="center" justifyContent="center">
             <Typography variant="h6" color="primary.dark" textAlign="center">
-              {perspectivesJobType2Title[perspectivesJob.perspectives_job_type]}{" "}
-              {perspectivesJob.status ? jobStatus2Title[perspectivesJob.status] : "?"}
+              {perspectivesJobType2Title[perspectivesJob.input.perspectives_job_type]}{" "}
+              {perspectivesJob.status.valueOf()}
             </Typography>
-            {perspectivesJob.status === BackgroundJobStatus.RUNNING && <CircularProgress size={24} color="primary" />}
+            {RUNNING_OR_WAITING.includes(perspectivesJob.status) && <CircularProgress size={24} color="primary" />}
           </Stack>
-          <Stepper activeStep={perspectivesJob.step}>
+          <Stepper activeStep={perspectivesJob.current_step}>
             {perspectivesJob.steps.map((label, index) => {
               const labelProps: {
                 optional?: React.ReactNode;
                 error?: boolean;
               } = {};
-              if (index === perspectivesJob.step && perspectivesJob.status === BackgroundJobStatus.ERRORNEOUS) {
+              if (index === perspectivesJob.current_step && perspectivesJob.status === JobStatus.FAILED) {
                 labelProps.optional = (
                   <Typography variant="caption" color="error">
                     An error occurred!
@@ -66,7 +60,7 @@ function ClusterJobProgressCard({ perspectivesJob }: PerspectivesJobProgressCard
             })}
           </Stepper>
           <Typography variant="body1" color="textSecondary" pl={1}>
-            Detailed status: {perspectivesJob.status_msg}
+            Detailed status: {perspectivesJob.status_message || "No status message available."}
           </Typography>
         </Stack>
       </CardContent>

@@ -1,14 +1,16 @@
 import { IconButton, Tooltip } from "@mui/material";
 import { memo, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import ExporterHooks from "../../api/ExporterHooks.ts";
-import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
-import { ExportJobParameters } from "../../api/openapi/models/ExportJobParameters.ts";
+import JobHooks from "../../api/JobHooks.ts";
+import { ExportJobInput } from "../../api/openapi/models/ExportJobInput.ts";
+import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { useOpenSnackbar } from "../SnackbarDialog/useOpenSnackbar.ts";
 
-interface ExportInstantButtonProps extends Omit<ExportJobParameters, "project_id"> {
+const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
+
+interface ExportInstantButtonProps extends Omit<ExportJobInput, "project_id"> {
   title: string;
   isDisabled?: boolean;
 }
@@ -23,8 +25,8 @@ function ExportButton({
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // mutations
-  const { mutate: startExportMutation, reset: resetExport, data, isPending } = ExporterHooks.useStartExportJob();
-  const exportJob = ExporterHooks.usePollExportJob(data?.id);
+  const { mutate: startExportMutation, reset: resetExport, data, isPending } = JobHooks.useStartExportJob();
+  const exportJob = JobHooks.usePollExportJob(data?.job_id);
 
   // snackbar
   const openSnackbar = useOpenSnackbar();
@@ -42,8 +44,8 @@ function ExportButton({
   useEffect(() => {
     if (!exportJob.data) return;
     if (exportJob.data.status) {
-      if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        downloadFile(encodeURI("/content/" + exportJob.data.results_url)).catch((error) => {
+      if (exportJob.data.status === JobStatus.FINISHED && exportJob.data.output?.results_url) {
+        downloadFile(encodeURI("/content/" + exportJob.data.output.results_url)).catch((error) => {
           console.error("Download failed:", error);
           openSnackbar({
             text: `Failed to download file ${error}.`,
@@ -53,9 +55,9 @@ function ExportButton({
 
         // Make sure the download doesn't start again on a re-render
         resetExport();
-      } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
+      } else if (exportJob.data.status === JobStatus.FAILED) {
         openSnackbar({
-          text: `Export job ${exportJob.data.id} failed`,
+          text: `Export job ${exportJob.data.job_id} failed`,
           severity: "error",
         });
       }
@@ -68,7 +70,7 @@ function ExportButton({
         <IconButton
           onClick={onClick}
           disabled={isDisabled}
-          loading={isPending || exportJob.data?.status === BackgroundJobStatus.WAITING}
+          loading={isPending || (exportJob.data && RUNNING_OR_WAITING.includes(exportJob.data.status))}
         >
           {getIconComponent(Icon.EXPORT)}
         </IconButton>

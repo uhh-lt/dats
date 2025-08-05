@@ -1,6 +1,6 @@
 import { Dialog } from "@mui/material";
 import { memo } from "react";
-import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
+import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import ClusterJobProgressCard from "./ClusterJobProgressCard.tsx";
 
@@ -17,7 +17,7 @@ function ClusterJobProgressDialog({ aspectId }: ClusterJobProgressDialog) {
   }
   return (
     <Dialog
-      open={job.data.status !== BackgroundJobStatus.FINISHED}
+      open={job.data.status !== JobStatus.FINISHED}
       maxWidth="lg"
       fullWidth
       slotProps={{

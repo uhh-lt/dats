@@ -29,9 +29,9 @@ function StatusStep() {
 
   const progressTooltip = useMemo(() => {
     if (!llmJob.data) return "";
-    return llmJob.data.current_step === llmJob.data.num_steps
-      ? `Status: All ${llmJob.data?.num_steps} steps are done.`
-      : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.num_steps} steps are done.`;
+    return llmJob.data.current_step === llmJob.data.steps.length
+      ? `Status: All ${llmJob.data?.steps.length} steps are done.`
+      : `Status: ${llmJob.data?.current_step} of ${llmJob.data?.steps.length} steps are done.`;
   }, [llmJob.data]);
 
   const isNextDisabled = useMemo(
@@ -50,7 +50,7 @@ function StatusStep() {
             sx={{ ml: 5 }}
             variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
             current={llmJob.isSuccess ? llmJob.data.current_step : 0}
-            max={llmJob.isSuccess ? llmJob.data.num_steps : 0}
+            max={llmJob.isSuccess ? llmJob.data.steps.length : 0}
             tooltip={progressTooltip}
           />
           {llmJob.isSuccess && (

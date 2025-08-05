@@ -57,8 +57,8 @@ function TagRecommendations() {
                 <ListItemText>Select a recommendation job</ListItemText>
               </MenuItem>
               {tagRecommendationMlJobs.data?.map((mlJob) => (
-                <MenuItem key={mlJob.id} value={mlJob.id}>
-                  <ListItemText>{mlJob.id}</ListItemText>
+                <MenuItem key={mlJob.job_id} value={mlJob.job_id}>
+                  <ListItemText>{mlJob.job_id}</ListItemText>
                 </MenuItem>
               ))}
             </Select>
