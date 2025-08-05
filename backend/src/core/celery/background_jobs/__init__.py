@@ -5,7 +5,6 @@ from celery import Task, group
 from celery.result import GroupResult
 from modules.crawler.crawler_job_dto import CrawlerJobParameters, CrawlerJobRead
 from modules.eximport.export_job_dto import ExportJobParameters, ExportJobRead
-from modules.eximport.import_job_dto import ImportJobParameters, ImportJobRead
 from modules.ml.ml_job_dto import MLJobParameters, MLJobRead
 from modules.perspectives.perspectives_job import (
     PerspectivesJobParams,
@@ -59,19 +58,6 @@ def prepare_and_start_export_job_async(
     print("-----ex id", ex_job.id)
     start_export_job.apply_async(kwargs={"export_job": ex_job})
     return ex_job
-
-
-def prepare_and_start_import_job_async(
-    import_job_params: ImportJobParameters,
-) -> ImportJobRead:
-    from core.celery.background_jobs.tasks import start_import_job
-    from modules.eximport.import_service import ImportService
-
-    assert isinstance(start_import_job, Task), "Not a Celery Task"
-    ims: ImportService = ImportService()
-    ims_job = ims.prepare_import_job(import_job_params)
-    start_import_job.apply_async(kwargs={"import_job": ims_job})
-    return ims_job
 
 
 def prepare_and_start_crawling_job_async(

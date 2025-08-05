@@ -23,11 +23,6 @@ from modules.eximport.export_job_dto import (
     ExportJobRead,
     ExportJobUpdate,
 )
-from modules.eximport.import_job_dto import (
-    ImportJobCreate,
-    ImportJobRead,
-    ImportJobUpdate,
-)
 from modules.ml.ml_job_dto import MLJobCreate, MLJobRead, MLJobUpdate
 from modules.perspectives.perspectives_job import (
     PerspectivesJobCreate,
@@ -154,71 +149,6 @@ class RedisRepo(metaclass=SingletonMeta):
             raise RuntimeError(msg)
         logger.debug(f"Deleted ExportJob {key}")
         return exj
-
-    def store_import_job(
-        self, import_job: ImportJobCreate | ImportJobRead
-    ) -> ImportJobRead:
-        client = self._get_client("import_")
-
-        if isinstance(import_job, ImportJobCreate):
-            key = self._generate_random_key()
-            imj = ImportJobRead(
-                id=key,
-                **import_job.model_dump(),
-                created=datetime.now(),
-                updated=datetime.now(),
-            )
-        elif isinstance(import_job, ImportJobRead):
-            key = import_job.id
-            imj = import_job
-
-        if client.set(key.encode("utf-8"), imj.model_dump_json()) != 1:
-            msg = "Cannot store ImportJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug(f"Successfully stored ImportJob {key}!")
-
-        return imj
-
-    def get_all_import_jobs(self, project_id: int) -> list[ImportJobRead]:
-        client = self._get_client("import_")
-        all_import_jobs: list[ImportJobRead] = [
-            self.load_import_job(str(key, "utf-8")) for key in client.keys()
-        ]
-        return [
-            job for job in all_import_jobs if job.parameters.project_id == project_id
-        ]
-
-    def load_import_job(self, key: str) -> ImportJobRead:
-        client = self._get_client("import_")
-        imj = client.get(key.encode("utf-8"))
-        if imj is None:
-            msg = f"ImportJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        logger.debug(f"Successfully loaded ImportJob {key}")
-        return ImportJobRead.model_validate_json(imj)
-
-    def update_import_job(self, key: str, update: ImportJobUpdate) -> ImportJobRead:
-        imj = self.load_import_job(key=key)
-        data = imj.model_dump()
-        data.update(**update.model_dump())
-        imj = ImportJobRead(**data)
-        imj = self.store_import_job(import_job=imj)
-        logger.debug(f"Updated ImportJob {key}")
-        return imj
-
-    def delete_import_job(self, key: str) -> ImportJobRead:
-        imj = self.load_import_job(key=key)
-        client = self._get_client("import_")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete ImportJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted ImportJob {key}")
-        return imj
 
     def store_crawler_job(
         self, crawler_job: CrawlerJobCreate | CrawlerJobRead

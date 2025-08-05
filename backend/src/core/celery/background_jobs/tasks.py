@@ -3,7 +3,6 @@ from pathlib import Path
 from core.celery.background_jobs.cota import start_cota_refinement_job_
 from core.celery.background_jobs.crawl import start_crawler_job_
 from core.celery.background_jobs.export import start_export_job_
-from core.celery.background_jobs.import_ import start_import_job_
 from core.celery.background_jobs.ml import start_ml_job_
 from core.celery.background_jobs.perspectives import start_perspectives_job_
 from core.celery.background_jobs.preprocess import (
@@ -17,7 +16,6 @@ from core.celery.background_jobs.trainer import start_trainer_job_
 from core.celery.celery_worker import celery_worker
 from modules.crawler.crawler_job_dto import CrawlerJobRead
 from modules.eximport.export_job_dto import ExportJobRead
-from modules.eximport.import_job_dto import ImportJobRead
 from modules.ml.ml_job_dto import MLJobRead
 from modules.perspectives.perspectives_job import PerspectivesJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -44,11 +42,6 @@ def start_trainer_job_task(trainer_job_id: str) -> None:
 @celery_worker.task(acks_late=True)
 def start_export_job(export_job: ExportJobRead) -> None:
     start_export_job_(export_job=export_job)
-
-
-@celery_worker.task(acks_late=True)
-def start_import_job(import_job: ImportJobRead) -> None:
-    start_import_job_(import_job=import_job)
 
 
 @celery_worker.task(acks_late=True)

@@ -1,8 +1,7 @@
-from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from pydantic import Field
+from systems.job_system.job_dto import JobInputBase, JobRead
 
 
 class ImportJobType(str, Enum):
@@ -21,38 +20,14 @@ class ImportJobType(str, Enum):
     DOCUMENTS = "DOCUMENTS"
 
 
-class ImportJobParameters(BaseModel):
+class ImportJobInput(JobInputBase):
     import_job_type: ImportJobType = Field(
         description="The type of the import job (what to import)"
     )
-    project_id: int = Field(description="ID of the Project")
     user_id: int = Field(description="ID of the User, who started the job.")
     file_name: str = Field(
         description="The name to the file that is used for the import job"
     )
 
 
-class ImportJobBase(BaseModel):
-    status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING, description="Status of the ImportJob"
-    )
-    error: str | None = Field(default=None, description="Error message (if any)")
-
-
-class ImportJobRead(ImportJobBase):
-    id: str = Field(description="ID of the ImportJob")
-    created: datetime = Field(description="Created timestamp of the ImportJob")
-    updated: datetime = Field(description="Updated timestamp of the ImportJob")
-    parameters: ImportJobParameters = Field(
-        description="The parameters of the import job that defines what to import!"
-    )
-
-
-class ImportJobCreate(ImportJobBase):
-    parameters: ImportJobParameters = Field(
-        description="The parameters of the import job that defines what to import!"
-    )
-
-
-class ImportJobUpdate(ImportJobBase):
-    pass
+ImportJobRead = JobRead[ImportJobInput, None]

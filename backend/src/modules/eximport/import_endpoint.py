@@ -2,15 +2,15 @@ from typing import TypedDict
 
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
-from core.celery.background_jobs import prepare_and_start_import_job_async
 from fastapi import APIRouter, Depends, UploadFile
 from modules.eximport.import_job_dto import (
-    ImportJobParameters,
+    ImportJobInput,
     ImportJobRead,
     ImportJobType,
 )
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
 from repos.filesystem_repo import FilesystemRepo
+from systems.job_system.job_service import JobService
 
 router = APIRouter(
     prefix="/import", dependencies=[Depends(get_current_user)], tags=["import"]
@@ -18,6 +18,7 @@ router = APIRouter(
 
 ims: ImportService = ImportService()
 fsr: FilesystemRepo = FilesystemRepo()
+js: JobService = JobService()
 
 
 class FileFormat(TypedDict):
@@ -115,14 +116,16 @@ async def start_import_job(
     )
 
     # Start the import job
-    return prepare_and_start_import_job_async(
-        import_job_params=ImportJobParameters(
+    job = js.start_job(
+        job_type="import",
+        payload=ImportJobInput(
             import_job_type=import_job_type,
             project_id=project_id,
             user_id=authz_user.user.id,
             file_name=filename,
-        )
+        ),
     )
+    return ImportJobRead.from_rq_job(job)
 
 
 @router.get(
@@ -133,9 +136,9 @@ async def start_import_job(
 def get_import_job(
     *, import_job_id: str, authz_user: AuthzUser = Depends()
 ) -> ImportJobRead:
-    job = ims.get_import_job(import_job_id=import_job_id)
-    authz_user.assert_in_project(job.parameters.project_id)
-    return job
+    job = js.get_job(import_job_id)
+    authz_user.assert_in_project(job.meta["project_id"])
+    return ImportJobRead.from_rq_job(job)
 
 
 @router.get(
@@ -147,6 +150,7 @@ def get_all_import_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> list[ImportJobRead]:
     authz_user.assert_in_project(project_id)
-    import_jobs = ims.get_all_import_jobs(project_id=project_id)
-    import_jobs.sort(key=lambda x: x.created, reverse=True)
-    return import_jobs
+
+    jobs = js.get_jobs_by_project(job_type="import", project_id=project_id)
+    jobs.sort(key=lambda x: x.meta["created"], reverse=True)
+    return [ImportJobRead.from_rq_job(job) for job in jobs]
