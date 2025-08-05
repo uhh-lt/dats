@@ -10,21 +10,11 @@ from core.celery.background_jobs.preprocess import (
     execute_video_preprocessing_pipeline_,
     import_uploaded_archive_,
 )
-from core.celery.background_jobs.trainer import start_trainer_job_
 from core.celery.celery_worker import celery_worker
 from modules.crawler.crawler_job_dto import CrawlerJobRead
 from modules.ml.ml_job_dto import MLJobRead
 from modules.perspectives.perspectives_job import PerspectivesJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-
-
-@celery_worker.task(
-    acks_late=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 0, "countdown": 5},
-)
-def start_trainer_job_task(trainer_job_id: str) -> None:
-    start_trainer_job_(trainer_job_id=trainer_job_id)
 
 
 @celery_worker.task(acks_late=True)

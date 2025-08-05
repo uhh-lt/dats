@@ -12,16 +12,6 @@ from modules.perspectives.perspectives_job import (
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
-def start_trainer_job_async(
-    trainer_job_id: str,
-) -> None:
-    from core.celery.background_jobs.tasks import start_trainer_job_task
-
-    assert isinstance(start_trainer_job_task, Task), "Not a Celery Task"
-
-    start_trainer_job_task.apply_async(kwargs={"trainer_job_id": trainer_job_id})
-
-
 def import_uploaded_archive_apply_async(
     archive_file_path: Path, project_id: int
 ) -> Any:
