@@ -20,6 +20,10 @@ export type COTARead = {
    */
   project_id: number;
   /**
+   * ID of the last refinement job for the ConceptOverTimeAnalysis
+   */
+  last_refinement_job_id: string | null;
+  /**
    * Timeline Analysis Settings of the ConceptOverTimeAnalysis.
    */
   timeline_settings: COTATimelineSettings;

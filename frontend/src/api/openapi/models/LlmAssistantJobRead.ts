@@ -33,7 +33,7 @@ export type LlmAssistantJobRead = {
   /**
    * Total number of steps in the job process
    */
-  num_steps: number;
+  steps: Array<string>;
   /**
    * Input for the job
    */
@@ -42,4 +42,12 @@ export type LlmAssistantJobRead = {
    * Output for the job
    */
   output?: LLMJobOutput | null;
+  /**
+   * Created timestamp of the job
+   */
+  created: string;
+  /**
+   * Finished timestamp of the job
+   */
+  finished?: string | null;
 };

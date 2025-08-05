@@ -8,15 +8,15 @@ import type { DocumentEmbeddingParams } from "./DocumentEmbeddingParams";
 import type { MLJobType } from "./MLJobType";
 import type { QuotationAttributionParams } from "./QuotationAttributionParams";
 import type { SentenceEmbeddingParams } from "./SentenceEmbeddingParams";
-export type MLJobParameters_Output = {
-  /**
-   * The type of the MLJob
-   */
-  ml_job_type: MLJobType;
+export type MLJobInput_Output = {
   /**
    * The ID of the Project to analyse
    */
   project_id: number;
+  /**
+   * The type of the MLJob
+   */
+  ml_job_type: MLJobType;
   /**
    * Specific parameters for the MLJob w.r.t it's type
    */

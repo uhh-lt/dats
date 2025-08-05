@@ -90,8 +90,8 @@ export const QueryKey = {
   // managed by CotaHooks:
   // CotaMap of a project (by project id)
   PROJECT_COTAS: "projectCotas",
-  // the most recent COTARefinementJobRead of a cota (by cota id)
-  COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
+  // COTARefinementJobRead (by cotaRefinementJob id)
+  COTA_REFINEMENT_JOB: "cotaRefinementJob",
 
   // managed by MetadataHooks:
   // ProjectMetadataMap of a Project (by project id)
@@ -126,7 +126,7 @@ export const QueryKey = {
   ANNOSCALING_SUGGEST: "annoscalingSuggest",
 
   // managed by TagRecommendationHooks:
-  // all MLJobReads[] of type DocumentTagRecommendation of a Project (by project id)
+  // all MlJobReads[] of type DocumentTagRecommendation of a Project (by project id)
   PROJECT_TAG_RECOMMENDATION_JOBS: "projectTagRecommendationJobs",
   // all DocumentTagRecommendationLinkRead[] of a MLJob (by ml job id)
   TAG_RECOMMENDATIONS: "tagRecommendations",
@@ -134,6 +134,12 @@ export const QueryKey = {
   // managed by JobHooks
   // a single DuplicateFinderJobRead (by duplicate finder job id)
   DUPLICATE_FINDER_JOB: "duplicateFinderJob",
+  // exportjob (by export job id)
+  EXPORT_JOB: "exportJob",
+  // a single MlJobRead (by ml job id)
+  ML_JOB: "mlJob",
+  // all MlJobRead[] of a project (by project id)
+  PROJECT_ML_JOBS: "projectMLJobs",
 
   // managed by FolderHooks
   // all FolderRead[] of a Project (by project id and folder type)
@@ -155,11 +161,6 @@ export const QueryKey = {
   // managed by various useInit*FilterSlice:
   // table info (by filterSliceName, projectId) (info about the columns and their types)
   TABLE_INFO: "tableInfo",
-
-  // TODO: Here is potential to refactor backend & frontend: BackgroundJobService
-  // managed by ExportHooks:
-  // exportjob (by export job id)
-  EXPORT_JOB: "exportJob",
 
   // managed by ImportHooks:
   // importjob (by import job id)
@@ -186,9 +187,4 @@ export const QueryKey = {
   LLM_JOB: "llmJob",
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
-
-  // managed by MLHooks:
-  ML_JOB: "mlJob",
-  // all ML jobs of a proect (by project id)
-  PROJECT_ML_JOBS: "projectMLJobs",
 };

@@ -6,8 +6,8 @@ import { RootState } from "../store/store.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { AspectRead } from "./openapi/models/AspectRead.ts";
-import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
+import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
 import { SdocColumns } from "./openapi/models/SdocColumns.ts";
 import { PerspectivesService } from "./openapi/services/PerspectivesService.ts";
@@ -108,10 +108,10 @@ const useStartPerspectivesJob = () =>
     mutationFn: PerspectivesService.startPerspectivesJob,
     onSuccess: (job) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ASPECTS, job.project_id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PERSPECTIVES_JOB, job.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PERSPECTIVES_JOB, job.job_id] });
     },
     meta: {
-      successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.id})`,
+      successMessage: (data: PerspectivesJobRead) => `Started TM Job as a new background task (ID: ${data.job_id})`,
     },
   });
 
@@ -131,26 +131,29 @@ const usePollPerspectivesJob = (
         return 1000;
       }
 
-      if (query.state.data.status) {
-        // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
-        const localDate = new Date();
-        const localUpdatedDate = dateToLocaleDate(query.state.data.updated);
-        if (
-          query.state.data.status === BackgroundJobStatus.FINISHED &&
-          localDate.getTime() - localUpdatedDate.getTime() < 3 * 60 * 1000
-        ) {
-          queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.aspect_id] });
-          queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.aspect_id] });
-        }
+      // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
+      const localDate = new Date();
+      if (
+        query.state.data.finished &&
+        localDate.getTime() - dateToLocaleDate(query.state.data.finished).getTime() < 3 * 60 * 1000
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.input.aspect_id],
+        });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.input.aspect_id] });
       }
 
       if (query.state.data.status) {
         switch (query.state.data.status) {
-          case BackgroundJobStatus.ERRORNEOUS:
-          case BackgroundJobStatus.FINISHED:
+          case JobStatus.CANCELED:
+          case JobStatus.FAILED:
+          case JobStatus.FINISHED:
+          case JobStatus.STOPPED:
             return false;
-          case BackgroundJobStatus.WAITING:
-          case BackgroundJobStatus.RUNNING:
+          case JobStatus.DEFERRED:
+          case JobStatus.QUEUED:
+          case JobStatus.SCHEDULED:
+          case JobStatus.STARTED:
             return 1000;
         }
       }

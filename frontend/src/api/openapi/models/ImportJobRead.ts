@@ -2,31 +2,51 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { ImportJobParameters } from "./ImportJobParameters";
+import type { ImportJobInput } from "./ImportJobInput";
+import type { JobStatus } from "./JobStatus";
 export type ImportJobRead = {
   /**
-   * Status of the ImportJob
+   * RQ job ID
    */
-  status?: BackgroundJobStatus;
+  job_id: string;
   /**
-   * Error message (if any)
+   * Type of the job
    */
-  error?: string | null;
+  job_type: string;
   /**
-   * ID of the ImportJob
+   * Project ID associated with the job
    */
-  id: string;
+  project_id: number;
   /**
-   * Created timestamp of the ImportJob
+   * Current status of the job
+   */
+  status: JobStatus;
+  /**
+   * Status message
+   */
+  status_message?: string | null;
+  /**
+   * Current step in the job process
+   */
+  current_step: number;
+  /**
+   * Total number of steps in the job process
+   */
+  steps: Array<string>;
+  /**
+   * Input for the job
+   */
+  input: ImportJobInput;
+  /**
+   * Output for the job
+   */
+  output?: null;
+  /**
+   * Created timestamp of the job
    */
   created: string;
   /**
-   * Updated timestamp of the ImportJob
+   * Finished timestamp of the job
    */
-  updated: string;
-  /**
-   * The parameters of the import job that defines what to import!
-   */
-  parameters: ImportJobParameters;
+  finished?: string | null;
 };
