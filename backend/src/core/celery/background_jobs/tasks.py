@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from core.celery.background_jobs.cota import start_cota_refinement_job_
 from core.celery.background_jobs.crawl import start_crawler_job_
 from core.celery.background_jobs.ml import start_ml_job_
 from core.celery.background_jobs.perspectives import start_perspectives_job_
@@ -17,15 +16,6 @@ from modules.crawler.crawler_job_dto import CrawlerJobRead
 from modules.ml.ml_job_dto import MLJobRead
 from modules.perspectives.perspectives_job import PerspectivesJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-
-
-@celery_worker.task(
-    acks_late=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 0, "countdown": 5},
-)
-def start_cota_refinement_job_task(cota_job_id: str) -> None:
-    start_cota_refinement_job_(cota_job_id=cota_job_id)
 
 
 @celery_worker.task(

@@ -12,16 +12,6 @@ from modules.perspectives.perspectives_job import (
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
-def start_cota_refinement_job_async(
-    cota_job_id: str,
-) -> None:
-    from core.celery.background_jobs.tasks import start_cota_refinement_job_task
-
-    assert isinstance(start_cota_refinement_job_task, Task), "Not a Celery Task"
-
-    start_cota_refinement_job_task.apply_async(kwargs={"cota_job_id": cota_job_id})
-
-
 def start_trainer_job_async(
     trainer_job_id: str,
 ) -> None:
