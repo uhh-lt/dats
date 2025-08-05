@@ -58,9 +58,9 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
     created: datetime = Field(description="Created timestamp of the job")
     finished: datetime | None = Field(None, description="Finished timestamp of the job")
 
-    @staticmethod
-    def from_rq_job(job: rq.job.Job) -> "JobRead[InputT, OutputT]":
-        return JobRead(
+    @classmethod
+    def from_rq_job(cls, job: rq.job.Job):
+        return cls(
             job_id=job.id,
             job_type=job.meta.get("type", "unknown"),
             project_id=job.meta.get("project_id", 0),

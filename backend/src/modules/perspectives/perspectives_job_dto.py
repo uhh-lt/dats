@@ -153,4 +153,5 @@ class PerspectivesJobInput(JobInputBase):
     )
 
 
-PerspectivesJobRead = JobRead[PerspectivesJobInput, None]
+class PerspectivesJobRead(JobRead[PerspectivesJobInput, None]):
+    pass

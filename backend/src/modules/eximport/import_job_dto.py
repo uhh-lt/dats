@@ -30,4 +30,5 @@ class ImportJobInput(JobInputBase):
     )
 
 
-ImportJobRead = JobRead[ImportJobInput, None]
+class ImportJobRead(JobRead[ImportJobInput, None]):
+    pass
