@@ -3,11 +3,7 @@ from typing import Literal
 
 from modules.perspectives.cluster_dto import ClusterCreate
 from pydantic import BaseModel, Field
-from systems.job_system.background_job_base_dto import (
-    BackgroundJobBaseCreate,
-    BackgroundJobBaseRead,
-    BackgroundJobBaseUpdate,
-)
+from systems.job_system.job_dto import JobInputBase, JobRead
 
 
 class PerspectivesJobType(str, Enum):
@@ -144,19 +140,12 @@ PerspectivesJobParams = (
 )
 
 
-class PerspectivesJobBase(BaseModel):
-    step: int = Field(
-        description="Current step of the PerspectivesJob. Starts at 0 and increments with each major step.",
-    )
-    steps: list[str] = Field(
-        description="List of steps that the PerspectivesJob consists of. Each step is a string describing the action taken.",
-    )
-    status_msg: str = Field(description="Status message of the PerspectivesJob")
-    perspectives_job_type: PerspectivesJobType = Field(
-        description="Type of the PerspectivesJob"
-    )
+class PerspectivesJobInput(JobInputBase):
     aspect_id: int = Field(
         description="ID of the aspect associated with the PerspectivesJob. -1 if not applicable.",
+    )
+    perspectives_job_type: PerspectivesJobType = Field(
+        description="Type of the PerspectivesJob"
     )
     parameters: PerspectivesJobParams = Field(
         description="Parameters for the PerspectivesJob. The type depends on the PerspectivesJobType.",
@@ -164,34 +153,4 @@ class PerspectivesJobBase(BaseModel):
     )
 
 
-class PerspectivesJobCreate(BackgroundJobBaseCreate, PerspectivesJobBase):
-    pass
-
-
-class PerspectivesJobUpdate(BackgroundJobBaseUpdate):
-    step: int | None = Field(
-        default=None,
-        description="Current step of the PerspectivesJob. Starts at 0 and increments with each major step.",
-    )
-    status_msg: str | None = Field(
-        default=None, description="Status message of the PerspectivesJob"
-    )
-
-
-class PerspectivesJobRead(BackgroundJobBaseRead, PerspectivesJobBase):
-    pass
-
-
-# PerspectivesJobRead is stored in Redis:
-# id: str
-# project_id: int
-# created: datetime
-# updated: datetime
-# status: BackgroundJobStatus
-#
-# aspect_id: int
-# step: int
-# steps: list[str]
-# status_msg: str
-# perspectives_job_type: PerspectivesJobType
-# parameters: PerspectivesJobParams
+PerspectivesJobRead = JobRead[PerspectivesJobInput, None]

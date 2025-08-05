@@ -11,11 +11,6 @@ from modules.crawler.crawler_job_dto import (
     CrawlerJobUpdate,
 )
 from modules.ml.ml_job_dto import MLJobCreate, MLJobRead, MLJobUpdate
-from modules.perspectives.perspectives_job import (
-    PerspectivesJobCreate,
-    PerspectivesJobRead,
-    PerspectivesJobUpdate,
-)
 
 
 class RedisRepo(metaclass=SingletonMeta):
@@ -209,71 +204,3 @@ class RedisRepo(metaclass=SingletonMeta):
             raise RuntimeError(msg)
         logger.debug(f"Deleted MLJob {key}")
         return mlj
-
-    def store_perspectives_job(
-        self, perspectives_job: PerspectivesJobCreate | PerspectivesJobRead
-    ) -> PerspectivesJobRead:
-        client = self._get_client("perspectives")
-
-        if isinstance(perspectives_job, PerspectivesJobCreate):
-            key = self._generate_random_key()
-            pj = PerspectivesJobRead(
-                id=key,
-                **perspectives_job.model_dump(),
-                created=datetime.now(),
-                updated=datetime.now(),
-            )
-        elif isinstance(perspectives_job, PerspectivesJobRead):
-            key = perspectives_job.id
-            pj = perspectives_job
-        else:
-            msg = "Invalid type for perspectives_job parameter."
-            logger.error(msg)
-            raise TypeError(msg)
-
-        if client.set(key.encode("utf-8"), pj.model_dump_json()) != 1:
-            msg = "Cannot store PerspectivesJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug(f"Successfully stored PerspectivesJob {key}!")
-        return pj
-
-    def get_all_perspectives_jobs(self, project_id: int) -> list[PerspectivesJobRead]:
-        client = self._get_client("perspectives")
-        all_perspectives_jobs: list[PerspectivesJobRead] = [
-            self.load_perspectives_job(str(key, "utf-8")) for key in client.keys()
-        ]
-        return [job for job in all_perspectives_jobs if job.project_id == project_id]
-
-    def load_perspectives_job(self, key: str) -> PerspectivesJobRead:
-        client = self._get_client("perspectives")
-        pj = client.get(key.encode("utf-8"))
-        if pj is None:
-            msg = f"PerspectivesJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        logger.debug(f"Successfully loaded PerspectivesJob {key}")
-        return PerspectivesJobRead.model_validate_json(pj)
-
-    def update_perspectives_job(
-        self, key: str, update: PerspectivesJobUpdate
-    ) -> PerspectivesJobRead:
-        pj = self.load_perspectives_job(key=key)
-        data = pj.model_dump(exclude={"updated"})
-        data.update(**update.model_dump(exclude_unset=True))
-        pj = PerspectivesJobRead(**data, updated=datetime.now())
-        pj = self.store_perspectives_job(perspectives_job=pj)
-        logger.debug(f"Updated PerspectivesJob {key}")
-        return pj
-
-    def delete_perspectives_job(self, key: str) -> PerspectivesJobRead:
-        pj = self.load_perspectives_job(key=key)
-        client = self._get_client("tm")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete PerspectivesJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted PerspectivesJob {key}")
-        return pj

@@ -154,7 +154,7 @@ class JobService(metaclass=SingletonMeta):
                 "status_message": "Job enqueued",
                 "project_id": input_obj.project_id,
                 "current_step": 0,
-                "num_steps": 1,
+                "steps": ["Initial step"],
                 "created": datetime.now(),
                 "finished": None,
             },

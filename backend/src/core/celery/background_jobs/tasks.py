@@ -2,7 +2,6 @@ from pathlib import Path
 
 from core.celery.background_jobs.crawl import start_crawler_job_
 from core.celery.background_jobs.ml import start_ml_job_
-from core.celery.background_jobs.perspectives import start_perspectives_job_
 from core.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
     execute_image_preprocessing_pipeline_,
@@ -13,7 +12,6 @@ from core.celery.background_jobs.preprocess import (
 from core.celery.celery_worker import celery_worker
 from modules.crawler.crawler_job_dto import CrawlerJobRead
 from modules.ml.ml_job_dto import MLJobRead
-from modules.perspectives.perspectives_job import PerspectivesJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -26,11 +24,6 @@ def start_crawler_job(crawler_job: CrawlerJobRead) -> tuple[Path, int]:
 @celery_worker.task(acks_late=True)
 def start_ml_job(ml_job: MLJobRead) -> None:
     start_ml_job_(ml_job=ml_job)
-
-
-@celery_worker.task(acks_late=True)
-def start_perspectives_job(perspectives_job: PerspectivesJobRead) -> None:
-    start_perspectives_job_(perspectives_job=perspectives_job)
 
 
 @celery_worker.task(

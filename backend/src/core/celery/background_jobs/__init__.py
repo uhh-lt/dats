@@ -5,10 +5,6 @@ from celery import Task, group
 from celery.result import GroupResult
 from modules.crawler.crawler_job_dto import CrawlerJobParameters, CrawlerJobRead
 from modules.ml.ml_job_dto import MLJobParameters, MLJobRead
-from modules.perspectives.perspectives_job import (
-    PerspectivesJobParams,
-    PerspectivesJobRead,
-)
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -64,26 +60,6 @@ def prepare_and_start_ml_job_async(
     ml_job = mls.prepare_ml_job(ml_job_params)
     start_ml_job.apply_async(kwargs={"ml_job": ml_job})
     return ml_job
-
-
-def prepare_and_start_perspectives_job_async(
-    project_id: int,
-    aspect_id: int,
-    perspectives_job_params: PerspectivesJobParams,
-) -> PerspectivesJobRead:
-    from core.celery.background_jobs.tasks import start_perspectives_job
-    from modules.perspectives.perspectives_job_service import PerspectivesJobService
-
-    assert isinstance(start_perspectives_job, Task), "Not a Celery Task"
-
-    pjs: PerspectivesJobService = PerspectivesJobService()
-    perspectives_job = pjs.prepare_perspectives_job(
-        project_id=project_id,
-        aspect_id=aspect_id,
-        perspectives_params=perspectives_job_params,
-    )
-    start_perspectives_job.apply_async(kwargs={"perspectives_job": perspectives_job})
-    return perspectives_job
 
 
 def execute_text_preprocessing_pipeline_apply_async(
