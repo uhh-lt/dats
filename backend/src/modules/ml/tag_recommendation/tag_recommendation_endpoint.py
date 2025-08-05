@@ -2,8 +2,6 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.tag.tag_crud import crud_tag
 from fastapi import APIRouter, Depends
-from modules.ml.ml_job_dto import MLJobRead, MLJobType
-from modules.ml.ml_service import MLService
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -19,10 +17,8 @@ from modules.ml.tag_recommendation.tag_recommendation_service import (
     DocumentClassificationService,
 )
 from sqlalchemy.orm import Session
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
 dcs: DocumentClassificationService = DocumentClassificationService()
-mls: MLService = MLService()
 
 router = APIRouter(
     prefix="/tagrecommendation",
@@ -33,26 +29,27 @@ router = APIRouter(
 
 @router.get(
     "/{project_id}",
-    response_model=list[MLJobRead],
+    response_model=list[int],
     summary="Retrieve all finished tag recommendation MLJobs.",
 )
 def get_all_tagrecommendation_jobs(
     *,
-    db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
-) -> list[MLJobRead]:
+) -> list[int]:
     authz_user.assert_in_project(project_id)
 
-    ml_jobs = mls.get_all_ml_jobs(project_id=project_id)
-    ml_jobs = [
-        ml_job
-        for ml_job in ml_jobs
-        if ml_job.status == BackgroundJobStatus.FINISHED
-        and ml_job.parameters.ml_job_type == MLJobType.TAG_RECOMMENDATION
-    ]
-    ml_jobs.sort(key=lambda x: x.created, reverse=True)
-    return ml_jobs
+    # TODO: FIXME
+    # ml_jobs = mls.get_all_ml_jobs(project_id=project_id)
+    # ml_jobs = [
+    #     ml_job
+    #     for ml_job in ml_jobs
+    #     if ml_job.status == BackgroundJobStatus.FINISHED
+    #     and ml_job.parameters.ml_job_type == MLJobType.TAG_RECOMMENDATION
+    # ]
+    # ml_jobs.sort(key=lambda x: x.created, reverse=True)
+    # return [ml_job.id for ml_job in ml_jobs]
+    return []
 
 
 @router.get(

@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from core.celery.background_jobs.crawl import start_crawler_job_
-from core.celery.background_jobs.ml import start_ml_job_
 from core.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
     execute_image_preprocessing_pipeline_,
@@ -11,7 +10,6 @@ from core.celery.background_jobs.preprocess import (
 )
 from core.celery.celery_worker import celery_worker
 from modules.crawler.crawler_job_dto import CrawlerJobRead
-from modules.ml.ml_job_dto import MLJobRead
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 
@@ -19,11 +17,6 @@ from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 def start_crawler_job(crawler_job: CrawlerJobRead) -> tuple[Path, int]:
     archive_file_path, project_id = start_crawler_job_(crawler_job=crawler_job)
     return archive_file_path, project_id
-
-
-@celery_worker.task(acks_late=True)
-def start_ml_job(ml_job: MLJobRead) -> None:
-    start_ml_job_(ml_job=ml_job)
 
 
 @celery_worker.task(

@@ -10,7 +10,6 @@ from modules.crawler.crawler_job_dto import (
     CrawlerJobRead,
     CrawlerJobUpdate,
 )
-from modules.ml.ml_job_dto import MLJobCreate, MLJobRead, MLJobUpdate
 
 
 class RedisRepo(metaclass=SingletonMeta):
@@ -143,64 +142,3 @@ class RedisRepo(metaclass=SingletonMeta):
                 for job in all_crawler_jobs
                 if job.parameters.project_id == project_id
             ]
-
-    def store_ml_job(self, ml_job: MLJobCreate | MLJobRead) -> MLJobRead:
-        client = self._get_client("ml")
-
-        if isinstance(ml_job, MLJobCreate):
-            key = self._generate_random_key()
-            mlj = MLJobRead(
-                id=key,
-                **ml_job.model_dump(),
-                created=datetime.now(),
-                updated=datetime.now(),
-            )
-        elif isinstance(ml_job, MLJobRead):
-            key = ml_job.id
-            mlj = ml_job
-
-        if client.set(key.encode("utf-8"), mlj.model_dump_json()) != 1:
-            msg = "Cannot store MLJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug(f"Successfully stored MLJob {key}!")
-
-        return mlj
-
-    def get_all_ml_jobs(self, project_id: int) -> list[MLJobRead]:
-        client = self._get_client("ml")
-        all_ml_jobs: list[MLJobRead] = [
-            self.load_ml_job(str(key, "utf-8")) for key in client.keys()
-        ]
-        return [job for job in all_ml_jobs if job.parameters.project_id == project_id]
-
-    def load_ml_job(self, key: str) -> MLJobRead:
-        client = self._get_client("ml")
-        mlj = client.get(key.encode("utf-8"))
-        if mlj is None:
-            msg = f"MLJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-
-        logger.debug(f"Successfully loaded MLJob {key}")
-        return MLJobRead.model_validate_json(mlj)
-
-    def update_ml_job(self, key: str, update: MLJobUpdate) -> MLJobRead:
-        mlj = self.load_ml_job(key=key)
-        data = mlj.model_dump(exclude={"updated"})
-        data.update(**update.model_dump(exclude_unset=True))
-        mlj = MLJobRead(**data, updated=datetime.now())
-        mlj = self.store_ml_job(ml_job=mlj)
-        logger.debug(f"Updated MLJob {key}")
-        return mlj
-
-    def delete_ML_job(self, key: str) -> MLJobRead:
-        mlj = self.load_ml_job(key=key)
-        client = self._get_client("ml")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete MLJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted MLJob {key}")
-        return mlj
