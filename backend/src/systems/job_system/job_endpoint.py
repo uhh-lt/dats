@@ -103,6 +103,7 @@ def register_job_endpoints(
         ):
             authz_user.assert_in_project(project_id)
             jobs = job_service.get_jobs_by_project(job_type, project_id)
+            jobs.sort(key=lambda x: x.meta["created"], reverse=True)
             return [JobReadModel.from_rq_job(job) for job in jobs]
 
         router.add_api_route(
