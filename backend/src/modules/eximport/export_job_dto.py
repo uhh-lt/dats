@@ -1,10 +1,8 @@
-from datetime import datetime
 from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
-from repos.db.dto_base import UpdateDTOBase
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_dto import JobInputBase
 
 
 class ExportJobType(str, Enum):
@@ -81,12 +79,9 @@ class ExportSelectedCotaParams(BaseModel):
     cota_ids: list[int] = Field(description="IDs of the cota to export")
 
 
-class ExportJobParameters(BaseModel):
+class ExportJobInput(JobInputBase):
     export_job_type: ExportJobType = Field(
         description="The type of the export job (what to export)"
-    )
-    project_id: int = Field(
-        description="The ID of the Project to export from",
     )
     specific_export_job_parameters: (
         None
@@ -105,36 +100,7 @@ class ExportJobParameters(BaseModel):
 
 
 # Properties shared across all DTOs
-class ExportJobBaseDTO(BaseModel):
-    status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING, description="Status of the ExportJob"
-    )
+class ExportJobOutput(BaseModel):
     results_url: str | None = Field(
         default=None, description="URL to download the results when done."
     )
-
-
-# Properties to create
-class ExportJobCreate(ExportJobBaseDTO):
-    parameters: ExportJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
-    )
-
-
-# Properties to update
-class ExportJobUpdate(BaseModel, UpdateDTOBase):
-    status: BackgroundJobStatus | None = Field(
-        default=None, description="Status of the ExportJob"
-    )
-    results_url: str | None = Field(
-        default=None, description="URL to download the results when done."
-    )
-
-
-# Properties to read
-class ExportJobRead(ExportJobBaseDTO):
-    id: str = Field(description="ID of the ExportJob")
-    parameters: ExportJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
-    )
-    created: datetime = Field(description="Created timestamp of the ExportJob")
