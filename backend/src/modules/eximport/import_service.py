@@ -11,12 +11,13 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
+from modules.eximport.import_exceptions import (
+    ImportJobPreparationError,
+    UnsupportedImportJobTypeError,
+)
 from modules.eximport.import_job_dto import (
-    ImportJobCreate,
-    ImportJobParameters,
-    ImportJobRead,
+    ImportJobInput,
     ImportJobType,
-    ImportJobUpdate,
 )
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project.import_project import import_project
@@ -37,29 +38,6 @@ from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
-
-
-class ImportJobPreparationError(Exception):
-    def __init__(self, cause: Exception) -> None:
-        super().__init__(f"Cannot prepare and create the Import Job! {cause}")
-
-
-class ImportJobAlreadyStartedOrDoneError(Exception):
-    def __init__(self, import_job_id: str) -> None:
-        super().__init__(
-            f"The ImportJob with ID {import_job_id} already started or is done!"
-        )
-
-
-class NoSuchImportJobError(Exception):
-    def __init__(self, import_job_id: str, cause: Exception) -> None:
-        super().__init__(f"There exists not ImportJob with ID {import_job_id}! {cause}")
-
-
-class UnsupportedImportJobTypeError(Exception):
-    def __init__(self, import_job_type: ImportJobType) -> None:
-        super().__init__(f"ImportJobType {import_job_type} is not supported! ")
 
 
 class ImportService(metaclass=SingletonMeta):
@@ -88,223 +66,156 @@ class ImportService(metaclass=SingletonMeta):
         with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
             zip_ref.extractall(unzip_target)
 
-    def prepare_import_job(
-        self, import_job_params: ImportJobParameters
-    ) -> ImportJobRead:
+    def handle_import_job(self, payload: ImportJobInput) -> None:
         with self.sqlr.db_session() as db:
+            # Check project exists
             crud_project.exists(
                 db=db,
-                id=import_job_params.project_id,
+                id=payload.project_id,
                 raise_error=True,
             )
 
-        # Check if the file exists
-        if not self.fsr._temp_file_exists(filename=import_job_params.file_name):
-            raise ImportJobPreparationError(
-                cause=Exception(
-                    f"The file {import_job_params.file_name} does not exist!"
+            # Check if the file exists
+            if not self.fsr._temp_file_exists(filename=payload.file_name):
+                raise ImportJobPreparationError(
+                    cause=Exception(f"The file {payload.file_name} does not exist!")
                 )
+
+            # get the import method based on the jobtype
+            import_method = self.import_method_for_job_type.get(
+                payload.import_job_type, None
             )
+            if import_method is None:
+                raise UnsupportedImportJobTypeError(payload.import_job_type)
 
-        imp_create = ImportJobCreate(parameters=import_job_params)
-        try:
-            imj_read = self.redis.store_import_job(import_job=imp_create)
-        except Exception as e:
-            raise ImportJobPreparationError(cause=e)
-        return imj_read
-
-    def get_import_job(self, import_job_id: str) -> ImportJobRead:
-        try:
-            imj = self.redis.load_import_job(key=import_job_id)
-        except Exception as e:
-            raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
-        return imj
-
-    def get_all_import_jobs(self, project_id: int) -> list[ImportJobRead]:
-        return self.redis.get_all_import_jobs(project_id=project_id)
-
-    def _update_import_job(
-        self,
-        import_job_id: str,
-        update: ImportJobUpdate,
-    ) -> ImportJobRead:
-        try:
-            imj = self.redis.update_import_job(key=import_job_id, update=update)
-        except Exception as e:
-            raise NoSuchImportJobError(import_job_id=import_job_id, cause=e)
-        return imj
-
-    def start_import_sync(self, import_job_id: str) -> ImportJobRead:
-        imj = self.get_import_job(import_job_id=import_job_id)
-        if imj.status != BackgroundJobStatus.WAITING:
-            raise ImportJobAlreadyStartedOrDoneError(import_job_id=import_job_id)
-        imj = self._update_import_job(
-            import_job_id=import_job_id,
-            update=ImportJobUpdate(status=BackgroundJobStatus.RUNNING),
-        )
-        try:
-            with self.sqlr.db_session() as db:
-                # get the import method based on the jobtype
-                import_method = self.import_method_for_job_type.get(
-                    imj.parameters.import_job_type, None
-                )
-                if import_method is None:
-                    raise UnsupportedImportJobTypeError(imj.parameters.import_job_type)
-
-                # execute the import_method with the provided specific parameters
-                import_method(
-                    self=self,
-                    db=db,
-                    imj_parameters=imj.parameters,
-                )
-            imj = self._update_import_job(
-                import_job_id=import_job_id,
-                update=ImportJobUpdate(status=BackgroundJobStatus.FINISHED),
+            # execute the import_method with the provided specific parameters
+            import_method(
+                self=self,
+                db=db,
+                payload=payload,
             )
-        except Exception as e:
-            logger.error(f"Cannot finish import job: {e}")
-            imj = self._update_import_job(
-                import_job_id=import_job_id,
-                update=ImportJobUpdate(
-                    status=BackgroundJobStatus.ERROR,
-                    error=f"Cannot finish import job: {e}",
-                ),
-            )
-        return imj
 
     def _import_codes_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import codes to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_codes_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_codes_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_tags_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import tags to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_tags_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_tags_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_bbox_annotations_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import bbox annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_bbox_annotations_to_proj(
-            db=db, df=df, project_id=imj_parameters.project_id
-        )
+        import_bbox_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_span_annotations_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import span annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_span_annotations_to_proj(
-            db=db, df=df, project_id=imj_parameters.project_id
-        )
+        import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_sent_annotations_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import sent annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_span_annotations_to_proj(
-            db=db, df=df, project_id=imj_parameters.project_id
-        )
+        import_span_annotations_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_whiteboards_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import whiteboards to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_whiteboards_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_whiteboards_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_timeline_analyses_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import timeline analyses to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_timeline_analysis_to_proj(
-            db=db, df=df, project_id=imj_parameters.project_id
-        )
+        import_timeline_analysis_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_cota_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import cota to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_cota_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_cota_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_memos_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import memos to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_memos_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_memos_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_users_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import users annotations to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_users_to_proj(db=db, df=df, project_id=imj_parameters.project_id)
+        import_users_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_project_metadata_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import project metadata to a project"""
-        path_to_file = self.fsr.get_dst_path_for_temp_file(imj_parameters.file_name)
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
-        import_project_metadata_to_proj(
-            db=db, df=df, project_id=imj_parameters.project_id
-        )
+        import_project_metadata_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_source_documents_to_proj(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import source documents to a project"""
         # unzip file
         try:
-            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(
-                imj_parameters.file_name
-            )
+            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
             path_to_temp_import_dir = self.fsr.create_temp_dir(
-                f"import_user_{imj_parameters.user_id}_sdocs_{imj_parameters.project_id}"
+                f"import_user_{payload.user_id}_sdocs_{payload.project_id}"
             )
             self.__unzip(
                 path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
@@ -316,22 +227,20 @@ class ImportService(metaclass=SingletonMeta):
         import_sdocs_to_proj(
             db=db,
             path_to_dir=path_to_temp_import_dir,
-            project_id=imj_parameters.project_id,
+            project_id=payload.project_id,
         )
 
     def _import_project(
         self,
         db: Session,
-        imj_parameters: ImportJobParameters,
+        payload: ImportJobInput,
     ) -> None:
         """Import an entire project"""
         # unzip file
         try:
-            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(
-                imj_parameters.file_name
-            )
+            path_to_zip_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
             path_to_temp_import_dir = self.fsr.create_temp_dir(
-                f"import_user_{imj_parameters.user_id}_project_{imj_parameters.project_id}"
+                f"import_user_{payload.user_id}_project_{payload.project_id}"
             )
             self.__unzip(
                 path_to_zip_file=path_to_zip_file, unzip_target=path_to_temp_import_dir
@@ -344,5 +253,5 @@ class ImportService(metaclass=SingletonMeta):
             db=db,
             fsr=self.fsr,
             path_to_dir=path_to_temp_import_dir,
-            proj_id=imj_parameters.project_id,
+            proj_id=payload.project_id,
         )
