@@ -16,6 +16,12 @@ function messageFromStringOrFunction(input: unknown, data: unknown, variables: u
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, variables, _context, mutation) => {
+      console.log("--- An unexpected error occured ---");
+      console.log(error);
+      console.log(variables);
+      console.log(_context);
+      console.log(mutation);
+      console.log("-----------------------------------");
       const title = messageFromStringOrFunction(mutation.meta?.errorMessage, error, variables);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {

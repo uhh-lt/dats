@@ -174,15 +174,14 @@ const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
 // COTA REFINEMENT JOB MUTATIONS
 const useRefineCota = () =>
   useMutation({
-    mutationFn: ConceptOverTimeAnalysisService.refineCotaById,
-    onSuccess: (cotaRefinementJob) => {
-      queryClient.setQueryData<COTARefinementJobRead>(
-        [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJob.job_id],
-        cotaRefinementJob,
+    mutationFn: ConceptOverTimeAnalysisService.refineCota,
+    onSuccess: (cota) => {
+      queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
+        prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
     },
     meta: {
-      successMessage: (job: COTARefinementJobRead) => `Started refinement job for "COTA ${job.input.cota_id}"`,
+      successMessage: (cota: COTARead) => `Started refinement job for "COTA ${cota.id}"`,
     },
   });
 
