@@ -271,8 +271,10 @@ services:
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
       OIDC_SERVER_METADATA_URL: ${OIDC_SERVER_METADATA_URL}
       IS_STABLE: ${IS_STABLE:-false}
+      NUMBA_CACHE_DIR: /api_cache/numba_cache
     volumes:
       - ./backend_repo:/tmp/dats
+      - ./api_cache:/api_cache
     depends_on:
       postgres:
         condition: service_healthy

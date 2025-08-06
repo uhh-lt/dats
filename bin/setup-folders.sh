@@ -1,6 +1,7 @@
 #!/bin/sh
 cd "$(dirname "$0}")" || exit
 mkdir -p ../docker/backend_repo
+mkdir -p ../docker/api_cache
 mkdir -p ../docker/celery_cache
 mkdir -p ../docker/rq_cache
 mkdir -p ../docker/ollama_cache
