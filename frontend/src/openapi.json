@@ -955,12 +955,12 @@
         }
       }
     },
-    "/cota/refine/{cota_id}": {
+    "/cota/refine": {
       "post": {
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Refines the ConceptOverTimeAnalysis",
         "description": "Refines the ConceptOverTimeAnalysis with the given ID if it exists",
-        "operationId": "refine_cota_by_id",
+        "operationId": "refine_cota",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobInput" } } },
           "required": true
@@ -968,7 +968,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARefinementJobRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
           },
           "422": {
             "description": "Validation Error",

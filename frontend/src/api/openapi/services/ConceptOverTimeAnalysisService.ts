@@ -202,17 +202,13 @@ export class ConceptOverTimeAnalysisService {
   /**
    * Refines the ConceptOverTimeAnalysis
    * Refines the ConceptOverTimeAnalysis with the given ID if it exists
-   * @returns COTARefinementJobRead Successful Response
+   * @returns COTARead Successful Response
    * @throws ApiError
    */
-  public static refineCotaById({
-    requestBody,
-  }: {
-    requestBody: COTARefinementJobInput;
-  }): CancelablePromise<COTARefinementJobRead> {
+  public static refineCota({ requestBody }: { requestBody: COTARefinementJobInput }): CancelablePromise<COTARead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/cota/refine/{cota_id}",
+      url: "/cota/refine",
       body: requestBody,
       mediaType: "application/json",
       errors: {
