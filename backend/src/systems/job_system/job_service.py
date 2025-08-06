@@ -19,6 +19,17 @@ from rq.registry import (
 )
 from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
 
+
+# Top-level handler for RQ jobs
+def rq_job_handler(handler, payload):
+    output = handler(payload=payload)
+    job = rq.get_current_job()
+    assert job is not None, "Job must be running in a worker context"
+    job.meta["finished"] = datetime.now()
+    job.save_meta()
+    return output
+
+
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
@@ -30,21 +41,6 @@ class RegisteredJob(TypedDict):
     generate_endpoints: EndpointGeneration
     priority: JobPriority
     router: APIRouter | None
-
-
-def handler_wrapper(handler: Callable) -> Callable:
-    def wrapper(payload):
-        output = handler(payload=payload)
-
-        # set finished time
-        job = rq.get_current_job()
-        assert job is not None, "Job must be running in a worker context"
-        job.meta["finished"] = datetime.now()
-        job.save_meta()
-
-        return output
-
-    return wrapper
 
 
 class JobService(metaclass=SingletonMeta):
@@ -126,6 +122,8 @@ class JobService(metaclass=SingletonMeta):
             "router": router,
         }
 
+    # Removed handler_wrapper; use top-level rq_job_handler instead
+
     def start_job(
         self,
         job_type: str,
@@ -146,7 +144,8 @@ class JobService(metaclass=SingletonMeta):
 
         job_id = str(uuid4())
         rq_job = queue.enqueue(
-            handler_wrapper(handler),
+            rq_job_handler,
+            handler=handler,
             payload=input_obj,
             job_id=job_id,
             meta={
