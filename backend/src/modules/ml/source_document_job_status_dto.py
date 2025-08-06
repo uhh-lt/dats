@@ -6,6 +6,7 @@ from repos.db.dto_base import UpdateDTOBase
 
 
 class JobType(IntEnum):
+    SPACY = 10
     QUOTATION_ATTRIBUTION = 100
     COREFERENCE_RESOLUTION = 101
     DOCUMENT_EMBEDDING = 102
