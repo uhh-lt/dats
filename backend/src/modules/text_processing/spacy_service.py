@@ -70,7 +70,7 @@ class SpacyService(metaclass=SingletonMeta):
                 )
             )
             assert keyword_project_metadata is not None, (
-                "Keyword metadat does not exist!"
+                "Keyword metadata does not exist!"
             )
 
             # tokens & offsets & sentences
