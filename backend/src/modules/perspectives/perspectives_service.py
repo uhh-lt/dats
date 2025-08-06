@@ -135,7 +135,7 @@ class PerspectivesService:
     def handle_perspectives_job(self, payload: PerspectivesJobInput):
         # Set initial status
         self.job.meta["current_step"] = 0
-        self.job.meta["status_msg"] = "Waiting..."
+        self.job.meta["status_message"] = "Waiting..."
         self.job.meta["steps"] = self.perspectives_job_steps.get(
             payload.perspectives_job_type, []
         )
@@ -146,7 +146,7 @@ class PerspectivesService:
         )
 
     def _log_status_msg(self, status_msg: str):
-        self.job.meta["status_msg"] = status_msg
+        self.job.meta["status_message"] = status_msg
         logger.info(status_msg)
         self.job.save_meta()
 

@@ -78,7 +78,7 @@ def start_perspectives_job(
 
     # No job running, so we can start a new one
     job = js.start_job(
-        "pespectives",
+        "perspectives",
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=aspect_id,
@@ -134,7 +134,7 @@ def create_aspect(
 
     params = CreateAspectParams()
     job = js.start_job(
-        "pespectives",
+        "perspectives",
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=db_aspect.id,

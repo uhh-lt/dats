@@ -14,13 +14,13 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
     COTARefinementJobInput,
-    COTARefinementJobRead,
     COTASentence,
     COTASentenceID,
     COTATimelineSettings,
     COTAUpdate,
     COTAUpdateIntern,
 )
+from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from sqlalchemy.orm import Session
@@ -219,10 +219,9 @@ class COTAService(metaclass=SingletonMeta):
         *,
         db: Session,
         payload: COTARefinementJobInput,
-    ) -> COTARefinementJobRead:
+    ) -> ConceptOverTimeAnalysisORM:
         # make sure the cota exists
-        db_obj = crud_cota.read(db=db, id=payload.cota_id)
-        cota = COTARead.model_validate(db_obj)
+        crud_cota.read(db=db, id=payload.cota_id)
 
         # start the refinement job
         job = self.js.start_job(
@@ -231,12 +230,10 @@ class COTAService(metaclass=SingletonMeta):
         )
 
         # update last refinement job id
-        crud_cota.update(
+        return crud_cota.update(
             db=db,
-            id=cota.id,
+            id=payload.cota_id,
             update_dto=COTAUpdateIntern(
                 last_refinement_job_id=job.id,
             ),
         )
-
-        return COTARefinementJobRead.from_rq_job(job=job)

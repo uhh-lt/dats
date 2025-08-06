@@ -206,19 +206,20 @@ async def reset_cota(
 
 
 @router.post(
-    "/refine/{cota_id}",
-    response_model=COTARefinementJobRead,
+    "/refine",
+    response_model=COTARead,
     summary="Refines the ConceptOverTimeAnalysis",
     description="Refines the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-async def refine_cota_by_id(
+async def refine_cota(
     *,
     db: Session = Depends(get_db_session),
     payload: COTARefinementJobInput,
     authz_user: AuthzUser = Depends(),
-) -> COTARefinementJobRead:
+) -> COTARead:
     authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, payload.cota_id)
-    return cotas.start_refinement_job(db=db, payload=payload)
+    cota_orm = cotas.start_refinement_job(db=db, payload=payload)
+    return COTARead.model_validate(cota_orm)
 
 
 @router.get(

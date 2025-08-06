@@ -40,7 +40,6 @@ from modules.eximport.whiteboards.export_whiteboards import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisRepo
 
 
 class ExportJobPreparationError(Exception):
@@ -68,7 +67,6 @@ class UnsupportedExportJobTypeError(Exception):
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.redis: RedisRepo = RedisRepo()
         cls.sqlr: SQLRepo = SQLRepo()
 
         # map from job_type to function
