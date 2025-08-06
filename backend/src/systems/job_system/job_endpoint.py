@@ -1,12 +1,15 @@
 from typing import Type
 
+from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, create_model
 from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobRead
 from systems.job_system.job_service import JobService
 
-router = APIRouter(prefix="/job", tags=["job"])
+router = APIRouter(
+    prefix="/job", dependencies=[Depends(get_current_user)], tags=["job"]
+)
 
 
 job_service = JobService()
