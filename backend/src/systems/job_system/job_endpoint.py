@@ -54,7 +54,7 @@ def register_job_endpoints(
         authz_user: AuthzUser = Depends(),
     ):
         job = job_service.get_job(job_id)
-        authz_user.assert_in_project(job.meta["project_id"])
+        authz_user.assert_in_project(job.get_project_id())
         return JobReadModel.from_rq_job(job)
 
     router.add_api_route(
@@ -70,7 +70,7 @@ def register_job_endpoints(
         # Abort job
         async def abort_job(job_id: str, authz_user: AuthzUser = Depends()):
             job = job_service.get_job(job_id)
-            authz_user.assert_in_project(job.meta["project_id"])
+            authz_user.assert_in_project(job.get_project_id())
             return job_service.stop_job(job_id)
 
         router.add_api_route(
@@ -85,7 +85,7 @@ def register_job_endpoints(
         # Retry job
         async def retry_job(job_id: str, authz_user: AuthzUser = Depends()):
             job = job_service.get_job(job_id)
-            authz_user.assert_in_project(job.meta["project_id"])
+            authz_user.assert_in_project(job.get_project_id())
             return job_service.retry_job(job_id)
 
         router.add_api_route(
@@ -103,7 +103,7 @@ def register_job_endpoints(
         ):
             authz_user.assert_in_project(project_id)
             jobs = job_service.get_jobs_by_project(job_type, project_id)
-            jobs.sort(key=lambda x: x.meta["created"], reverse=True)
+            jobs.sort(key=lambda x: x.get_created(), reverse=True)
             return [JobReadModel.from_rq_job(job) for job in jobs]
 
         router.add_api_route(

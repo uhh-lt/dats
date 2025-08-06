@@ -7,9 +7,7 @@ from common.singleton_meta import SingletonMeta
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from fastapi.encoders import jsonable_encoder
-from modules.concept_over_time_analysis.cota_crud import (
-    crud_cota,
-)
+from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreateIntern,
     COTARead,
@@ -234,6 +232,6 @@ class COTAService(metaclass=SingletonMeta):
             db=db,
             id=payload.cota_id,
             update_dto=COTAUpdateIntern(
-                last_refinement_job_id=job.id,
+                last_refinement_job_id=job.get_id(),
             ),
         )

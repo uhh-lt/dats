@@ -13,9 +13,8 @@ from modules.ml.source_document_job_status_orm import (
     JobStatus,
     SourceDocumentJobStatusORM,
 )
-from rq import get_current_job
 from sqlalchemy import and_, or_
-from systems.job_system.job_dto import EndpointGeneration, JobPriority
+from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -26,12 +25,7 @@ from systems.job_system.job_register_decorator import register_job
     priority=JobPriority.DEFAULT,
     generate_endpoints=EndpointGeneration.ALL,
 )
-def ml_job(
-    payload: MLJobInput,
-) -> None:
-    job = get_current_job()
-    assert job is not None, "Job must be running in a worker context"
-
+def ml_job(payload: MLJobInput, job: Job) -> None:
     start_time = datetime.now()
 
     match payload.ml_job_type:
@@ -57,7 +51,7 @@ def ml_job(
                 DocTagRecommendationParams,
             ), "DocTagRecommendationParams expected"
             DocumentClassificationService().classify_untagged_documents(
-                ml_job_id=job.id,
+                ml_job_id=job.get_id(),
                 project_id=payload.project_id,
                 tag_ids=payload.specific_ml_job_parameters.tag_ids,
                 multi_class=payload.specific_ml_job_parameters.multi_class,

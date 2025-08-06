@@ -17,16 +17,18 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
-from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobPriority
+from systems.job_system.job_dto import (
+    EndpointGeneration,
+    Job,
+    JobInputBase,
+    JobPriority,
+)
 
 
-# Top-level handler for RQ jobs
 def rq_job_handler(handler, payload):
-    output = handler(payload=payload)
-    job = rq.get_current_job()
-    assert job is not None, "Job must be running in a worker context"
-    job.meta["finished"] = datetime.now()
-    job.save_meta()
+    job = Job()
+    output = handler(payload=payload, job=job)
+    job.update(finished=datetime.now())
     return output
 
 
@@ -98,7 +100,7 @@ class JobService(metaclass=SingletonMeta):
     def register_job(
         self,
         job_type: str,
-        handler_func: Callable[[InputT], OutputT | None],
+        handler_func: Callable[[InputT, Job], OutputT | None],
         input_type: type[InputT],
         output_type: type[OutputT] | None,
         priority: JobPriority,
@@ -108,9 +110,14 @@ class JobService(metaclass=SingletonMeta):
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
         params = list(sig.parameters.values())
-        if not params or len(params) != 1 or params[0].name != "payload":
+        if (
+            not params
+            or len(params) != 2
+            or params[0].name != "payload"
+            or params[1].name != "job"
+        ):
             raise ValueError(
-                f"The only parameter of function '{handler_func.__name__}' must be named 'payload'."
+                f"The parameters of function '{handler_func.__name__}' must be named 'payload, job'."
             )
 
         self.job_registry[job_type] = {
@@ -129,7 +136,7 @@ class JobService(metaclass=SingletonMeta):
         job_type: str,
         payload: JobInputBase,
         priority: JobPriority | None = None,
-    ) -> rq.job.Job:
+    ) -> Job:
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")
@@ -158,16 +165,16 @@ class JobService(metaclass=SingletonMeta):
                 "finished": None,
             },
         )
-        return rq_job
+        return Job(rq_job)
 
-    def get_job(self, job_id: str) -> rq.job.Job:
-        return rq.job.Job.fetch(job_id, connection=self.redis_conn)
+    def get_job(self, job_id: str) -> Job:
+        return Job(rq.job.Job.fetch(job_id, connection=self.redis_conn))
 
     def get_jobs_by_project(
         self,
         job_type: str,
         project_id: int,
-    ) -> list[rq.job.Job]:
+    ) -> list[Job]:
         jobs = []
 
         # Get jobs from all queues (pending/enqueued jobs)
@@ -177,7 +184,7 @@ class JobService(metaclass=SingletonMeta):
                     job.meta.get("type") == job_type
                     and job.meta.get("project_id") == project_id
                 ):
-                    jobs.append(job)
+                    jobs.append(Job(job))
 
         # Get jobs from different registries (completed, failed, etc.)
         for registry in self.registries.values():
@@ -188,7 +195,7 @@ class JobService(metaclass=SingletonMeta):
                         job.meta.get("type") == job_type
                         and job.meta.get("project_id") == project_id
                     ):
-                        jobs.append(job)
+                        jobs.append(Job(job))
                 except Exception:
                     # Job might have been deleted or corrupted, skip it
                     continue

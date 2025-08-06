@@ -3,8 +3,6 @@
 set -e
 source .venv/bin/activate
 
-export BACKEND_TYPE="api"
-
 LOG_LEVEL=${LOG_LEVEL:-debug}
 API_PORT=${API_PORT:-5500}
 API_WORKERS=${API_WORKERS:-10}

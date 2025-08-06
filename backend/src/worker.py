@@ -3,6 +3,7 @@ import sys
 import redis
 from config import conf
 from loguru import logger
+from utils.import_utils import import_by_suffix
 
 r_host = conf.redis.host
 r_port = conf.redis.port
@@ -40,6 +41,12 @@ def do_healthcheck():
 def do_work():
     from rq import Queue
     from rq.worker import Worker
+
+    # import all expensive stuff before forking, so that imports are only done once
+    import_by_suffix("_repo.py")
+    import_by_suffix("_service.py")
+    import_by_suffix("_orm.py")
+    import_by_suffix("_crud.py")
 
     queues = [
         Queue("high", connection=redis_conn),

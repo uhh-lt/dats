@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Callable, Type
 
-import rq
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -76,6 +75,7 @@ from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
+from systems.job_system.job_dto import Job
 
 lac = conf.llm_assistant
 
@@ -123,23 +123,21 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
         return super(LLMAssistantService, cls).__new__(cls)
 
-    def _next_llm_job_step(self, job: rq.job.Job, description: str) -> None:
-        job.meta["current_step"] = job.meta["current_step"] + 1
-        job.meta["status_message"] = description
-        job.save_meta()
+    def _next_llm_job_step(self, job: Job, description: str) -> None:
+        job.update(current_step=job.get_current_step() + 1, status_message=description)
 
-    def _update_llm_job_description(self, job: rq.job.Job, description: str) -> None:
-        job.meta["status_message"] = description
-        job.save_meta()
+    def _update_llm_job_description(self, job: Job, description: str) -> None:
+        job.update(status_message=description)
 
-    def handle_llm_job(self, job: rq.job.Job, payload: LLMJobInput) -> LLMJobOutput:
-        job.meta["steps"] = [
-            f"Step {i}"
-            for i in range(len(payload.specific_task_parameters.sdoc_ids) + 2)
-        ]
-        job.meta["current_step"] = 1
-        job.meta["status_message"] = "Started LLM Assistant!"
-        job.save_meta()
+    def handle_llm_job(self, job: Job, payload: LLMJobInput) -> LLMJobOutput:
+        job.update(
+            steps=[
+                f"Step {i}"
+                for i in range(len(payload.specific_task_parameters.sdoc_ids) + 2)
+            ],
+            current_step=1,
+            status_message="Started LLM Assistant!",
+        )
 
         with self.sqlr.db_session() as db:
             # get the llm method based on the jobtype
@@ -159,9 +157,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 task_parameters=payload.specific_task_parameters,
             )
 
-        job.meta["current_step"] = len(job.meta["steps"]) - 1
-        job.meta["status_message"] = "Finished LLMJob successfully!"
-        job.save_meta()
+        job.update(
+            current_step=len(job.get_steps()) - 1,
+            status_message="Finished LLMJob successfully!",
+        )
 
         return result
 
@@ -364,7 +363,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        job: rq.job.Job,
+        job: Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: TaggingParams,
@@ -486,7 +485,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        job: rq.job.Job,
+        job: Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: MetadataExtractionParams,
@@ -633,7 +632,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        job: rq.job.Job,
+        job: Job,
         project_id: int,
         approach_parameters: ZeroShotParams,
         task_parameters: AnnotationParams,
@@ -802,7 +801,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        job: rq.job.Job,
+        job: Job,
         project_id: int,
         approach_parameters: ZeroShotParams | FewShotParams,
         task_parameters: SentenceAnnotationParams,
@@ -1017,7 +1016,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         self,
         *,
         db: Session,
-        job: rq.job.Job,
+        job: Job,
         project_id: int,
         approach_parameters: ModelTrainingParams,
         task_parameters: SentenceAnnotationParams,
@@ -1030,13 +1029,14 @@ class LLMAssistantService(metaclass=SingletonMeta):
         )
 
         msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
-        job.meta["steps"] = [
-            f"Step {i}"
-            for i in range(5 + 2)  # +1 for the start, end step
-        ]
-        job.meta["current_step"] = 1
-        job.meta["status_message"] = msg
-        job.save_meta()
+        job.update(
+            steps=[
+                f"Step {i}"
+                for i in range(5 + 2)  # +1 for the start, end step
+            ],
+            current_step=1,
+            status_message=msg,
+        )
         logger.info(msg)
 
         # Step: 1 - Building the training dataset

@@ -37,6 +37,49 @@ class EndpointGeneration(str, enum.Enum):
     NONE = "none"  # Do not generate any endpoints
 
 
+class Job:
+    def __init__(self, job: rq.job.Job | None = None):
+        if job is None:
+            job = rq.get_current_job()
+        assert job is not None, "Job must be running in a worker context"
+        self.job = job
+
+    def update(
+        self,
+        status_message: str | None = None,
+        current_step: int | None = None,
+        steps: list[str] | None = None,
+        finished: datetime | None = None,
+    ):
+        if steps is not None:
+            self.job.meta["steps"] = steps
+        if status_message is not None:
+            self.job.meta["status_message"] = status_message
+        if current_step is not None:
+            self.job.meta["current_step"] = current_step
+        if finished is not None:
+            self.job.meta["finished"] = finished
+        self.job.save_meta()
+
+    def get_id(self) -> str:
+        return self.job.id
+
+    def get_project_id(self) -> int:
+        return self.job.meta["project_id"]
+
+    def get_steps(self) -> list[str]:
+        return self.job.meta["steps"]
+
+    def get_current_step(self) -> int:
+        return self.job.meta["current_step"]
+
+    def get_created(self) -> datetime:
+        return self.job.meta["created"]
+
+    def get_status(self) -> JobStatus:
+        return JobStatus(self.job.get_status())
+
+
 class JobInputBase(BaseModel):
     project_id: int = Field(description="Project ID associated with the job")
 
@@ -59,17 +102,17 @@ class JobRead(BaseModel, Generic[InputT, OutputT]):
     finished: datetime | None = Field(None, description="Finished timestamp of the job")
 
     @classmethod
-    def from_rq_job(cls, job: rq.job.Job):
+    def from_rq_job(cls, job: Job):
         return cls(
-            job_id=job.id,
-            job_type=job.meta.get("type", "unknown"),
-            project_id=job.meta.get("project_id", 0),
-            status=JobStatus(job.get_status()),
-            status_message=job.meta.get("status_message", ""),
-            current_step=job.meta.get("current_step", 0),
-            steps=job.meta.get("steps", ["Initial step"]),
-            input=job.kwargs["payload"],
-            output=job.return_value(),
-            created=job.meta.get("created", datetime.now()),
-            finished=job.meta.get("finished", None),
+            job_id=job.job.id,
+            job_type=job.job.meta.get("type", "unknown"),
+            project_id=job.job.meta.get("project_id", 0),
+            status=job.get_status(),
+            status_message=job.job.meta.get("status_message", ""),
+            current_step=job.job.meta.get("current_step", 0),
+            steps=job.job.meta.get("steps", ["Initial step"]),
+            input=job.job.kwargs["payload"],
+            output=job.job.return_value(),
+            created=job.job.meta.get("created", datetime.now()),
+            finished=job.job.meta.get("finished", None),
         )

@@ -73,7 +73,7 @@ def start_perspectives_job(
             and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
         ):
             raise Exception(
-                f"PerspectivesJob {most_recent_job.id} is still running. Please wait until it is finished."
+                f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
             )
 
     # No job running, so we can start a new one
@@ -92,7 +92,7 @@ def start_perspectives_job(
         db=db,
         id=aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=job.id,
+            most_recent_job_id=job.get_id(),
         ),
     )
 
@@ -110,7 +110,7 @@ def get_perspectives_job(
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesJobRead:
     job = js.get_job(perspectives_job_id)
-    authz_user.assert_in_project(job.meta["project_id"])
+    authz_user.assert_in_project(job.get_project_id())
     return PerspectivesJobRead.from_rq_job(job=job)
 
 
@@ -147,7 +147,7 @@ def create_aspect(
         db=db,
         id=db_aspect.id,
         update_dto=AspectUpdateIntern(
-            most_recent_job_id=job.id,
+            most_recent_job_id=job.get_id(),
         ),
     )
 
