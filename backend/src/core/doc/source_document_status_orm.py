@@ -18,6 +18,8 @@ class SourceDocumentStatusORM(ORMBase):
     )
     source_document: Mapped["SourceDocumentORM"] = relationship("SourceDocumentORM")
     spacy: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    es_index: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    lang_detect: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     def get_project_id(self) -> int:
         return self.source_document.get_project_id()
