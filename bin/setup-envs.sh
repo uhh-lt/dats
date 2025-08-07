@@ -41,7 +41,7 @@ fi
 JWT_SECRET=$(pwgen 32 1)
 SESSION_SECRET=$(pwgen 32 1)
 UUID_NAMESPACE=$(uv run python -c "import uuid; print(uuid.uuid4())")
-REPO_ROOT="$(pwd)/docker/backend_repo"
+SHARED_FILESYSTEM_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env
 cp backend/.env.example backend/.env
@@ -61,7 +61,7 @@ sed -i "s/131/${PORT_PREFIX}/g" backend/.env
 sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" backend/.env
 sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
 sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" backend/.env
-sed -i "s|REPO_ROOT=/insert_path_to_dats_repo/docker/backend_repo|REPO_ROOT=${REPO_ROOT}|" backend/.env
+sed -i "s|SHARED_FILESYSTEM_ROOT=/insert_path_to_dats_repo/docker/backend_repo|SHARED_FILESYSTEM_ROOT=${SHARED_FILESYSTEM_ROOT}|" backend/.env
 
 # setup frontend .env file
 sed -i "s/131/${PORT_PREFIX}/g" frontend/.env
