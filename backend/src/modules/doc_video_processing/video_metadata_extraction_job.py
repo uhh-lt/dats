@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import ffmpeg
+from common.doc_type import DocType
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import (
     EndpointGeneration,
@@ -13,6 +15,20 @@ from systems.job_system.job_dto import (
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
+
+EXPECTED_METADATA = [
+    "url",
+    "language",
+    "transcription_keywords",
+    "width",
+    "height",
+    "duration",
+    "format_name",
+    "format_long_name",
+    "size",
+    "bit_rate",
+    "tags",
+]
 
 
 class VideoMetadataExtractionJobInput(JobInputBase):
@@ -36,16 +52,24 @@ def handle_video_metadata_extraction_job(
 
     metadata = {}
     for k, v in ffmpeg_probe["format"].items():
-        metadata[k] = str(v)
+        if k in EXPECTED_METADATA:
+            metadata[k] = str(v)
 
     vidx = 0 if ffmpeg_probe["streams"][0]["codec_type"] == "video" else 1
-    for md in ["width", "height", "display_aspect_ratio"]:
-        if md in ffmpeg_probe["streams"][vidx]:
-            metadata[md] = str(ffmpeg_probe["streams"][vidx][md])
+    for k, v in ffmpeg_probe["streams"][vidx].items():
+        if k in EXPECTED_METADATA:
+            metadata[k] = str(v)
 
     with sqlr.db_session() as db:
-        # Store metadata in the database
-        # TODO: create a new metadata crud function
+        # Store video metadata in db
+        crud_sdoc_meta.create_multi_with_doctype(
+            db=db,
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            doctype=DocType.video,
+            keys=list(metadata.keys()),
+            values=list(metadata.values()),
+        )
 
         # Set db status
         crud_sdoc_status.update(

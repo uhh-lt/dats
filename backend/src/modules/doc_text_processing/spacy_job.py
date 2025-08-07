@@ -3,7 +3,6 @@ from uuid import uuid4
 
 import yake
 from common.doc_type import DocType
-from common.meta_type import MetaType
 from config import conf
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -13,9 +12,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
-from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
@@ -69,23 +66,13 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
         adoc = crud_adoc.exists_or_create(
             db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
         )
-        keyword_project_metadata = (
-            crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
-                db=db,
-                project_id=payload.project_id,
-                key="keywords",
-                metatype=MetaType.LIST,
-                doctype=payload.doctype,
-            )
-        )
-        assert keyword_project_metadata is not None, "Keyword metadata does not exist!"
 
         # tokens & offsets & sentences
         sdoc_data = extract_tok_sent_data(spacy_output)
 
         # keywords
         # if payload does not have keywords:
-        keywords = extract_keywords(payload, spacy_output, keyword_project_metadata.id)
+        keywords = extract_keywords(payload, spacy_output)
 
         # word frequencies
         word_frequencies = extract_word_frequencies(payload, spacy_output)
@@ -96,7 +83,14 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
         )
 
         # store outputs in db
-        crud_sdoc_meta.create(db=db, create_dto=keywords)
+        crud_sdoc_meta.create_multi_with_doctype(
+            db=db,
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            doctype=payload.doctype,
+            keys=["keywords"],
+            values=[keywords],
+        )
         crud_word_frequency.create_multi(db=db, create_dtos=word_frequencies)
         crud_span_anno.create_multi(db, create_dtos=span_annotations)
         crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
@@ -110,8 +104,7 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
 def extract_keywords(
     payload: SpacyJobInput,
     spacy_output: SpacyPipelineOutput,
-    keyword_project_metadata_id: int,
-) -> SourceDocumentMetadataCreate:
+) -> list[str]:
     kw_extractor = yake.KeywordExtractor(
         lan=payload.language,
         n=conf.keyword_extraction.max_ngram_size,
@@ -156,12 +149,7 @@ def extract_keywords(
             # if any of the words is not in the pos dict, we skip the keyword
             pass
 
-    return SourceDocumentMetadataCreate.with_metatype(
-        value=keywords,
-        source_document_id=payload.sdoc_id,
-        project_metadata_id=keyword_project_metadata_id,
-        metatype=MetaType.LIST,
-    )
+    return keywords
 
 
 def extract_span_annotations(
