@@ -1,3 +1,4 @@
+from common.doc_type import DocType
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.metadata.project_metadata_orm import ProjectMetadataORM
@@ -59,6 +60,53 @@ class CRUDSourceDocumentMetadata(
         metadata_orm = super().create(db, create_dto=create_dto)
 
         return metadata_orm
+
+    def create_multi_with_doctype(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        sdoc_id: int,
+        doctype: DocType,
+        keys: list[str],
+        values: list,
+    ) -> list[SourceDocumentMetadataORM]:
+        from core.metadata.project_metadata_crud import crud_project_meta
+
+        assert len(keys) == len(values), "keys and values must have the same length"
+
+        # read the matching project metadata
+        project_metadatas = {
+            pm.key: pm
+            for pm in crud_project_meta.read_by_project_and_doctype(
+                db=db, project_id=project_id, doctype=doctype
+            )
+        }
+
+        create_dtos: list[SourceDocumentMetadataCreate] = []
+        for key, value in zip(keys, values):
+            # ensure key exists
+            project_metadata = project_metadatas.get(key)
+            if project_metadata is None:
+                raise ValueError(f"Unknown project metadata key: {key}")
+
+            # ensure value conforms with metatype
+            metatype = MetaType(project_metadata.metatype)
+            if not metatype.is_value_of_type(value):
+                raise ValueError(
+                    f"Value for key '{key}' does not conform to metatype {metatype}"
+                )
+
+            create_dtos.append(
+                SourceDocumentMetadataCreate.with_metatype(
+                    metatype=metatype,
+                    project_metadata_id=project_metadata.id,
+                    value=value,
+                    source_document_id=sdoc_id,
+                )
+            )
+
+        return self.create_multi(db=db, create_dtos=create_dtos)
 
     ### READ OPERATIONS ###
 
