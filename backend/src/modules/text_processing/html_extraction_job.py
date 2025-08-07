@@ -1,0 +1,176 @@
+from pathlib import Path
+from uuid import uuid4
+
+import mammoth
+from bs4 import BeautifulSoup, Tag
+from config import conf
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from core.doc.source_document_status_crud import crud_sdoc_status
+from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
+from loguru import logger
+from modules.text_processing.html_cleaning_utils import clean_html
+from repos.db.sql_repo import SQLRepo
+from repos.ray_repo import RayRepo
+from systems.job_system.job_dto import (
+    EndpointGeneration,
+    Job,
+    JobInputBase,
+    JobPriority,
+)
+from systems.job_system.job_register_decorator import register_job
+from utils.image_utils import base64_to_image
+
+cc = conf.celery
+
+
+class ExtractHTMLJobInput(JobInputBase):
+    sdoc_id: int
+    filepath: Path
+
+
+@register_job(
+    job_type="extract_html",
+    input_type=ExtractHTMLJobInput,
+    output_type=None,
+    priority=JobPriority.DEFAULT,
+    generate_endpoints=EndpointGeneration.NONE,
+)
+def handle_extract_html_job(payload: ExtractHTMLJobInput, job: Job) -> None:
+    if not payload.filepath.exists():
+        logger.error(f"File {payload.filepath} does not exist!")
+        raise Exception(f"File {payload.filepath} does not exist!")
+
+    # TODO: these extractions have varying compute requirements
+    if payload.filepath.suffix == ".txt":
+        doc_html, extracted_images = extract_html_from_text(payload.filepath)
+    elif payload.filepath.suffix == ".docx" or payload.filepath.suffix == ".doc":
+        doc_html, extracted_images = extract_html_from_word(payload.filepath)
+    elif payload.filepath.suffix == ".pdf":
+        doc_html, extracted_images = extract_html_from_pdf(payload.filepath)
+    elif payload.filepath.suffix == ".html":
+        doc_html, extracted_images = extract_html_from_html(payload.filepath)
+    else:
+        logger.error(f"Unsupported file type: {payload.filepath.suffix}")
+        raise Exception(f"Unsupported file type: {payload.filepath.suffix}")
+
+    # Clean HTML (may use readability, always uses heuristics)
+    html = clean_html(doc_html)
+
+    # TODO: html mapping auch gleich hier machen?
+
+    # TODO: image jobs starten?
+
+    # TODO: irgendwie nicht so gut, hier speichern wir ein Zwischenergebnis in DB!
+    with SQLRepo().db_session() as db:
+        # Save the extracted (raw) HTML to db
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                html=html,
+            ),
+        )
+
+        # Set db status
+        crud_sdoc_status.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentStatusUpdate(html_extraction=True),
+        )
+
+
+def extract_html_from_pdf(filepath: Path) -> tuple[str, list[Path]]:
+    logger.debug(f"Extracting content as HTML from {filepath.name} ...")
+    pdf_bytes = filepath.read_bytes()
+    # this will take some time ...
+    conversion_output = RayRepo().docling_pdf_to_html(pdf_bytes=pdf_bytes)
+    doc_html = conversion_output.html_content
+
+    # store all extracted images in the same directory as the PDF
+    extracted_images: list[Path] = []
+    output_path = filepath.parent
+    for img_fn, b64_img in conversion_output.base64_images.items():
+        img_fn = Path(img_fn)
+        img_path = output_path / (img_fn.stem + ".png")
+        img = base64_to_image(b64_img)
+        img.save(img_path, format="PNG")
+        extracted_images.append(img_path)
+        logger.debug(f"Saved extracted image {img_path} from PDF {filepath.name}.")
+
+    return doc_html, extracted_images
+
+
+def extract_html_from_text(filepath: Path) -> tuple[str, list[Path]]:
+    content = filepath.read_text(encoding="utf-8")
+    html_content = f"<html><body><p>{content}</p></body></html>"
+    return html_content, []
+
+
+def extract_html_from_word(filepath: Path) -> tuple[str, list[Path]]:
+    extracted_images: list[Path] = []
+
+    def convert_image(image) -> dict[str, str]:
+        if not cc.preprocessing.extract_images_from_docx:
+            return {"src": ""}
+
+        fn = filepath.parent / f"image_{str(uuid4())}"
+        if "png" in image.content_type:
+            fn = fn.with_suffix(".png")
+        elif "jpg" in image.content_type:
+            fn = fn.with_suffix(".jpg")
+        elif "jpeg" in image.content_type:
+            fn = fn.with_suffix(".jpeg")
+        else:
+            return {"src": ""}
+
+        with image.open() as image_bytes:
+            with open(fn, "wb") as binary_file:
+                binary_file.write(image_bytes.read())
+            extracted_images.append(fn)
+            return {"src": str(fn.name)}
+
+    with open(str(filepath), "rb") as docx_file:
+        html = mammoth.convert_to_html(
+            docx_file, convert_image=mammoth.images.img_element(convert_image)
+        )
+
+    return f"<html><body>{html.value}</body></html>", extracted_images
+
+
+def extract_html_from_html(filepath: Path) -> tuple[str, list[Path]]:
+    # Parse the HTML content
+    content = filepath.read_text(encoding="utf-8")
+    soup = BeautifulSoup(content, "html.parser")
+
+    # Extract base64 encoded images from the HTML content
+    base64_images = {}
+    for img_tag in soup.find_all("img"):
+        src = img_tag.get("src", "")
+        if src.startswith("data:image") and "base64," in src:
+            base64_data = src.split("base64,")[1]
+            unique_filename = f"{uuid4()}.png"
+            base64_images[unique_filename] = base64_data
+            img_tag["src"] = unique_filename  # Replace src with the filename
+
+    # Store all extracted images in the same directory as the HTML
+    extracted_images: list[Path] = []
+    output_path = filepath.parent
+    for img_fn, b64_img in base64_images.items():
+        img_path = output_path / img_fn
+        try:
+            img = base64_to_image(b64_img)
+        except Exception as e:
+            logger.error(
+                f"Error decoding base64 image {img_fn} from {filepath.name}: {e}"
+            )
+            # delete the image tag entirely from the HTML
+            img_tag = soup.find("img", {"src": img_fn})
+            if img_tag and isinstance(img_tag, Tag):
+                img_tag.decompose()
+            continue
+        img.save(img_path, format="PNG")
+        extracted_images.append(img_path)
+        logger.debug(f"Saved extracted image {img_path} from HTML {filepath.name}.")
+
+    return str(soup), extracted_images
