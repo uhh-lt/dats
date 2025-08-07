@@ -86,6 +86,19 @@ class CRUDProjectMetadata(
         )
         return db_objs
 
+    def read_by_project_and_doctype(
+        self, db: Session, project_id: int, doctype: DocType
+    ) -> list[ProjectMetadataORM]:
+        db_objs = (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.doctype == doctype,
+            )
+            .all()
+        )
+        return db_objs
+
     def read_by_project_and_key_and_metatype_and_doctype(
         self, db: Session, project_id: int, key: str, metatype: str, doctype: str
     ) -> ProjectMetadataORM | None:
