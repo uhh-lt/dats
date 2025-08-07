@@ -70,6 +70,9 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
     sentence_ends: list[int] | None = Field(
         description="End of each sentence in character offsets in content", default=None
     )
+    html: str | None = Field(
+        description="Processed HTML of the SourceDocument", default=None
+    )
 
 
 # Properties for creation
