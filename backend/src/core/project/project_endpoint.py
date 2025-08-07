@@ -11,8 +11,7 @@ from core.project.project_dto import (
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from fastapi import APIRouter, Depends, File, UploadFile
-from preprocessing.preprocessing_job_dto import PreprocessingJobRead
-from preprocessing.preprocessing_service import PreprocessingService
+from modules.doc_processing.preprocessing_new_service import PreprocessingServiceNew
 from repos.db.crud_base import NoSuchElementError
 from sqlalchemy.orm import Session
 
@@ -90,7 +89,7 @@ def delete_project(
 
 @router.put(
     "/{proj_id}/sdoc",
-    response_model=PreprocessingJobRead,
+    response_model=None,
     summary="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
 )
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
@@ -106,13 +105,16 @@ def upload_project_sdoc(
         ),
     ),
     authz_user: AuthzUser = Depends(),
-) -> PreprocessingJobRead:
+) -> None:
     authz_user.assert_in_project(proj_id)
 
-    pps: PreprocessingService = PreprocessingService()
-    return pps.prepare_and_start_preprocessing_job_async(
-        proj_id=proj_id, uploaded_files=uploaded_files
-    )
+    # pps: PreprocessingService = PreprocessingService()
+    # return pps.prepare_and_start_preprocessing_job_async(
+    #     proj_id=proj_id, uploaded_files=uploaded_files
+    # )
+
+    ppsn = PreprocessingServiceNew()
+    ppsn.start_preprocessing(project_id=proj_id, uploaded_files=uploaded_files)
 
 
 @router.get(

@@ -17,6 +17,7 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
+from systems.event_system.events import job_finished
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
@@ -29,6 +30,7 @@ def rq_job_handler(handler, payload):
     job = Job()
     output = handler(payload=payload, job=job)
     job.update(finished=datetime.now())
+    job_finished.send(job_type=job.job.meta["type"], input=payload, output=output)
     return output
 
 
