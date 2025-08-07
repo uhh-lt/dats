@@ -70,8 +70,15 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
     sentence_ends: list[int] | None = Field(
         description="End of each sentence in character offsets in content", default=None
     )
-    html: str | None = Field(
-        description="Processed HTML of the SourceDocument", default=None
+    token_time_starts: list[int] | None = Field(
+        description="Start times of each token in transcript", default=None
+    )
+    token_time_ends: list[int] | None = Field(
+        description="End times of each token in transcript", default=None
+    )
+    html: str | None = Field(description="HTML of the SourceDocument", default=None)
+    content: str | None = Field(
+        description="Content of the SourceDocument", default=None
     )
 
 
