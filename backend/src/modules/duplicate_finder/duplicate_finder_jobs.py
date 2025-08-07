@@ -10,10 +10,9 @@ from modules.duplicate_finder.duplicate_finder_dto import (
 )
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from repos.db.sql_repo import SQLRepo
-from rq import get_current_job
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
-from systems.job_system.job_dto import EndpointGeneration, JobPriority
+from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -26,12 +25,9 @@ from systems.job_system.job_register_decorator import register_job
 )
 def find_duplicates_job(
     payload: DuplicateFinderInput,
+    job: Job,
 ) -> DuplicateFinderOutput:
-    job = get_current_job()
-    assert job is not None, "Job must be running in a worker context"
-
-    job.meta["status_message"] = "Started duplicate finding"
-    job.save_meta()
+    job.update(status_message="Started duplicate finding")
 
     logger.info("Finding duplicate text sdocs")
     t0 = time.time()
@@ -40,8 +36,7 @@ def find_duplicates_job(
             db, project_id=payload.project_id, doctype=DocType.text
         )
     t1 = time.time()
-    job.meta["status_message"] = "Fetched word frequencies from database"
-    job.save_meta()
+    job.update(status_message="Fetched word frequencies from database")
     logger.info(f"query took: {t1 - t0}")
 
     t0 = time.time()
@@ -75,8 +70,7 @@ def find_duplicates_job(
         (values, (index, indices)), shape=(len(idx2sdoc_id), vocab_size)
     )
     t1 = time.time()
-    job.meta["status_message"] = "Created document word vectors"
-    job.save_meta()
+    job.update(status_message="Created document word vectors")
     logger.info(f"document vector creation took: {t1 - t0}")
     logger.info(f"vocab size: {vocab_size}")
     logger.info(f"document_vectors shape: {document_vectors.shape}")
@@ -85,8 +79,7 @@ def find_duplicates_job(
     t0 = time.time()
     word_dists = manhattan_distances(document_vectors, document_vectors)
     t1 = time.time()
-    job.meta["status_message"] = "Computed distances between documents"
-    job.save_meta()
+    job.update(status_message="Computed distances between documents")
     logger.info(f"manhatten distance took: {t1 - t0}")
 
     # mask out self distances and one half of the matrix
@@ -103,8 +96,7 @@ def find_duplicates_job(
         )
     ).tolist()
     t1 = time.time()
-    job.meta["status_message"] = "Identified duplicate pairs"
-    job.save_meta()
+    job.update(status_message="Identified duplicate pairs")
     logger.info(f"finding duplicates took: {t1 - t0}")
 
     # map back to sdoc_ids
@@ -120,8 +112,7 @@ def find_duplicates_job(
     G.to_undirected()
     subgraph_nodes = [list(subgraph) for subgraph in nx.connected_components(G)]
     t1 = time.time()
-    job.meta["status_message"] = "Finished finding duplicates!"
-    job.save_meta()
+    job.update(status_message="Finished finding duplicates!")
     logger.info(f"graph grouping took: {t1 - t0}")
 
     return DuplicateFinderOutput(duplicates=subgraph_nodes)

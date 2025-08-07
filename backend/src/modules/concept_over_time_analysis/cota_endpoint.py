@@ -2,9 +2,7 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
-from modules.concept_over_time_analysis.cota_crud import (
-    crud_cota,
-)
+from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
     COTACreateIntern,
@@ -234,5 +232,5 @@ async def get_cota_job(
     authz_user: AuthzUser = Depends(),
 ) -> COTARefinementJobRead:
     job = js.get_job(job_id=cota_job_id)
-    authz_user.assert_in_project(job.meta["project_id"])
+    authz_user.assert_in_project(job.get_project_id())
     return COTARefinementJobRead.from_rq_job(job=job)

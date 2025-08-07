@@ -6,7 +6,6 @@ from typing import Callable
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
-import rq
 from hdbscan import HDBSCAN
 from loguru import logger
 from matplotlib.axes import Axes
@@ -56,12 +55,13 @@ from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sklearn.feature_extraction.text import CountVectorizer
 from sqlalchemy.orm import Session
+from systems.job_system.job_dto import Job
 from umap import UMAP
 from weaviate import WeaviateClient
 
 
 class PerspectivesService:
-    def __init__(self, job: rq.job.Job):
+    def __init__(self, job: Job):
         self.job = job
 
         self.ray: RayRepo = RayRepo()
@@ -134,10 +134,10 @@ class PerspectivesService:
 
     def handle_perspectives_job(self, payload: PerspectivesJobInput):
         # Set initial status
-        self.job.meta["current_step"] = 0
-        self.job.meta["status_message"] = "Waiting..."
-        self.job.meta["steps"] = self.perspectives_job_steps.get(
-            payload.perspectives_job_type, []
+        self.job.update(
+            current_step=0,
+            status_message="Waiting...",
+            steps=self.perspectives_job_steps.get(payload.perspectives_job_type, []),
         )
 
         # Execute the correct function
@@ -146,13 +146,11 @@ class PerspectivesService:
         )
 
     def _log_status_msg(self, status_msg: str):
-        self.job.meta["status_message"] = status_msg
+        self.job.update(status_message=status_msg)
         logger.info(status_msg)
-        self.job.save_meta()
 
     def _log_status_step(self, step: int):
-        self.job.meta["current_step"] = step
-        self.job.save_meta()
+        self.job.update(current_step=step)
 
     def _modify_documents(self, db: Session, aspect_id: int):
         aspect = crud_aspect.read(db=db, id=aspect_id)

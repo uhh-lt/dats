@@ -3,11 +3,7 @@ from typing import TypedDict
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends, UploadFile
-from modules.eximport.import_job_dto import (
-    ImportJobInput,
-    ImportJobRead,
-    ImportJobType,
-)
+from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead, ImportJobType
 from modules.eximport.import_service import ImportJobPreparationError, ImportService
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
@@ -137,7 +133,7 @@ def get_import_job(
     *, import_job_id: str, authz_user: AuthzUser = Depends()
 ) -> ImportJobRead:
     job = js.get_job(import_job_id)
-    authz_user.assert_in_project(job.meta["project_id"])
+    authz_user.assert_in_project(job.get_project_id())
     return ImportJobRead.from_rq_job(job)
 
 
@@ -152,5 +148,5 @@ def get_all_import_jobs(
     authz_user.assert_in_project(project_id)
 
     jobs = js.get_jobs_by_project(job_type="import", project_id=project_id)
-    jobs.sort(key=lambda x: x.meta["created"], reverse=True)
+    jobs.sort(key=lambda x: x.get_created(), reverse=True)
     return [ImportJobRead.from_rq_job(job) for job in jobs]

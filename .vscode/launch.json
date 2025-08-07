@@ -11,7 +11,6 @@
       "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
-        "BACKEND_TYPE": "api",
         "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
     },
@@ -26,7 +25,6 @@
       "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env",
       "env": {
-        "BACKEND_TYPE": "worker",
         "PYTHONPATH": "${workspaceFolder}/backend/src"
       }
     },
