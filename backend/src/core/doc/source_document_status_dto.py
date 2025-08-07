@@ -23,3 +23,4 @@ class SourceDocumentStatusUpdate(BaseModel, UpdateDTOBase):
     lang_detect: bool | None = Field(
         description="Language Detection done?", default=None
     )
+    html_mapping: bool | None = Field(description="HTML Mapping done?", default=None)
