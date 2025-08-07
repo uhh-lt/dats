@@ -48,6 +48,9 @@ def do_work():
     import_by_suffix("_orm.py")
     import_by_suffix("_crud.py")
 
+    # import doc_processing_pipeline
+    import modules.doc_processing.doc_processing_pipeline  # noqa: F401
+
     queues = [
         Queue("high", connection=redis_conn),
         Queue("default", connection=redis_conn),
