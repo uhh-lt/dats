@@ -9,7 +9,7 @@ from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
-from modules.text_processing.html_cleaning_utils import clean_html
+from modules.doc_text_processing.html_cleaning_utils import clean_html
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import (
