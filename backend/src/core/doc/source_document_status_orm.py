@@ -21,6 +21,7 @@ class SourceDocumentStatusORM(ORMBase):
     es_index: Mapped[bool] = mapped_column(Boolean, nullable=False)
     lang_detect: Mapped[bool] = mapped_column(Boolean, nullable=False)
     html_mapping: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    html_extraction: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     def get_project_id(self) -> int:
         return self.source_document.get_project_id()

@@ -147,6 +147,9 @@ def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)
 
+    # compute text here?
+    # text = " ".join([str(r["text"]) for r in results])
+
     # compute offsets
     text2html_character_offsets: list[int] = []
     for hp in html_parse:
@@ -197,5 +200,7 @@ def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
 
     # Set db status
     crud_sdoc_status.update(
-        db=db, id=payload.sdoc_id, update_dto=SourceDocumentStatusUpdate(es_index=True)
+        db=db,
+        id=payload.sdoc_id,
+        update_dto=SourceDocumentStatusUpdate(html_mapping=True),
     )
