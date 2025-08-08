@@ -1,17 +1,11 @@
+from common.job_type import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 emb = EmbeddingService()
@@ -24,11 +18,8 @@ class ImageEmbeddingJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="image_embedding",
+    job_type=JobType.IMAGE_EMBEDDING,
     input_type=ImageEmbeddingJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     # embed the image
@@ -44,12 +35,4 @@ def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> Non
             project_id=payload.project_id,
             id=ImageObjectIdentifier(sdoc_id=payload.sdoc_id),
             embedding=embedding,
-        )
-
-    # Set db status
-    with sqlr.db_session() as db:
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(image_embedding=True),
         )

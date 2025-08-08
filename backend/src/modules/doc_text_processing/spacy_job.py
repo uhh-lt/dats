@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import yake
 from common.doc_type import DocType
+from common.job_type import JobType
 from config import conf
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -10,8 +11,6 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
@@ -19,12 +18,7 @@ from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -40,11 +34,8 @@ class SpacyJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="spacy",
+    job_type=JobType.SPACY,
     input_type=SpacyJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
     # 1. call spacy in ray
@@ -94,11 +85,6 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
         crud_word_frequency.create_multi(db=db, create_dtos=word_frequencies)
         crud_span_anno.create_multi(db, create_dtos=span_annotations)
         crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
-        crud_sdoc_status.update(
-            db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(spacy=True),
-        )
 
 
 def extract_keywords(

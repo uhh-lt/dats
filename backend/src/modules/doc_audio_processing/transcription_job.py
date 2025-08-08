@@ -2,21 +2,15 @@ from io import BytesIO
 from pathlib import Path
 
 import ffmpeg
+from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import (
-    SourceDocumentDataUpdate,
-)
+from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 ray = RayRepo()
@@ -29,11 +23,8 @@ class TranscriptionJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="transcription",
+    job_type=JobType.AUDIO_TRANSCRIPTION,
     input_type=TranscriptionJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_transcription_job(payload: TranscriptionJobInput, job: Job) -> None:
     # convert audio file to uncompessed PCM format

@@ -2,17 +2,11 @@ from io import BytesIO
 from pathlib import Path
 
 import ffmpeg
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
+from common.job_type import JobType
 from PIL import Image
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 fsr = FilesystemRepo()
@@ -25,11 +19,8 @@ class VideoThumbnailJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="video_thumbnail",
+    job_type=JobType.VIDEO_THUMBNAIL,
     input_type=VideoThumbnailJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> None:
     start_frame, err = (
@@ -49,12 +40,4 @@ def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> Non
             quality=50,
             lossless=True,
             method=6,
-        )
-
-    with sqlr.db_session() as db:
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(video_thumbnail=True),
         )

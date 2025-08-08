@@ -1,23 +1,17 @@
 from pathlib import Path
 from uuid import uuid4
 
+from common.job_type import JobType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.code.code_crud import crud_code
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.user.user_crud import SYSTEM_USER_ID
 from loguru import logger
 from ray_model_worker.dto.detr import DETRImageInput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
@@ -31,11 +25,8 @@ class ObjectDetectionJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="object_detection",
+    job_type=JobType.IMAGE_OBJECT_DETECTION,
     input_type=ObjectDetectionJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> None:
     # Run object detection with ray
@@ -78,11 +69,4 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
         crud_bbox_anno.create_multi(
             db=db,
             create_dtos=create_dtos,
-        )
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(object_detection=True),
         )

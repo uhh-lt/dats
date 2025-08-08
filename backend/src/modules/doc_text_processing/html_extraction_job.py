@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import mammoth
 from bs4 import BeautifulSoup, Tag
+from common.job_type import JobType
 from config import conf
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
@@ -10,6 +11,7 @@ from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from modules.doc_text_processing.html_cleaning_utils import clean_html
+from pydantic import BaseModel
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import (
@@ -29,14 +31,19 @@ class ExtractHTMLJobInput(JobInputBase):
     filepath: Path
 
 
+class ExtractHTMLJobOutput(BaseModel):
+    html: str
+    image_paths: list[Path]
+
+
 @register_job(
-    job_type="extract_html",
+    job_type=JobType.EXTRACT_HTML,
     input_type=ExtractHTMLJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
+    output_type=ExtractHTMLJobOutput,
 )
-def handle_extract_html_job(payload: ExtractHTMLJobInput, job: Job) -> None:
+def handle_extract_html_job(
+    payload: ExtractHTMLJobInput, job: Job
+) -> ExtractHTMLJobOutput:
     if not payload.filepath.exists():
         logger.error(f"File {payload.filepath} does not exist!")
         raise Exception(f"File {payload.filepath} does not exist!")
@@ -62,22 +69,23 @@ def handle_extract_html_job(payload: ExtractHTMLJobInput, job: Job) -> None:
     # TODO: image jobs starten?
 
     # TODO: irgendwie nicht so gut, hier speichern wir ein Zwischenergebnis in DB!
-    with SQLRepo().db_session() as db:
-        # Save the extracted (raw) HTML to db
-        crud_sdoc_data.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentDataUpdate(
-                html=html,
-            ),
-        )
+    # with SQLRepo().db_session() as db:
+    #     # Save the extracted (raw) HTML to db
+    #     crud_sdoc_data.update(
+    #         db=db,
+    #         id=payload.sdoc_id,
+    #         update_dto=SourceDocumentDataUpdate(
+    #             html=html,
+    #         ),
+    #     )
 
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(html_extraction=True),
-        )
+    #     # Set db status
+    #     crud_sdoc_status.update(
+    #         db=db,
+    #         id=payload.sdoc_id,
+    #         update_dto=SourceDocumentStatusUpdate(html_extraction=True),
+    #     )
+    return ExtractHTMLJobOutput(html=html, image_paths=extracted_images)
 
 
 def extract_html_from_pdf(filepath: Path) -> tuple[str, list[Path]]:

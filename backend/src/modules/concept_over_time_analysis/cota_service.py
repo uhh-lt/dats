@@ -2,6 +2,7 @@ import shutil
 
 import srsly
 from common.doc_type import DocType
+from common.job_type import JobType
 from common.meta_type import MetaType
 from common.singleton_meta import SingletonMeta
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -223,7 +224,7 @@ class COTAService(metaclass=SingletonMeta):
 
         # start the refinement job
         job = self.js.start_job(
-            job_type="cota_refinement",
+            job_type=JobType.COTA_REFINEMENT,
             payload=payload,
         )
 

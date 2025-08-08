@@ -4,6 +4,7 @@ from io import StringIO
 from itertools import accumulate
 from typing import TypedDict
 
+from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from core.doc.source_document_status_crud import crud_sdoc_status
@@ -121,11 +122,8 @@ class StringBuilder(StringIO):
 
 
 @register_job(
-    job_type="html_mapping",
+    job_type=JobType.HTML_MAPPING,
     input_type=HTMLMappingJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
     with SQLRepo().db_session() as db:
@@ -196,11 +194,4 @@ def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
         update_dto=SourceDocumentDataUpdate(
             html=new_html.build(),
         ),
-    )
-
-    # Set db status
-    crud_sdoc_status.update(
-        db=db,
-        id=payload.sdoc_id,
-        update_dto=SourceDocumentStatusUpdate(html_mapping=True),
     )

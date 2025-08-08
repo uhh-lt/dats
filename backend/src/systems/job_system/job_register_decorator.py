@@ -1,5 +1,6 @@
 from typing import Callable, TypeVar
 
+from common.job_type import JobType
 from fastapi import APIRouter
 from pydantic import BaseModel
 from systems.job_system.job_dto import (
@@ -14,11 +15,11 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 
 
 def register_job(
-    job_type: str,
+    job_type: JobType,
     input_type: type[InputT],
-    output_type: type[OutputT] | None,
-    priority: JobPriority,
-    generate_endpoints: EndpointGeneration,
+    output_type: type[OutputT] | None = None,
+    priority: JobPriority = JobPriority.DEFAULT,
+    generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):

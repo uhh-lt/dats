@@ -5,10 +5,12 @@ from uuid import uuid4
 
 import redis
 import rq
+from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from config import conf
 from fastapi import APIRouter
 from loguru import logger
+from modules.doc_processing.doc_processing_pipeline import handle_job_finished
 from pydantic import BaseModel
 from rq.registry import (
     CanceledJobRegistry,
@@ -30,7 +32,8 @@ def rq_job_handler(handler, payload):
     job = Job()
     output = handler(payload=payload, job=job)
     job.update(finished=datetime.now())
-    job_finished.send(job_type=job.job.meta["type"], input=payload, output=output)
+    handle_job_finished(job.job.meta["type"], input=payload, output=output)
+    # job_finished.send(job_type=job.job.meta["type"], input=payload, output=output)
     return output
 
 
@@ -101,7 +104,7 @@ class JobService(metaclass=SingletonMeta):
 
     def register_job(
         self,
-        job_type: str,
+        job_type: JobType,
         handler_func: Callable[[InputT, Job], OutputT | None],
         input_type: type[InputT],
         output_type: type[OutputT] | None,
@@ -135,7 +138,7 @@ class JobService(metaclass=SingletonMeta):
 
     def start_job(
         self,
-        job_type: str,
+        job_type: JobType,
         payload: JobInputBase,
         priority: JobPriority | None = None,
     ) -> Job:
