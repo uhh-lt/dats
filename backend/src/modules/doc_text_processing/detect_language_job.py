@@ -1,4 +1,5 @@
 from common.doc_type import DocType
+from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
@@ -31,11 +32,8 @@ class DetectLanguageJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="detect_language",
+    job_type=JobType.DETECT_LANGUAGE,
     input_type=DetectLanguageJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_detect_language_job(payload: DetectLanguageJobInput, job: Job) -> None:
     # if we re-run this job, text is None or doctype is None, we need to query it from db
@@ -71,11 +69,4 @@ def handle_detect_language_job(payload: DetectLanguageJobInput, job: Job) -> Non
             doctype=payload.doctype,
             keys=["language"],
             values=[lang],
-        )
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(lang_detect=True),
         )

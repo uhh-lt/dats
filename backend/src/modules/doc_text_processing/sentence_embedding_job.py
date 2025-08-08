@@ -1,18 +1,12 @@
+from common.job_type import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -22,11 +16,8 @@ class SentenceEmbeddingJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="sentence_embedding",
+    job_type=JobType.SENTENCE_EMBEDDING,
     input_type=SentenceEmbeddingJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) -> None:
     # if we re-run this job, sentences is None, we need to query it from db
@@ -58,10 +49,3 @@ def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) 
                     ],
                     embeddings=embeddings,
                 )
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(sentence_embedding=True),
-        )

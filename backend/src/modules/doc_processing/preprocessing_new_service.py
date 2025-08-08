@@ -1,12 +1,11 @@
 from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
+from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.text_init_job import TextInitJobInput
 from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import (
-    FilesystemRepo,
-)
+from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
 
@@ -63,7 +62,7 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
             match doc_type:
                 case DocType.text:
                     self.js.start_job(
-                        job_type="text_init",
+                        job_type=JobType.TEXT_INIT,
                         payload=TextInitJobInput(
                             project_id=project_id,
                             filepath=file_path,
