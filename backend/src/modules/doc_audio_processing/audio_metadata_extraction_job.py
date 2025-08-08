@@ -2,6 +2,7 @@ from pathlib import Path
 
 import ffmpeg
 from common.doc_type import DocType
+from common.job_type import JobType
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
@@ -33,11 +34,8 @@ class AudioMetadataExtractionJobInput(JobInputBase):
 
 
 @register_job(
-    job_type="audio_metadata_extraction",
+    job_type=JobType.AUDIO_METADATA_EXTRACTION,
     input_type=AudioMetadataExtractionJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def handle_audio_metadata_extraction_job(
     payload: AudioMetadataExtractionJobInput, job: Job

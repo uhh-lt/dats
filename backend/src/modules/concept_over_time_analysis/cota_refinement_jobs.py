@@ -1,3 +1,4 @@
+from common.job_type import JobType
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import COTARead, COTARefinementJobInput
 from modules.concept_over_time_analysis.refinement_steps.finetune_apply_compute import (
@@ -7,16 +8,14 @@ from modules.concept_over_time_analysis.refinement_steps.init_search_space impor
     init_search_space,
 )
 from modules.concept_over_time_analysis.refinement_steps.store_in_db import store_in_db
-from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 
 @register_job(
-    job_type="cota_refinement",
+    job_type=JobType.COTA_REFINEMENT,
     input_type=COTARefinementJobInput,
     output_type=None,
-    priority=JobPriority.DEFAULT,
-    generate_endpoints=EndpointGeneration.NONE,
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
     from repos.db.sql_repo import SQLRepo
