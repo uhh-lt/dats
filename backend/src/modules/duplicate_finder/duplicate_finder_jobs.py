@@ -3,6 +3,7 @@ import time
 import networkx as nx
 import numpy as np
 from common.doc_type import DocType
+from common.job_type import JobType
 from loguru import logger
 from modules.duplicate_finder.duplicate_finder_dto import (
     DuplicateFinderInput,
@@ -12,15 +13,14 @@ from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from repos.db.sql_repo import SQLRepo
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
-from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
+from systems.job_system.job_dto import EndpointGeneration, Job
 from systems.job_system.job_register_decorator import register_job
 
 
 @register_job(
-    job_type="duplicate_finder",
+    job_type=JobType.DUPLICATE_FINDER,
     input_type=DuplicateFinderInput,
     output_type=DuplicateFinderOutput,
-    priority=JobPriority.DEFAULT,
     generate_endpoints=EndpointGeneration.MINIMAL,
 )
 def find_duplicates_job(

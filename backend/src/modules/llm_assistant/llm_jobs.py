@@ -1,14 +1,14 @@
+from common.job_type import JobType
 from modules.llm_assistant.llm_endpoint import router
 from modules.llm_assistant.llm_job_dto import LLMJobInput, LLMJobOutput
-from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
+from systems.job_system.job_dto import EndpointGeneration, Job
 from systems.job_system.job_register_decorator import register_job
 
 
 @register_job(
-    job_type="llm_assistant",
+    job_type=JobType.LLM_ASSISTANT,
     input_type=LLMJobInput,
     output_type=LLMJobOutput,
-    priority=JobPriority.DEFAULT,
     generate_endpoints=EndpointGeneration.ALL,
     router=router,
 )

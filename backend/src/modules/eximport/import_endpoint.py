@@ -1,6 +1,7 @@
 from typing import TypedDict
 
 from common.dependencies import get_current_user
+from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends, UploadFile
 from modules.eximport.import_job_dto import ImportJobInput, ImportJobRead, ImportJobType
@@ -113,7 +114,7 @@ async def start_import_job(
 
     # Start the import job
     job = js.start_job(
-        job_type="import",
+        job_type=JobType.IMPORT,
         payload=ImportJobInput(
             import_job_type=import_job_type,
             project_id=project_id,
