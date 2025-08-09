@@ -1,6 +1,7 @@
 from typing import Type
 
 from common.dependencies import get_current_user
+from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, create_model
@@ -16,7 +17,7 @@ job_service = JobService()
 
 
 def register_job_endpoints(
-    job_type: str,
+    job_type: JobType,
     input_model: Type[JobInputBase],
     output_model: Type[BaseModel] | None,
     endpoint_generation: EndpointGeneration,

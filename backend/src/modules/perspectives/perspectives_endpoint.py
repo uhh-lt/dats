@@ -1,6 +1,7 @@
 import numpy as np
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, get_weaviate_session
+from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from fastapi import APIRouter, Depends
@@ -78,7 +79,7 @@ def start_perspectives_job(
 
     # No job running, so we can start a new one
     job = js.start_job(
-        "perspectives",
+        JobType.PERSPECTIVES,
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=aspect_id,
@@ -134,7 +135,7 @@ def create_aspect(
 
     params = CreateAspectParams()
     job = js.start_job(
-        "perspectives",
+        JobType.PERSPECTIVES,
         payload=PerspectivesJobInput(
             project_id=aspect.project_id,
             aspect_id=db_aspect.id,
