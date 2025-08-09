@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from common.job_type import JobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
     DocTagRecommendationParams,
@@ -14,15 +15,13 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from sqlalchemy import and_, or_
-from systems.job_system.job_dto import EndpointGeneration, Job, JobPriority
+from systems.job_system.job_dto import EndpointGeneration, Job
 from systems.job_system.job_register_decorator import register_job
 
 
 @register_job(
-    job_type="ml",
+    job_type=JobType.ML,
     input_type=MLJobInput,
-    output_type=None,
-    priority=JobPriority.DEFAULT,
     generate_endpoints=EndpointGeneration.ALL,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:

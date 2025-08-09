@@ -19,7 +19,6 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
-from systems.event_system.events import job_finished
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
@@ -99,7 +98,7 @@ class JobService(metaclass=SingletonMeta):
         cls.registries["failed"].default_job_timeout = TTL_90_DAYS
         cls.registries["canceled"].default_job_timeout = TTL_90_DAYS
 
-        cls.job_registry: Dict[str, RegisteredJob] = {}
+        cls.job_registry: Dict[JobType, RegisteredJob] = {}
         return super(JobService, cls).__new__(cls)
 
     def register_job(
