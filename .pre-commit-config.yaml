@@ -19,11 +19,18 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
-      - id: pyright
-        name: "Pyright"
+      - id: pyright-backend
+        name: "Pyright (backend)"
         entry: bash -c 'source backend/.venv/bin/activate && pyright --project backend "$@"' --
         language: system
-        files: \.py$
+        files: ^backend/.*\.py$
+  - repo: local
+    hooks:
+      - id: pyright-airflow
+        name: "Pyright (airflow)"
+        entry: bash -c 'source airflow/.venv/bin/activate && pyright --project airflow "$@"' --
+        language: system
+        files: ^airflow/.*\.py$
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v9.22.0
     hooks:
