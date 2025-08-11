@@ -13,6 +13,7 @@ class JobType(str, Enum):
 
     TEXT_INIT = ("text_init", "Init text doc")
     EXTRACT_HTML = ("extract_html", "Extract HTML")
+    EXTRACT_PLAIN_TEXT = ("extract_text", "")
     IMAGE_SDOC = ("image_sdoc", "create image sdoc")
     IMAGE_METADATA_EXTRACTION = ("image_metadata", "")
     IMAGE_EMBEDDING = ("image_embedding", "")

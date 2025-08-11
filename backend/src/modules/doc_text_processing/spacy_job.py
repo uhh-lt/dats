@@ -15,6 +15,7 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
+from pydantic import BaseModel
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
@@ -31,13 +32,23 @@ class SpacyJobInput(JobInputBase):
     doctype: DocType
     text: str
     language: str
+    html: str
+
+
+class SpacyJobOutput(BaseModel):
+    sentence_starts: list[int]
+    sentence_ends: list[int]
+    token_starts: list[int]
+    token_ends: list[int]
+    sentences: list[str]
 
 
 @register_job(
     job_type=JobType.SPACY,
     input_type=SpacyJobInput,
+    output_type=SpacyJobOutput,
 )
-def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
+def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
         SpacyInput(
@@ -84,7 +95,14 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> None:
         )
         crud_word_frequency.create_multi(db=db, create_dtos=word_frequencies)
         crud_span_anno.create_multi(db, create_dtos=span_annotations)
-        crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
+        data = crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
+    return SpacyJobOutput(
+        sentence_starts=data.sentence_starts,
+        sentence_ends=data.sentence_ends,
+        token_starts=data.token_starts,
+        token_ends=data.token_ends,
+        sentences=data.sentences,
+    )
 
 
 def extract_keywords(
