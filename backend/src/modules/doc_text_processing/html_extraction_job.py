@@ -3,23 +3,14 @@ from uuid import uuid4
 
 import mammoth
 from bs4 import BeautifulSoup, Tag
+from common.doc_type import DocType
 from common.job_type import JobType
 from config import conf
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from modules.doc_text_processing.html_cleaning_utils import clean_html
 from pydantic import BaseModel
-from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image
 
@@ -29,6 +20,7 @@ cc = conf.celery
 class ExtractHTMLJobInput(JobInputBase):
     sdoc_id: int
     filepath: Path
+    doctype: DocType
 
 
 class ExtractHTMLJobOutput(BaseModel):

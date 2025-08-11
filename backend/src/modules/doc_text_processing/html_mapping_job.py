@@ -4,29 +4,36 @@ from io import StringIO
 from itertools import accumulate
 from typing import TypedDict
 
+from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
+from pydantic import BaseModel
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, JobInputBase
 from systems.job_system.job_register_decorator import register_job
 
 
 class HTMLMappingJobInput(JobInputBase):
     sdoc_id: int
-    raw_html: str | None
-    sentence_starts: list[int] | None
-    sentence_ends: list[int] | None
-    token_starts: list[int] | None
-    token_ends: list[int] | None
+    raw_html: str
+    sentence_starts: list[int]
+    sentence_ends: list[int]
+    token_starts: list[int]
+    token_ends: list[int]
+
+
+class ExtractPlainTextJobInput(JobInputBase):
+    sdoc_id: int
+    html: str
+    filename: str
+    doctype: DocType
+
+
+class ExtractPlainTextJobOutput(BaseModel):
+    text: str
+    text2html_character_offsets: list[int]
 
 
 class Text(TypedDict):
@@ -122,25 +129,36 @@ class StringBuilder(StringIO):
 
 
 @register_job(
+    job_type=JobType.EXTRACT_PLAIN_TEXT,
+    input_type=ExtractPlainTextJobInput,
+    output_type=ExtractPlainTextJobOutput,
+)
+def extract_text_from_html_and_create_source_mapping(
+    payload: ExtractPlainTextJobInput,
+    job: Job,
+) -> ExtractPlainTextJobOutput:
+    content_in_html = payload.html
+
+    parser = HTMLTextMapper()
+    results = parser(content_in_html)
+
+    text = " ".join([str(r["text"]) for r in results])
+    text2html_character_offsets: list[int] = []
+    for result in results:
+        text2html_character_offsets.extend(
+            range(int(result["start"]), int(result["end"]) + 1)
+        )
+
+    return ExtractPlainTextJobOutput(
+        text=text, text2html_character_offsets=text2html_character_offsets
+    )
+
+
+@register_job(
     job_type=JobType.HTML_MAPPING,
     input_type=HTMLMappingJobInput,
 )
 def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
-    with SQLRepo().db_session() as db:
-        if (
-            payload.raw_html is None
-            or payload.sentence_starts is None
-            or payload.sentence_ends is None
-            or payload.token_starts is None
-            or payload.token_ends is None
-        ):
-            sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
-            payload.raw_html = sdoc_data.html
-            payload.sentence_starts = sdoc_data.sentence_starts
-            payload.sentence_ends = sdoc_data.sentence_ends
-            payload.token_starts = sdoc_data.token_starts
-            payload.token_ends = sdoc_data.token_ends
-
     # parse html
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)
@@ -187,11 +205,12 @@ def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
         current_position = html_end
     new_html += payload.raw_html[current_position:]
 
-    # update source document data in db
-    crud_sdoc_data.update(
-        db=db,
-        id=payload.sdoc_id,
-        update_dto=SourceDocumentDataUpdate(
-            html=new_html.build(),
-        ),
-    )
+    with SQLRepo().db_session() as db:
+        # update source document data in db
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                html=new_html.build(),
+            ),
+        )
