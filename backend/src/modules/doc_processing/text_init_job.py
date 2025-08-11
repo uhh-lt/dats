@@ -8,29 +8,30 @@ from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusCreate
 from loguru import logger
-from pydantic import BaseModel
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 fsr: FilesystemRepo = FilesystemRepo()
 
 
-class TextInitJobInput(JobInputBase):
+class SdocInitJobInput(JobInputBase):
     filepath: Path
+    doctype: DocType
+    folder_id: int | None
 
 
-class TextInitJobOutput(BaseModel):
+class SdocInitJobOutput(JobOutputBase):
     sdoc_id: int
 
 
 @register_job(
-    job_type=JobType.TEXT_INIT,
-    input_type=TextInitJobInput,
-    output_type=TextInitJobOutput,
+    job_type=JobType.SDOC_INIT,
+    input_type=SdocInitJobInput,
+    output_type=SdocInitJobOutput,
 )
-def handle_init_text_job(payload: TextInitJobInput, job: Job) -> TextInitJobOutput:
+def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutput:
     with SQLRepo().db_session() as db:
         # split document
 
@@ -40,10 +41,10 @@ def handle_init_text_job(payload: TextInitJobInput, job: Job) -> TextInitJobOutp
         logger.info(f"Persisting SourceDocument for {payload.filepath.name}...")
         create_dto = SourceDocumentCreate(
             filename=payload.filepath.name,
-            doctype=DocType.text,
+            doctype=payload.doctype,
             project_id=payload.project_id,
             status=SDocStatus.unfinished_or_erroneous,
-            folder_id=None,
+            folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
@@ -53,4 +54,4 @@ def handle_init_text_job(payload: TextInitJobInput, job: Job) -> TextInitJobOutp
             create_dto=SourceDocumentStatusCreate(id=sdoc_db_obj.id),
         )
 
-        return TextInitJobOutput(sdoc_id=sdoc_db_obj.id)
+        return SdocInitJobOutput(sdoc_id=sdoc_db_obj.id)

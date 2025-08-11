@@ -3,8 +3,6 @@ from pathlib import Path
 from common.doc_type import DocType
 from common.job_type import JobType
 from common.meta_type import MetaType
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
@@ -13,7 +11,7 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.ollama_repo import OllamaRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
@@ -21,16 +19,23 @@ ollama = OllamaRepo()
 sqlr = SQLRepo()
 
 
-class ImageCaptionJobInput(JobInputBase):
-    sdoc_id: int
+class ImageCaptionJobInput(SdocJobInput):
     filepath: Path
+
+
+class ImageCaptionJobOutput(JobOutputBase):
+    text: str
+    html: str
 
 
 @register_job(
     job_type=JobType.IMAGE_CAPTION,
     input_type=ImageCaptionJobInput,
+    output_type=ImageCaptionJobOutput,
 )
-def handle_image_caption_job(payload: ImageCaptionJobInput, job: Job) -> None:
+def handle_image_caption_job(
+    payload: ImageCaptionJobInput, job: Job
+) -> ImageCaptionJobOutput:
     image = load_image(payload.filepath)
     image_b64 = image_to_base64(image)
     caption, _ = ollama.vlm_chat(
@@ -58,10 +63,6 @@ def handle_image_caption_job(payload: ImageCaptionJobInput, job: Job) -> None:
                 metatype=MetaType.STRING,
             ),
         )
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(image_caption=True),
-        )
+    return ImageCaptionJobOutput(
+        text=caption, html=f"<html><body><p>{caption}</p></body></html>"
+    )

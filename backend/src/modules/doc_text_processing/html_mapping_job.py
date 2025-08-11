@@ -9,14 +9,12 @@ from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from loguru import logger
-from pydantic import BaseModel
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 
-class HTMLMappingJobInput(JobInputBase):
-    sdoc_id: int
+class HTMLMappingJobInput(SdocJobInput):
     raw_html: str
     sentence_starts: list[int]
     sentence_ends: list[int]
@@ -24,14 +22,13 @@ class HTMLMappingJobInput(JobInputBase):
     token_ends: list[int]
 
 
-class ExtractPlainTextJobInput(JobInputBase):
-    sdoc_id: int
+class ExtractPlainTextJobInput(SdocJobInput):
     html: str
     filename: str
     doctype: DocType
 
 
-class ExtractPlainTextJobOutput(BaseModel):
+class ExtractPlainTextJobOutput(JobOutputBase):
     text: str
     text2html_character_offsets: list[int]
 

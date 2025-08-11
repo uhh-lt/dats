@@ -11,7 +11,7 @@ from loguru import logger
 from ray_model_worker.dto.detr import DETRImageInput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
@@ -19,8 +19,7 @@ ray = RayRepo()
 sqlr = SQLRepo()
 
 
-class ObjectDetectionJobInput(JobInputBase):
-    sdoc_id: int
+class ObjectDetectionJobInput(SdocJobInput):
     filepath: Path
 
 

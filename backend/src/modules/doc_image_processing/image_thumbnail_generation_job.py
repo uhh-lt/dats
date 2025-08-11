@@ -4,16 +4,15 @@ from common.job_type import JobType
 from PIL import Image
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 fsr: FilesystemRepo = FilesystemRepo()
 sqlr = SQLRepo()
 
 
-class ImageThumbnailJobInput(JobInputBase):
+class ImageThumbnailJobInput(SdocJobInput):
     filepath: Path
-    sdoc_id: int
 
 
 @register_job(

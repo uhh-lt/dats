@@ -71,3 +71,7 @@ def mime_type_supported(mime_type: str) -> bool:
 
 def is_archive_file(mime_type: str) -> bool:
     return mime_type in __archive_mime_types__
+
+
+def is_pdf(mime_type: str) -> bool:
+    return mime_type == "application/pdf"

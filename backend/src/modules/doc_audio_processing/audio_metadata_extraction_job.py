@@ -7,12 +7,7 @@ from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobInputBase,
-    JobPriority,
-)
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -28,9 +23,8 @@ EXPECTED_METADATA = [
 ]
 
 
-class AudioMetadataExtractionJobInput(JobInputBase):
+class AudioMetadataExtractionJobInput(SdocJobInput):
     filepath: Path
-    sdoc_id: int
 
 
 @register_job(

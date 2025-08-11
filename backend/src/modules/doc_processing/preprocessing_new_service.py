@@ -1,9 +1,16 @@
-from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
+from common.doc_type import (
+    DocType,
+    get_doc_type,
+    is_archive_file,
+    is_pdf,
+    mime_type_supported,
+)
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
-from modules.doc_processing.text_init_job import TextInitJobInput
+from modules.doc_processing.doc_chunking_job import PDFChunkingJobInput
+from modules.doc_processing.text_init_job import SdocInitJobInput
 from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -61,43 +68,27 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
                     ),
                 )
                 return
+            elif is_pdf(mime_type):
+                self.js.start_job(
+                    JobType.PDF_CHECKING,
+                    PDFChunkingJobInput(
+                        project_id=input.project_id, filename=file_path
+                    ),
+                )
+                return
 
             doc_type = get_doc_type(mime_type=mime_type)
-            match doc_type:
-                case DocType.text:
-                    self.js.start_job(
-                        job_type=JobType.TEXT_INIT,
-                        payload=TextInitJobInput(
-                            project_id=project_id,
-                            filepath=file_path,
-                        ),
-                    )
-                case DocType.image:
-                    print("Image file detected, starting image init job...")
-                    # self.js.start_job(
-                    #     job_type="image_init",
-                    #     payload=ImageInitJobInput(
-                    #         project_id=project_id, filepath=file_path
-                    #     ),
-                    # )
-                case DocType.video:
-                    print("Video file detected, starting video init job...")
-                    # self.js.start_job(
-                    #     job_type="video_init",
-                    #     payload=VideoInitJobInput(
-                    #         project_id=project_id, filepath=file_path
-                    #     ),
-                    # )
-                case DocType.audio:
-                    print("Audio file detected, starting audio init job...")
-                    # self.js.start_job(
-                    #     job_type="audio_init",
-                    #     payload=AudioInitJobInput(
-                    #         project_id=project_id, filepath=file_path
-                    #     ),
-                    # )
-                case _:
-                    raise HTTPException(
-                        detail=f"Document with MIME type {mime_type} not supported!",
-                        status_code=406,
-                    )
+            if doc_type is None:
+                raise HTTPException(
+                    detail=f"Document with MIME type {mime_type} not supported!",
+                    status_code=406,
+                )
+            self.js.start_job(
+                job_type=JobType.SDOC_INIT,
+                payload=SdocInitJobInput(
+                    project_id=project_id,
+                    filepath=file_path,
+                    doctype=doc_type,
+                    folder_id=None,
+                ),
+            )

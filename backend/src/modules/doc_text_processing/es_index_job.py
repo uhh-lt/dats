@@ -4,12 +4,11 @@ from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 
-class ESIndexJobInput(JobInputBase):
-    sdoc_id: int
+class ESIndexJobInput(SdocJobInput):
     filename: str | None
     text: str | None
 

@@ -5,15 +5,14 @@ from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 
-class AudioThumbnailJobInput(JobInputBase):
-    sdoc_id: int
+class AudioThumbnailJobInput(SdocJobInput):
     filepath: Path
 
 

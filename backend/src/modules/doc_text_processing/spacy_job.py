@@ -15,19 +15,17 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from pydantic import BaseModel
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
 
 
-class SpacyJobInput(JobInputBase):
-    sdoc_id: int
+class SpacyJobInput(SdocJobInput):
     # everything below is queryable:
     doctype: DocType
     text: str
@@ -35,7 +33,7 @@ class SpacyJobInput(JobInputBase):
     html: str
 
 
-class SpacyJobOutput(BaseModel):
+class SpacyJobOutput(JobOutputBase):
     sentence_starts: list[int]
     sentence_ends: list[int]
     token_starts: list[int]

@@ -4,8 +4,13 @@ from common.dependencies import get_current_user
 from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, create_model
-from systems.job_system.job_dto import EndpointGeneration, JobInputBase, JobRead
+from pydantic import create_model
+from systems.job_system.job_dto import (
+    EndpointGeneration,
+    JobInputBase,
+    JobOutputBase,
+    JobRead,
+)
 from systems.job_system.job_service import JobService
 
 router = APIRouter(
@@ -19,7 +24,7 @@ job_service = JobService()
 def register_job_endpoints(
     job_type: JobType,
     input_model: Type[JobInputBase],
-    output_model: Type[BaseModel] | None,
+    output_model: Type[JobOutputBase] | None,
     endpoint_generation: EndpointGeneration,
     router: APIRouter,
 ):
