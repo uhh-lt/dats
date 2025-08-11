@@ -1,0 +1,9 @@
+{
+  // frontend
+  "javascript.preferences.importModuleSpecifierEnding": "js",
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+
+  // prettier
+  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.configPath": "./package.json"
+}

@@ -1,10 +1,10 @@
 {
   // general
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+  "files.exclude": {
+    "airflow": true,
+    "backend": true,
+    "frontend": true
   },
-  "files.insertFinalNewline": true,
 
   // python
   "python.envFile": "${workspaceFolder}/backend/.env",

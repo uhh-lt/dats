@@ -1,0 +1,21 @@
+{
+  // python
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.autoComplete.extraPaths": ["${workspaceFolder}/src"],
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "**/.venv", "**/docker"],
+
+  // pytest
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.testing.pytestArgs": ["-c", "pyproject.toml"],
+  "python.testing.autoTestDiscoverOnSaveEnabled": false,
+
+  // ruff (python linter)
+  "ruff.configuration": "./pyproject.toml"
+}
