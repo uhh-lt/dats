@@ -1,5 +1,5 @@
 /authentik/*
-
+/airflow_cache/*
 /api_cache/*
 /backend_repo/*
 /ollama_cache/*
