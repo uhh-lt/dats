@@ -5,28 +5,37 @@ import ffmpeg
 from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 ray = RayRepo()
 sqlr = SQLRepo()
 
 
-class TranscriptionJobInput(JobInputBase):
-    sdoc_id: int
+class TranscriptionJobInput(SdocJobInput):
     filepath: Path
+
+
+class TranscriptionJobOutput(JobOutputBase):
+    token_starts: list[int]
+    token_ends: list[int]
+    token_time_starts: list[int]
+    token_time_ends: list[int]
+    content: str
+    html: str
 
 
 @register_job(
     job_type=JobType.AUDIO_TRANSCRIPTION,
     input_type=TranscriptionJobInput,
+    output_type=TranscriptionJobOutput,
 )
-def handle_transcription_job(payload: TranscriptionJobInput, job: Job) -> None:
+def handle_transcription_job(
+    payload: TranscriptionJobInput, job: Job
+) -> TranscriptionJobOutput:
     # convert audio file to uncompessed PCM format
     pcm_bytes = convert_to_pcm(payload.filepath)
 
@@ -37,13 +46,14 @@ def handle_transcription_job(payload: TranscriptionJobInput, job: Job) -> None:
         # TODO: are the tokens overwritten by the text pipeline?
         # update sdoc data
         crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(transcription=True),
-        )
+    return TranscriptionJobOutput(
+        token_starts=sdoc_data.token_starts,  # type: ignore
+        token_ends=sdoc_data.token_ends,  # type: ignore
+        token_time_starts=sdoc_data.token_time_starts,  # type: ignore
+        token_time_ends=sdoc_data.token_time_ends,  # type: ignore
+        content=sdoc_data.content,  # type: ignore
+        html=sdoc_data.html,  # type: ignore
+    )
 
 
 def convert_to_pcm(filepath: Path):

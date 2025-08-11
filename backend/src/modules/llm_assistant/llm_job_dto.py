@@ -8,7 +8,7 @@ from core.metadata.source_document_metadata_dto import (
 )
 from pydantic import BaseModel, Field
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
-from systems.job_system.job_dto import JobInputBase
+from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---
 
@@ -205,7 +205,7 @@ class SentenceAnnotationLLMJobResult(BaseModel):
     results: list[SentenceAnnotationResult]
 
 
-class LLMJobOutput(BaseModel):
+class LLMJobOutput(JobOutputBase):
     llm_job_type: TaskType = Field(description="The type of the LLMJob (what to llm)")
     specific_task_result: (
         TaggingLLMJobResult

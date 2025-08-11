@@ -5,7 +5,7 @@ from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 emb = EmbeddingService()
@@ -13,8 +13,8 @@ weaviate = WeaviateRepo()
 sqlr = SQLRepo()
 
 
-class ImageEmbeddingJobInput(JobInputBase):
-    sdoc_id: int
+class ImageEmbeddingJobInput(SdocJobInput):
+    pass
 
 
 @register_job(
