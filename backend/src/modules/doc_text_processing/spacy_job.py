@@ -10,7 +10,10 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from core.doc.source_document_data_dto import (
+    SourceDocumentDataCreate,
+    SourceDocumentDataUpdate,
+)
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
@@ -68,7 +71,7 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
 
         # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(spacy_output)
+        sdoc_data = extract_tok_sent_data(payload, spacy_output)
 
         # keywords
         # if payload does not have keywords:
@@ -93,7 +96,7 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
         crud_word_frequency.create_multi(db=db, create_dtos=word_frequencies)
         crud_span_anno.create_multi(db, create_dtos=span_annotations)
-        data = crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
+        data = crud_sdoc_data.create(db=db, create_dto=sdoc_data)
     return SpacyJobOutput(
         sentence_starts=data.sentence_starts,
         sentence_ends=data.sentence_ends,
@@ -185,8 +188,9 @@ def extract_span_annotations(
 
 
 def extract_tok_sent_data(
+    input: SpacyJobInput,
     spacy_output: SpacyPipelineOutput,
-) -> SourceDocumentDataUpdate:
+) -> SourceDocumentDataCreate:
     # FIXME: take tokens/sentences from whisper and store audio token time offsets
     token_starts: list[int] = []
     token_ends: list[int] = []
@@ -200,7 +204,11 @@ def extract_tok_sent_data(
         sentence_starts.append(s.start_char)
         sentence_ends.append(s.end_char)
 
-    return SourceDocumentDataUpdate(
+    return SourceDocumentDataCreate(
+        id=input.sdoc_id,
+        content=input.text,
+        html=input.html,
+        repo_url="",
         token_starts=token_starts,
         token_ends=token_ends,
         sentence_starts=sentence_starts,

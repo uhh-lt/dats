@@ -8,6 +8,9 @@ if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
 
 
+# TODO the names of the status must match names in JobType
+
+
 class SourceDocumentStatusORM(ORMBase):
     id: Mapped[int] = mapped_column(
         Integer,
@@ -19,7 +22,10 @@ class SourceDocumentStatusORM(ORMBase):
     source_document: Mapped["SourceDocumentORM"] = relationship("SourceDocumentORM")
 
     # TEXT
-    text_init: Mapped[bool] = mapped_column(
+    sdoc_init: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    text_extraction: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
     spacy: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
@@ -72,6 +78,9 @@ class SourceDocumentStatusORM(ORMBase):
         Boolean, nullable=False, server_default="false"
     )
     video_thumbnail: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    video_audio_extraction: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
 

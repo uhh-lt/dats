@@ -170,6 +170,7 @@ services:
     command: /dats_code/src/rq_worker_entrypoint.sh
     user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
     environment:
+      NUM_RQ_WORKER: 16
       DATS_BACKEND_MODE: production
       LOG_LEVEL: ${RQ_LOG_LEVEL:-info}
       UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid namespace required}

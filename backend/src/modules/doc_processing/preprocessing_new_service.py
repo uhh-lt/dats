@@ -1,35 +1,18 @@
-from common.doc_type import (
-    DocType,
-    get_doc_type,
-    is_archive_file,
-    is_pdf,
-    mime_type_supported,
-)
+from common.doc_type import get_doc_type, is_archive_file, is_pdf, mime_type_supported
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
 from modules.doc_processing.doc_chunking_job import PDFChunkingJobInput
 from modules.doc_processing.text_init_job import SdocInitJobInput
-from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
-from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
 
-class UnsupportedDocTypeForMimeType(Exception):
-    def __init__(self, mime_type: str):
-        super().__init__(
-            f"Unsupported DocType! Cannot infer DocType from MimeType '{mime_type}'."
-        )
-
-
 class PreprocessingServiceNew(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.js = JobService()
-        cls._pipelines: dict[DocType, PreprocessingPipeline] = dict()
 
         return super(PreprocessingServiceNew, cls).__new__(cls)
 

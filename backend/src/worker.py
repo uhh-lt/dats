@@ -1,8 +1,11 @@
 import sys
+from os import environ
 
 import redis
 from config import conf
 from loguru import logger
+from rq import SimpleWorker
+from rq.worker_pool import WorkerPool
 from utils.import_utils import import_by_suffix
 
 r_host = conf.redis.host
@@ -40,7 +43,6 @@ def do_healthcheck():
 
 def do_work():
     from rq import Queue
-    from rq.worker import Worker
 
     # import all expensive stuff before forking, so that imports are only done once
     import_by_suffix("_repo.py")
@@ -57,8 +59,13 @@ def do_work():
         Queue("low", connection=redis_conn),
     ]
 
-    worker = Worker(queues)
-    worker.work()
+    worker = WorkerPool(
+        queues,
+        connection=redis_conn,
+        num_workers=int(environ.get("NUM_RQ_WORKER", "1")),
+        worker_class=SimpleWorker,
+    )
+    worker.start
 
 
 if __name__ == "__main__":
