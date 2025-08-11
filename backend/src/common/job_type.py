@@ -11,6 +11,7 @@ class JobType(str, Enum):
         obj.description = description
         return obj
 
+    EXTRACT_ARCHIVE = ("extract_archive", "")
     TEXT_INIT = ("text_init", "Init text doc")
     EXTRACT_HTML = ("extract_html", "Extract HTML")
     EXTRACT_PLAIN_TEXT = ("extract_text", "")
@@ -21,6 +22,7 @@ class JobType(str, Enum):
     IMAGE_OBJECT_DETECTION = ("object_detection", "")
     PDF_CHECKING = ("pdf_checking", "")
     COTA_REFINEMENT = ("cota_refinement", "")
+    AUDIO_SDOC = ("audio_sdoc", "")
     AUDIO_METADATA_EXTRACTION = ("audio_metadata_extraction", "")
     AUDIO_THUMBNAIL = ("audio_thumbnail", "")
     AUDIO_TRANSCRIPTION = ("audio_transcription", "")
@@ -30,6 +32,7 @@ class JobType(str, Enum):
     DETECT_LANGUAGE = ("lang_detect", "")
     SENTENCE_EMBEDDING = ("sentence_embedding", "")
     SPACY = ("spacy", "")
+    VIDEO_SDOC = ("video_sdoc", "")
     VIDEO_METADATA_EXTRACTION = ("video_metadata", "")
     VIDEO_THUMBNAIL = ("video_thumbnail", "")
     DUPLICATE_FINDER = ("duplicate_finder", "")

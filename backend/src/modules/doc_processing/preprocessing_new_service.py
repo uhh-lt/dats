@@ -2,6 +2,7 @@ from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_su
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
+from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
 from modules.doc_processing.text_init_job import TextInitJobInput
 from preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from repos.db.sql_repo import SQLRepo
@@ -53,9 +54,12 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
 
             # 3. start correct job based on type
             if is_archive_file(mime_type):
-                # TODO: Start archive processing job
-                print("Archive file detected, extracting...")
-                # self.js.start archive job
+                self.js.start_job(
+                    JobType.EXTRACT_ARCHIVE,
+                    ArchiveExtractionJobInput(
+                        project_id=project_id, filepath=file_path
+                    ),
+                )
                 return
 
             doc_type = get_doc_type(mime_type=mime_type)
