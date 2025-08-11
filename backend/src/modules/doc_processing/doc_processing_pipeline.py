@@ -4,6 +4,10 @@ from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
 from modules.doc_image_processing.image_sdoc_job import ImageSdocJobInput
+from modules.doc_processing.archive_extraction_job import (
+    ArchiveExtractionJobInput,
+    ArchiveExtractionJobOutput,
+)
 from modules.doc_processing.text_init_job import TextInitJobInput, TextInitJobOutput
 from modules.doc_text_processing.detect_language_job import (
     DetectLanguageJobInput,
@@ -32,18 +36,13 @@ js = JobService()
 def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: BaseModel | None
 ):
-    sdoc_id = None
-    if hasattr(input, "sdoc_id"):
-        sdoc_id = getattr(input, "sdoc_id")
-    elif hasattr(output, "sdoc_id"):
-        sdoc_id = getattr(output, "sdoc_id")
+    sdoc_id = getattr(input, "sdoc_id", getattr(output, "sdoc_id", None))
     if sdoc_id is not None:
-        kwargs = {job_type.value: True}
         with SQLRepo().db_session() as db:
             crud_sdoc_status.update(
-                db=db,
+                db,
                 id=sdoc_id,
-                update_dto=SourceDocumentStatusUpdate(**kwargs),
+                update_dto=SourceDocumentStatusUpdate(**{job_type.value: True}),
             )
 
     # Jobs without sdoc_id
@@ -61,6 +60,17 @@ def handle_job_finished(
                     doctype=DocType.text,
                 ),
             )
+        case JobType.EXTRACT_ARCHIVE:
+            assert isinstance(input, ArchiveExtractionJobInput)
+            assert isinstance(output, ArchiveExtractionJobOutput)
+            for path, jobtype in zip(output.file_paths, output.job_types):
+                match jobtype:
+                    case JobType.TEXT_INIT:
+                        payload = TextInitJobInput(
+                            project_id=input.project_id, filepath=path
+                        )
+                    # TODO image, video, audio
+                js.start_job(jobtype, payload)
 
     assert sdoc_id is not None, "sdoc_id must be set"
 
