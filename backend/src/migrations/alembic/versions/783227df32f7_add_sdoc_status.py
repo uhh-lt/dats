@@ -1,8 +1,8 @@
-"""add sdocstatus table
+"""add sdoc status
 
-Revision ID: 99db6fe5876d
+Revision ID: 783227df32f7
 Revises: 1b21abe44adb
-Create Date: 2025-08-07 15:39:13.172334
+Create Date: 2025-08-11 11:56:06.078963
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "99db6fe5876d"
+revision: str = "783227df32f7"
 down_revision: str | None = "1b21abe44adb"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -23,7 +23,10 @@ def upgrade() -> None:
     op.create_table(
         "sourcedocumentstatus",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("text_init", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column("sdoc_init", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
+            "text_extraction", sa.Boolean(), server_default="false", nullable=False
+        ),
         sa.Column("spacy", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("es_index", sa.Boolean(), server_default="false", nullable=False),
         sa.Column("lang_detect", sa.Boolean(), server_default="false", nullable=False),
@@ -63,6 +66,12 @@ def upgrade() -> None:
         ),
         sa.Column(
             "video_thumbnail", sa.Boolean(), server_default="false", nullable=False
+        ),
+        sa.Column(
+            "video_audio_extraction",
+            sa.Boolean(),
+            server_default="false",
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["id"], ["sourcedocument.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),

@@ -10,8 +10,6 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 from fastapi import APIRouter
 from loguru import logger
-from modules.doc_processing.doc_processing_pipeline import handle_job_finished
-from pydantic import BaseModel
 from rq.registry import (
     CanceledJobRegistry,
     DeferredJobRegistry,
@@ -26,16 +24,6 @@ from systems.job_system.job_dto import (
     JobOutputBase,
     JobPriority,
 )
-
-
-def rq_job_handler(handler, payload):
-    job = Job()
-    output = handler(payload=payload, job=job)
-    job.update(finished=datetime.now())
-    handle_job_finished(job.job.meta["type"], input=payload, output=output)
-    # job_finished.send(job_type=job.job.meta["type"], input=payload, output=output)
-    return output
-
 
 InputT = TypeVar("InputT", bound=JobInputBase)
 OutputT = TypeVar("OutputT", bound=JobOutputBase)
@@ -142,6 +130,8 @@ class JobService(metaclass=SingletonMeta):
         payload: JobInputBase,
         priority: JobPriority | None = None,
     ) -> Job:
+        from systems.job_system.job_handler import rq_job_handler
+
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")

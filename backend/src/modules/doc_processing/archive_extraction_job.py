@@ -3,10 +3,8 @@ from pathlib import Path
 import magic
 from common.doc_type import DocType, get_doc_type
 from common.job_type import JobType
+from fastapi import HTTPException
 from loguru import logger
-from modules.doc_processing.preprocessing_new_service import (
-    UnsupportedDocTypeForMimeType,
-)
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
@@ -40,6 +38,9 @@ def handle_init_text_job(
         doctype = get_doc_type(mime_type=mime_type)
         if not doctype:
             logger.error(f"Unsupported DocType (for MIME Type {mime_type})!")
-            raise UnsupportedDocTypeForMimeType(mime_type=mime_type)
+            raise HTTPException(
+                detail=f"Document with MIME type {mime_type} not supported!",
+                status_code=406,
+            )
         doctypes.append(doctype)
     return ArchiveExtractionJobOutput(file_paths=paths, doctypes=doctypes)
