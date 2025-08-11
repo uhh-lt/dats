@@ -1,0 +1,13 @@
+{
+  // python
+  "python.autoComplete.extraPaths": ["${workspaceFolder}/src", "../backend/src"],
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.extraPaths": ["${workspaceFolder}/src", "../backend/src"],
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/__pycache__", "**/.venv"],
+
+  // ruff (python linter)
+  "ruff.configuration": "./pyproject.toml"
+}

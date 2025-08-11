@@ -1,0 +1,50 @@
+[project]
+name = "dats-airflow"
+authors = [
+  {name = "Tim Fischer", email = "tim.fischer@uni-hamburg.de"},
+]
+maintainers = [
+  {name = "Tim Fischer", email = "tim.fischer@uni-hamburg.de"},
+]
+version = "1.7.1"
+requires-python = "==3.11.*"
+description = "DATS Airflow Worker"
+readme = "../README.md"
+license="Apache-2.0"
+license-files = ["../LICENSE"]
+dependencies = [
+    "alembic==1.13.1",
+    "apache-airflow==3.0.4",
+    "pydantic==2.11.0",
+    "pydantic-core==2.33.0",
+    "pyright==1.1.385",
+    "sqlalchemy==1.4.54",
+    "sqlalchemy-utils==0.41.2",
+]
+
+[project.urls]
+Homepage = "https://www.hcds.uni-hamburg.de/de/research/demos/dats.html"
+Documentation = "https://github.com/uhh-lt/dats/wiki"
+Repository = "https://github.com/uhh-lt/dats.git"
+Issues = "https://github.com/uhh-lt/dats/issues"
+
+[tool.ruff]
+src = ["src"]
+
+[tool.ruff.lint]
+
+# I: isort-compatible import sorting
+# W291: Trailing whitespace
+# W292: Add newline to end of file
+# W293: Blank line contains whitespace
+extend-select = ["I", "W292", "W291", "W293"]
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__",
+    "src/dev_notebooks",
+]
+extraPaths = ["src"]
+reportIncompatibleMethodOverride = false
+reportIncompatibleVariableOverride = false
+reportUnreachable = true
