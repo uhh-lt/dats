@@ -1,5 +1,7 @@
 from enum import Enum
 
+# TODO the names must match the name of the columns in SdocProcessingStatus
+
 
 class JobType(str, Enum):
     name: str
@@ -11,31 +13,34 @@ class JobType(str, Enum):
         obj.description = description
         return obj
 
+    # pre-processing pipeline jobs
     EXTRACT_ARCHIVE = ("extract_archive", "")
-    SDOC_INIT = ("text_init", "Init text doc")
-    EXTRACT_HTML = ("extract_html", "Extract HTML")
-    EXTRACT_PLAIN_TEXT = ("extract_text", "")
+    PDF_CHECKING = ("pdf_checking", "")
+    SDOC_INIT = ("sdoc_init", "Init source doc")
+    EXTRACT_HTML = ("html_extraction", "Extract HTML")
+    EXTRACT_PLAIN_TEXT = ("text_extraction", "")
+    DETECT_LANGUAGE = ("lang_detect", "")
+    SPACY = ("spacy", "")
+    ES_INDEX = ("es_index", "")
+    SENTENCE_EMBEDDING = ("sentence_embedding", "")
+    HTML_MAPPING = ("html_mapping", "")
+    AUDIO_METADATA_EXTRACTION = ("audio_metadata", "")
+    AUDIO_THUMBNAIL = ("audio_thumbnail", "")
+    AUDIO_TRANSCRIPTION = ("transcription", "")
+    IMAGE_CAPTION = ("image_caption", "")
     IMAGE_METADATA_EXTRACTION = ("image_metadata", "")
     IMAGE_EMBEDDING = ("image_embedding", "")
     IMAGE_THUMBNAIL = ("image_thumbnail", "")
     IMAGE_OBJECT_DETECTION = ("object_detection", "")
-    PDF_CHECKING = ("pdf_checking", "")
-    COTA_REFINEMENT = ("cota_refinement", "")
-    AUDIO_METADATA_EXTRACTION = ("audio_metadata_extraction", "")
-    AUDIO_THUMBNAIL = ("audio_thumbnail", "")
-    AUDIO_TRANSCRIPTION = ("audio_transcription", "")
-    IMAGE_CAPTION = ("image_caption", "")
-    HTML_MAPPING = ("html_mapping", "")
-    ES_INDEX = ("es_index", "")
-    DETECT_LANGUAGE = ("lang_detect", "")
-    SENTENCE_EMBEDDING = ("sentence_embedding", "")
-    SPACY = ("spacy", "")
     VIDEO_METADATA_EXTRACTION = ("video_metadata", "")
     VIDEO_THUMBNAIL = ("video_thumbnail", "")
     VIDEO_AUDIO_EXTRACTION = ("video_audio_extraction", "")
+
+    # on-demand jobs
     DUPLICATE_FINDER = ("duplicate_finder", "")
     EXPORT = ("export", "")
     IMPORT = ("import", "")
     LLM_ASSISTANT = ("llm_assistant", "")
+    COTA_REFINEMENT = ("cota_refinement", "")
     ML = ("ml", "")
     PERSPECTIVES = ("perspectives", "")
