@@ -5,16 +5,30 @@ import numpy as np
 from common.doc_type import DocType
 from common.job_type import JobType
 from loguru import logger
-from modules.duplicate_finder.duplicate_finder_dto import (
-    DuplicateFinderInput,
-    DuplicateFinderOutput,
-)
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from pydantic import Field
 from repos.db.sql_repo import SQLRepo
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
-from systems.job_system.job_dto import EndpointGeneration, Job
+from systems.job_system.job_dto import (
+    EndpointGeneration,
+    Job,
+    JobInputBase,
+    JobOutputBase,
+)
 from systems.job_system.job_register_decorator import register_job
+
+
+class DuplicateFinderInput(JobInputBase):
+    max_different_words: int = Field(
+        ..., description="Number of different words allowed between duplicates"
+    )
+
+
+class DuplicateFinderOutput(JobOutputBase):
+    duplicates: list[list[int]] = Field(
+        ..., description="List of found duplicate clusters"
+    )
 
 
 @register_job(

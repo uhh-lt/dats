@@ -1,11 +1,10 @@
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from pydantic import BaseModel
 from ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 ray = RayRepo()
@@ -18,14 +17,13 @@ class LanguageNotSupportedError(Exception):
         )
 
 
-class DetectLanguageJobInput(JobInputBase):
-    sdoc_id: int
+class DetectLanguageJobInput(SdocJobInput):
     html: str
     text: str
     doctype: DocType
 
 
-class DetectLanguageJobOutput(BaseModel):
+class DetectLanguageJobOutput(JobOutputBase):
     language: str
     text: str
 

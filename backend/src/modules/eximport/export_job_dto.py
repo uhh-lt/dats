@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
-from systems.job_system.job_dto import JobInputBase
+from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 
 class ExportJobType(str, Enum):
@@ -100,7 +100,7 @@ class ExportJobInput(JobInputBase):
 
 
 # Properties shared across all DTOs
-class ExportJobOutput(BaseModel):
+class ExportJobOutput(JobOutputBase):
     results_url: str | None = Field(
         default=None, description="URL to download the results when done."
     )

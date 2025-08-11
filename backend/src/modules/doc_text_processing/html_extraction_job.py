@@ -6,26 +6,29 @@ from bs4 import BeautifulSoup, Tag
 from common.doc_type import DocType
 from common.job_type import JobType
 from config import conf
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderCreate, FolderType
 from loguru import logger
 from modules.doc_text_processing.html_cleaning_utils import clean_html
-from pydantic import BaseModel
+from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image
 
 cc = conf.celery
 
 
-class ExtractHTMLJobInput(JobInputBase):
-    sdoc_id: int
+class ExtractHTMLJobInput(SdocJobInput):
     filepath: Path
     doctype: DocType
+    folder_id: int | None
 
 
-class ExtractHTMLJobOutput(BaseModel):
+class ExtractHTMLJobOutput(JobOutputBase):
     html: str
     image_paths: list[Path]
+    folder_id: int | None
 
 
 @register_job(
@@ -56,28 +59,22 @@ def handle_extract_html_job(
     # Clean HTML (may use readability, always uses heuristics)
     html = clean_html(doc_html)
 
-    # TODO: html mapping auch gleich hier machen?
-
-    # TODO: image jobs starten?
-
-    # TODO: irgendwie nicht so gut, hier speichern wir ein Zwischenergebnis in DB!
-    # with SQLRepo().db_session() as db:
-    #     # Save the extracted (raw) HTML to db
-    #     crud_sdoc_data.update(
-    #         db=db,
-    #         id=payload.sdoc_id,
-    #         update_dto=SourceDocumentDataUpdate(
-    #             html=html,
-    #         ),
-    #     )
-
-    #     # Set db status
-    #     crud_sdoc_status.update(
-    #         db=db,
-    #         id=payload.sdoc_id,
-    #         update_dto=SourceDocumentStatusUpdate(html_extraction=True),
-    #     )
-    return ExtractHTMLJobOutput(html=html, image_paths=extracted_images)
+    folder_id = payload.folder_id
+    if len(extracted_images) > 0:
+        with SQLRepo().db_session() as db:
+            folder = crud_folder.create(
+                db,
+                create_dto=FolderCreate(
+                    project_id=payload.project_id,
+                    folder_type=FolderType.SDOC_FOLDER,
+                    name=payload.filepath.name,
+                    parent_id=payload.folder_id,
+                ),
+            )
+            folder_id = folder.id
+    return ExtractHTMLJobOutput(
+        html=html, image_paths=extracted_images, folder_id=folder_id
+    )
 
 
 def extract_html_from_pdf(filepath: Path) -> tuple[str, list[Path]]:

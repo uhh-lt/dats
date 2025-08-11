@@ -23,6 +23,7 @@ from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
     JobInputBase,
+    JobOutputBase,
     JobPriority,
 )
 
@@ -37,13 +38,13 @@ def rq_job_handler(handler, payload):
 
 
 InputT = TypeVar("InputT", bound=JobInputBase)
-OutputT = TypeVar("OutputT", bound=BaseModel)
+OutputT = TypeVar("OutputT", bound=JobOutputBase)
 
 
 class RegisteredJob(TypedDict):
     handler: Callable
     input_type: type[JobInputBase]
-    output_type: type[BaseModel] | None
+    output_type: type[JobOutputBase] | None
     generate_endpoints: EndpointGeneration
     priority: JobPriority
     router: APIRouter | None

@@ -5,7 +5,7 @@ from common.doc_type import DocType
 from common.job_type import JobType
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import Job, JobInputBase
+from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -25,8 +25,7 @@ EXPECTED_METADATA = [
 ]
 
 
-class VideoMetadataExtractionJobInput(JobInputBase):
-    sdoc_id: int
+class VideoMetadataExtractionJobInput(SdocJobInput):
     filename: str | None
     text: str | None
     filepath: Path

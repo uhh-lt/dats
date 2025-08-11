@@ -2,16 +2,16 @@ from typing import Callable, TypeVar
 
 from common.job_type import JobType
 from fastapi import APIRouter
-from pydantic import BaseModel
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
     JobInputBase,
+    JobOutputBase,
     JobPriority,
 )
 
 InputT = TypeVar("InputT", bound=JobInputBase)
-OutputT = TypeVar("OutputT", bound=BaseModel)
+OutputT = TypeVar("OutputT", bound=JobOutputBase)
 
 
 def register_job(
