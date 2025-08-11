@@ -1,0 +1,69 @@
+{
+  "folders": [
+    {
+      "name": "dats",
+      "path": "..",
+    },
+    {
+      "name": "airflow",
+      "path": "../airflow",
+    },
+    {
+      "name": "backend",
+      "path": "../backend",
+    },
+    {
+      "name": "frontend",
+      "path": "../frontend",
+    },
+  ],
+  // global workspace settings
+  "settings": {
+    // general
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+    },
+    "files.insertFinalNewline": true,
+    // formatting
+    "[yaml]": {
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true,
+    },
+    "[dockercompose]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-azuretools.vscode-docker",
+      // git
+      "eamodio.gitlens",
+      "github.vscode-github-actions",
+      "github.copilot",
+      // backend
+      "ms-python.python",
+      "ms-python.debugpy",
+      "ms-python.vscode-pylance",
+      "charliermarsh.ruff",
+      // frontend
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+    ],
+  },
+}

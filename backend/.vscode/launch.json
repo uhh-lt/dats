@@ -2,45 +2,37 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "backend",
+      "name": "fastapi",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/src/main.py",
+      "program": "${workspaceFolder}/src/main.py",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     },
     {
       "name": "rq",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/src/worker.py",
+      "program": "${workspaceFolder}/src/worker.py",
       "args": ["work"],
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
-    },
-    {
-      "name": "frontend",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run dev",
-      "cwd": "${workspaceFolder}/frontend",
-      "envFile": "${workspaceFolder}/frontend/.env.development"
     },
     {
       "name": "celery",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/.venv/bin/celery",
+      "program": "${workspaceFolder}/.venv/bin/celery",
       "args": [
         "-A",
         "core.celery.background_jobs.tasks",
@@ -59,10 +51,10 @@
       ],
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     },
     {
@@ -72,10 +64,10 @@
       "module": "pytest",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src",
+        "PYTHONPATH": "${workspaceFolder}/src",
         "RESET_DATABASE_FOR_TESTING": "1"
       }
     },
@@ -84,23 +76,23 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "uv run pyright",
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     },
     {
       "name": "Alembic: migrate",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/src/migrations/run_migrations.py",
+      "program": "${workspaceFolder}/src/migrations/run_migrations.py",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     },
     {
@@ -108,10 +100,10 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "uv run alembic -c src/migrations/alembic.ini check",
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     },
     {
@@ -119,10 +111,10 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "uv run alembic -c src/migrations/alembic.ini revision --autogenerate -m \"vscode launcher\"",
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
+        "PYTHONPATH": "${workspaceFolder}/src"
       }
     }
   ]
