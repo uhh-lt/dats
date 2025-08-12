@@ -26,14 +26,7 @@ class ExtractHTMLJobOutput(JobOutputBase):
     folder_id: int | None
 
 
-@register_job(
-    job_type=JobType.EXTRACT_HTML,
-    input_type=ExtractHTMLJobInput,
-    output_type=ExtractHTMLJobOutput,
-)
-def handle_extract_html_job(
-    payload: ExtractHTMLJobInput, job: Job
-) -> ExtractHTMLJobOutput:
+def extract_html(payload: ExtractHTMLJobInput) -> ExtractHTMLJobOutput:
     if not payload.filepath.exists():
         logger.error(f"File {payload.filepath} does not exist!")
         raise Exception(f"File {payload.filepath} does not exist!")
@@ -169,3 +162,14 @@ def extract_html_from_html(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
         )
 
     return str(soup), extracted_images
+
+
+@register_job(
+    job_type=JobType.EXTRACT_HTML,
+    input_type=ExtractHTMLJobInput,
+    output_type=ExtractHTMLJobOutput,
+)
+def handle_extract_html_job(
+    payload: ExtractHTMLJobInput, job: Job
+) -> ExtractHTMLJobOutput:
+    return extract_html(payload=payload)

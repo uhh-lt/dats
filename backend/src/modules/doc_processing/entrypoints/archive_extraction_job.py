@@ -22,17 +22,8 @@ class ArchiveExtractionJobOutput(JobOutputBase):
     invalid_files: list[str]
 
 
-@register_job(
-    job_type=JobType.EXTRACT_ARCHIVE,
-    input_type=ArchiveExtractionJobInput,
-    output_type=ArchiveExtractionJobOutput,
-)
-def handle_archive_extraction_job(
-    payload: ArchiveExtractionJobInput, job: Job
-) -> ArchiveExtractionJobOutput:
-    paths = FilesystemRepo().extract_archive_in_project(
-        payload.project_id, payload.filepath
-    )
+def extract_archive(payload: ArchiveExtractionJobInput) -> ArchiveExtractionJobOutput:
+    paths = fsr.extract_archive_in_project(payload.project_id, payload.filepath)
     doctypes = []
     valid_paths = []
     invalid_files = []
@@ -55,3 +46,14 @@ def handle_archive_extraction_job(
     return ArchiveExtractionJobOutput(
         file_paths=valid_paths, doctypes=doctypes, invalid_files=invalid_files
     )
+
+
+@register_job(
+    job_type=JobType.EXTRACT_ARCHIVE,
+    input_type=ArchiveExtractionJobInput,
+    output_type=ArchiveExtractionJobOutput,
+)
+def handle_extract_archive_job(
+    payload: ArchiveExtractionJobInput, job: Job
+) -> ArchiveExtractionJobOutput:
+    return extract_archive(payload=payload)
