@@ -11,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, name="seqsenttagger")
+@serve.deployment(num_replicas=1, name="seqsenttagger", max_ongoing_requests=128)
 @serve.ingress(api)
 class SeqSentTaggerApi:
     def __init__(self, seqsenttagger_model_handle: DeploymentHandle) -> None:

@@ -1,7 +1,6 @@
 import inspect
 from datetime import datetime
 from typing import Callable, Dict, TypedDict, TypeVar
-from uuid import uuid4
 
 import redis
 import rq
@@ -65,9 +64,25 @@ class JobService(metaclass=SingletonMeta):
 
         # Define priority queues
         cls.queues = {
-            JobPriority.HIGH: rq.Queue("high", connection=cls.redis_conn),
-            JobPriority.DEFAULT: rq.Queue("default", connection=cls.redis_conn),
-            JobPriority.LOW: rq.Queue("low", connection=cls.redis_conn),
+            ("default", JobPriority.HIGH): rq.Queue(
+                "default-high", connection=cls.redis_conn
+            ),
+            ("default", JobPriority.DEFAULT): rq.Queue(
+                "default-default", connection=cls.redis_conn
+            ),
+            ("default", JobPriority.LOW): rq.Queue(
+                "default-low", connection=cls.redis_conn
+            ),
+            ("cpu", JobPriority.HIGH): rq.Queue("cpu-high", connection=cls.redis_conn),
+            ("cpu", JobPriority.DEFAULT): rq.Queue(
+                "cpu-default", connection=cls.redis_conn
+            ),
+            ("cpu", JobPriority.LOW): rq.Queue("cpu-low", connection=cls.redis_conn),
+            ("gpu", JobPriority.HIGH): rq.Queue("gpu-high", connection=cls.redis_conn),
+            ("gpu", JobPriority.DEFAULT): rq.Queue(
+                "gpu-default", connection=cls.redis_conn
+            ),
+            ("gpu", JobPriority.LOW): rq.Queue("gpu-low", connection=cls.redis_conn),
         }
 
         # Configure job registries with custom TTL settings
@@ -113,6 +128,9 @@ class JobService(metaclass=SingletonMeta):
                 f"The parameters of function '{handler_func.__name__}' must be named 'payload, job'."
             )
 
+        if self.job_registry.get(job_type) is not None:
+            raise ValueError(f"JobType {job_type} is already registered!")
+
         self.job_registry[job_type] = {
             "handler": handler_func,
             "input_type": input_type,
@@ -139,17 +157,20 @@ class JobService(metaclass=SingletonMeta):
         input_type = job_info["input_type"]
 
         # priority can be used to override the registered priority level
-        queue = self.queues[job_info["priority"] if priority is None else priority]
+        queue = self.queues[
+            (job_type.queue, job_info["priority"])
+            if priority is None
+            else (job_type.queue, priority)
+        ]
 
         # Validate payload is of correct subclass type
         input_obj = input_type.model_validate(payload.model_dump())
 
-        job_id = str(uuid4())
         rq_job = queue.enqueue(
             rq_job_handler,
+            jobtype=job_type,
             handler=handler,
             payload=input_obj,
-            job_id=job_id,
             meta={
                 "type": job_type,
                 "status_message": "Job enqueued",

@@ -20,7 +20,7 @@ cc = conf.docling
 TMP_DIR = Path(cc.tmp_dir)
 
 
-@serve.deployment(num_replicas=1, name="docling")
+@serve.deployment(num_replicas=1, name="docling", max_ongoing_requests=128)
 @serve.ingress(api)
 class DoclingApi:
     def __init__(self, docling_model_handle: DeploymentHandle) -> None:
