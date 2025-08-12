@@ -58,10 +58,8 @@ def tutorial_taskflow_api():
         print(f"Total order value is: {total_order_value:.2f}")
 
     order_data = extract()
-    assert order_data is dict, "Order data should be a dictionary."
-    order_summary = transform(order_data)
-    assert order_summary is dict, "Order summary should be a dictionary."
-    load(order_summary["total_order_value"])
+    order_summary = transform(order_data)  # pyright: ignore[reportArgumentType]
+    load(order_summary["total_order_value"])  # pyright: ignore[reportIndexIssue, reportArgumentType]
 
 
 tutorial_taskflow_api()
