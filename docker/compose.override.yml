@@ -1,3 +1,8 @@
+x-airflow-override: &airflow-override
+  volumes:
+    - ../backend/src:/dats_code/src
+    - ../airflow/src/dags:/opt/airflow/dags
+
 services:
   postgres:
     volumes:
@@ -61,6 +66,27 @@ services:
   rq-worker:
     volumes:
       - ../backend/src:/dats_code/src
+
+  airflow-apiserver:
+    <<: *airflow-override
+
+  airflow-scheduler:
+    <<: *airflow-override
+
+  airflow-dag-processor:
+    <<: *airflow-override
+
+  airflow-worker:
+    <<: *airflow-override
+
+  airflow-triggerer:
+    <<: *airflow-override
+
+  airflow-init:
+    <<: *airflow-override
+
+  airflow-cli:
+    <<: *airflow-override
 
   dats-backend-api:
     volumes:

@@ -1,4 +1,5 @@
-# docker build -f DockerfileAirflow -t uhhlt/dats_airflow:<version> .
+# MUST BE RUN FROM root directory!
+# docker build -f airflow/Dockerfile -t uhhlt/dats_airflow:<version> .
 # docker push uhhlt/dats_airflow:<version>
 
 FROM apache/airflow:3.0.3-python3.11
@@ -26,8 +27,8 @@ ENV UV_LOCKED=1
 WORKDIR /dats_code
 RUN uv venv /dats_code/dats-venv
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
     source /dats_code/dats-venv/bin/activate && uv sync --active --directory . --no-dev --no-editable --no-install-project --no-install-workspace --no-managed-python
 
 # set up python env variables
@@ -38,6 +39,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV CUPY_CACHE_IN_MEMORY=1
 ENV PYTHONPATH=/dats_code/src
 
-# copy the actual dats source code into the image
-COPY . /dats_code
+# copy the dats source code into the image
+COPY backend/src /dats_code
+
+# copy the dags source code into the image
+COPY airflow/src/dags /opt/airflow/dags
+
 WORKDIR /dats_code

@@ -1,23 +1,22 @@
-airflow-common: &airflow-common
+x-airflow-common: &airflow-common
   image: uhhlt/dats_airflow:${DATS_AIRFLOW_DOCKER_VERSION:?dats-airflow-docker-version-required!}
   build:
-    context: ../backend
-    dockerfile: DockerfileAirflow
+    context: ../
+    dockerfile: airflow/Dockerfile
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:?postgres-user-required!}:${POSTGRES_PASSWORD:?postgres-password-required!}@postgres/${AIRFLOW_DB:?airflow-db-required!}
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER:?postgres-user-required!}:${POSTGRES_PASSWORD:?postgres-password-required!}@postgres/${AIRFLOW_DB:?airflow-db-required!}
     AIRFLOW__CELERY__BROKER_URL: redis://:${REDIS_PASSWORD:?redis-password-required!}@redis:6379/${AIRFLOW_REDIS_DB:?airflow-redis-db-required!}
-    AIRFLOW__CORE__DAGS_FOLDER: /dats_code/src/workflows
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
     AIRFLOW__CORE__FERNET_KEY: ""
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
     AIRFLOW_CONFIG: "/opt/airflow/config/airflow.cfg"
-  volumes: &airflow-common-volumes
-    - ../backend/src:/dats_code/src
+  volumes:
     - ./airflow_cache:/opt/airflow/logs
     # - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     # - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
@@ -29,8 +28,10 @@ airflow-common: &airflow-common
       condition: service_healthy
   networks:
     - dats_network
+  profiles:
+    - airflow
 
-dats-common: &dats-common
+x-dats-common: &dats-common
   image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:?dats-backend-docker-version-required!}
   build:
     context: ../backend
@@ -158,8 +159,6 @@ services:
       BACKUP_FILESYSTEM_PATH: "/mount/backups"
     networks:
       - dats_network
-    profiles:
-      - weaviate
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
@@ -206,6 +205,7 @@ services:
       NUM_RQ_WORKER_GPU: ${RQ_NUM_RQ_WORKER_GPU:-16}
       LOG_LEVEL: ${RQ_LOG_LEVEL:-info}
       NUMBA_CACHE_DIR: /rq_cache/numba_cache
+      MPLCONFIGDIR: /rq_cache/matplotlib
     volumes:
       - ./backend_repo:/tmp/dats
       - ./rq_cache:/rq_cache
@@ -294,6 +294,7 @@ services:
       DUMB_INIT_SETSID: "0"
       # DATS Environment Variables:
       NUMBA_CACHE_DIR: /airflow_cache/numba_cache
+      MPLCONFIGDIR: /airflow_cache/matplotlib
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
@@ -322,7 +323,7 @@ services:
     entrypoint: /bin/bash
     command: ["/opt/airflow-init.sh"]
     volumes:
-      - *airflow-common-volumes
+      - ./airflow_cache:/opt/airflow/logs
       - ./configs/airflow/airflow-init.sh:/opt/airflow-init.sh:ro
     environment:
       <<: *airflow-common-env
@@ -361,6 +362,7 @@ services:
       LOG_LEVEL: ${API_LOG_LEVEL:-info}
       API_WORKERS: ${API_WORKERS:-10}
       NUMBA_CACHE_DIR: /api_cache/numba_cache
+      MPLCONFIGDIR: /api_cache/matplotlib
     volumes:
       - ./backend_repo:/tmp/dats
       - ./api_cache:/api_cache
