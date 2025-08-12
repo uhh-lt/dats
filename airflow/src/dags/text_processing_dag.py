@@ -39,8 +39,7 @@ def text_processing_dag():
         print(f"A project was recently created! The id is {project_id}.")
 
     project_id = create_project()
-    assert isinstance(project_id, int), "Project ID should be an integer."
-    print_project(project_id=project_id)
+    print_project(project_id=project_id)  # pyright: ignore[reportArgumentType]
 
 
 text_processing_dag()
