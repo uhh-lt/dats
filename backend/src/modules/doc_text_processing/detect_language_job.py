@@ -28,14 +28,7 @@ class DetectLanguageJobOutput(JobOutputBase):
     text: str
 
 
-@register_job(
-    job_type=JobType.DETECT_LANGUAGE,
-    input_type=DetectLanguageJobInput,
-    output_type=DetectLanguageJobOutput,
-)
-def handle_detect_language_job(
-    payload: DetectLanguageJobInput, job: Job
-) -> DetectLanguageJobOutput:
+def detect_language(payload: DetectLanguageJobInput) -> DetectLanguageJobOutput:
     # DETECT LANGUAGE
     # TODO Flo: what to do with mixed lang docs?
     glotlid_input = GlotLIDInput(text=payload.text)
@@ -65,3 +58,14 @@ def handle_detect_language_job(
             values=[lang],
         )
     return DetectLanguageJobOutput(language=lang, text=payload.text)
+
+
+@register_job(
+    job_type=JobType.DETECT_LANGUAGE,
+    input_type=DetectLanguageJobInput,
+    output_type=DetectLanguageJobOutput,
+)
+def handle_detect_language_job(
+    payload: DetectLanguageJobInput, job: Job
+) -> DetectLanguageJobOutput:
+    return detect_language(payload)

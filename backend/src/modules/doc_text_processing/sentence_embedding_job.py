@@ -15,11 +15,7 @@ class SentenceEmbeddingJobInput(SdocJobInput):
     sentences: list[str] | None
 
 
-@register_job(
-    job_type=JobType.SENTENCE_EMBEDDING,
-    input_type=SentenceEmbeddingJobInput,
-)
-def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) -> None:
+def sentence_embedding(payload: SentenceEmbeddingJobInput) -> None:
     # if we re-run this job, sentences is None, we need to query it from db
     if payload.sentences is None:
         with SQLRepo().db_session() as db:
@@ -47,3 +43,11 @@ def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) 
                 ],
                 embeddings=embeddings,
             )
+
+
+@register_job(
+    job_type=JobType.SENTENCE_EMBEDDING,
+    input_type=SentenceEmbeddingJobInput,
+)
+def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) -> None:
+    return sentence_embedding(payload=payload)

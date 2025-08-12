@@ -13,11 +13,7 @@ class ESIndexJobInput(SdocJobInput):
     text: str | None
 
 
-@register_job(
-    job_type=JobType.ES_INDEX,
-    input_type=ESIndexJobInput,
-)
-def handle_es_index_job(payload: ESIndexJobInput, job: Job) -> None:
+def es_index(payload: ESIndexJobInput) -> None:
     # if we re-run this job, filename and text is None, we need to query it from db
     with SQLRepo().db_session() as db:
         if payload.filename is None or payload.text is None:
@@ -37,3 +33,11 @@ def handle_es_index_job(payload: ESIndexJobInput, job: Job) -> None:
             create_dto=esdoc,
             proj_id=payload.project_id,
         )
+
+
+@register_job(
+    job_type=JobType.ES_INDEX,
+    input_type=ESIndexJobInput,
+)
+def handle_es_index_job(payload: ESIndexJobInput, job: Job) -> None:
+    return es_index(payload=payload)

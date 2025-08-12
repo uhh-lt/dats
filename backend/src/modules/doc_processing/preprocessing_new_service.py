@@ -3,7 +3,7 @@ from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
-from modules.doc_processing.doc_chunking_job import PDFChunkingJobInput
+from modules.doc_processing.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.text_init_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
@@ -53,10 +53,8 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
                 return
             elif is_pdf(mime_type):
                 self.js.start_job(
-                    JobType.PDF_CHECKING,
-                    PDFChunkingJobInput(
-                        project_id=input.project_id, filename=file_path
-                    ),
+                    JobType.DOC_CHUNKING,
+                    DocChunkingJobInput(project_id=project_id, filename=file_path),
                 )
                 return
 

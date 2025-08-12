@@ -31,8 +31,8 @@ from modules.doc_processing.archive_extraction_job import (
     ArchiveExtractionJobOutput,
 )
 from modules.doc_processing.doc_chunking_job import (
-    PDFChunkingJobInput,
-    PDFChunkingJobOutput,
+    DocChunkingJobInput,
+    DocChunkingJobOutput,
 )
 from modules.doc_processing.text_init_job import SdocInitJobInput, SdocInitJobOutput
 from modules.doc_text_processing.detect_language_job import (
@@ -99,8 +99,8 @@ def handle_job_finished(
             for path, doctype in zip(output.file_paths, output.doctypes):
                 if path.suffix == ".pdf":
                     js.start_job(
-                        JobType.PDF_CHECKING,
-                        PDFChunkingJobInput(project_id=input.project_id, filename=path),
+                        JobType.DOC_CHUNKING,
+                        DocChunkingJobInput(project_id=input.project_id, filename=path),
                     )
                 else:
                     data = SdocInitJobInput(
@@ -110,9 +110,9 @@ def handle_job_finished(
                         folder_id=None,
                     )
                     js.start_job(JobType.SDOC_INIT, data)
-        case JobType.PDF_CHECKING:
-            assert isinstance(input, PDFChunkingJobInput)
-            assert isinstance(output, PDFChunkingJobOutput)
+        case JobType.DOC_CHUNKING:
+            assert isinstance(input, DocChunkingJobInput)
+            assert isinstance(output, DocChunkingJobOutput)
             for path in output.files:
                 data = SdocInitJobInput(
                     project_id=input.project_id,
@@ -286,7 +286,7 @@ def __start_image_jobs(project_id: int, sdoc_id: int, filepath: Path, doctype: D
     js.start_job(
         JobType.IMAGE_THUMBNAIL,
         ImageThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
 
@@ -307,7 +307,7 @@ def __start_audio_jobs(project_id: int, sdoc_id: int, filepath: Path):
     js.start_job(
         JobType.AUDIO_THUMBNAIL,
         AudioThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
 
@@ -322,12 +322,12 @@ def __start_video_jobs(project_id: int, sdoc_id: int, filepath: Path):
     js.start_job(
         JobType.VIDEO_THUMBNAIL,
         AudioThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
     js.start_job(
         JobType.VIDEO_AUDIO_EXTRACTION,
         VideoAudioExtractionJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )

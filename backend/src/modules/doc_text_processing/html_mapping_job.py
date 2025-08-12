@@ -125,15 +125,7 @@ class StringBuilder(StringIO):
         return self.getvalue()
 
 
-@register_job(
-    job_type=JobType.EXTRACT_PLAIN_TEXT,
-    input_type=ExtractPlainTextJobInput,
-    output_type=ExtractPlainTextJobOutput,
-)
-def extract_text_from_html_and_create_source_mapping(
-    payload: ExtractPlainTextJobInput,
-    job: Job,
-) -> ExtractPlainTextJobOutput:
+def extract_plain_text(payload: ExtractPlainTextJobInput) -> ExtractPlainTextJobOutput:
     content_in_html = payload.html
 
     parser = HTMLTextMapper()
@@ -151,11 +143,7 @@ def extract_text_from_html_and_create_source_mapping(
     )
 
 
-@register_job(
-    job_type=JobType.HTML_MAPPING,
-    input_type=HTMLMappingJobInput,
-)
-def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
+def html_mapping(payload: HTMLMappingJobInput) -> None:
     # parse html
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)
@@ -211,3 +199,23 @@ def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
                 html=new_html.build(),
             ),
         )
+
+
+@register_job(
+    job_type=JobType.EXTRACT_PLAIN_TEXT,
+    input_type=ExtractPlainTextJobInput,
+    output_type=ExtractPlainTextJobOutput,
+)
+def extract_text_from_html_and_create_source_mapping(
+    payload: ExtractPlainTextJobInput,
+    job: Job,
+) -> ExtractPlainTextJobOutput:
+    return extract_plain_text(payload=payload)
+
+
+@register_job(
+    job_type=JobType.HTML_MAPPING,
+    input_type=HTMLMappingJobInput,
+)
+def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
+    return html_mapping(payload=payload)

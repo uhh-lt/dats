@@ -41,12 +41,7 @@ class SpacyJobOutput(JobOutputBase):
     sentences: list[str]
 
 
-@register_job(
-    job_type=JobType.SPACY,
-    input_type=SpacyJobInput,
-    output_type=SpacyJobOutput,
-)
-def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
+def spacy(payload: SpacyJobInput) -> SpacyJobOutput:
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
         SpacyInput(
@@ -231,3 +226,12 @@ def extract_word_frequencies(
         )
         for word, count in word_freqs.items()
     ]
+
+
+@register_job(
+    job_type=JobType.SPACY,
+    input_type=SpacyJobInput,
+    output_type=SpacyJobOutput,
+)
+def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
+    return spacy(payload=payload)

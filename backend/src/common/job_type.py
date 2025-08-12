@@ -18,6 +18,7 @@ class JobType(str, Enum):
     # pre-processing pipeline jobs
     EXTRACT_ARCHIVE = ("extract_archive", "")
     PDF_CHECKING = ("pdf_checking", "")
+    DOC_CHUNKING = ("doc_chunking", "")
     SDOC_INIT = ("sdoc_init", "Init source doc")
     EXTRACT_HTML = ("html_extraction", "Extract HTML")
     EXTRACT_PLAIN_TEXT = ("text_extraction", "")

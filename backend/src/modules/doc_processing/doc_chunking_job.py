@@ -25,24 +25,17 @@ pps = PreprocessingService()
 ray = RayRepo()
 
 
-class PDFChunkingJobInput(JobInputBase):
+class DocChunkingJobInput(JobInputBase):
     filename: Path
     max_pages_per_chunk: int = 1
 
 
-class PDFChunkingJobOutput(JobOutputBase):
+class DocChunkingJobOutput(JobOutputBase):
     files: list[Path]
     folder_id: int | None
 
 
-@register_job(
-    job_type=JobType.PDF_CHECKING,
-    input_type=PDFChunkingJobInput,
-    output_type=PDFChunkingJobOutput,
-)
-def handle_pdf_chunking_job(
-    payload: PDFChunkingJobInput, job: Job
-) -> PDFChunkingJobOutput:
+def doc_chunking(payload: DocChunkingJobInput) -> DocChunkingJobOutput:
     input_doc = payload.filename
     max_pages_per_chunk = payload.max_pages_per_chunk
     proj_id = payload.project_id
@@ -59,7 +52,7 @@ def handle_pdf_chunking_job(
     if num_splits == 1:
         logger.info(f"PDF {input_doc.name} has {total_pages} pages; no split needed.")
         src.close()
-        return PDFChunkingJobOutput(files=[input_doc], folder_id=None)
+        return DocChunkingJobOutput(files=[input_doc], folder_id=None)
 
     # Calculate the number of digits needed for zero-padding
     total_digits = len(str(total_pages))
@@ -120,4 +113,15 @@ def handle_pdf_chunking_job(
             )
             folder_id = folder.id
 
-    return PDFChunkingJobOutput(files=chunks, folder_id=folder_id)
+    return DocChunkingJobOutput(files=chunks, folder_id=folder_id)
+
+
+@register_job(
+    job_type=JobType.DOC_CHUNKING,
+    input_type=DocChunkingJobInput,
+    output_type=DocChunkingJobOutput,
+)
+def handle_doc_chunking_job(
+    payload: DocChunkingJobInput, job: Job
+) -> DocChunkingJobOutput:
+    return doc_chunking(payload=payload)
