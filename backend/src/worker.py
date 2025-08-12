@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import sys
 from os import environ
 
@@ -42,30 +43,50 @@ def do_healthcheck():
 
 
 def do_work():
-    from rq import Queue
-
     # import all expensive stuff before forking, so that imports are only done once
     import_by_suffix("_repo.py")
     import_by_suffix("_service.py")
     import_by_suffix("_orm.py")
+    import_by_suffix("_dto.py")
     import_by_suffix("_crud.py")
-
     # import doc_processing_pipeline
     import modules.doc_processing.doc_processing_pipeline  # noqa: F401
 
+    ctx = mp.get_context("fork")
+
+    default = ctx.Process(
+        target=create_pool, args=("default", int(environ.get("NUM_RQ_WORKER", "1")))
+    )
+    cpu = ctx.Process(
+        target=create_pool, args=("cpu", int(environ.get("NUM_RQ_WORKER_CPU", "1")))
+    )
+    gpu = ctx.Process(
+        target=create_pool, args=("gpu", int(environ.get("NUM_RQ_WORKER_GPU", "1")))
+    )
+    default.start()
+    cpu.start()
+    gpu.start()
+    default.join()
+    cpu.join()
+    gpu.join()
+
+
+def create_pool(queue_name: str, num_workers: int):
+    from rq import Queue
+
     queues = [
-        Queue("high", connection=redis_conn),
-        Queue("default", connection=redis_conn),
-        Queue("low", connection=redis_conn),
+        Queue(f"{queue_name}-high", connection=redis_conn),
+        Queue(f"{queue_name}-default", connection=redis_conn),
+        Queue(f"{queue_name}-low", connection=redis_conn),
     ]
 
     worker = WorkerPool(
         queues,
         connection=redis_conn,
-        num_workers=int(environ.get("NUM_RQ_WORKER", "1")),
+        num_workers=num_workers,
         worker_class=SimpleWorker,
     )
-    worker.start
+    worker.start()
 
 
 if __name__ == "__main__":

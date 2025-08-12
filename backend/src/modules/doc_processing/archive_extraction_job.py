@@ -3,7 +3,6 @@ from pathlib import Path
 import magic
 from common.doc_type import DocType, get_doc_type
 from common.job_type import JobType
-from fastapi import HTTPException
 from loguru import logger
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
@@ -19,28 +18,39 @@ class ArchiveExtractionJobInput(JobInputBase):
 class ArchiveExtractionJobOutput(JobOutputBase):
     file_paths: list[Path]
     doctypes: list[DocType]
+    invalid_files: list[str]
 
 
 @register_job(
-    job_type=JobType.SDOC_INIT,
+    job_type=JobType.EXTRACT_ARCHIVE,
     input_type=ArchiveExtractionJobInput,
     output_type=ArchiveExtractionJobOutput,
 )
-def handle_init_text_job(
+def handle_archive_extraction_job(
     payload: ArchiveExtractionJobInput, job: Job
 ) -> ArchiveExtractionJobOutput:
     paths = FilesystemRepo().extract_archive_in_project(
         payload.project_id, payload.filepath
     )
     doctypes = []
+    valid_paths = []
+    invalid_files = []
     for path in paths:
         mime_type = magic.from_file(path, mime=True)
         doctype = get_doc_type(mime_type=mime_type)
         if not doctype:
-            logger.error(f"Unsupported DocType (for MIME Type {mime_type})!")
-            raise HTTPException(
-                detail=f"Document with MIME type {mime_type} not supported!",
-                status_code=406,
+            logger.warning(
+                f"Unsupported DocType (for MIME Type {mime_type})! Skipping document {path.name} from archive."
             )
-        doctypes.append(doctype)
-    return ArchiveExtractionJobOutput(file_paths=paths, doctypes=doctypes)
+            invalid_files.append(path.name)
+        else:
+            doctypes.append(doctype)
+            valid_paths.append(path)
+    if len(valid_paths) == 0:
+        raise Exception("Archive extraction failed! No valid document found within!")
+    job.update(
+        status_message=f"Extracted {len(paths)} files, {len(valid_paths)} can be processed, {len(invalid_files)} are unsupprted/skipped."
+    )
+    return ArchiveExtractionJobOutput(
+        file_paths=valid_paths, doctypes=doctypes, invalid_files=invalid_files
+    )
