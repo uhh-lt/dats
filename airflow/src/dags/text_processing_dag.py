@@ -22,7 +22,7 @@ def text_processing_dag():
         task_id="create_project", python="/dats_code/dats-venv/bin/python"
     )
     def create_project() -> int:
-        from modules.doc_text_processing.example_text_processing_task import (  # pyright: ignore[reportMissingImports]
+        from modules.doc_text_processing.example_text_processing_task import (
             create_project_task,
         )
 
