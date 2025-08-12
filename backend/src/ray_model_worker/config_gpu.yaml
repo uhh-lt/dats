@@ -15,7 +15,10 @@ spacy:
       num_gpus: 0.
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 1
+      max_replicas: 32
+      upscale_delay_s: 5
+      metrics_interval_s: 5
+      target_ongoing_requests: 1
 
 whisper:
   model: distil-large-v3
@@ -140,18 +143,21 @@ detr:
 clip:
   text_encoder:
     model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
-    batch_size: 32
+    batch_size: 128
     device: cuda
   image_encoder:
     model: "clip-ViT-B-32"
-    batch_size: 32
+    batch_size: 64
     device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .1
+      num_gpus: .05
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 1
+      max_replicas: 8
+      upscale_delay_s: 5
+      metrics_interval_s: 5
+      target_ongoing_requests: 16
 
 cota:
   model: "sentence-transformers/paraphrase-mpnet-base-v2"
@@ -197,7 +203,10 @@ glotlid:
       num_gpus: .0
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 1
+      max_replicas: 32
+      upscale_delay_s: 5
+      metrics_interval_s: 5
+      target_ongoing_requests: 1
 
 coref:
   model_de: "fynnos/maverick-mes-de10"
@@ -221,7 +230,9 @@ docling:
       num_gpus: .1
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 1
+      max_replicas: 32
+      upscale_delay_s: 5
+      metrics_interval_s: 5
 
 promptembedder:
   model: "intfloat/multilingual-e5-large-instruct"

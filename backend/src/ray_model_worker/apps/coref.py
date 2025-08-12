@@ -11,7 +11,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="coref")
+@serve.deployment(num_replicas=1, name="coref", max_ongoing_requests=128)
 @serve.ingress(api)
 class CorefApi:
     def __init__(self, coref_model_handle: DeploymentHandle) -> None:

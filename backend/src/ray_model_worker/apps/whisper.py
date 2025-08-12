@@ -12,7 +12,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="whisper")
+@serve.deployment(num_replicas=1, name="whisper", max_ongoing_requests=128)
 @serve.ingress(api)
 class WhisperApi:
     def __init__(self, whisper_model_handle: DeploymentHandle) -> None:

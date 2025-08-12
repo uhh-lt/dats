@@ -1,9 +1,6 @@
 import logging
 
-from dto.promptembedder import (
-    PromptEmbedderInput,
-    PromptEmbedderOutput,
-)
+from dto.promptembedder import PromptEmbedderInput, PromptEmbedderOutput
 from fastapi import FastAPI
 from models.promptembedder import PromptEmbedderModel
 from ray import serve
@@ -14,7 +11,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, name="promptembedder")
+@serve.deployment(num_replicas=1, name="promptembedder", max_ongoing_requests=128)
 @serve.ingress(api)
 class PromptEmbedderApi:
     def __init__(self, promptembedder_model_handle: DeploymentHandle) -> None:
