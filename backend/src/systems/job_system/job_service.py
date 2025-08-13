@@ -1,6 +1,6 @@
 import inspect
 from datetime import datetime
-from typing import Callable, Dict, TypedDict, TypeVar
+from typing import Callable, Dict, Literal, TypedDict, TypeVar
 
 import redis
 import rq
@@ -34,6 +34,7 @@ class RegisteredJob(TypedDict):
     output_type: type[JobOutputBase] | None
     generate_endpoints: EndpointGeneration
     priority: JobPriority
+    device: Literal["gpu", "cpu"]
     router: APIRouter | None
 
 
@@ -112,6 +113,7 @@ class JobService(metaclass=SingletonMeta):
         input_type: type[InputT],
         output_type: type[OutputT] | None,
         priority: JobPriority,
+        device: Literal["gpu", "cpu"],
         generate_endpoints: EndpointGeneration,
         router: APIRouter | None,
     ) -> None:
@@ -137,6 +139,7 @@ class JobService(metaclass=SingletonMeta):
             "output_type": output_type,
             "generate_endpoints": generate_endpoints,
             "priority": priority,
+            "device": device,
             "router": router,
         }
 
@@ -155,12 +158,11 @@ class JobService(metaclass=SingletonMeta):
             raise ValueError(f"Unknown job type: {job_type}")
         handler = job_info["handler"]
         input_type = job_info["input_type"]
+        device = job_info["device"]
 
         # priority can be used to override the registered priority level
         queue = self.queues[
-            (job_type.queue, job_info["priority"])
-            if priority is None
-            else (job_type.queue, priority)
+            (device, job_info["priority"]) if priority is None else (device, priority)
         ]
 
         # Validate payload is of correct subclass type

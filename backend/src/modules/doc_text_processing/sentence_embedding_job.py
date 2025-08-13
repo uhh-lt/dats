@@ -18,6 +18,7 @@ class SentenceEmbeddingJobInput(SdocJobInput):
 @register_job(
     job_type=JobType.SENTENCE_EMBEDDING,
     input_type=SentenceEmbeddingJobInput,
+    device="gpu",
 )
 def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) -> None:
     # if we re-run this job, sentences is None, we need to query it from db

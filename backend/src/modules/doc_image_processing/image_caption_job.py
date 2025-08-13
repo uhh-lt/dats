@@ -32,6 +32,7 @@ class ImageCaptionJobOutput(JobOutputBase):
     job_type=JobType.IMAGE_CAPTION,
     input_type=ImageCaptionJobInput,
     output_type=ImageCaptionJobOutput,
+    device="gpu",
 )
 def handle_image_caption_job(
     payload: ImageCaptionJobInput, job: Job

@@ -16,6 +16,7 @@ from systems.job_system.job_register_decorator import register_job
     job_type=JobType.COTA_REFINEMENT,
     input_type=COTARefinementJobInput,
     output_type=None,
+    device="gpu",
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
     from repos.db.sql_repo import SQLRepo

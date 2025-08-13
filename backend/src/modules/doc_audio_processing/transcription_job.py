@@ -32,6 +32,7 @@ class TranscriptionJobOutput(JobOutputBase):
     job_type=JobType.AUDIO_TRANSCRIPTION,
     input_type=TranscriptionJobInput,
     output_type=TranscriptionJobOutput,
+    device="gpu",
 )
 def handle_transcription_job(
     payload: TranscriptionJobInput, job: Job

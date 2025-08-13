@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar
+from typing import Callable, Literal, TypeVar
 
 from common.job_type import JobType
 from fastapi import APIRouter
@@ -19,6 +19,7 @@ def register_job(
     input_type: type[InputT],
     output_type: type[OutputT] | None = None,
     priority: JobPriority = JobPriority.DEFAULT,
+    device: Literal["gpu", "cpu"] = "cpu",
     generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
 ):
@@ -31,6 +32,7 @@ def register_job(
             input_type=input_type,
             output_type=output_type,
             priority=priority,
+            device=device,
             generate_endpoints=generate_endpoints,
             router=router,
         )

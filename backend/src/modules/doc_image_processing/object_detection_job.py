@@ -26,6 +26,7 @@ class ObjectDetectionJobInput(SdocJobInput):
 @register_job(
     job_type=JobType.IMAGE_OBJECT_DETECTION,
     input_type=ObjectDetectionJobInput,
+    device="gpu",
 )
 def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> None:
     # Run object detection with ray

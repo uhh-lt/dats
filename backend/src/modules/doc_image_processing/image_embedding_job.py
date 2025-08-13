@@ -18,8 +18,7 @@ class ImageEmbeddingJobInput(SdocJobInput):
 
 
 @register_job(
-    job_type=JobType.IMAGE_EMBEDDING,
-    input_type=ImageEmbeddingJobInput,
+    job_type=JobType.IMAGE_EMBEDDING, input_type=ImageEmbeddingJobInput, device="gpu"
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     # embed the image
