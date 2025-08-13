@@ -21,27 +21,39 @@ class SourceDocumentStatusORM(ORMBase):
     )
     source_document: Mapped["SourceDocumentORM"] = relationship("SourceDocumentORM")
 
-    # TEXT
+    # KEEP THE SAME ORDER AS job_type.py!
+
+    # INIT
     sdoc_init: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
+    extract_archive: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    pdf_checking: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    extract_html: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+
+    # HTML
     text_extraction: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    spacy: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    es_index: Mapped[bool] = mapped_column(
+    text_language_detection: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    lang_detect: Mapped[bool] = mapped_column(
+    text_spacy: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    html_mapping: Mapped[bool] = mapped_column(
+    text_es_index: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    html_extraction: Mapped[bool] = mapped_column(
+    text_sentence_embedding: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    sentence_embedding: Mapped[bool] = mapped_column(
+    text_html_mapping: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
 
@@ -52,13 +64,13 @@ class SourceDocumentStatusORM(ORMBase):
     image_embedding: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    image_metadata: Mapped[bool] = mapped_column(
+    image_metadata_extraction: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
     image_thumbnail: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    object_detection: Mapped[bool] = mapped_column(
+    image_object_detection: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
 
@@ -69,7 +81,7 @@ class SourceDocumentStatusORM(ORMBase):
     audio_thumbnail: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    transcription: Mapped[bool] = mapped_column(
+    audio_transcription: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
 

@@ -45,11 +45,11 @@ class SpacyJobOutput(JobOutputBase):
 
 
 @register_job(
-    job_type=JobType.SPACY,
+    job_type=JobType.TEXT_SPACY,
     input_type=SpacyJobInput,
     output_type=SpacyJobOutput,
 )
-def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
+def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # 1. call spacy in ray
     spacy_output = ray.spacy_pipline(
         SpacyInput(
