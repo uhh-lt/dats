@@ -77,3 +77,18 @@ class SQLRepo(metaclass=SingletonMeta):
         finally:
             if session is not None:
                 session.close()
+
+    @contextmanager
+    def transaction(self) -> Generator[Session, None, None]:
+        session = None
+        try:
+            session = self.session_maker()
+            # TODO start tranaction
+            yield session
+            # TODO commit
+        except:
+            pass
+            # TODO rollback!
+        finally:
+            if session is not None:
+                session.close()

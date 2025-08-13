@@ -29,6 +29,7 @@ class SourceDocumentORM(ORMBase):
     filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String, nullable=True, index=True)
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    # TODO replace this with a virtual column created from sdoc status
     status: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
