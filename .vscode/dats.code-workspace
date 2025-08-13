@@ -51,11 +51,14 @@
   },
   "extensions": {
     "recommendations": [
-      "ms-azuretools.vscode-docker",
+      // copilot
+      "github.copilot",
+      "github.copilot-chat",
+      // docker
+      "ms-azuretools.vscode-containers",
       // git
       "eamodio.gitlens",
       "github.vscode-github-actions",
-      "github.copilot",
       // backend
       "ms-python.python",
       "ms-python.debugpy",
