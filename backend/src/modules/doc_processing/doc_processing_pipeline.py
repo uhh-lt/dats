@@ -36,20 +36,22 @@ from modules.doc_processing.doc_chunking_job import (
 )
 from modules.doc_processing.init_sdoc_job import SdocInitJobInput, SdocInitJobOutput
 from modules.doc_text_processing.detect_language_job import (
-    DetectLanguageJobInput,
-    DetectLanguageJobOutput,
+    TextLanguageDetectionJobInput,
+    TextLanguageDetectionJobOutput,
 )
-from modules.doc_text_processing.es_index_job import ESIndexJobInput
+from modules.doc_text_processing.es_index_job import TextESIndexJobInput
 from modules.doc_text_processing.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
 )
 from modules.doc_text_processing.html_mapping_job import (
-    ExtractPlainTextJobInput,
-    ExtractPlainTextJobOutput,
-    HTMLMappingJobInput,
+    TextExtractionJobInput,
+    TextExtractionJobOutput,
+    TextHTMLMappingJobInput,
 )
-from modules.doc_text_processing.sentence_embedding_job import SentenceEmbeddingJobInput
+from modules.doc_text_processing.sentence_embedding_job import (
+    TextSentenceEmbeddingJobInput,
+)
 from modules.doc_text_processing.spacy_job import SpacyJobInput, SpacyJobOutput
 from modules.doc_video_processing.video_audio_extraction_job import (
     VideoAudioExtractionJobInput,
@@ -138,8 +140,8 @@ def handle_job_finished(
             assert isinstance(input, ExtractHTMLJobInput)
             assert isinstance(output, ExtractHTMLJobOutput)
             js.start_job(
-                JobType.EXTRACT_PLAIN_TEXT,
-                ExtractPlainTextJobInput(
+                JobType.TEXT_EXTRACTION,
+                TextExtractionJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     html=output.html,
@@ -157,12 +159,12 @@ def handle_job_finished(
                         doctype=DocType.image,
                     ),
                 )
-        case JobType.EXTRACT_PLAIN_TEXT:
-            assert isinstance(input, ExtractPlainTextJobInput)
-            assert isinstance(output, ExtractPlainTextJobOutput)
+        case JobType.TEXT_EXTRACTION:
+            assert isinstance(input, TextExtractionJobInput)
+            assert isinstance(output, TextExtractionJobOutput)
             js.start_job(
-                JobType.DETECT_LANGUAGE,
-                DetectLanguageJobInput(
+                JobType.TEXT_LANGUAGE_DETECTION,
+                TextLanguageDetectionJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     text=output.text,
@@ -171,19 +173,19 @@ def handle_job_finished(
                 ),
             )
             js.start_job(
-                JobType.ES_INDEX,
-                ESIndexJobInput(
+                JobType.TEXT_ES_INDEX,
+                TextESIndexJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     text=output.text,
                     filename=input.filename,
                 ),
             )
-        case JobType.DETECT_LANGUAGE:
-            assert isinstance(input, DetectLanguageJobInput)
-            assert isinstance(output, DetectLanguageJobOutput)
+        case JobType.TEXT_LANGUAGE_DETECTION:
+            assert isinstance(input, TextLanguageDetectionJobInput)
+            assert isinstance(output, TextLanguageDetectionJobOutput)
             js.start_job(
-                JobType.SPACY,
+                JobType.TEXT_SPACY,
                 SpacyJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
@@ -193,12 +195,12 @@ def handle_job_finished(
                     html=input.html,
                 ),
             )
-        case JobType.SPACY:
+        case JobType.TEXT_SPACY:
             assert isinstance(input, SpacyJobInput)
             assert isinstance(output, SpacyJobOutput)
             js.start_job(
-                JobType.HTML_MAPPING,
-                HTMLMappingJobInput(
+                JobType.TEXT_HTML_MAPPING,
+                TextHTMLMappingJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     raw_html=input.html,
@@ -209,8 +211,8 @@ def handle_job_finished(
                 ),
             )
             js.start_job(
-                JobType.SENTENCE_EMBEDDING,
-                SentenceEmbeddingJobInput(
+                JobType.TEXT_SENTENCE_EMBEDDING,
+                TextSentenceEmbeddingJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     sentences=output.sentences,
@@ -231,8 +233,8 @@ def handle_job_finished(
             assert isinstance(input, TranscriptionJobInput)
             assert isinstance(output, TranscriptionJobOutput)
             js.start_job(
-                JobType.EXTRACT_PLAIN_TEXT,
-                ExtractPlainTextJobInput(
+                JobType.TEXT_EXTRACTION,
+                TextExtractionJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     html=output.html,
@@ -244,8 +246,8 @@ def handle_job_finished(
             assert isinstance(input, ImageCaptionJobInput)
             assert isinstance(output, ImageCaptionJobOutput)
             js.start_job(
-                JobType.EXTRACT_PLAIN_TEXT,
-                ExtractPlainTextJobInput(
+                JobType.TEXT_EXTRACTION,
+                TextExtractionJobInput(
                     project_id=input.project_id,
                     sdoc_id=input.sdoc_id,
                     html=output.html,
@@ -279,7 +281,7 @@ def __start_image_jobs(project_id: int, sdoc_id: int, filepath: Path, doctype: D
     js.start_job(
         JobType.IMAGE_THUMBNAIL,
         ImageThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
 
@@ -300,7 +302,7 @@ def __start_audio_jobs(project_id: int, sdoc_id: int, filepath: Path):
     js.start_job(
         JobType.AUDIO_THUMBNAIL,
         AudioThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
 
@@ -315,12 +317,12 @@ def __start_video_jobs(project_id: int, sdoc_id: int, filepath: Path):
     js.start_job(
         JobType.VIDEO_THUMBNAIL,
         AudioThumbnailJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )
     js.start_job(
         JobType.VIDEO_AUDIO_EXTRACTION,
         VideoAudioExtractionJobInput(
-            project_id=input.project_id, sdoc_id=sdoc_id, filepath=filepath
+            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
         ),
     )

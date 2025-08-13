@@ -10,17 +10,19 @@ from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 
-class SentenceEmbeddingJobInput(SdocJobInput):
+class TextSentenceEmbeddingJobInput(SdocJobInput):
     sdoc_id: int
     sentences: list[str] | None
 
 
 @register_job(
-    job_type=JobType.SENTENCE_EMBEDDING,
-    input_type=SentenceEmbeddingJobInput,
+    job_type=JobType.TEXT_SENTENCE_EMBEDDING,
+    input_type=TextSentenceEmbeddingJobInput,
     device="gpu",
 )
-def handle_sentence_embedding_job(payload: SentenceEmbeddingJobInput, job: Job) -> None:
+def handle_text_sentence_embedding_job(
+    payload: TextSentenceEmbeddingJobInput, job: Job
+) -> None:
     # if we re-run this job, sentences is None, we need to query it from db
     if payload.sentences is None:
         with SQLRepo().db_session() as db:

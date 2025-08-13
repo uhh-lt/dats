@@ -14,7 +14,7 @@ from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 
-class HTMLMappingJobInput(SdocJobInput):
+class TextHTMLMappingJobInput(SdocJobInput):
     raw_html: str
     sentence_starts: list[int]
     sentence_ends: list[int]
@@ -22,13 +22,13 @@ class HTMLMappingJobInput(SdocJobInput):
     token_ends: list[int]
 
 
-class ExtractPlainTextJobInput(SdocJobInput):
+class TextExtractionJobInput(SdocJobInput):
     html: str
     filename: str
     doctype: DocType
 
 
-class ExtractPlainTextJobOutput(JobOutputBase):
+class TextExtractionJobOutput(JobOutputBase):
     text: str
     text2html_character_offsets: list[int]
 
@@ -126,14 +126,14 @@ class StringBuilder(StringIO):
 
 
 @register_job(
-    job_type=JobType.EXTRACT_PLAIN_TEXT,
-    input_type=ExtractPlainTextJobInput,
-    output_type=ExtractPlainTextJobOutput,
+    job_type=JobType.TEXT_EXTRACTION,
+    input_type=TextExtractionJobInput,
+    output_type=TextExtractionJobOutput,
 )
-def extract_text_from_html_and_create_source_mapping(
-    payload: ExtractPlainTextJobInput,
+def handle_text_extraction_job(
+    payload: TextExtractionJobInput,
     job: Job,
-) -> ExtractPlainTextJobOutput:
+) -> TextExtractionJobOutput:
     content_in_html = payload.html
 
     parser = HTMLTextMapper()
@@ -146,16 +146,16 @@ def extract_text_from_html_and_create_source_mapping(
             range(int(result["start"]), int(result["end"]) + 1)
         )
 
-    return ExtractPlainTextJobOutput(
+    return TextExtractionJobOutput(
         text=text, text2html_character_offsets=text2html_character_offsets
     )
 
 
 @register_job(
-    job_type=JobType.HTML_MAPPING,
-    input_type=HTMLMappingJobInput,
+    job_type=JobType.TEXT_HTML_MAPPING,
+    input_type=TextHTMLMappingJobInput,
 )
-def handle_html_mapping_job(payload: HTMLMappingJobInput, job: Job) -> None:
+def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
     # parse html
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)
