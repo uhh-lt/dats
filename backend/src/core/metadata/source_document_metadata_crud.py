@@ -70,6 +70,7 @@ class CRUDSourceDocumentMetadata(
         doctype: DocType,
         keys: list[str],
         values: list,
+        manual_commit: bool = False,
     ) -> list[SourceDocumentMetadataORM]:
         from core.metadata.project_metadata_crud import crud_project_meta
 
@@ -106,7 +107,9 @@ class CRUDSourceDocumentMetadata(
                 )
             )
 
-        return self.create_multi(db=db, create_dtos=create_dtos)
+        return self.create_multi(
+            db=db, create_dtos=create_dtos, manual_commit=manual_commit
+        )
 
     ### READ OPERATIONS ###
 
