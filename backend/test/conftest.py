@@ -31,7 +31,6 @@ from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.redis_repo import RedisRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
 
@@ -41,7 +40,6 @@ def pytest_sessionfinish():
     SQLRepo().drop_database()
     ElasticSearchRepo().drop_indices()
     WeaviateRepo().drop_indices()
-    RedisRepo().flush_all_clients()
     FilesystemRepo().purge_filesystem()
     return True
 

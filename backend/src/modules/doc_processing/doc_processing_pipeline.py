@@ -5,6 +5,7 @@ from common.job_type import JobType
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
+from modules.crawler.crawler_jobs import CrawlerJobInput, CrawlerJobOutput
 from modules.doc_audio_processing.audio_metadata_extraction_job import (
     AudioMetadataExtractionJobInput,
 )
@@ -69,6 +70,18 @@ def handle_job_finished(
 ):
     # Jobs without sdoc_id in input
     match job_type:
+        case JobType.CRAWLER:
+            assert isinstance(input, CrawlerJobInput)
+            assert isinstance(output, CrawlerJobOutput)
+            logger.info(
+                f"Web crawling completed for {input.urls}! Zip stored at {output.crawled_data_zip}"
+            )
+            js.start_job(
+                JobType.EXTRACT_ARCHIVE,
+                ArchiveExtractionJobInput(
+                    project_id=input.project_id, filepath=output.crawled_data_zip
+                ),
+            )
         case JobType.SDOC_INIT:
             assert isinstance(input, SdocInitJobInput)
             assert isinstance(output, SdocInitJobOutput)
