@@ -127,7 +127,18 @@ extend = "../ruff.toml"
 src = ["src"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["src"]
+known-first-party = [
+    "common",
+    "core",
+    "config",
+    "migrations",
+    "modules",
+    "preprocessing",
+    "ray_model_worker",
+    "repos",
+    "systems",
+    "utils"
+]
 
 [tool.pyright]
 include = ["src"]

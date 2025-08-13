@@ -33,7 +33,11 @@ extend = "../ruff.toml"
 src = ["src"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["src"]
+known-first-party = [
+  "config",
+  "dags",
+  "plugins"
+]
 
 [tool.pyright]
 include = ["src"]
