@@ -36,6 +36,7 @@ class JobType(str, Enum):
     VIDEO_AUDIO_EXTRACTION = "video_audio_extraction"
 
     # on-demand jobs
+    CRAWLER = "crawler"
     DUPLICATE_FINDER = "duplicate_finder"
     EXPORT = "export"
     IMPORT = "import"

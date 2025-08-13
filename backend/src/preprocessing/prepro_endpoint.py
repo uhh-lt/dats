@@ -11,7 +11,6 @@ from preprocessing.preprocessing_job_dto import PreprocessingJobRead
 from preprocessing.preprocessing_job_payload_crud import crud_prepro_job_payload
 from preprocessing.preprocessing_job_payload_dto import PreprocessingJobPayloadRead
 from preprocessing.preprocessing_service import PreprocessingService
-from repos.redis_repo import RedisRepo
 from sqlalchemy.orm import Session
 from systems.job_system.background_job_base_dto import BackgroundJobStatus
 
@@ -19,7 +18,6 @@ router = APIRouter(
     prefix="/prepro", dependencies=[Depends(get_current_user)], tags=["prepro"]
 )
 
-redis: RedisRepo = RedisRepo()
 pps: PreprocessingService = PreprocessingService()
 
 
