@@ -113,13 +113,17 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         crud_span_anno.create_multi(
             trans, create_dtos=span_annotations, manual_commit=True
         )
-        data = crud_sdoc_data.create(db=trans, create_dto=sdoc_data, manual_commit=True)
+        crud_sdoc_data.create(db=trans, create_dto=sdoc_data, manual_commit=True)
+
     return SpacyJobOutput(
-        sentence_starts=data.sentence_starts,
-        sentence_ends=data.sentence_ends,
-        token_starts=data.token_starts,
-        token_ends=data.token_ends,
-        sentences=data.sentences,
+        sentence_starts=sdoc_data.sentence_starts,
+        sentence_ends=sdoc_data.sentence_ends,
+        token_starts=sdoc_data.token_starts,
+        token_ends=sdoc_data.token_ends,
+        sentences=[
+            sdoc_data.content[s:e]
+            for s, e in zip(sdoc_data.sentence_starts, sdoc_data.sentence_ends)
+        ],
     )
 
 
