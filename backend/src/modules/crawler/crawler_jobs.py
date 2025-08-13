@@ -52,16 +52,10 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     output_dir = fsr.create_temp_dir()
     image_dir = output_dir / "images"
     image_dir.mkdir()
-    video_dir = output_dir / "videos"
-    video_dir.mkdir()
-    audio_dir = output_dir / "audios"
-    audio_dir.mkdir()
 
     # # relative directories to communicate with the celery workers
     output_dir = output_dir.relative_to(fsr.root_dir)
     image_dir = image_dir.relative_to(fsr.root_dir)
-    video_dir = video_dir.relative_to(fsr.root_dir)
-    audio_dir = audio_dir.relative_to(fsr.root_dir)
 
     # run the crawler script
     script_env = os.environ.copy()
@@ -73,8 +67,6 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
         "src/modules/crawler/crawler_script.py",
         str(output_dir),
         str(image_dir),
-        str(audio_dir),
-        str(video_dir),
     ] + payload.urls
     crawled_zip = subprocess.run(args, env=script_env, capture_output=True, text=True)
     logger.info("Finished Scrapy Crawler Script! ")

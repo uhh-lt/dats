@@ -6,11 +6,8 @@ from bs4 import BeautifulSoup, Tag
 from common.doc_type import DocType
 from common.job_type import JobType
 from config import conf
-from core.doc.folder_crud import crud_folder
-from core.doc.folder_dto import FolderCreate, FolderType
 from loguru import logger
 from modules.doc_text_processing.html_cleaning_utils import clean_html
-from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
@@ -60,18 +57,18 @@ def handle_extract_html_job(
     html = clean_html(doc_html)
 
     folder_id = payload.folder_id
-    if len(extracted_images) > 0:
-        with SQLRepo().db_session() as db:
-            folder = crud_folder.create(
-                db,
-                create_dto=FolderCreate(
-                    project_id=payload.project_id,
-                    folder_type=FolderType.SDOC_FOLDER,
-                    name=payload.filepath.name,
-                    parent_id=payload.folder_id,
-                ),
-            )
-            folder_id = folder.id
+    # if len(extracted_images) > 0:
+    #     with SQLRepo().db_session() as db:
+    #         folder = crud_folder.create(
+    #             db,
+    #             create_dto=FolderCreate(
+    #                 project_id=payload.project_id,
+    #                 folder_type=FolderType.SDOC_FOLDER,
+    #                 name=payload.filepath.name,
+    #                 parent_id=payload.folder_id,
+    #             ),
+    #         )
+    #         folder_id = folder.id
     return ExtractHTMLJobOutput(
         html=html, image_paths=extracted_images, folder_id=folder_id
     )

@@ -13,14 +13,6 @@ class CrawledItem(scrapy.Item):
     image_names = scrapy.Field()
     images = scrapy.Field()
 
-    video_urls = scrapy.Field()
-    video_names = scrapy.Field()
-    videos = scrapy.Field()
-
-    audio_urls = scrapy.Field()
-    audio_names = scrapy.Field()
-    audios = scrapy.Field()
-
     title = scrapy.Field()
     clean_html = scrapy.Field()
 
@@ -35,9 +27,6 @@ class CrawledItem(scrapy.Item):
                 "access_date": self.get("access_date", ""),
                 "title": self.get("title", ""),
                 "image_names": self.get("image_names", []),
-                "videos": self.get("videos", []),
-                "video_urls": self.get("video_urls", []),
-                "audio_names": self.get("audio_names", []),
                 "filename": self.get("filename", ""),
                 "output_dir": self.get("output_dir", ""),
             }

@@ -24,6 +24,7 @@ class SdocInitJobInput(JobInputBase):
 
 class SdocInitJobOutput(JobOutputBase):
     sdoc_id: int
+    folder_id: int
 
 
 @register_job(
@@ -33,11 +34,7 @@ class SdocInitJobOutput(JobOutputBase):
 )
 def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutput:
     with SQLRepo().db_session() as db:
-        # split document
-
-        # create folder (if we split the document)
-
-        # create sdoc
+        # create sdoc (& optionally the corresponding folder)
         logger.info(f"Persisting SourceDocument for {payload.filepath.name}...")
         create_dto = SourceDocumentCreate(
             filename=payload.filepath.name,
@@ -54,4 +51,6 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             create_dto=SourceDocumentStatusCreate(id=sdoc_db_obj.id),
         )
 
-        return SdocInitJobOutput(sdoc_id=sdoc_db_obj.id)
+        return SdocInitJobOutput(
+            sdoc_id=sdoc_db_obj.id, folder_id=sdoc_db_obj.folder_id
+        )
