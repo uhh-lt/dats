@@ -56,6 +56,12 @@
     "[json]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
+    // python
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "workspace",
+    // pytest
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
   },
   "extensions": {
     "recommendations": [
