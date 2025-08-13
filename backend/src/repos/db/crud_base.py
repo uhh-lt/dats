@@ -53,24 +53,41 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             raise NoSuchElementError(self.model, id=id)
         return exists
 
-    def create(self, db: Session, *, create_dto: CreateDTOType) -> ORMModelType:
+    def create(
+        self, db: Session, *, create_dto: CreateDTOType, manual_commit: bool = False
+    ) -> ORMModelType:
         dto_obj_data = jsonable_encoder(create_dto)
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+            db.refresh(db_obj)
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[CreateDTOType]
+        self,
+        db: Session,
+        *,
+        create_dtos: list[CreateDTOType],
+        manual_commit: bool = False,
     ) -> list[ORMModelType]:
         db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         db.add_all(db_objs)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return db_objs
 
     def update(
-        self, db: Session, *, id: int, update_dto: UpdateDTOType
+        self,
+        db: Session,
+        *,
+        id: int,
+        update_dto: UpdateDTOType,
+        manual_commit: bool = False,
     ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
 
@@ -80,13 +97,22 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+            db.refresh(db_obj)
         db.refresh(db_obj)
 
         return db_obj
 
     def update_multi(
-        self, db: Session, *, ids: list[int], update_dtos: list[UpdateDTOType]
+        self,
+        db: Session,
+        *,
+        ids: list[int],
+        update_dtos: list[UpdateDTOType],
+        manual_commit: bool = False,
     ) -> list[ORMModelType]:
         if len(ids) != len(update_dtos):
             raise ValueError(
@@ -101,16 +127,30 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return db_objects
 
-    def delete(self, db: Session, *, id: int) -> ORMModelType:
+    def delete(
+        self, db: Session, *, id: int, manual_commit: bool = False
+    ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         db.delete(db_obj)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+            db.refresh(db_obj)
         return db_obj
 
-    def remove_multi(self, db: Session, *, ids: list[int]) -> int:
+    def remove_multi(
+        self, db: Session, *, ids: list[int], manual_commit: bool = False
+    ) -> int:
         count = db.query(self.model).filter(self.model.id.in_(ids)).delete()
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return count

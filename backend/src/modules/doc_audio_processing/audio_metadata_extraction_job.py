@@ -3,8 +3,6 @@ from pathlib import Path
 import ffmpeg
 from common.doc_type import DocType
 from common.job_type import JobType
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, SdocJobInput
@@ -49,11 +47,4 @@ def handle_audio_metadata_extraction_job(
             doctype=DocType.audio,
             keys=list(audio_metadata.keys()),
             values=list(audio_metadata.values()),
-        )
-
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(audio_metadata=True),
         )

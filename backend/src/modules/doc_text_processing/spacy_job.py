@@ -58,19 +58,22 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
     )
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as trans:
         # query required data from db
         system_code_ids = {
             code.name: code.id
             for code in crud_code.read_system_codes_by_project(
-                db=db, proj_id=payload.project_id
+                db=trans, proj_id=payload.project_id
             )
         }
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
+            db=trans,
+            user_id=SYSTEM_USER_ID,
+            sdoc_id=payload.sdoc_id,
+            manual_commit=True,
         )
 
-        sdoc = crud_sdoc.read(db, payload.sdoc_id)
+        sdoc = crud_sdoc.read(trans, payload.sdoc_id)
 
         url = FilesystemRepo().get_sdoc_url(
             sdoc=SourceDocumentRead.model_validate(sdoc),
@@ -96,16 +99,21 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
 
         # store outputs in db
         crud_sdoc_meta.create_multi_with_doctype(
-            db=db,
+            db=trans,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
             doctype=payload.doctype,
             keys=["keywords"],
             values=[keywords],
+            manual_commit=True,
         )
-        crud_word_frequency.create_multi(db=db, create_dtos=word_frequencies)
-        crud_span_anno.create_multi(db, create_dtos=span_annotations)
-        data = crud_sdoc_data.create(db=db, create_dto=sdoc_data)
+        crud_word_frequency.create_multi(
+            db=trans, create_dtos=word_frequencies, manual_commit=True
+        )
+        crud_span_anno.create_multi(
+            trans, create_dtos=span_annotations, manual_commit=True
+        )
+        data = crud_sdoc_data.create(db=trans, create_dto=sdoc_data, manual_commit=True)
     return SpacyJobOutput(
         sentence_starts=data.sentence_starts,
         sentence_ends=data.sentence_ends,

@@ -40,19 +40,22 @@ def handle_transcription_job(
     pcm_bytes = convert_to_pcm(payload.filepath)
 
     # generate transcription using ray
-    sdoc_data = generate_automatic_transcription(pcm_bytes)
+    sdoc_data_update = generate_automatic_transcription(pcm_bytes)
 
     with sqlr.db_session() as db:
         # TODO: are the tokens overwritten by the text pipeline?
         # update sdoc data
-        crud_sdoc_data.update(db=db, id=payload.sdoc_id, update_dto=sdoc_data)
+        sdoc_data = crud_sdoc_data.update(
+            db=db, id=payload.sdoc_id, update_dto=sdoc_data_update
+        )
+
     return TranscriptionJobOutput(
-        token_starts=sdoc_data.token_starts,  # type: ignore
-        token_ends=sdoc_data.token_ends,  # type: ignore
-        token_time_starts=sdoc_data.token_time_starts,  # type: ignore
-        token_time_ends=sdoc_data.token_time_ends,  # type: ignore
-        content=sdoc_data.content,  # type: ignore
-        html=sdoc_data.html,  # type: ignore
+        token_starts=sdoc_data.token_starts,
+        token_ends=sdoc_data.token_ends,
+        token_time_starts=sdoc_data.token_time_starts,
+        token_time_ends=sdoc_data.token_time_ends,
+        content=sdoc_data.content,
+        html=sdoc_data.html,
     )
 
 
