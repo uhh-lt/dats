@@ -126,6 +126,9 @@ Issues = "https://github.com/uhh-lt/dats/issues"
 extend = "../ruff.toml"
 src = ["src"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
 [tool.pyright]
 include = ["src"]
 exclude = ["**/__pycache__",
