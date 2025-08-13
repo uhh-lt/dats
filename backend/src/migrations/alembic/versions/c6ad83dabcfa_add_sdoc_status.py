@@ -1,8 +1,8 @@
 """add sdoc status
 
-Revision ID: 783227df32f7
+Revision ID: c6ad83dabcfa
 Revises: 1b21abe44adb
-Create Date: 2025-08-11 11:56:06.078963
+Create Date: 2025-08-13 13:38:30.574721
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "783227df32f7"
+revision: str = "c6ad83dabcfa"
 down_revision: str | None = "1b21abe44adb"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -25,17 +25,31 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("sdoc_init", sa.Boolean(), server_default="false", nullable=False),
         sa.Column(
+            "extract_archive", sa.Boolean(), server_default="false", nullable=False
+        ),
+        sa.Column("pdf_checking", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column("extract_html", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
             "text_extraction", sa.Boolean(), server_default="false", nullable=False
         ),
-        sa.Column("spacy", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("es_index", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("lang_detect", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("html_mapping", sa.Boolean(), server_default="false", nullable=False),
         sa.Column(
-            "html_extraction", sa.Boolean(), server_default="false", nullable=False
+            "text_language_detection",
+            sa.Boolean(),
+            server_default="false",
+            nullable=False,
+        ),
+        sa.Column("text_spacy", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
+            "text_es_index", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
-            "sentence_embedding", sa.Boolean(), server_default="false", nullable=False
+            "text_sentence_embedding",
+            sa.Boolean(),
+            server_default="false",
+            nullable=False,
+        ),
+        sa.Column(
+            "text_html_mapping", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
             "image_caption", sa.Boolean(), server_default="false", nullable=False
@@ -44,13 +58,19 @@ def upgrade() -> None:
             "image_embedding", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
-            "image_metadata", sa.Boolean(), server_default="false", nullable=False
+            "image_metadata_extraction",
+            sa.Boolean(),
+            server_default="false",
+            nullable=False,
         ),
         sa.Column(
             "image_thumbnail", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
-            "object_detection", sa.Boolean(), server_default="false", nullable=False
+            "image_object_detection",
+            sa.Boolean(),
+            server_default="false",
+            nullable=False,
         ),
         sa.Column(
             "audio_metadata", sa.Boolean(), server_default="false", nullable=False
@@ -59,7 +79,7 @@ def upgrade() -> None:
             "audio_thumbnail", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
-            "transcription", sa.Boolean(), server_default="false", nullable=False
+            "audio_transcription", sa.Boolean(), server_default="false", nullable=False
         ),
         sa.Column(
             "video_metadata", sa.Boolean(), server_default="false", nullable=False

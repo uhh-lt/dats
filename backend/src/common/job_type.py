@@ -1,28 +1,36 @@
 from enum import Enum
 
-# TODO the names must match the name of the columns in SdocProcessingStatus
-
 
 class JobType(str, Enum):
-    # pre-processing pipeline jobs
+    # KEEP THE SAME ORDER AS source_document_status_orm.py!
+
+    # init
+    SDOC_INIT = "sdoc_init"
     EXTRACT_ARCHIVE = "extract_archive"
     PDF_CHECKING = "pdf_checking"
-    SDOC_INIT = "sdoc_init"
-    EXTRACT_HTML = "html_extraction"
-    EXTRACT_PLAIN_TEXT = "text_extraction"
-    DETECT_LANGUAGE = "lang_detect"
-    SPACY = "spacy"
-    ES_INDEX = "es_index"
-    SENTENCE_EMBEDDING = "sentence_embedding"
-    HTML_MAPPING = "html_mapping"
+    EXTRACT_HTML = "extract_html"
+
+    # html
+    TEXT_EXTRACTION = "text_extraction"
+    TEXT_LANGUAGE_DETECTION = "text_language_detection"
+    TEXT_SPACY = "text_spacy"
+    TEXT_ES_INDEX = "text_es_index"
+    TEXT_SENTENCE_EMBEDDING = "text_sentence_embedding"
+    TEXT_HTML_MAPPING = "text_html_mapping"
+
+    # image
+    IMAGE_CAPTION = "image_caption"
+    IMAGE_EMBEDDING = "image_embedding"
+    IMAGE_METADATA_EXTRACTION = "image_metadata_extraction"
+    IMAGE_THUMBNAIL = "image_thumbnail"
+    IMAGE_OBJECT_DETECTION = "image_object_detection"
+
+    # audio
     AUDIO_METADATA_EXTRACTION = "audio_metadata"
     AUDIO_THUMBNAIL = "audio_thumbnail"
-    AUDIO_TRANSCRIPTION = "transcription"
-    IMAGE_CAPTION = "image_caption"
-    IMAGE_METADATA_EXTRACTION = "image_metadata"
-    IMAGE_EMBEDDING = "image_embedding"
-    IMAGE_THUMBNAIL = "image_thumbnail"
-    IMAGE_OBJECT_DETECTION = "object_detection"
+    AUDIO_TRANSCRIPTION = "audio_transcription"
+
+    # video
     VIDEO_METADATA_EXTRACTION = "video_metadata"
     VIDEO_THUMBNAIL = "video_thumbnail"
     VIDEO_AUDIO_EXTRACTION = "video_audio_extraction"

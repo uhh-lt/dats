@@ -17,25 +17,25 @@ class LanguageNotSupportedError(Exception):
         )
 
 
-class DetectLanguageJobInput(SdocJobInput):
+class TextLanguageDetectionJobInput(SdocJobInput):
     html: str
     text: str
     doctype: DocType
 
 
-class DetectLanguageJobOutput(JobOutputBase):
+class TextLanguageDetectionJobOutput(JobOutputBase):
     language: str
     text: str
 
 
 @register_job(
-    job_type=JobType.DETECT_LANGUAGE,
-    input_type=DetectLanguageJobInput,
-    output_type=DetectLanguageJobOutput,
+    job_type=JobType.TEXT_LANGUAGE_DETECTION,
+    input_type=TextLanguageDetectionJobInput,
+    output_type=TextLanguageDetectionJobOutput,
 )
-def handle_detect_language_job(
-    payload: DetectLanguageJobInput, job: Job
-) -> DetectLanguageJobOutput:
+def handle_text_language_detection_job(
+    payload: TextLanguageDetectionJobInput, job: Job
+) -> TextLanguageDetectionJobOutput:
     # DETECT LANGUAGE
     glotlid_input = GlotLIDInput(text=payload.text)
     glotlid_output: GlotLIDOutput = ray.language_identification(glotlid_input)
@@ -70,4 +70,4 @@ def handle_detect_language_job(
             keys=["language"],
             values=[lang],
         )
-    return DetectLanguageJobOutput(language=lang, text=payload.text)
+    return TextLanguageDetectionJobOutput(language=lang, text=payload.text)

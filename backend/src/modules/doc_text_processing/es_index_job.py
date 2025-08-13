@@ -8,16 +8,16 @@ from systems.job_system.job_dto import Job, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 
 
-class ESIndexJobInput(SdocJobInput):
+class TextESIndexJobInput(SdocJobInput):
     filename: str | None
     text: str | None
 
 
 @register_job(
-    job_type=JobType.ES_INDEX,
-    input_type=ESIndexJobInput,
+    job_type=JobType.TEXT_ES_INDEX,
+    input_type=TextESIndexJobInput,
 )
-def handle_es_index_job(payload: ESIndexJobInput, job: Job) -> None:
+def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
     # if we re-run this job, filename and text is None, we need to query it from db
     with SQLRepo().db_session() as db:
         if payload.filename is None or payload.text is None:
