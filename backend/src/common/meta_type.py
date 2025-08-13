@@ -46,11 +46,33 @@ class MetaType(str, Enum):
             case MetaType.STRING:
                 return isinstance(value, str)
             case MetaType.NUMBER:
-                return isinstance(value, (int, float))
+                if isinstance(value, (int, float)):
+                    return True
+                if isinstance(value, str):
+                    try:
+                        float(value)
+                        return True
+                    except ValueError:
+                        return False
+                return False
             case MetaType.DATE:
-                return isinstance(value, datetime)
+                if isinstance(value, datetime):
+                    return True
+                if isinstance(value, str):
+                    from dateutil.parser import parse
+
+                    try:
+                        parse(value)
+                        return True
+                    except Exception:
+                        return False
+                return False
             case MetaType.BOOLEAN:
-                return isinstance(value, bool)
+                if isinstance(value, bool):
+                    return True
+                if isinstance(value, str):
+                    return value.lower() in {"true", "false", "1", "0"}
+                return False
             case MetaType.LIST:
                 return isinstance(value, list) and all(
                     isinstance(item, str) for item in value

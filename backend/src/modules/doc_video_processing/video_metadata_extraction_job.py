@@ -26,8 +26,6 @@ EXPECTED_METADATA = [
 
 
 class VideoMetadataExtractionJobInput(SdocJobInput):
-    filename: str | None
-    text: str | None
     filepath: Path
 
 
@@ -42,7 +40,9 @@ def handle_video_metadata_extraction_job(
 
     metadata = {}
     for k, v in ffmpeg_probe["format"].items():
-        if k in EXPECTED_METADATA:
+        if k == "format_name":
+            metadata[k] = str(v).split(",")
+        elif k in EXPECTED_METADATA:
             metadata[k] = str(v)
 
     vidx = 0 if ffmpeg_probe["streams"][0]["codec_type"] == "video" else 1
