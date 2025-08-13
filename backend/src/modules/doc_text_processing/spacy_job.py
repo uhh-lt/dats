@@ -10,10 +10,7 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import (
-    SourceDocumentDataCreate,
-    SourceDocumentDataUpdate,
-)
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
