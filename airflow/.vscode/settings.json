@@ -1,13 +1,22 @@
 {
   // python
-  "python.autoComplete.extraPaths": ["${workspaceFolder}/src", "${workspaceFolder}/../backend/src"],
+  "python.defaultInterpreterPath": "${workspaceFolder:airflow}/.venv/bin/python",
+  "python.autoComplete.extraPaths": ["${workspaceFolder:airflow}/src", "${workspaceFolder:backend}/src"],
   "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.extraPaths": ["${workspaceFolder}/src", "${workspaceFolder}/../backend/src"],
+  "python.analysis.extraPaths": ["${workspaceFolder:airflow}/src", "${workspaceFolder:backend}/src"],
   "python.analysis.autoFormatStrings": true,
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
   "python.analysis.exclude": ["**/__pycache__", "**/.venv"],
 
-  // ruff (python linter)
-  "ruff.configuration": "./pyproject.toml"
+  // pytest
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": false,
+
+  // prettier
+  "prettier.prettierPath": "../frontend/node_modules/prettier",
+  "prettier.configPath": "../.prettierrc.yaml",
+
+  // ruff
+  "ruff.interpreter": ["${workspaceFolder:airflow}/.venv/bin/python"]
 }

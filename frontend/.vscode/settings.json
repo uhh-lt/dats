@@ -4,6 +4,6 @@
   "typescript.preferences.importModuleSpecifierEnding": "js",
 
   // prettier
-  "prettier.prettierPath": "./node_modules/prettier",
-  "prettier.configPath": "./package.json"
+  "prettier.prettierPath": "node_modules/prettier",
+  "prettier.configPath": "../.prettierrc.yaml"
 }

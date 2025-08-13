@@ -41,12 +41,7 @@ repos:
       - id: eslint
         files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
         types: [file]
-        args:
-          [
-            --max-warnings=0,
-            --config=frontend/eslint.config.mjs,
-            --no-warn-ignored,
-          ]
+        args: [--max-warnings=0, --config=frontend/eslint.config.mjs, --no-warn-ignored]
         additional_dependencies:
           - "@tanstack/eslint-plugin-query@5.59.2"
           - eslint@9.22.0
@@ -57,10 +52,10 @@ repos:
     rev: "v4.0.0-alpha.8"
     hooks:
       - id: prettier
-        files: \.([jt]sx?|json)$ # *.js, *.jsx, *.ts, *.tsx, *.json
+        files: \.([jt]sx?|json|ya?ml)$ # *.js, *.jsx, *.ts, *.tsx, *.json, *.yml, *.yaml
         args: [
-            --print-width,
-            "120",
+            "--config",
+            ".prettierrc.yaml",
             # Without this, prettier will create a `node_modules` folder in the repository root
             "--cache-location",
             "frontend/node_modules/.cache/prettier",

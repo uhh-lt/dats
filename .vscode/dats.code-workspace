@@ -2,52 +2,60 @@
   "folders": [
     {
       "name": "dats",
-      "path": ".."
+      "path": "..",
     },
     {
       "name": "airflow",
-      "path": "../airflow"
+      "path": "../airflow",
     },
     {
       "name": "backend",
-      "path": "../backend"
+      "path": "../backend",
     },
     {
       "name": "frontend",
-      "path": "../frontend"
-    }
+      "path": "../frontend",
+    },
   ],
   // global workspace settings
   "settings": {
     // general
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "files.insertFinalNewline": true,
+    // ruff
+    "ruff.enable": true,
+    "ruff.nativeServer": "on",
+    "ruff.importStrategy": "useBundled",
+    "ruff.configuration": "ruff.toml",
     // formatting
     "[yaml]": {
       "editor.tabSize": 2,
-      "editor.insertSpaces": true
+      "editor.insertSpaces": true,
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
     },
     "[dockercompose]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[javascript]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[typescript]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[javascriptreact]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[typescriptreact]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[json]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
   },
   "extensions": {
     "recommendations": [
@@ -66,7 +74,7 @@
       "charliermarsh.ruff",
       // frontend
       "dbaeumer.vscode-eslint",
-      "esbenp.prettier-vscode"
-    ]
-  }
+      "esbenp.prettier-vscode",
+    ],
+  },
 }
