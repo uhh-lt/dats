@@ -2,11 +2,15 @@ from io import BytesIO
 from pathlib import Path
 
 import ffmpeg
+from common.doc_type import DocType
 from common.job_type import JobType
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import SourceDocumentRead
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
@@ -40,14 +44,36 @@ def handle_transcription_job(
     # convert audio file to uncompessed PCM format
     pcm_bytes = convert_to_pcm(payload.filepath)
 
-    # generate transcription using ray
-    sdoc_data_update = generate_automatic_transcription(pcm_bytes)
-
     with sqlr.db_session() as db:
-        # TODO: are the tokens overwritten by the text pipeline?
-        # update sdoc data
-        sdoc_data = crud_sdoc_data.update(
-            db=db, id=payload.sdoc_id, update_dto=sdoc_data_update
+        # get required data to create sdoc data
+        sdoc = crud_sdoc.read(db, payload.sdoc_id)
+        url = FilesystemRepo().get_sdoc_url(
+            sdoc=SourceDocumentRead.model_validate(sdoc),
+            relative=True,
+            webp=sdoc.doctype == DocType.image,
+            thumbnail=False,
+        )
+
+        # generate transcription using ray
+        transcription = generate_automatic_transcription(
+            payload=payload, audio_bytes=pcm_bytes
+        )
+
+        # create sdoc data
+        sdoc_data = crud_sdoc_data.create(
+            db=db,
+            create_dto=SourceDocumentDataCreate(
+                id=payload.sdoc_id,
+                repo_url=url,
+                sentence_starts=[],
+                sentence_ends=[],
+                token_starts=transcription["token_starts"],
+                token_ends=transcription["token_ends"],
+                token_time_starts=transcription["token_time_starts"],
+                token_time_ends=transcription["token_time_ends"],
+                content=transcription["content"],
+                html=transcription["html"],
+            ),
         )
 
     return TranscriptionJobOutput(
@@ -71,7 +97,9 @@ def convert_to_pcm(filepath: Path):
     return pcm_bytes.getvalue()
 
 
-def generate_automatic_transcription(audio_bytes) -> SourceDocumentDataUpdate:
+def generate_automatic_transcription(
+    payload: TranscriptionJobInput, audio_bytes
+) -> dict:
     logger.debug("Generating automatic transcription ...")
 
     # send the audio bytes to the whisper model to get the transcript
@@ -98,11 +126,11 @@ def generate_automatic_transcription(audio_bytes) -> SourceDocumentDataUpdate:
 
     transcription = " ".join([token for token in tokens])
 
-    return SourceDocumentDataUpdate(
-        token_starts=token_starts,
-        token_ends=token_ends,
-        token_time_starts=token_time_starts,
-        token_time_ends=token_time_ends,
-        content=transcription,
-        html=f"<html><body><p>{transcription}</p></body></html>",
-    )
+    return {
+        "token_starts": token_starts,
+        "token_ends": token_ends,
+        "token_time_starts": token_time_starts,
+        "token_time_ends": token_time_ends,
+        "content": transcription,
+        "html": f"<html><body><p>{transcription}</p></body></html>",
+    }
