@@ -34,7 +34,7 @@ from modules.doc_processing.doc_chunking_job import (
     PDFChunkingJobInput,
     PDFChunkingJobOutput,
 )
-from modules.doc_processing.text_init_job import SdocInitJobInput, SdocInitJobOutput
+from modules.doc_processing.init_sdoc_job import SdocInitJobInput, SdocInitJobOutput
 from modules.doc_text_processing.detect_language_job import (
     DetectLanguageJobInput,
     DetectLanguageJobOutput,
@@ -55,16 +55,15 @@ from modules.doc_video_processing.video_audio_extraction_job import (
     VideoAudioExtractionJobInput,
     VideoAudioExtractionJobOutput,
 )
-from pydantic import BaseModel
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import JobInputBase, SdocJobInput
+from systems.job_system.job_dto import JobInputBase, JobOutputBase, SdocJobInput
 from systems.job_system.job_service import JobService
 
 js = JobService()
 
 
 def handle_job_finished(
-    job_type: JobType, input: JobInputBase, output: BaseModel | None
+    job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
     # Jobs without sdoc_id in input
     match job_type:
@@ -251,7 +250,7 @@ def handle_job_finished(
                     sdoc_id=input.sdoc_id,
                     html=output.html,
                     filename=input.filepath.name,
-                    doctype=DocType.image,
+                    doctype=DocType.text,
                 ),
             )
 
@@ -267,12 +266,6 @@ def __start_image_jobs(project_id: int, sdoc_id: int, filepath: Path, doctype: D
     )
     js.start_job(
         JobType.IMAGE_METADATA_EXTRACTION,
-        ImageMetadataExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath, doctype=doctype
-        ),
-    )
-    js.start_job(
-        JobType.IMAGE_OBJECT_DETECTION,
         ImageMetadataExtractionJobInput(
             project_id=project_id, sdoc_id=sdoc_id, filepath=filepath, doctype=doctype
         ),
