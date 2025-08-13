@@ -1,8 +1,6 @@
 from pathlib import Path
 
 from common.job_type import JobType
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, SdocJobInput
@@ -31,6 +29,8 @@ def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> Non
     )
     print(webp_filename)
 
+    # TODO: Implement correctly!
+
     # create a thumbnail from the audio file
     # Needs to be re-implemented, the original code was extremely slow and inefficient
 
@@ -56,11 +56,3 @@ def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> Non
     # plt.axis("off")
     # plt.margins(0, 0)
     # plt.savefig(str(webp_filename), bbox_inches="tight", pad_inches=0, transparent=True)
-
-    with sqlr.db_session() as db:
-        # Set db status
-        crud_sdoc_status.update(
-            db=db,
-            id=payload.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(es_index=True),
-        )

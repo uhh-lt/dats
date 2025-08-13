@@ -36,16 +36,19 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
     logger.info(f"Found following objects: {result.bboxes}")
 
     # Store bboxes in the database
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as trans:
         # query required data from db
         system_code_ids = {
             code.name: code.id
             for code in crud_code.read_system_codes_by_project(
-                db=db, proj_id=payload.project_id
+                db=trans, proj_id=payload.project_id
             )
         }
         adoc = crud_adoc.exists_or_create(
-            db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
+            db=trans,
+            user_id=SYSTEM_USER_ID,
+            sdoc_id=payload.sdoc_id,
+            manual_commit=True,
         )
 
         # convert to BBoxAnnotationCreate
@@ -66,6 +69,7 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
 
         # store bboxes in db
         crud_bbox_anno.create_multi(
-            db=db,
+            db=trans,
             create_dtos=create_dtos,
+            manual_commit=True,
         )

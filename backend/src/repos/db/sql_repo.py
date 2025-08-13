@@ -83,12 +83,12 @@ class SQLRepo(metaclass=SingletonMeta):
         session = None
         try:
             session = self.session_maker()
-            # TODO start tranaction
             yield session
-            # TODO commit
-        except:
-            pass
-            # TODO rollback!
+            session.commit()
+        except Exception as e:
+            if session is not None:
+                session.rollback()
+            raise e
         finally:
             if session is not None:
                 session.close()

@@ -62,7 +62,11 @@ class CRUDSpanAnnotation(
         return db_obj
 
     def create_multi(
-        self, db: Session, *, create_dtos: list[SpanAnnotationCreateIntern]
+        self,
+        db: Session,
+        *,
+        create_dtos: list[SpanAnnotationCreateIntern],
+        manual_commit: bool = False,
     ) -> list[SpanAnnotationORM]:
         # first create the SpanText
         span_texts_orm = crud_span_text.create_multi(
@@ -70,6 +74,7 @@ class CRUDSpanAnnotation(
             create_dtos=[
                 SpanTextCreate(text=create_dto.span_text) for create_dto in create_dtos
             ],
+            manual_commit=manual_commit,
         )
 
         # create the SpanAnnotation (and link the SpanText via FK)
@@ -82,7 +87,10 @@ class CRUDSpanAnnotation(
         for db_obj, span_text_orm in zip(db_objs, span_texts_orm):
             db_obj.span_text_id = span_text_orm.id
         db.add_all(db_objs)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
 
         # update all affected annotation documents' timestamp
         adoc_ids = list(

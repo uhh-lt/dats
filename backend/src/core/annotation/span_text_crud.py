@@ -23,7 +23,11 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         reraise=True,
     )
     def create_multi(
-        self, db: Session, *, create_dtos: list[SpanTextCreate]
+        self,
+        db: Session,
+        *,
+        create_dtos: list[SpanTextCreate],
+        manual_commit: bool = False,
     ) -> list[SpanTextORM]:
         text_to_create_dto = {create_dto.text: create_dto for create_dto in create_dtos}
         unique_create_dtos = list(text_to_create_dto.values())
@@ -45,7 +49,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         newly_created_span_texts = []
         if len(dtos_to_create) > 0:
             newly_created_span_texts = super().create_multi(
-                db=db, create_dtos=dtos_to_create
+                db=db, create_dtos=dtos_to_create, manual_commit=manual_commit
             )
         for dto in newly_created_span_texts:
             text_to_db_obj_map[dto.text] = dto
