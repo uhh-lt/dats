@@ -11,6 +11,7 @@ from systems.job_system.job_register_decorator import register_job
     output_type=LLMJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
     router=router,
+    device="gpu",
 )
 def llm_assistant(
     payload: LLMJobInput,
