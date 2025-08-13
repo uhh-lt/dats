@@ -54,19 +54,14 @@ def do_work():
 
     ctx = mp.get_context("fork")
 
-    default = ctx.Process(
-        target=create_pool, args=("default", int(environ.get("NUM_RQ_WORKER", "1")))
-    )
     cpu = ctx.Process(
-        target=create_pool, args=("cpu", int(environ.get("NUM_RQ_WORKER_CPU", "1")))
+        target=create_pool, args=("cpu", int(environ.get("NUM_RQ_WORKER_CPU", "8")))
     )
     gpu = ctx.Process(
-        target=create_pool, args=("gpu", int(environ.get("NUM_RQ_WORKER_GPU", "1")))
+        target=create_pool, args=("gpu", int(environ.get("NUM_RQ_WORKER_GPU", "16")))
     )
-    default.start()
     cpu.start()
     gpu.start()
-    default.join()
     cpu.join()
     gpu.join()
 
