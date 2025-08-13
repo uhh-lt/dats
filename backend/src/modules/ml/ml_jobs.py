@@ -23,6 +23,7 @@ from systems.job_system.job_register_decorator import register_job
     job_type=JobType.ML,
     input_type=MLJobInput,
     generate_endpoints=EndpointGeneration.ALL,
+    device="gpu",
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:
     start_time = datetime.now()
