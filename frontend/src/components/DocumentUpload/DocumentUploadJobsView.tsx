@@ -1,7 +1,7 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import CrawlerHooks from "../../api/CrawlerHooks";
+import JobHooks from "../../api/JobHooks.ts";
 import PreProHooks from "../../api/PreProHooks";
 import CrawlerJobListItem from "../BackgroundTasks/CrawlerJobListItem";
 import PreProJobListItem from "../BackgroundTasks/PreProJobListItem";
@@ -17,7 +17,7 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
     data: crawlerJobs,
     refetch: refetchCrawlerJobs,
     isFetching: isCrawlerFetching,
-  } = CrawlerHooks.useGetAllCrawlerJobs(projectId);
+  } = JobHooks.useGetAllCrawlerJobs(projectId);
   const {
     data: preproJobs,
     refetch: refetchPreproJobs,
@@ -53,7 +53,7 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
               URL Upload Jobs
             </Typography>
             {allCrawlerJobs.map((job) => (
-              <CrawlerJobListItem key={job.id} initialCrawlerJob={job} />
+              <CrawlerJobListItem key={job.job_id} initialCrawlerJob={job} />
             ))}
           </Stack>
         )}

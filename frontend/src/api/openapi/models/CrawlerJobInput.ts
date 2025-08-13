@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type CrawlerJobParameters = {
+export type CrawlerJobInput = {
   /**
    * The ID of the Project to import the crawled data.
    */

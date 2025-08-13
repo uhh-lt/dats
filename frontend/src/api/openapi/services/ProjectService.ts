@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
-import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
@@ -88,7 +87,7 @@ export class ProjectService {
   }
   /**
    * Uploads one or multiple SourceDocument to the Project with the given ID if it exists
-   * @returns PreprocessingJobRead Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
   public static uploadProjectSdoc({
@@ -97,7 +96,7 @@ export class ProjectService {
   }: {
     projId: number;
     formData: Body_project_upload_project_sdoc;
-  }): CancelablePromise<PreprocessingJobRead> {
+  }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/project/{proj_id}/sdoc",
