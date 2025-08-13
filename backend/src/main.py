@@ -12,6 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRoute
 from loguru import logger
+from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from psycopg2.errors import UniqueViolation
 from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
 from repos.elastic.elastic_repo import ElasticSearchRepo
@@ -42,11 +43,6 @@ from config import conf
 from core.auth.authz_user import ForbiddenError
 from core.auth.validation import InvalidError
 from core.doc.source_document_crud import SourceDocumentPreprocessingUnfinishedError
-from modules.crawler.crawler_service import (
-    CrawlerJobPreparationError,
-    NoDataToCrawlError,
-    NoSuchCrawlerJobError,
-)
 from modules.eximport.export_service import (
     ExportJobPreparationError,
     NoSuchExportJobError,
@@ -139,16 +135,6 @@ async def no_such_element_error_handler(_, exc: NoSuchElementError):
 @app.exception_handler(NoDataToCrawlError)
 async def no_data_to_crawl_handler(_, exc: NoDataToCrawlError):
     return PlainTextResponse(str(exc), status_code=400)
-
-
-@app.exception_handler(NoSuchCrawlerJobError)
-async def no_such_crawler_job_handler(_, exc: NoSuchCrawlerJobError):
-    return PlainTextResponse(str(exc), status_code=404)
-
-
-@app.exception_handler(CrawlerJobPreparationError)
-async def crawler_job_preparation_error_handler(_, exc: CrawlerJobPreparationError):
-    return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.exception_handler(NoDataToExportError)
