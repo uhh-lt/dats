@@ -6,8 +6,9 @@ from enum import Enum
 class JobType(str, Enum):
     name: str
     description: str
+    queue: str
 
-    def __new__(cls, name: str, description: str = "", queue: str = "default"):
+    def __new__(cls, name: str, description: str = "", queue: str = "cpu"):
         obj = str.__new__(cls, name)
         obj._value_ = name
         obj.description = description
@@ -21,7 +22,7 @@ class JobType(str, Enum):
     EXTRACT_HTML = ("html_extraction", "Extract HTML")
     EXTRACT_PLAIN_TEXT = ("text_extraction", "")
     DETECT_LANGUAGE = ("lang_detect", "")
-    SPACY = ("spacy", "", "cpu")
+    SPACY = ("spacy", "")
     ES_INDEX = ("es_index", "")
     SENTENCE_EMBEDDING = ("sentence_embedding", "", "gpu")
     HTML_MAPPING = ("html_mapping", "")
