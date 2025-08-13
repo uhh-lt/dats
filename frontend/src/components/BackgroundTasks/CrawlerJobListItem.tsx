@@ -1,10 +1,10 @@
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import CrawlerHooks from "../../api/CrawlerHooks.ts";
+import JobHooks from "../../api/JobHooks.ts";
 import { CrawlerJobRead } from "../../api/openapi/models/CrawlerJobRead.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
+import JobListItem from "./JobListItem.tsx";
 
 interface CrawlerJobListItemProps {
   initialCrawlerJob: CrawlerJobRead;
@@ -12,7 +12,7 @@ interface CrawlerJobListItemProps {
 
 function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
   // global server state (react-query)
-  const crawlerJob = CrawlerHooks.usePollCrawlerJob(initialCrawlerJob.id, initialCrawlerJob);
+  const crawlerJob = JobHooks.usePollCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
 
   const dateString = useMemo(() => {
     return dateToLocaleString(initialCrawlerJob.created);
@@ -20,10 +20,10 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
 
   if (crawlerJob.isSuccess) {
     return (
-      <BackgroundJobListItem
+      <JobListItem
         jobStatus={crawlerJob.data.status}
-        jobId={crawlerJob.data.id}
-        title={`Crawler Job: ${crawlerJob.data.id}`}
+        jobId={crawlerJob.data.job_id}
+        title={`Crawler Job: ${crawlerJob.data.job_id}`}
         subTitle={dateString}
       >
         <List
@@ -33,7 +33,7 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
           sx={{ pl: 6 }}
           subheader={<ListSubheader>Downloaded URLs</ListSubheader>}
         >
-          {crawlerJob.data.parameters.urls.map((url, index) => (
+          {crawlerJob.data.input.urls.map((url, index) => (
             <ListItemButton key={index} component={Link} href={url} target="_blank">
               <ListItemIcon>
                 <WebIcon />
@@ -46,7 +46,7 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
             </ListItemButton>
           ))}
         </List>
-      </BackgroundJobListItem>
+      </JobListItem>
     );
   } else {
     return null;

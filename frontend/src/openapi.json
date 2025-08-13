@@ -1005,88 +1005,6 @@
         }
       }
     },
-    "/crawler": {
-      "post": {
-        "tags": ["crawler"],
-        "summary": "Returns the CrawlerJob for the given Parameters",
-        "operationId": "start_crawler_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobParameters" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/crawler/{crawler_job_id}": {
-      "get": {
-        "tags": ["crawler"],
-        "summary": "Returns the CrawlerJob for the given ID if it exists",
-        "operationId": "get_crawler_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "crawler_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Crawler Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/crawler/project/{project_id}": {
-      "get": {
-        "tags": ["crawler"],
-        "summary": "Returns all CrawlerJobs for the given project ID if it exists",
-        "operationId": "get_all_crawler_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CrawlerJobRead" },
-                  "title": "Response Crawler-Get All Crawler Jobs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/folder/{folder_id}": {
       "get": {
         "tags": ["folder"],
@@ -1380,6 +1298,129 @@
         "operationId": "root_to_docs",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+        }
+      }
+    },
+    "/job/crawler": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start Crawler job",
+        "operationId": "start_crawler_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/crawler/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get Crawler job",
+        "operationId": "get_crawler_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/crawler/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort Crawler job",
+        "operationId": "abort_crawler_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Abort Crawler Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/crawler/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry Crawler job",
+        "operationId": "retry_crawler_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "type": "boolean", "title": "Response Job-Retry Crawler Job" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/crawler/project/{project_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all Crawler jobs by project",
+        "operationId": "get_crawler_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CrawlerJobRead" },
+                  "title": "Response Job-Get Crawler Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
         }
       }
     },
@@ -2646,10 +2687,7 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
-          },
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -7305,7 +7343,7 @@
         "required": ["ml_job_type"],
         "title": "CoreferenceResolutionParams"
       },
-      "CrawlerJobParameters": {
+      "CrawlerJobInput": {
         "properties": {
           "project_id": {
             "type": "integer",
@@ -7321,69 +7359,50 @@
         },
         "type": "object",
         "required": ["project_id", "urls"],
-        "title": "CrawlerJobParameters"
+        "title": "CrawlerJobInput"
       },
       "CrawlerJobRead": {
         "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the CrawlerJob",
-            "default": "Waiting"
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
           },
-          "id": { "type": "string", "title": "Id", "description": "ID of the CrawlerJob" },
-          "parameters": {
-            "$ref": "#/components/schemas/CrawlerJobParameters",
-            "description": "The parameters of the crawler job that defines what to crawl!"
-          },
-          "output_dir": {
-            "type": "string",
-            "title": "Output Dir",
-            "description": "Internal temporary output directory for the crawled data."
-          },
-          "images_store_path": {
-            "type": "string",
-            "title": "Images Store Path",
-            "description": "Internal temporary output directory for the crawled images."
-          },
-          "videos_store_path": {
-            "type": "string",
-            "title": "Videos Store Path",
-            "description": "Internal temporary output directory for the crawled videos."
-          },
-          "audios_store_path": {
-            "type": "string",
-            "title": "Audios Store Path",
-            "description": "Internal temporary output directory for the crawled audios."
-          },
-          "crawled_data_zip_path": {
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Crawled Data Zip Path",
-            "description": "Path to the ZIP that contains the data of the CrawlerJob"
+            "title": "Status Message",
+            "description": "Status message"
           },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/CrawlerJobInput", "description": "Input for the job" },
+          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the CrawlerJob"
+            "description": "Created timestamp of the job"
           },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the CrawlerJob"
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "parameters",
-          "output_dir",
-          "images_store_path",
-          "videos_store_path",
-          "audios_store_path",
-          "created",
-          "updated"
-        ],
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "CrawlerJobRead"
       },
       "CreateAspectParams": {
