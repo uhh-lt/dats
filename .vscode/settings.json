@@ -5,9 +5,11 @@
     "backend": true,
     "frontend": true
   },
+
   // prettier
   "prettier.prettierPath": "frontend/node_modules/prettier",
   "prettier.configPath": ".prettierrc.yaml",
+
   // ruff
   "ruff.interpreter": ["${workspaceFolder:backend}/.venv/bin/python"]
 }
