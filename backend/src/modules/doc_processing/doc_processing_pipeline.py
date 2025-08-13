@@ -95,7 +95,7 @@ def handle_job_finished(
                             sdoc_id=output.sdoc_id,
                             filepath=input.filepath,
                             doctype=DocType.text,
-                            folder_id=input.folder_id,
+                            folder_id=output.folder_id,
                         ),
                     )
                 case DocType.image:
