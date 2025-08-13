@@ -11,5 +11,8 @@
   "prettier.configPath": ".prettierrc.yaml",
 
   // ruff
-  "ruff.interpreter": ["${workspaceFolder:backend}/.venv/bin/python"]
+  "ruff.interpreter": ["${workspaceFolder:backend}/.venv/bin/python"],
+
+  // python
+  "python.analysis.exclude": ["*"]
 }
