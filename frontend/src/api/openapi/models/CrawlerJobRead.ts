@@ -2,47 +2,51 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { CrawlerJobParameters } from "./CrawlerJobParameters";
+import type { CrawlerJobInput } from "./CrawlerJobInput";
+import type { JobStatus } from "./JobStatus";
 export type CrawlerJobRead = {
   /**
-   * Status of the CrawlerJob
+   * RQ job ID
    */
-  status?: BackgroundJobStatus;
+  job_id: string;
   /**
-   * ID of the CrawlerJob
+   * Type of the job
    */
-  id: string;
+  job_type: string;
   /**
-   * The parameters of the crawler job that defines what to crawl!
+   * Project ID associated with the job
    */
-  parameters: CrawlerJobParameters;
+  project_id: number;
   /**
-   * Internal temporary output directory for the crawled data.
+   * Current status of the job
    */
-  output_dir: string;
+  status: JobStatus;
   /**
-   * Internal temporary output directory for the crawled images.
+   * Status message
    */
-  images_store_path: string;
+  status_message?: string | null;
   /**
-   * Internal temporary output directory for the crawled videos.
+   * Current step in the job process
    */
-  videos_store_path: string;
+  current_step: number;
   /**
-   * Internal temporary output directory for the crawled audios.
+   * Total number of steps in the job process
    */
-  audios_store_path: string;
+  steps: Array<string>;
   /**
-   * Path to the ZIP that contains the data of the CrawlerJob
+   * Input for the job
    */
-  crawled_data_zip_path?: string | null;
+  input: CrawlerJobInput;
   /**
-   * Created timestamp of the CrawlerJob
+   * Output for the job
+   */
+  output?: null;
+  /**
+   * Created timestamp of the job
    */
   created: string;
   /**
-   * Updated timestamp of the CrawlerJob
+   * Finished timestamp of the job
    */
-  updated: string;
+  finished?: string | null;
 };
