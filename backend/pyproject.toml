@@ -123,15 +123,8 @@ Repository = "https://github.com/uhh-lt/dats.git"
 Issues = "https://github.com/uhh-lt/dats/issues"
 
 [tool.ruff]
+extend = "../ruff.toml"
 src = ["src"]
-
-[tool.ruff.lint]
-
-# I: isort-compatible import sorting
-# W291: Trailing whitespace
-# W292: Add newline to end of file
-# W293: Blank line contains whitespace
-extend-select = ["I", "W292", "W291", "W293"]
 
 [tool.pyright]
 include = ["src"]
