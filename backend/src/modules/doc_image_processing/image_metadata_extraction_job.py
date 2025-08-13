@@ -24,8 +24,8 @@ def handle_image_metadata_extraction_job(
     payload: ImageMetadataExtractionJobInput, job: Job
 ) -> None:
     with Image.open(payload.filepath) as img:
-        width = str(img.width)
-        height = str(img.height)
+        width = img.width
+        height = img.height
         format = str(img.format)
         mode = str(img.mode)
 

@@ -9,14 +9,17 @@ from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
@@ -67,8 +70,17 @@ def handle_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             db=db, user_id=SYSTEM_USER_ID, sdoc_id=payload.sdoc_id
         )
 
+        sdoc = crud_sdoc.read(db, payload.sdoc_id)
+
+        url = FilesystemRepo().get_sdoc_url(
+            sdoc=SourceDocumentRead.model_validate(sdoc),
+            relative=True,
+            webp=sdoc.doctype == DocType.image,
+            thumbnail=False,
+        )
+
         # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(payload, spacy_output)
+        sdoc_data = extract_tok_sent_data(payload, spacy_output, url)
 
         # keywords
         # if payload does not have keywords:
@@ -187,6 +199,7 @@ def extract_span_annotations(
 def extract_tok_sent_data(
     input: SpacyJobInput,
     spacy_output: SpacyPipelineOutput,
+    url: str,
 ) -> SourceDocumentDataCreate:
     # FIXME: take tokens/sentences from whisper and store audio token time offsets
     token_starts: list[int] = []
@@ -205,7 +218,7 @@ def extract_tok_sent_data(
         id=input.sdoc_id,
         content=input.text,
         html=input.html,
-        repo_url="",
+        repo_url=url,
         token_starts=token_starts,
         token_ends=token_ends,
         sentence_starts=sentence_starts,

@@ -37,7 +37,6 @@ def handle_detect_language_job(
     payload: DetectLanguageJobInput, job: Job
 ) -> DetectLanguageJobOutput:
     # DETECT LANGUAGE
-    # TODO Flo: what to do with mixed lang docs?
     glotlid_input = GlotLIDInput(text=payload.text)
     glotlid_output: GlotLIDOutput = ray.language_identification(glotlid_input)
 
@@ -49,10 +48,17 @@ def handle_detect_language_job(
         "ita_Latn": "it",
     }
 
-    lang_code = glotlid_output.best_match.lang_code
-    lang = code_map.get(lang_code, None)
+    lang = None
+    # take the best/first supported language
+    for det_lang in glotlid_output.detected_languages:
+        lang = code_map.get(det_lang.lang_code, None)
+        if lang is not None:
+            break
     if lang is None:
-        raise LanguageNotSupportedError(detected_language=lang_code)
+        # none of the top k languages is supported
+        raise LanguageNotSupportedError(
+            detected_language=glotlid_output.best_match.lang_code
+        )
 
     with SQLRepo().db_session() as db:
         # Store language in db

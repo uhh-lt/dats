@@ -49,6 +49,7 @@ def do_work():
     import_by_suffix("_orm.py")
     import_by_suffix("_dto.py")
     import_by_suffix("_crud.py")
+    import_by_suffix("_job.py")
     # import doc_processing_pipeline
     import modules.doc_processing.doc_processing_pipeline  # noqa: F401
 
