@@ -265,7 +265,7 @@ def handle_job_finished(
                     sdoc_id=input.sdoc_id,
                     html=output.html,
                     filename=input.filepath.name,
-                    doctype=DocType.text,
+                    doctype=DocType.image,
                 ),
             )
 

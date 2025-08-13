@@ -11,13 +11,17 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_data_dto import (
+    SourceDocumentDataCreate,
+    SourceDocumentDataUpdate,
+)
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
+from repos.db.crud_base import NoSuchElementError
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayRepo
@@ -73,17 +77,8 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             manual_commit=True,
         )
 
-        sdoc = crud_sdoc.read(trans, payload.sdoc_id)
-
-        url = FilesystemRepo().get_sdoc_url(
-            sdoc=SourceDocumentRead.model_validate(sdoc),
-            relative=True,
-            webp=sdoc.doctype == DocType.image,
-            thumbnail=False,
-        )
-
         # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(payload, spacy_output, url)
+        sdoc_data = extract_tok_sent_data(spacy_output)
 
         # keywords
         # if payload does not have keywords:
@@ -113,16 +108,61 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         crud_span_anno.create_multi(
             trans, create_dtos=span_annotations, manual_commit=True
         )
-        crud_sdoc_data.create(db=trans, create_dto=sdoc_data, manual_commit=True)
+
+        # it is possible that sdoc data already exists (if coming from audio or video pipeline)
+        # in this case, we are only interested in sentence splitting (tokenization already done by whisper)
+        try:
+            existing_sdoc_data = crud_sdoc_data.read(db=trans, id=payload.sdoc_id)
+            sdoc_data = {
+                "token_starts": existing_sdoc_data.token_starts,
+                "token_ends": existing_sdoc_data.token_ends,
+                "sentence_starts": sdoc_data["sentence_starts"],
+                "sentence_ends": sdoc_data["sentence_ends"],
+            }
+        except NoSuchElementError:
+            existing_sdoc_data = None
+
+        if existing_sdoc_data is None:
+            sdoc = crud_sdoc.read(trans, payload.sdoc_id)
+            url = FilesystemRepo().get_sdoc_url(
+                sdoc=SourceDocumentRead.model_validate(sdoc),
+                relative=True,
+                webp=sdoc.doctype == DocType.image,
+                thumbnail=False,
+            )
+            crud_sdoc_data.create(
+                db=trans,
+                create_dto=SourceDocumentDataCreate(
+                    id=payload.sdoc_id,
+                    repo_url=url,
+                    content=payload.text,
+                    html=payload.html,
+                    token_starts=sdoc_data["token_starts"],
+                    token_ends=sdoc_data["token_ends"],
+                    sentence_starts=sdoc_data["sentence_starts"],
+                    sentence_ends=sdoc_data["sentence_ends"],
+                ),
+                manual_commit=True,
+            )
+        else:
+            crud_sdoc_data.update(
+                db=trans,
+                id=payload.sdoc_id,
+                update_dto=SourceDocumentDataUpdate(
+                    sentence_starts=sdoc_data["sentence_starts"],
+                    sentence_ends=sdoc_data["sentence_ends"],
+                ),
+                manual_commit=True,
+            )
 
     return SpacyJobOutput(
-        sentence_starts=sdoc_data.sentence_starts,
-        sentence_ends=sdoc_data.sentence_ends,
-        token_starts=sdoc_data.token_starts,
-        token_ends=sdoc_data.token_ends,
+        sentence_starts=sdoc_data["sentence_starts"],
+        sentence_ends=sdoc_data["sentence_ends"],
+        token_starts=sdoc_data["token_starts"],
+        token_ends=sdoc_data["token_ends"],
         sentences=[
-            sdoc_data.content[s:e]
-            for s, e in zip(sdoc_data.sentence_starts, sdoc_data.sentence_ends)
+            payload.text[s:e]
+            for s, e in zip(sdoc_data["sentence_starts"], sdoc_data["sentence_ends"])
         ],
     )
 
@@ -209,10 +249,8 @@ def extract_span_annotations(
 
 
 def extract_tok_sent_data(
-    input: SpacyJobInput,
     spacy_output: SpacyPipelineOutput,
-    url: str,
-) -> SourceDocumentDataCreate:
+) -> dict:
     # FIXME: take tokens/sentences from whisper and store audio token time offsets
     token_starts: list[int] = []
     token_ends: list[int] = []
@@ -226,16 +264,12 @@ def extract_tok_sent_data(
         sentence_starts.append(s.start_char)
         sentence_ends.append(s.end_char)
 
-    return SourceDocumentDataCreate(
-        id=input.sdoc_id,
-        content=input.text,
-        html=input.html,
-        repo_url=url,
-        token_starts=token_starts,
-        token_ends=token_ends,
-        sentence_starts=sentence_starts,
-        sentence_ends=sentence_ends,
-    )
+    return {
+        "token_starts": token_starts,
+        "token_ends": token_ends,
+        "sentence_starts": sentence_starts,
+        "sentence_ends": sentence_ends,
+    }
 
 
 def extract_word_frequencies(

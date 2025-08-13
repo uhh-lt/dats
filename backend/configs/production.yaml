@@ -173,6 +173,12 @@ project_metadata:
     read_only: True
     doctype: "image"
     description: "The URL of the image"
+  image_language:
+    key: "language"
+    metatype: "STRING"
+    read_only: True
+    doctype: "image"
+    description: "The language of the image caption"
   image_keywords:
     key: "keywords"
     metatype: "LIST"
@@ -228,8 +234,8 @@ project_metadata:
     read_only: True
     doctype: "audio"
     description: "The language of the audio"
-  audio_transcription_keywords:
-    key: "transcription_keywords"
+  audio_keywords:
+    key: "keywords"
     metatype: "LIST"
     read_only: True
     doctype: "audio"
@@ -283,8 +289,8 @@ project_metadata:
     read_only: True
     doctype: "video"
     description: "The language of the video"
-  video_transcription_keywords:
-    key: "transcription_keywords"
+  video_keywords:
+    key: "keywords"
     metatype: "LIST"
     read_only: True
     doctype: "video"

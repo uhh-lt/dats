@@ -14,7 +14,6 @@ sqlr = SQLRepo()
 
 
 class VideoThumbnailJobInput(SdocJobInput):
-    sdoc_id: int
     filepath: Path
 
 

@@ -11,13 +11,12 @@ from systems.job_system.job_register_decorator import register_job
 sqlr = SQLRepo()
 
 EXPECTED_METADATA = [
-    "url",
     "duration",
     "format_name",
     "format_long_name",
     "size",
     "bit_rate",
-    "tags",
+    "tags",  # missing
 ]
 
 
@@ -35,7 +34,9 @@ def handle_audio_metadata_extraction_job(
     audio_metadata = {}
     ffmpeg_probe = ffmpeg.probe(payload.filepath)
     for k, v in ffmpeg_probe["format"].items():
-        if k in EXPECTED_METADATA:
+        if k == "format_name":
+            audio_metadata[k] = str(v).split(",")
+        elif k in EXPECTED_METADATA:
             audio_metadata[k] = v
 
     with sqlr.db_session() as db:
