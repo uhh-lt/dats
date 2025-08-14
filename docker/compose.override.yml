@@ -5,12 +5,6 @@ services:
     ports:
       - "${POSTGRES_EXPOSED:-13122}:5432"
 
-  rabbitmq:
-    volumes:
-      - "rabbitmq_data:/var/lib/rabbitmq/data"
-    ports:
-      - "${RABBIT_EXPOSED:-13123}:5672"
-
   redis:
     volumes:
       - "redis_data:/var/lib/redis/data"
@@ -73,8 +67,6 @@ services:
       - ../backend/src:/dats_code/src
 
 volumes:
-  rabbitmq_data:
-    driver: local
   redis_data:
     driver: local
   postgres_data:

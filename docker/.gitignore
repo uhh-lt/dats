@@ -7,7 +7,6 @@
 /rq_cache/*
 
 /pg_data/*
-/rabbitmq_data/*
 /redis_data/*
 /weaviate_data/*
 /elasticsearch_data/*

@@ -12,19 +12,6 @@ services:
     networks:
       - dats_network
 
-  rabbitmq:
-    image: "rabbitmq:3-management-alpine"
-    healthcheck:
-      test: "rabbitmq-diagnostics check_port_connectivity"
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dats123}
-    networks:
-      - dats_network
-
   redis:
     image: "redis:7-alpine"
     healthcheck:
@@ -121,8 +108,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
@@ -137,9 +122,6 @@ services:
       - ./rq_cache:/rq_cache
     depends_on:
       postgres:
-        condition: service_healthy
-        restart: true
-      rabbitmq:
         condition: service_healthy
         restart: true
       redis:
@@ -200,8 +182,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dats}
       POSTGRES_USER: ${POSTGRES_USER:-datsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dats123}
-      RABBITMQ_USER: ${RABBITMQ_USER:-datsuser}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dats123}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dats123}
       OLLAMA_HOST: ${OLLAMA_HOST:-ollama}
       OLLAMA_PORT: ${OLLAMA_PORT:-11434}
@@ -222,9 +202,6 @@ services:
       - ./api_cache:/api_cache
     depends_on:
       postgres:
-        condition: service_healthy
-        restart: true
-      rabbitmq:
         condition: service_healthy
         restart: true
       redis:
