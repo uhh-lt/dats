@@ -5,7 +5,7 @@ from common.job_type import JobType
 from core.doc.source_document_status_crud import crud_sdoc_status
 from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
 from loguru import logger
-from modules.crawler.crawler_jobs import CrawlerJobInput, CrawlerJobOutput
+from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
 from modules.doc_audio_processing.audio_metadata_extraction_job import (
     AudioMetadataExtractionJobInput,
 )
