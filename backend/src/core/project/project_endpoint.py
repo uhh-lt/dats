@@ -107,12 +107,6 @@ def upload_project_sdoc(
     authz_user: AuthzUser = Depends(),
 ) -> None:
     authz_user.assert_in_project(proj_id)
-
-    # pps: PreprocessingService = PreprocessingService()
-    # return pps.prepare_and_start_preprocessing_job_async(
-    #     proj_id=proj_id, uploaded_files=uploaded_files
-    # )
-
     ppsn = DocProcessingService()
     ppsn.start_preprocessing(project_id=proj_id, uploaded_files=uploaded_files)
 

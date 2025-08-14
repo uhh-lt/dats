@@ -114,3 +114,45 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
         description="ID of the Folder this SourceDocument belongs to. If not provided, a folder with the filename of the SourceDocument will be created automatically.",
         default=None,
     )
+
+
+class SourceDocumentStatusRead(SourceDocumentBaseDTO):
+    # KEEP THE SAME ORDER AS source_document_orm.py!
+
+    # text
+    extract_html: SDocStatus = Field(description="Extract HTML done?")
+
+    # HTML
+    text_extraction: SDocStatus = Field(description="Text Extraction done?")
+    text_language_detection: SDocStatus = Field(
+        description="Text Language Detection done?"
+    )
+    text_spacy: SDocStatus = Field(description="Text Spacy done?")
+    text_es_index: SDocStatus = Field(description="Text ES Index done?")
+    text_sentence_embedding: SDocStatus = Field(
+        description="Text Sentence Embedding done?"
+    )
+    text_html_mapping: SDocStatus = Field(description="Text HTML Mapping done?")
+
+    # IMAGES
+    image_caption: SDocStatus = Field(description="Image Captioning done?")
+    image_embedding: SDocStatus = Field(description="Image Embedding done?")
+    image_metadata_extraction: SDocStatus = Field(
+        description="Image Metadata Extraction done?"
+    )
+    image_thumbnail: SDocStatus = Field(description="Image Thumbnail Generation done?")
+    image_object_detection: SDocStatus = Field(description="Object Detection done?")
+
+    # AUDIO
+    audio_metadata: SDocStatus = Field(description="Audio Metadata Extraction done?")
+    audio_thumbnail: SDocStatus = Field(description="Audio Thumbnail Generation done?")
+    audio_transcription: SDocStatus = Field(description="Transcription done?")
+
+    # VIDEO
+    video_metadata: SDocStatus = Field(description="Video Metadata Extraction done?")
+    video_thumbnail: SDocStatus = Field(description="Video Thumbnail Generation done?")
+    video_audio_extraction: SDocStatus = Field(
+        description="Video Audio Extraction done?"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
