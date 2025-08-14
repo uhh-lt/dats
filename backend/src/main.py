@@ -58,7 +58,7 @@ from repos.filesystem_repo import (
 )
 
 # import all jobs dynamically
-import_by_suffix("_jobs.py")
+import_by_suffix("_job.py")
 
 
 # custom method to generate OpenApi function names
