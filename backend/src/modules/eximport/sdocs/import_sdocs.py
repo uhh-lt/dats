@@ -22,12 +22,12 @@ from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCre
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from loguru import logger
+from modules.doc_image_processing.image_thumbnail_generation_job import (
+    generate_thumbnails,
+)
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from preprocessing.pipeline.steps.image.process.convert_to_webp_and_generate_thumbnail import (
-    generate_thumbnails,
-)
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo

@@ -7,7 +7,6 @@ from config import conf
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
 from loguru import logger
-from preprocessing.preprocessing_service import PreprocessingService
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import (
     FileAlreadyExistsInFilesystemError,
@@ -18,10 +17,9 @@ from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
-cc = conf.celery
+cp = conf.preprocessing
 
 fsr = FilesystemRepo()
-pps = PreprocessingService()
 ray = RayRepo()
 
 

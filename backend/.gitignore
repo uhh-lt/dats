@@ -16,10 +16,6 @@ __pycache__/
 # PyBuilder
 target/
 
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
 # Ray
 src/ray_model_worker/spec.yaml
 

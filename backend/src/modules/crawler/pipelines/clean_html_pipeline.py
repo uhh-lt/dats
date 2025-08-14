@@ -5,7 +5,7 @@
 
 
 from modules.crawler.crawled_item import CrawledItem
-from preprocessing.pipeline.steps.text.init.clean_html import (
+from modules.doc_text_processing.html_cleaning_utils import (
     cleaning_with_readability_pipeline,
 )
 
