@@ -21,7 +21,6 @@ dependencies = [
     "beautifulsoup4==4.12.3",
     "black==23.9.1",
     "blinker==1.9.0",
-    "celery==5.2",
     "cssselect==1.2.0",
     "debugpy==1.8.0",
     "elasticsearch==7.17",

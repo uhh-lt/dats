@@ -34,8 +34,6 @@ from modules.timeline_analysis.timeline_analysis_crud import (
 )
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
-from preprocessing.preprocessing_job_crud import crud_prepro_job
-from preprocessing.preprocessing_job_payload_crud import crud_prepro_job_payload
 
 
 class Crud(Enum):
@@ -51,8 +49,6 @@ class Crud(Enum):
     FOLDER = crud_folder
     MEMO = crud_memo
     OBJECT_HANDLE = crud_object_handle
-    PREPROCESSING_JOB_PAYLOAD = crud_prepro_job_payload
-    PREPROCESSING_JOB = crud_prepro_job
     PROJECT = crud_project
     PROJECT_METADATA = crud_project_meta
     REFRESH_TOKEN = crud_refresh_token

@@ -13,7 +13,7 @@ from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image
 
-cc = conf.celery
+cp = conf.preprocessing
 
 
 class ExtractHTMLJobInput(SdocJobInput):
@@ -93,7 +93,7 @@ def extract_html_from_word(filepath: Path) -> tuple[str, list[Path]]:
     extracted_images: list[Path] = []
 
     def convert_image(image) -> dict[str, str]:
-        if not cc.preprocessing.extract_images_from_docx:
+        if not cp.extract_images_from_docx:
             return {"src": ""}
 
         fn = filepath.parent / f"image_{str(uuid4())}"

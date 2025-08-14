@@ -64,10 +64,6 @@ services:
     networks:
       - dats_network
 
-  celery-background-jobs-worker:
-    volumes:
-      - ../backend/src:/dats_code/src
-
   rq-worker:
     volumes:
       - ../backend/src:/dats_code/src

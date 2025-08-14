@@ -56,7 +56,7 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     image_dir = output_dir / "images"
     image_dir.mkdir()
 
-    # # relative directories to communicate with the celery workers
+    # # relative directories to communicate with the workers
     output_dir = output_dir.relative_to(fsr.root_dir)
     image_dir = image_dir.relative_to(fsr.root_dir)
 
