@@ -19,8 +19,6 @@ if TYPE_CHECKING:
     from core.user.user_orm import UserORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
-    from preprocessing.preprocessing_job_orm import PreprocessingJobORM
-    from preprocessing.preprocessing_job_payload_orm import PreprocessingJobPayloadORM
 
 
 class ProjectORM(ORMBase):
@@ -101,20 +99,6 @@ class ProjectORM(ORMBase):
 
     whiteboards: Mapped[list["WhiteboardORM"]] = relationship(
         "WhiteboardORM",
-        back_populates="project",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-
-    preprocessing_jobs: Mapped[list["PreprocessingJobORM"]] = relationship(
-        "PreprocessingJobORM",
-        back_populates="project",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-
-    preprocessing_payloads: Mapped[list["PreprocessingJobPayloadORM"]] = relationship(
-        "PreprocessingJobPayloadORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

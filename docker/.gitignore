@@ -2,7 +2,6 @@
 
 /api_cache/*
 /backend_repo/*
-/celery_cache/*
 /ollama_cache/*
 /ray_cache/*
 /rq_cache/*

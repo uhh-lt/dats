@@ -51,21 +51,10 @@ filesystem:
     port: ${oc.env:CONTENT_SERVER_PORT, 13121}
     context_path: /
 
-celery:
-  backend:
-    host: localhost
-    port: ${oc.env:REDIS_PORT, 13124}
-    db: 0
-    password: ${oc.env:REDIS_PASSWORD, dats123}
-  broker:
-    host: localhost
-    port: ${oc.env:RABBITMQ_PORT, 13123}
-    user: ${oc.env:RABBITMQ_USER, datsuser}
-    password: ${oc.env:RABBITMQ_PASSWORD, dats123}
-  preprocessing:
-    extract_images_from_pdf: True
-    extract_images_from_docx: True
-    max_pages_per_pdf_chunk: 10
+preprocessing:
+  extract_images_from_pdf: True
+  extract_images_from_docx: True
+  max_pages_per_pdf_chunk: 10
 
 weaviate:
   host: localhost

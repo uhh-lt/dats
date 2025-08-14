@@ -37,35 +37,6 @@
       "envFile": "${workspaceFolder}/frontend/.env.development"
     },
     {
-      "name": "celery",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/backend/.venv/bin/celery",
-      "args": [
-        "-A",
-        "core.celery.background_jobs.tasks",
-        "worker",
-        "-Q",
-        "bgJobsQ,celery",
-        "-P",
-        "threads",
-        "-l",
-        "info",
-        "-c",
-        "1",
-        "--without-gossip",
-        "--without-mingle",
-        "--without-heartbeat"
-      ],
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/backend/src"
-      }
-    },
-    {
       "name": "pytest",
       "type": "debugpy",
       "request": "launch",

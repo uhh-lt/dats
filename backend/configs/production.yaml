@@ -51,21 +51,10 @@ filesystem:
     port: 80
     context_path: /
 
-celery:
-  backend:
-    host: redis
-    port: 6379
-    db: 0
-    password: ${oc.env:REDIS_PASSWORD, dats123}
-  broker:
-    host: rabbitmq
-    port: 5672
-    user: ${oc.env:RABBITMQ_USER, datsuser}
-    password: ${oc.env:RABBITMQ_PASSWORD, dats123}
-  preprocessing:
-    extract_images_from_pdf: True
-    extract_images_from_docx: True
-    max_pages_per_pdf_chunk: 10
+preprocessing:
+  extract_images_from_pdf: True
+  extract_images_from_docx: True
+  max_pages_per_pdf_chunk: 10
 
 weaviate:
   host: weaviate
