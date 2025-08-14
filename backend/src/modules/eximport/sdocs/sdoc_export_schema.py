@@ -11,7 +11,7 @@ class SourceDocumentExportSchema(BaseModel):
     filename: str = Field(description="Filename of the source document")
     name: str | None = Field(description="Name of the source document", default=None)
     doctype: str = Field(description="Document type of the source document")
-    processed: bool = Field(description="Processed status of the source document")
+    status: SDocStatus = Field(description="Status of the source document")
 
     # Data attached to the source document
     tags: list[str] = Field(

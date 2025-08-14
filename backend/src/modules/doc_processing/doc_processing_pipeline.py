@@ -2,6 +2,7 @@ from pathlib import Path
 
 from common.doc_type import DocType
 from common.job_type import JobType
+from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentUpdate
 from loguru import logger
@@ -63,6 +64,19 @@ from systems.job_system.job_dto import JobInputBase, JobOutputBase, SdocJobInput
 from systems.job_system.job_service import JobService
 
 js = JobService()
+
+
+def handle_job_error(job_type: JobType, input: JobInputBase):
+    if not isinstance(input, SdocJobInput):
+        return
+
+    # Update status: Job X has error
+    with SQLRepo().db_session() as db:
+        crud_sdoc.update(
+            db,
+            id=input.sdoc_id,
+            update_dto=SourceDocumentUpdate(**{job_type.value: SDocStatus.erroneous}),  # type: ignore
+        )
 
 
 def handle_job_finished(
@@ -144,7 +158,7 @@ def handle_job_finished(
         crud_sdoc.update(
             db,
             id=input.sdoc_id,
-            update_dto=SourceDocumentUpdate(**{job_type.value: True}),  # type: ignore
+            update_dto=SourceDocumentUpdate(**{job_type.value: SDocStatus.finished}),  # type: ignore
         )
 
     # Jobs requiring sdoc_id are below:

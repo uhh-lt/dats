@@ -5,16 +5,15 @@ from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
 from sqlalchemy import (
-    Boolean,
     Computed,
     DateTime,
     ForeignKey,
     Integer,
     String,
     UniqueConstraint,
-    case,
     func,
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -154,250 +153,202 @@ class SourceDocumentORM(ORMBase):
 
     # KEEP THE SAME ORDER AS job_type.py!
 
-    # INIT
-    sdoc_init: Mapped[bool] = mapped_column(
-        Boolean,
+    # OPTIONAL (2)
+    extract_archive: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    extract_archive: Mapped[bool] = mapped_column(
-        Boolean,
+    pdf_checking: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
-    )
-    pdf_checking: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
-    )
-    extract_html: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
     )
 
-    # HTML
-    text_extraction: Mapped[bool] = mapped_column(
-        Boolean,
+    # INIT (2)
+    sdoc_init: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    text_language_detection: Mapped[bool] = mapped_column(
-        Boolean,
+    extract_html: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
-    )
-    text_spacy: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
-    )
-    text_es_index: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
-    )
-    text_sentence_embedding: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
-    )
-    text_html_mapping: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
     )
 
-    # IMAGE
-    image_caption: Mapped[bool] = mapped_column(
-        Boolean,
+    # HTML (6)
+    text_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    image_embedding: Mapped[bool] = mapped_column(
-        Boolean,
+    text_language_detection: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    image_metadata_extraction: Mapped[bool] = mapped_column(
-        Boolean,
+    text_spacy: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    image_thumbnail: Mapped[bool] = mapped_column(
-        Boolean,
+    text_es_index: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    image_object_detection: Mapped[bool] = mapped_column(
-        Boolean,
+    text_sentence_embedding: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-
-    # AUDIO
-    audio_metadata: Mapped[bool] = mapped_column(
-        Boolean,
+    text_html_mapping: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
-    )
-    audio_thumbnail: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
-    )
-    audio_transcription: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default="false",
-        deferred=True,
-        deferred_raiseload=True,
     )
 
-    # VIDEO
-    video_metadata: Mapped[bool] = mapped_column(
-        Boolean,
+    # IMAGE (5)
+    image_caption: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    video_thumbnail: Mapped[bool] = mapped_column(
-        Boolean,
+    image_embedding: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
     )
-    video_audio_extraction: Mapped[bool] = mapped_column(
-        Boolean,
+    image_metadata_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
         nullable=False,
-        server_default="false",
+        server_default="0",
         deferred=True,
-        deferred_raiseload=True,
+    )
+    image_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    image_object_detection: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
     )
 
-    processed: Mapped[bool] = mapped_column(
+    # AUDIO (3)
+    audio_metadata: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    audio_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    audio_transcription: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    # VIDEO (3)
+    video_metadata: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    video_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    video_audio_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    processed_jobs: Mapped[int] = mapped_column(
         Computed(
-            case(
-                (
-                    doctype == DocType.text,
-                    case(
-                        (
-                            sdoc_init
-                            & extract_html
-                            & text_extraction
-                            & text_es_index
-                            & text_html_mapping
-                            & text_language_detection
-                            & text_spacy
-                            & text_sentence_embedding,
-                            True,
-                        ),
-                        else_=False,
-                    ),
-                ),
-                (
-                    doctype == DocType.image,
-                    case(
-                        (
-                            sdoc_init
-                            & text_extraction
-                            & text_es_index
-                            & text_html_mapping
-                            & text_language_detection
-                            & text_spacy
-                            & text_sentence_embedding
-                            & image_caption
-                            & image_embedding
-                            & image_metadata_extraction
-                            & image_object_detection
-                            & image_thumbnail,
-                            True,
-                        ),
-                        else_=False,
-                    ),
-                ),
-                (
-                    doctype == DocType.audio,
-                    case(
-                        (
-                            sdoc_init
-                            & text_extraction
-                            & text_es_index
-                            & text_html_mapping
-                            & text_language_detection
-                            & text_spacy
-                            & text_sentence_embedding
-                            & audio_metadata
-                            & audio_thumbnail
-                            & audio_transcription,
-                            True,
-                        ),
-                        else_=False,
-                    ),
-                ),
-                (
-                    doctype == DocType.video,
-                    case(
-                        (
-                            sdoc_init
-                            & text_extraction
-                            & text_es_index
-                            & text_html_mapping
-                            & text_language_detection
-                            & text_spacy
-                            & text_sentence_embedding
-                            & audio_transcription
-                            & video_audio_extraction
-                            & video_metadata
-                            & video_thumbnail,
-                            True,
-                        ),
-                        else_=False,
-                    ),
-                ),
-                else_=False,
-            ),
+            # init (2)
+            sdoc_init
+            + extract_html
+            # html (6)
+            + text_extraction
+            + text_language_detection
+            + text_spacy
+            + text_es_index
+            + text_sentence_embedding
+            + text_html_mapping
+            # image (5)
+            + image_caption
+            + image_embedding
+            + image_metadata_extraction
+            + image_thumbnail
+            + image_object_detection
+            # audio (3)
+            + audio_metadata
+            + audio_thumbnail
+            + audio_transcription
+            # video (3)
+            + video_metadata
+            + video_thumbnail
+            + video_audio_extraction,
             persisted=True,
         ),
         nullable=False,
         index=True,
     )
+
+    @hybrid_property
+    def processed_status(self) -> SDocStatus:
+        if self.processed_jobs < 0:
+            return SDocStatus.erroneous
+        if self.doctype == DocType.text:
+            # init + html
+            if self.processed_jobs == 8:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.image:
+            # init + image + html
+            if self.processed_jobs == 13:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.audio:
+            # init + audio + html
+            if self.processed_jobs == 11:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.video:
+            # init + video + html
+            if self.processed_jobs == 14:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        else:
+            return SDocStatus.processing
 
     __table_args__ = (
         UniqueConstraint(
