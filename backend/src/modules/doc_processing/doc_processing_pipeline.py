@@ -2,8 +2,8 @@ from pathlib import Path
 
 from common.doc_type import DocType
 from common.job_type import JobType
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusUpdate
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentUpdate
 from loguru import logger
 from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
 from modules.doc_audio_processing.audio_metadata_extraction_job import (
@@ -141,10 +141,10 @@ def handle_job_finished(
 
     # Update status: Job X has been completed successfully
     with SQLRepo().db_session() as db:
-        crud_sdoc_status.update(
+        crud_sdoc.update(
             db,
             id=input.sdoc_id,
-            update_dto=SourceDocumentStatusUpdate(**{job_type.value: True}),
+            update_dto=SourceDocumentUpdate(**{job_type.value: True}),  # type: ignore
         )
 
     # Jobs requiring sdoc_id are below:

@@ -645,7 +645,8 @@ class FilesystemRepo(metaclass=SingletonMeta):
             filename=filename,
             doctype=doctype,
             project_id=proj_id,
-            status=SDocStatus.unfinished_or_erroneous,
+            # TODO status
+            # status=SDocStatus.unfinished_or_erroneous,
             folder_id=None,  # Create folder automatically
             **extra_data,
         )

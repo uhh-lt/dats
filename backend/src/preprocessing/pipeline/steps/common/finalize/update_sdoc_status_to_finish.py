@@ -7,7 +7,7 @@ sqlr = SQLRepo()
 
 
 def update_sdoc_status_to_finish(cargo: PipelineCargo) -> PipelineCargo:
-    sdoc_id = cargo.data["sdoc_id"]
-    with sqlr.db_session() as db:
-        crud_sdoc.update_status(db=db, sdoc_id=sdoc_id, sdoc_status=SDocStatus.finished)
+    # sdoc_id = cargo.data["sdoc_id"]
+    # with sqlr.db_session() as db:
+    # crud_sdoc.update_status(db=db, sdoc_id=sdoc_id, sdoc_status=SDocStatus.finished)
     return cargo

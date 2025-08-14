@@ -69,9 +69,9 @@ class CRUDSourceDocument(
         if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
             return SDocStatus.unfinished_or_erroneous
         status = SDocStatus(
-            db.query(self.model.status).filter(self.model.id == sdoc_id).scalar()
+            db.query(self.model.processed).filter(self.model.id == sdoc_id).scalar()
         )
-        if not status == SDocStatus.finished and raise_error_on_unfinished:
+        if status == False and raise_error_on_unfinished:  # noqa: E712
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
 
@@ -111,7 +111,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.status == SDocStatus.finished,
+                self.model.processed == True,  # noqa: E712
                 TagORM.id == tag_id,
             )
         else:
@@ -138,7 +138,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.status == SDocStatus.finished,
+                self.model.processed == True,  # noqa: E712
             )
         else:
             query = query.filter(self.model.project_id == proj_id)
@@ -159,7 +159,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == proj_id,
                 self.model.filename == filename,
-                self.model.status == SDocStatus.finished,
+                self.model.processed == True,  # noqa: E712
             )
         else:
             query = query.filter(
@@ -227,18 +227,6 @@ class CRUDSourceDocument(
         )
         return {row[0]: row[1] for row in rows}
 
-    ### UPDATE OPERATIONS ###
-
-    def update_status(
-        self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
-    ) -> SourceDocumentORM:
-        sdoc_db_obj = self.read(db=db, id=sdoc_id)
-        sdoc_db_obj.status = sdoc_status.value
-        db.add(sdoc_db_obj)
-        db.commit()
-        db.refresh(sdoc_db_obj)
-        return sdoc_db_obj
-
     ### DELETE OPERATIONS ###
 
     def delete(self, db: Session, *, id: int) -> SourceDocumentORM:
@@ -264,7 +252,8 @@ class CRUDSourceDocument(
         query = db.query(self.model)
         if status is not None:
             query = query.filter(
-                self.model.project_id == proj_id, self.model.status == status
+                self.model.project_id == proj_id,
+                self.model.processed == (status == SDocStatus.finished),
             )
         else:
             query = query.filter(self.model.project_id == proj_id)
