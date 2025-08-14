@@ -7,7 +7,7 @@ from common.doc_type import DocType
 from common.job_type import JobType
 from config import conf
 from loguru import logger
-from modules.doc_text_processing.html_cleaning_utils import clean_html
+from modules.doc_processing.html.html_cleaning_utils import clean_html
 from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
 from systems.job_system.job_register_decorator import register_job
