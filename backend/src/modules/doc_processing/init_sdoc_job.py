@@ -2,7 +2,6 @@ from pathlib import Path
 
 from common.doc_type import DocType
 from common.job_type import JobType
-from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from loguru import logger
@@ -23,6 +22,7 @@ class SdocInitJobInput(JobInputBase):
 class SdocInitJobOutput(JobOutputBase):
     sdoc_id: int
     folder_id: int
+    doctype: DocType
 
 
 @register_job(
@@ -38,12 +38,12 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             filename=payload.filepath.name,
             doctype=payload.doctype,
             project_id=payload.project_id,
-            # TODO status
-            # status=SDocStatus.unfinished_or_erroneous,
             folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
         return SdocInitJobOutput(
-            sdoc_id=sdoc_db_obj.id, folder_id=sdoc_db_obj.folder_id
+            sdoc_id=sdoc_db_obj.id,
+            folder_id=sdoc_db_obj.folder_id,
+            doctype=DocType(sdoc_db_obj.doctype),
         )

@@ -1,355 +1,185 @@
-from pathlib import Path
-
 from common.doc_type import DocType
 from common.job_type import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentUpdate
-from loguru import logger
-from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
-from modules.doc_audio_processing.audio_metadata_extraction_job import (
-    AudioMetadataExtractionJobInput,
-)
-from modules.doc_audio_processing.audio_thumbnail_generation_job import (
-    AudioThumbnailJobInput,
-)
-from modules.doc_audio_processing.transcription_job import (
-    TranscriptionJobInput,
-    TranscriptionJobOutput,
-)
-from modules.doc_image_processing.image_caption_job import (
-    ImageCaptionJobInput,
-    ImageCaptionJobOutput,
-)
-from modules.doc_image_processing.image_embedding_job import ImageEmbeddingJobInput
-from modules.doc_image_processing.image_metadata_extraction_job import (
-    ImageMetadataExtractionJobInput,
-)
-from modules.doc_image_processing.image_thumbnail_generation_job import (
-    ImageThumbnailJobInput,
-)
-from modules.doc_processing.archive_extraction_job import (
-    ArchiveExtractionJobInput,
-    ArchiveExtractionJobOutput,
-)
-from modules.doc_processing.doc_chunking_job import (
-    PDFChunkingJobInput,
-    PDFChunkingJobOutput,
-)
-from modules.doc_processing.init_sdoc_job import SdocInitJobInput, SdocInitJobOutput
-from modules.doc_text_processing.detect_language_job import (
-    TextLanguageDetectionJobInput,
-    TextLanguageDetectionJobOutput,
-)
-from modules.doc_text_processing.es_index_job import TextESIndexJobInput
-from modules.doc_text_processing.html_extraction_job import (
-    ExtractHTMLJobInput,
-    ExtractHTMLJobOutput,
-)
-from modules.doc_text_processing.html_mapping_job import (
-    TextExtractionJobInput,
-    TextExtractionJobOutput,
-    TextHTMLMappingJobInput,
-)
-from modules.doc_text_processing.sentence_embedding_job import (
-    TextSentenceEmbeddingJobInput,
-)
-from modules.doc_text_processing.spacy_job import SpacyJobInput, SpacyJobOutput
-from modules.doc_video_processing.video_audio_extraction_job import (
-    VideoAudioExtractionJobInput,
-    VideoAudioExtractionJobOutput,
+from modules.doc_processing.doc_processing_pipeline_utils import (
+    LoopBranchOperator,
+    SwitchCaseBranchOperator,
+    audio_transcription_to_text_extraction,
+    crawler_to_extract_archive,
+    extract_archive_to_pdf_chunking,
+    extract_html_to_image_sdoc_init,
+    extract_html_to_text_extraction,
+    image_caption_to_text_extraction,
+    language_detection_to_spacy,
+    pdf_chunking_to_sdoc_init,
+    sdoc_init_to_audio_metadata_extraction,
+    sdoc_init_to_audio_thumbnail,
+    sdoc_init_to_audio_transcription,
+    sdoc_init_to_extract_html,
+    sdoc_init_to_image_caption,
+    sdoc_init_to_image_embedding,
+    sdoc_init_to_image_metadata_extraction,
+    sdoc_init_to_image_thumbnail,
+    sdoc_init_to_video_audio_extraction,
+    sdoc_init_to_video_metadata_extraction,
+    sdoc_init_to_video_thumbnail,
+    spacy_to_html_mapping,
+    spacy_to_sentence_embedding,
+    text_extraction_to_es_index,
+    text_extraction_to_language_detection,
+    video_audio_extraction_to_audio_transcription,
 )
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import JobInputBase, JobOutputBase, SdocJobInput
 from systems.job_system.job_service import JobService
 
+# --- PREPROCESSING PIPELINE_GRAPH ---
+PIPELINE_GRAPH = {
+    JobType.CRAWLER: [
+        (crawler_to_extract_archive, JobType.EXTRACT_ARCHIVE),
+    ],
+    # extract archive is called if user uploads zip archive or user triggers the crawler
+    JobType.EXTRACT_ARCHIVE: [(extract_archive_to_pdf_chunking, JobType.DOC_CHUNKING)],
+    # doc chunking is called if text documents are preprocessed
+    JobType.DOC_CHUNKING: [
+        LoopBranchOperator(
+            loop_variable=lambda output: output.files,
+            next_jobs=[
+                (pdf_chunking_to_sdoc_init, JobType.SDOC_INIT),
+            ],
+        ),
+    ],
+    # sdoc init is called for all kinds of documents
+    JobType.SDOC_INIT: [
+        SwitchCaseBranchOperator(
+            switch_variable=lambda output: output.doctype,
+            cases={
+                DocType.text: [
+                    (sdoc_init_to_extract_html, JobType.EXTRACT_HTML),
+                ],
+                DocType.image: [
+                    (sdoc_init_to_image_caption, JobType.IMAGE_CAPTION),
+                    (sdoc_init_to_image_embedding, JobType.IMAGE_EMBEDDING),
+                    (
+                        sdoc_init_to_image_metadata_extraction,
+                        JobType.IMAGE_METADATA_EXTRACTION,
+                    ),
+                    (sdoc_init_to_image_thumbnail, JobType.IMAGE_THUMBNAIL),
+                ],
+                DocType.audio: [
+                    (
+                        sdoc_init_to_audio_metadata_extraction,
+                        JobType.AUDIO_METADATA_EXTRACTION,
+                    ),
+                    (
+                        sdoc_init_to_audio_transcription,
+                        JobType.AUDIO_TRANSCRIPTION,
+                    ),
+                    (
+                        sdoc_init_to_audio_thumbnail,
+                        JobType.AUDIO_THUMBNAIL,
+                    ),
+                ],
+                DocType.video: [
+                    (
+                        sdoc_init_to_video_metadata_extraction,
+                        JobType.VIDEO_METADATA_EXTRACTION,
+                    ),
+                    (
+                        sdoc_init_to_video_thumbnail,
+                        JobType.VIDEO_THUMBNAIL,
+                    ),
+                    (
+                        sdoc_init_to_video_audio_extraction,
+                        JobType.VIDEO_AUDIO_EXTRACTION,
+                    ),
+                ],
+            },
+        ),
+    ],
+    # HTML PROCESSING
+    JobType.EXTRACT_HTML: [
+        (extract_html_to_text_extraction, JobType.TEXT_EXTRACTION),
+        LoopBranchOperator(
+            loop_variable=lambda output: output.image_paths,
+            next_jobs=[
+                (extract_html_to_image_sdoc_init, JobType.SDOC_INIT),
+            ],
+        ),
+    ],
+    JobType.TEXT_EXTRACTION: [
+        (text_extraction_to_language_detection, JobType.TEXT_LANGUAGE_DETECTION),
+        (text_extraction_to_es_index, JobType.TEXT_ES_INDEX),
+    ],
+    JobType.TEXT_LANGUAGE_DETECTION: [
+        (language_detection_to_spacy, JobType.TEXT_SPACY),
+    ],
+    JobType.TEXT_SPACY: [
+        (spacy_to_html_mapping, JobType.TEXT_HTML_MAPPING),
+        (spacy_to_sentence_embedding, JobType.TEXT_SENTENCE_EMBEDDING),
+    ],
+    # VIDEO -> AUDIO
+    JobType.VIDEO_AUDIO_EXTRACTION: [
+        (video_audio_extraction_to_audio_transcription, JobType.AUDIO_TRANSCRIPTION),
+    ],
+    # AUDIO -> TEXT
+    JobType.AUDIO_TRANSCRIPTION: [
+        (audio_transcription_to_text_extraction, JobType.TEXT_EXTRACTION),
+    ],
+    # IMAGE -> TEXT
+    JobType.IMAGE_CAPTION: [
+        (image_caption_to_text_extraction, JobType.TEXT_EXTRACTION),
+    ],
+}
+
+
+def execute_pipeline_step(job_type: JobType, input, output, job_service):
+    steps = PIPELINE_GRAPH.get(job_type, [])
+    for step in steps:
+        if isinstance(step, SwitchCaseBranchOperator):
+            next_jobs = step.get_next_jobs(input, output)
+            for transition_fn, next_job_type in next_jobs:
+                job_input = transition_fn(input, output)
+                job_service.start_job(next_job_type, job_input)
+        elif isinstance(step, LoopBranchOperator):
+            jobs = step.get_next_jobs(input, output)
+            for transition_fn, next_job_type, idx in jobs:
+                job_input = transition_fn(input, output, idx)
+                job_service.start_job(next_job_type, job_input)
+        else:
+            transition_fn, next_job_type = step
+            job_input = transition_fn(input, output)
+            job_service.start_job(next_job_type, job_input)
+
+
 js = JobService()
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase):
-    if not isinstance(input, SdocJobInput):
-        return
-
-    # Update status: Job X has error
-    with SQLRepo().db_session() as db:
-        crud_sdoc.update(
-            db,
-            id=input.sdoc_id,
-            update_dto=SourceDocumentUpdate(**{job_type.value: SDocStatus.erroneous}),  # type: ignore
-        )
+    if isinstance(input, SdocJobInput):
+        with SQLRepo().db_session() as db:
+            crud_sdoc.update(
+                db,
+                id=input.sdoc_id,
+                update_dto=SourceDocumentUpdate(
+                    **{job_type.value: SDocStatus.erroneous}  # type: ignore
+                ),
+            )
 
 
 def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
-    # Jobs without sdoc_id in input
-    match job_type:
-        case JobType.CRAWLER:
-            assert isinstance(input, CrawlerJobInput)
-            assert isinstance(output, CrawlerJobOutput)
-            logger.info(
-                f"Web crawling completed for {input.urls}! Zip stored at {output.crawled_data_zip}"
-            )
-            js.start_job(
-                JobType.EXTRACT_ARCHIVE,
-                ArchiveExtractionJobInput(
-                    project_id=input.project_id, filepath=output.crawled_data_zip
-                ),
-            )
-        case JobType.SDOC_INIT:
-            assert isinstance(input, SdocInitJobInput)
-            assert isinstance(output, SdocInitJobOutput)
-            logger.info(f"SDoc initialization completed for {input.filepath.name}")
-            match input.doctype:
-                case DocType.text:
-                    js.start_job(
-                        JobType.EXTRACT_HTML,
-                        ExtractHTMLJobInput(
-                            project_id=input.project_id,
-                            sdoc_id=output.sdoc_id,
-                            filepath=input.filepath,
-                            doctype=DocType.text,
-                            folder_id=output.folder_id,
-                        ),
-                    )
-                case DocType.image:
-                    __start_image_jobs(
-                        input.project_id, output.sdoc_id, input.filepath, input.doctype
-                    )
-                case DocType.audio:
-                    __start_audio_jobs(input.project_id, output.sdoc_id, input.filepath)
-                case DocType.video:
-                    __start_video_jobs(input.project_id, output.sdoc_id, input.filepath)
-
-        case JobType.EXTRACT_ARCHIVE:
-            assert isinstance(input, ArchiveExtractionJobInput)
-            assert isinstance(output, ArchiveExtractionJobOutput)
-            for path, doctype in zip(output.file_paths, output.doctypes):
-                if path.suffix == ".pdf":
-                    js.start_job(
-                        JobType.PDF_CHECKING,
-                        PDFChunkingJobInput(project_id=input.project_id, filename=path),
-                    )
-                else:
-                    data = SdocInitJobInput(
-                        project_id=input.project_id,
-                        doctype=doctype,
-                        filepath=path,
-                        folder_id=None,
-                    )
-                    js.start_job(JobType.SDOC_INIT, data)
-        case JobType.PDF_CHECKING:
-            assert isinstance(input, PDFChunkingJobInput)
-            assert isinstance(output, PDFChunkingJobOutput)
-            for path in output.files:
-                data = SdocInitJobInput(
-                    project_id=input.project_id,
-                    doctype=DocType.text,
-                    filepath=path,
-                    folder_id=output.folder_id,
-                )
-                js.start_job(JobType.SDOC_INIT, data)
-
-    if not isinstance(input, SdocJobInput):
-        return
-
-    # Update status: Job X has been completed successfully
-    with SQLRepo().db_session() as db:
-        crud_sdoc.update(
-            db,
-            id=input.sdoc_id,
-            update_dto=SourceDocumentUpdate(**{job_type.value: SDocStatus.finished}),  # type: ignore
-        )
-
-    # Jobs requiring sdoc_id are below:
-    match job_type:
-        case JobType.EXTRACT_HTML:
-            assert isinstance(input, ExtractHTMLJobInput)
-            assert isinstance(output, ExtractHTMLJobOutput)
-            js.start_job(
-                JobType.TEXT_EXTRACTION,
-                TextExtractionJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    html=output.html,
-                    filename=input.filepath.name,
-                    doctype=input.doctype,
-                ),
-            )
-            for path in output.image_paths:
-                js.start_job(
-                    JobType.SDOC_INIT,
-                    SdocInitJobInput(
-                        project_id=input.project_id,
-                        filepath=path,
-                        folder_id=output.folder_id,
-                        doctype=DocType.image,
-                    ),
-                )
-        case JobType.TEXT_EXTRACTION:
-            assert isinstance(input, TextExtractionJobInput)
-            assert isinstance(output, TextExtractionJobOutput)
-            js.start_job(
-                JobType.TEXT_LANGUAGE_DETECTION,
-                TextLanguageDetectionJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    text=output.text,
-                    doctype=input.doctype,
-                    html=input.html,
-                ),
-            )
-            js.start_job(
-                JobType.TEXT_ES_INDEX,
-                TextESIndexJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    text=output.text,
-                    filename=input.filename,
-                ),
-            )
-        case JobType.TEXT_LANGUAGE_DETECTION:
-            assert isinstance(input, TextLanguageDetectionJobInput)
-            assert isinstance(output, TextLanguageDetectionJobOutput)
-            js.start_job(
-                JobType.TEXT_SPACY,
-                SpacyJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    text=output.text,
-                    doctype=input.doctype,
-                    language=output.language,
-                    html=input.html,
-                ),
-            )
-        case JobType.TEXT_SPACY:
-            assert isinstance(input, SpacyJobInput)
-            assert isinstance(output, SpacyJobOutput)
-            js.start_job(
-                JobType.TEXT_HTML_MAPPING,
-                TextHTMLMappingJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    raw_html=input.html,
-                    sentence_starts=output.sentence_starts,
-                    sentence_ends=output.sentence_ends,
-                    token_starts=output.token_starts,
-                    token_ends=output.token_ends,
-                ),
-            )
-            js.start_job(
-                JobType.TEXT_SENTENCE_EMBEDDING,
-                TextSentenceEmbeddingJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    sentences=output.sentences,
-                ),
-            )
-        case JobType.VIDEO_AUDIO_EXTRACTION:
-            assert isinstance(input, VideoAudioExtractionJobInput)
-            assert isinstance(output, VideoAudioExtractionJobOutput)
-            js.start_job(
-                JobType.AUDIO_TRANSCRIPTION,
-                TranscriptionJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    filepath=output.filepath,
-                ),
-            )
-        case JobType.AUDIO_TRANSCRIPTION:
-            assert isinstance(input, TranscriptionJobInput)
-            assert isinstance(output, TranscriptionJobOutput)
-            js.start_job(
-                JobType.TEXT_EXTRACTION,
-                TextExtractionJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    html=output.html,
-                    filename=input.filepath.name,
-                    doctype=DocType.audio,
-                ),
-            )
-        case JobType.IMAGE_CAPTION:
-            assert isinstance(input, ImageCaptionJobInput)
-            assert isinstance(output, ImageCaptionJobOutput)
-            js.start_job(
-                JobType.TEXT_EXTRACTION,
-                TextExtractionJobInput(
-                    project_id=input.project_id,
-                    sdoc_id=input.sdoc_id,
-                    html=output.html,
-                    filename=input.filepath.name,
-                    doctype=DocType.image,
+    if isinstance(input, SdocJobInput):
+        with SQLRepo().db_session() as db:
+            crud_sdoc.update(
+                db,
+                id=input.sdoc_id,
+                update_dto=SourceDocumentUpdate(
+                    **{job_type.value: SDocStatus.finished}  # type: ignore
                 ),
             )
 
-
-def __start_image_jobs(project_id: int, sdoc_id: int, filepath: Path, doctype: DocType):
-    js.start_job(
-        JobType.IMAGE_CAPTION,
-        ImageCaptionJobInput(project_id=project_id, sdoc_id=sdoc_id, filepath=filepath),
-    )
-    js.start_job(
-        JobType.IMAGE_EMBEDDING,
-        ImageEmbeddingJobInput(project_id=project_id, sdoc_id=sdoc_id),
-    )
-    js.start_job(
-        JobType.IMAGE_METADATA_EXTRACTION,
-        ImageMetadataExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath, doctype=doctype
-        ),
-    )
-    js.start_job(
-        JobType.IMAGE_OBJECT_DETECTION,
-        ImageMetadataExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath, doctype=doctype
-        ),
-    )
-    js.start_job(
-        JobType.IMAGE_THUMBNAIL,
-        ImageThumbnailJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-
-
-def __start_audio_jobs(project_id: int, sdoc_id: int, filepath: Path):
-    js.start_job(
-        JobType.AUDIO_METADATA_EXTRACTION,
-        AudioMetadataExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-    js.start_job(
-        JobType.AUDIO_TRANSCRIPTION,
-        TranscriptionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-    js.start_job(
-        JobType.AUDIO_THUMBNAIL,
-        AudioThumbnailJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-
-
-def __start_video_jobs(project_id: int, sdoc_id: int, filepath: Path):
-    js.start_job(
-        JobType.VIDEO_METADATA_EXTRACTION,
-        AudioMetadataExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-    js.start_job(
-        JobType.VIDEO_THUMBNAIL,
-        AudioThumbnailJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
-    js.start_job(
-        JobType.VIDEO_AUDIO_EXTRACTION,
-        VideoAudioExtractionJobInput(
-            project_id=project_id, sdoc_id=sdoc_id, filepath=filepath
-        ),
-    )
+    execute_pipeline_step(job_type=job_type, input=input, output=output, job_service=js)

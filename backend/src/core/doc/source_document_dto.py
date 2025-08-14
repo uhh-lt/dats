@@ -34,16 +34,7 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
 
     # KEEP THE SAME ORDER AS source_document_orm.py!
 
-    # optional
-    extract_archive: SDocStatus | None = Field(
-        description="Extract Archive done?", default=None
-    )
-    pdf_checking: SDocStatus | None = Field(
-        description="PDF Checking done?", default=None
-    )
-
-    # init
-    sdoc_init: SDocStatus | None = Field(description="SDoc Init done?", default=None)
+    # text
     extract_html: SDocStatus | None = Field(
         description="Extract HTML done?", default=None
     )
