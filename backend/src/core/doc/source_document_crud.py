@@ -9,14 +9,13 @@ from core.doc.source_document_dto import (
     SourceDocumentRead,
     SourceDocumentUpdate,
 )
-from core.doc.source_document_link_orm import SourceDocumentLinkORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from systems.event_system.events import source_document_deleted
@@ -266,35 +265,6 @@ class CRUDSourceDocument(
         else:
             query = query.filter(self.model.project_id == proj_id)
         return query.with_entities(func.count()).scalar()
-
-    def collect_linked_sdoc_ids(self, db: Session, *, sdoc_id: int) -> list[int]:
-        # SELECT * FROM sourcedocumentlink sl
-        # WHERE (sl.linked_source_document_id = 1 OR
-        #       sl.parent_source_document_id = 1) and sl.linked_source_document_id IS NOT NULL
-
-        query = db.query(
-            SourceDocumentLinkORM.parent_source_document_id,
-            SourceDocumentLinkORM.linked_source_document_id,
-        )
-
-        # noinspection PyUnresolvedReferences
-        query = query.filter(
-            and_(
-                or_(
-                    SourceDocumentLinkORM.parent_source_document_id == sdoc_id,
-                    SourceDocumentLinkORM.linked_source_document_id == sdoc_id,
-                ),
-                SourceDocumentLinkORM.linked_source_document_id.is_not(None),
-            )
-        )
-        query = query.order_by(desc(SourceDocumentLinkORM.parent_source_document_id))
-
-        res = query.all()
-        return [
-            linked_sdoc_id if parent_sdoc_id == sdoc_id else parent_sdoc_id
-            for (parent_sdoc_id, linked_sdoc_id) in res
-            if linked_sdoc_id is not None
-        ]
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
