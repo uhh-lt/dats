@@ -93,6 +93,18 @@ class CRUDSourceDocument(
         id2data = {db_obj.id: db_obj for db_obj in db_objs}
         return [id2data.get(id) for id in ids]
 
+    def read_by_project_and_status(
+        self, db: Session, *, project_id: int, status: SDocStatus
+    ) -> list[SourceDocumentORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+                self.model.processed_status == status.value,
+            )
+            .all()
+        )
+
     def read_by_project_and_tag(
         self,
         db: Session,

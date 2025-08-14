@@ -19,7 +19,10 @@ PIPELINE_GRAPH = {
     ],
     # extract archive is called if user uploads zip archive or user triggers the crawler
     JobType.EXTRACT_ARCHIVE: [
-        (t.extract_archive_to_pdf_chunking, JobType.DOC_CHUNKING)
+        LoopBranchOperator(
+            loop_variable=lambda output: output.file_paths,
+            next_jobs=[(t.extract_archive_to_pdf_chunking, JobType.DOC_CHUNKING)],
+        )
     ],
     # doc chunking is called if text documents are preprocessed
     JobType.DOC_CHUNKING: [
@@ -46,6 +49,10 @@ PIPELINE_GRAPH = {
                         JobType.IMAGE_METADATA_EXTRACTION,
                     ),
                     (t.sdoc_init_to_image_thumbnail, JobType.IMAGE_THUMBNAIL),
+                    (
+                        t.sdoc_init_to_image_object_detection,
+                        JobType.IMAGE_OBJECT_DETECTION,
+                    ),
                 ],
                 DocType.audio: [
                     (
@@ -78,7 +85,7 @@ PIPELINE_GRAPH = {
             },
         ),
     ],
-    # HTML PROCESSING
+    # TEXT
     JobType.EXTRACT_HTML: [
         (t.extract_html_to_text_extraction, JobType.TEXT_EXTRACTION),
         LoopBranchOperator(
@@ -88,6 +95,7 @@ PIPELINE_GRAPH = {
             ],
         ),
     ],
+    # HTML
     JobType.TEXT_EXTRACTION: [
         (t.text_extraction_to_language_detection, JobType.TEXT_LANGUAGE_DETECTION),
         (t.text_extraction_to_es_index, JobType.TEXT_ES_INDEX),

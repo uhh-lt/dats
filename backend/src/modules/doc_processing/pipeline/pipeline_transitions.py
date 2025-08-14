@@ -50,6 +50,7 @@ from modules.doc_processing.image.image_metadata_extraction_job import (
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     ImageThumbnailJobInput,
 )
+from modules.doc_processing.image.object_detection_job import ObjectDetectionJobInput
 from modules.doc_processing.text.html_extraction_job import (
     ExtractHTMLJobInput,
     ExtractHTMLJobOutput,
@@ -273,6 +274,16 @@ def sdoc_init_to_image_metadata_extraction(input, output):
         sdoc_id=output.sdoc_id,
         filepath=input.filepath,
         doctype=input.doctype,
+    )
+
+
+def sdoc_init_to_image_object_detection(input, output):
+    assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
+    assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
+    return ObjectDetectionJobInput(
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
     )
 
 

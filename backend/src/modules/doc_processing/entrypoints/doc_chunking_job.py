@@ -147,14 +147,14 @@ def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
 
 def chunk_txt(payload: DocChunkingJobInput) -> list[Path]:
     logger.info("txt chunking not implemented")
-    return []
+    return [payload.filepath]
 
 
 def chunk_word(payload: DocChunkingJobInput) -> list[Path]:
     logger.info("word chunking not implemented")
-    return []
+    return [payload.filepath]
 
 
 def chunk_html(payload: DocChunkingJobInput) -> list[Path]:
     logger.info("html chunking not implemented")
-    return []
+    return [payload.filepath]

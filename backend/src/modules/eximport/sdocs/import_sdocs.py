@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 from common.doc_type import DocType
-from common.sdoc_status_enum import SDocStatus
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.image_embedding_crud import crud_image_embedding
