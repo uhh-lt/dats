@@ -5,10 +5,6 @@ services:
     shm_size: 2gb
     command: -c full_page_writes=off -c wal_init_zero=off -c wal_recycle=off
 
-  rabbitmq:
-    volumes:
-      - "./rabbitmq_data:/var/lib/rabbitmq/data"
-
   redis:
     volumes:
       - "./redis_data:/var/lib/redis/data"
