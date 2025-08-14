@@ -63,7 +63,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             db.flush()
         else:
             db.commit()
-            db.refresh(db_obj)
+        db.refresh(db_obj)
         return db_obj
 
     def create_multi(
@@ -101,7 +101,6 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             db.flush()
         else:
             db.commit()
-            db.refresh(db_obj)
         db.refresh(db_obj)
 
         return db_obj
@@ -142,7 +141,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             db.flush()
         else:
             db.commit()
-            db.refresh(db_obj)
+        db.refresh(db_obj)
         return db_obj
 
     def remove_multi(

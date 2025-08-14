@@ -66,14 +66,10 @@ class CRUDSourceDocument(
     def read_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
-        if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
-            return SDocStatus.unfinished_or_erroneous
-        status = SDocStatus(
-            db.query(self.model.processed).filter(self.model.id == sdoc_id).scalar()
-        )
-        if status == False and raise_error_on_unfinished:  # noqa: E712
+        sdoc = self.read(db=db, id=sdoc_id)
+        if sdoc.processed_status != SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
-        return status
+        return sdoc.processed_status
 
     def read_data(self, db: Session, *, id: int) -> SourceDocumentDataRead:
         db_obj = (
@@ -111,7 +107,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.processed == True,  # noqa: E712
+                self.model.processed_status == SDocStatus.finished.value,
                 TagORM.id == tag_id,
             )
         else:
@@ -138,7 +134,7 @@ class CRUDSourceDocument(
         if only_finished:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.processed == True,  # noqa: E712
+                self.model.processed_status == SDocStatus.finished.value,
             )
         else:
             query = query.filter(self.model.project_id == proj_id)
@@ -159,7 +155,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == proj_id,
                 self.model.filename == filename,
-                self.model.processed == True,  # noqa: E712
+                self.model.processed_status == SDocStatus.finished,
             )
         else:
             query = query.filter(
@@ -253,7 +249,7 @@ class CRUDSourceDocument(
         if status is not None:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.processed == (status == SDocStatus.finished),
+                self.model.processed_status == SDocStatus.finished,
             )
         else:
             query = query.filter(self.model.project_id == proj_id)

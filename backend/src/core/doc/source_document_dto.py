@@ -34,66 +34,74 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
 
     # KEEP THE SAME ORDER AS source_document_orm.py!
 
-    # init
-    sdoc_init: bool | None = Field(description="SDoc Init done?", default=None)
-    extract_archive: bool | None = Field(
+    # optional
+    extract_archive: SDocStatus | None = Field(
         description="Extract Archive done?", default=None
     )
-    pdf_checking: bool | None = Field(description="PDF Checking done?", default=None)
-    extract_html: bool | None = Field(description="Extract HTML done?", default=None)
+    pdf_checking: SDocStatus | None = Field(
+        description="PDF Checking done?", default=None
+    )
+
+    # init
+    sdoc_init: SDocStatus | None = Field(description="SDoc Init done?", default=None)
+    extract_html: SDocStatus | None = Field(
+        description="Extract HTML done?", default=None
+    )
 
     # HTML
-    text_extraction: bool | None = Field(
+    text_extraction: SDocStatus | None = Field(
         description="Text Extraction done?", default=None
     )
-    text_language_detection: bool | None = Field(
+    text_language_detection: SDocStatus | None = Field(
         description="Text Language Detection done?", default=None
     )
-    text_spacy: bool | None = Field(description="Text Spacy done?", default=None)
-    text_es_index: bool | None = Field(description="Text ES Index done?", default=None)
-    text_sentence_embedding: bool | None = Field(
+    text_spacy: SDocStatus | None = Field(description="Text Spacy done?", default=None)
+    text_es_index: SDocStatus | None = Field(
+        description="Text ES Index done?", default=None
+    )
+    text_sentence_embedding: SDocStatus | None = Field(
         description="Text Sentence Embedding done?", default=None
     )
-    text_html_mapping: bool | None = Field(
+    text_html_mapping: SDocStatus | None = Field(
         description="Text HTML Mapping done?", default=None
     )
 
     # IMAGES
-    image_caption: bool | None = Field(
+    image_caption: SDocStatus | None = Field(
         description="Image Captioning done?", default=None
     )
-    image_embedding: bool | None = Field(
+    image_embedding: SDocStatus | None = Field(
         description="Image Embedding done?", default=None
     )
-    image_metadata_extraction: bool | None = Field(
+    image_metadata_extraction: SDocStatus | None = Field(
         description="Image Metadata Extraction done?", default=None
     )
-    image_thumbnail: bool | None = Field(
+    image_thumbnail: SDocStatus | None = Field(
         description="Image Thumbnail Generation done?", default=None
     )
-    image_object_detection: bool | None = Field(
+    image_object_detection: SDocStatus | None = Field(
         description="Object Detection done?", default=None
     )
 
     # AUDIO
-    audio_metadata: bool | None = Field(
+    audio_metadata: SDocStatus | None = Field(
         description="Audio Metadata Extraction done?", default=None
     )
-    audio_thumbnail: bool | None = Field(
+    audio_thumbnail: SDocStatus | None = Field(
         description="Audio Thumbnail Generation done?", default=None
     )
-    audio_transcription: bool | None = Field(
+    audio_transcription: SDocStatus | None = Field(
         description="Transcription done?", default=None
     )
 
     # VIDEO
-    video_metadata: bool | None = Field(
+    video_metadata: SDocStatus | None = Field(
         description="Video Metadata Extraction done?", default=None
     )
-    video_thumbnail: bool | None = Field(
+    video_thumbnail: SDocStatus | None = Field(
         description="Video Thumbnail Generation done?", default=None
     )
-    video_audio_extraction: bool | None = Field(
+    video_audio_extraction: SDocStatus | None = Field(
         description="Video Audio Extraction done?", default=None
     )
 

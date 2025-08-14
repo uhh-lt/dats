@@ -116,10 +116,7 @@ def get_project_prepro_status(
     finished_sdocs = crud_sdoc.count_by_project(
         db=db, proj_id=proj_id, status=SDocStatus.finished
     )
-    unfinished_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, status=SDocStatus.unfinished_or_erroneous
-    )
-    total_sdocs = finished_sdocs + unfinished_sdocs
+    total_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id)
 
     return PreProProjectStatus(
         project_id=proj_id,
