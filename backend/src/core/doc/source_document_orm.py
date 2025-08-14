@@ -11,6 +11,7 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    case,
     func,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -153,27 +154,7 @@ class SourceDocumentORM(ORMBase):
 
     # KEEP THE SAME ORDER AS job_type.py!
 
-    # OPTIONAL (2)
-    extract_archive: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-    pdf_checking: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
-
-    # INIT (2)
-    sdoc_init: Mapped[SDocStatus] = mapped_column(
-        Integer,
-        nullable=False,
-        server_default="0",
-        deferred=True,
-    )
+    # TEXT (1)
     extract_html: Mapped[SDocStatus] = mapped_column(
         Integer,
         nullable=False,
@@ -293,9 +274,8 @@ class SourceDocumentORM(ORMBase):
 
     processed_jobs: Mapped[int] = mapped_column(
         Computed(
-            # init (2)
-            sdoc_init
-            + extract_html
+            # text (1)
+            extract_html
             # html (6)
             + text_extraction
             + text_language_detection
@@ -324,31 +304,57 @@ class SourceDocumentORM(ORMBase):
     )
 
     @hybrid_property
-    def processed_status(self) -> SDocStatus:
+    def processed_status(self) -> SDocStatus:  # type: ignore
         if self.processed_jobs < 0:
             return SDocStatus.erroneous
         if self.doctype == DocType.text:
-            # init + html
-            if self.processed_jobs == 8:
+            # text + html
+            if self.processed_jobs == 7:
                 return SDocStatus.finished
             return SDocStatus.processing
         elif self.doctype == DocType.image:
-            # init + image + html
-            if self.processed_jobs == 13:
-                return SDocStatus.finished
-            return SDocStatus.processing
-        elif self.doctype == DocType.audio:
-            # init + audio + html
+            # image + html
             if self.processed_jobs == 11:
                 return SDocStatus.finished
             return SDocStatus.processing
+        elif self.doctype == DocType.audio:
+            # audio + html
+            if self.processed_jobs == 9:
+                return SDocStatus.finished
+            return SDocStatus.processing
         elif self.doctype == DocType.video:
-            # init + video + html
-            if self.processed_jobs == 14:
+            # video + 1 audio + html
+            if self.processed_jobs == 10:
                 return SDocStatus.finished
             return SDocStatus.processing
         else:
             return SDocStatus.processing
+
+    @processed_status.expression
+    def processed_status(cls):
+        return case(
+            (
+                cls.processed_jobs < 0,
+                SDocStatus.erroneous,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.text) & (cls.processed_jobs == 7),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.image) & (cls.processed_jobs == 11),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.audio) & (cls.processed_jobs == 9),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.video) & (cls.processed_jobs == 10),
+                SDocStatus.finished,
+            ),  # type: ignore
+            else_=SDocStatus.processing,
+        )
 
     __table_args__ = (
         UniqueConstraint(

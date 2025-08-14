@@ -4,12 +4,12 @@ from enum import Enum
 class JobType(str, Enum):
     # KEEP THE SAME ORDER AS source_document_status_orm.py!
 
-    # optional
+    # entrypoints
     EXTRACT_ARCHIVE = "extract_archive"
-    PDF_CHECKING = "pdf_checking"
-
-    # init
+    DOC_CHUNKING = "doc_chunking"
     SDOC_INIT = "sdoc_init"
+
+    # text
     EXTRACT_HTML = "extract_html"
 
     # html

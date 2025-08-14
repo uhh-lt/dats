@@ -1,9 +1,14 @@
-from common.doc_type import get_doc_type, is_archive_file, is_pdf, mime_type_supported
+from common.doc_type import (
+    DocType,
+    get_doc_type,
+    is_archive_file,
+    mime_type_supported,
+)
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
-from modules.doc_processing.doc_chunking_job import PDFChunkingJobInput
+from modules.doc_processing.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
@@ -51,12 +56,6 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
                     ),
                 )
                 return
-            elif is_pdf(mime_type):
-                self.js.start_job(
-                    JobType.PDF_CHECKING,
-                    PDFChunkingJobInput(project_id=project_id, filename=file_path),
-                )
-                return
 
             doc_type = get_doc_type(mime_type=mime_type)
             if doc_type is None:
@@ -64,12 +63,18 @@ class PreprocessingServiceNew(metaclass=SingletonMeta):
                     detail=f"Document with MIME type {mime_type} not supported!",
                     status_code=406,
                 )
-            self.js.start_job(
-                job_type=JobType.SDOC_INIT,
-                payload=SdocInitJobInput(
-                    project_id=project_id,
-                    filepath=file_path,
-                    doctype=doc_type,
-                    folder_id=None,
-                ),
-            )
+            elif doc_type == DocType.text:
+                self.js.start_job(
+                    JobType.DOC_CHUNKING,
+                    DocChunkingJobInput(project_id=project_id, filepath=file_path),
+                )
+            else:
+                self.js.start_job(
+                    job_type=JobType.SDOC_INIT,
+                    payload=SdocInitJobInput(
+                        project_id=project_id,
+                        filepath=file_path,
+                        doctype=doc_type,
+                        folder_id=None,
+                    ),
+                )
