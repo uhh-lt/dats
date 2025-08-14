@@ -10,7 +10,6 @@ chmod 777 ../docker/ray_cache
 # for production
 mkdir -p ../docker/elasticsearch_data
 mkdir -p ../docker/pg_data
-mkdir -p ../docker/rabbitmq_data
 mkdir -p ../docker/redis_data
 mkdir -p ../docker/weaviate_data
 
