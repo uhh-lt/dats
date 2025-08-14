@@ -65,7 +65,7 @@ def __export_sdocs(
     # 2.1. Info about the source document itself (name, filename, doctype, status) [SourceDocumentORM]
     # 2.2. The source document's metadata (sdoc metadata) [SourceDocumentMetadataORM]
     # 2.3. The source document's tags (sdoc tags) [TagORM]
-    # 2.4. The source document's links (sdoc links) [SourceDocumentLinkORM]
+    # 2.4. TODO: The source document's folder [FolderORM]
     # 2.5. The source document's word frequencies (sdoc word frequencies) [WordFrequencyORM]
     # 3. Processed data of the source document (content, html, tokens, sentences, times) [SourceDocumentDataORM]
     # 4. Embeddings of the source document
@@ -93,16 +93,6 @@ def __export_sdocs(
 
         # Document tags
         tags = [tag.name for tag in sdoc.tags]
-
-        # Document links
-        # We only want the resolved links, i.e., the ones that have a linked_source_document_id
-        links = [
-            link.linked_source_document_filename
-            for link in sdoc.source_document_links
-            if link.linked_source_document_filename is not None
-            and link.linked_source_document_id is not None
-            and link.parent_source_document_id is not None
-        ]
 
         # Document metadata
         sdoc_metadata_dtos = [
@@ -148,7 +138,6 @@ def __export_sdocs(
             doctype=sdoc.doctype,
             status=sdoc.processed_status,
             tags=tags,
-            links=links,
             word_frequencies=word_frequencies,
             metadata=metadata_list,
             content=sdoc_data.content,

@@ -17,9 +17,7 @@ class SourceDocumentExportSchema(BaseModel):
     tags: list[str] = Field(
         description="List of tags (tag names) associated with the source document"
     )
-    links: list[str] = Field(
-        description="List of links (source document filenames) associated with the source document"
-    )
+    # TODO: Folder(s)
     word_frequencies: list[tuple[str, int]] = Field(
         description="List of word frequencies (word, frequency) associated with the source document"
     )

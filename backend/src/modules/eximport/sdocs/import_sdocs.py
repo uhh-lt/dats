@@ -14,8 +14,6 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentCreate
-from core.doc.source_document_link_crud import crud_sdoc_link
-from core.doc.source_document_link_dto import SourceDocumentLinkCreate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
@@ -128,17 +126,7 @@ def import_sdocs_to_proj(
                 f"Tag '{tag_name}' does not exist in project {project_id}"
             )
 
-    # 4. Check if all links exist
-    needed_links: set[str] = set()
-    for sdoc in sdoc_collection.source_documents:
-        needed_links.update(sdoc.links)
-    existing_sdocs = {sdoc.filename: sdoc for sdoc in project.source_documents}
-    importing_sdocs = {sdoc.filename: sdoc for sdoc in sdoc_collection.source_documents}
-    for link_name in needed_links:
-        if link_name not in existing_sdocs and link_name not in importing_sdocs:
-            error_messages.append(
-                f"Linked source document '{link_name}' does neither exist in project {project_id} nor in the import data"
-            )
+    # 4. TODO: Check if all folders exist
 
     # 5. Check if all metadata keys exist
     needed_metadata_keys: dict[DocType, set[str]] = {}
@@ -236,15 +224,7 @@ def import_sdocs_to_proj(
             metadata_create_dtos.append(metadata_create)
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
-        # Links
-        link_create_dtos = [
-            SourceDocumentLinkCreate(
-                parent_source_document_id=created_sdoc.id,
-                linked_source_document_filename=linked_filename,
-            )
-            for linked_filename in sdoc_export.links
-        ]
-        crud_sdoc_link.create_multi(db=db, create_dtos=link_create_dtos)
+        # TODO: Folders
 
         # 5. Add embeddings to the vector database
         with WeaviateRepo().weaviate_session() as client:
@@ -290,12 +270,6 @@ def import_sdocs_to_proj(
                 content=sdoc_export.content if sdoc_export.content else "",
             ),
         )
-
-    # 7. Resolve the links between the source documents
-    crud_sdoc_link.resolve_filenames_to_sdoc_ids(
-        db=db,
-        proj_id=project_id,
-    )
 
     logger.info(
         f"Successfully imported {len(imported_sdoc_ids)} source documents into project {project_id}"

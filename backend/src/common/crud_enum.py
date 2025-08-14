@@ -11,7 +11,6 @@ from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_link_crud import crud_sdoc_link
 from core.memo.memo_crud import crud_memo
 from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -55,7 +54,6 @@ class Crud(Enum):
     SENTENCE_ANNOTATION = crud_sentence_anno
     SOURCE_DOCUMENT_DATA = crud_sdoc_data
     SOURCE_DOCUMENT_JOB_STATUS = crud_sdoc_job_status
-    SOURCE_DOCUMENT_LINK = crud_sdoc_link
     SOURCE_DOCUMENT_METADATA = crud_sdoc_meta
     SOURCE_DOCUMENT = crud_sdoc
     SPAN_ANNOTATION = crud_span_anno
