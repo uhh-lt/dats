@@ -90,11 +90,11 @@ def update_sdoc(
 
 
 @router.get(
-    "/{sdoc_id}/linked_sdocs",
+    "/{sdoc_id}/same_folder",
     response_model=list[int],
-    summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
+    summary="Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
 )
-def get_linked_sdocs(
+def get_same_folder_sdocs(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -102,7 +102,8 @@ def get_linked_sdocs(
 ) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
-    return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
+    sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+    return [s.id for s in sdoc.folder.source_documents]
 
 
 @router.get(
