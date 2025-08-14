@@ -4,7 +4,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
-import JobHooks from "../../api/JobHooks.ts";
+import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
 import { DialogSection } from "../MUI/DialogSection";
 
 interface UrlCrawlerSectionProps {
@@ -25,7 +25,7 @@ function isValidHttpUrl(string: string): boolean {
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   // Crawler mutation
-  const crawlUrlsMutation = JobHooks.useStartCrawlerJob();
+  const crawlUrlsMutation = DocProcessingHooks.useStartCrawlerJob();
 
   // Local state
   const [currentUrl, setCurrentUrl] = useState("");
