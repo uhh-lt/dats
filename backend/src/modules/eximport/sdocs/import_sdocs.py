@@ -186,7 +186,8 @@ def import_sdocs_to_proj(
             name=sdoc_export.name,
             doctype=DocType(sdoc_export.doctype),
             project_id=project_id,
-            status=SDocStatus[sdoc_export.status],
+            # FIXME status
+            # status=SDocStatus[sdoc_export.processed],
             folder_id=None,  # Create folder automatically
         )
 

@@ -5,8 +5,6 @@ from common.job_type import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
-from core.doc.source_document_status_crud import crud_sdoc_status
-from core.doc.source_document_status_dto import SourceDocumentStatusCreate
 from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -40,16 +38,11 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             filename=payload.filepath.name,
             doctype=payload.doctype,
             project_id=payload.project_id,
-            status=SDocStatus.unfinished_or_erroneous,
+            # TODO status
+            # status=SDocStatus.unfinished_or_erroneous,
             folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-
-        # create sdoc status
-        crud_sdoc_status.create(
-            db=db,
-            create_dto=SourceDocumentStatusCreate(id=sdoc_db_obj.id),
-        )
 
         return SdocInitJobOutput(
             sdoc_id=sdoc_db_obj.id, folder_id=sdoc_db_obj.folder_id

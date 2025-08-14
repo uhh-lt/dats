@@ -1,8 +1,20 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from common.doc_type import DocType
+from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    Computed,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    case,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -29,8 +41,6 @@ class SourceDocumentORM(ORMBase):
     filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String, nullable=True, index=True)
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    # TODO replace this with a virtual column created from sdoc status
-    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
@@ -140,6 +150,253 @@ class SourceDocumentORM(ORMBase):
         secondary="documentcluster",
         back_populates="source_documents",
         overlaps="document_clusters,cluster,source_document",
+    )
+
+    # KEEP THE SAME ORDER AS job_type.py!
+
+    # INIT
+    sdoc_init: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    extract_archive: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    pdf_checking: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    extract_html: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+
+    # HTML
+    text_extraction: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    text_language_detection: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    text_spacy: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    text_es_index: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    text_sentence_embedding: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    text_html_mapping: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+
+    # IMAGE
+    image_caption: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    image_embedding: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    image_metadata_extraction: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    image_thumbnail: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    image_object_detection: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+
+    # AUDIO
+    audio_metadata: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    audio_thumbnail: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    audio_transcription: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+
+    # VIDEO
+    video_metadata: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    video_thumbnail: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+    video_audio_extraction: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        deferred=True,
+        deferred_raiseload=True,
+    )
+
+    processed: Mapped[bool] = mapped_column(
+        Computed(
+            case(
+                (
+                    doctype == DocType.text,
+                    case(
+                        (
+                            sdoc_init
+                            & extract_html
+                            & text_extraction
+                            & text_es_index
+                            & text_html_mapping
+                            & text_language_detection
+                            & text_spacy
+                            & text_sentence_embedding,
+                            True,
+                        ),
+                        else_=False,
+                    ),
+                ),
+                (
+                    doctype == DocType.image,
+                    case(
+                        (
+                            sdoc_init
+                            & text_extraction
+                            & text_es_index
+                            & text_html_mapping
+                            & text_language_detection
+                            & text_spacy
+                            & text_sentence_embedding
+                            & image_caption
+                            & image_embedding
+                            & image_metadata_extraction
+                            & image_object_detection
+                            & image_thumbnail,
+                            True,
+                        ),
+                        else_=False,
+                    ),
+                ),
+                (
+                    doctype == DocType.audio,
+                    case(
+                        (
+                            sdoc_init
+                            & text_extraction
+                            & text_es_index
+                            & text_html_mapping
+                            & text_language_detection
+                            & text_spacy
+                            & text_sentence_embedding
+                            & audio_metadata
+                            & audio_thumbnail
+                            & audio_transcription,
+                            True,
+                        ),
+                        else_=False,
+                    ),
+                ),
+                (
+                    doctype == DocType.video,
+                    case(
+                        (
+                            sdoc_init
+                            & text_extraction
+                            & text_es_index
+                            & text_html_mapping
+                            & text_language_detection
+                            & text_spacy
+                            & text_sentence_embedding
+                            & audio_transcription
+                            & video_audio_extraction
+                            & video_metadata
+                            & video_thumbnail,
+                            True,
+                        ),
+                        else_=False,
+                    ),
+                ),
+                else_=False,
+            ),
+            persisted=True,
+        ),
+        nullable=False,
+        index=True,
     )
 
     __table_args__ = (

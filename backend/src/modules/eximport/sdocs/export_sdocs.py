@@ -146,7 +146,7 @@ def __export_sdocs(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=sdoc.status,
+            processed=sdoc.processed,
             tags=tags,
             links=links,
             word_frequencies=word_frequencies,
