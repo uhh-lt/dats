@@ -1005,6 +1005,67 @@
         }
       }
     },
+    "/docprocessing/project/{proj_id}/status/{status}": {
+      "get": {
+        "tags": ["docprocessing"],
+        "summary": "Get all SourceDocumentStatus for the Project with the given ID by status",
+        "operationId": "get_sdoc_status_by_project_and_status",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentStatusRead" },
+                  "title": "Response Docprocessing-Get Sdoc Status By Project And Status"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/docprocessing/project/{proj_id}": {
+      "put": {
+        "tags": ["docprocessing"],
+        "summary": "Uploads one or multiple files to the Project with the given ID if it exists",
+        "operationId": "upload_files",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_docprocessing-upload_files" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string", "format": "date-time", "title": "Response Docprocessing-Upload Files" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder/{folder_id}": {
       "get": {
         "tags": ["folder"],
@@ -6435,6 +6496,19 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
+      "Body_docprocessing-upload_files": {
+        "properties": {
+          "uploaded_files": {
+            "items": { "type": "string", "format": "binary" },
+            "type": "array",
+            "title": "Uploaded Files",
+            "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
+          }
+        },
+        "type": "object",
+        "required": ["uploaded_files"],
+        "title": "Body_docprocessing-upload_files"
+      },
       "Body_import-start_import_job": {
         "properties": { "uploaded_file": { "type": "string", "format": "binary", "title": "Uploaded File" } },
         "type": "object",
@@ -9725,7 +9799,7 @@
         "type": "object",
         "title": "ResetModelParams"
       },
-      "SDocStatus": { "type": "string", "enum": ["unfinished_or_erroneous", "finished"], "title": "SDocStatus" },
+      "SDocStatus": { "type": "integer", "enum": [-100, 0, 1], "title": "SDocStatus" },
       "SampledSdocsResults": {
         "properties": {
           "tags": {
@@ -10507,7 +10581,6 @@
             "description": "User-defined name of the document"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
-          "status": { "$ref": "#/components/schemas/SDocStatus", "description": "Status of the SourceDocument" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -10533,8 +10606,102 @@
           }
         },
         "type": "object",
-        "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated", "folder_id"],
+        "required": ["filename", "doctype", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
+      },
+      "SourceDocumentStatusRead": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 230,
+            "title": "Filename",
+            "description": "Filename of the SourceDocument"
+          },
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "User-defined name of the document"
+          },
+          "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SourceDocument belongs to"
+          },
+          "extract_html": { "$ref": "#/components/schemas/SDocStatus", "description": "Extract HTML done?" },
+          "text_extraction": { "$ref": "#/components/schemas/SDocStatus", "description": "Text Extraction done?" },
+          "text_language_detection": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Text Language Detection done?"
+          },
+          "text_spacy": { "$ref": "#/components/schemas/SDocStatus", "description": "Text Spacy done?" },
+          "text_es_index": { "$ref": "#/components/schemas/SDocStatus", "description": "Text ES Index done?" },
+          "text_sentence_embedding": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Text Sentence Embedding done?"
+          },
+          "text_html_mapping": { "$ref": "#/components/schemas/SDocStatus", "description": "Text HTML Mapping done?" },
+          "image_caption": { "$ref": "#/components/schemas/SDocStatus", "description": "Image Captioning done?" },
+          "image_embedding": { "$ref": "#/components/schemas/SDocStatus", "description": "Image Embedding done?" },
+          "image_metadata_extraction": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Image Metadata Extraction done?"
+          },
+          "image_thumbnail": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Image Thumbnail Generation done?"
+          },
+          "image_object_detection": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Object Detection done?"
+          },
+          "audio_metadata": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Audio Metadata Extraction done?"
+          },
+          "audio_thumbnail": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Audio Thumbnail Generation done?"
+          },
+          "audio_transcription": { "$ref": "#/components/schemas/SDocStatus", "description": "Transcription done?" },
+          "video_metadata": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Video Metadata Extraction done?"
+          },
+          "video_thumbnail": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Video Thumbnail Generation done?"
+          },
+          "video_audio_extraction": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Video Audio Extraction done?"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filename",
+          "doctype",
+          "project_id",
+          "extract_html",
+          "text_extraction",
+          "text_language_detection",
+          "text_spacy",
+          "text_es_index",
+          "text_sentence_embedding",
+          "text_html_mapping",
+          "image_caption",
+          "image_embedding",
+          "image_metadata_extraction",
+          "image_thumbnail",
+          "image_object_detection",
+          "audio_metadata",
+          "audio_thumbnail",
+          "audio_transcription",
+          "video_metadata",
+          "video_thumbnail",
+          "video_audio_extraction"
+        ],
+        "title": "SourceDocumentStatusRead"
       },
       "SourceDocumentTagLinks": {
         "properties": {
@@ -10584,6 +10751,78 @@
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Folder Id",
             "description": "ID of the Folder this SourceDocument belongs to"
+          },
+          "extract_html": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Extract HTML done?"
+          },
+          "text_extraction": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text Extraction done?"
+          },
+          "text_language_detection": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text Language Detection done?"
+          },
+          "text_spacy": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text Spacy done?"
+          },
+          "text_es_index": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text ES Index done?"
+          },
+          "text_sentence_embedding": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text Sentence Embedding done?"
+          },
+          "text_html_mapping": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Text HTML Mapping done?"
+          },
+          "image_caption": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Image Captioning done?"
+          },
+          "image_embedding": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Image Embedding done?"
+          },
+          "image_metadata_extraction": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Image Metadata Extraction done?"
+          },
+          "image_thumbnail": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Image Thumbnail Generation done?"
+          },
+          "image_object_detection": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Object Detection done?"
+          },
+          "audio_metadata": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Audio Metadata Extraction done?"
+          },
+          "audio_thumbnail": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Audio Thumbnail Generation done?"
+          },
+          "audio_transcription": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Transcription done?"
+          },
+          "video_metadata": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Video Metadata Extraction done?"
+          },
+          "video_thumbnail": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Video Thumbnail Generation done?"
+          },
+          "video_audio_extraction": {
+            "anyOf": [{ "$ref": "#/components/schemas/SDocStatus" }, { "type": "null" }],
+            "description": "Video Audio Extraction done?"
           }
         },
         "type": "object",

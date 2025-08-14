@@ -145,6 +145,10 @@ export const QueryKey = {
   // all FolderRead[] of a Project (by project id and folder type)
   PROJECT_FOLDERS: "projectFolders",
 
+  // managed by DocProcessingHooks
+  // all SourceDocumentStatusRead[] of a project (by project id, status)
+  PROJECT_SDOC_STATUS: "projectSdocStatus",
+
   // tables
   SEARCH_TABLE: "search-document-table-data",
   SDOC_TABLE: "document-table-data",

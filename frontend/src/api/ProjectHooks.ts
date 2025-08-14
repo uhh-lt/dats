@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
-import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
@@ -73,19 +72,6 @@ const useDeleteProject = () =>
     },
   });
 
-// sdoc
-const useUploadDocument = () =>
-  useMutation({
-    mutationFn: ProjectService.uploadProjectSdoc,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_PREPROCESSING_JOBS, data.project_id] });
-    },
-    meta: {
-      successMessage: (data: PreprocessingJobRead) =>
-        `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
-    },
-  });
-
 const ProjectHooks = {
   // project
   useGetAllProjects,
@@ -93,8 +79,6 @@ const ProjectHooks = {
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
-  // sdoc
-  useUploadDocument,
 };
 
 export default ProjectHooks;

@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DocType } from "./DocType";
-import type { SDocStatus } from "./SDocStatus";
 export type SourceDocumentRead = {
   /**
    * Filename of the SourceDocument
@@ -17,10 +16,6 @@ export type SourceDocumentRead = {
    * DOCTYPE of the SourceDocument
    */
   doctype: DocType;
-  /**
-   * Status of the SourceDocument
-   */
-  status: SDocStatus;
   /**
    * Project the SourceDocument belongs to
    */
