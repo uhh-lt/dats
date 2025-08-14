@@ -11,7 +11,7 @@ from core.project.project_dto import (
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from fastapi import APIRouter, Depends, File, UploadFile
-from modules.doc_processing.preprocessing_new_service import PreprocessingServiceNew
+from modules.doc_processing.doc_processing_service import DocProcessingService
 from repos.db.crud_base import NoSuchElementError
 from sqlalchemy.orm import Session
 
@@ -113,7 +113,7 @@ def upload_project_sdoc(
     #     proj_id=proj_id, uploaded_files=uploaded_files
     # )
 
-    ppsn = PreprocessingServiceNew()
+    ppsn = DocProcessingService()
     ppsn.start_preprocessing(project_id=proj_id, uploaded_files=uploaded_files)
 
 

@@ -1,105 +1,67 @@
-from typing import Any, Callable, Dict, List, Tuple
-
 from common.doc_type import DocType
-from common.job_type import JobType
 from modules.crawler.crawler_job import CrawlerJobInput, CrawlerJobOutput
-from modules.doc_audio_processing.audio_metadata_extraction_job import (
+from modules.doc_processing.audio.audio_metadata_extraction_job import (
     AudioMetadataExtractionJobInput,
 )
-from modules.doc_audio_processing.audio_thumbnail_generation_job import (
+from modules.doc_processing.audio.audio_thumbnail_generation_job import (
     AudioThumbnailJobInput,
 )
-from modules.doc_audio_processing.transcription_job import (
+from modules.doc_processing.audio.transcription_job import (
     TranscriptionJobInput,
     TranscriptionJobOutput,
 )
-from modules.doc_image_processing.image_caption_job import (
-    ImageCaptionJobInput,
-    ImageCaptionJobOutput,
-)
-from modules.doc_image_processing.image_embedding_job import ImageEmbeddingJobInput
-from modules.doc_image_processing.image_metadata_extraction_job import (
-    ImageMetadataExtractionJobInput,
-)
-from modules.doc_image_processing.image_thumbnail_generation_job import (
-    ImageThumbnailJobInput,
-)
-from modules.doc_processing.archive_extraction_job import (
+from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
     ArchiveExtractionJobOutput,
 )
-from modules.doc_processing.doc_chunking_job import (
+from modules.doc_processing.entrypoints.doc_chunking_job import (
     DocChunkingJobInput,
     DocChunkingJobOutput,
 )
-from modules.doc_processing.init_sdoc_job import (
+from modules.doc_processing.entrypoints.init_sdoc_job import (
     SdocInitJobInput,
     SdocInitJobOutput,
 )
-from modules.doc_text_processing.detect_language_job import (
+from modules.doc_processing.html.detect_language_job import (
     TextLanguageDetectionJobInput,
     TextLanguageDetectionJobOutput,
 )
-from modules.doc_text_processing.es_index_job import TextESIndexJobInput
-from modules.doc_text_processing.html_extraction_job import (
-    ExtractHTMLJobInput,
-    ExtractHTMLJobOutput,
-)
-from modules.doc_text_processing.html_mapping_job import (
+from modules.doc_processing.html.es_index_job import TextESIndexJobInput
+from modules.doc_processing.html.html_mapping_job import (
     TextExtractionJobInput,
     TextExtractionJobOutput,
     TextHTMLMappingJobInput,
 )
-from modules.doc_text_processing.sentence_embedding_job import (
+from modules.doc_processing.html.sentence_embedding_job import (
     TextSentenceEmbeddingJobInput,
 )
-from modules.doc_text_processing.spacy_job import (
+from modules.doc_processing.html.spacy_job import (
     SpacyJobInput,
     SpacyJobOutput,
 )
-from modules.doc_video_processing.video_audio_extraction_job import (
+from modules.doc_processing.image.image_caption_job import (
+    ImageCaptionJobInput,
+    ImageCaptionJobOutput,
+)
+from modules.doc_processing.image.image_embedding_job import ImageEmbeddingJobInput
+from modules.doc_processing.image.image_metadata_extraction_job import (
+    ImageMetadataExtractionJobInput,
+)
+from modules.doc_processing.image.image_thumbnail_generation_job import (
+    ImageThumbnailJobInput,
+)
+from modules.doc_processing.text.html_extraction_job import (
+    ExtractHTMLJobInput,
+    ExtractHTMLJobOutput,
+)
+from modules.doc_processing.video.video_audio_extraction_job import (
     VideoAudioExtractionJobInput,
     VideoAudioExtractionJobOutput,
 )
 
 
-# --- Operator Classes ---
-class SwitchCaseBranchOperator:
-    def __init__(
-        self,
-        switch_variable: Callable[[Any], Any],
-        cases: Dict[Any, List[Tuple[Callable, JobType]]],
-    ):
-        self.switch_variable = switch_variable
-        self.cases = cases
-
-    def get_next_jobs(self, input, output):
-        key = self.switch_variable(output)
-        return self.cases.get(key, [])
-
-
-class LoopBranchOperator:
-    def __init__(
-        self,
-        loop_variable: Callable[[Any], List[Any]],
-        next_jobs: List[Tuple[Callable, JobType]],
-    ):
-        self.loop_variable = loop_variable
-        self.next_jobs = next_jobs
-
-    def get_next_jobs(self, input, output):
-        items = self.loop_variable(output)
-        jobs = []
-        for idx, item in enumerate(items):
-            for transition_fn, job_type in self.next_jobs:
-                jobs.append((transition_fn, job_type, idx))
-        return jobs
-
-
 # --- Transition Functions ---
 def crawler_to_extract_archive(input, output):
-    from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
-
     assert isinstance(input, CrawlerJobInput), "Expected CrawlerJobInput"
     assert isinstance(output, CrawlerJobOutput), "Expected CrawlerJobOutput"
     return ArchiveExtractionJobInput(
@@ -118,7 +80,7 @@ def extract_archive_to_pdf_chunking(input, output, idx):
     return DocChunkingJobInput(project_id=input.project_id, filepath=path)
 
 
-def pdf_chunking_to_sdoc_init(input, output, idx):
+def doc_chunking_to_sdoc_init(input, output, idx):
     assert isinstance(input, DocChunkingJobInput), "Expected PDFChunkingJobInput"
     assert isinstance(output, DocChunkingJobOutput), "Expected PDFChunkingJobOutput"
     path = output.files[idx]

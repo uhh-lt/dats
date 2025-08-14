@@ -7,19 +7,21 @@ from common.doc_type import (
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from fastapi import HTTPException, UploadFile
-from modules.doc_processing.archive_extraction_job import ArchiveExtractionJobInput
-from modules.doc_processing.doc_chunking_job import DocChunkingJobInput
-from modules.doc_processing.init_sdoc_job import SdocInitJobInput
+from modules.doc_processing.entrypoints.archive_extraction_job import (
+    ArchiveExtractionJobInput,
+)
+from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
+from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
 
-class PreprocessingServiceNew(metaclass=SingletonMeta):
+class DocProcessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
         cls.js = JobService()
 
-        return super(PreprocessingServiceNew, cls).__new__(cls)
+        return super(DocProcessingService, cls).__new__(cls)
 
     def start_preprocessing(
         self,
