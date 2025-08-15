@@ -19,7 +19,6 @@ class SourceDocumentBaseDTO(BaseModel):
         description="User-defined name of the document", default=None
     )
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
-    status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
 
 
@@ -31,6 +30,70 @@ class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
     )
     folder_id: int | None = Field(
         description="ID of the Folder this SourceDocument belongs to", default=None
+    )
+
+    # KEEP THE SAME ORDER AS source_document_orm.py!
+
+    # text
+    extract_html: SDocStatus | None = Field(
+        description="Extract HTML done?", default=None
+    )
+
+    # HTML
+    text_extraction: SDocStatus | None = Field(
+        description="Text Extraction done?", default=None
+    )
+    text_language_detection: SDocStatus | None = Field(
+        description="Text Language Detection done?", default=None
+    )
+    text_spacy: SDocStatus | None = Field(description="Text Spacy done?", default=None)
+    text_es_index: SDocStatus | None = Field(
+        description="Text ES Index done?", default=None
+    )
+    text_sentence_embedding: SDocStatus | None = Field(
+        description="Text Sentence Embedding done?", default=None
+    )
+    text_html_mapping: SDocStatus | None = Field(
+        description="Text HTML Mapping done?", default=None
+    )
+
+    # IMAGES
+    image_caption: SDocStatus | None = Field(
+        description="Image Captioning done?", default=None
+    )
+    image_embedding: SDocStatus | None = Field(
+        description="Image Embedding done?", default=None
+    )
+    image_metadata_extraction: SDocStatus | None = Field(
+        description="Image Metadata Extraction done?", default=None
+    )
+    image_thumbnail: SDocStatus | None = Field(
+        description="Image Thumbnail Generation done?", default=None
+    )
+    image_object_detection: SDocStatus | None = Field(
+        description="Object Detection done?", default=None
+    )
+
+    # AUDIO
+    audio_metadata: SDocStatus | None = Field(
+        description="Audio Metadata Extraction done?", default=None
+    )
+    audio_thumbnail: SDocStatus | None = Field(
+        description="Audio Thumbnail Generation done?", default=None
+    )
+    audio_transcription: SDocStatus | None = Field(
+        description="Transcription done?", default=None
+    )
+
+    # VIDEO
+    video_metadata: SDocStatus | None = Field(
+        description="Video Metadata Extraction done?", default=None
+    )
+    video_thumbnail: SDocStatus | None = Field(
+        description="Video Thumbnail Generation done?", default=None
+    )
+    video_audio_extraction: SDocStatus | None = Field(
+        description="Video Audio Extraction done?", default=None
     )
 
 
@@ -51,3 +114,59 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
         description="ID of the Folder this SourceDocument belongs to. If not provided, a folder with the filename of the SourceDocument will be created automatically.",
         default=None,
     )
+
+
+class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
+    processed_jobs: int = Field(
+        description="Number of processed jobs (depending on the doctype)"
+    )
+    total_jobs: int = Field(
+        description="Total number of jobs (depending on the doctype)"
+    )
+    processed_status: SDocStatus = Field(
+        description="Overall processing status. Results from processed_jobs and total_jobs"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SourceDocumentStatusDetailed(SourceDocumentStatusSimple):
+    # KEEP THE SAME ORDER AS source_document_orm.py!
+
+    # text
+    extract_html: SDocStatus = Field(description="Extract HTML done?")
+
+    # HTML
+    text_extraction: SDocStatus = Field(description="Text Extraction done?")
+    text_language_detection: SDocStatus = Field(
+        description="Text Language Detection done?"
+    )
+    text_spacy: SDocStatus = Field(description="Text Spacy done?")
+    text_es_index: SDocStatus = Field(description="Text ES Index done?")
+    text_sentence_embedding: SDocStatus = Field(
+        description="Text Sentence Embedding done?"
+    )
+    text_html_mapping: SDocStatus = Field(description="Text HTML Mapping done?")
+
+    # IMAGES
+    image_caption: SDocStatus = Field(description="Image Captioning done?")
+    image_embedding: SDocStatus = Field(description="Image Embedding done?")
+    image_metadata_extraction: SDocStatus = Field(
+        description="Image Metadata Extraction done?"
+    )
+    image_thumbnail: SDocStatus = Field(description="Image Thumbnail Generation done?")
+    image_object_detection: SDocStatus = Field(description="Object Detection done?")
+
+    # AUDIO
+    audio_metadata: SDocStatus = Field(description="Audio Metadata Extraction done?")
+    audio_thumbnail: SDocStatus = Field(description="Audio Thumbnail Generation done?")
+    audio_transcription: SDocStatus = Field(description="Transcription done?")
+
+    # VIDEO
+    video_metadata: SDocStatus = Field(description="Video Metadata Extraction done?")
+    video_thumbnail: SDocStatus = Field(description="Video Thumbnail Generation done?")
+    video_audio_extraction: SDocStatus = Field(
+        description="Video Audio Extraction done?"
+    )
+
+    model_config = ConfigDict(from_attributes=True)

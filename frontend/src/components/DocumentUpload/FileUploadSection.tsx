@@ -1,7 +1,7 @@
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
 import { UploadDropzone } from "./UploadDropzone.tsx";
 
@@ -11,7 +11,7 @@ interface FileUploadSectionProps {
 
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   // Upload mutation
-  const uploadDocumentMutation = ProjectHooks.useUploadDocument();
+  const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
 
   // Local state for selected files
   const [files, setFiles] = useState<File[]>([]);

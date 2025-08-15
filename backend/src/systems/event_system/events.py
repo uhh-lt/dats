@@ -11,3 +11,6 @@ source_document_deleted = signal("source_document_deleted")
 
 # sends project_id: int, user_id: int
 user_added_to_project = signal("user_added_to_project")
+
+# sends job_type: str, input: JobInputBase, output: BaseModel | None
+job_finished = signal("job_finished")

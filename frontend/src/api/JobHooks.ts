@@ -146,8 +146,8 @@ const useGetAllMLJobs = (projectId: number) => {
 };
 
 const JobHooks = {
-  usePollDuplicateFinderJob,
   useStartDuplicateFinderJob,
+  usePollDuplicateFinderJob,
   useStartExportJob,
   usePollExportJob,
   useStartMLJob,

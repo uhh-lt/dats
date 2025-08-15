@@ -1,6 +1,4 @@
-from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
-from loguru import logger
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -28,9 +26,9 @@ def remove_erroneous_or_unfinished_sdocs(cargo: PipelineCargo) -> PipelineCargo:
                     filename=filename,
                     only_finished=False,
                 )
-                if sdoc is not None and sdoc.status != SDocStatus.finished is False:
-                    logger.info(
-                        f"Removing erroneous or unfinished SourceDocument {filename}!"
-                    )
-                    sdoc = crud_sdoc.delete(db=db, id=sdoc.id)
+                # if sdoc is not None and sdoc.status != SDocStatus.finished is False:
+                #     logger.info(
+                #         f"Removing erroneous or unfinished SourceDocument {filename}!"
+                #     )
+                #     sdoc = crud_sdoc.delete(db=db, id=sdoc.id)
     return cargo

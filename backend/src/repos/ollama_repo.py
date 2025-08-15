@@ -358,4 +358,4 @@ class OllamaRepo(metaclass=SingletonMeta):
         """
         Close the connection to the Ollama client.
         """
-        self.__client._client._client.close()
+        self.__client._client.close()

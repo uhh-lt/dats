@@ -128,11 +128,6 @@ def __init_repos__(
 
     ElasticSearchRepo(flush=reset_elastic)
 
-    # import and init Reds
-    from repos.redis_repo import RedisRepo
-
-    RedisRepo(flush_all_clients=reset_db)
-
     # import and init Mail
     from repos.mail_repo import MailRepo
 

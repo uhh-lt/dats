@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
+from repos.db.dto_base import UpdateDTOBase
 
 
 class WordLevelTranscription(BaseModel):
@@ -53,6 +54,32 @@ class SourceDocumentDataRead(BaseModel):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
+    token_starts: list[int] | None = Field(
+        description="Start of each token in character offsets in content", default=None
+    )
+    token_ends: list[int] | None = Field(
+        description="End of each token in character offsets in content", default=None
+    )
+    sentence_starts: list[int] | None = Field(
+        description="Start of each sentence in character offsets in content",
+        default=None,
+    )
+    sentence_ends: list[int] | None = Field(
+        description="End of each sentence in character offsets in content", default=None
+    )
+    token_time_starts: list[int] | None = Field(
+        description="Start times of each token in transcript", default=None
+    )
+    token_time_ends: list[int] | None = Field(
+        description="End times of each token in transcript", default=None
+    )
+    html: str | None = Field(description="HTML of the SourceDocument", default=None)
+    content: str | None = Field(
+        description="Content of the SourceDocument", default=None
+    )
 
 
 # Properties for creation

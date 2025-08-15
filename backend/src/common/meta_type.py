@@ -40,3 +40,41 @@ class MetaType(str, Enum):
                 return FilterOperator.BOOLEAN
             case MetaType.LIST:
                 return FilterOperator.LIST
+
+    def is_value_of_type(self, value) -> bool:
+        match self:
+            case MetaType.STRING:
+                return isinstance(value, str)
+            case MetaType.NUMBER:
+                if isinstance(value, (int, float)):
+                    return True
+                if isinstance(value, str):
+                    try:
+                        float(value)
+                        return True
+                    except ValueError:
+                        return False
+                return False
+            case MetaType.DATE:
+                if isinstance(value, datetime):
+                    return True
+                if isinstance(value, str):
+                    from dateutil.parser import parse
+
+                    try:
+                        parse(value)
+                        return True
+                    except Exception:
+                        return False
+                return False
+            case MetaType.BOOLEAN:
+                if isinstance(value, bool):
+                    return True
+                if isinstance(value, str):
+                    return value.lower() in {"true", "false", "1", "0"}
+                return False
+            case MetaType.LIST:
+                return isinstance(value, list) and all(
+                    isinstance(item, str) for item in value
+                )
+        return False

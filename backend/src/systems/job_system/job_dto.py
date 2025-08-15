@@ -31,6 +31,11 @@ class JobPriority(str, enum.Enum):
     HIGH = "high"
 
 
+class JobResultTTL(int, enum.Enum):
+    DEFAULT = 500
+    NINETY_DAYS = 90 * 24 * 60 * 60
+
+
 class EndpointGeneration(str, enum.Enum):
     ALL = "all"  # Generate all endpoints
     MINIMAL = "minimal"  # Generate start and get_by_id endpoints
@@ -84,8 +89,16 @@ class JobInputBase(BaseModel):
     project_id: int = Field(description="Project ID associated with the job")
 
 
+class SdocJobInput(JobInputBase):
+    sdoc_id: int = Field(description="SDoc ID")
+
+
+class JobOutputBase(BaseModel):
+    pass
+
+
 InputT = TypeVar("InputT", bound=JobInputBase)
-OutputT = TypeVar("OutputT", bound=BaseModel | None)
+OutputT = TypeVar("OutputT", bound=JobOutputBase | None)
 
 
 class JobRead(BaseModel, Generic[InputT, OutputT]):

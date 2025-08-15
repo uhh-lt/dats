@@ -1,25 +1,29 @@
-from typing import Callable, TypeVar
+from typing import Callable, Literal, TypeVar
 
+from common.job_type import JobType
 from fastapi import APIRouter
-from pydantic import BaseModel
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
     JobInputBase,
+    JobOutputBase,
     JobPriority,
+    JobResultTTL,
 )
 
 InputT = TypeVar("InputT", bound=JobInputBase)
-OutputT = TypeVar("OutputT", bound=BaseModel)
+OutputT = TypeVar("OutputT", bound=JobOutputBase)
 
 
 def register_job(
-    job_type: str,
+    job_type: JobType,
     input_type: type[InputT],
-    output_type: type[OutputT] | None,
-    priority: JobPriority,
-    generate_endpoints: EndpointGeneration,
+    output_type: type[OutputT] | None = None,
+    priority: JobPriority = JobPriority.DEFAULT,
+    device: Literal["gpu", "cpu"] = "cpu",
+    generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
+    result_ttl: JobResultTTL = JobResultTTL.DEFAULT,
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService
@@ -30,8 +34,10 @@ def register_job(
             input_type=input_type,
             output_type=output_type,
             priority=priority,
+            device=device,
             generate_endpoints=generate_endpoints,
             router=router,
+            result_ttl=result_ttl,
         )
         return func
 

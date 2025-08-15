@@ -11,7 +11,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="quote")
+@serve.deployment(num_replicas=1, name="quote", max_ongoing_requests=128)
 @serve.ingress(api)
 class QuoteApi:
     def __init__(self, quote_model_handle: DeploymentHandle) -> None:

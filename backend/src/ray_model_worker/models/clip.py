@@ -24,7 +24,7 @@ IMAGE_BATCH_SIZE = cc.image_encoder.batch_size
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(**build_ray_model_deployment_config("clip"))
+@serve.deployment(max_ongoing_requests=64, **build_ray_model_deployment_config("clip"))
 class ClipModel:
     def __init__(self):
         logger.debug(f"Loading ClipModel {TEXT_MODEL} for text ...")
@@ -37,10 +37,17 @@ class ClipModel:
         image_encoder.eval()
         self.image_encoder = image_encoder
 
-    def text_embedding(self, input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
+    @serve.batch(max_batch_size=32, batch_wait_timeout_s=0.2)
+    async def text_embedding(
+        self, inputs: list[ClipTextEmbeddingInput]
+    ) -> list[ClipEmbeddingOutput]:
+        doc_sentences = [doc.text for doc in inputs]
+        sentences = [s for sents in doc_sentences for s in sents]
+        logger.info("CLIP num docs %d, total sentences %d", len(inputs), len(sentences))
+
         with torch.no_grad():
             encoded_text = self.text_encoder.encode(
-                sentences=input.text,
+                sentences=sentences,
                 batch_size=TEXT_BATCH_SIZE,
                 show_progress_bar=False,
                 normalize_embeddings=True,
@@ -48,8 +55,13 @@ class ClipModel:
                 convert_to_numpy=True,
             )
             assert isinstance(encoded_text, np.ndarray), "Failed to encode texts"
-
-            return ClipEmbeddingOutput(embeddings=encoded_text.tolist())
+        offset = 0
+        results = []
+        for doc in doc_sentences:
+            emb = encoded_text[offset : offset + len(doc)]
+            offset += len(doc)
+            results.append(ClipEmbeddingOutput(embeddings=emb.tolist()))
+        return results
 
     def image_embedding(self, input: ClipImageEmbeddingInput) -> ClipEmbeddingOutput:
         images = [base64_to_image(b64) for b64 in input.base64_images]

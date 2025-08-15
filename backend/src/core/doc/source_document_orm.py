@@ -1,8 +1,20 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from common.doc_type import DocType
+from common.sdoc_status_enum import SDocStatus
 from repos.db.orm_base import ORMBase
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    Computed,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    case,
+    func,
+)
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -23,13 +35,19 @@ if TYPE_CHECKING:
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 
+PROCESSING_JOBS = {
+    DocType.text: 7,
+    DocType.image: 11,
+    DocType.audio: 9,
+    DocType.video: 10,
+}
+
 
 class SourceDocumentORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String, nullable=True, index=True)
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
@@ -140,6 +158,214 @@ class SourceDocumentORM(ORMBase):
         back_populates="source_documents",
         overlaps="document_clusters,cluster,source_document",
     )
+
+    # KEEP THE SAME ORDER AS job_type.py!
+
+    # TEXT (1)
+    extract_html: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    # HTML (6)
+    text_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    text_language_detection: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    text_spacy: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    text_es_index: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    text_sentence_embedding: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    text_html_mapping: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    # IMAGE (5)
+    image_caption: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    image_embedding: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    image_metadata_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    image_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    image_object_detection: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    # AUDIO (3)
+    audio_metadata: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    audio_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    audio_transcription: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    # VIDEO (3)
+    video_metadata: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    video_thumbnail: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+    video_audio_extraction: Mapped[SDocStatus] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="0",
+        deferred=True,
+    )
+
+    processed_jobs: Mapped[int] = mapped_column(
+        Computed(
+            # text (1)
+            extract_html
+            # html (6)
+            + text_extraction
+            + text_language_detection
+            + text_spacy
+            + text_es_index
+            + text_sentence_embedding
+            + text_html_mapping
+            # image (5)
+            + image_caption
+            + image_embedding
+            + image_metadata_extraction
+            + image_thumbnail
+            + image_object_detection
+            # audio (3)
+            + audio_metadata
+            + audio_thumbnail
+            + audio_transcription
+            # video (3)
+            + video_metadata
+            + video_thumbnail
+            + video_audio_extraction,
+            persisted=True,
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    @property
+    def total_jobs(self) -> int:
+        return PROCESSING_JOBS[DocType(self.doctype)]
+
+    @hybrid_property
+    def processed_status(self) -> SDocStatus:  # type: ignore
+        if self.processed_jobs < 0:
+            return SDocStatus.erroneous
+        if self.doctype == DocType.text:
+            # text + html
+            if self.processed_jobs == PROCESSING_JOBS[DocType.text]:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.image:
+            # image + html
+            if self.processed_jobs == PROCESSING_JOBS[DocType.image]:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.audio:
+            # audio + html
+            if self.processed_jobs == PROCESSING_JOBS[DocType.audio]:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        elif self.doctype == DocType.video:
+            # video + 1 audio + html
+            if self.processed_jobs == PROCESSING_JOBS[DocType.video]:
+                return SDocStatus.finished
+            return SDocStatus.processing
+        else:
+            return SDocStatus.processing
+
+    @processed_status.expression
+    def processed_status(cls):
+        return case(
+            (
+                cls.processed_jobs < 0,
+                SDocStatus.erroneous,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.text) & (cls.processed_jobs == 7),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.image) & (cls.processed_jobs == 11),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.audio) & (cls.processed_jobs == 9),
+                SDocStatus.finished,
+            ),  # type: ignore
+            (
+                (cls.doctype == DocType.video) & (cls.processed_jobs == 10),
+                SDocStatus.finished,
+            ),  # type: ignore
+            else_=SDocStatus.processing,
+        )
 
     __table_args__ = (
         UniqueConstraint(
