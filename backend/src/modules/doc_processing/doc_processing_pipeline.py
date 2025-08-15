@@ -13,6 +13,7 @@ from systems.job_system.job_dto import JobInputBase, JobOutputBase, SdocJobInput
 from systems.job_system.job_service import JobService
 
 # --- PREPROCESSING PIPELINE_GRAPH ---
+# fmt: off
 PIPELINE_GRAPH = {
     JobType.CRAWLER: [
         (t.crawler_to_extract_archive, JobType.EXTRACT_ARCHIVE),
@@ -44,43 +45,19 @@ PIPELINE_GRAPH = {
                 DocType.image: [
                     (t.sdoc_init_to_image_caption, JobType.IMAGE_CAPTION),
                     (t.sdoc_init_to_image_embedding, JobType.IMAGE_EMBEDDING),
-                    (
-                        t.sdoc_init_to_image_metadata_extraction,
-                        JobType.IMAGE_METADATA_EXTRACTION,
-                    ),
+                    (t.sdoc_init_to_image_metadata_extraction, JobType.IMAGE_METADATA_EXTRACTION),
                     (t.sdoc_init_to_image_thumbnail, JobType.IMAGE_THUMBNAIL),
-                    (
-                        t.sdoc_init_to_image_object_detection,
-                        JobType.IMAGE_OBJECT_DETECTION,
-                    ),
+                    (t.sdoc_init_to_image_object_detection, JobType.IMAGE_OBJECT_DETECTION),
                 ],
                 DocType.audio: [
-                    (
-                        t.sdoc_init_to_audio_metadata_extraction,
-                        JobType.AUDIO_METADATA_EXTRACTION,
-                    ),
-                    (
-                        t.sdoc_init_to_audio_transcription,
-                        JobType.AUDIO_TRANSCRIPTION,
-                    ),
-                    (
-                        t.sdoc_init_to_audio_thumbnail,
-                        JobType.AUDIO_THUMBNAIL,
-                    ),
+                    (t.sdoc_init_to_audio_metadata_extraction, JobType.AUDIO_METADATA_EXTRACTION),
+                    (t.sdoc_init_to_audio_transcription, JobType.AUDIO_TRANSCRIPTION),
+                    (t.sdoc_init_to_audio_thumbnail, JobType.AUDIO_THUMBNAIL),
                 ],
                 DocType.video: [
-                    (
-                        t.sdoc_init_to_video_metadata_extraction,
-                        JobType.VIDEO_METADATA_EXTRACTION,
-                    ),
-                    (
-                        t.sdoc_init_to_video_thumbnail,
-                        JobType.VIDEO_THUMBNAIL,
-                    ),
-                    (
-                        t.sdoc_init_to_video_audio_extraction,
-                        JobType.VIDEO_AUDIO_EXTRACTION,
-                    ),
+                    (t.sdoc_init_to_video_metadata_extraction, JobType.VIDEO_METADATA_EXTRACTION),
+                    (t.sdoc_init_to_video_thumbnail, JobType.VIDEO_THUMBNAIL),
+                    (t.sdoc_init_to_video_audio_extraction, JobType.VIDEO_AUDIO_EXTRACTION),
                 ],
             },
         ),
@@ -120,6 +97,7 @@ PIPELINE_GRAPH = {
         (t.image_caption_to_text_extraction, JobType.TEXT_EXTRACTION),
     ],
 }
+# fmt: on
 
 
 def execute_pipeline_step(job_type: JobType, input, output, job_service):
