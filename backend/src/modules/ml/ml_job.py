@@ -15,7 +15,7 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from sqlalchemy import and_, or_
-from systems.job_system.job_dto import EndpointGeneration, Job
+from systems.job_system.job_dto import EndpointGeneration, Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -24,6 +24,7 @@ from systems.job_system.job_register_decorator import register_job
     input_type=MLJobInput,
     generate_endpoints=EndpointGeneration.ALL,
     device="gpu",
+    result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:
     start_time = datetime.now()

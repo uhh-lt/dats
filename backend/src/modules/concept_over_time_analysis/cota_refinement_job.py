@@ -8,7 +8,7 @@ from modules.concept_over_time_analysis.refinement_steps.init_search_space impor
     init_search_space,
 )
 from modules.concept_over_time_analysis.refinement_steps.store_in_db import store_in_db
-from systems.job_system.job_dto import Job
+from systems.job_system.job_dto import Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -17,6 +17,7 @@ from systems.job_system.job_register_decorator import register_job
     input_type=COTARefinementJobInput,
     output_type=None,
     device="gpu",
+    result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
     from repos.db.sql_repo import SQLRepo
