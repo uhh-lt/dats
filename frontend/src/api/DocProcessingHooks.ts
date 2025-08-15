@@ -1,10 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Query, useMutation, useQuery } from "@tanstack/react-query";
+import { useRef } from "react";
 import queryClient from "../plugins/ReactQueryClient.ts";
-import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { SDocStatus } from "./openapi/models/SDocStatus.ts";
-import { SourceDocumentStatusRead } from "./openapi/models/SourceDocumentStatusRead.ts";
+import { SourceDocumentStatusSimple } from "./openapi/models/SourceDocumentStatusSimple.ts";
 import { DocprocessingService } from "./openapi/services/DocprocessingService.ts";
 import { JobService } from "./openapi/services/JobService.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -13,9 +13,10 @@ const useStartCrawlerJob = () =>
   useMutation({
     mutationFn: JobService.startCrawlerJob,
     onSuccess: (job) => {
-      // force refetch of all crawler jobs when adding a new one
-      console.log("Invalidating project crawler jobs");
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CRAWLER_JOBS, job.input.project_id] });
+      setTimeout(() => {
+        console.log("Invalidating project crawler jobs");
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CRAWLER_JOBS, job.input.project_id] });
+      }, 1000);
     },
     meta: {
       successMessage: (data: CrawlerJobRead) => `Started Crawler Job as a new background task (ID: ${data.job_id})`,
@@ -33,19 +34,6 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
     refetchInterval: (query) => {
       if (!query.state.data) {
         return 1000;
-      }
-
-      // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
-      const localDate = new Date();
-      if (
-        query.state.data.finished &&
-        localDate.getTime() - dateToLocaleDate(query.state.data.finished).getTime() < 3 * 60 * 1000
-      ) {
-        const projectId = query.state.data.project_id;
-        setTimeout(() => {
-          console.log("Invalidating project sdoc status");
-          queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOC_STATUS, projectId] });
-        }, 1000);
       }
 
       if (query.state.data.status) {
@@ -82,39 +70,55 @@ const useGetAllCrawlerJobs = (projectId: number) => {
 const useUploadDocument = () =>
   useMutation({
     mutationFn: DocprocessingService.uploadFiles,
-    onSuccess: (_, variables) => {
-      setTimeout(() => {
-        console.log("Invalidating project sdoc status");
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOC_STATUS, variables.projId] });
-      }, 3000);
-    },
     meta: {
       successMessage: (data: string) =>
         `Successfully uploaded documents and started PreprocessingJob in the background! (${data})`,
     },
   });
 
-const usePollAllSdocStatus = (projectId: number, status: SDocStatus) => {
-  return useQuery<SourceDocumentStatusRead[], Error>({
-    queryKey: [QueryKey.PROJECT_SDOC_STATUS, projectId, status],
+interface UseAllSimpleSdocStatusQueryParams<T> {
+  projectId: number;
+  status: SDocStatus;
+  select?: (data: SourceDocumentStatusSimple[]) => T;
+  refetchInterval?: (query: Query<SourceDocumentStatusSimple[]>) => number | false;
+}
+
+const useAllSimpleSdocStatusQuery = <T = SourceDocumentStatusSimple[]>({
+  projectId,
+  status,
+  select,
+  refetchInterval,
+}: UseAllSimpleSdocStatusQueryParams<T>) => {
+  return useQuery({
+    queryKey: [QueryKey.PROJECT_SDOC_STATUS_SIMPLE, projectId, status],
     queryFn: () =>
-      DocprocessingService.getSdocStatusByProjectAndStatus({
+      DocprocessingService.getSimpleSdocStatusByProjectAndStatus({
         projId: projectId!,
         status: status!,
       }),
+    select,
+    refetchInterval,
+  });
+};
+
+// this query is polling the processing status of simple SDocs every 3 seconds
+const usePollProcessingSimpleSdocStatus = (projectId: number) => {
+  const previousLengthRef = useRef<number>(0);
+  return useAllSimpleSdocStatusQuery({
+    projectId,
+    status: SDocStatus._0,
     refetchInterval: (query) => {
       if (!query.state.data) {
-        return 1000;
+        return 3000;
       }
-
-      if (query.state.data.length == 0) {
-        // do invalidation if all documents are processed
+      const currentLength = query.state.data.length;
+      // Only invalidate if previous length > 0 and current length == 0
+      if (previousLengthRef.current > 0 && currentLength === 0) {
         console.log("Invalidating documents");
         queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
-        return false;
-      } else {
-        return 1000;
       }
+      previousLengthRef.current = currentLength;
+      return 3000;
     },
   });
 };
@@ -125,7 +129,7 @@ const DocProcessingHooks = {
   usePollCrawlerJob,
   useGetAllCrawlerJobs,
   useUploadDocument,
-  usePollAllSdocStatus,
+  usePollProcessingSimpleSdocStatus,
 };
 
 export default DocProcessingHooks;

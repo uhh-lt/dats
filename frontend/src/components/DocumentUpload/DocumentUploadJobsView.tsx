@@ -2,10 +2,9 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
-import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
 import CrawlerJobListItem from "../BackgroundTasks/CrawlerJobListItem";
 import { DialogSection } from "../MUI/DialogSection";
-import SdocStatusListItem from "./SdocStatusListItem.tsx";
+import SdocStatusSimpleListItem from "./SdocStatusListItem.tsx";
 
 interface DocumentImportJobsViewProps {
   projectId: number;
@@ -22,9 +21,7 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
     data: sdocStatus,
     refetch: refetchSdocStatus,
     isFetching: isSdocStatusFetching,
-  } = DocProcessingHooks.usePollAllSdocStatus(projectId, SDocStatus._0);
-
-  console.log(sdocStatus);
+  } = DocProcessingHooks.usePollProcessingSimpleSdocStatus(projectId);
 
   // Memoize all jobs
   const allCrawlerJobs = useMemo(() => crawlerJobs || [], [crawlerJobs]);
@@ -66,7 +63,7 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
               Documents in progress
             </Typography>
             {allSdocStatus.map((status) => (
-              <SdocStatusListItem key={status.filename} sdocStatus={status} />
+              <SdocStatusSimpleListItem key={status.filename} sdocStatus={status} />
             ))}
           </Stack>
         )}
