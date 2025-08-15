@@ -1,5 +1,3 @@
-from common.sdoc_status_enum import SDocStatus
-from core.doc.source_document_crud import crud_sdoc
 from preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from repos.db.sql_repo import SQLRepo
 
