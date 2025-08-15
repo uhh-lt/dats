@@ -1005,11 +1005,11 @@
         }
       }
     },
-    "/docprocessing/project/{proj_id}/status/{status}": {
+    "/docprocessing/project/{proj_id}/status/{status}/simple": {
       "get": {
         "tags": ["docprocessing"],
-        "summary": "Get all SourceDocumentStatus for the Project with the given ID by status",
-        "operationId": "get_sdoc_status_by_project_and_status",
+        "summary": "Get all SourceDocumentStatusSimple for the Project with the given ID by status",
+        "operationId": "get_simple_sdoc_status_by_project_and_status",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
@@ -1022,8 +1022,38 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentStatusRead" },
-                  "title": "Response Docprocessing-Get Sdoc Status By Project And Status"
+                  "items": { "$ref": "#/components/schemas/SourceDocumentStatusSimple" },
+                  "title": "Response Docprocessing-Get Simple Sdoc Status By Project And Status"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/docprocessing/project/{proj_id}/status/{status}/detailed": {
+      "get": {
+        "tags": ["docprocessing"],
+        "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+        "operationId": "get_detailed_sdoc_status_by_project_and_status",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentStatusDetailed" },
+                  "title": "Response Docprocessing-Get Detailed Sdoc Status By Project And Status"
                 }
               }
             }
@@ -10609,7 +10639,7 @@
         "required": ["filename", "doctype", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
       },
-      "SourceDocumentStatusRead": {
+      "SourceDocumentStatusDetailed": {
         "properties": {
           "filename": {
             "type": "string",
@@ -10627,6 +10657,20 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the SourceDocument belongs to"
+          },
+          "processed_jobs": {
+            "type": "integer",
+            "title": "Processed Jobs",
+            "description": "Number of processed jobs (depending on the doctype)"
+          },
+          "total_jobs": {
+            "type": "integer",
+            "title": "Total Jobs",
+            "description": "Total number of jobs (depending on the doctype)"
+          },
+          "processed_status": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Overall processing status. Results from processed_jobs and total_jobs"
           },
           "extract_html": { "$ref": "#/components/schemas/SDocStatus", "description": "Extract HTML done?" },
           "text_extraction": { "$ref": "#/components/schemas/SDocStatus", "description": "Text Extraction done?" },
@@ -10682,6 +10726,9 @@
           "filename",
           "doctype",
           "project_id",
+          "processed_jobs",
+          "total_jobs",
+          "processed_status",
           "extract_html",
           "text_extraction",
           "text_language_detection",
@@ -10701,7 +10748,45 @@
           "video_thumbnail",
           "video_audio_extraction"
         ],
-        "title": "SourceDocumentStatusRead"
+        "title": "SourceDocumentStatusDetailed"
+      },
+      "SourceDocumentStatusSimple": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "maxLength": 230,
+            "title": "Filename",
+            "description": "Filename of the SourceDocument"
+          },
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "User-defined name of the document"
+          },
+          "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the SourceDocument belongs to"
+          },
+          "processed_jobs": {
+            "type": "integer",
+            "title": "Processed Jobs",
+            "description": "Number of processed jobs (depending on the doctype)"
+          },
+          "total_jobs": {
+            "type": "integer",
+            "title": "Total Jobs",
+            "description": "Total number of jobs (depending on the doctype)"
+          },
+          "processed_status": {
+            "$ref": "#/components/schemas/SDocStatus",
+            "description": "Overall processing status. Results from processed_jobs and total_jobs"
+          }
+        },
+        "type": "object",
+        "required": ["filename", "doctype", "project_id", "processed_jobs", "total_jobs", "processed_status"],
+        "title": "SourceDocumentStatusSimple"
       },
       "SourceDocumentTagLinks": {
         "properties": {
