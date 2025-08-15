@@ -35,6 +35,13 @@ if TYPE_CHECKING:
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 
+PROCESSING_JOBS = {
+    DocType.text: 7,
+    DocType.image: 11,
+    DocType.audio: 9,
+    DocType.video: 10,
+}
+
 
 class SourceDocumentORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -303,28 +310,32 @@ class SourceDocumentORM(ORMBase):
         index=True,
     )
 
+    @property
+    def total_jobs(self) -> int:
+        return PROCESSING_JOBS[DocType(self.doctype)]
+
     @hybrid_property
     def processed_status(self) -> SDocStatus:  # type: ignore
         if self.processed_jobs < 0:
             return SDocStatus.erroneous
         if self.doctype == DocType.text:
             # text + html
-            if self.processed_jobs == 7:
+            if self.processed_jobs == PROCESSING_JOBS[DocType.text]:
                 return SDocStatus.finished
             return SDocStatus.processing
         elif self.doctype == DocType.image:
             # image + html
-            if self.processed_jobs == 11:
+            if self.processed_jobs == PROCESSING_JOBS[DocType.image]:
                 return SDocStatus.finished
             return SDocStatus.processing
         elif self.doctype == DocType.audio:
             # audio + html
-            if self.processed_jobs == 9:
+            if self.processed_jobs == PROCESSING_JOBS[DocType.audio]:
                 return SDocStatus.finished
             return SDocStatus.processing
         elif self.doctype == DocType.video:
             # video + 1 audio + html
-            if self.processed_jobs == 10:
+            if self.processed_jobs == PROCESSING_JOBS[DocType.video]:
                 return SDocStatus.finished
             return SDocStatus.processing
         else:

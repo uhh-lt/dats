@@ -116,7 +116,21 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
     )
 
 
-class SourceDocumentStatusRead(SourceDocumentBaseDTO):
+class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
+    processed_jobs: int = Field(
+        description="Number of processed jobs (depending on the doctype)"
+    )
+    total_jobs: int = Field(
+        description="Total number of jobs (depending on the doctype)"
+    )
+    processed_status: SDocStatus = Field(
+        description="Overall processing status. Results from processed_jobs and total_jobs"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SourceDocumentStatusDetailed(SourceDocumentStatusSimple):
     # KEEP THE SAME ORDER AS source_document_orm.py!
 
     # text
