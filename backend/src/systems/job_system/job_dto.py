@@ -31,6 +31,11 @@ class JobPriority(str, enum.Enum):
     HIGH = "high"
 
 
+class JobResultTTL(int, enum.Enum):
+    DEFAULT = 500
+    NINETY_DAYS = 90 * 24 * 60 * 60
+
+
 class EndpointGeneration(str, enum.Enum):
     ALL = "all"  # Generate all endpoints
     MINIMAL = "minimal"  # Generate start and get_by_id endpoints

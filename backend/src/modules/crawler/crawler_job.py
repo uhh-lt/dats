@@ -14,6 +14,7 @@ from systems.job_system.job_dto import (
     Job,
     JobInputBase,
     JobOutputBase,
+    JobResultTTL,
 )
 from systems.job_system.job_register_decorator import register_job
 
@@ -34,7 +35,9 @@ class CrawlerJobOutput(JobOutputBase):
 @register_job(
     job_type=JobType.CRAWLER,
     input_type=CrawlerJobInput,
+    output_type=CrawlerJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
+    result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     # Check that everything exists

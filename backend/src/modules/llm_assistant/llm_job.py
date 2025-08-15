@@ -1,7 +1,7 @@
 from common.job_type import JobType
 from modules.llm_assistant.llm_endpoint import router
 from modules.llm_assistant.llm_job_dto import LLMJobInput, LLMJobOutput
-from systems.job_system.job_dto import EndpointGeneration, Job
+from systems.job_system.job_dto import EndpointGeneration, Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
 
 
@@ -12,6 +12,7 @@ from systems.job_system.job_register_decorator import register_job
     generate_endpoints=EndpointGeneration.ALL,
     router=router,
     device="gpu",
+    result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def llm_assistant(
     payload: LLMJobInput,

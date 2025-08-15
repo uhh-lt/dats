@@ -37,12 +37,14 @@ class JobType(str, Enum):
     VIDEO_THUMBNAIL = "video_thumbnail"
     VIDEO_AUDIO_EXTRACTION = "video_audio_extraction"
 
-    # on-demand jobs
-    CRAWLER = "crawler"
+    # on-demand jobs (short-lived)
     DUPLICATE_FINDER = "duplicate_finder"
     EXPORT = "export"
     IMPORT = "import"
-    LLM_ASSISTANT = "llm_assistant"
-    COTA_REFINEMENT = "cota_refinement"
+
+    # on demand jobs (long-lived)
     ML = "ml"
+    LLM_ASSISTANT = "llm_assistant"
+    CRAWLER = "crawler"
+    COTA_REFINEMENT = "cota_refinement"
     PERSPECTIVES = "perspectives"

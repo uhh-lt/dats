@@ -148,6 +148,6 @@ def get_all_import_jobs(
 ) -> list[ImportJobRead]:
     authz_user.assert_in_project(project_id)
 
-    jobs = js.get_jobs_by_project(job_type="import", project_id=project_id)
+    jobs = js.get_jobs_by_project(job_type=JobType.IMPORT, project_id=project_id)
     jobs.sort(key=lambda x: x.get_created(), reverse=True)
     return [ImportJobRead.from_rq_job(job) for job in jobs]
