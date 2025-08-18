@@ -20,7 +20,7 @@ def remove_erroneous_or_unfinished_sdocs(cargo: PipelineCargo) -> PipelineCargo:
             if doc in cargo.data.keys():
                 filename = str(cargo.data[doc].filename)
 
-                sdoc = crud_sdoc.read_by_filename(
+                crud_sdoc.read_by_filename(
                     db=db,
                     proj_id=cargo.ppj_payload.project_id,
                     filename=filename,
