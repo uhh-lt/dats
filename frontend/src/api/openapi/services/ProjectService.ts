@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
@@ -80,31 +79,6 @@ export class ProjectService {
       path: {
         proj_id: projId,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Uploads one or multiple SourceDocument to the Project with the given ID if it exists
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static uploadProjectSdoc({
-    projId,
-    formData,
-  }: {
-    projId: number;
-    formData: Body_project_upload_project_sdoc;
-  }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/project/{proj_id}/sdoc",
-      path: {
-        proj_id: projId,
-      },
-      formData: formData,
-      mediaType: "multipart/form-data",
       errors: {
         422: `Validation Error`,
       },

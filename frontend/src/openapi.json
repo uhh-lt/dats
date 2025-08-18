@@ -1084,9 +1084,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
-                "schema": { "type": "string", "format": "date-time", "title": "Response Docprocessing-Upload Files" }
-              }
+              "application/json": { "schema": { "type": "integer", "title": "Response Docprocessing-Upload Files" } }
             }
           },
           "422": {
@@ -2755,30 +2753,6 @@
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectRead" } } }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/project/{proj_id}/sdoc": {
-      "put": {
-        "tags": ["project"],
-        "summary": "Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
-        "operationId": "upload_project_sdoc",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": { "schema": { "$ref": "#/components/schemas/Body_project-upload_project_sdoc" } }
-          }
-        },
-        "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
           "422": {
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
@@ -6575,19 +6549,6 @@
         "required": ["filter", "sorts"],
         "title": "Body_perspectives-visualize_documents"
       },
-      "Body_project-upload_project_sdoc": {
-        "properties": {
-          "uploaded_files": {
-            "items": { "type": "string", "format": "binary" },
-            "type": "array",
-            "title": "Uploaded Files",
-            "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
-          }
-        },
-        "type": "object",
-        "required": ["uploaded_files"],
-        "title": "Body_project-upload_project_sdoc"
-      },
       "Body_rag-rag_session": {
         "properties": {
           "query": {
@@ -7465,6 +7426,12 @@
         "required": ["project_id", "urls"],
         "title": "CrawlerJobInput"
       },
+      "CrawlerJobOutput": {
+        "properties": { "crawled_data_zip": { "type": "string", "format": "path", "title": "Crawled Data Zip" } },
+        "type": "object",
+        "required": ["crawled_data_zip"],
+        "title": "CrawlerJobOutput"
+      },
       "CrawlerJobRead": {
         "properties": {
           "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
@@ -7492,7 +7459,10 @@
             "description": "Total number of steps in the job process"
           },
           "input": { "$ref": "#/components/schemas/CrawlerJobInput", "description": "Input for the job" },
-          "output": { "type": "null", "title": "Output", "description": "Output for the job" },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/CrawlerJobOutput" }, { "type": "null" }],
+            "description": "Output for the job"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -10658,6 +10628,7 @@
             "title": "Project Id",
             "description": "Project the SourceDocument belongs to"
           },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "processed_jobs": {
             "type": "integer",
             "title": "Processed Jobs",
@@ -10726,6 +10697,7 @@
           "filename",
           "doctype",
           "project_id",
+          "id",
           "processed_jobs",
           "total_jobs",
           "processed_status",
@@ -10769,6 +10741,7 @@
             "title": "Project Id",
             "description": "Project the SourceDocument belongs to"
           },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
           "processed_jobs": {
             "type": "integer",
             "title": "Processed Jobs",
@@ -10785,7 +10758,7 @@
           }
         },
         "type": "object",
-        "required": ["filename", "doctype", "project_id", "processed_jobs", "total_jobs", "processed_status"],
+        "required": ["filename", "doctype", "project_id", "id", "processed_jobs", "total_jobs", "processed_status"],
         "title": "SourceDocumentStatusSimple"
       },
       "SourceDocumentTagLinks": {
