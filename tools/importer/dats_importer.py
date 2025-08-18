@@ -1,7 +1,7 @@
 import argparse
 import json
-import math
 from pathlib import Path
+from time import sleep
 
 import magic
 from dats_api import DATSAPI
@@ -135,14 +135,6 @@ parser.add_argument(
     dest="file_extension",
 )
 parser.add_argument(
-    "--batch_size",
-    help="The batch size for uploading files. Default is 200",
-    type=int,
-    default=200,
-    required=False,
-    dest="batch_size",
-)
-parser.add_argument(
     "--max_num_docs",
     help="The maximum number of documents to upload. Default is no limit",
     type=int,
@@ -251,22 +243,31 @@ if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
     print("WARNING: More files found than max_num_docs!")
     print(f"Limited to {args.max_num_docs}.")
 
-# upload files batchwise, 200 files at a time
-num_batches = math.ceil(len(files) / args.batch_size)
-for i in tqdm(
-    range(0, len(files), args.batch_size),
-    desc="Uploading batches... ",
-    total=num_batches,
-):
-    api.upload_file_batch(
-        project_id=project["id"],
-        file_batch=files[i : i + args.batch_size],
-        filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
-    )
-    api.refresh_login()
-    if args.max_num_docs != -1 and (i + args.batch_size) >= args.max_num_docs:
-        break
+# upload files
+uploading_files = files[: args.max_num_docs] if args.max_num_docs != -1 else files
+api.upload_files(
+    proj_id=project["id"],
+    files=uploading_files,
+    filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
+)
+api.refresh_login()
 
+# wait for success
+sleep(30)
+num_processing_docs = len(
+    api.read_preprocessing_status(project_id=project["id"], status=0)
+)
+is_finished = num_processing_docs == 0
+with tqdm(
+    total=len(uploading_files), desc="Document Preprocessing: ", position=1
+) as pbar:
+    while not is_finished:
+        sleep(30)
+        num_processing_docs = len(
+            api.read_preprocessing_status(project_id=project["id"], status=0)
+        )
+        is_finished = num_processing_docs == 0
+        pbar.update(len(uploading_files) - num_processing_docs)
 
 # create new tag if it does not exist
 api.refresh_login()

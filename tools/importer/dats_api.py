@@ -104,19 +104,27 @@ class DATSAPI:
         r.raise_for_status()
         return r.json()
 
-    def read_project_status(self, proj_id: int) -> dict[str, Any]:
-        r = requests.get(
-            self.BASE_PATH + f"prepro/project/{proj_id}/status",
-            headers={"Authorization": f"Bearer {self.access_token}"},
-        )
-        r.raise_for_status()
-        return r.json()
+    # PREPROCESSING
 
-    # PREPROCESSING JOB
+    def read_preprocessing_status(self, project_id: int, status: int) -> dict[str, Any]:
+        """
+        Args:
+            project_id (int): The ID of the project.
+            status (int): The status code of the job:
+                - -100: erroneous
+                - 0: processing
+                - 1: finished
 
-    def read_preprocessing_job_status(self, preprojob_id: int) -> dict[str, Any]:
+        Returns:
+             The status information of the preprocessing job.
+
+        Raises:
+            requests.HTTPError: If the HTTP request returned an unsuccessful status code.
+        """
+
         r = requests.get(
-            self.BASE_PATH + f"prepro/{preprojob_id}",
+            self.BASE_PATH
+            + f"docprocessing/project/{project_id}/status/{status}/simple",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -190,7 +198,7 @@ class DATSAPI:
         files: list[tuple[str, tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool = False,
     ) -> dict[str, Any] | None:
-        # upload files
+        # check for duplicates
         if filter_duplicate_files_before_upload:
             logger.info("Filtering files to upload ...")
             # filter the files so that only new files with a non-existing filename get uploaded
@@ -205,9 +213,10 @@ class DATSAPI:
             logger.info(f"Filtered {len(files) - len(filtered_files)} files !")
             files = filtered_files
 
+        # upload files
         if len(files) > 0:
             r = requests.put(
-                self.BASE_PATH + f"project/{proj_id}/sdoc",
+                self.BASE_PATH + f"docprocessing/project/{proj_id}",
                 files=files,
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
@@ -217,60 +226,6 @@ class DATSAPI:
         else:
             logger.info("No files to upload!")
             return None
-
-    def upload_file_batch(
-        self,
-        project_id: int,
-        file_batch: list[tuple[str, tuple[str, bytes, str]]],
-        filter_duplicate_files_before_upload: bool,
-    ) -> list[int]:
-        # file upload
-        preprocessing_job = self.upload_files(
-            proj_id=project_id,
-            files=file_batch,
-            filter_duplicate_files_before_upload=filter_duplicate_files_before_upload,
-        )
-        if preprocessing_job is None:
-            logger.info("Upload skipped!")
-            return []
-
-        total = len(preprocessing_job["payloads"])
-
-        # WAITING = "Waiting"  # Initializing (not started yet)
-        # RUNNING = "Running"  # (currently in progress)
-        # FINISHED = "Finished"  # (successfully finished)
-        # ERROR = "Errorneous"  # (failed to finish)
-        # ABORTED = "Aborted"  # (aborted by user)
-        payloads_status = [
-            payload["status"] for payload in preprocessing_job["payloads"]
-        ]
-        num_finished_docs = payloads_status.count("Finished")
-        is_finished = not ("Waiting" in payloads_status or "Running" in payloads_status)
-
-        with tqdm(total=total, desc="Document Preprocessing: ", position=1) as pbar:
-            while not is_finished:
-                sleep(5)
-
-                preprocessing_job = self.read_preprocessing_job_status(
-                    preprojob_id=preprocessing_job["id"]
-                )
-
-                payloads_status = [
-                    payload["status"] for payload in preprocessing_job["payloads"]
-                ]
-                num_finished_docs_new = payloads_status.count("Finished")
-                is_finished = not (
-                    "Waiting" in payloads_status or "Running" in payloads_status
-                )
-
-                pbar.update(num_finished_docs_new - num_finished_docs)
-                num_finished_docs = num_finished_docs_new
-        finished_sdoc_ids = []
-        for payload in preprocessing_job["payloads"]:
-            if payload["status"] == "Finished":
-                finished_sdoc_ids.append(payload["source_document_id"])
-        logger.info(f"Uploaded {len(finished_sdoc_ids)} files sucessfully!")
-        return finished_sdoc_ids
 
     def set_sdoc_name(self, sdoc_id: int, name: str):
         r = requests.patch(
@@ -428,10 +383,6 @@ if __name__ == "__main__":
     projects = dats.read_all_projects()
     logger.info("got all projects", projects)
 
-    # get project status
-    status = dats.read_project_status(proj_id=project["id"])
-    logger.info("got project status", status)
-
     # create tag
     tag = dats.create_tag(
         name="test tag", description="my test tag", color="blue", proj_id=project["id"]
@@ -448,8 +399,7 @@ if __name__ == "__main__":
     logger.info("got tags", tags)
 
     # status before upload
-    status = dats.read_project_status(proj_id=project["id"])
-    sdocs_in_project = status["num_sdocs_finished"]
+    status = dats.read_preprocessing_status(project_id=project["id"], status=0)
 
     # file upload
     from pathlib import Path
@@ -465,12 +415,27 @@ if __name__ == "__main__":
         mime = magic.from_buffer(file_bytes, mime=True)
         files.append(("uploaded_files", (file.name, file_bytes, mime)))
 
-    dats.upload_file_batch(
-        project_id=project["id"],
-        file_batch=files,
+    dats.upload_files(
+        proj_id=project["id"],
+        files=files,
         filter_duplicate_files_before_upload=True,
     )
     logger.info("Upload success!")
+
+    # wait for success
+    sleep(30)
+    num_processing_docs = len(
+        dats.read_preprocessing_status(project_id=project["id"], status=0)
+    )
+    is_finished = num_processing_docs == 0
+    with tqdm(total=len(files), desc="Document Preprocessing: ", position=1) as pbar:
+        while not is_finished:
+            sleep(30)
+            num_processing_docs = len(
+                dats.read_preprocessing_status(project_id=project["id"], status=0)
+            )
+            is_finished = num_processing_docs == 0
+            pbar.update(len(files) - num_processing_docs)
 
     # get all sdocs
     sdoc_ids = dats.read_all_sdoc_ids(proj_id=project["id"])
