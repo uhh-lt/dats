@@ -40,7 +40,8 @@ def handle_extract_html_job(
         logger.error(f"File {payload.filepath} does not exist!")
         raise Exception(f"File {payload.filepath} does not exist!")
 
-    # TODO: these extractions have varying compute requirements
+    # TODO: these extractions have varying compute requirements when run across
+    #       multiple machines or if GPU is used for PDFs via Docling etc.
     if payload.filepath.suffix == ".txt":
         doc_html, extracted_images = extract_html_from_text(payload.filepath)
     elif payload.filepath.suffix == ".docx" or payload.filepath.suffix == ".doc":
@@ -56,21 +57,8 @@ def handle_extract_html_job(
     # Clean HTML (may use readability, always uses heuristics)
     html = clean_html(doc_html)
 
-    folder_id = payload.folder_id
-    # if len(extracted_images) > 0:
-    #     with SQLRepo().db_session() as db:
-    #         folder = crud_folder.create(
-    #             db,
-    #             create_dto=FolderCreate(
-    #                 project_id=payload.project_id,
-    #                 folder_type=FolderType.SDOC_FOLDER,
-    #                 name=payload.filepath.name,
-    #                 parent_id=payload.folder_id,
-    #             ),
-    #         )
-    #         folder_id = folder.id
     return ExtractHTMLJobOutput(
-        html=html, image_paths=extracted_images, folder_id=folder_id
+        html=html, image_paths=extracted_images, folder_id=payload.folder_id
     )
 
 
