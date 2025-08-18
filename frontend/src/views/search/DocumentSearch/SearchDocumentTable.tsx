@@ -49,7 +49,7 @@ import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
-import { useTableFetchMoreOnScroll, useTransformInfiniteData } from "../../../utils/useTableInfiniteScroll.ts";
+import { useTableFetchMoreOnScroll } from "../../../utils/useTableInfiniteScroll.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import OpenInTabsButton from "./OpenInTabsButton.tsx";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
@@ -58,17 +58,6 @@ import { SearchActions } from "./searchSlice.ts";
 // this has to match Search.tsx!
 const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
-
-const flatMapData = (page: PaginatedSDocHits) => page.hits;
-const flatMapDataNoFolders = (page: PaginatedSDocHits) =>
-  page.hits.reduce((acc, hit) => {
-    acc.push(...hit.sub_rows);
-    return acc;
-  }, [] as HierarchicalElasticSearchHit[]);
-
-const lengthDataChildren = (hits: HierarchicalElasticSearchHit[]) =>
-  hits.reduce((acc, hit) => acc + hit.sub_rows.length, 0);
-const lengthData = (hits: HierarchicalElasticSearchHit[]) => hits.length;
 
 enum FolderSelection {
   FOLDER = "FOLDER",
@@ -238,6 +227,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
 
   // search
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
+  console.log("fetch size:", fetchSize);
   const filter = useAppSelector((state) => state.search.filter[filterName]);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
     queryKey: [
@@ -303,16 +293,50 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     refetchOnWindowFocus: false,
   });
 
-  const {
-    flatData,
-    totalFetched: totalFetchedSdocs,
-    totalResults,
-  } = useTransformInfiniteData({
-    data,
-    flatMapData: showFolders ? flatMapData : flatMapDataNoFolders,
-    lengthData: showFolders ? lengthDataChildren : lengthData,
-  });
-  const totalFetchedFolders = lengthData(flatData);
+  // this is a custom version of the useTransformInfiniteData hook
+  const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {
+    // the backend may send a folder multiple times (e.g. in page 1, and in page 2, if the folder has many documents)
+    // this is why we need to merge results here!
+    if (!data || data.pages.length === 0) return { flatData: [], totalFetchedSdocs: 0, totalFetchedFolders: 0 };
+
+    // if we do not want to show folders, we simply show all sub_rows
+    if (!showFolders) {
+      const flatData = data.pages.flatMap((page) =>
+        page.hits.reduce((acc, hit) => {
+          acc.push(...hit.sub_rows);
+          return acc;
+        }, [] as HierarchicalElasticSearchHit[]),
+      );
+      return { flatData, totalFetchedSdocs: flatData.length, totalFetchedFolders: 0 };
+    }
+
+    // if showFolders is true, we need to merge the sub_rows, highlights of the hits
+    const hits: Record<number, HierarchicalElasticSearchHit> = {};
+    data.pages.forEach((page) => {
+      page.hits.forEach((hit) => {
+        // do the merging here!
+        if (hits[hit.id]) {
+          hits[hit.id].sub_rows.push(...hit.sub_rows);
+          if (hit.highlights) {
+            hits[hit.id].highlights?.push(...hit.highlights);
+          }
+        } else {
+          hits[hit.id] = JSON.parse(JSON.stringify(hit)); // deep clone to avoid mutating the original hit
+        }
+      });
+    });
+    const flatData = Object.values(hits);
+    console.log(data);
+    console.log(flatData);
+    return {
+      flatData,
+      totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
+      totalFetchedFolders: flatData.length,
+    };
+  }, [showFolders, data]);
+  const totalResults = data?.pages?.[0]?.total_results ?? 0;
+
+  // lengthData: showFolders ? lengthDataChildren : lengthData,
 
   useEffect(() => {
     // if show folders, the documents are nested (inside folders)
