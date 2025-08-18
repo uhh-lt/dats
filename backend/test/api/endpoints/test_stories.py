@@ -329,101 +329,26 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
 @pytest.mark.order(after="test_project_add_user")
 def test_upload_documents(client, api_user, api_project, api_document) -> None:
-    import time
-
     alice = api_user.user_list["alice"]
     project1 = api_project.project_list["project1"]
 
     # Alice uploads two text documents to project1
-    text_response12 = api_document.create([text_doc1, text_doc2], alice, project1)
-
-    text1_prepro_job_id = text_response12[text_doc1[1]]["prepro_job_id"]
-    text2_prepro_job_id = text_response12[text_doc2[1]]["prepro_job_id"]
-
-    text1_prepro_status = api_document.prepro_status(text1_prepro_job_id, alice)
-    text2_prepro_status = api_document.prepro_status(text2_prepro_job_id, alice)
-    while text1_prepro_status == "Running" or text2_prepro_status == "Running":
-        text1_prepro_status = api_document.prepro_status(text1_prepro_job_id, alice)
-        text2_prepro_status = api_document.prepro_status(text2_prepro_job_id, alice)
-        time.sleep(3)
-    assert text1_prepro_status == "Finished"
-    assert text2_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(text_doc1[1], alice)
-    api_document.get_sdoc_id(text_doc2[1], alice)
+    api_document.upload_files([text_doc1, text_doc2], alice, project1)
 
     # Alice uploads two image documents to project1
-    image_response12 = api_document.create([image_doc1, image_doc2], alice, project1)
-    image1_prepro_job_id = image_response12[image_doc1[1]]["prepro_job_id"]
-    image2_prepro_job_id = image_response12[image_doc2[1]]["prepro_job_id"]
-
-    image1_prepro_status = api_document.prepro_status(image1_prepro_job_id, alice)
-    image2_prepro_status = api_document.prepro_status(image2_prepro_job_id, alice)
-    while image1_prepro_status == "Running" or image2_prepro_status == "Running":
-        image1_prepro_status = api_document.prepro_status(image1_prepro_job_id, alice)
-        image2_prepro_status = api_document.prepro_status(image2_prepro_job_id, alice)
-        time.sleep(3)
-    assert image1_prepro_status == "Finished"
-    assert image2_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(image_doc1[1], alice)
-    api_document.get_sdoc_id(image_doc2[1], alice)
+    api_document.upload_files([image_doc1, image_doc2], alice, project1)
 
     # Alice uploads two video documents to project1
-    video_response12 = api_document.create([video_doc1, video_doc2], alice, project1)
-    video1_prepro_job_id = video_response12[video_doc1[1]]["prepro_job_id"]
-    video2_prepro_job_id = video_response12[video_doc2[1]]["prepro_job_id"]
-
-    video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
-    video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
-    while video1_propro_status == "Running" or video2_prepro_status == "Running":
-        video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
-        video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
-        time.sleep(3)
-    assert video1_propro_status == "Finished"
-    assert video2_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(video_doc1[1], alice)
-    api_document.get_sdoc_id(video_doc2[1], alice)
+    api_document.upload_files([video_doc1, video_doc2], alice, project1)
 
     # Alice uploads two audio documents to project1
-    audio_response12 = api_document.create([audio_doc1, audio_doc2], alice, project1)
-    audio1_prepro_job_id = audio_response12[audio_doc1[1]]["prepro_job_id"]
-    audio2_prepro_job_id = audio_response12[audio_doc2[1]]["prepro_job_id"]
-
-    audio1_prepro_status = api_document.prepro_status(audio1_prepro_job_id, alice)
-    audio2_prepro_status = api_document.prepro_status(audio2_prepro_job_id, alice)
-    while audio1_prepro_status == "Running" or audio2_prepro_status == "Running":
-        audio1_prepro_status = api_document.prepro_status(audio1_prepro_job_id, alice)
-        audio2_prepro_status = api_document.prepro_status(audio2_prepro_job_id, alice)
-        time.sleep(3)
-
-    assert audio1_prepro_status == "Finished"
-    assert audio2_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(audio_doc1[1], alice)
-    api_document.get_sdoc_id(audio_doc2[1], alice)
+    api_document.upload_files([audio_doc1, audio_doc2], alice, project1)
 
     # Bob uploads two text documents to project2
     bob = api_user.user_list["bob"]
     project2 = api_project.project_list["project2"]
 
-    text_response34 = api_document.create([text_doc3, text_doc4], bob, project2)
-
-    text3_prepro_job_id = text_response34[text_doc3[1]]["prepro_job_id"]
-    text4_prepro_job_id = text_response34[text_doc4[1]]["prepro_job_id"]
-
-    text3_prepro_status = api_document.prepro_status(text3_prepro_job_id, bob)
-    text4_prepro_status = api_document.prepro_status(text4_prepro_job_id, bob)
-    while text3_prepro_status == "Running" or text4_prepro_status == "Running":
-        text3_prepro_status = api_document.prepro_status(text3_prepro_job_id, bob)
-        text4_prepro_status = api_document.prepro_status(text4_prepro_job_id, bob)
-        time.sleep(3)
-    assert text3_prepro_status == "Finished"
-    assert text4_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(text_doc3[1], bob)
-    api_document.get_sdoc_id(text_doc4[1], bob)
+    api_document.upload_files([text_doc3, text_doc4], bob, project2)
 
     # Bob updates textdoc3 and removes it
     text_doc3_rem = api_document.document_list[text_doc3[1]]
@@ -441,55 +366,13 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     assert text_doc3_remove_response.status_code == 200
 
     # Bob uploads two image documents to project2
-    image_response34 = api_document.create([image_doc3, image_doc4], bob, project2)
-    image3_prepro_job_id = image_response34[image_doc3[1]]["prepro_job_id"]
-    image4_prepro_job_id = image_response34[image_doc4[1]]["prepro_job_id"]
-
-    image3_prepro_status = api_document.prepro_status(image3_prepro_job_id, bob)
-    image4_prepro_status = api_document.prepro_status(image4_prepro_job_id, bob)
-    while image3_prepro_status == "Running" or image4_prepro_status == "Running":
-        image3_prepro_status = api_document.prepro_status(image3_prepro_job_id, bob)
-        image4_prepro_status = api_document.prepro_status(image4_prepro_job_id, bob)
-        time.sleep(3)
-    assert image3_prepro_status == "Finished"
-    assert image4_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(image_doc3[1], bob)
-    api_document.get_sdoc_id(image_doc4[1], bob)
+    api_document.upload_files([image_doc3, image_doc4], bob, project2)
 
     # Bob uploads two video documents to project2
-    video_response34 = api_document.create([video_doc3, video_doc4], bob, project2)
-    video3_prepro_job_id = video_response34[video_doc3[1]]["prepro_job_id"]
-    video4_prepro_job_id = video_response34[video_doc4[1]]["prepro_job_id"]
-
-    video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
-    video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
-    while video3_prepro_status == "Running" or video4_prepro_status == "Running":
-        video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
-        video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
-        time.sleep(3)
-    assert video3_prepro_status == "Finished"
-    assert video4_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(video_doc3[1], bob)
-    api_document.get_sdoc_id(video_doc4[1], bob)
+    api_document.upload_files([video_doc3, video_doc4], bob, project2)
 
     # Bob uploads two audio documents to project2
-    audio_response34 = api_document.create([audio_doc3, audio_doc4], bob, project2)
-    audio3_prepro_job_id = audio_response34[audio_doc3[1]]["prepro_job_id"]
-    audio4_prepro_job_id = audio_response34[audio_doc4[1]]["prepro_job_id"]
-
-    audio3_prepro_status = api_document.prepro_status(audio3_prepro_job_id, bob)
-    audio4_prepro_status = api_document.prepro_status(audio4_prepro_job_id, bob)
-    while audio3_prepro_status == "Running" or audio4_prepro_status == "Running":
-        audio3_prepro_status = api_document.prepro_status(audio3_prepro_job_id, bob)
-        audio4_prepro_status = api_document.prepro_status(audio4_prepro_job_id, bob)
-        time.sleep(3)
-    assert audio3_prepro_status == "Finished"
-    assert audio4_prepro_status == "Finished"
-
-    api_document.get_sdoc_id(audio_doc3[1], bob)
-    api_document.get_sdoc_id(audio_doc4[1], bob)
+    api_document.upload_files([audio_doc3, audio_doc4], bob, project2)
 
     # Alice creates a memo for text_doc1
     project_text_doc1 = api_document.document_list[text_doc1[1]]

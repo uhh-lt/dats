@@ -10,8 +10,7 @@ from core.project.project_dto import (
 )
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from fastapi import APIRouter, Depends, File, UploadFile
-from modules.doc_processing.doc_processing_service import DocProcessingService
+from fastapi import APIRouter, Depends
 from repos.db.crud_base import NoSuchElementError
 from sqlalchemy.orm import Session
 
@@ -85,30 +84,6 @@ def delete_project(
     authz_user.assert_in_project(proj_id)
     db_obj = crud_project.delete(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
-
-
-@router.put(
-    "/{proj_id}/sdoc",
-    response_model=None,
-    summary="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
-)
-# Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
-#  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
-#  see: https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads-with-additional-metadata
-def upload_project_sdoc(
-    *,
-    proj_id: int,
-    uploaded_files: list[UploadFile] = File(
-        ...,
-        description=(
-            "File(s) that get uploaded and represented by the SourceDocument(s)"
-        ),
-    ),
-    authz_user: AuthzUser = Depends(),
-) -> None:
-    authz_user.assert_in_project(proj_id)
-    ppsn = DocProcessingService()
-    ppsn.start_preprocessing(project_id=proj_id, uploaded_files=uploaded_files)
 
 
 @router.get(

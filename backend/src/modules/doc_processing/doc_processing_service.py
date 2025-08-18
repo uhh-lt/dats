@@ -29,8 +29,8 @@ class DocProcessingService(metaclass=SingletonMeta):
         *,
         project_id: int,
         uploaded_files: list[UploadFile],
-    ) -> Job:
-        # store uploaded files
+    ) -> list[Job]:
+        jobs = []
         for uploaded_file in uploaded_files:
             # 1. Check if mime type is ok
             mime_type = uploaded_file.content_type
@@ -52,12 +52,14 @@ class DocProcessingService(metaclass=SingletonMeta):
 
             # 3. start correct job based on type
             if is_archive_file(mime_type):
-                return self.js.start_job(
+                job = self.js.start_job(
                     JobType.EXTRACT_ARCHIVE,
                     ArchiveExtractionJobInput(
                         project_id=project_id, filepath=file_path
                     ),
                 )
+                jobs.append(job)
+                continue
 
             doc_type = get_doc_type(mime_type=mime_type)
             if doc_type is None:
@@ -66,12 +68,13 @@ class DocProcessingService(metaclass=SingletonMeta):
                     status_code=406,
                 )
             elif doc_type == DocType.text:
-                return self.js.start_job(
+                job = self.js.start_job(
                     JobType.DOC_CHUNKING,
                     DocChunkingJobInput(project_id=project_id, filepath=file_path),
                 )
+                jobs.append(job)
             else:
-                return self.js.start_job(
+                job = self.js.start_job(
                     job_type=JobType.SDOC_INIT,
                     payload=SdocInitJobInput(
                         project_id=project_id,
@@ -80,7 +83,12 @@ class DocProcessingService(metaclass=SingletonMeta):
                         folder_id=None,
                     ),
                 )
-        raise HTTPException(
-            detail="No files were processed or no job was started.",
-            status_code=400,
-        )
+                jobs.append(job)
+
+        if len(jobs) == 0:
+            raise HTTPException(
+                detail="No files were processed or no job was started.",
+                status_code=400,
+            )
+
+        return jobs
