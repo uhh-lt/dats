@@ -160,6 +160,7 @@ class JobService(metaclass=SingletonMeta):
                 "finished": None,
             },
             result_ttl=job_info["result_ttl"].value,
+            retry=rq.Retry(max=3, interval=30),
         )
         return Job(rq_job)
 
