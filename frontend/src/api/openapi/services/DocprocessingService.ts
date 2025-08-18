@@ -60,7 +60,7 @@ export class DocprocessingService {
   }
   /**
    * Uploads one or multiple files to the Project with the given ID if it exists
-   * @returns string Successful Response
+   * @returns number Successful Response
    * @throws ApiError
    */
   public static uploadFiles({
@@ -69,7 +69,7 @@ export class DocprocessingService {
   }: {
     projId: number;
     formData: Body_docprocessing_upload_files;
-  }): CancelablePromise<string> {
+  }): CancelablePromise<number> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/docprocessing/project/{proj_id}",

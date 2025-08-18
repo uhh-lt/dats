@@ -22,6 +22,10 @@ export type SourceDocumentStatusSimple = {
    */
   project_id: number;
   /**
+   * ID of the SourceDocument
+   */
+  id: number;
+  /**
    * Number of processed jobs (depending on the doctype)
    */
   processed_jobs: number;

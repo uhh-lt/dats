@@ -71,8 +71,8 @@ const useUploadDocument = () =>
   useMutation({
     mutationFn: DocprocessingService.uploadFiles,
     meta: {
-      successMessage: (data: string) =>
-        `Successfully uploaded documents and started PreprocessingJob in the background! (${data})`,
+      successMessage: (data: number) =>
+        `Successfully uploaded ${data} documents and started PreprocessingJob in the background!`,
     },
   });
 
