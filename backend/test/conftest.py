@@ -5,6 +5,7 @@ import os
 import random
 import string
 import sys
+from time import sleep
 from typing import Callable, Generator
 
 import magic
@@ -304,7 +305,29 @@ def api_document(client: TestClient):
         def __init__(self):
             self.document_list = {}
 
-        def create(self, upload_list: list, user: dict, project: dict):
+        def read_docstatus(self, user: dict, project: dict, status: int):
+            headers = user["AuthHeader"]
+            response = client.get(
+                f"/docprocessing/project/{project['id']}/status/{status}/simple",
+                headers=headers,
+            )
+            assert response.status_code == 200, (
+                f"Failed to get project status. Response: {response}"
+            )
+            json_response = response.json()
+            print(f"Document status (simple): {json_response}")
+            return json_response
+
+        def upload_files(self, upload_list: list, user: dict, project: dict):
+            # 1. get number of successfully uploaded docs in project
+            num_successful_docs = len(
+                self.read_docstatus(user=user, project=project, status=1)
+            )
+            print(
+                f"Number of successfully uploaded docs (before upload): {num_successful_docs}"
+            )
+
+            # 2. upload files
             user_headers = user["AuthHeader"]
             files = []
             download_headers = {
@@ -317,37 +340,49 @@ def api_document(client: TestClient):
                     ("uploaded_files", (filename[1], request_download.content, mime))
                 )
             response = client.put(
-                f"/project/{project['id']}/sdoc", headers=user_headers, files=files
+                f"/docprocessing/project/{project['id']}",
+                headers=user_headers,
+                files=files,
             )
+            print(f"Uploaded {len(files)} files!")
             assert response.status_code == 200, (
                 f"Failed to upload files. Response: {response}. Files: {files}"
             )
-            response = response.json()
+
+            # 3. wait for success
+            sleep(5)
+            num_processing_docs = len(
+                self.read_docstatus(user=user, project=project, status=0)
+            )
+            while num_processing_docs > 0:
+                sleep(5)
+                num_processing_docs = len(
+                    self.read_docstatus(user=user, project=project, status=0)
+                )
+
+            # 4. get number of successfully uploaded docs in project again
+            successful_docs = self.read_docstatus(user=user, project=project, status=1)
+            error_docs = self.read_docstatus(user=user, project=project, status=-100)
+            print(
+                f"Number of successfully uploaded docs (after upload): {len(successful_docs)}"
+            )
+            print(f"Number of error docs (after upload): {len(error_docs)}")
+
+            is_finished = (num_successful_docs + len(files)) == len(successful_docs)
+            assert is_finished, (
+                f"An error occurred during file upload: Expected {num_successful_docs + len(files)}, but got {len(successful_docs)}"
+            )
+
             docs = {}
-            for file in response["payloads"]:
+            for file in successful_docs:
                 document = {
-                    "id": file["id"],
-                    "filename": file["filename"],
+                    "sdoc_id": file["id"],
                     "project_id": file["project_id"],
-                    "mime_type": file["mime_type"],
-                    "doc_type": file["doc_type"],
-                    "prepro_job_id": file["prepro_job_id"],
+                    "filename": file["filename"],
+                    "doctype": file["doctype"],
                 }
                 docs[document["filename"]] = document
             self.document_list.update(docs)
             return docs
-
-        def prepro_status(self, prepro_id, user):
-            return client.get(f"prepro/{prepro_id}", headers=user["AuthHeader"]).json()[
-                "status"
-            ]
-
-        def get_sdoc_id(self, filename, user):
-            doc = self.document_list[filename]
-            project_id = doc["project_id"]
-            doc["sdoc_id"] = client.get(
-                f"project/{project_id}/resolve_filename/{filename}",
-                headers=user["AuthHeader"],
-            ).json()
 
     return DocumentFactory()

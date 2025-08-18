@@ -16,7 +16,7 @@ EXPECTED_METADATA = [
     "format_long_name",
     "size",
     "bit_rate",
-    "tags",  # missing
+    "tags",
 ]
 
 
@@ -37,7 +37,7 @@ def handle_audio_metadata_extraction_job(
         if k == "format_name":
             audio_metadata[k] = str(v).split(",")
         elif k in EXPECTED_METADATA:
-            audio_metadata[k] = v
+            audio_metadata[k] = str(v)
 
     with sqlr.db_session() as db:
         # Store audio_metadata in db

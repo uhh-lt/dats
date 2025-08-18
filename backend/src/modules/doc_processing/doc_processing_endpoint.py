@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
@@ -63,7 +61,7 @@ def get_detailed_sdoc_status_by_project_and_status(
 
 @router.put(
     "/project/{proj_id}",
-    response_model=datetime,
+    response_model=int,
     summary="Uploads one or multiple files to the Project with the given ID if it exists",
 )
 def upload_files(
@@ -76,8 +74,9 @@ def upload_files(
         ),
     ),
     authz_user: AuthzUser = Depends(),
-) -> datetime:
+) -> int:
     authz_user.assert_in_project(proj_id)
-    ppsn = DocProcessingService()
-    job = ppsn.start_preprocessing(project_id=proj_id, uploaded_files=uploaded_files)
-    return job.get_created()
+    jobs = DocProcessingService().start_preprocessing(
+        project_id=proj_id, uploaded_files=uploaded_files
+    )
+    return len(jobs)

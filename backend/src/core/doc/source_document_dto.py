@@ -117,6 +117,7 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
 
 
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
+    id: int = Field(description="ID of the SourceDocument")
     processed_jobs: int = Field(
         description="Number of processed jobs (depending on the doctype)"
     )
