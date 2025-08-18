@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CrawlerJobInput } from "./CrawlerJobInput";
+import type { CrawlerJobOutput } from "./CrawlerJobOutput";
 import type { JobStatus } from "./JobStatus";
 export type CrawlerJobRead = {
   /**
@@ -40,7 +41,7 @@ export type CrawlerJobRead = {
   /**
    * Output for the job
    */
-  output?: null;
+  output?: CrawlerJobOutput | null;
   /**
    * Created timestamp of the job
    */
