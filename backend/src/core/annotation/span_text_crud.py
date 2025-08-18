@@ -29,30 +29,32 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         create_dtos: list[SpanTextCreate],
         manual_commit: bool = False,
     ) -> list[SpanTextORM]:
-        text_to_create_dto = {create_dto.text: create_dto for create_dto in create_dtos}
-        unique_create_dtos = list(text_to_create_dto.values())
-        dtos_to_create = []
-
         # When importing multiple large documents with similar content in parallel, it can happen that
         #  the unique constraint on the text field is violated due to the non-atomic check for
-        #  unique create DTOs below! (Line 37-44)
+        #  unique create DTOs below!
         # Hence, as a quick-and-dirty fix, we retry the method on UniqueViolation...
-        text_to_db_obj_map: dict[str, SpanTextORM] = {}
-        for unique_create_dto in unique_create_dtos:
-            # TODO: this is very inefficient. Can't we read all at once?
-            db_obj = self.read_by_text(db=db, text=unique_create_dto.text)
-            if db_obj is None:
-                dtos_to_create.append(unique_create_dto)
-            else:
-                text_to_db_obj_map[unique_create_dto.text] = db_obj
 
-        newly_created_span_texts = []
+        text_to_create_dto = {create_dto.text: create_dto for create_dto in create_dtos}
+        unique_create_dtos = list(text_to_create_dto.values())
+
+        existing_texts = self.read_all_by_text(
+            db, texts=[dto.text for dto in unique_create_dtos]
+        )
+        text_to_db_obj_map: dict[str, SpanTextORM] = {
+            span.text: span for span in existing_texts
+        }
+        dtos_to_create = []
+
+        for unique_create_dto in unique_create_dtos:
+            if text_to_db_obj_map.get(unique_create_dto.text) is None:
+                dtos_to_create.append(unique_create_dto)
+
         if len(dtos_to_create) > 0:
             newly_created_span_texts = super().create_multi(
                 db=db, create_dtos=dtos_to_create, manual_commit=manual_commit
             )
-        for dto in newly_created_span_texts:
-            text_to_db_obj_map[dto.text] = dto
+            for orm in newly_created_span_texts:
+                text_to_db_obj_map[orm.text] = orm
 
         return [text_to_db_obj_map[create_dto.text] for create_dto in create_dtos]
 
@@ -60,6 +62,9 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
     def read_by_text(self, db: Session, *, text: str) -> SpanTextORM | None:
         return db.query(self.model).filter(self.model.text == text).first()
+
+    def read_all_by_text(self, db: Session, *, texts: list[str]) -> list[SpanTextORM]:
+        return db.query(self.model).filter(self.model.text.in_(texts)).all()
 
     ### UPDATE OPERATIONS ###
 
