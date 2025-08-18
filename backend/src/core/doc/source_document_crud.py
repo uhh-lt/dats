@@ -167,7 +167,7 @@ class CRUDSourceDocument(
             query = query.filter(
                 self.model.project_id == proj_id,
                 self.model.filename == filename,
-                self.model.processed_status == SDocStatus.finished,
+                self.model.processed_status == SDocStatus.finished.value,
             )
         else:
             query = query.filter(
@@ -261,7 +261,7 @@ class CRUDSourceDocument(
         if status is not None:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.processed_status == SDocStatus.finished,
+                self.model.processed_status == SDocStatus.finished.value,
             )
         else:
             query = query.filter(self.model.project_id == proj_id)
