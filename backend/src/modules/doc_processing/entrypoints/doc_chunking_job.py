@@ -47,7 +47,9 @@ def handle_pdf_chunking_job(
         logger.error(f"File {payload.filepath} does not exist!")
         raise Exception(f"File {payload.filepath} does not exist!")
 
-    # TODO: these extractions have varying compute requirements
+    # TODO: these extractions have varying compute requirements when run
+    #       across multiple machines or using GPU
+
     # Chunk the document
     if payload.filepath.suffix == ".txt":
         chunks = chunk_txt(payload)

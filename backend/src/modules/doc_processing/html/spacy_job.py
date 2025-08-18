@@ -251,7 +251,6 @@ def extract_span_annotations(
 def extract_tok_sent_data(
     spacy_output: SpacyPipelineOutput,
 ) -> dict:
-    # FIXME: take tokens/sentences from whisper and store audio token time offsets
     token_starts: list[int] = []
     token_ends: list[int] = []
     for token in spacy_output.tokens:
