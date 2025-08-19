@@ -1005,6 +1005,76 @@
         }
       }
     },
+    "/docprocessing/searchColumns/{doctype}": {
+      "get": {
+        "tags": ["docprocessing"],
+        "summary": "Get all column names (the job names) for the given document type",
+        "operationId": "get_search_columns_by_doctype",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "doctype", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "title": "Response Docprocessing-Get Search Columns By Doctype"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/docprocessing/project/{proj_id}/search": {
+      "post": {
+        "tags": ["docprocessing"],
+        "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+        "operationId": "search_sdoc_health",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "doctype", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } },
+          { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SdocHealthSort" },
+                "title": "Sorts"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/docprocessing/project/{proj_id}/status/{status}/simple": {
       "get": {
         "tags": ["docprocessing"],
@@ -1024,36 +1094,6 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SourceDocumentStatusSimple" },
                   "title": "Response Docprocessing-Get Simple Sdoc Status By Project And Status"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/docprocessing/project/{proj_id}/status/{status}/detailed": {
-      "get": {
-        "tags": ["docprocessing"],
-        "summary": "Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
-        "operationId": "get_detailed_sdoc_status_by_project_and_status",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentStatusDetailed" },
-                  "title": "Response Docprocessing-Get Detailed Sdoc Status By Project And Status"
                 }
               }
             }
@@ -9650,6 +9690,33 @@
         ],
         "title": "SdocColumns"
       },
+      "SdocHealthResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "Total number of sdocs in the project"
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/SdocStatusRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "List of SourceDocument status rows (one per sdoc in the project)"
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "SdocHealthResult"
+      },
+      "SdocHealthSort": {
+        "properties": {
+          "column": { "type": "string", "title": "Column" },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "SdocHealthSort"
+      },
       "SdocNodeData": {
         "properties": {
           "bgcolor": { "type": "string", "title": "Bgcolor", "description": "Background color of the text" },
@@ -9673,6 +9740,21 @@
         "type": "object",
         "required": ["sdoc_id", "sentence"],
         "title": "SdocSentencePair"
+      },
+      "SdocStatusRow": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the SourceDocument" },
+          "filename": { "type": "string", "title": "Filename", "description": "Filename of the SourceDocument" },
+          "status": {
+            "additionalProperties": { "$ref": "#/components/schemas/SDocStatus" },
+            "type": "object",
+            "title": "Status",
+            "description": "Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "filename", "status"],
+        "title": "SdocStatusRow"
       },
       "SdocTimelineAnalysisFilter-Input": {
         "properties": {
@@ -10420,119 +10502,6 @@
         "type": "object",
         "required": ["filename", "doctype", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
-      },
-      "SourceDocumentStatusDetailed": {
-        "properties": {
-          "filename": {
-            "type": "string",
-            "maxLength": 230,
-            "title": "Filename",
-            "description": "Filename of the SourceDocument"
-          },
-          "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Name",
-            "description": "User-defined name of the document"
-          },
-          "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project the SourceDocument belongs to"
-          },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the SourceDocument" },
-          "processed_jobs": {
-            "type": "integer",
-            "title": "Processed Jobs",
-            "description": "Number of processed jobs (depending on the doctype)"
-          },
-          "total_jobs": {
-            "type": "integer",
-            "title": "Total Jobs",
-            "description": "Total number of jobs (depending on the doctype)"
-          },
-          "processed_status": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Overall processing status. Results from processed_jobs and total_jobs"
-          },
-          "extract_html": { "$ref": "#/components/schemas/SDocStatus", "description": "Extract HTML done?" },
-          "text_extraction": { "$ref": "#/components/schemas/SDocStatus", "description": "Text Extraction done?" },
-          "text_language_detection": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Text Language Detection done?"
-          },
-          "text_spacy": { "$ref": "#/components/schemas/SDocStatus", "description": "Text Spacy done?" },
-          "text_es_index": { "$ref": "#/components/schemas/SDocStatus", "description": "Text ES Index done?" },
-          "text_sentence_embedding": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Text Sentence Embedding done?"
-          },
-          "text_html_mapping": { "$ref": "#/components/schemas/SDocStatus", "description": "Text HTML Mapping done?" },
-          "image_caption": { "$ref": "#/components/schemas/SDocStatus", "description": "Image Captioning done?" },
-          "image_embedding": { "$ref": "#/components/schemas/SDocStatus", "description": "Image Embedding done?" },
-          "image_metadata_extraction": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Image Metadata Extraction done?"
-          },
-          "image_thumbnail": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Image Thumbnail Generation done?"
-          },
-          "image_object_detection": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Object Detection done?"
-          },
-          "audio_metadata": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Audio Metadata Extraction done?"
-          },
-          "audio_thumbnail": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Audio Thumbnail Generation done?"
-          },
-          "audio_transcription": { "$ref": "#/components/schemas/SDocStatus", "description": "Transcription done?" },
-          "video_metadata": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Video Metadata Extraction done?"
-          },
-          "video_thumbnail": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Video Thumbnail Generation done?"
-          },
-          "video_audio_extraction": {
-            "$ref": "#/components/schemas/SDocStatus",
-            "description": "Video Audio Extraction done?"
-          }
-        },
-        "type": "object",
-        "required": [
-          "filename",
-          "doctype",
-          "project_id",
-          "id",
-          "processed_jobs",
-          "total_jobs",
-          "processed_status",
-          "extract_html",
-          "text_extraction",
-          "text_language_detection",
-          "text_spacy",
-          "text_es_index",
-          "text_sentence_embedding",
-          "text_html_mapping",
-          "image_caption",
-          "image_embedding",
-          "image_metadata_extraction",
-          "image_thumbnail",
-          "image_object_detection",
-          "audio_metadata",
-          "audio_thumbnail",
-          "audio_transcription",
-          "video_metadata",
-          "video_thumbnail",
-          "video_audio_extraction"
-        ],
-        "title": "SourceDocumentStatusDetailed"
       },
       "SourceDocumentStatusSimple": {
         "properties": {
