@@ -20,7 +20,7 @@ from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCre
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from loguru import logger
-from modules.doc_image_processing.image_thumbnail_generation_job import (
+from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
 from modules.eximport.sdocs.sdoc_export_schema import SourceDocumentExportCollection
