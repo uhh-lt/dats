@@ -1,17 +1,18 @@
 from pathlib import Path
 
 from common.job_type import JobType
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from PIL import Image
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job, SdocJobInput
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 fsr: FilesystemRepo = FilesystemRepo()
 sqlr = SQLRepo()
 
 
-class ImageThumbnailJobInput(SdocJobInput):
+class ImageThumbnailJobInput(SdocProcessingJobInput):
     filepath: Path
 
 

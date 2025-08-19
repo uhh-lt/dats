@@ -3,13 +3,17 @@ from common.job_type import JobType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentUpdate
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.pipeline import pipeline_transitions as t
 from modules.doc_processing.pipeline.pipeline_operators import (
     LoopBranchOperator,
     SwitchCaseBranchOperator,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import JobInputBase, JobOutputBase, SdocJobInput
+from systems.job_system.job_dto import (
+    JobInputBase,
+    JobOutputBase,
+)
 from systems.job_system.job_service import JobService
 
 # --- PREPROCESSING PIPELINE_GRAPH ---
@@ -123,7 +127,7 @@ js = JobService()
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase):
-    if isinstance(input, SdocJobInput):
+    if isinstance(input, SdocProcessingJobInput):
         with SQLRepo().db_session() as db:
             crud_sdoc.update(
                 db,
@@ -137,7 +141,7 @@ def handle_job_error(job_type: JobType, input: JobInputBase):
 def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
-    if isinstance(input, SdocJobInput):
+    if isinstance(input, SdocProcessingJobInput):
         with SQLRepo().db_session() as db:
             crud_sdoc.update(
                 db,

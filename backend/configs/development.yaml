@@ -51,11 +51,6 @@ filesystem:
     port: ${oc.env:CONTENT_SERVER_PORT, 13121}
     context_path: /
 
-preprocessing:
-  extract_images_from_pdf: True
-  extract_images_from_docx: True
-  max_pages_per_pdf_chunk: 10
-
 weaviate:
   host: localhost
   port: ${oc.env:WEAVIATE_PORT, 13132}

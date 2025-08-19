@@ -3,14 +3,15 @@ from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
 from loguru import logger
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import Job, SdocJobInput
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 
-class TextSentenceEmbeddingJobInput(SdocJobInput):
+class TextSentenceEmbeddingJobInput(SdocProcessingJobInput):
     sdoc_id: int
     sentences: list[str] | None
 

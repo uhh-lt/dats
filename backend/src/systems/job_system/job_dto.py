@@ -89,10 +89,6 @@ class JobInputBase(BaseModel):
     project_id: int = Field(description="Project ID associated with the job")
 
 
-class SdocJobInput(JobInputBase):
-    sdoc_id: int = Field(description="SDoc ID")
-
-
 class JobOutputBase(BaseModel):
     pass
 

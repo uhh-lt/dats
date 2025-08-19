@@ -5,6 +5,7 @@ from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from fastapi import APIRouter, Depends, File, UploadFile
 from modules.doc_processing.doc_processing_dto import (
+    ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
     SourceDocumentStatusSimple,
@@ -89,6 +90,7 @@ def get_simple_sdoc_status_by_project_and_status(
 def upload_files(
     *,
     proj_id: int,
+    settings: ProcessingSettings,
     uploaded_files: list[UploadFile] = File(
         ...,
         description=(
@@ -99,6 +101,6 @@ def upload_files(
 ) -> int:
     authz_user.assert_in_project(proj_id)
     jobs = DocProcessingService().start_preprocessing(
-        project_id=proj_id, uploaded_files=uploaded_files
+        project_id=proj_id, uploaded_files=uploaded_files, settings=settings
     )
     return len(jobs)
