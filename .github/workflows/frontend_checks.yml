@@ -15,7 +15,7 @@ jobs:
     env:
       API_WORKERS: 1
       VITE_APP_SERVER: http://localhost:13120
-      COMPOSE_PROFILES: "weaviate,rq,backend,frontend"
+      COMPOSE_PROFILES: "rq,backend,frontend"
       BACKEND_HAS_CHANGED: false
       RAY_HAS_CHANGED: false
     steps:

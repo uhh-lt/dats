@@ -1,0 +1,6 @@
+[lint]
+# I: isort-compatible import sorting
+# W291: Trailing whitespace
+# W292: Add newline to end of file
+# W293: Blank line contains whitespace
+extend-select = ["I", "W292", "W291", "W293"]

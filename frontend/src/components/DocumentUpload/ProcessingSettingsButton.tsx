@@ -50,6 +50,10 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
       <em>Extract images:</em> {settings.extract_images ? "yes" : "no"}
       <br />
       <em>Pages per chunk:</em> {settings.pages_per_chunk}
+      <br />
+      <em>Number of keywords:</em> {settings.keyword_number}
+      <br />
+      <em>Keyword ngrams:</em> {settings.keyword_max_ngram_size}
     </Typography>
   );
 
@@ -108,6 +112,61 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
                     label: "# pages",
                     variant: "filled",
                     inputProps: { min: 1, max: 10 },
+                    fullWidth: false,
+                    size: "small",
+                    sx: { width: 80, ml: 2 },
+                  }}
+                />
+              </Box>
+              <Divider />
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={500}>
+                    Number of keywords
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    The number of keywords to extract (1-20).
+                  </Typography>
+                </Box>
+                <FormNumber
+                  name="keyword_number"
+                  control={control}
+                  rules={{
+                    required: "Required",
+                    min: { value: 1, message: "Must be at least 1" },
+                    max: { value: 20, message: "Must be at most 20" },
+                  }}
+                  textFieldProps={{
+                    label: "# words",
+                    variant: "filled",
+                    inputProps: { min: 1, max: 20 },
+                    fullWidth: false,
+                    size: "small",
+                    sx: { width: 80, ml: 2 },
+                  }}
+                />
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={500}>
+                    Keyword ngram size
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    The maximum size of keyword n-grams (1-5).
+                  </Typography>
+                </Box>
+                <FormNumber
+                  name="keyword_max_ngram_size"
+                  control={control}
+                  rules={{
+                    required: "Required",
+                    min: { value: 1, message: "Must be at least 1" },
+                    max: { value: 5, message: "Must be at most 5" },
+                  }}
+                  textFieldProps={{
+                    label: "# n-grams",
+                    variant: "filled",
+                    inputProps: { min: 1, max: 5 },
                     fullWidth: false,
                     size: "small",
                     sx: { width: 80, ml: 2 },

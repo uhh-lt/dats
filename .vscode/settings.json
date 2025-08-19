@@ -1,60 +1,18 @@
 {
   // general
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+  "files.exclude": {
+    "airflow": true,
+    "backend": true,
+    "frontend": true
   },
-  "files.insertFinalNewline": true,
-
-  // python
-  "python.envFile": "${workspaceFolder}/backend/.env",
-  "python.autoComplete.extraPaths": ["${workspaceFolder}/backend/src"],
-  "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.extraPaths": ["${workspaceFolder}/backend/src"],
-  "python.analysis.autoFormatStrings": true,
-  "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
-  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", ".git", "**/.venv", "**/docker"],
-
-  // pytest
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "python.testing.cwd": "${workspaceFolder}/backend",
-  "python.testing.pytestArgs": ["-c", "pyproject.toml"],
-  "python.testing.autoTestDiscoverOnSaveEnabled": false,
-
-  // ruff (python linter)
-  "ruff.configuration": "./backend/pyproject.toml",
-
-  // frontend
-  "javascript.preferences.importModuleSpecifierEnding": "js",
-  "typescript.preferences.importModuleSpecifierEnding": "js",
 
   // prettier
-  "prettier.prettierPath": "./frontend/node_modules/prettier",
-  "prettier.configPath": "./frontend/package.json",
+  "prettier.prettierPath": "frontend/node_modules/prettier",
+  "prettier.configPath": ".prettierrc.yaml",
 
-  // formatting
-  "[yaml]": {
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true
-  },
-  "[dockercompose]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  // ruff
+  "ruff.interpreter": ["${workspaceFolder:backend}/.venv/bin/python"],
+
+  // python
+  "python.analysis.exclude": ["*"]
 }

@@ -9459,10 +9459,31 @@
             "type": "integer",
             "title": "Pages Per Chunk",
             "description": "Number of pages to chunk the documents into"
+          },
+          "keyword_number": {
+            "type": "integer",
+            "title": "Keyword Number",
+            "description": "Number of keywords to extract"
+          },
+          "keyword_deduplication_threshold": {
+            "type": "number",
+            "title": "Keyword Deduplication Threshold",
+            "description": "Threshold for keyword deduplication (0.0 - 1.0)"
+          },
+          "keyword_max_ngram_size": {
+            "type": "integer",
+            "title": "Keyword Max Ngram Size",
+            "description": "Maximum n-gram size for keyword extraction"
           }
         },
         "type": "object",
-        "required": ["extract_images", "pages_per_chunk"],
+        "required": [
+          "extract_images",
+          "pages_per_chunk",
+          "keyword_number",
+          "keyword_deduplication_threshold",
+          "keyword_max_ngram_size"
+        ],
         "title": "ProcessingSettings"
       },
       "ProjectAddUser": {

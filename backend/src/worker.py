@@ -3,10 +3,11 @@ import sys
 from os import environ
 
 import redis
-from config import conf
 from loguru import logger
 from rq import SimpleWorker
 from rq.worker_pool import WorkerPool
+
+from config import conf
 from utils.import_utils import import_by_suffix
 
 r_host = conf.redis.host
@@ -56,10 +57,10 @@ def do_work():
     ctx = mp.get_context("fork")
 
     cpu = ctx.Process(
-        target=create_pool, args=("cpu", int(environ.get("NUM_RQ_WORKER_CPU", "8")))
+        target=create_pool, args=("cpu", int(environ.get("RQ_WORKERS_CPU", "8")))
     )
     gpu = ctx.Process(
-        target=create_pool, args=("gpu", int(environ.get("NUM_RQ_WORKER_GPU", "16")))
+        target=create_pool, args=("gpu", int(environ.get("RQ_WORKERS_GPU", "16")))
     )
     cpu.start()
     gpu.start()

@@ -8,12 +8,12 @@ services:
       timeout: 5s
       retries: 3
     environment:
-      MARIADB_DATABASE: ${MARIA_DB:-kuma}
-      MARIADB_USER: ${MARIA_USER:-kumauser}
-      MARIADB_PASSWORD: ${MARIA_PASSWORD:-kuma123}
-      MARIADB_ROOT_PASSWORD: ${MARIA_ROOT_PASSWORD:-kumaroot123}
+      MARIADB_DATABASE: ${MARIA_DB?maria-db-required!}
+      MARIADB_USER: ${MARIA_USER?maria-user-required!}
+      MARIADB_PASSWORD: ${MARIA_PASSWORD?maria-password-required!}
+      MARIADB_ROOT_PASSWORD: ${MARIA_ROOT_PASSWORD?maria-root-password-required!}
     volumes:
-      - ./mariadb_data:/var/lib/mysql"
+      - ./mariadb_data:/var/lib/mysql
     networks:
       - kuma_network
 
@@ -25,14 +25,14 @@ services:
       UPTIME_KUMA_DB_TYPE: mariadb
       UPTIME_KUMA_DB_HOSTNAME: mariadb
       UPTIME_KUMA_DB_PORT: 3306
-      UPTIME_KUMA_DB_NAME: ${MARIA_DB:-kuma}
-      UPTIME_KUMA_DB_USERNAME: ${MARIA_USER:-kumauser}
-      UPTIME_KUMA_DB_PASSWORD: ${MARIA_PASSWORD:-kuma123}
+      UPTIME_KUMA_DB_NAME: ${MARIA_DB?maria-db-required!}
+      UPTIME_KUMA_DB_USERNAME: ${MARIA_USER?maria-user-required!}
+      UPTIME_KUMA_DB_PASSWORD: ${MARIA_PASSWORD?maria-password-required!}
     volumes:
       - ./kuma_data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "${KUMA_EXPOSED:-13101}:3001"
+      - "${KUMA_EXPOSED?kuma-exposed-required!}:3001"
     depends_on:
       mariadb:
         condition: service_healthy

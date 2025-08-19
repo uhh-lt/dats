@@ -2,10 +2,10 @@
 
 services:
   ray:
-    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION?dats-ray-docker-version-required!}
     ports:
-      - ${RAY_API_EXPOSED:-13130}:8000
-      - ${RAY_DASHBOARD_EXPOSED:-13131}:8265
+      - ${RAY_API_EXPOSED?ray-api-exposed-required!}:8000
+      - ${RAY_DASHBOARD_EXPOSED?ray-dashboard-exposed-required!}:8265
     build:
       context: ../backend/src/ray_model_worker
       dockerfile: Dockerfile
@@ -18,8 +18,8 @@ services:
     command: /dats_code_ray/ray_model_worker_entrypoint.sh
     # user: ${UID:-1000}:${GID:-100}
     environment:
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      RAY_CONFIG: ${RAY_CONFIG:-config_gpu.yaml}
+      LOG_LEVEL: ${RAY_LOG_LEVEL?ray-log-level-required!}
+      RAY_CONFIG: ${RAY_CONFIG?ray-config-required!}
       SPACY_MODELS_DIR: /ray_cache/spacy_models
       HUGGINGFACE_HUB_CACHE: /ray_cache/hf_hub_cache
       HF_HOME: /ray_cache/hf_cache
@@ -37,7 +37,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["${RAY_DEVICE_IDS:-0}"]
+              device_ids: ["${RAY_DEVICE_IDS?ray-device-ids-required!}"]
               capabilities: [gpu]
     networks:
       - ray_network
