@@ -31,7 +31,6 @@ if [ "$DEVELOPMENT" -eq 0 ]; then
 	# in production we use filesystem instead of docker managed volumes
 	mkdir -p ../docker/elasticsearch_data
 	mkdir -p ../docker/pg_data
-	mkdir -p ../docker/rabbitmq_data
 	mkdir -p ../docker/redis_data
 	mkdir -p ../docker/weaviate_data
 
