@@ -109,6 +109,22 @@ parser.add_argument(
     dest="pages_per_chunk",
 )
 parser.add_argument(
+    "--keyword_number",
+    help="Number of keywords to extract (default: 5)",
+    type=int,
+    default=5,
+    required=False,
+    dest="keyword_number",
+)
+parser.add_argument(
+    "--keyword_max_ngram_size",
+    help="Keyword max n-gram size (default: 2)",
+    type=int,
+    default=2,
+    required=False,
+    dest="keyword_max_ngram_size",
+)
+parser.add_argument(
     "--metadata_keys",
     nargs="+",
     help="JSON keys to be used as metadata, e.g. --metadata_keys author published_date visited_date",
@@ -264,6 +280,9 @@ uploading_files = files[: args.max_num_docs] if args.max_num_docs != -1 else fil
 settings = {
     "extract_images": args.extract_images,
     "pages_per_chunk": args.pages_per_chunk,
+    "keyword_number": args.keyword_number,
+    "keyword_deduplication_threshold": 0.5,
+    "keyword_max_ngram_size": args.keyword_max_ngram_size,
 }
 api.upload_files(
     proj_id=project["id"],
