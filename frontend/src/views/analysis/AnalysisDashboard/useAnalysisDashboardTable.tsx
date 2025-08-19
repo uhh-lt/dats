@@ -123,8 +123,7 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     },
     // selection
     enableRowSelection: true,
-    // row actions
-    positionActionsColumn: "last",
+    // row
     muiTableBodyRowProps: ({ row, table }) => {
       const tableState = table.getState();
       return {
@@ -188,6 +187,8 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     enableRowVirtualization: true,
     enableBottomToolbar: false,
     // actions
+    enableRowActions: true,
+    positionActionsColumn: "last",
     displayColumnDefOptions: { "mrt-row-actions": { size: 150 } },
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "0.5rem" }}>

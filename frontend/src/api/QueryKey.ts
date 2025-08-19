@@ -150,7 +150,10 @@ export const QueryKey = {
   // managed by DocProcessingHooks
   // all SourceDocumentStatusSimple[] of a project (by project id, status)
   PROJECT_SDOC_STATUS_SIMPLE: "projectSdocStatusSimple",
-  PROJECT_SDOC_STATUS_DETAILED: "projectSdocStatusDetailed",
+  // the columns (string[]) for a doctype (by doctype)
+  SDOC_HEALTH_TABLE_COLUMNS: "sdocHealthTableColumns",
+  // sdoc health of a project (by project id, doctype)
+  SDOC_HEALTH_TABLE: "sdocHealthTable",
 
   // tables
   SEARCH_TABLE: "search-document-table-data",
@@ -180,14 +183,6 @@ export const QueryKey = {
   CRAWLER_JOB: "crawlerJob",
   // all crawler jobs of a Project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
-
-  // managed by PreProHooks:
-  // preprojob (by prepro job id)
-  PREPRO_JOB: "preProJob",
-  // all prepro jobs of a Project (by project id)
-  PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
-  // preprocessing status of the project (by project id)
-  PREPRO_PROJECT_STATUS: "preproProjectStatus",
 
   // managed by LLMHooks:
   // llmjob (by llm job id)
