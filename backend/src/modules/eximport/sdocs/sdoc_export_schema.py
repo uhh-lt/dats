@@ -91,7 +91,7 @@ class SourceDocumentExportSchema(BaseModel):
         if not v or v.strip() == "":
             raise ValueError("status cannot be empty")
         try:
-            # Attempt to convert the string to an AttachedObjectType Enum member
+            # Attempt to convert the string to an SDocStatus Enum member
             SDocStatus[v]
         except KeyError:
             raise ValueError(f"status must be one of {[e.value for e in SDocStatus]}")
@@ -100,7 +100,7 @@ class SourceDocumentExportSchema(BaseModel):
 
         return v
 
-    @field_validator("tags", "links")
+    @field_validator("tags")
     @classmethod
     def validate_lists(cls, v):
         """Validate that the field is a list."""
@@ -243,7 +243,6 @@ class SourceDocumentExportCollection(BaseModel):
             # Convert string representations of lists and tuples back to Python objects
             for field in [
                 "tags",
-                "links",
                 "token_starts",
                 "token_ends",
                 "sentence_starts",
