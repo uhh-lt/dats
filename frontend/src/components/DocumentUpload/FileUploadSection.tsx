@@ -2,7 +2,9 @@ import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
+import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
 import { UploadDropzone } from "./UploadDropzone.tsx";
 
 interface FileUploadSectionProps {
@@ -13,8 +15,12 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   // Upload mutation
   const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
 
-  // Local state for selected files
+  // Local state
   const [files, setFiles] = useState<File[]>([]);
+  const [settings, setSettings] = useState<ProcessingSettings>({
+    extract_images: true,
+    pages_per_chunk: 1,
+  });
 
   const handleFilesChange = useCallback((files: File[]) => {
     setFiles(files);
@@ -25,15 +31,19 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
       await uploadDocumentMutation.mutateAsync({
         projId: projectId,
         formData: {
+          settings: settings,
           uploaded_files: Array.from(files),
         },
       });
       setFiles([]);
     }
-  }, [files, projectId, uploadDocumentMutation]);
+  }, [files, projectId, settings, uploadDocumentMutation]);
 
   return (
-    <DialogSection title="Upload Files">
+    <DialogSection
+      title="Upload Files"
+      action={<ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} />}
+    >
       <UploadDropzone onFilesChanged={handleFilesChange} files={files} />
       <LoadingButton
         variant="contained"
