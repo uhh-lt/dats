@@ -319,6 +319,8 @@ def api_document(client: TestClient):
             return json_response
 
         def upload_files(self, upload_list: list, user: dict, project: dict):
+            import json
+
             # 1. get number of successfully uploaded docs in project
             num_successful_docs = len(
                 self.read_docstatus(user=user, project=project, status=1)
@@ -330,6 +332,10 @@ def api_document(client: TestClient):
             # 2. upload files
             user_headers = user["AuthHeader"]
             files = []
+            settings = {
+                "extract_images": True,
+                "pages_per_chunk": 10,
+            }
             download_headers = {
                 "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"
             }
@@ -339,12 +345,14 @@ def api_document(client: TestClient):
                 files.append(
                     ("uploaded_files", (filename[1], request_download.content, mime))
                 )
+            data = {"settings": json.dumps(settings)}
             response = client.put(
                 f"/docprocessing/project/{project['id']}",
                 headers=user_headers,
                 files=files,
+                data=data,
             )
-            print(f"Uploaded {len(files)} files!")
+            print(f"Uploaded {len(upload_list)} files!")
             assert response.status_code == 200, (
                 f"Failed to upload files. Response: {response}. Files: {files}"
             )
@@ -368,9 +376,11 @@ def api_document(client: TestClient):
             )
             print(f"Number of error docs (after upload): {len(error_docs)}")
 
-            is_finished = (num_successful_docs + len(files)) == len(successful_docs)
+            is_finished = (num_successful_docs + len(upload_list)) == len(
+                successful_docs
+            )
             assert is_finished, (
-                f"An error occurred during file upload: Expected {num_successful_docs + len(files)}, but got {len(successful_docs)}"
+                f"An error occurred during file upload: Expected {num_successful_docs + len(upload_list)}, but got {len(successful_docs)}"
             )
 
             docs = {}

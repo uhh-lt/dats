@@ -197,7 +197,10 @@ class DATSAPI:
         proj_id: int,
         files: list[tuple[str, tuple[str, bytes, str]]],
         filter_duplicate_files_before_upload: bool = False,
+        settings: dict | None = None,
     ) -> dict[str, Any] | None:
+        import json
+
         # check for duplicates
         if filter_duplicate_files_before_upload:
             logger.info("Filtering files to upload ...")
@@ -213,11 +216,22 @@ class DATSAPI:
             logger.info(f"Filtered {len(files) - len(filtered_files)} files !")
             files = filtered_files
 
+        # Default settings if not provided
+        if settings is None:
+            settings = {
+                "extract_images": True,
+                "pages_per_chunk": 10,
+            }
+
+        # Prepare form data for settings
+        data = {"settings": json.dumps(settings)}
+
         # upload files
         if len(files) > 0:
             r = requests.put(
                 self.BASE_PATH + f"docprocessing/project/{proj_id}",
                 files=files,
+                data=data,
                 headers={"Authorization": f"Bearer {self.access_token}"},
             )
             r.raise_for_status()
