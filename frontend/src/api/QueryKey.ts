@@ -26,6 +26,8 @@ export const QueryKey = {
   // managed by ProjectHooks
   // all ProjectRead[] of the logged-in user (no parameters)
   USER_PROJECTS: "userProjects",
+  // count (int) of SourceDocuments with SDocStatus (by project id, sdoc status)
+  PROJECT_SDOC_STATUS_COUNT: "projectSdocStatusCount",
 
   // managed by SdocHooks:
   // a single SourceDocumentRead (by sdoc id)
@@ -34,8 +36,8 @@ export const QueryKey = {
   SDOC_DATA: "sdocData",
   // id of a single SourceDocument (by project id and filename)
   SDOC_ID: "sdocId",
-  // linked sdoc ids of a document (by sdoc id)
-  SDOC_LINKS: "sdocLinks",
+  // sdoc ids of a document that are in the same folder (by sdoc id)
+  SDOC_SAME_FOLDER: "sdocSameFolder",
   // thumbnail url of a document (by sdoc id)
   SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
   // all SourceDocument ids tagged with the given tag (by tag id)

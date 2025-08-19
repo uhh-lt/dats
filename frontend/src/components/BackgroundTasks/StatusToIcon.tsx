@@ -4,17 +4,8 @@ import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { CircularProgress } from "@mui/material";
 import React from "react";
-import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { jobStatusToTypographyColor } from "./StatusToTypographyColor.ts";
-
-export const statusToIcon: Record<BackgroundJobStatus, React.ReactElement> = {
-  [BackgroundJobStatus.WAITING]: <HourglassTopOutlinedIcon />,
-  [BackgroundJobStatus.RUNNING]: <CircularProgress size={24} />,
-  [BackgroundJobStatus.FINISHED]: <TaskAltIcon />,
-  [BackgroundJobStatus.ERRORNEOUS]: <ErrorOutlineIcon />,
-  [BackgroundJobStatus.ABORTED]: <CancelIcon />,
-};
 
 export const jobStatusToIcon: Record<JobStatus, React.ReactElement> = {
   // waiting

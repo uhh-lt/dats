@@ -2,13 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { SpanAnnotationRead } from "./SpanAnnotationRead";
 export type AnnotationResult = {
   /**
    * Status of the Result
    */
-  status: BackgroundJobStatus;
+  status: AnnotationResult.status;
   /**
    * Status message of the result
    */
@@ -22,3 +21,12 @@ export type AnnotationResult = {
    */
   suggested_annotations: Array<SpanAnnotationRead>;
 };
+export namespace AnnotationResult {
+  /**
+   * Status of the Result
+   */
+  export enum status {
+    ERROR = "error",
+    FINISHED = "finished",
+  }
+}

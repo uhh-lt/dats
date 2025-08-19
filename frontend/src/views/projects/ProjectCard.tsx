@@ -1,14 +1,25 @@
-import { Card, CardActionArea, CardActions, CardContent, CircularProgress, Grid2, Typography } from "@mui/material";
+import {
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  CircularProgress,
+  Grid2,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import PreProHooks from "../../api/PreProHooks.ts";
+import ProjectHooks from "../../api/ProjectHooks.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 
 interface ProjectCardProps {
   project: ProjectRead;
 }
 export function ProjectCard({ project }: ProjectCardProps) {
-  const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
+  const numFinishedSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._1);
+  const numProcessingSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._0);
 
   const projectTabs = useAppSelector((state) => state.tabs.tabsByProject);
 
@@ -26,25 +37,24 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Grid2 size={{ sm: 3 }}>
       <Card>
         <CardActionArea onClick={openProject}>
-          <CardContent sx={{ padding: "0px !important" }}>
-            <Typography variant="body2" color="textPrimary" bgcolor="lightgray" p={2} height={100}>
+          <CardContent
+            sx={{ padding: "0px !important", bgcolor: "lightgray", p: 2, color: "textPrimary", height: 200 }}
+          >
+            <Typography variant="body2" height="50%">
               {project.description}
             </Typography>
-          </CardContent>
-          {preProStatus.isSuccess && (
-            <CardContent sx={{ padding: "0px !important" }}>
-              <Typography variant="body2" color="textPrimary" bgcolor="lightgray" p={2} height={100}>
-                Number of Documents: {preProStatus.data.num_sdocs_finished}
-                <br />
-                {preProStatus.data.num_active_prepro_job_payloads > 0 && (
-                  <>
-                    {preProStatus.data.num_active_prepro_job_payloads} Document(s) are preprocessing{" "}
-                    <CircularProgress />
-                  </>
+            {numFinishedSdocs.isSuccess && (
+              <Stack height="50%" spacing={2}>
+                <Typography variant="body2">Number of documents: {numFinishedSdocs.data}</Typography>
+                {numProcessingSdocs.isSuccess && numProcessingSdocs.data > 0 && (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <CircularProgress size={14} />
+                    <Typography variant="body2">{numProcessingSdocs.data} document(s) are being processed</Typography>
+                  </Stack>
                 )}
-              </Typography>
-            </CardContent>
-          )}
+              </Stack>
+            )}
+          </CardContent>
         </CardActionArea>
         <CardActions>
           <Typography variant="subtitle1" sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}>

@@ -104,14 +104,14 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
+   * Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static getLinkedSdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+  public static getSameFolderSdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/sdoc/{sdoc_id}/linked_sdocs",
+      url: "/sdoc/{sdoc_id}/same_folder",
       path: {
         sdoc_id: sdocId,
       },

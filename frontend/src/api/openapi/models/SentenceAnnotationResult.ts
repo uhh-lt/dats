@@ -2,13 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { SentenceAnnotationRead } from "./SentenceAnnotationRead";
 export type SentenceAnnotationResult = {
   /**
    * Status of the Result
    */
-  status: BackgroundJobStatus;
+  status: SentenceAnnotationResult.status;
   /**
    * Status message of the result
    */
@@ -22,3 +21,12 @@ export type SentenceAnnotationResult = {
    */
   suggested_annotations: Array<SentenceAnnotationRead>;
 };
+export namespace SentenceAnnotationResult {
+  /**
+   * Status of the Result
+   */
+  export enum status {
+    ERROR = "error",
+    FINISHED = "finished",
+  }
+}

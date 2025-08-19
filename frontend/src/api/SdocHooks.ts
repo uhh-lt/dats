@@ -38,11 +38,11 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     staleTime: Infinity,
   });
 
-const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
+const useGetSameFolderSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>({
-    queryKey: [QueryKey.SDOC_LINKS, sdocId],
+    queryKey: [QueryKey.SDOC_SAME_FOLDER, sdocId],
     queryFn: () =>
-      SourceDocumentService.getLinkedSdocs({
+      SourceDocumentService.getSameFolderSdocs({
         sdocId: sdocId!,
       }),
     enabled: !!sdocId,
@@ -118,7 +118,7 @@ const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentData,
-  useGetLinkedSdocIds,
+  useGetSameFolderSdocIds,
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags

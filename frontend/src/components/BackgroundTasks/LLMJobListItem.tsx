@@ -5,7 +5,6 @@ import { memo, useCallback, useRef, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import LLMHooks from "../../api/LLMHooks.ts";
 import { ApproachType } from "../../api/openapi/models/ApproachType.ts";
-import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FewShotParams } from "../../api/openapi/models/FewShotParams.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
@@ -18,7 +17,7 @@ import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import JobListItem from "./JobListItem.tsx";
-import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
+import { jobStatusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface LLMJobListItemProps {
   initialLLMJob: LlmAssistantJobRead;
@@ -187,7 +186,7 @@ function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobOutput }) {
 }
 
 interface ResultStatusItem {
-  status: BackgroundJobStatus;
+  status: string;
   status_message: string;
   sdoc_id: number;
 }
@@ -195,7 +194,15 @@ interface ResultStatusItem {
 function LLMResultStatusItem({ result }: { result: ResultStatusItem }) {
   return (
     <ListItemButton component={RouterLink} to={`./annotation/${result.sdoc_id}`}>
-      <ListItemIcon sx={{ color: `${statusToTypographyColor[result.status]}` }}>
+      <ListItemIcon
+        sx={{
+          color: `${
+            result.status == "finished"
+              ? jobStatusToTypographyColor[JobStatus.FINISHED]
+              : jobStatusToTypographyColor[JobStatus.FAILED]
+          }`,
+        }}
+      >
         {docTypeToIcon[DocType.TEXT]}
       </ListItemIcon>
       <ListItemText primary={`Document with ID ${result.sdoc_id} - ${result.status_message}`} />

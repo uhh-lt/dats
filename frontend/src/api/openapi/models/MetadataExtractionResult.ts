@@ -2,13 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { SourceDocumentMetadataReadResolved } from "./SourceDocumentMetadataReadResolved";
 export type MetadataExtractionResult = {
   /**
    * Status of the Result
    */
-  status: BackgroundJobStatus;
+  status: MetadataExtractionResult.status;
   /**
    * Status message of the result
    */
@@ -26,3 +25,12 @@ export type MetadataExtractionResult = {
    */
   suggested_metadata: Array<SourceDocumentMetadataReadResolved>;
 };
+export namespace MetadataExtractionResult {
+  /**
+   * Status of the Result
+   */
+  export enum status {
+    ERROR = "error",
+    FINISHED = "finished",
+  }
+}

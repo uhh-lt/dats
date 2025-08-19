@@ -3,7 +3,7 @@ import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { memo, useState } from "react";
 import DocumentMemos from "./DocumentMemos.tsx";
 import MetadataPanel from "./Info/MetadataPanel.tsx";
-import LinksPanel from "./Links/LinksPanel.tsx";
+import RelatedPanel from "./Related/RelatedPanel.tsx";
 import TagPanel from "./Tags/TagPanel.tsx";
 
 interface DocumentInformationProps {
@@ -40,14 +40,14 @@ function DocumentInformation({
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Info" value="info" />
             <Tab label="Tags" value="tags" />
-            <Tab label="Links" value="links" />
+            <Tab label="Related" value="related" />
             <Tab label="Memos" value="memos" />
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
           <MetadataPanel currentTab={tab} sdocId={sdocId} filterName={filterName} />
           <TagPanel currentTab={tab} sdocId={sdocId} />
-          <LinksPanel currentTab={tab} sdocId={sdocId} />
+          <RelatedPanel currentTab={tab} sdocId={sdocId} />
           <TabPanel value="memos" sx={{ p: 0 }} className="h100">
             <DocumentMemos sdocId={sdocId} key={sdocId} />
           </TabPanel>
