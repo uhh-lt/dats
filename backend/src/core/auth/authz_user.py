@@ -1,13 +1,14 @@
 from typing import NoReturn
 
+from fastapi import Depends, Request
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.user.user_orm import UserORM
-from fastapi import Depends, Request
-from loguru import logger
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from sqlalchemy.orm import Session
 
 
 class ForbiddenError(Exception):

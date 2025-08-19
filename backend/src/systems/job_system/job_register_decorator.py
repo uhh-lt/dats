@@ -1,7 +1,8 @@
 from typing import Callable, Literal, TypeVar
 
-from common.job_type import JobType
 from fastapi import APIRouter
+
+from common.job_type import JobType
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,

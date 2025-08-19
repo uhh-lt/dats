@@ -1,13 +1,14 @@
 from contextlib import contextmanager
 from typing import Generator
 
-from common.singleton_meta import SingletonMeta
-from config import conf
 from loguru import logger
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
+
+from common.singleton_meta import SingletonMeta
+from config import conf
 from utils.import_utils import import_by_suffix
 
 import_by_suffix("_orm.py")

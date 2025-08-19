@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.concept_over_time_analysis.cota_crud import crud_cota
 from modules.concept_over_time_analysis.cota_dto import (
     COTACreate,
@@ -13,7 +15,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdate,
 )
 from modules.concept_over_time_analysis.cota_service import COTAService
-from sqlalchemy.orm import Session
 from systems.job_system.job_service import JobService
 
 cotas = COTAService()

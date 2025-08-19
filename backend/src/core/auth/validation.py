@@ -1,11 +1,12 @@
 from typing import Sequence
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_db_session
-from fastapi import Depends
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
-from sqlalchemy.orm import Session
 
 
 class InvalidError(Exception):

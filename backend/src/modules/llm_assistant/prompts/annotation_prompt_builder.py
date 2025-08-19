@@ -1,9 +1,10 @@
 import random
 
-from core.project.project_crud import crud_project
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from core.project.project_crud import crud_project
+from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 
 
 class OllamaParsedAnnotationResult(BaseModel):

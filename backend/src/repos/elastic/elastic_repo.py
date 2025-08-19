@@ -1,7 +1,8 @@
-from common.singleton_meta import SingletonMeta
-from config import conf
 from elasticsearch import Elasticsearch
 from loguru import logger
+
+from common.singleton_meta import SingletonMeta
+from config import conf
 
 
 class ElasticSearchRepo(metaclass=SingletonMeta):

@@ -11,6 +11,9 @@ from zipfile import ZipFile
 
 import magic
 import pandas as pd
+from fastapi import HTTPException, UploadFile
+from loguru import logger
+
 from common.doc_type import DocType, get_doc_type
 from common.singleton_meta import SingletonMeta
 from config import conf
@@ -20,8 +23,6 @@ from core.doc.source_document_dto import (
     SourceDocumentCreate,
     SourceDocumentRead,
 )
-from fastapi import HTTPException, UploadFile
-from loguru import logger
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...

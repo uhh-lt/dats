@@ -1,9 +1,10 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from sqlalchemy.orm import Session
+
 from core.auth.refresh_token_crud import crud_refresh_token
 from core.user.user_orm import UserORM
-from sqlalchemy.orm import Session
 
 
 def test_create_and_use_refresh_token(db: Session, user: UserORM) -> None:

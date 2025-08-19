@@ -1,9 +1,10 @@
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 
 class OllamaMetadataExtractionResult(BaseModel):

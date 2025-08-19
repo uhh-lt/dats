@@ -1,12 +1,13 @@
 from enum import Enum
 from typing import Literal
 
+from pydantic import BaseModel, Field
+
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from pydantic import BaseModel, Field
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---

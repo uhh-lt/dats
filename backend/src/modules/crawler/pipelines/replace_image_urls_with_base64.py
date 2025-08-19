@@ -2,8 +2,9 @@ import base64
 import os
 from mimetypes import guess_type
 
-from modules.crawler.crawled_item import CrawledItem
 from scrapy import Selector
+
+from modules.crawler.crawled_item import CrawledItem
 
 
 class ReplaceImageUrlsWithBase64Pipeline:

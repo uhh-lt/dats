@@ -1,5 +1,8 @@
 from uuid import uuid4
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud, MemoCrud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -15,8 +18,6 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_generation_service import generate_memo_ollama
 from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]

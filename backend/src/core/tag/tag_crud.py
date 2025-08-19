@@ -1,11 +1,12 @@
 from typing import Iterable
 
+from sqlalchemy import delete, func, select
+from sqlalchemy.orm import Session
+
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from repos.db.crud_base import CRUDBase
-from sqlalchemy import delete, func, select
-from sqlalchemy.orm import Session
 
 
 class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):

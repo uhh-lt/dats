@@ -2,9 +2,10 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from config import conf
 from pydantic import BaseModel
 from weaviate.types import UUID
+
+from config import conf
 
 
 class ObjectIdentifier(ABC, BaseModel):

@@ -1,9 +1,10 @@
 from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+
 from config import conf
 from repos.db.orm_base import ORMBase
-from sqlalchemy import engine_from_config, pool
 from utils.import_utils import import_by_suffix
 
 # When autogenerating migrations, alembic looks at our ORM models.

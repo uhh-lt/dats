@@ -4,6 +4,9 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from config import conf
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
@@ -16,8 +19,6 @@ from core.user.user_dto import UserCreate, UserRead
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
 from repos.db.sql_repo import SQLRepo
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 
 def get_number_of_system_codes() -> int:

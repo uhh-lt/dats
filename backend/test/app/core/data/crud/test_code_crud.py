@@ -3,6 +3,8 @@ import string
 from uuid import uuid4
 
 import pytest
+from sqlalchemy.orm import Session
+
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
 from core.code.code_orm import CodeORM
@@ -12,7 +14,6 @@ from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
-from sqlalchemy.orm import Session
 
 
 def test_create_get_delete_code(

@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session
 from common.doc_type import DocType
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.analysis.analysis_dto import (
     CodeFrequency,
     CodeOccurrence,
@@ -15,7 +17,6 @@ from modules.analysis.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
 from modules.analysis.document_sampler import document_sampler_by_tags
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]

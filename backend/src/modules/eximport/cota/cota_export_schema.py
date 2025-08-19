@@ -1,11 +1,12 @@
 import pandas as pd
 import srsly
+from pydantic import BaseModel, Field, field_validator
+
 from modules.concept_over_time_analysis.cota_dto import (
     COTAConcept,
     COTATimelineSettings,
     COTATrainingSettings,
 )
-from pydantic import BaseModel, Field, field_validator
 
 
 class COTAExportSchema(BaseModel):

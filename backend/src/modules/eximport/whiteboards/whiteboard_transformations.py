@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
@@ -28,7 +30,6 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardNode,
     WhiteboardNodeType,
 )
-from sqlalchemy.orm import Session
 
 
 def transform_content_for_export(

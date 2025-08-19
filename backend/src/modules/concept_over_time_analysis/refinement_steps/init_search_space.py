@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy.orm import Session
+
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
@@ -9,7 +11,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTASentence,
 )
 from modules.simsearch.simsearch_service import SimSearchService
-from sqlalchemy.orm import Session
 
 
 def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:

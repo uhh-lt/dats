@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import (
     WhiteboardCreate,
@@ -11,7 +13,6 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardUpdate,
     WhiteboardUpdateIntern,
 )
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/whiteboard", dependencies=[Depends(get_current_user)], tags=["whiteboard"]

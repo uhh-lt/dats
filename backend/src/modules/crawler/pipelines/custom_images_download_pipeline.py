@@ -2,9 +2,10 @@ import mimetypes
 from pathlib import Path
 from urllib.parse import urlparse
 
+from scrapy.pipelines.images import ImagesPipeline
+
 from modules.crawler.crawled_item import CrawledItem
 from modules.crawler.crawler_utils import slugify
-from scrapy.pipelines.images import ImagesPipeline
 
 
 class CustomImagesDownloadPipeline(ImagesPipeline):

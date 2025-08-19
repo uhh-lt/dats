@@ -1,10 +1,11 @@
 import pandas as pd
 import srsly
+from pydantic import BaseModel, Field, field_validator
+
 from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisConceptForExport,
     TimelineAnalysisSettingsForExport,
 )
-from pydantic import BaseModel, Field, field_validator
 
 
 class TimelineAnalysisExportSchema(BaseModel):

@@ -1,10 +1,11 @@
 from pathlib import Path
 
+from loguru import logger
+
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

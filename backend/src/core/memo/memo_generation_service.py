@@ -1,3 +1,7 @@
+from loguru import logger
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -9,14 +13,11 @@ from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from loguru import logger
 from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
-from pydantic import BaseModel
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
-from sqlalchemy.orm import Session
 from utils.image_utils import image_to_base64, load_image
 
 

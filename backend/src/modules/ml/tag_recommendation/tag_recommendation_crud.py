@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationLinkCreate,
     TagRecommendationLinkUpdate,
@@ -6,7 +8,6 @@ from modules.ml.tag_recommendation.tag_recommendation_orm import (
     TagRecommendationLinkORM,
 )
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDTagRecommendationLink(

@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
-from repos.db.orm_base import ORMBase
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.span_annotation_orm import SpanAnnotationORM

@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
+
+from repos.db.orm_base import ORMBase
 
 
 class TimelineAnalysisORM(ORMBase):

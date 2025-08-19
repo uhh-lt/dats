@@ -4,6 +4,8 @@ import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.eximport.no_data_export_error import NoDataToExportError
 from modules.eximport.timeline_analysis.timeline_analysis_export_schema import (
     TimelineAnalysisExportCollection,
@@ -21,7 +23,6 @@ from modules.timeline_analysis.timeline_analysis_dto import (
 )
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 def export_selected_timeline_analyses(

@@ -1,3 +1,8 @@
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
 from common.sdoc_status_enum import SDocStatus
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.doc.folder_crud import crud_folder
@@ -11,13 +16,9 @@ from core.doc.source_document_dto import (
 )
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
-from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 from repos.db.sql_utils import aggregate_ids
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy import func
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 from systems.event_system.events import source_document_deleted
 
 

@@ -3,9 +3,10 @@ from uuid import uuid4
 
 import mammoth
 from bs4 import BeautifulSoup, Tag
+from loguru import logger
+
 from common.doc_type import DocType
 from common.job_type import JobType
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_cleaning_utils import clean_html
 from repos.ray_repo import RayRepo

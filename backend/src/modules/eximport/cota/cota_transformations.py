@@ -1,9 +1,10 @@
+from sqlalchemy.orm import Session
+
 from modules.concept_over_time_analysis.cota_dto import (
     COTAConcept,
     COTATimelineSettings,
     COTATrainingSettings,
 )
-from sqlalchemy.orm import Session
 
 
 def transform_timeline_settings_for_export(

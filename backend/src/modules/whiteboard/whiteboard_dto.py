@@ -2,6 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
@@ -9,7 +11,6 @@ from core.code.code_dto import CodeRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
 from core.tag.tag_dto import TagRead
-from pydantic import BaseModel, ConfigDict, Field, field_validator
 from repos.db.dto_base import UpdateDTOBase
 
 # --- DATA START ---

@@ -1,12 +1,13 @@
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_, false, or_
+from sqlalchemy.orm import Session
+
 from modules.ml.source_document_job_status_dto import (
     SourceDocumentJobStatusCreate,
     SourceDocumentJobStatusUpdate,
 )
 from modules.ml.source_document_job_status_orm import SourceDocumentJobStatusORM
 from repos.db.crud_base import CRUDBase
-from sqlalchemy import and_, false, or_
-from sqlalchemy.orm import Session
 
 
 class CRUDSourceDocumentJobStatus(

@@ -2,6 +2,7 @@ from typing import Any, Generic, TypeVar
 
 from elasticsearch import Elasticsearch, helpers
 from pydantic import BaseModel
+
 from repos.elastic.elastic_dto_base import (
     ElasticSearchHit,
     ElasticSearchModelBase,

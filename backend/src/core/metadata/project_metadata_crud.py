@@ -1,3 +1,6 @@
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from config import conf
@@ -8,9 +11,7 @@ from core.metadata.project_metadata_dto import (
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
-from loguru import logger
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDProjectMetadata(

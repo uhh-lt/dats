@@ -1,3 +1,7 @@
+from fastapi import APIRouter, Depends
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -11,9 +15,6 @@ from core.annotation.sentence_annotation_dto import (
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 from core.doc.source_document_crud import crud_sdoc
-from fastapi import APIRouter, Depends
-from loguru import logger
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/sentence",

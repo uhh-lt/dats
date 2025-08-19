@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from sqlalchemy.orm import Session
+
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.image_embedding_crud import crud_image_embedding
@@ -18,7 +20,6 @@ from modules.eximport.sdocs.sdoc_export_schema import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy.orm import Session
 
 
 def export_selected_sdocs(

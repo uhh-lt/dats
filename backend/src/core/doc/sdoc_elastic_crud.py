@@ -1,10 +1,11 @@
+from elasticsearch import Elasticsearch
+
 from core.doc.sdoc_elastic_dto import (
     ElasticSearchDocument,
     ElasticSearchDocumentCreate,
     ElasticSearchDocumentUpdate,
 )
 from core.doc.sdoc_elastic_index import SdocIndex
-from elasticsearch import Elasticsearch
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.event_system.events import (

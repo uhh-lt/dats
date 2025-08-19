@@ -1,6 +1,7 @@
-from repos.vector.weaviate_models import ObjectIdentifier
 from weaviate.collections import Collection
 from weaviate.types import UUID
+
+from repos.vector.weaviate_models import ObjectIdentifier
 
 
 class WeaviateClientError(RuntimeError):

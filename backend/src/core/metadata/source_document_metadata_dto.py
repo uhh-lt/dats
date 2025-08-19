@@ -1,8 +1,9 @@
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
-from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 

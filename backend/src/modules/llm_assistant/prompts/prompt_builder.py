@@ -1,6 +1,7 @@
+from sqlalchemy.orm import Session
+
 from core.project.project_crud import crud_project
 from modules.llm_assistant.llm_job_dto import LLMPromptTemplates
-from sqlalchemy.orm import Session
 
 # ENGLISH
 

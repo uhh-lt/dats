@@ -1,6 +1,7 @@
 import pytest
-from core.memo.memo_dto import AttachedObjectType
 from fastapi.testclient import TestClient
+
+from core.memo.memo_dto import AttachedObjectType
 
 # The licence for the respective work is linked in the commentary
 # https://commons.wikimedia.org/wiki/File:Armstrong_Small_Step.ogg

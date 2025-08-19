@@ -1,6 +1,7 @@
+from scrapy import Selector
+
 from modules.crawler.crawled_item import CrawledItem
 from modules.crawler.spiders.spider_base import SpiderBase
-from scrapy import Selector
 
 
 class ExtractImageUrlsFromHtmlPipeline:

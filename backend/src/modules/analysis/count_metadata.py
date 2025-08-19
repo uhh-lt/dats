@@ -1,7 +1,8 @@
+from sqlalchemy import func
+
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from repos.db.sql_repo import SQLRepo
-from sqlalchemy import func
 
 
 def compute_num_sdocs_with_date_metadata(

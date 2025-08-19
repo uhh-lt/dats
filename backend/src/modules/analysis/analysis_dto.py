@@ -2,11 +2,12 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 
-from core.code.code_dto import CodeRead
-from core.doc.source_document_dto import SourceDocumentRead
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+
+from core.code.code_dto import CodeRead
+from core.doc.source_document_dto import SourceDocumentRead
 
 
 class CodeOccurrence(BaseModel):

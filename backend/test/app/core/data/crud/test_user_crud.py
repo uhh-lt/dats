@@ -2,13 +2,14 @@ import random
 import string
 
 import pytest
+from sqlalchemy.orm import Session
+
 from core.project.project_dto import ProjectRead
 from core.project.project_orm import ProjectORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate, UserRead, UserUpdate
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
-from sqlalchemy.orm import Session
 
 
 def test_create_delete_user(db: Session) -> None:

@@ -1,10 +1,11 @@
 import weaviate
+from loguru import logger
+
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.doc.document_collection import DocumentCollection
 from core.doc.image_collection import ImageCollection
 from core.doc.sentence_collection import SentenceCollection
-from loguru import logger
 from modules.perspectives.aspect_collection import AspectCollection
 from modules.perspectives.cluster_collection import ClusterCollection
 

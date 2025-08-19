@@ -1,10 +1,11 @@
+from elasticsearch import Elasticsearch
+
 from core.memo.memo_elastic_dto import (
     ElasticSearchMemo,
     ElasticSearchMemoCreate,
     ElasticSearchMemoUpdate,
 )
 from core.memo.memo_elastic_index import MemoIndex
-from elasticsearch import Elasticsearch
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.event_system.events import (

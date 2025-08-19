@@ -1,5 +1,7 @@
 import pandas as pd
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardContentForExport,
     WhiteboardExportCollection,
@@ -9,7 +11,6 @@ from modules.eximport.whiteboards.whiteboard_transformations import (
 )
 from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import WhiteboardCreateIntern
-from sqlalchemy.orm import Session
 
 
 class ImportWhiteboardsError(Exception):

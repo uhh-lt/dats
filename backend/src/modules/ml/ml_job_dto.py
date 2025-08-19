@@ -1,10 +1,11 @@
 from enum import StrEnum
 from typing import Literal
 
+from pydantic import BaseModel, Field
+
 from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationMethod,
 )
-from pydantic import BaseModel, Field
 from systems.job_system.job_dto import JobInputBase
 
 

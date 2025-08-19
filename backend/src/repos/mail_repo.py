@@ -1,8 +1,9 @@
-from common.singleton_meta import SingletonMeta
-from config import conf
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from loguru import logger
 from pydantic import EmailStr
+
+from common.singleton_meta import SingletonMeta
+from config import conf
 
 
 class MailRepo(metaclass=SingletonMeta):

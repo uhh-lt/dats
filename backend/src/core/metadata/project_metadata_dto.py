@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from common.doc_type import DocType
 from common.meta_type import MetaType
-from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 

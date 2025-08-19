@@ -2,10 +2,11 @@ import math
 from pathlib import Path
 
 import fitz
+from loguru import logger
+
 from common.job_type import JobType
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import (

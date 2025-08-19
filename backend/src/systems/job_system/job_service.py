@@ -4,9 +4,6 @@ from typing import Callable, Dict, Literal, TypedDict, TypeVar
 
 import redis
 import rq
-from common.job_type import JobType
-from common.singleton_meta import SingletonMeta
-from config import conf
 from fastapi import APIRouter
 from loguru import logger
 from rq.registry import (
@@ -17,6 +14,10 @@ from rq.registry import (
     FinishedJobRegistry,
     StartedJobRegistry,
 )
+
+from common.job_type import JobType
+from common.singleton_meta import SingletonMeta
+from config import conf
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,

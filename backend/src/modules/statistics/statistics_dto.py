@@ -1,5 +1,6 @@
-from core.tag.tag_dto import TagRead
 from pydantic import BaseModel, Field
+
+from core.tag.tag_dto import TagRead
 
 
 class SpanEntity(BaseModel):

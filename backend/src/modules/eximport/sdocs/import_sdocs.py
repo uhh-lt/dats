@@ -1,6 +1,9 @@
 from pathlib import Path
 
 import pandas as pd
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -19,7 +22,6 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
-from loguru import logger
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
@@ -29,7 +31,6 @@ from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy.orm import Session
 
 es = ElasticSearchRepo()
 fsr = FilesystemRepo()

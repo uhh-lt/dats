@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import ffmpeg
+
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta

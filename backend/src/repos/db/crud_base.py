@@ -2,8 +2,9 @@ from typing import Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from repos.db.orm_base import ORMBase
 from sqlalchemy.orm import Session
+
+from repos.db.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)

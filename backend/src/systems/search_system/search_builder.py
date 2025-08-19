@@ -1,10 +1,5 @@
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from common.meta_type import MetaType
-from core.doc.source_document_orm import SourceDocumentORM
-from core.metadata.project_metadata_dto import ProjectMetadataRead
-from core.metadata.project_metadata_orm import ProjectMetadataORM
-from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from sqlalchemy import desc
 from sqlalchemy.orm import Query, Session, aliased
 from sqlalchemy.sql._typing import (
@@ -13,6 +8,12 @@ from sqlalchemy.sql._typing import (
     _OnClauseArgument,  # type: ignore
 )
 from sqlalchemy.sql.selectable import Subquery
+
+from common.meta_type import MetaType
+from core.doc.source_document_orm import SourceDocumentORM
+from core.metadata.project_metadata_dto import ProjectMetadataRead
+from core.metadata.project_metadata_orm import ProjectMetadataORM
+from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from systems.search_system.filtering import (
     Filter,
     apply_filtering,

@@ -1,11 +1,12 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
 from core.user.user_orm import UserORM
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]

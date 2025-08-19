@@ -1,6 +1,11 @@
 from typing import Any, Generic, Type, TypeVar
 
 from loguru import logger
+from weaviate import WeaviateClient
+from weaviate.classes.query import MetadataQuery
+from weaviate.collections.classes.filters import _Filters
+from weaviate.types import UUID
+
 from repos.vector.collection_base import BaseCollection
 from repos.vector.weaviate_exceptions import (
     WeaviateBatchImportError,
@@ -12,10 +17,6 @@ from repos.vector.weaviate_models import (
     ObjectIdentifier,
     SimSearchResult,
 )
-from weaviate import WeaviateClient
-from weaviate.classes.query import MetadataQuery
-from weaviate.collections.classes.filters import _Filters
-from weaviate.types import UUID
 
 ID = TypeVar("ID", bound=ObjectIdentifier)
 COLLECTION = TypeVar("COLLECTION", bound=BaseCollection)

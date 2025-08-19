@@ -1,7 +1,10 @@
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import tuple_
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
-from fastapi.encoders import jsonable_encoder
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_dto import (
     DocumentAspectCreate,
@@ -10,8 +13,6 @@ from modules.perspectives.document_aspect_dto import (
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy import tuple_
-from sqlalchemy.orm import Session
 
 
 class CRUDDocumentAspect(

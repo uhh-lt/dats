@@ -1,9 +1,11 @@
 from datetime import datetime
 from pathlib import Path
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
-from loguru import logger
 from modules.eximport.bbox_annotations.export_bbox_annotations import (
     export_all_bbox_annotations,
 )
@@ -28,7 +30,6 @@ from modules.eximport.timeline_analysis.export_timeline_analysis import (
 from modules.eximport.user.export_users import export_all_users
 from modules.eximport.whiteboards.export_whiteboards import export_all_whiteboards
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 def export_project(

@@ -1,6 +1,9 @@
 from datetime import datetime
 
 import numpy as np
+from sqlalchemy import ColumnElement, and_
+from weaviate import WeaviateClient
+
 from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.document_embedding_crud import crud_document_embedding
@@ -23,9 +26,7 @@ from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy import ColumnElement, and_
 from utils.image_utils import image_to_base64, load_image
-from weaviate import WeaviateClient
 
 
 class EmbeddingService(metaclass=SingletonMeta):

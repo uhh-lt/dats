@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy import and_, or_
+
 from common.job_type import JobType
 from modules.ml.ml_job_dto import (
     CoreferenceResolutionParams,
@@ -14,7 +16,6 @@ from modules.ml.source_document_job_status_orm import (
     JobStatus,
     SourceDocumentJobStatusORM,
 )
-from sqlalchemy import and_, or_
 from systems.job_system.job_dto import EndpointGeneration, Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
 

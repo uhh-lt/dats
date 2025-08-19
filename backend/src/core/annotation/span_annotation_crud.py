@@ -1,5 +1,8 @@
 from uuid import uuid4
 
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_dto import (
@@ -15,9 +18,7 @@ from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
-from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(

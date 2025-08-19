@@ -1,10 +1,11 @@
+from sqlalchemy.orm import Session
+
 from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisConcept,
     TimelineAnalysisConceptForExport,
     TimelineAnalysisSettings,
     TimelineAnalysisSettingsForExport,
 )
-from sqlalchemy.orm import Session
 from systems.search_system.filtering import Filter
 
 

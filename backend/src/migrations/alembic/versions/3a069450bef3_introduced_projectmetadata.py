@@ -11,7 +11,6 @@ from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from common.meta_type import MetaType
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -30,6 +29,8 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+
+from common.meta_type import MetaType
 
 Base = declarative_base()
 

@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Literal
 
-from modules.perspectives.cluster_dto import ClusterCreate
 from pydantic import BaseModel, Field
+
+from modules.perspectives.cluster_dto import ClusterCreate
 from systems.job_system.job_dto import JobInputBase, JobRead
 
 

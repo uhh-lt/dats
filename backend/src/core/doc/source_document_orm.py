@@ -1,10 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from common.doc_type import DocType
-from common.sdoc_status_enum import SDocStatus
-from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
-from repos.db.orm_base import ORMBase
 from sqlalchemy import (
     Computed,
     DateTime,
@@ -17,6 +13,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from common.doc_type import DocType
+from common.sdoc_status_enum import SDocStatus
+from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM

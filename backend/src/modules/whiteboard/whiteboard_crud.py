@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationRead
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -26,7 +28,6 @@ from modules.whiteboard.whiteboard_dto import (
 )
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDWhiteboard(

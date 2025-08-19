@@ -1,8 +1,9 @@
 from pathlib import Path
 
+from PIL import Image
+
 from common.job_type import JobType
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from PIL import Image
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job

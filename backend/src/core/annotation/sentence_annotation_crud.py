@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_dto import (
@@ -12,7 +14,6 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDSentenceAnnotation(

@@ -1,8 +1,9 @@
+from sqlalchemy.orm import Session, joinedload
+
 from core.auth.security import generate_password_hash, verify_password
 from core.user.user_dto import UserCreate, UserLogin, UserUpdate
 from core.user.user_orm import UserORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy.orm import Session, joinedload
 
 SYSTEM_USER_ID: int = 1
 ASSISTANT_ZEROSHOT_ID: int = 9990

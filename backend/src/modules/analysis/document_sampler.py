@@ -1,10 +1,11 @@
 import pandas as pd
+from sqlalchemy import and_, case, func
+
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from modules.analysis.analysis_dto import SampledSdocsResults
 from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
-from sqlalchemy import and_, case, func
 
 
 def document_sampler_by_tags(

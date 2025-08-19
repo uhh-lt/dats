@@ -4,9 +4,10 @@ import zipfile
 from pathlib import Path
 
 from loguru import logger
-from repos.filesystem_repo import FilesystemRepo
 from scrapy.crawler import CrawlerProcess
 from twisted.internet import asyncioreactor
+
+from repos.filesystem_repo import FilesystemRepo
 
 asyncioreactor.install()
 

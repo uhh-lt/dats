@@ -1,11 +1,12 @@
 from collections import defaultdict
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
-from loguru import logger
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.ollama_repo import OllamaRepo
-from sqlalchemy.orm import Session
 
 
 class RAGService(metaclass=SingletonMeta):

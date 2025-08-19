@@ -3,11 +3,12 @@ from typing import Type, TypedDict, TypeVar
 from uuid import uuid4
 
 import numpy as np
-from common.singleton_meta import SingletonMeta
-from config import conf
 from loguru import logger
 from ollama import Client
 from pydantic import BaseModel
+
+from common.singleton_meta import SingletonMeta
+from config import conf
 
 T = TypeVar("T", bound=BaseModel)
 

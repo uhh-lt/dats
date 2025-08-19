@@ -1,3 +1,5 @@
+from loguru import logger
+
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -8,7 +10,6 @@ from core.memo.memo_dto import AttachedObjectType, MemoInDB, MemoRead
 from core.memo.memo_orm import MemoORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from loguru import logger
 from repos.db.crud_base import NoSuchElementError
 
 

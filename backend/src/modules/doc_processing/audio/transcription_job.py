@@ -2,13 +2,14 @@ from io import BytesIO
 from pathlib import Path
 
 import ffmpeg
+from loguru import logger
+
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentRead
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo

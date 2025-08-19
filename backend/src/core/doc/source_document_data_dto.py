@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
+
 from repos.db.dto_base import UpdateDTOBase
 
 
