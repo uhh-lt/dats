@@ -3,6 +3,7 @@ from typing import Sequence
 
 import starlette.routing
 from fastapi.routing import APIRoute
+
 from main import app
 
 

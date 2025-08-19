@@ -131,6 +131,7 @@ known-first-party = [
     "common",
     "core",
     "config",
+    "main",
     "migrations",
     "modules",
     "preprocessing",
@@ -141,7 +142,7 @@ known-first-party = [
 ]
 
 [tool.pyright]
-include = ["src"]
+include = ["src", "test"]
 exclude = ["**/__pycache__",
     "src/dev_notebooks",
 ]
