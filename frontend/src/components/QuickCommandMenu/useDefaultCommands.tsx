@@ -83,6 +83,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         keywords: ["perspectives", "map"],
       },
       {
+        id: "health",
+        title: "Open Document Health",
+        description: "Go to project document health",
+        category: "Navigation",
+        icon: getIconComponent(Icon.HEALTH),
+        route: `/project/${projectId}/health`,
+        keywords: ["health", "document", "status", "processing"],
+      },
+      {
         id: "annotation-view",
         title: "Annotation View",
         description: "Go to annotation view",

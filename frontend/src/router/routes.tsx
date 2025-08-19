@@ -25,6 +25,7 @@ import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysi
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
 import Annotation from "../views/annotation/Annotation.tsx";
+import Health from "../views/health/Health.tsx";
 import Logbook from "../views/logbook/Logbook.tsx";
 import Login from "../views/login/Login.tsx";
 import Register from "../views/login/Register.tsx";
@@ -246,6 +247,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/perspectives/map/:aspectId",
         element: <Map />,
+      },
+      {
+        path: "/project/:projectId/health",
+        element: <Health />,
       },
     ],
   },
