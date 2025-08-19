@@ -1,13 +1,16 @@
 from common.dependencies import get_current_user, get_db_session
+from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import (
-    SourceDocumentStatusDetailed,
+from fastapi import APIRouter, Depends, File, UploadFile
+from modules.doc_processing.doc_processing_dto import (
+    SdocHealthResult,
+    SdocHealthSort,
     SourceDocumentStatusSimple,
 )
-from fastapi import APIRouter, Depends, File, UploadFile
 from modules.doc_processing.doc_processing_service import DocProcessingService
+from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -15,6 +18,46 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
     tags=["docprocessing"],
 )
+
+
+@router.get(
+    "/searchColumns/{doctype}",
+    response_model=list[str],
+    summary="Get all column names (the job names) for the given document type",
+)
+def get_search_columns_by_doctype(
+    *,
+    db: Session = Depends(get_db_session),
+    doctype: DocType,
+    authz_user: AuthzUser = Depends(),
+) -> list[str]:
+    return PROCESSING_JOBS[doctype]
+
+
+@router.post(
+    "/project/{proj_id}/search",
+    response_model=SdocHealthResult,
+    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
+)
+def search_sdoc_health(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    doctype: DocType,
+    sorts: list[SdocHealthSort],
+    page: int,
+    page_size: int,
+    authz_user: AuthzUser = Depends(),
+) -> SdocHealthResult:
+    authz_user.assert_in_project(proj_id)
+    return DocProcessingService().search_sdoc_health(
+        db=db,
+        project_id=proj_id,
+        doctype=doctype,
+        sorts=sorts,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get(
@@ -32,27 +75,6 @@ def get_simple_sdoc_status_by_project_and_status(
     authz_user.assert_in_project(proj_id)
     return [
         SourceDocumentStatusSimple.model_validate(sdoc)
-        for sdoc in crud_sdoc.read_by_project_and_status(
-            db=db, project_id=proj_id, status=status
-        )
-    ]
-
-
-@router.get(
-    "/project/{proj_id}/status/{status}/detailed",
-    response_model=list[SourceDocumentStatusDetailed],
-    summary="Get all SourceDocumentStatusDetailed for the Project with the given ID by status",
-)
-def get_detailed_sdoc_status_by_project_and_status(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    status: SDocStatus,
-    authz_user: AuthzUser = Depends(),
-) -> list[SourceDocumentStatusDetailed]:
-    authz_user.assert_in_project(proj_id)
-    return [
-        SourceDocumentStatusDetailed.model_validate(sdoc)
         for sdoc in crud_sdoc.read_by_project_and_status(
             db=db, project_id=proj_id, status=status
         )

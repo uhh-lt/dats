@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
+from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from repos.db.orm_base import ORMBase
 from sqlalchemy import (
     Computed,
@@ -33,13 +34,6 @@ if TYPE_CHECKING:
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
     from modules.perspectives.document_cluster_orm import DocumentClusterORM
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
-
-PROCESSING_JOBS = {
-    DocType.text: 7,
-    DocType.image: 11,
-    DocType.audio: 9,
-    DocType.video: 10,
-}
 
 
 class SourceDocumentORM(ORMBase):
@@ -303,32 +297,14 @@ class SourceDocumentORM(ORMBase):
 
     @property
     def total_jobs(self) -> int:
-        return PROCESSING_JOBS[DocType(self.doctype)]
+        return len(PROCESSING_JOBS[DocType(self.doctype)])
 
     @hybrid_property
     def processed_status(self) -> SDocStatus:  # type: ignore
         if self.processed_jobs < 0:
             return SDocStatus.erroneous
-        if self.doctype == DocType.text:
-            # text + html
-            if self.processed_jobs == PROCESSING_JOBS[DocType.text]:
-                return SDocStatus.finished
-            return SDocStatus.processing
-        elif self.doctype == DocType.image:
-            # image + html
-            if self.processed_jobs == PROCESSING_JOBS[DocType.image]:
-                return SDocStatus.finished
-            return SDocStatus.processing
-        elif self.doctype == DocType.audio:
-            # audio + html
-            if self.processed_jobs == PROCESSING_JOBS[DocType.audio]:
-                return SDocStatus.finished
-            return SDocStatus.processing
-        elif self.doctype == DocType.video:
-            # video + 1 audio + html
-            if self.processed_jobs == PROCESSING_JOBS[DocType.video]:
-                return SDocStatus.finished
-            return SDocStatus.processing
+        elif self.processed_jobs == len(PROCESSING_JOBS[DocType(self.doctype)]):
+            return SDocStatus.finished
         else:
             return SDocStatus.processing
 
@@ -340,19 +316,23 @@ class SourceDocumentORM(ORMBase):
                 SDocStatus.erroneous,
             ),  # type: ignore
             (
-                (cls.doctype == DocType.text) & (cls.processed_jobs == 7),
+                (cls.doctype == DocType.text)
+                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.text])),
                 SDocStatus.finished,
             ),  # type: ignore
             (
-                (cls.doctype == DocType.image) & (cls.processed_jobs == 11),
+                (cls.doctype == DocType.image)
+                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.image])),
                 SDocStatus.finished,
             ),  # type: ignore
             (
-                (cls.doctype == DocType.audio) & (cls.processed_jobs == 9),
+                (cls.doctype == DocType.audio)
+                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.audio])),
                 SDocStatus.finished,
             ),  # type: ignore
             (
-                (cls.doctype == DocType.video) & (cls.processed_jobs == 10),
+                (cls.doctype == DocType.video)
+                & (cls.processed_jobs == len(PROCESSING_JOBS[DocType.video])),
                 SDocStatus.finished,
             ),  # type: ignore
             else_=SDocStatus.processing,
