@@ -6,15 +6,23 @@ from common.doc_type import (
 )
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
+from core.doc.source_document_orm import SourceDocumentORM
 from fastapi import HTTPException, UploadFile
+from modules.doc_processing.doc_processing_dto import (
+    SdocHealthResult,
+    SdocHealthSort,
+    SdocStatusRow,
+)
 from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
+from sqlalchemy.orm import Session
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
+from systems.search_system.pagination import apply_pagination
 
 
 class DocProcessingService(metaclass=SingletonMeta):
@@ -92,3 +100,43 @@ class DocProcessingService(metaclass=SingletonMeta):
             )
 
         return jobs
+
+    def search_sdoc_health(
+        self,
+        *,
+        db: Session,
+        project_id: int,
+        doctype: str,
+        sorts: list[SdocHealthSort],
+        page: int | None = None,
+        page_size: int | None = None,
+    ) -> SdocHealthResult:
+        # query
+        query = db.query(SourceDocumentORM).filter(
+            SourceDocumentORM.project_id == project_id,
+            SourceDocumentORM.doctype == doctype,
+        )
+
+        # sorting
+        if len(sorts) > 0:
+            query = query.order_by(*[s.get_sqlalchemy_expression() for s in sorts])
+        else:
+            query = query.order_by(SourceDocumentORM.filename.asc())
+
+        # pagination
+        if page is not None and page_size is not None:
+            query, pagination = apply_pagination(
+                query=query, page_number=page + 1, page_size=page_size
+            )
+            total_results = pagination.total_results
+            result_rows = query.all()
+        # no pagination
+        else:
+            result_rows = query.all()
+            total_results = len(result_rows)
+
+        # transform to dto
+        return SdocHealthResult(
+            total_results=total_results,
+            data=[SdocStatusRow.from_sdoc_orm(sdoc) for sdoc in result_rows],
+        )
