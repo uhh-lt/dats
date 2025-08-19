@@ -4,7 +4,25 @@ from core.doc.source_document_dto import SourceDocumentBaseDTO
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from pydantic import BaseModel, ConfigDict, Field
+from systems.job_system.job_dto import JobInputBase
 from systems.search_system.sorting import SortDirection
+
+
+class ProcessingSettings(BaseModel):
+    extract_images: bool = Field(
+        description="Whether to extract images from the documents"
+    )
+    pages_per_chunk: int = Field(
+        description="Number of pages to chunk the documents into"
+    )
+
+
+class ProcessingJobInput(JobInputBase):
+    settings: ProcessingSettings = Field(description="Processing settings")
+
+
+class SdocProcessingJobInput(ProcessingJobInput):
+    sdoc_id: int = Field(description="SDoc ID")
 
 
 class SourceDocumentStatusSimple(SourceDocumentBaseDTO):

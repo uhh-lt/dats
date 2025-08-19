@@ -2,10 +2,11 @@ from common.job_type import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from loguru import logger
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from systems.job_system.job_dto import Job, SdocJobInput
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 emb = EmbeddingService()
@@ -13,7 +14,7 @@ weaviate = WeaviateRepo()
 sqlr = SQLRepo()
 
 
-class ImageEmbeddingJobInput(SdocJobInput):
+class ImageEmbeddingJobInput(SdocProcessingJobInput):
     pass
 
 

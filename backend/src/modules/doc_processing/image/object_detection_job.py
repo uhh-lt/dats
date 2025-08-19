@@ -8,10 +8,11 @@ from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.user.user_crud import SYSTEM_USER_ID
 from loguru import logger
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from ray_model_worker.dto.detr import DETRImageInput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, SdocJobInput
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
@@ -19,7 +20,7 @@ ray = RayRepo()
 sqlr = SQLRepo()
 
 
-class ObjectDetectionJobInput(SdocJobInput):
+class ObjectDetectionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 

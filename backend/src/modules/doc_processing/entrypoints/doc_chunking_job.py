@@ -3,10 +3,10 @@ from pathlib import Path
 
 import fitz
 from common.job_type import JobType
-from config import conf
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderCreate, FolderType
 from loguru import logger
+from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import (
     FileAlreadyExistsInFilesystemError,
@@ -14,18 +14,15 @@ from repos.filesystem_repo import (
     FilesystemRepo,
 )
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobInputBase, JobOutputBase
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
-
-cp = conf.preprocessing
 
 fsr = FilesystemRepo()
 ray = RayRepo()
 
 
-class DocChunkingJobInput(JobInputBase):
+class DocChunkingJobInput(ProcessingJobInput):
     filepath: Path
-    max_pages_per_chunk: int = 1
 
 
 class DocChunkingJobOutput(JobOutputBase):
@@ -88,7 +85,7 @@ def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
         raise RuntimeError(msg)
 
     # First, we check if the PDF needs to be split
-    num_splits = math.ceil(total_pages / payload.max_pages_per_chunk)
+    num_splits = math.ceil(total_pages / payload.settings.pages_per_chunk)
     if num_splits == 1:
         logger.info(
             f"PDF {payload.filepath.name} has {total_pages} pages; no split needed."
@@ -103,13 +100,13 @@ def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
     out_dir = payload.filepath.parent
     logger.info(
         f"Splitting PDF {payload.filepath.name} into {num_splits} chunks of "
-        f"up to {payload.max_pages_per_chunk} pages each. Output will be saved in {out_dir}."
+        f"up to {payload.settings.pages_per_chunk} pages each. Output will be saved in {out_dir}."
     )
 
     chunks: list[Path] = []
     for i in range(num_splits):
-        start_page = i * payload.max_pages_per_chunk + 1
-        end_page = min((i + 1) * payload.max_pages_per_chunk, total_pages)
+        start_page = i * payload.settings.pages_per_chunk + 1
+        end_page = min((i + 1) * payload.settings.pages_per_chunk, total_pages)
         # Format page range with zero-padding
         page_range_str = f"{start_page:0{total_digits}}-{end_page:0{total_digits}}"
         output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.pdf"

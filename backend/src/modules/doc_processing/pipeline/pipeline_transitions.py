@@ -66,7 +66,9 @@ def crawler_to_extract_archive(input, output):
     assert isinstance(input, CrawlerJobInput), "Expected CrawlerJobInput"
     assert isinstance(output, CrawlerJobOutput), "Expected CrawlerJobOutput"
     return ArchiveExtractionJobInput(
-        project_id=input.project_id, filepath=output.crawled_data_zip
+        project_id=input.project_id,
+        filepath=output.crawled_data_zip,
+        settings=input.settings,
     )
 
 
@@ -78,7 +80,9 @@ def extract_archive_to_pdf_chunking(input, output, idx):
         "Expected ArchiveExtractionJobOutput"
     )
     path = output.file_paths[idx]
-    return DocChunkingJobInput(project_id=input.project_id, filepath=path)
+    return DocChunkingJobInput(
+        project_id=input.project_id, filepath=path, settings=input.settings
+    )
 
 
 def doc_chunking_to_sdoc_init(input, output, idx):
@@ -90,6 +94,7 @@ def doc_chunking_to_sdoc_init(input, output, idx):
         doctype=DocType.text,
         filepath=path,
         folder_id=output.folder_id,
+        settings=input.settings,
     )
 
 
@@ -102,6 +107,7 @@ def extract_html_to_text_extraction(input, output):
         html=output.html,
         filename=input.filepath.name,
         doctype=input.doctype,
+        settings=input.settings,
     )
 
 
@@ -114,6 +120,7 @@ def extract_html_to_image_sdoc_init(input, output, idx):
         filepath=path,
         folder_id=output.folder_id,
         doctype=DocType.image,
+        settings=input.settings,
     )
 
 
@@ -128,6 +135,7 @@ def text_extraction_to_language_detection(input, output):
         text=output.text,
         doctype=input.doctype,
         html=input.html,
+        settings=input.settings,
     )
 
 
@@ -141,6 +149,7 @@ def text_extraction_to_es_index(input, output):
         sdoc_id=input.sdoc_id,
         text=output.text,
         filename=input.filename,
+        settings=input.settings,
     )
 
 
@@ -158,6 +167,7 @@ def language_detection_to_spacy(input, output):
         doctype=input.doctype,
         language=output.language,
         html=input.html,
+        settings=input.settings,
     )
 
 
@@ -172,6 +182,7 @@ def spacy_to_html_mapping(input, output):
         sentence_ends=output.sentence_ends,
         token_starts=output.token_starts,
         token_ends=output.token_ends,
+        settings=input.settings,
     )
 
 
@@ -182,6 +193,7 @@ def spacy_to_sentence_embedding(input, output):
         project_id=input.project_id,
         sdoc_id=input.sdoc_id,
         sentences=output.sentences,
+        settings=input.settings,
     )
 
 
@@ -196,6 +208,7 @@ def video_audio_extraction_to_audio_transcription(input, output):
         project_id=input.project_id,
         sdoc_id=input.sdoc_id,
         filepath=output.filepath,
+        settings=input.settings,
     )
 
 
@@ -208,6 +221,7 @@ def audio_transcription_to_text_extraction(input, output):
         html=output.html,
         filename=input.filepath.name,
         doctype=DocType.audio,
+        settings=input.settings,
     )
 
 
@@ -220,6 +234,7 @@ def image_caption_to_text_extraction(input, output):
         html=output.html,
         filename=input.filepath.name,
         doctype=DocType.image,
+        settings=input.settings,
     )
 
 
@@ -232,6 +247,7 @@ def sdoc_init_to_extract_html(input, output):
         filepath=input.filepath,
         doctype=DocType.text,
         folder_id=output.folder_id,
+        settings=input.settings,
     )
 
 
@@ -249,6 +265,7 @@ def extract_archive_to_sdoc_init(input, output, idx):
         doctype=doctype,
         filepath=path,
         folder_id=None,
+        settings=input.settings,
     )
 
 
@@ -256,14 +273,21 @@ def sdoc_init_to_image_caption(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return ImageCaptionJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
 def sdoc_init_to_image_embedding(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
-    return ImageEmbeddingJobInput(project_id=input.project_id, sdoc_id=output.sdoc_id)
+    return ImageEmbeddingJobInput(
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        settings=input.settings,
+    )
 
 
 def sdoc_init_to_image_metadata_extraction(input, output):
@@ -274,6 +298,7 @@ def sdoc_init_to_image_metadata_extraction(input, output):
         sdoc_id=output.sdoc_id,
         filepath=input.filepath,
         doctype=input.doctype,
+        settings=input.settings,
     )
 
 
@@ -284,6 +309,7 @@ def sdoc_init_to_image_object_detection(input, output):
         project_id=input.project_id,
         sdoc_id=output.sdoc_id,
         filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -291,7 +317,10 @@ def sdoc_init_to_image_thumbnail(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return ImageThumbnailJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -299,7 +328,10 @@ def sdoc_init_to_audio_metadata_extraction(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return AudioMetadataExtractionJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -307,7 +339,10 @@ def sdoc_init_to_audio_transcription(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return TranscriptionJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -315,7 +350,10 @@ def sdoc_init_to_audio_thumbnail(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return AudioThumbnailJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -323,7 +361,10 @@ def sdoc_init_to_video_metadata_extraction(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return AudioMetadataExtractionJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -331,7 +372,10 @@ def sdoc_init_to_video_thumbnail(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return AudioThumbnailJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )
 
 
@@ -339,5 +383,8 @@ def sdoc_init_to_video_audio_extraction(input, output):
     assert isinstance(input, SdocInitJobInput), "Expected SdocInitJobInput"
     assert isinstance(output, SdocInitJobOutput), "Expected SdocInitJobOutput"
     return VideoAudioExtractionJobInput(
-        project_id=input.project_id, sdoc_id=output.sdoc_id, filepath=input.filepath
+        project_id=input.project_id,
+        sdoc_id=output.sdoc_id,
+        filepath=input.filepath,
+        settings=input.settings,
     )

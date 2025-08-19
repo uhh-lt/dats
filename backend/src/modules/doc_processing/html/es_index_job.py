@@ -2,13 +2,14 @@ from common.job_type import JobType
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.sdoc_elastic_dto import ElasticSearchDocumentCreate
 from core.doc.source_document_data_crud import crud_sdoc_data
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from systems.job_system.job_dto import Job, SdocJobInput
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 
-class TextESIndexJobInput(SdocJobInput):
+class TextESIndexJobInput(SdocProcessingJobInput):
     filename: str | None
     text: str | None
 

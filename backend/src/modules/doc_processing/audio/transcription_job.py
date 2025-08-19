@@ -9,17 +9,18 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
 from core.doc.source_document_dto import SourceDocumentRead
 from loguru import logger
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 ray = RayRepo()
 sqlr = SQLRepo()
 
 
-class TranscriptionJobInput(SdocJobInput):
+class TranscriptionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 

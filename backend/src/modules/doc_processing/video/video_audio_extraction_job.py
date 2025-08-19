@@ -3,11 +3,12 @@ from pathlib import Path
 import ffmpeg
 from common.job_type import JobType
 from loguru import logger
-from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 
-class VideoAudioExtractionJobInput(SdocJobInput):
+class VideoAudioExtractionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 

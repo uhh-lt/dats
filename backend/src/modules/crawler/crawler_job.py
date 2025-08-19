@@ -6,13 +6,13 @@ from common.job_type import JobType
 from core.project.project_crud import crud_project
 from loguru import logger
 from modules.crawler.crawler_exceptions import NoDataToCrawlError
+from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from pydantic import Field
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
-    JobInputBase,
     JobOutputBase,
     JobResultTTL,
 )
@@ -21,7 +21,7 @@ from systems.job_system.job_register_decorator import register_job
 fsr: FilesystemRepo = FilesystemRepo()
 
 
-class CrawlerJobInput(JobInputBase):
+class CrawlerJobInput(ProcessingJobInput):
     project_id: int = Field(
         description="The ID of the Project to import the crawled data."
     )

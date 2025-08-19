@@ -51,11 +51,6 @@ filesystem:
     port: 80
     context_path: /
 
-preprocessing:
-  extract_images_from_pdf: True
-  extract_images_from_docx: True
-  max_pages_per_pdf_chunk: 10
-
 weaviate:
   host: weaviate
   port: 8080

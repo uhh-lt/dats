@@ -18,6 +18,7 @@ from core.doc.source_document_data_dto import (
 from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
@@ -25,14 +26,14 @@ from repos.db.crud_base import NoSuchElementError
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 ray = RayRepo()
 
 
-class SpacyJobInput(SdocJobInput):
+class SpacyJobInput(SdocProcessingJobInput):
     # everything below is queryable:
     doctype: DocType
     text: str

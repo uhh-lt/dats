@@ -1,10 +1,11 @@
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from systems.job_system.job_dto import Job, JobOutputBase, SdocJobInput
+from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
 ray = RayRepo()
@@ -17,7 +18,7 @@ class LanguageNotSupportedError(Exception):
         )
 
 
-class TextLanguageDetectionJobInput(SdocJobInput):
+class TextLanguageDetectionJobInput(SdocProcessingJobInput):
     html: str
     text: str
     doctype: DocType

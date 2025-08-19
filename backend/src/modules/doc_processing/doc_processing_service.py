@@ -9,6 +9,7 @@ from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
 from fastapi import HTTPException, UploadFile
 from modules.doc_processing.doc_processing_dto import (
+    ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
     SdocStatusRow,
@@ -37,6 +38,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         *,
         project_id: int,
         uploaded_files: list[UploadFile],
+        settings: ProcessingSettings,
     ) -> list[Job]:
         jobs = []
         for uploaded_file in uploaded_files:
@@ -63,7 +65,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                 job = self.js.start_job(
                     JobType.EXTRACT_ARCHIVE,
                     ArchiveExtractionJobInput(
-                        project_id=project_id, filepath=file_path
+                        project_id=project_id, filepath=file_path, settings=settings
                     ),
                 )
                 jobs.append(job)
@@ -78,7 +80,9 @@ class DocProcessingService(metaclass=SingletonMeta):
             elif doc_type == DocType.text:
                 job = self.js.start_job(
                     JobType.DOC_CHUNKING,
-                    DocChunkingJobInput(project_id=project_id, filepath=file_path),
+                    DocChunkingJobInput(
+                        project_id=project_id, filepath=file_path, settings=settings
+                    ),
                 )
                 jobs.append(job)
             else:
@@ -89,6 +93,7 @@ class DocProcessingService(metaclass=SingletonMeta):
                         filepath=file_path,
                         doctype=doc_type,
                         folder_id=None,
+                        settings=settings,
                     ),
                 )
                 jobs.append(job)
