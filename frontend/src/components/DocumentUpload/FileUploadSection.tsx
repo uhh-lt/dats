@@ -31,7 +31,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
       await uploadDocumentMutation.mutateAsync({
         projId: projectId,
         formData: {
-          settings: settings,
+          settings: JSON.stringify(settings),
           uploaded_files: Array.from(files),
         },
       });

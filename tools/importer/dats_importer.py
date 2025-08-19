@@ -93,6 +93,22 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
+    "--extract_images",
+    help="Whether to extract images during preprocessing (default: True)",
+    type=bool,
+    default=True,
+    required=False,
+    dest="extract_images",
+)
+parser.add_argument(
+    "--pages_per_chunk",
+    help="Number of pages per chunk during preprocessing (default: 10)",
+    type=int,
+    default=10,
+    required=False,
+    dest="pages_per_chunk",
+)
+parser.add_argument(
     "--metadata_keys",
     nargs="+",
     help="JSON keys to be used as metadata, e.g. --metadata_keys author published_date visited_date",
@@ -245,10 +261,15 @@ if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
 
 # upload files
 uploading_files = files[: args.max_num_docs] if args.max_num_docs != -1 else files
+settings = {
+    "extract_images": args.extract_images,
+    "pages_per_chunk": args.pages_per_chunk,
+}
 api.upload_files(
     proj_id=project["id"],
     files=uploading_files,
     filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
+    settings=settings,
 )
 api.refresh_login()
 

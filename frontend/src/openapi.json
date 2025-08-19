@@ -6466,7 +6466,7 @@
       },
       "Body_docprocessing-upload_files": {
         "properties": {
-          "settings": { "$ref": "#/components/schemas/ProcessingSettings" },
+          "settings": { "type": "string", "title": "Settings", "description": "ProcessingSettings as JSON string" },
           "uploaded_files": {
             "items": { "type": "string", "format": "binary" },
             "type": "array",

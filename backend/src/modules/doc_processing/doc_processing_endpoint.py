@@ -3,7 +3,7 @@ from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -90,7 +90,7 @@ def get_simple_sdoc_status_by_project_and_status(
 def upload_files(
     *,
     proj_id: int,
-    settings: ProcessingSettings,
+    settings: str = Form(..., description="ProcessingSettings as JSON string"),
     uploaded_files: list[UploadFile] = File(
         ...,
         description=(
@@ -99,8 +99,12 @@ def upload_files(
     ),
     authz_user: AuthzUser = Depends(),
 ) -> int:
+    try:
+        settings_obj = ProcessingSettings.model_validate_json(settings)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid settings: {e}")
     authz_user.assert_in_project(proj_id)
     jobs = DocProcessingService().start_preprocessing(
-        project_id=proj_id, uploaded_files=uploaded_files, settings=settings
+        project_id=proj_id, uploaded_files=uploaded_files, settings=settings_obj
     )
     return len(jobs)
