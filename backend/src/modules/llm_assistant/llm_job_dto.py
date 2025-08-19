@@ -7,7 +7,6 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from pydantic import BaseModel, Field
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 # --- START INPUT ---
@@ -144,7 +143,7 @@ class LLMJobInput(LLMJobParameters):
 
 
 class LLMResultWithStatus(BaseModel):
-    status: BackgroundJobStatus = Field(
+    status: Literal["error", "finished"] = Field(
         description="Status of the Result",
     )
     status_message: str = Field(description="Status message of the result")

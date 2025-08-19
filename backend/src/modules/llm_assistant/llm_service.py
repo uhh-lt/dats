@@ -74,7 +74,6 @@ from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from sqlalchemy.orm import Session
-from systems.job_system.background_job_base_dto import BackgroundJobStatus
 from systems.job_system.job_dto import Job
 
 lac = conf.llm_assistant
@@ -453,7 +452,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                 result.append(
                     TaggingResult(
-                        status=BackgroundJobStatus.FINISHED,
+                        status="finished",
                         status_message="Document tagging successful",
                         sdoc_id=sdoc_data.id,
                         suggested_tag_ids=parsed_result.tag_ids,
@@ -465,7 +464,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             except Exception as e:
                 result.append(
                     TaggingResult(
-                        status=BackgroundJobStatus.ERROR,
+                        status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_id,
                         suggested_tag_ids=[],
@@ -602,7 +601,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                 result.append(
                     MetadataExtractionResult(
-                        status=BackgroundJobStatus.FINISHED,
+                        status="finished",
                         status_message="Metadata extraction successful",
                         sdoc_id=sdoc_data.id,
                         current_metadata=current_metadata,
@@ -613,7 +612,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             except Exception as e:
                 result.append(
                     MetadataExtractionResult(
-                        status=BackgroundJobStatus.ERROR,
+                        status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_id,
                         current_metadata=[],
@@ -773,7 +772,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                 result.append(
                     AnnotationResult(
-                        status=BackgroundJobStatus.FINISHED,
+                        status="finished",
                         status_message="Annotation successful",
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=suggested_annotations,
@@ -783,7 +782,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             except Exception as e:
                 result.append(
                     AnnotationResult(
-                        status=BackgroundJobStatus.ERROR,
+                        status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_id,
                         suggested_annotations=[],
@@ -985,7 +984,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                 results.append(
                     SentenceAnnotationResult(
-                        status=BackgroundJobStatus.FINISHED,
+                        status="finished",
                         status_message="Sentence annotation successful",
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=[
@@ -998,7 +997,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             except Exception as e:
                 results.append(
                     SentenceAnnotationResult(
-                        status=BackgroundJobStatus.ERROR,
+                        status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_id,
                         suggested_annotations=[],
@@ -1313,7 +1312,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                 results.append(
                     SentenceAnnotationResult(
-                        status=BackgroundJobStatus.FINISHED,
+                        status="finished",
                         status_message="Sentence annotation successful",
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=[
@@ -1333,7 +1332,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             except Exception as e:
                 results.append(
                     SentenceAnnotationResult(
-                        status=BackgroundJobStatus.ERROR,
+                        status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_data.id,
                         suggested_annotations=[],
