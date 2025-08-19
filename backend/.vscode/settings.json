@@ -11,7 +11,7 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.testing.cwd": "${workspaceFolder:backend}",
-  "python.testing.pytestArgs": ["-c", "pyproject.toml"],
+  "python.testing.pytestArgs": ["test", "-c", "pyproject.toml"],
 
   // prettier
   "prettier.prettierPath": "../frontend/node_modules/prettier",

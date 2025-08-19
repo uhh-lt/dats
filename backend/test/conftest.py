@@ -15,7 +15,6 @@ from fastapi import Request
 from fastapi.datastructures import Headers
 from fastapi.testclient import TestClient
 from loguru import logger
-from main import app
 from pytest import FixtureRequest
 from sqlalchemy.orm import Session
 
@@ -31,6 +30,7 @@ from core.project.project_orm import ProjectORM
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+from main import app
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -336,6 +336,9 @@ def api_document(client: TestClient):
             settings = {
                 "extract_images": True,
                 "pages_per_chunk": 10,
+                "keyword_number": 5,
+                "keyword_deduplication_threshold": 0.5,
+                "keyword_max_ngram_size": 2,
             }
             download_headers = {
                 "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"
