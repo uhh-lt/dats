@@ -60,8 +60,8 @@ jobs:
             docker compose -f compose.ray.yml build
             docker compose -f compose.ray.yml up --wait
           fi
-          COMPOSE_PROFILES="weaviate,background,rq,backend" docker compose build
-          COMPOSE_PROFILES="weaviate,background,rq" docker compose up --wait --quiet-pull
+          COMPOSE_PROFILES="weaviate,rq,backend" docker compose build
+          COMPOSE_PROFILES="weaviate,rq" docker compose up --wait --quiet-pull
       - name: Check 1 - pytest runs without errors
         working-directory: docker
         run: |
@@ -89,7 +89,7 @@ jobs:
         working-directory: docker
         run: |
           source .env
-          COMPOSE_PROFILES="weaviate,background,rq,backend" docker compose up --wait --quiet-pull
+          COMPOSE_PROFILES="weaviate,rq,backend" docker compose up --wait --quiet-pull
       - name: Check 6 - Test End-2-End importer script
         working-directory: backend
         env:
