@@ -1,4 +1,5 @@
 from common.dependencies import get_current_user, get_db_session
+from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
@@ -125,3 +126,21 @@ def get_user_projects(
 ) -> list[ProjectRead]:
     db_obj = crud_user.read(db=db, id=authz_user.user.id)
     return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
+
+
+@router.get(
+    "{project_id}/sdoc/status/{status}",
+    response_model=int,
+    summary="Returns all Projects of the logged-in User",
+)
+def count_sdocs_with_status(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    status: SDocStatus,
+    authz_user: AuthzUser = Depends(),
+) -> int:
+    authz_user.assert_in_project(project_id)
+    return crud_sdoc.count_by_project_and_status(
+        db=db, proj_id=project_id, status=status
+    )

@@ -253,14 +253,14 @@ class CRUDSourceDocument(
 
     ### OTHER OPERATIONS ###
 
-    def count_by_project(
+    def count_by_project_and_status(
         self, db: Session, *, proj_id: int, status: SDocStatus | None = None
     ) -> int:
         query = db.query(self.model)
         if status is not None:
             query = query.filter(
                 self.model.project_id == proj_id,
-                self.model.processed_status == SDocStatus.finished.value,
+                self.model.processed_status == status.value,
             )
         else:
             query = query.filter(self.model.project_id == proj_id)
