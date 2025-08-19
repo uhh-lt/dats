@@ -28,6 +28,7 @@ import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
@@ -49,7 +50,6 @@ import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { SvgIconProps } from "@mui/material";
-
 import React from "react";
 export enum Icon {
   HOME = "home",
@@ -118,6 +118,9 @@ export enum Icon {
   MAP = "map",
   CLUSTERS = "clusters",
   CLUSTER = "cluster",
+
+  // SDOC HEALTH STATUS
+  HEALTH = "health",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -225,6 +228,9 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.MAP]: (iconProps) => <MapIcon {...iconProps} />,
   [Icon.CLUSTERS]: (iconProps) => <BubbleChartIcon {...iconProps} />,
   [Icon.CLUSTER]: (iconProps) => <CircleIcon {...iconProps} />,
+
+  // SDOC HEALTH STATUS
+  [Icon.HEALTH]: (iconProps) => <MedicalServicesIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,

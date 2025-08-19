@@ -401,6 +401,37 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 </MenuItem>
               </Menu>
             </ListItem>
+
+            <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title="Document Health (⌘⇧H)" placement="right" arrow disableHoverListener={isExpanded}>
+                <ListItemButton
+                  component={Link}
+                  to={`/project/${projectId}/health`}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: isExpanded ? "initial" : "center",
+                    px: 2.5,
+                    bgcolor: isActive("/health") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: isExpanded ? 3 : "auto",
+                      justifyContent: "center",
+                      color: "primary.contrastText",
+                    }}
+                  >
+                    {getIconComponent(Icon.HEALTH)}
+                  </ListItemIcon>
+                  {isExpanded && (
+                    <ListItemText>
+                      Document <span style={{ textDecoration: "underline" }}>H</span>ealth
+                    </ListItemText>
+                  )}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
           </List>
         )}
         <Box sx={{ flexGrow: 1 }} />
