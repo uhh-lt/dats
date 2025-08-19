@@ -1,10 +1,11 @@
 from typing import Any
 
 import numpy as np
+from loguru import logger
+
 from common.singleton_meta import SingletonMeta
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from loguru import logger
 from modules.ml.embedding_service import EmbeddingService
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService

@@ -2,6 +2,8 @@ import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.eximport.timeline_analysis.timeline_analysis_export_schema import (
     TimelineAnalysisExportCollection,
 )
@@ -18,7 +20,6 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisSettingsForExport,
     TimelineAnalysisType,
 )
-from sqlalchemy.orm import Session
 
 
 class ImportTimelineAnalysisError(Exception):

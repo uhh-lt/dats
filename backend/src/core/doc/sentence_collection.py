@@ -1,7 +1,8 @@
 from typing import TypedDict
 
-from repos.vector.collection_base import BaseCollection
 from weaviate.classes.config import DataType, Property
+
+from repos.vector.collection_base import BaseCollection
 
 
 class SentenceCollectionProperties(TypedDict):

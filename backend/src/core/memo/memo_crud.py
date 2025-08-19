@@ -1,3 +1,6 @@
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -18,10 +21,8 @@ from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
-from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from sqlalchemy.orm import Session
 from systems.event_system.events import user_added_to_project
 
 

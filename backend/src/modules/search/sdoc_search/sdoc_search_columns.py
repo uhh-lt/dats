@@ -1,3 +1,7 @@
+from sqlalchemy import String, cast, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -7,9 +11,6 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_orm import TagORM
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids, aggregate_two_ids
-from sqlalchemy import String, cast, func
-from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
-from sqlalchemy.orm import Session
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 from systems.search_system.search_builder import SearchBuilder

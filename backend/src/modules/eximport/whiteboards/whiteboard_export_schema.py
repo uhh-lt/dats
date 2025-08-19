@@ -1,6 +1,8 @@
 from typing import Literal
 
 import pandas as pd
+from pydantic import BaseModel, Field, field_validator
+
 from modules.whiteboard.whiteboard_dto import (
     BorderNodeData,
     NoteNodeData,
@@ -10,7 +12,6 @@ from modules.whiteboard.whiteboard_dto import (
     WhiteboardNode,
     WhiteboardNodeType,
 )
-from pydantic import BaseModel, Field, field_validator
 
 
 class SdocNodeDataForExport(WhiteboardBackgroundColorData):

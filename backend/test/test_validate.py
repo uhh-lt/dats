@@ -1,4 +1,5 @@
 import pytest
+
 from core.auth.validation import InvalidError, Validate
 
 

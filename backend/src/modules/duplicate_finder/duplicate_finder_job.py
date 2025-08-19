@@ -2,14 +2,15 @@ import time
 
 import networkx as nx
 import numpy as np
-from common.doc_type import DocType
-from common.job_type import JobType
 from loguru import logger
-from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from pydantic import Field
-from repos.db.sql_repo import SQLRepo
 from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
+
+from common.doc_type import DocType
+from common.job_type import JobType
+from modules.word_frequency.word_frequency_crud import crud_word_frequency
+from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,

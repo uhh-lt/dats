@@ -4,6 +4,7 @@ from typing import Generic, TypeVar
 from pydantic import BaseModel
 from sqlalchemy import asc, desc
 from sqlalchemy.orm import QueryableAttribute
+
 from systems.search_system.abstract_column import AbstractColumns
 
 T = TypeVar("T", bound=AbstractColumns)

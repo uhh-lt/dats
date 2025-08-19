@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Callable, Type
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -24,7 +27,6 @@ from core.user.user_crud import (
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
-from loguru import logger
 from modules.llm_assistant.llm_exceptions import UnsupportedLLMJobTypeError
 from modules.llm_assistant.llm_job_dto import (
     AnnotationLLMJobResult,
@@ -73,7 +75,6 @@ from repos.db.sql_repo import SQLRepo
 from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy.orm import Session
 from systems.job_system.job_dto import Job
 
 lac = conf.llm_assistant

@@ -1,4 +1,6 @@
 import pandas as pd
+from sqlalchemy import distinct, func
+
 from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
@@ -11,7 +13,6 @@ from modules.word_frequency.word_frequency_dto import (
 from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy import distinct, func
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder

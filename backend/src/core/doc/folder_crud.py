@@ -1,7 +1,8 @@
+from sqlalchemy.orm import Session
+
 from core.doc.folder_dto import FolderCreate, FolderType, FolderUpdate
 from core.doc.folder_orm import FolderORM
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):

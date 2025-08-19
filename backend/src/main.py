@@ -12,15 +12,16 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRoute
 from loguru import logger
-from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
+from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.main import run
+
+from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.ollama_repo import OllamaRepo
-from sqlalchemy.exc import IntegrityError
-from starlette.middleware.sessions import SessionMiddleware
 from utils.import_utils import import_by_suffix
-from uvicorn.main import run
 
 #####################################################################################################################
 #                                               READ BEFORE CHANGING                                                #

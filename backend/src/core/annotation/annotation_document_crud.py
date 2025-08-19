@@ -1,12 +1,13 @@
 import datetime
 
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_dto import (
     AnnotationDocumentCreate,
     AnnotationDocumentUpdate,
 )
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy.orm import Session
 
 
 class CRUDAnnotationDocument(

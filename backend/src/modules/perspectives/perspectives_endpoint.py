@@ -1,10 +1,13 @@
 import numpy as np
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from weaviate import WeaviateClient
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, get_weaviate_session
 from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
-from fastapi import APIRouter, Depends
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import (
     AspectCreate,
@@ -32,12 +35,10 @@ from modules.perspectives.perspectives_vis_dto import (
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
-from sqlalchemy.orm import Session
 from systems.job_system.job_dto import RUNNING_JOB_STATUS, JobStatus
 from systems.job_system.job_service import JobService
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
-from weaviate import WeaviateClient
 
 router = APIRouter(
     prefix="/perspectives",

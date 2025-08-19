@@ -2,6 +2,8 @@ import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
@@ -17,7 +19,6 @@ from modules.eximport.cota.cota_transformations import (
     transform_timeline_settings_for_import,
     transform_training_settings_for_import,
 )
-from sqlalchemy.orm import Session
 
 
 class ImportCOTAError(Exception):

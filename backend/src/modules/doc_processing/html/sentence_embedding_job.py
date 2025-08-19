@@ -1,8 +1,9 @@
+from loguru import logger
+
 from common.job_type import JobType
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo

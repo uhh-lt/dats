@@ -1,3 +1,6 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
@@ -8,8 +11,6 @@ from core.doc.folder_dto import (
     FolderType,
     FolderUpdate,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/folder", dependencies=[Depends(get_current_user)], tags=["folder"]

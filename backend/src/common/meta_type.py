@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
 
-from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from sqlalchemy.orm import QueryableAttribute
+
+from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from systems.search_system.filtering_operators import FilterOperator
 
 

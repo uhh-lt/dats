@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import Field
+
 from repos.elastic.elastic_dto_base import ElasticSearchModelBase
 
 

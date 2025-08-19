@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.word_frequency.word_frequency_dto import (
@@ -6,7 +8,6 @@ from modules.word_frequency.word_frequency_dto import (
 )
 from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 from repos.db.crud_base import CRUDBase, UpdateNotAllowed
-from sqlalchemy.orm import Session
 
 
 class CRUDWordFrequency(

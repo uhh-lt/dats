@@ -10,12 +10,13 @@ from typing import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
+
 from common.doc_type import DocType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
 revision: str = "970c55224a39"

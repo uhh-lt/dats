@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from modules.ml.source_document_job_status_dto import JobStatus, JobType
-from repos.db.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from modules.ml.source_document_job_status_dto import JobStatus, JobType
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM

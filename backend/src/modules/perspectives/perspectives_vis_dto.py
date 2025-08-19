@@ -1,5 +1,6 @@
-from modules.perspectives.cluster_dto import ClusterRead
 from pydantic import BaseModel, Field
+
+from modules.perspectives.cluster_dto import ClusterRead
 
 
 class PerspectivesDoc(BaseModel):

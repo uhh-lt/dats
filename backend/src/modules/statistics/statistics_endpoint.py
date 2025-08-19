@@ -1,14 +1,15 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
 from modules.statistics.statistics_service import (
     compute_code_statistics,
     compute_keyword_statistics,
     compute_tag_statistics,
 )
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/statistics", dependencies=[Depends(get_current_user)], tags=["statistics"]

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.base import ReadOnlyColumnCollection
+
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 
 if TYPE_CHECKING:

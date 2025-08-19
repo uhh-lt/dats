@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.eximport.bbox_annotations.import_bbox_annotations import (
     import_bbox_annotations_to_proj,
 )
@@ -30,7 +32,6 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 class ExportEntity(Enum):

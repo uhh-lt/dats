@@ -1,6 +1,8 @@
 from typing import Callable
 
 import pytest
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from core.auth.authz_user import AuthzUser, ForbiddenError
 from core.code.code_crud import crud_code
@@ -9,7 +11,6 @@ from core.project.project_crud import crud_project
 from core.project.project_orm import ProjectORM
 from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
-from sqlalchemy.orm import Session
 
 
 def test_assert_true(authz_user: AuthzUser):

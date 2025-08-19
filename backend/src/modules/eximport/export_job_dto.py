@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
 
 

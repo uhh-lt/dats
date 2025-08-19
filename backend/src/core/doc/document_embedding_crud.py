@@ -1,9 +1,10 @@
+from weaviate import WeaviateClient
+from weaviate.classes.query import Filter
+
 from core.doc.document_collection import DocumentCollection
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
 from systems.event_system.events import project_deleted, source_document_deleted
-from weaviate import WeaviateClient
-from weaviate.classes.query import Filter
 
 
 class CRUDDocumentEmbedding(CRUDBase[DocumentObjectIdentifier, DocumentCollection]):

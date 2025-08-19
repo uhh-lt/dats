@@ -1,3 +1,6 @@
+from fastapi import HTTPException, UploadFile
+from sqlalchemy.orm import Session
+
 from common.doc_type import (
     DocType,
     get_doc_type,
@@ -7,7 +10,6 @@ from common.doc_type import (
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
-from fastapi import HTTPException, UploadFile
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -20,7 +22,6 @@ from modules.doc_processing.entrypoints.archive_extraction_job import (
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 from systems.job_system.job_dto import Job
 from systems.job_system.job_service import JobService
 from systems.search_system.pagination import apply_pagination

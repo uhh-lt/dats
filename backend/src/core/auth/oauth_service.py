@@ -2,13 +2,14 @@ import random
 import string
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
+from fastapi import Request
+from loguru import logger
+
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
-from fastapi import Request
-from loguru import logger
 from repos.db.sql_repo import SQLRepo
 from repos.mail_repo import MailRepo
 

@@ -1,3 +1,7 @@
+from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -20,11 +24,8 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from psycopg2.errors import UniqueViolation
 from repos.db.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
 from repos.db.sql_repo import SQLRepo
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):

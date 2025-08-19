@@ -1,3 +1,6 @@
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
@@ -9,9 +12,7 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataUpdate,
 )
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
-from loguru import logger
 from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy.orm import Session
 
 
 # TODO: wohin damit?

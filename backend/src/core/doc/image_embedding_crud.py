@@ -1,9 +1,10 @@
+from weaviate import WeaviateClient
+from weaviate.classes.query import Filter
+
 from core.doc.image_collection import ImageCollection
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
 from systems.event_system.events import project_deleted, source_document_deleted
-from weaviate import WeaviateClient
-from weaviate.classes.query import Filter
 
 
 class CRUDImageEmbedding(CRUDBase[ImageObjectIdentifier, ImageCollection]):

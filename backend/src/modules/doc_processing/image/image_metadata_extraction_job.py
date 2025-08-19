@@ -1,10 +1,11 @@
 from pathlib import Path
 
+from PIL import Image
+
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
-from PIL import Image
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job

@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING
 
-from repos.db.orm_base import ORMBase
 from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
+
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.bbox_annotation_orm import BBoxAnnotationORM

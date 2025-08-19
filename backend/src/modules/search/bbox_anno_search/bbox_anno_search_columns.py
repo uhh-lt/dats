@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
@@ -6,7 +8,6 @@ from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_orm import TagORM
 from repos.db.sql_utils import aggregate_ids
-from sqlalchemy.orm import Session
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 from systems.search_system.search_builder import SearchBuilder

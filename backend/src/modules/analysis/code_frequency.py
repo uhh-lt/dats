@@ -1,3 +1,5 @@
+from sqlalchemy import and_, func
+
 from common.doc_type import DocType
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -13,7 +15,6 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
 from modules.analysis.analysis_dto import CodeFrequency, CodeOccurrence
 from repos.db.sql_repo import SQLRepo
-from sqlalchemy import and_, func
 
 
 def find_code_frequencies(

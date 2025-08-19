@@ -2,6 +2,7 @@ import os
 
 from alembic.command import upgrade
 from alembic.config import Config
+
 from repos.db.sql_repo import SQLRepo
 
 

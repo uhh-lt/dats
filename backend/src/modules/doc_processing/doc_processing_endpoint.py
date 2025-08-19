@@ -1,9 +1,11 @@
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
@@ -12,7 +14,6 @@ from modules.doc_processing.doc_processing_dto import (
 )
 from modules.doc_processing.doc_processing_service import DocProcessingService
 from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/docprocessing",

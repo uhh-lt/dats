@@ -1,4 +1,7 @@
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import tuple_, update
+from sqlalchemy.orm import Session
+
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_dto import (
     DocumentClusterCreate,
@@ -6,8 +9,6 @@ from modules.perspectives.document_cluster_dto import (
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
-from sqlalchemy import tuple_, update
-from sqlalchemy.orm import Session
 
 
 class CRUDDocumentCluster(

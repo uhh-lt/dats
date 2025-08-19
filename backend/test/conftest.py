@@ -11,6 +11,14 @@ from typing import Callable, Generator
 import magic
 import pytest
 import requests
+from fastapi import Request
+from fastapi.datastructures import Headers
+from fastapi.testclient import TestClient
+from loguru import logger
+from main import app
+from pytest import FixtureRequest
+from sqlalchemy.orm import Session
+
 from config import conf
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
@@ -23,17 +31,10 @@ from core.project.project_orm import ProjectORM
 from core.user.user_crud import SYSTEM_USER_ID, crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
-from fastapi import Request
-from fastapi.datastructures import Headers
-from fastapi.testclient import TestClient
-from loguru import logger
-from main import app
-from pytest import FixtureRequest
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy.orm import Session
 
 
 def pytest_sessionfinish():

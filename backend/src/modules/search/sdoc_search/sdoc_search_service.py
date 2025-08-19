@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from common.singleton_meta import SingletonMeta
 from core.doc.folder_crud import crud_folder
@@ -17,7 +19,6 @@ from modules.search.search_dto import (
 from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from sqlalchemy.orm import Session
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder

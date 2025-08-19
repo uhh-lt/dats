@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
 )
@@ -15,7 +17,6 @@ from modules.timeline_analysis.timeline_analysis_service import (
     recompute_timeline_analysis,
     update_timeline_analysis,
 )
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/timelineAnalysis",

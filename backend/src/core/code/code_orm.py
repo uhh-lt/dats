@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from repos.db.orm_base import ORMBase
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -12,6 +11,8 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.annotation.bbox_annotation_orm import BBoxAnnotationORM

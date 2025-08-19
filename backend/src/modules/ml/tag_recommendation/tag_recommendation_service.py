@@ -2,6 +2,8 @@ import statistics
 from collections import defaultdict
 from typing import Any, Callable, Iterable, Iterator, Sequence, TypeVar
 
+from weaviate import WeaviateClient
+
 from common.singleton_meta import SingletonMeta
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
@@ -19,7 +21,6 @@ from modules.simsearch.simsearch_dto import SimSearchDocumentHit
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
-from weaviate import WeaviateClient
 
 SimSearchHit = TypeVar("SimSearchHit")
 

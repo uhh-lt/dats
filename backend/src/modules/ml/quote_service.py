@@ -2,6 +2,10 @@ from datetime import datetime
 from typing import NamedTuple
 from uuid import uuid4
 
+from loguru import logger
+from sqlalchemy import ColumnElement, and_
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from common.singleton_meta import SingletonMeta
@@ -17,7 +21,6 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.user.user_crud import SYSTEM_USER_ID
-from loguru import logger
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.source_document_job_status_dto import SourceDocumentJobStatusCreate
 from modules.ml.source_document_job_status_orm import (
@@ -28,8 +31,6 @@ from modules.ml.source_document_job_status_orm import (
 from ray_model_worker.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from sqlalchemy import ColumnElement, and_
-from sqlalchemy.orm import Session
 
 
 class _CodeQuoteId(NamedTuple):

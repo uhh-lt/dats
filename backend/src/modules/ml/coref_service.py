@@ -1,6 +1,9 @@
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy import ColumnElement, and_
+from sqlalchemy.orm import Session
+
 from common.doc_type import DocType
 from common.meta_type import MetaType
 from common.singleton_meta import SingletonMeta
@@ -26,8 +29,6 @@ from modules.ml.source_document_job_status_orm import (
 from ray_model_worker.dto.coref import CorefInputDoc, CorefJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
-from sqlalchemy import ColumnElement, and_
-from sqlalchemy.orm import Session
 
 
 class CorefService(metaclass=SingletonMeta):

@@ -1,9 +1,11 @@
 from typing import Any
 
 import requests
+from loguru import logger
+from requests import Response
+
 from common.singleton_meta import SingletonMeta
 from config import conf
-from loguru import logger
 from ray_model_worker.dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
@@ -25,7 +27,6 @@ from ray_model_worker.dto.seqsenttagger import (
 )
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from ray_model_worker.dto.whisper import WhisperTranscriptionOutput
-from requests import Response
 
 
 class RayRepo(metaclass=SingletonMeta):

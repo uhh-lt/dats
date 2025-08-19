@@ -1,6 +1,7 @@
+from fastapi import APIRouter, Depends
+
 from common.dependencies import get_current_user
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,

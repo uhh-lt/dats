@@ -4,6 +4,7 @@ from typing import Generic, TypeVar, Union
 from pydantic import BaseModel
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering_operators import (
     BooleanOperator,

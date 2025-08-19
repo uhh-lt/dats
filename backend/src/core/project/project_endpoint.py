@@ -1,3 +1,6 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
 from core.auth.authz_user import AuthzUser
@@ -11,9 +14,7 @@ from core.project.project_dto import (
 )
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from fastapi import APIRouter, Depends
 from repos.db.crud_base import NoSuchElementError
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/project",

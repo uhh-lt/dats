@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.tag.tag_crud import crud_tag
-from fastapi import APIRouter, Depends
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
@@ -16,7 +18,6 @@ from modules.ml.tag_recommendation.tag_recommendation_orm import (
 from modules.ml.tag_recommendation.tag_recommendation_service import (
     DocumentClassificationService,
 )
-from sqlalchemy.orm import Session
 
 dcs: DocumentClassificationService = DocumentClassificationService()
 

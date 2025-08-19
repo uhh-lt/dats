@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from core.memo.memo_dto import AttachedObjectType
 from pydantic import BaseModel, Field
+
+from core.memo.memo_dto import AttachedObjectType
 from repos.elastic.elastic_dto_base import (
     ElasticSearchModelBase,
 )

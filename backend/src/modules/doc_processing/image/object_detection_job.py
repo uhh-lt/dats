@@ -1,13 +1,14 @@
 from pathlib import Path
 from uuid import uuid4
 
+from loguru import logger
+
 from common.job_type import JobType
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreateIntern
 from core.code.code_crud import crud_code
 from core.user.user_crud import SYSTEM_USER_ID
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from ray_model_worker.dto.detr import DETRImageInput
 from repos.db.sql_repo import SQLRepo

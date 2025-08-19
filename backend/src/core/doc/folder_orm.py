@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from core.doc.folder_dto import FolderType
-from repos.db.orm_base import ORMBase
 from sqlalchemy import (
     DateTime,
     Enum,
@@ -13,6 +11,9 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from core.doc.folder_dto import FolderType
+from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.doc.folder_orm import FolderORM

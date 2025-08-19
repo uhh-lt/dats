@@ -4,11 +4,12 @@ from io import StringIO
 from itertools import accumulate
 from typing import TypedDict
 
+from loguru import logger
+
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobOutputBase

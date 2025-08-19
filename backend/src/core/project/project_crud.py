@@ -1,3 +1,6 @@
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from core.code.code_crud import crud_code
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_dto import ProjectCreate, ProjectUpdate
@@ -10,10 +13,8 @@ from core.user.user_crud import (
     crud_user,
 )
 from core.user.user_orm import UserORM
-from fastapi.encoders import jsonable_encoder
 from repos.db.crud_base import CRUDBase
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 from systems.event_system.events import (
     project_created,
     project_deleted,

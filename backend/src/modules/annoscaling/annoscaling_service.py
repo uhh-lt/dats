@@ -2,6 +2,7 @@ from time import perf_counter_ns
 from typing import Any, Callable, Iterable, TypeVar
 
 import numpy as np
+
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno

@@ -1,18 +1,19 @@
 from typing import AsyncGenerator
 
+from fastapi import Depends, Query
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
+from weaviate import WeaviateClient
+
 from config import conf
 from core.auth.auth_exceptions import credentials_exception
 from core.auth.security import decode_jwt
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
-from fastapi import Depends, Query
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from pydantic import ValidationError
 from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sqlalchemy.orm import Session
-from weaviate import WeaviateClient
 
 # instantiate here to so that it is reusable for consecutive calls
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_url)

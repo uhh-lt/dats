@@ -1,8 +1,9 @@
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
-from pydantic import BaseModel, ConfigDict, Field
 from repos.db.dto_base import UpdateDTOBase
 
 SDOC_FILENAME_MAX_LENGTH = 200

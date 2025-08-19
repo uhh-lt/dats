@@ -1,3 +1,6 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.annotation.span_annotation_dto import SpanAnnotationRead
@@ -9,8 +12,6 @@ from core.annotation.span_group_dto import (
     SpanGroupWithAnnotationsRead,
 )
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]

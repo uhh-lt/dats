@@ -2,9 +2,10 @@ from datetime import datetime
 from enum import Enum
 
 import srsly
-from modules.analysis.analysis_dto import DateGroupBy
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.functional_validators import field_validator
+
+from modules.analysis.analysis_dto import DateGroupBy
 from repos.db.dto_base import UpdateDTOBase
 from systems.job_system.job_dto import JobInputBase, JobRead
 

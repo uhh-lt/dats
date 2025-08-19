@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_group_dto import (
@@ -10,7 +12,6 @@ from core.annotation.span_group_orm import (
     SpanGroupORM,
 )
 from repos.db.crud_base import CRUDBase
-from sqlalchemy.orm import Session
 
 
 class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdate]):

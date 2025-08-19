@@ -1,6 +1,7 @@
 from enum import Enum
 
 from pydantic import Field
+
 from systems.job_system.job_dto import JobInputBase, JobRead
 
 

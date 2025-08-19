@@ -10,6 +10,12 @@ from hdbscan import HDBSCAN
 from loguru import logger
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from pydantic import BaseModel
+from sklearn.feature_extraction.text import CountVectorizer
+from sqlalchemy.orm import Session
+from umap import UMAP
+from weaviate import WeaviateClient
+
 from modules.perspectives.aspect_crud import crud_aspect
 from modules.perspectives.aspect_dto import AspectUpdateIntern
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
@@ -46,18 +52,13 @@ from modules.perspectives.perspectives_job_dto import (
     ResetModelParams,
     SplitClusterParams,
 )
-from pydantic import BaseModel
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.ollama_repo import OllamaRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from sklearn.feature_extraction.text import CountVectorizer
-from sqlalchemy.orm import Session
 from systems.job_system.job_dto import Job
-from umap import UMAP
-from weaviate import WeaviateClient
 
 
 class PerspectivesService:

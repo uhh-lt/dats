@@ -1,10 +1,11 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.rag.rag_dto import ChatSessionResponse
 from modules.rag.rag_service import RAGService
 from repos.ollama_repo import OllamaRepo
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/rag", dependencies=[Depends(get_current_user)], tags=["rag"]

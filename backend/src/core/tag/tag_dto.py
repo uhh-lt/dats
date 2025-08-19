@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+
 from repos.db.dto_base import UpdateDTOBase
 from utils.color_utils import get_next_color
 

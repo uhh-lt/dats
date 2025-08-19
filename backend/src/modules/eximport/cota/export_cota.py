@@ -4,6 +4,8 @@ import pandas as pd
 import srsly
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
@@ -24,7 +26,6 @@ from modules.eximport.cota.cota_transformations import (
 )
 from modules.eximport.no_data_export_error import NoDataToExportError
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 def export_selected_cota(

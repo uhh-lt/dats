@@ -5,6 +5,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 import scrapy
+
 from modules.crawler.crawled_item import CrawledItem
 from modules.crawler.crawler_utils import slugify
 

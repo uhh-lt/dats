@@ -1,16 +1,17 @@
 import pandas as pd
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_crud import crud_project
-from loguru import logger
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
 )
-from sqlalchemy.orm import Session
 
 
 class ImportSpanAnnotationsError(Exception):

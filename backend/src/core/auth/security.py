@@ -1,11 +1,12 @@
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from config import conf
-from core.user.user_orm import UserORM
 from jose import jwt
 from loguru import logger
 from passlib.context import CryptContext
+
+from config import conf
+from core.user.user_orm import UserORM
 
 __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 

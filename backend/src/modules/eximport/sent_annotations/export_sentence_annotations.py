@@ -1,17 +1,18 @@
 from pathlib import Path
 
 import pandas as pd
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
-from loguru import logger
 from modules.eximport.no_data_export_error import NoDataToExportError
 from modules.eximport.sent_annotations.sentence_annotations_export_schema import (
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,
 )
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 def export_selected_sentence_annotations(

@@ -1,4 +1,5 @@
 from pydantic import Field
+
 from repos.vector.weaviate_models import ObjectIdentifier
 
 

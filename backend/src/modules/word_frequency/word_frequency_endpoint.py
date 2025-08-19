@@ -1,7 +1,9 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from fastapi import APIRouter, Depends
 from modules.word_frequency.word_frequency_columns import WordFrequencyColumns
 from modules.word_frequency.word_frequency_dto import (
     WordFrequencyRead,
@@ -12,7 +14,6 @@ from modules.word_frequency.word_frequency_service import (
     word_frequency_export,
     word_frequency_info,
 )
-from sqlalchemy.orm import Session
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort

@@ -1,7 +1,9 @@
 import numpy as np
+from loguru import logger
+from umap.umap_ import UMAP
+
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
-from loguru import logger
 from modules.concept_over_time_analysis.cota_dto import (
     COTAConcept,
     COTARead,
@@ -14,7 +16,6 @@ from ray_model_worker.dto.cota import (
 )
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
-from umap.umap_ import UMAP
 
 
 def finetune_apply_compute(

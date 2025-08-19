@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy.orm import Session
+
 from modules.eximport.no_data_export_error import NoDataToExportError
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardExportCollection,
@@ -14,7 +16,6 @@ from modules.whiteboard.whiteboard_crud import crud_whiteboard
 from modules.whiteboard.whiteboard_dto import WhiteboardRead
 from modules.whiteboard.whiteboard_orm import WhiteboardORM
 from repos.filesystem_repo import FilesystemRepo
-from sqlalchemy.orm import Session
 
 
 def export_selected_whiteboards(

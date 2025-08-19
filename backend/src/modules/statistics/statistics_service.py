@@ -1,5 +1,8 @@
 from collections import Counter
 
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
@@ -7,8 +10,6 @@ from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from modules.statistics.statistics_dto import KeywordStat, SpanEntityStat, TagStat
-from sqlalchemy import func
-from sqlalchemy.orm import Session
 
 
 def compute_tag_statistics(
