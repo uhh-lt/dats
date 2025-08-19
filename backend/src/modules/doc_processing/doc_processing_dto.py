@@ -1,9 +1,10 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from common.doc_type import DocType
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
-from pydantic import BaseModel, ConfigDict, Field
 from systems.job_system.job_dto import JobInputBase
 from systems.search_system.sorting import SortDirection
 
@@ -14,6 +15,13 @@ class ProcessingSettings(BaseModel):
     )
     pages_per_chunk: int = Field(
         description="Number of pages to chunk the documents into"
+    )
+    keyword_number: int = Field(description="Number of keywords to extract")
+    keyword_deduplication_threshold: float = Field(
+        description="Threshold for keyword deduplication (0.0 - 1.0)"
+    )
+    keyword_max_ngram_size: int = Field(
+        description="Maximum n-gram size for keyword extraction"
     )
 
 

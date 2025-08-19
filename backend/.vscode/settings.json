@@ -1,0 +1,22 @@
+{
+  // python
+  "python.defaultInterpreterPath": "${workspaceFolder:backend}/.venv/bin/python",
+  "python.envFile": "${workspaceFolder:backend}/.env",
+  "python.autoComplete.extraPaths": ["${workspaceFolder:backend}/src"],
+  "python.analysis.extraPaths": ["${workspaceFolder:backend}/src"],
+  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/__pycache__", "**/.venv"],
+
+  // pytest
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder:backend}",
+  "python.testing.pytestArgs": ["-c", "pyproject.toml"],
+
+  // prettier
+  "prettier.prettierPath": "../frontend/node_modules/prettier",
+  "prettier.configPath": "../.prettierrc.yaml",
+
+  // ruff
+  "ruff.interpreter": ["${workspaceFolder:backend}/.venv/bin/python"]
+}

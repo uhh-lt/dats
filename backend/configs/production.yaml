@@ -83,14 +83,6 @@ redis:
   port: 6379
   password: ${oc.env:REDIS_PASSWORD, dats123}
   rq_idx: 10
-  clients:
-    export: 2
-    crawler: 3
-    trainer: 4
-    cota: 5
-    import_: 7
-    ml: 8
-    perspectives: 9
 
 logging:
   max_file_size: 500 # MB
@@ -132,12 +124,6 @@ llm_assistant:
     model_training_threshold: 100
 
 project_metadata:
-  text_url:
-    key: "url"
-    metatype: "STRING"
-    read_only: True
-    doctype: "text"
-    description: "The URL of the document"
   text_language:
     key: "language"
     metatype: "STRING"
@@ -151,12 +137,6 @@ project_metadata:
     doctype: "text"
     description: "Keywords extracted from the document"
 
-  image_url:
-    key: "url"
-    metatype: "STRING"
-    read_only: True
-    doctype: "image"
-    description: "The URL of the image"
   image_language:
     key: "language"
     metatype: "STRING"
@@ -206,12 +186,6 @@ project_metadata:
     doctype: "image"
     description: "The mode of the image"
 
-  audio_url:
-    key: "url"
-    metatype: "STRING"
-    read_only: True
-    doctype: "audio"
-    description: "The URL of the audio file"
   audio_language:
     key: "language"
     metatype: "STRING"
@@ -261,12 +235,6 @@ project_metadata:
     doctype: "audio"
     description: "Tags extracted from the audio file"
 
-  video_url:
-    key: "url"
-    metatype: "STRING"
-    read_only: True
-    doctype: "video"
-    description: "The URL of the video file"
   video_language:
     key: "language"
     metatype: "STRING"
@@ -635,8 +603,3 @@ system_codes:
             desc: entity in the text that the quotation is directed at
           FRAME:
             desc: part of a sentence including Cue & Speaker, but not the quotation
-
-keyword_extraction:
-  max_ngram_size: 2
-  deduplication_threshold: 0.5
-  keyword_proposals: 5

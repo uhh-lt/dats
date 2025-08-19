@@ -4,7 +4,7 @@ services:
   ollama:
     image: ollama/ollama:0.9.0
     ports:
-      - ${OLLAMA_EXPOSED:-13133}:11434
+      - ${OLLAMA_EXPOSED?ollama-exposed-required!}:11434
     environment:
       - OLLAMA_KEEP_ALIVE=-1
       - OLLAMA_FLASH_ATTENTION=1
@@ -19,7 +19,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["${OLLAMA_DEVICE_IDS:-1}"]
+              device_ids: ["${OLLAMA_DEVICE_IDS?ollama-device-ids-required!}"]
               capabilities: [gpu]
     networks:
       - ollama_network

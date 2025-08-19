@@ -1,4 +1,21 @@
----
+x-authentik-common: &authentik-common
+  image: ${AUTHENTIK_IMAGE?authentik-image-required!}:${AUTHENTIK_TAG?authentik-tag-required!}
+  restart: unless-stopped
+  environment:
+    AUTHENTIK_REDIS__HOST: auth-redis
+    AUTHENTIK_POSTGRESQL__HOST: auth-postgres
+    AUTHENTIK_POSTGRESQL__USER: ${AUTH_DB_USER?auth-db-user-required!}
+    AUTHENTIK_POSTGRESQL__NAME: ${AUTH_DB?auth-db-required!}
+    AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTH_DB_PASS?auth-db-pass-required!}
+    AUTHENTIK_SECRET_KEY: ${AUTH_SECRET_KEY?auth-secret-key-required!}
+  depends_on:
+    auth-postgres:
+      condition: service_healthy
+    auth-redis:
+      condition: service_healthy
+  networks:
+    - auth_network
+
 services:
   auth-postgres:
     image: docker.io/library/postgres:16-alpine
@@ -12,9 +29,9 @@ services:
     volumes:
       - auth-postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: ${AUTH_DB_PASS:?database password required}
-      POSTGRES_USER: ${AUTH_DB_USER:-authentik}
-      POSTGRES_DB: ${AUTH_DB:-authentik}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASS?auto-db-pass-required!}
+      POSTGRES_USER: ${AUTH_DB_USER?auto-db-user-required!}
+      POSTGRES_DB: ${AUTH_DB?auto-db-required!}
     networks:
       - auth_network
 
@@ -31,46 +48,23 @@ services:
     volumes:
       - auth-redis-data:/data
     environment:
-      AUTHENTIK_SECRET_KEY: ${AUTH_SECRET_KEY:?secret key required}
+      AUTHENTIK_SECRET_KEY: ${AUTH_SECRET_KEY?auth-secret-key-required!}
     networks:
       - auth_network
 
   auth-server:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.2.2}
-    restart: unless-stopped
+    <<: *authentik-common
     command: server
-    environment:
-      AUTHENTIK_REDIS__HOST: auth-redis
-      AUTHENTIK_POSTGRESQL__HOST: auth-postgres
-      AUTHENTIK_POSTGRESQL__USER: ${AUTH_DB_USER:-authentik}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTH_DB:-authentik}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTH_DB_PASS}
-      AUTHENTIK_SECRET_KEY: ${AUTH_SECRET_KEY:?secret key required}
     volumes:
       - ./authentik/media:/media
       - ./authentik/custom-templates:/templates
     ports:
-      - "${AUTH_EXPOSED_HTTP:-9000}:9000"
-      - "${AUTH_EXPOSED_HTTPS:-9443}:9443"
-    depends_on:
-      auth-postgres:
-        condition: service_healthy
-      auth-redis:
-        condition: service_healthy
-    networks:
-      - auth_network
+      - "${AUTH_EXPOSED_HTTP?auth-exposed-http-required!}:9000"
+      - "${AUTH_EXPOSED_HTTPS?auth-exposed-https-required!:-9443}:9443"
 
   auth-worker:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.2.2}
-    restart: unless-stopped
+    <<: *authentik-common
     command: worker
-    environment:
-      AUTHENTIK_REDIS__HOST: auth-redis
-      AUTHENTIK_POSTGRESQL__HOST: auth-postgres
-      AUTHENTIK_POSTGRESQL__USER: ${AUTH_DB_USER:-authentik}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTH_DB:-authentik}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTH_DB_PASS}
-      AUTHENTIK_SECRET_KEY: ${AUTH_SECRET_KEY:?secret key required}
     # `user: root` and the docker socket volume are optional.
     # See more for the docker socket integration here:
     # https://goauthentik.io/docs/outposts/integrations/docker
@@ -83,13 +77,6 @@ services:
       - ./authentik/media:/media
       - ./authentik/certs:/certs
       - ./authentik/custom-templates:/templates
-    depends_on:
-      auth-postgres:
-        condition: service_healthy
-      auth-redis:
-        condition: service_healthy
-    networks:
-      - auth_network
 
 volumes:
   auth-postgres-data:

@@ -2,9 +2,9 @@ from typing import Counter
 from uuid import uuid4
 
 import yake
+
 from common.doc_type import DocType
 from common.job_type import JobType
-from config import conf
 from core.annotation.annotation_document_crud import crud_adoc
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
@@ -174,9 +174,9 @@ def extract_keywords(
 ) -> list[str]:
     kw_extractor = yake.KeywordExtractor(
         lan=payload.language,
-        n=conf.keyword_extraction.max_ngram_size,
-        dedupLim=conf.keyword_extraction.deduplication_threshold,
-        top=conf.keyword_extraction.keyword_proposals,
+        n=payload.settings.keyword_number,
+        dedupLim=payload.settings.keyword_deduplication_threshold,
+        top=payload.settings.keyword_max_ngram_size,
     )
     keyword_proposals = kw_extractor.extract_keywords(payload.text)
     keyword_proposals = [kw for kw, _ in keyword_proposals]

@@ -1,0 +1,82 @@
+{
+  "folders": [
+    {
+      "name": "dats",
+      "path": "..",
+    },
+    {
+      "name": "backend",
+      "path": "../backend",
+    },
+    {
+      "name": "frontend",
+      "path": "../frontend",
+    },
+  ],
+  // global workspace settings
+  "settings": {
+    // general
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+    },
+    "files.insertFinalNewline": true,
+    // ruff
+    "ruff.enable": true,
+    "ruff.nativeServer": "on",
+    "ruff.importStrategy": "useBundled",
+    "ruff.configuration": "ruff.toml",
+    // formatting
+    "[yaml]": {
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true,
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+    },
+    "[dockercompose]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    // python
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticMode": "workspace",
+    // pytest
+    "python.testing.autoTestDiscoverOnSaveEnabled": false,
+  },
+  "extensions": {
+    "recommendations": [
+      // copilot
+      "github.copilot",
+      "github.copilot-chat",
+      // docker
+      "ms-azuretools.vscode-containers",
+      // git
+      "eamodio.gitlens",
+      "github.vscode-github-actions",
+      // backend
+      "ms-python.python",
+      "ms-python.debugpy",
+      "ms-python.vscode-pylance",
+      "charliermarsh.ruff",
+      // frontend
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+    ],
+  },
+}
