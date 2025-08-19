@@ -4,6 +4,7 @@ import { QueryKey } from "./QueryKey.ts";
 
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
 import { ProjectRead } from "./openapi/models/ProjectRead.ts";
+import { SDocStatus } from "./openapi/models/SDocStatus.ts";
 import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 // PROJECT QUERIES
@@ -72,6 +73,12 @@ const useDeleteProject = () =>
     },
   });
 
+const useCountSdocsWithStatus = (projectId: number, status: SDocStatus) =>
+  useQuery({
+    queryKey: [QueryKey.PROJECT_SDOC_STATUS_COUNT, projectId, status],
+    queryFn: () => ProjectService.countSdocsWithStatus({ projectId, status }),
+  });
+
 const ProjectHooks = {
   // project
   useGetAllProjects,
@@ -79,6 +86,7 @@ const ProjectHooks = {
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
+  useCountSdocsWithStatus,
 };
 
 export default ProjectHooks;

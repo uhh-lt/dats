@@ -5,6 +5,7 @@
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
+import type { SDocStatus } from "../models/SDocStatus";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -122,6 +123,30 @@ export class ProjectService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/user/projects",
+    });
+  }
+  /**
+   * Returns all Projects of the logged-in User
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countSdocsWithStatus({
+    projectId,
+    status,
+  }: {
+    projectId: number;
+    status: SDocStatus;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project{project_id}/sdoc/status/{status}",
+      path: {
+        project_id: projectId,
+        status: status,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
 }

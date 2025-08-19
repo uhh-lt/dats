@@ -5,7 +5,7 @@ import { memo } from "react";
 import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
 import { SourceDocumentStatusSimple } from "../../api/openapi/models/SourceDocumentStatusSimple.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
-import { statusToTypographyColor } from "../BackgroundTasks/StatusToTypographyColor.ts";
+import { jobStatusToTypographyColor } from "../BackgroundTasks/StatusToTypographyColor.ts";
 
 interface SdocStatusSimpleListItemProps {
   sdocStatus: SourceDocumentStatusSimple;
@@ -40,11 +40,11 @@ function SdocStatusSimpleListItem({ sdocStatus }: SdocStatusSimpleListItemProps)
           </Box>
           <ListItemIcon sx={{ minWidth: "1px" }}>
             {sdocStatus.processed_status === SDocStatus._1 ? (
-              <TaskAltIcon sx={{ color: statusToTypographyColor.Finished }} />
+              <TaskAltIcon sx={{ color: jobStatusToTypographyColor.finished }} />
             ) : sdocStatus.processed_status === SDocStatus._0 ? (
               <CircularProgress color="secondary" size={24} />
             ) : (
-              <ErrorOutlineIcon sx={{ color: statusToTypographyColor.Errorneous }} />
+              <ErrorOutlineIcon sx={{ color: jobStatusToTypographyColor.failed }} />
             )}
           </ListItemIcon>
         </Box>

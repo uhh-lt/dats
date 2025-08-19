@@ -2,12 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 export type TaggingResult = {
   /**
    * Status of the Result
    */
-  status: BackgroundJobStatus;
+  status: TaggingResult.status;
   /**
    * Status message of the result
    */
@@ -29,3 +28,12 @@ export type TaggingResult = {
    */
   reasoning: string;
 };
+export namespace TaggingResult {
+  /**
+   * Status of the Result
+   */
+  export enum status {
+    ERROR = "error",
+    FINISHED = "finished",
+  }
+}

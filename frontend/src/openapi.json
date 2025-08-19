@@ -2568,113 +2568,6 @@
         }
       }
     },
-    "/prepro/{prepro_job_id}": {
-      "get": {
-        "tags": ["prepro"],
-        "summary": "Returns the PreprocessingJob for the given ID if it exists",
-        "operationId": "get_prepro_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "prepro_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Prepro Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/prepro/{prepro_job_id}/abort": {
-      "patch": {
-        "tags": ["prepro"],
-        "summary": "Aborts the PreprocessingJob for the given ID if it exists",
-        "operationId": "abort_prepro_job",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "prepro_job_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "title": "Prepro Job Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/prepro/project/{project_id}": {
-      "get": {
-        "tags": ["prepro"],
-        "summary": "Returns all PreprocessingJobs for the given project ID if it exists",
-        "operationId": "get_all_prepro_jobs",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/PreprocessingJobRead" },
-                  "title": "Response Prepro-Get All Prepro Jobs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/prepro/project/{proj_id}/status": {
-      "get": {
-        "tags": ["prepro"],
-        "summary": "Returns the PreProProjectStatus of the Project with the given ID.",
-        "operationId": "get_project_prepro_status",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreProProjectStatus" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/project": {
       "put": {
         "tags": ["project"],
@@ -2810,6 +2703,37 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/project{project_id}/sdoc/status/{status}": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all Projects of the logged-in User",
+        "operationId": "count_sdocs_with_status",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "status", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/SDocStatus" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "integer", "title": "Response Project-Count Sdocs With Status" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/projmeta": {
@@ -3867,11 +3791,11 @@
         }
       }
     },
-    "/sdoc/{sdoc_id}/linked_sdocs": {
+    "/sdoc/{sdoc_id}/same_folder": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
-        "operationId": "get_linked_sdocs",
+        "summary": "Returns the ids of SourceDocuments in the same folder as the SourceDocument with the given id.",
+        "operationId": "get_same_folder_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
@@ -3884,7 +3808,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "type": "integer" },
-                  "title": "Response Sourcedocument-Get Linked Sdocs"
+                  "title": "Response Sourcedocument-Get Same Folder Sdocs"
                 }
               }
             }
@@ -6126,7 +6050,12 @@
       },
       "AnnotationResult": {
         "properties": {
-          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status": {
+            "type": "string",
+            "enum": ["error", "finished"],
+            "title": "Status",
+            "description": "Status of the Result"
+          },
           "status_message": {
             "type": "string",
             "title": "Status Message",
@@ -6468,11 +6397,6 @@
         "type": "string",
         "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_FILENAME", "BB_TAG_ID_LIST"],
         "title": "BBoxColumns"
-      },
-      "BackgroundJobStatus": {
-        "type": "string",
-        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
-        "title": "BackgroundJobStatus"
       },
       "Body_analysis-code_frequencies": {
         "properties": {
@@ -9094,7 +9018,12 @@
       },
       "MetadataExtractionResult": {
         "properties": {
-          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status": {
+            "type": "string",
+            "enum": ["error", "finished"],
+            "title": "Status",
+            "description": "Status of the Result"
+          },
           "status_message": {
             "type": "string",
             "title": "Status Message",
@@ -9476,128 +9405,6 @@
         "type": "object",
         "required": ["aspect_id", "clusters", "docs"],
         "title": "PerspectivesVisualization"
-      },
-      "PreProProjectStatus": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project ID this PreProProjectStatus refers to."
-          },
-          "active_prepro_job_ids": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Active Prepro Job Ids",
-            "description": "List of active PreprocessingJob UUIDs"
-          },
-          "num_active_prepro_job_payloads": {
-            "type": "integer",
-            "title": "Num Active Prepro Job Payloads",
-            "description": "Number of active PreprocessingJobPayloads"
-          },
-          "erroneous_prepro_job_payload_ids": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Erroneous Prepro Job Payload Ids",
-            "description": "List of erroneous or aborted PreprocessingJobPayload UUIDs"
-          },
-          "num_sdocs_finished": {
-            "type": "integer",
-            "title": "Num Sdocs Finished",
-            "description": "Number of SourceDocuments preprocessing has finished."
-          },
-          "num_sdocs_total": {
-            "type": "integer",
-            "title": "Num Sdocs Total",
-            "description": "Number of total SourceDocuments."
-          }
-        },
-        "type": "object",
-        "required": [
-          "project_id",
-          "num_active_prepro_job_payloads",
-          "erroneous_prepro_job_payload_ids",
-          "num_sdocs_finished",
-          "num_sdocs_total"
-        ],
-        "title": "PreProProjectStatus"
-      },
-      "PreprocessingJobPayloadRead": {
-        "properties": {
-          "id": { "type": "string", "title": "Id", "description": "ID of the PreprocessingJobPayload" },
-          "prepro_job_id": {
-            "type": "string",
-            "title": "Prepro Job Id",
-            "description": "UUID of the PreprocessingJob this payload belongs to."
-          },
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "ID of the Project of the PreprocessingJobPayload"
-          },
-          "source_document_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Source Document Id",
-            "description": "ID of the SourceDocument that was created from the payload."
-          },
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "The current status of the payload.",
-            "default": "Waiting"
-          },
-          "filename": {
-            "type": "string",
-            "title": "Filename",
-            "description": "The filename of the document to be preprocessed."
-          },
-          "mime_type": { "type": "string", "title": "Mime Type", "description": "The MIME type of the payload file." },
-          "doc_type": { "$ref": "#/components/schemas/DocType", "description": "The DocType of the payload file." },
-          "current_pipeline_step": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Current Pipeline Step",
-            "description": "The current step in the preprocessing pipeline."
-          },
-          "error_message": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Error Message",
-            "description": "The error message if the payload failed."
-          }
-        },
-        "type": "object",
-        "required": ["id", "prepro_job_id", "project_id", "filename", "mime_type", "doc_type"],
-        "title": "PreprocessingJobPayloadRead"
-      },
-      "PreprocessingJobRead": {
-        "properties": {
-          "id": { "type": "string", "title": "Id", "description": "UUID of the PreprocessingJob" },
-          "status": {
-            "$ref": "#/components/schemas/BackgroundJobStatus",
-            "description": "Status of the PreprocessingJob",
-            "default": "Waiting"
-          },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project." },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the PreprocessingJob"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the PreprocessingJob"
-          },
-          "payloads": {
-            "items": { "$ref": "#/components/schemas/PreprocessingJobPayloadRead" },
-            "type": "array",
-            "title": "Payloads",
-            "description": "Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
-          }
-        },
-        "type": "object",
-        "required": ["id", "project_id", "created", "updated", "payloads"],
-        "title": "PreprocessingJobRead"
       },
       "ProjectAddUser": {
         "properties": {
@@ -10074,7 +9881,12 @@
       },
       "SentenceAnnotationResult": {
         "properties": {
-          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status": {
+            "type": "string",
+            "enum": ["error", "finished"],
+            "title": "Status",
+            "description": "Status of the Result"
+          },
           "status_message": {
             "type": "string",
             "title": "Status Message",
@@ -11503,7 +11315,12 @@
       },
       "TaggingResult": {
         "properties": {
-          "status": { "$ref": "#/components/schemas/BackgroundJobStatus", "description": "Status of the Result" },
+          "status": {
+            "type": "string",
+            "enum": ["error", "finished"],
+            "title": "Status",
+            "description": "Status of the Result"
+          },
           "status_message": {
             "type": "string",
             "title": "Status Message",
