@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import magic
+from loguru import logger
+
 from common.doc_type import DocType, get_doc_type
 from common.job_type import JobType
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -22,8 +23,17 @@ class ArchiveExtractionJobOutput(JobOutputBase):
     invalid_files: list[str]
 
 
-def extract_archive(payload: ArchiveExtractionJobInput) -> ArchiveExtractionJobOutput:
-    paths = fsr.extract_archive_in_project(payload.project_id, payload.filepath)
+@register_job(
+    job_type=JobType.EXTRACT_ARCHIVE,
+    input_type=ArchiveExtractionJobInput,
+    output_type=ArchiveExtractionJobOutput,
+)
+def handle_archive_extraction_job(
+    payload: ArchiveExtractionJobInput, job: Job
+) -> ArchiveExtractionJobOutput:
+    paths = FilesystemRepo().extract_archive_in_project(
+        payload.project_id, payload.filepath
+    )
     doctypes = []
     valid_paths = []
     invalid_files = []
@@ -46,14 +56,3 @@ def extract_archive(payload: ArchiveExtractionJobInput) -> ArchiveExtractionJobO
     return ArchiveExtractionJobOutput(
         file_paths=valid_paths, doctypes=doctypes, invalid_files=invalid_files
     )
-
-
-@register_job(
-    job_type=JobType.EXTRACT_ARCHIVE,
-    input_type=ArchiveExtractionJobInput,
-    output_type=ArchiveExtractionJobOutput,
-)
-def handle_extract_archive_job(
-    payload: ArchiveExtractionJobInput, job: Job
-) -> ArchiveExtractionJobOutput:
-    return extract_archive(payload=payload)

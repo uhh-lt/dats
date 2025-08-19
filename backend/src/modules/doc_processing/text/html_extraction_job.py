@@ -3,9 +3,10 @@ from uuid import uuid4
 
 import mammoth
 from bs4 import BeautifulSoup, Tag
+from loguru import logger
+
 from common.doc_type import DocType
 from common.job_type import JobType
-from loguru import logger
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_cleaning_utils import clean_html
 from repos.ray_repo import RayRepo
@@ -26,7 +27,14 @@ class ExtractHTMLJobOutput(JobOutputBase):
     folder_id: int | None
 
 
-def extract_html(payload: ExtractHTMLJobInput) -> ExtractHTMLJobOutput:
+@register_job(
+    job_type=JobType.EXTRACT_HTML,
+    input_type=ExtractHTMLJobInput,
+    output_type=ExtractHTMLJobOutput,
+)
+def handle_extract_html_job(
+    payload: ExtractHTMLJobInput, job: Job
+) -> ExtractHTMLJobOutput:
     if not payload.filepath.exists():
         logger.error(f"File {payload.filepath} does not exist!")
         raise Exception(f"File {payload.filepath} does not exist!")
@@ -162,14 +170,3 @@ def extract_html_from_html(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
         )
 
     return str(soup), extracted_images
-
-
-@register_job(
-    job_type=JobType.EXTRACT_HTML,
-    input_type=ExtractHTMLJobInput,
-    output_type=ExtractHTMLJobOutput,
-)
-def handle_extract_html_job(
-    payload: ExtractHTMLJobInput, job: Job
-) -> ExtractHTMLJobOutput:
-    return extract_html(payload=payload)
