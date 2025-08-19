@@ -34,9 +34,6 @@ x-dats-common: &dats-common
     postgres:
       condition: service_healthy
       restart: true
-    rabbitmq:
-      condition: service_healthy
-      restart: true
     redis:
       condition: service_healthy
       restart: true
