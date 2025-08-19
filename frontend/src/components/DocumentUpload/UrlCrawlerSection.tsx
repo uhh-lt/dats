@@ -5,7 +5,9 @@ import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection";
+import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
 
 interface UrlCrawlerSectionProps {
   projectId: number;
@@ -31,6 +33,10 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   const [currentUrl, setCurrentUrl] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [settings, setSettings] = useState<ProcessingSettings>({
+    extract_images: true,
+    pages_per_chunk: 1,
+  });
 
   const handleUrlChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setCurrentUrl(event.target.value);
@@ -70,16 +76,20 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
     if (urls.length > 0) {
       await crawlUrlsMutation.mutateAsync({
         requestBody: {
+          settings: settings,
           project_id: projectId,
           urls: urls,
         },
       });
       setUrls([]);
     }
-  }, [urls, projectId, crawlUrlsMutation]);
+  }, [urls, crawlUrlsMutation, settings, projectId]);
 
   return (
-    <DialogSection title="Upload URLs">
+    <DialogSection
+      title="Upload URLs"
+      action={<ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} />}
+    >
       {/* URL Input Field */}
       <Stack direction="row" spacing={1} mb={2}>
         <TextField

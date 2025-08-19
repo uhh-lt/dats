@@ -2,11 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ProcessingSettings } from "./ProcessingSettings";
 export type CrawlerJobInput = {
   /**
    * The ID of the Project to import the crawled data.
    */
   project_id: number;
+  /**
+   * Processing settings
+   */
+  settings: ProcessingSettings;
   /**
    * List of URLs to crawl.
    */

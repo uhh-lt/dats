@@ -6466,6 +6466,7 @@
       },
       "Body_docprocessing-upload_files": {
         "properties": {
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings" },
           "uploaded_files": {
             "items": { "type": "string", "format": "binary" },
             "type": "array",
@@ -6474,7 +6475,7 @@
           }
         },
         "type": "object",
-        "required": ["uploaded_files"],
+        "required": ["settings", "uploaded_files"],
         "title": "Body_docprocessing-upload_files"
       },
       "Body_import-start_import_job": {
@@ -7379,6 +7380,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to import the crawled data."
           },
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
           "urls": {
             "items": { "type": "string" },
             "type": "array",
@@ -7387,7 +7389,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "urls"],
+        "required": ["project_id", "settings", "urls"],
         "title": "CrawlerJobInput"
       },
       "CrawlerJobOutput": {
@@ -9445,6 +9447,23 @@
         "type": "object",
         "required": ["aspect_id", "clusters", "docs"],
         "title": "PerspectivesVisualization"
+      },
+      "ProcessingSettings": {
+        "properties": {
+          "extract_images": {
+            "type": "boolean",
+            "title": "Extract Images",
+            "description": "Whether to extract images from the documents"
+          },
+          "pages_per_chunk": {
+            "type": "integer",
+            "title": "Pages Per Chunk",
+            "description": "Number of pages to chunk the documents into"
+          }
+        },
+        "type": "object",
+        "required": ["extract_images", "pages_per_chunk"],
+        "title": "ProcessingSettings"
       },
       "ProjectAddUser": {
         "properties": {

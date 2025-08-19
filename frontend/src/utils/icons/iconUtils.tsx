@@ -26,6 +26,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
+import CloseIcon from "@mui/icons-material/Close";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -33,6 +34,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
+import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import ScaleIcon from "@mui/icons-material/Scale";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
@@ -154,6 +156,8 @@ export enum Icon {
   VISIBILITY = "visibility",
   VISIBILITY_OFF = "visibility_off",
   WIKI = "wiki",
+  SAVE = "save",
+  CLOSE = "close",
 }
 
 // Define a type for icon component factory functions
@@ -264,6 +268,8 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.VISIBILITY]: (iconProps) => <VisibilityIcon {...iconProps} />,
   [Icon.VISIBILITY_OFF]: (iconProps) => <VisibilityOffIcon {...iconProps} />,
   [Icon.WIKI]: (iconProps) => <AutoStoriesIcon {...iconProps} />,
+  [Icon.SAVE]: (iconProps) => <SaveIcon {...iconProps} />,
+  [Icon.CLOSE]: (iconProps) => <CloseIcon {...iconProps} />,
 };
 
 /**
