@@ -224,6 +224,7 @@ class DATSAPI:
                 "keyword_number": 5,
                 "keyword_deduplication_threshold": 0.5,
                 "keyword_max_ngram_size": 2,
+                "language": "auto",
             }
 
         # Prepare form data for settings
