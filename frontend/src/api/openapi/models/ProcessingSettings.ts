@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Language } from "./Language";
 export type ProcessingSettings = {
   /**
    * Whether to extract images from the documents
@@ -23,4 +24,8 @@ export type ProcessingSettings = {
    * Maximum n-gram size for keyword extraction
    */
   keyword_max_ngram_size: number;
+  /**
+   * Language of the documents: 'de', 'en', ...
+   */
+  language: Language;
 };

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CrawlerJobInput } from "../models/CrawlerJobInput";
+import type { CrawlerJobInput_Input } from "../models/CrawlerJobInput_Input";
 import type { CrawlerJobRead } from "../models/CrawlerJobRead";
 import type { DuplicateFinderInput } from "../models/DuplicateFinderInput";
 import type { DuplicateFinderJobRead } from "../models/DuplicateFinderJobRead";
@@ -19,7 +19,11 @@ export class JobService {
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError
    */
-  public static startCrawlerJob({ requestBody }: { requestBody: CrawlerJobInput }): CancelablePromise<CrawlerJobRead> {
+  public static startCrawlerJob({
+    requestBody,
+  }: {
+    requestBody: CrawlerJobInput_Input;
+  }): CancelablePromise<CrawlerJobRead> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/job/crawler",
