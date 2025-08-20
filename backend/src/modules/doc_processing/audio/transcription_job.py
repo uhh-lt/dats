@@ -110,7 +110,9 @@ def generate_automatic_transcription(
     logger.debug("Generating automatic transcription ...")
 
     # send the audio bytes to the whisper model to get the transcript
-    output = ray.whisper_transcribe(audio_bytes=audio_bytes, language=payload.language)
+    output = ray.whisper_transcribe(
+        audio_bytes=audio_bytes, language=payload.settings.language
+    )
     logger.info(f"Generated transcript {output}")
 
     # Create Wordlevel Transcriptions and token info in one pass

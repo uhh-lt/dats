@@ -70,8 +70,8 @@ text_doc4 = ("https://de.wikipedia.org/wiki/Otter", "Otter – Wikipedia.html")
 
 # https://commons.wikimedia.org/wiki/File:Stephen_Amell_about_flashbacks_of_Arrow_at_NerdHQ_2014.webm
 video_doc1 = (
-    "https://ltdata1.informatik.uni-hamburg.de/dats/Abertas_inscri%C3%A7%C3%B5es_para_pr%C3%AAmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm",
-    "Abertas_inscrições_para_prêmio_que_incentiva_projetos_ligados_a_arte_nas_ruas.webm",
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Stephen_Amell_about_flashbacks_of_Arrow_at_NerdHQ_2014.webm",
+    "Stephen_Amell_about_flashbacks_of_Arrow_at_NerdHQ_2014.webm",
 )
 
 # https://commons.wikimedia.org/wiki/File:Google_translate_accent_differences.mpg

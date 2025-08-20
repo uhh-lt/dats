@@ -23,6 +23,9 @@ class ProcessingSettings(BaseModel):
     keyword_max_ngram_size: int = Field(
         description="Maximum n-gram size for keyword extraction"
     )
+    language: str | None = Field(
+        default=None, description="Language of the documents: 'de', 'en', ..."
+    )
 
 
 class ProcessingJobInput(JobInputBase):
