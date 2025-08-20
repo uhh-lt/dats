@@ -182,26 +182,26 @@ def extract_keywords(
     keyword_proposals = kw_extractor.extract_keywords(payload.text)
     keyword_proposals = [kw for kw, _ in keyword_proposals]
 
-    tok2pos = {tok.text: tok.pos for tok in spacy_output.tokens}
+    # Part of speech filtering for keywords, is this really necessary?
+    # tok2pos = {tok.text: tok.pos for tok in spacy_output.tokens}
+    # # pos_to_keep = [
+    # #     "NOUN",
+    # #     "PROPN",
+    # #     "ADJ",
+    # #     "VERB",
+    # # ]
+    # # keywords = []
+    # # for kp in keyword_proposals:
+    # #     ws = kp.split()
+    # #     keep_kp = True
+    # #     for w in ws:
+    # #         if tok2pos[w] not in pos_to_keep:
+    # #             keep_kp = False
+    # #             break
+    # #     if keep_kp:
+    # #         keywords.append(kp)
 
-    pos_to_keep = [
-        "NOUN",
-        "PROPN",
-        "ADJ",
-        "VERB",
-    ]
-    keywords = []
-    for kp in keyword_proposals:
-        ws = kp.split()
-        keep_kp = True
-        for w in ws:
-            if tok2pos[w] not in pos_to_keep:
-                keep_kp = False
-                break
-        if keep_kp:
-            keywords.append(kp)
-
-    return keywords
+    return keyword_proposals
 
 
 def extract_span_annotations(
