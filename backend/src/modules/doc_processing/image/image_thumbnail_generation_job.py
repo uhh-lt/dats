@@ -30,11 +30,11 @@ def generate_thumbnails(image_path: Path):
         )
         # create thumbnail
         thumbnail_fn = fsr.generate_sdoc_filename(image_path, webp=True, thumbnail=True)
-        im.thumbnail((128, 128))
+        im.thumbnail((256, 256))
         im.save(
             thumbnail_fn,
             "WEBP",
-            quality=100,
+            quality=50,
             lossless=True,
             method=6,
         )
