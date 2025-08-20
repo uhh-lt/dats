@@ -23,10 +23,10 @@ audio_doc3 = (
 )
 
 # https://commons.wikimedia.org/wiki/File:Bluetooth.ogg
-audio_doc4 = (
-    "https://ltdata1.informatik.uni-hamburg.de/dats/Bluetooth.ogg",
-    "Bluetooth.ogg",
-)
+# audio_doc4 = (
+#     "https://ltdata1.informatik.uni-hamburg.de/dats/Bluetooth.ogg",
+#     "Bluetooth.ogg",
+# )
 
 # https://commons.wikimedia.org/wiki/File:GG1949.png
 image_doc1 = (
@@ -373,7 +373,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.upload_files([video_doc1, video_doc2], bob, project2)
 
     # Bob uploads two audio documents to project2
-    api_document.upload_files([audio_doc3, audio_doc4], bob, project2)
+    api_document.upload_files([audio_doc2, audio_doc3], bob, project2)
 
     # Alice creates a memo for text_doc1
     project_text_doc1 = api_document.document_list[text_doc1[1]]
