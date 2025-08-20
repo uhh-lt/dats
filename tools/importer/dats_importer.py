@@ -125,6 +125,14 @@ parser.add_argument(
     dest="keyword_max_ngram_size",
 )
 parser.add_argument(
+    "--language",
+    help="Language for processing (default: auto)",
+    type=str,
+    default="auto",
+    required=False,
+    dest="language",
+)
+parser.add_argument(
     "--metadata_keys",
     nargs="+",
     help="JSON keys to be used as metadata, e.g. --metadata_keys author published_date visited_date",
@@ -283,6 +291,7 @@ settings = {
     "keyword_number": args.keyword_number,
     "keyword_deduplication_threshold": 0.5,
     "keyword_max_ngram_size": args.keyword_max_ngram_size,
+    "language": args.language,
 }
 api.upload_files(
     proj_id=project["id"],
