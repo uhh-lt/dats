@@ -61,6 +61,16 @@ def handle_extract_html_job(
     )
 
 
+def __remove_img_tags(content: str) -> str:
+    """
+    Remove all <img> tags from the given HTML content and return the cleaned HTML as a string.
+    """
+    soup = BeautifulSoup(content, "html.parser")
+    for img_tag in soup.find_all("img"):
+        img_tag.decompose()
+    return str(soup)
+
+
 def extract_html_from_pdf(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
     logger.debug(f"Extracting content as HTML from {payload.filepath.name} ...")
     pdf_bytes = payload.filepath.read_bytes()
@@ -71,7 +81,7 @@ def extract_html_from_pdf(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]
     extracted_images: list[Path] = []
 
     if not payload.settings.extract_images:
-        return doc_html, extracted_images
+        return __remove_img_tags(doc_html), extracted_images
 
     # store all extracted images in the same directory as the PDF
     output_path = payload.filepath.parent
@@ -122,7 +132,11 @@ def extract_html_from_word(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
             docx_file, convert_image=mammoth.images.img_element(convert_image)
         )
 
-    return f"<html><body>{html.value}</body></html>", extracted_images
+    html_content = f"<html><body>{html.value}</body></html>"
+    if not payload.settings.extract_images:
+        # Remove all <img> tags from the HTML
+        html_content = __remove_img_tags(html_content)
+    return html_content, extracted_images
 
 
 def extract_html_from_html(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
@@ -133,10 +147,7 @@ def extract_html_from_html(payload: ExtractHTMLJobInput) -> tuple[str, list[Path
     extracted_images: list[Path] = []
 
     if not payload.settings.extract_images:
-        # Remove all <img> tags from the HTML
-        for img_tag in soup.find_all("img"):
-            img_tag.decompose()
-        return str(soup), extracted_images
+        return __remove_img_tags(content), extracted_images
 
     # Extract base64 encoded images from the HTML content
     base64_images = {}
