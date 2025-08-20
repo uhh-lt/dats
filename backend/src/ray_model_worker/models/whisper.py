@@ -2,12 +2,12 @@ import logging
 from typing import Any
 
 import numpy as np
-import torch
 from dto.whisper import (
     SegmentTranscription,
     WhisperTranscriptionOutput,
     WordTranscription,
 )
+from faster_whisper import BatchedInferencePipeline
 from faster_whisper import WhisperModel as FasterWhisperModel
 from ray import serve
 from ray_config import build_ray_model_deployment_config, conf
@@ -25,7 +25,7 @@ WHISPER_TRANSCRIBE_OPTIONS = cc.options
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
-        self.model = FasterWhisperModel(WHISPER_MODEL, DEVICE)
+        self.model = BatchedInferencePipeline(FasterWhisperModel(WHISPER_MODEL, DEVICE))
 
     def _get_uncompressed_audio(self, wav_data: np.ndarray) -> np.ndarray:
         audio_array = (
@@ -33,7 +33,9 @@ class WhisperModel:
         )
         return audio_array
 
-    def transcribe_fpi(self, wav_data: np.ndarray) -> WhisperTranscriptionOutput:
+    def transcribe_fpi(
+        self, wav_data: np.ndarray, language: str | None = None
+    ) -> WhisperTranscriptionOutput:
         audio_array = self._get_uncompressed_audio(wav_data)
 
         logger.debug(
@@ -43,9 +45,10 @@ class WhisperModel:
             task="transcribe", **WHISPER_TRANSCRIBE_OPTIONS
         )
 
-        with torch.no_grad():
-            result = self.model.transcribe(audio=audio_array, **transcribe_options)
-            transcriptions = list(result[0])
+        transcriptions, info = self.model.transcribe(
+            audio=audio_array, language=language, **transcribe_options
+        )
+        transcriptions = list(transcriptions)
 
         segments: list[SegmentTranscription] = []
         for segment in transcriptions:
@@ -68,4 +71,8 @@ class WhisperModel:
             st.words = words
             segments.append(st)
 
-        return WhisperTranscriptionOutput(segments=segments)
+        return WhisperTranscriptionOutput(
+            segments=segments,
+            language=info.language,
+            language_probability=info.language_probability,
+        )

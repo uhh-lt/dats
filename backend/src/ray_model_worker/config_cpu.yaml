@@ -24,6 +24,7 @@ whisper:
     word_timestamps: True
     beam_size: 5
     best_of: 5
+    batch_size: 8
 
   deployment:
     ray_actor_options:

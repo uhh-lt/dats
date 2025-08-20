@@ -44,3 +44,9 @@ class WhisperTranscriptionOutput(BaseModel):
             }
         ],
     )
+    language: str = Field(
+        description="Detected language of the audio file", examples=["de", "en"]
+    )
+    language_probability: float = Field(
+        description="Probability of the detected language", examples=[0.99, 0.8]
+    )

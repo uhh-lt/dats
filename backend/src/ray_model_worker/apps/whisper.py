@@ -22,11 +22,13 @@ class WhisperApi:
         "/transcribe",
         response_model=WhisperTranscriptionOutput,
     )
-    async def transcribe(self, request: Request) -> WhisperTranscriptionOutput:
+    async def transcribe(
+        self, request: Request, language: str | None = None
+    ) -> WhisperTranscriptionOutput:
         # we are expecting a wav file as binary data (application/octet-stream)
         raw_wav_bytes = await request.body()
         wav_data = bytes_to_wav_data(raw_wav_bytes)
-        transcript_result = await self.whisper.transcribe_fpi.remote(wav_data)  # type: ignore
+        transcript_result = await self.whisper.transcribe_fpi.remote(wav_data, language)  # type: ignore
         return transcript_result
 
 

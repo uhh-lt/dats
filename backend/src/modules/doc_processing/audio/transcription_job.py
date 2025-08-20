@@ -23,6 +23,7 @@ sqlr = SQLRepo()
 
 class TranscriptionJobInput(SdocProcessingJobInput):
     filepath: Path
+    language: str | None = None
 
 
 class TranscriptionJobOutput(JobOutputBase):
@@ -32,6 +33,8 @@ class TranscriptionJobOutput(JobOutputBase):
     token_time_ends: list[int]
     content: str
     html: str
+    language: str
+    language_probability: float
 
 
 @register_job(
@@ -85,6 +88,8 @@ def handle_transcription_job(
         token_time_ends=sdoc_data.token_time_ends,
         content=sdoc_data.content,
         html=sdoc_data.html,
+        language=transcription["language"],
+        language_probability=transcription["language_probability"],
     )
 
 
@@ -105,8 +110,8 @@ def generate_automatic_transcription(
     logger.debug("Generating automatic transcription ...")
 
     # send the audio bytes to the whisper model to get the transcript
-    transcription = ray.whisper_transcribe(audio_bytes=audio_bytes)
-    logger.info(f"Generated transcript {transcription}")
+    output = ray.whisper_transcribe(audio_bytes=audio_bytes, language=payload.language)
+    logger.info(f"Generated transcript {output}")
 
     # Create Wordlevel Transcriptions and token info in one pass
     tokens: list[str] = []
@@ -115,7 +120,7 @@ def generate_automatic_transcription(
     token_time_starts: list[int] = []
     token_time_ends: list[int] = []
     current_position = 0
-    for segment in transcription.segments:
+    for segment in output.segments:
         for word in segment.words:
             text = word.text.strip()
             token_time_starts.append(word.start_ms)
@@ -135,4 +140,6 @@ def generate_automatic_transcription(
         "token_time_ends": token_time_ends,
         "content": transcription,
         "html": f"<html><body><p>{transcription}</p></body></html>",
+        "language": output.language,
+        "language_probability": output.language_probability,
     }
