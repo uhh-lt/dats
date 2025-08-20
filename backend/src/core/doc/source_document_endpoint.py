@@ -102,9 +102,11 @@ def get_same_folder_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> list[int]:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
     sdoc = crud_sdoc.read(db=db, id=sdoc_id)
-    return [s.id for s in sdoc.folder.source_documents]
+    same_folder_sdocs = sdoc.folder.source_documents
+    doctype_order = {"text": 0, "img": 1, "audio": 2, "video": 3}
+    same_folder_sdocs.sort(key=lambda s: (doctype_order.get(s.doctype, 99), s.filename))
+    return [s.id for s in same_folder_sdocs]
 
 
 @router.get(
