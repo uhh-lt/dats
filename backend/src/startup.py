@@ -1,5 +1,6 @@
 import os
 import random
+import shutil
 import time
 import traceback
 
@@ -19,12 +20,18 @@ from loguru import logger
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
-    progress_indicator_file = "/tmp/DATS_START_UP_IN_PROGRESS"
+    UUID_NAMESPACE = os.environ.get("UUID_NAMESPACE", None)
+    if UUID_NAMESPACE is None:
+        logger.error("UUID_NAMESPACE environment variable is not set!")
+        exit()
+    progress_indicator_dir = f"/tmp/{UUID_NAMESPACE}"
+    progress_indicator_file = f"{progress_indicator_dir}/DATS_START_UP_IN_PROGRESS"
 
     def is_startup_in_progress() -> bool:
         # Flo: sleep for some random time so that an eventual other process can create the file
         time.sleep(random.uniform(1, 2))
         if not os.path.exists(progress_indicator_file):
+            os.makedirs(progress_indicator_dir, exist_ok=True)
             with open(progress_indicator_file, "w") as f:
                 # Flo: write the PID, so we know which process created it
                 f.write(f"{os.getpid()}")
@@ -42,11 +49,17 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         if os.path.exists(progress_indicator_file):
             with open(progress_indicator_file, "r") as f:
                 pid = int(f.readline().strip())
-            if pid == os.getpid() and os.path.exists(progress_indicator_file):
-                logger.debug(
-                    f"Removing startup indicator file at: {progress_indicator_file}"
-                )
-                os.remove(progress_indicator_file)
+            if pid == os.getpid():
+                try:
+                    if os.path.isdir(progress_indicator_dir):
+                        shutil.rmtree(progress_indicator_dir)
+                        logger.debug(
+                            f"Removed startup indicator directory and all contents at: {progress_indicator_dir}"
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"Could not remove directory {progress_indicator_dir}: {e}"
+                    )
 
     """
     System Start Up Process
