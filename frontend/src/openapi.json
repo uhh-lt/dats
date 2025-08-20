@@ -1436,7 +1436,7 @@
         "summary": "Start Crawler job",
         "operationId": "start_crawler_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput-Input" } } },
           "required": true
         },
         "responses": {
@@ -7373,7 +7373,26 @@
         "required": ["ml_job_type"],
         "title": "CoreferenceResolutionParams"
       },
-      "CrawlerJobInput": {
+      "CrawlerJobInput-Input": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to import the crawled data."
+          },
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
+          "urls": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Urls",
+            "description": "List of URLs to crawl."
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "settings", "urls"],
+        "title": "CrawlerJobInput"
+      },
+      "CrawlerJobInput-Output": {
         "properties": {
           "project_id": {
             "type": "integer",
@@ -7424,7 +7443,7 @@
             "title": "Steps",
             "description": "Total number of steps in the job process"
           },
-          "input": { "$ref": "#/components/schemas/CrawlerJobInput", "description": "Input for the job" },
+          "input": { "$ref": "#/components/schemas/CrawlerJobInput-Output", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/CrawlerJobOutput" }, { "type": "null" }],
             "description": "Output for the job"
@@ -8756,6 +8775,7 @@
         "required": ["language", "system_prompt", "user_prompt"],
         "title": "LLMPromptTemplates"
       },
+      "Language": { "type": "string", "enum": ["auto", "de", "en", "it"], "title": "Language" },
       "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LlmAssistantJobRead": {
         "properties": {
@@ -9474,6 +9494,10 @@
             "type": "integer",
             "title": "Keyword Max Ngram Size",
             "description": "Maximum n-gram size for keyword extraction"
+          },
+          "language": {
+            "$ref": "#/components/schemas/Language",
+            "description": "Language of the documents: 'de', 'en', ..."
           }
         },
         "type": "object",
@@ -9482,7 +9506,8 @@
           "pages_per_chunk",
           "keyword_number",
           "keyword_deduplication_threshold",
-          "keyword_max_ngram_size"
+          "keyword_max_ngram_size",
+          "language"
         ],
         "title": "ProcessingSettings"
       },

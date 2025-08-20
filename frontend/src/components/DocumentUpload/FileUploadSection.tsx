@@ -2,6 +2,7 @@ import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
 import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
@@ -23,6 +24,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
     keyword_deduplication_threshold: 0.5,
     keyword_max_ngram_size: 2,
     keyword_number: 5,
+    language: Language.AUTO,
   });
 
   const handleFilesChange = useCallback((files: File[]) => {

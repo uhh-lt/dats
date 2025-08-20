@@ -1,3 +1,4 @@
+import { ErrorMessage } from "@hookform/error-message";
 import {
   Box,
   Button,
@@ -7,14 +8,17 @@ import {
   DialogTitle,
   Divider,
   IconButton,
+  MenuItem,
   Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { Language } from "../../api/openapi/models/Language.ts";
 import type { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
+import FormMenu from "../FormInputs/FormMenu.tsx";
 import FormNumber from "../FormInputs/FormNumber";
 import FormSwitch from "../FormInputs/FormSwitch";
 
@@ -25,7 +29,12 @@ interface ProcessingSettingsButtonProps {
 
 const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ settings, onChangeSettings }) => {
   const [open, setOpen] = useState(false);
-  const { control, handleSubmit, reset } = useForm<ProcessingSettings>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProcessingSettings>({
     defaultValues: settings,
   });
 
@@ -46,6 +55,8 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
   const tooltipContent = (
     <Typography variant="body2" component="div">
       <b>Processing Settings</b>
+      <br />
+      <em>Language:</em> {settings.language}
       <br />
       <em>Extract images:</em> {settings.extract_images ? "yes" : "no"}
       <br />
@@ -74,6 +85,33 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
             <Stack spacing={3}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={500}>
+                    Language
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Set the language for the document processing.
+                  </Typography>
+                </Box>
+                <FormMenu
+                  name="language"
+                  control={control}
+                  textFieldProps={{
+                    label: "Language",
+                    error: Boolean(errors.language),
+                    helperText: <ErrorMessage errors={errors} name="language" />,
+                    variant: "filled",
+                  }}
+                >
+                  {Object.values(Language).map((lang) => (
+                    <MenuItem key={lang} value={lang}>
+                      {lang}
+                    </MenuItem>
+                  ))}
+                </FormMenu>
+              </Box>
+              <Divider />
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={500}>

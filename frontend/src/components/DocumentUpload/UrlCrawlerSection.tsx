@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection";
 import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
@@ -39,6 +40,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
     keyword_deduplication_threshold: 0.5,
     keyword_max_ngram_size: 2,
     keyword_number: 5,
+    language: Language.AUTO,
   });
 
   const handleUrlChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {

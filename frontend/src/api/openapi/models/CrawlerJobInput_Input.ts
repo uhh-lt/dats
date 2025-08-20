@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ProcessingSettings } from "./ProcessingSettings";
-export type CrawlerJobInput = {
+export type CrawlerJobInput_Input = {
   /**
    * The ID of the Project to import the crawled data.
    */
