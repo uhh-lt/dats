@@ -1,5 +1,6 @@
 from common.doc_type import DocType
 from common.job_type import JobType
+from common.languages_enum import Language
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
@@ -37,7 +38,7 @@ class TextLanguageDetectionJobOutput(JobOutputBase):
 def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job
 ) -> TextLanguageDetectionJobOutput:
-    if payload.settings.language is not None:
+    if payload.settings.language != Language.auto:
         lang = payload.settings.language
     else:
         glotlid_input = GlotLIDInput(text=payload.text)

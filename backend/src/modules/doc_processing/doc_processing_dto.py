@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from common.doc_type import DocType
+from common.languages_enum import Language
 from common.sdoc_status_enum import SDocStatus
 from core.doc.source_document_dto import SourceDocumentBaseDTO
 from core.doc.source_document_orm import SourceDocumentORM
@@ -23,9 +24,7 @@ class ProcessingSettings(BaseModel):
     keyword_max_ngram_size: int = Field(
         description="Maximum n-gram size for keyword extraction"
     )
-    language: str | None = Field(
-        default=None, description="Language of the documents: 'de', 'en', ..."
-    )
+    language: Language = Field(description="Language of the documents: 'de', 'en', ...")
 
 
 class ProcessingJobInput(JobInputBase):
