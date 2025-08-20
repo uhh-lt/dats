@@ -174,47 +174,32 @@ def extract_keywords(
 ) -> list[str]:
     kw_extractor = yake.KeywordExtractor(
         lan=payload.language,
-        n=payload.settings.keyword_number,
+        n=payload.settings.keyword_max_ngram_size,
         dedupLim=payload.settings.keyword_deduplication_threshold,
-        top=payload.settings.keyword_max_ngram_size,
+        windowsSize=1,
+        top=payload.settings.keyword_number,
     )
     keyword_proposals = kw_extractor.extract_keywords(payload.text)
     keyword_proposals = [kw for kw, _ in keyword_proposals]
 
     tok2pos = {tok.text: tok.pos for tok in spacy_output.tokens}
 
-    keep = [
+    pos_to_keep = [
         "NOUN",
         "PROPN",
-        #
-        ["NOUN", "NOUN"],
-        ["PROPN", "PROPN"],
-        ["PROPN", "NOUN"],
-        ["NOUN", "PROPN"],
-        #
-        ["ADJ", "NOUN"],
-        ["ADJ", "PROPN"],
-        #
-        ["NOUN", "VERB"],
-        ["PROPN", "VERB"],
-        ["VERB", "NOUN"],
-        ["VERB", "PROPN"],
+        "ADJ",
+        "VERB",
     ]
     keywords = []
     for kp in keyword_proposals:
-        try:
-            ws = kp.split()
-            if len(ws) == 1:
-                if tok2pos[ws[0]] in keep:
-                    keywords.append(kp)
-            elif len(ws) == 2:
-                if [tok2pos[w] for w in ws] in keep:
-                    keywords.append(kp)
-                elif tok2pos[ws[0]] in keep and tok2pos[ws[1]] == "ADJ":
-                    keywords.append(ws[0])
-        except Exception as e:  # noqa
-            # if any of the words is not in the pos dict, we skip the keyword
-            pass
+        ws = kp.split()
+        keep_kp = True
+        for w in ws:
+            if tok2pos[w] not in pos_to_keep:
+                keep_kp = False
+                break
+        if keep_kp:
+            keywords.append(kp)
 
     return keywords
 
