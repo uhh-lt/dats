@@ -133,6 +133,17 @@ def generate_automatic_transcription(
             token_ends.append(current_position + current_word_length)
             current_position += current_word_length + 1
 
+    if len(tokens) == 0:
+        # no spoken words detected: inform user by writing informative fake data
+        logger.warning(
+            f"Document {payload.sdoc_id} {payload.filepath.name} seems to contain no spoken words. Using dummy text data."
+        )
+        tokens = ["File", "contains", "no", "spoken", "words"]
+        token_starts = [0, 5, 14, 17, 24]
+        token_ends = [4, 13, 16, 23, 29]
+        token_time_starts = [0, 0, 0, 0, 0]
+        token_time_ends = token_time_starts
+
     transcription = " ".join([token for token in tokens])
 
     return {

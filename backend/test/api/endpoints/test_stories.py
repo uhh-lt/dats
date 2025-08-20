@@ -81,16 +81,16 @@ video_doc2 = (
 )
 
 # https://upload.wikimedia.org/wikipedia/commons/6/64/2012-07-18_Market_Street_-_San_Francisco.webm
-# video_doc3 = (
-#     "https://ltdata1.informatik.uni-hamburg.de/dats/2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
-#     "2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
-# )
+video_doc3 = (
+    "https://ltdata1.informatik.uni-hamburg.de/dats/2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
+    "2012-07-18_Market_Street_-_San_Francisco.webm.480p.vp9.webm",
+)
 
 # https://commons.wikimedia.org/wiki/File:Schlossbergbahn.webm
-# video_doc4 = (
-#     "https://ltdata1.informatik.uni-hamburg.de/dats/Schlossbergbahn.webm.360p.webm",
-#     "Schlossbergbahn.webm.360p.webm",
-# )
+video_doc4 = (
+    "https://ltdata1.informatik.uni-hamburg.de/dats/Schlossbergbahn.webm.360p.webm",
+    "Schlossbergbahn.webm.360p.webm",
+)
 
 
 def test_project_add_user(client: TestClient, api_user, api_project) -> None:
@@ -370,7 +370,7 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.upload_files([image_doc3, image_doc4], bob, project2)
 
     # Bob uploads two video documents to project2
-    api_document.upload_files([video_doc1, video_doc2], bob, project2)
+    api_document.upload_files([video_doc3, video_doc4], bob, project2)
 
     # Bob uploads two audio documents to project2
     api_document.upload_files([audio_doc2, audio_doc3], bob, project2)
