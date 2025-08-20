@@ -86,12 +86,16 @@ class RayRepo(metaclass=SingletonMeta):
         return response
 
     def _make_post_request_with_binary_data(
-        self, endpoint: str, data: bytes
+        self,
+        endpoint: str,
+        data: bytes,
+        params: dict[str, str] | None = None,
     ) -> Response:
         url = f"{self.base_url}{endpoint}"
         logger.debug(f"Making POST request to {url} with binary data ({len(data)}")
         response = requests.post(
             url,
+            params=params,
             data=data,
             timeout=1200,
             headers={"Content-Type": "application/octet-stream"},
@@ -115,9 +119,11 @@ class RayRepo(metaclass=SingletonMeta):
     def whisper_transcribe(
         self,
         audio_bytes: bytes,
+        language: str | None = None,
     ) -> WhisperTranscriptionOutput:
+        params = None if language is None else {"language": language}
         response = self._make_post_request_with_binary_data(
-            "/whisper/transcribe", audio_bytes
+            "/whisper/transcribe", audio_bytes, params
         )
         return WhisperTranscriptionOutput.model_validate(response.json())
 

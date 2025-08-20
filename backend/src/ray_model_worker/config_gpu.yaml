@@ -21,12 +21,13 @@ spacy:
       target_ongoing_requests: 1
 
 whisper:
-  model: distil-large-v3
+  model: deepdml/faster-whisper-large-v3-turbo-ct2
   device: cuda
   options:
     word_timestamps: True
     beam_size: 5
     best_of: 5
+    batch_size: 8
 
   deployment:
     ray_actor_options:
