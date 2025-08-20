@@ -18,6 +18,7 @@ from loguru import logger
 from pytest import FixtureRequest
 from sqlalchemy.orm import Session
 
+from common.languages_enum import Language
 from config import conf
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
@@ -339,6 +340,7 @@ def api_document(client: TestClient):
                 "keyword_number": 5,
                 "keyword_deduplication_threshold": 0.5,
                 "keyword_max_ngram_size": 2,
+                "language": Language.auto,
             }
             download_headers = {
                 "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"

@@ -6,6 +6,7 @@ from loguru import logger
 
 from common.doc_type import DocType
 from common.job_type import JobType
+from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
@@ -87,10 +88,8 @@ def handle_transcription_job(
         token_time_ends=sdoc_data.token_time_ends,
         content=sdoc_data.content,
         html=sdoc_data.html,
-        language=payload.settings.language or transcription["language"],
-        language_probability=transcription["language_probability"]
-        if payload.settings.language is None
-        else 1.0,
+        language=transcription["language"],
+        language_probability=transcription["language_probability"],
     )
 
 
@@ -112,7 +111,10 @@ def generate_automatic_transcription(
 
     # send the audio bytes to the whisper model to get the transcript
     output = ray.whisper_transcribe(
-        audio_bytes=audio_bytes, language=payload.settings.language
+        audio_bytes=audio_bytes,
+        language=None
+        if payload.settings.language == Language.auto
+        else payload.settings.language,
     )
     logger.info(f"Generated transcript {output}")
 
