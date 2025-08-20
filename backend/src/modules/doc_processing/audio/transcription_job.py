@@ -23,7 +23,6 @@ sqlr = SQLRepo()
 
 class TranscriptionJobInput(SdocProcessingJobInput):
     filepath: Path
-    language: str | None = None
 
 
 class TranscriptionJobOutput(JobOutputBase):
@@ -88,8 +87,10 @@ def handle_transcription_job(
         token_time_ends=sdoc_data.token_time_ends,
         content=sdoc_data.content,
         html=sdoc_data.html,
-        language=transcription["language"],
-        language_probability=transcription["language_probability"],
+        language=payload.settings.language or transcription["language"],
+        language_probability=transcription["language_probability"]
+        if payload.settings.language is None
+        else 1.0,
     )
 
 
