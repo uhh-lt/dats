@@ -5,7 +5,7 @@ import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 
 interface ImageSearchState {
   // project state:
-  searchQuery: string | number;
+  searchQuery: string;
   selectedDocumentIds: number[];
   selectedDocumentId: number | undefined;
   // app state:
@@ -65,7 +65,7 @@ export const imageSearchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {
@@ -73,7 +73,6 @@ export const imageSearchSlice = createSlice({
       state.selectedDocumentIds = [];
       state.selectedDocumentId = undefined;
     },
-
     onChangeSearchOptions: (state, action: PayloadAction<{ threshold: number; topK: number }>) => {
       state.threshold = action.payload.threshold;
       state.topK = action.payload.topK;

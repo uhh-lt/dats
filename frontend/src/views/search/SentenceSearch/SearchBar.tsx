@@ -17,7 +17,7 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { ImageSearchActions } from "./imageSearchSlice.ts";
+import { SentenceSearchActions } from "./sentenceSearchSlice.ts";
 
 interface SearchFormValues {
   query: string;
@@ -29,19 +29,19 @@ interface SearchBarProps {
 
 function SearchBar({ placeholder }: SearchBarProps) {
   // global client state (redux)
-  const searchQuery = useAppSelector((state) => state.imageSearch.searchQuery);
+  const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
   const dispatch = useAppDispatch();
 
   // react hook form
   const { register, handleSubmit, reset } = useForm<SearchFormValues>({
     values: {
-      query: searchQuery,
+      query: searchQuery || "",
     },
   });
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(data.query));
-    dispatch(ImageSearchActions.clearSelectedDocuments());
+    dispatch(SentenceSearchActions.onSearchQueryChange(data.query));
+    dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: data.query,
     });
@@ -52,7 +52,8 @@ function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch: React.MouseEventHandler<HTMLButtonElement> = () => {
-    dispatch(ImageSearchActions.onClearSearch());
+    dispatch(SentenceSearchActions.onSearchQueryChange());
+    dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: "",
     });
@@ -60,8 +61,8 @@ function SearchBar({ placeholder }: SearchBarProps) {
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Backspace" && typeof searchQuery === "number") {
-      dispatch(ImageSearchActions.onChangeSearchQuery(""));
-      dispatch(ImageSearchActions.clearSelectedDocuments());
+      dispatch(SentenceSearchActions.onSearchQueryChange(""));
+      dispatch(SentenceSearchActions.onClearRowSelection());
       reset({
         query: "",
       });
@@ -88,7 +89,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
           </IconButton>
         </span>
       </Tooltip>
-      {!isNaN(Number(searchQuery)) && <SdocImageRenderer sdocId={Number(searchQuery)} />}
+      {searchQuery && !isNaN(Number(searchQuery)) && <SdocImageRenderer sdocId={Number(searchQuery)} />}
       <InputBase
         sx={{ ml: 1, flex: 1 }}
         placeholder={placeholder}

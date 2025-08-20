@@ -1,7 +1,6 @@
 import { Box } from "@mui/material";
 import {
   MRT_ColumnDef,
-  MRT_GlobalFilterTextField,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
@@ -30,6 +29,7 @@ import { RootState } from "../../../store/store.ts";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { SearchActions } from "../DocumentSearch/searchSlice.ts";
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
+import SearchBar from "./SearchBar.tsx";
 import SentenceSimilaritySearchOptionsMenu from "./SentenceSimilaritySearchOptionsMenu.tsx";
 import { SentenceSearchActions } from "./sentenceSearchSlice.ts";
 
@@ -59,10 +59,6 @@ function SentenceSimilaritySearchTable({
 
   // global client state (redux)
 
-  const [searchQuery, setSearchQuery] = useReduxConnector(
-    (state) => state.sentenceSearch.searchQuery,
-    SentenceSearchActions.onSearchQueryChange,
-  );
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.sentenceSearch.rowSelectionModel,
     SentenceSearchActions.onRowSelectionChange,
@@ -179,7 +175,6 @@ function SentenceSimilaritySearchTable({
     getRowId: (row) => `${row.sdoc_id}-${row.sentence_id}`,
     // state
     state: {
-      globalFilter: searchQuery,
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       columnVisibility: columnVisibilityModel,
@@ -188,13 +183,13 @@ function SentenceSimilaritySearchTable({
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
-      showGlobalFilter: true,
+      showGlobalFilter: false,
     },
     // search query
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
     // enableGlobalFilter: true,
-    onGlobalFilterChange: setSearchQuery,
+    // onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
     onRowSelectionChange: setRowSelectionModel,
@@ -262,7 +257,7 @@ function SentenceSimilaritySearchTable({
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />
-        <MRT_GlobalFilterTextField table={table} />
+        <SearchBar placeholder="Search" />
         <SentenceSimilaritySearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />

@@ -45,7 +45,7 @@ const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
       console.error("Something went wrong. This is a bug, please report it to the developers.");
       return;
     }
-    dispatch(ImageSearchActions.onChangeSearchQuery(image));
+    dispatch(ImageSearchActions.onChangeSearchQuery(`${image}`));
     closeMenu();
     navigate("../imagesearch");
   };

@@ -8,6 +8,7 @@ import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
+import { SentenceSearchActions } from "../../search/SentenceSearch/sentenceSearchSlice.ts";
 import SVGBBox from "../ImageAnnotator/SVGBBox.tsx";
 import SVGBBoxText from "../ImageAnnotator/SVGBBoxText.tsx";
 
@@ -79,14 +80,23 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const handleImageSimilaritySearch = () => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(sdocData.id));
+    dispatch(ImageSearchActions.onChangeSearchQuery(`${sdocData.id}`));
     navigate("../imagesearch");
+  };
+
+  // find similar sentences
+  const handleSentenceSimilaritySearch = () => {
+    dispatch(SentenceSearchActions.onSearchQueryChange(`${sdocData.id}`));
+    navigate("../sentencesearch");
   };
 
   return (
     <Box>
-      <Button variant="outlined" onClick={handleImageSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
-        Find similar images
+      <Button variant="outlined" onClick={handleImageSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2, mr: 1 }}>
+        Similar images
+      </Button>
+      <Button variant="outlined" onClick={handleSentenceSimilaritySearch} startIcon={<SearchIcon />} sx={{ mb: 2 }}>
+        Similar sentences
       </Button>
       <svg ref={measuredRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
