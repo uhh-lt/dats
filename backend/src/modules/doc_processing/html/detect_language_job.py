@@ -37,29 +37,31 @@ class TextLanguageDetectionJobOutput(JobOutputBase):
 def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job
 ) -> TextLanguageDetectionJobOutput:
-    # DETECT LANGUAGE
-    glotlid_input = GlotLIDInput(text=payload.text)
-    glotlid_output: GlotLIDOutput = ray.language_identification(glotlid_input)
+    if payload.settings.language is not None:
+        lang = payload.settings.language
+    else:
+        glotlid_input = GlotLIDInput(text=payload.text)
+        glotlid_output: GlotLIDOutput = ray.language_identification(glotlid_input)
 
-    # map the GlodLID language code to the ISO 639-1 language code we support in our spaCy Pipeline
-    # TODO: we should set this in a config file or so
-    code_map = {
-        "eng_Latn": "en",
-        "deu_Latn": "de",
-        "ita_Latn": "it",
-    }
+        # map the GlodLID language code to the ISO 639-1 language code we support in our spaCy Pipeline
+        # TODO: we should set this in a config file or so
+        code_map = {
+            "eng_Latn": "en",
+            "deu_Latn": "de",
+            "ita_Latn": "it",
+        }
 
-    lang = None
-    # take the best/first supported language
-    for det_lang in glotlid_output.detected_languages:
-        lang = code_map.get(det_lang.lang_code, None)
-        if lang is not None:
-            break
-    if lang is None:
-        # none of the top k languages is supported
-        raise LanguageNotSupportedError(
-            detected_language=glotlid_output.best_match.lang_code
-        )
+        lang = None
+        # take the best/first supported language
+        for det_lang in glotlid_output.detected_languages:
+            lang = code_map.get(det_lang.lang_code, None)
+            if lang is not None:
+                break
+        if lang is None:
+            # none of the top k languages is supported
+            raise LanguageNotSupportedError(
+                detected_language=glotlid_output.best_match.lang_code
+            )
 
     with SQLRepo().db_session() as db:
         # Store language in db
