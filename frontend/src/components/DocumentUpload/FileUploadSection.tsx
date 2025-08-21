@@ -20,7 +20,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [settings, setSettings] = useState<ProcessingSettings>({
     extract_images: true,
-    pages_per_chunk: 1,
+    pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
     keyword_max_ngram_size: 2,
     keyword_number: 5,

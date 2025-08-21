@@ -36,7 +36,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<ProcessingSettings>({
     extract_images: true,
-    pages_per_chunk: 1,
+    pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
     keyword_max_ngram_size: 2,
     keyword_number: 5,
