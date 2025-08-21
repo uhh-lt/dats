@@ -8,7 +8,7 @@ class SdocIndex(IndexBase):
     mappings = {
         "properties": {
             "filename": {"type": "keyword"},
-            "content": {"type": "text"},
+            "content": {"type": "text", "term_vector": "with_positions_offsets"},
             "sdoc_id": {"type": "long"},
             "project_id": {"type": "long"},
             "created": {"type": "date"},

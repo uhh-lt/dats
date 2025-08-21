@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
+from core.doc.sdoc_kwic_dto import PaginatedElasticSearchKwicHits
+from fastapi import APIRouter, Depends
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -86,6 +88,31 @@ def search_sdocs(
         folder_id=folder_id,
         filter=filter,
         sorts=sorts,
+        page_number=page_number,
+        page_size=page_size,
+    )
+
+
+@router.post(
+    "/sdoc/kwic",
+    response_model=PaginatedElasticSearchKwicHits,
+    summary="Returns KWIC search results.",
+)
+def search_sdocs_kwic(
+    *,
+    project_id: int,
+    search_query: str,
+    window: int = 5,
+    # fuzziness: int = 0,
+    page_number: int | None = None,
+    page_size: int | None = None,
+    authz_user: AuthzUser = Depends(),
+):
+    authz_user.assert_in_project(project_id)
+    return SdocSearchService().kwic_search(
+        project_id=project_id,
+        search_query=search_query,
+        window=window,
         page_number=page_number,
         page_size=page_size,
     )
