@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
+from common.doc_type import DocType
 from core.auth.authz_user import AuthzUser
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import (
@@ -26,6 +27,26 @@ def get_folder_by_id(
     authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
     folder = crud_folder.read(db=db, id=folder_id)
     return FolderRead.model_validate(folder)
+
+
+@router.get(
+    "/sdocids/{folder_id}",
+    response_model=dict[DocType, list[int]],
+    summary="Returns lists of source document ids per doctype in the specified sdoc folder",
+)
+def get_sdoc_ids_in_folder_by_doctype(
+    folder_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> dict[DocType, list[int]]:
+    authz_user.assert_in_same_project_as(Crud.FOLDER, folder_id)
+    folder = crud_folder.read(db=db, id=folder_id)
+    if folder.folder_type != FolderType.SDOC_FOLDER:
+        raise ValueError("Folder is not an SDOC folder")
+    result: dict[DocType, list[int]] = {dt: [] for dt in DocType}
+    for sdoc in folder.source_documents:
+        result[DocType(sdoc.doctype)].append(sdoc.id)
+    return result
 
 
 @router.get(
