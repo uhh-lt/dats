@@ -35,29 +35,29 @@ const templates: AspectTemplate[] = [
     name: "Topic Discovery",
     description: "Group documents by their main topic.",
     doc_embedding_prompt: "Identify the main topic or theme of the document",
-    doc_modification_prompt:
-      "Summarize the document, analyzing the topics of the document. Conclude with a possible topic categorization of it.",
+    doc_modification_prompt: "",
+    // "Summarize the document, analyzing the topics of the document. Conclude with a possible topic categorization of it.",
   },
   {
     name: "Sentiment Analysis",
     description: "Group documents by their overall sentiment.",
     doc_embedding_prompt: "Identify the main sentiment of the document",
-    doc_modification_prompt:
-      "Summarize the document, analyzing the sentiment of the document. Conclude with a categorization of it as positive, negative, or neutral.",
+    doc_modification_prompt: "",
+    // "Summarize the document, analyzing the sentiment of the document. Conclude with a categorization of it as positive, negative, or neutral.",
   },
   {
     name: "Style Analysis",
     description: "Group documents by their writing style.",
     doc_embedding_prompt: "Identify the main writing style of the document",
-    doc_modification_prompt:
-      "Summarize the document, analyzing the writing style of the document. Conclude with a possible style categorization of it.",
+    doc_modification_prompt: "",
+    // "Summarize the document, analyzing the writing style of the document. Conclude with a possible style categorization of it.",
   },
   {
     name: "Narrative Structure",
     description: "Group documents by their narrative structure.",
     doc_embedding_prompt: "Identify the main narrative structure of the document",
-    doc_modification_prompt:
-      "Summarize the document, analyzing the narrative structure of the document. Conclude with a possible narrative structure categorization of it.",
+    doc_modification_prompt: "",
+    // "Summarize the document, analyzing the narrative structure of the document. Conclude with a possible narrative structure categorization of it.",
   },
 ];
 
