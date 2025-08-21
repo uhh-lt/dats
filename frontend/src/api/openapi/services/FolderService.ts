@@ -70,6 +70,27 @@ export class FolderService {
     });
   }
   /**
+   * Returns lists of source document ids per doctype in the specified sdoc folder
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getSdocIdsInFolderByDoctype({
+    folderId,
+  }: {
+    folderId: number;
+  }): CancelablePromise<Record<string, Array<number>>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/folder/sdocids/{folder_id}",
+      path: {
+        folder_id: folderId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the folders of the folder_type of the project with the given ID
    * @returns FolderRead Successful Response
    * @throws ApiError

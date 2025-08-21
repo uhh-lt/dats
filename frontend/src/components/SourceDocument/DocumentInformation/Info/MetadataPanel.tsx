@@ -3,7 +3,7 @@ import { Box, CircularProgress, Stack } from "@mui/material";
 import { memo, useCallback } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../../views/search/DocumentSearch/searchSlice.ts";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
@@ -27,7 +27,7 @@ function MetadataPanelContent({ sdocId, filterName }: MetadataPanelProps) {
   const metadata = MetadataHooks.useGetSdocMetadata(sdocId);
   const dispatch = useAppDispatch();
   const handleAddMetadataFilter = useCallback(
-    (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => {
+    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
       dispatch(SearchActions.onAddMetadataFilter({ metadata, projectMetadata, filterName }));
     },
     [dispatch, filterName],
@@ -47,7 +47,7 @@ function MetadataPanelContent({ sdocId, filterName }: MetadataPanelProps) {
         {metadata.isError && <span>{metadata.error.message}</span>}
         {metadata.isSuccess &&
           metadata.data
-            .sort((a, b) => a.id - b.id)
+            .sort((a, b) => a.project_metadata_id - b.project_metadata_id)
             .map((data) => (
               <DocumentMetadataRow key={data.id} metadata={data} onAddFilterClick={handleAddMetadataFilter} />
             ))}

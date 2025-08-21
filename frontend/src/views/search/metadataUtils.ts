@@ -1,9 +1,9 @@
 import { MetaType } from "../../api/openapi/models/MetaType.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
-import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataUpdate } from "../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils.ts";
 
-export const getValue = (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => {
+export const getValue = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
   switch (projectMetadata.metatype) {
     case MetaType.STRING:
       return metadata.str_value;

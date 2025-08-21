@@ -7,7 +7,7 @@ import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../api/openapi/models/SdocColumns.ts";
-import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataUpdate } from "../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
 import {
   createInitialFilterState,
@@ -252,13 +252,13 @@ export const perspectivesSlice = createSlice({
     onAddMetadataFilter: (
       state,
       action: PayloadAction<{
-        metadata: SourceDocumentMetadataRead;
+        metadata: SourceDocumentMetadataUpdate;
         projectMetadata: ProjectMetadataRead;
         filterName: string;
       }>,
     ) => {
       // the column of a metadata filter is the project_metadata_id
-      const filterOperator = state.column2Info[action.payload.metadata.project_metadata_id.toString()].operator;
+      const filterOperator = state.column2Info[action.payload.projectMetadata.id.toString()].operator;
       const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
       const currentFilter = getOrCreateFilter(state, action.payload.filterName);
@@ -266,7 +266,7 @@ export const perspectivesSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: action.payload.metadata.project_metadata_id,
+          column: action.payload.projectMetadata.id,
           operator: getDefaultOperator(filterOperatorType),
           value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
         },

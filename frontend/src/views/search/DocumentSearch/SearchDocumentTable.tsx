@@ -141,6 +141,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     SearchActions.onGridDensityChange,
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
+  const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
   const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
   const showFolders = useAppSelector((state: RootState) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
@@ -414,7 +415,14 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     // mui components
     muiTableBodyRowProps: ({ row }) =>
       row.original.is_folder
-        ? {}
+        ? {
+            onClick: () => {
+              dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
+            },
+            sx: {
+              backgroundColor: selectedSdocFolderId === row.original.id ? "lightgrey !important" : undefined,
+            },
+          }
         : {
             onClick: (event) => {
               if (event.detail >= 2) {

@@ -62,6 +62,17 @@ const useGetAllSdocFolders = () =>
 
 const useGetAllSdocFoldersMap = () => useProjectFoldersQuery({ folderType: FolderType.SDOC_FOLDER });
 
+const useGetSdocIdsPerDoctypeInSdocFolder = (sdocFolderId: number | null | undefined) =>
+  useQuery({
+    queryKey: [QueryKey.SDOC_IDS_PER_DOCTYPE_IN_FOLDER, sdocFolderId],
+    queryFn: () =>
+      FolderService.getSdocIdsInFolderByDoctype({
+        folderId: sdocFolderId!,
+      }),
+    staleTime: 1000 * 60 * 5,
+    enabled: !!sdocFolderId,
+  });
+
 // Folder MUTATIONS
 
 const useCreateFolder = () =>
@@ -142,6 +153,7 @@ const FolderHooks = {
   useGetSdocFolder,
   useGetAllSdocFolders,
   useGetAllSdocFoldersMap,
+  useGetSdocIdsPerDoctypeInSdocFolder,
   useCreateFolder,
   useUpdateFolder,
   useMoveFolders,

@@ -3,15 +3,29 @@ import React, { memo, useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
+import { DocType } from "../../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 
 interface MetadataCreateButtonProps {
-  sdocId: number;
+  sdocId?: number;
+  docType?: DocType;
 }
 
-function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
+function MetadataCreateButton({ sdocId, docType }: MetadataCreateButtonProps) {
+  const sdoc = SdocHooks.useGetDocument(sdocId);
+
+  if (docType !== undefined) {
+    return <MetadataCreateButtonContent docType={docType} />;
+  }
+  if (sdocId !== undefined) {
+    return <MetadataCreateButtonContent docType={sdoc.data?.doctype} />;
+  }
+  return <>Error: Missing document ID or DocType</>;
+}
+
+function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined }) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -28,16 +42,15 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
 
   // create
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-  const sdoc = SdocHooks.useGetDocument(sdocId);
   const { mutate: createMetadataMutation } = MetadataHooks.useCreateProjectMetadata();
 
   const handleCreateMetadata = useCallback(
     (metaType: string) => {
-      if (!sdoc.data) return;
+      if (!docType) return;
 
       createMetadataMutation({
         requestBody: {
-          doctype: sdoc.data.doctype,
+          doctype: docType,
           metatype: metaType as MetaType,
           key: `${metaType.toLowerCase()} (new)`,
           project_id: projectId,
@@ -46,7 +59,7 @@ function MetadataCreateButton({ sdocId }: MetadataCreateButtonProps) {
         },
       });
     },
-    [createMetadataMutation, projectId, sdoc.data],
+    [createMetadataMutation, docType, projectId],
   );
 
   return (

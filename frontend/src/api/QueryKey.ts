@@ -146,6 +146,8 @@ export const QueryKey = {
   // managed by FolderHooks
   // all FolderRead[] of a Project (by project id and folder type)
   PROJECT_FOLDERS: "projectFolders",
+  // a dict of {doctype: list[sdocIds]} (by sdoc folder id)
+  SDOC_IDS_PER_DOCTYPE_IN_FOLDER: "sdocIdsPerDoctypeInFolder",
 
   // managed by DocProcessingHooks
   // all SourceDocumentStatusSimple[] of a project (by project id, status)

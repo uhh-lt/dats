@@ -1197,6 +1197,36 @@
         }
       }
     },
+    "/folder/sdocids/{folder_id}": {
+      "get": {
+        "tags": ["folder"],
+        "summary": "Returns lists of source document ids per doctype in the specified sdoc folder",
+        "operationId": "get_sdoc_ids_in_folder_by_doctype",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "folder_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Folder Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "array", "items": { "type": "integer" } },
+                  "propertyNames": { "$ref": "#/components/schemas/DocType" },
+                  "title": "Response Folder-Get Sdoc Ids In Folder By Doctype"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder/project/{project_id}/folder/{folder_type}": {
       "get": {
         "tags": ["folder"],

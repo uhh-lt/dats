@@ -10,6 +10,7 @@ import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import FolderExplorer from "../../../components/Folder/FolderExplorer/FolderExplorer.tsx";
 import FolderRenderer from "../../../components/Folder/FolderRenderer.tsx";
 import DocumentInformation from "../../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
+import FolderInformation from "../../../components/SourceDocument/FolderInformation/FolderInformation.tsx";
 import { selectSelectedRows } from "../../../components/tableSlice.ts";
 import TagExplorer from "../../../components/Tag/TagExplorer/TagExplorer.tsx";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
@@ -29,6 +30,7 @@ function Search() {
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
+  const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
   const dispatch = useAppDispatch();
 
@@ -158,19 +160,19 @@ function Search() {
         }
         content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
         rightSidebar={
-          <DocumentInformation
-            sdocId={selectedDocumentId}
-            filterName={filterName}
-            isIdleContent={
-              <SearchStatistics
-                className="h100"
-                sdocIds={sdocIds}
-                handleKeywordClick={handleAddKeywordFilter}
-                handleTagClick={handleAddTagFilter}
-                handleCodeClick={handleAddCodeFilter}
-              />
-            }
-          />
+          selectedDocumentId != undefined ? (
+            <DocumentInformation sdocId={selectedDocumentId} filterName={filterName} />
+          ) : selectedSdocFolderId != undefined ? (
+            <FolderInformation sdocFolderId={selectedSdocFolderId} filterName={filterName} />
+          ) : (
+            <SearchStatistics
+              className="h100"
+              sdocIds={sdocIds}
+              handleKeywordClick={handleAddKeywordFilter}
+              handleTagClick={handleAddTagFilter}
+              handleCodeClick={handleAddCodeFilter}
+            />
+          )
         }
       />
       <DragOverlay>

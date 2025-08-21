@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import TagHooks from "../../../../api/TagHooks.ts";
@@ -52,7 +52,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   // filtering
-  const handleAddMetadataFilter = (metadata: SourceDocumentMetadataRead, projectMetadata: ProjectMetadataRead) => {
+  const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
     dispatch(PerspectivesActions.onAddMetadataFilter({ metadata, projectMetadata, filterName: `aspect-${aspectId}` }));
   };
 

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
@@ -86,11 +86,7 @@ const useDeleteProjectMetadata = () =>
         .forEach((query) => {
           queryClient.setQueryData<SdocMetadataMap>(query.queryKey, (oldData) => {
             const newData = { ...oldData };
-            const metadataToDelete = Object.values(newData).find(
-              (metadata) => metadata.project_metadata_id === data.id,
-            );
-            if (!metadataToDelete) return newData;
-            delete newData[metadataToDelete.id];
+            delete newData[data.id];
             return newData;
           });
         });
@@ -109,7 +105,7 @@ const useDeleteProjectMetadata = () =>
   });
 
 // SDOC METADATA QUERIES
-
+// mapping from projectMetadataId -> SourceDocumentRead
 export type SdocMetadataMap = Record<number, SourceDocumentMetadataRead>;
 
 interface UseSdocMetadataQueryParams<T> {
@@ -117,18 +113,20 @@ interface UseSdocMetadataQueryParams<T> {
   select?: (data: SdocMetadataMap) => T;
 }
 
+const sdocMetadataQueryFn = async (sdocId: number) => {
+  const metadata = await SdocMetadataService.getBySdoc({
+    sdocId: sdocId!,
+  });
+  return metadata.reduce((acc, metadata) => {
+    acc[metadata.project_metadata_id] = metadata;
+    return acc;
+  }, {} as SdocMetadataMap);
+};
+
 const useSdocMetadataQuery = <T = SdocMetadataMap>({ sdocId, select }: UseSdocMetadataQueryParams<T>) =>
   useQuery({
     queryKey: [QueryKey.SDOC_METADATAS, sdocId],
-    queryFn: async () => {
-      const metadata = await SdocMetadataService.getBySdoc({
-        sdocId: sdocId!,
-      });
-      return metadata.reduce((acc, metadata) => {
-        acc[metadata.id] = metadata;
-        return acc;
-      }, {} as SdocMetadataMap);
-    },
+    queryFn: () => sdocMetadataQueryFn(sdocId!),
     staleTime: 1000 * 60 * 5,
     select,
     enabled: !!sdocId,
@@ -143,7 +141,72 @@ const useGetSdocMetadata = (sdocId: number | null | undefined) =>
 const useGetSdocMetadataByProjectMetadataId = (sdocId: number | null | undefined, projectMetadataId: number) =>
   useSdocMetadataQuery({
     sdocId,
-    select: (data) => Object.values(data).find((metadata) => metadata.project_metadata_id === projectMetadataId),
+    select: (data) => data[projectMetadataId],
+  });
+
+export type SourceDocumentMetadataReadCombined = Omit<SourceDocumentMetadataRead, "id" | "source_document_id"> & {
+  ids: number[];
+};
+
+// referential stability for bulk queries
+const combineBulkData = (results: UseQueryResult<SdocMetadataMap, Error>[]) => {
+  const isSuccess = results.every((result) => result.isSuccess);
+
+  let data: SourceDocumentMetadataReadCombined[] | undefined = undefined;
+  if (isSuccess) {
+    // Aggregate all SourceDocumentMetadataRead objects by project_metadata_id
+    const combinedMap: Record<number, SourceDocumentMetadataRead[]> = {};
+    results.forEach((result) => {
+      Object.entries(result.data).forEach(([projectMetadataId, metadata]) => {
+        const pmid = Number(projectMetadataId);
+        if (!combinedMap[pmid]) {
+          combinedMap[pmid] = [metadata];
+        } else {
+          combinedMap[pmid].push(metadata);
+        }
+      });
+    });
+
+    // Merge values for each project_metadata_id
+    data = Object.entries(combinedMap).map(([projectMetadataId, metadatas]) => {
+      // Helper to merge a field
+      function mergeField<T>(getter: (m: SourceDocumentMetadataRead) => T): T | null {
+        const values = metadatas.map(getter);
+        const first = values[0];
+        return values.every((v) => v === first) ? first : null;
+      }
+
+      return {
+        int_value: mergeField((m) => m.int_value),
+        str_value: mergeField((m) => m.str_value),
+        boolean_value: mergeField((m) => m.boolean_value),
+        date_value: mergeField((m) => m.date_value),
+        list_value:
+          mergeField((m) => JSON.stringify(m.list_value)) === JSON.stringify(metadatas[0].list_value)
+            ? metadatas[0].list_value
+            : null,
+        ids: metadatas.map((m) => m.id),
+        project_metadata_id: Number(projectMetadataId),
+      };
+    });
+  }
+
+  return {
+    isLoading: results.some((result) => result.isLoading),
+    isError: results.some((result) => result.isError),
+    isSuccess,
+    data,
+  };
+};
+
+const useGetSdocMetadataBulk = (sdocIds: number[]) =>
+  useQueries({
+    queries: sdocIds.map((sdocId) => ({
+      queryKey: [QueryKey.SDOC_METADATAS, sdocId],
+      queryFn: () => sdocMetadataQueryFn(sdocId),
+      staleTime: 1000 * 60 * 5,
+    })),
+    combine: combineBulkData,
   });
 
 // TODO: REMOVE THIS HOOK
@@ -160,26 +223,13 @@ const useGetSdocMetadataByKey = (sdocId: number | null | undefined, key: string)
 
 // SDOC METADATA MUTATIONS
 
-const useUpdateSdocMetadata = () =>
-  useMutation({
-    mutationFn: SdocMetadataService.updateById,
-    onSuccess: (metadata) => {
-      queryClient.setQueryData<SdocMetadataMap>([QueryKey.SDOC_METADATAS, metadata.source_document_id], (old) =>
-        old ? { ...old, [metadata.id]: metadata } : { [metadata.id]: metadata },
-      );
-    },
-    meta: {
-      successMessage: (data: SourceDocumentMetadataRead) => `Updated metadata value for document "${data.id}"`,
-    },
-  });
-
 const useUpdateBulkSdocMetadata = () =>
   useMutation({
     mutationFn: SdocMetadataService.updateBulk,
     onSuccess: (metadatas) => {
       metadatas.forEach((metadata) => {
         queryClient.setQueryData<SdocMetadataMap>([QueryKey.SDOC_METADATAS, metadata.source_document_id], (old) =>
-          old ? { ...old, [metadata.id]: metadata } : { [metadata.id]: metadata },
+          old ? { ...old, [metadata.project_metadata_id]: metadata } : { [metadata.project_metadata_id]: metadata },
         );
       });
     },
@@ -193,7 +243,7 @@ const MetadataHooks = {
   useGetSdocMetadata,
   useGetSdocMetadataByKey,
   useGetSdocMetadataByProjectMetadataId,
-  useUpdateSdocMetadata,
+  useGetSdocMetadataBulk,
   useUpdateBulkSdocMetadata,
   // project metadata
   useGetProjectMetadataList,

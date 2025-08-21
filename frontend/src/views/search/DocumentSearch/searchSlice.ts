@@ -7,7 +7,7 @@ import { ListOperator } from "../../../api/openapi/models/ListOperator.ts";
 import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
-import { SourceDocumentMetadataRead } from "../../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataUpdate } from "../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
 import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import {
   FilterState,
@@ -29,6 +29,7 @@ import { getValue } from "../metadataUtils.ts";
 interface SearchState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
+  selectedSdocFolderId: number | undefined; // the id of the selected sdoc folder document. Used to highlight the selected folder in the table, and to show the folder information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
   expandedFolderIds: string[]; // the ids of the folders that are expanded in the folder tree.
   selectedFolderId: number; // the id of the selected folder. (the root folder is -1)
@@ -51,6 +52,7 @@ const initialState: FilterState & TableState & SearchState = {
   ...createInitialFilterState(defaultFilterExpression),
   // project state:
   selectedDocumentId: undefined,
+  selectedSdocFolderId: undefined,
   expandedTagIds: [],
   expandedFolderIds: [],
   selectedFolderId: -1, // the root folder is -1
@@ -91,6 +93,17 @@ export const searchSlice = createSlice({
         state.selectedDocumentId = undefined;
       } else {
         state.selectedDocumentId = action.payload;
+        state.selectedSdocFolderId = undefined; // either document or folder is selected!
+      }
+    },
+    // folder selection
+    onToggleSelectedSdocFolderIdChange: (state, action: PayloadAction<number | undefined>) => {
+      // toggle
+      if (state.selectedSdocFolderId === action.payload) {
+        state.selectedSdocFolderId = undefined;
+      } else {
+        state.selectedSdocFolderId = action.payload;
+        state.selectedDocumentId = undefined; // either document or folder is selected!
       }
     },
     // scroll position handling
@@ -198,13 +211,13 @@ export const searchSlice = createSlice({
     onAddMetadataFilter: (
       state,
       action: PayloadAction<{
-        metadata: SourceDocumentMetadataRead;
+        metadata: SourceDocumentMetadataUpdate;
         projectMetadata: ProjectMetadataRead;
         filterName: string;
       }>,
     ) => {
       // the column of a metadata filter is the project_metadata_id
-      const filterOperator = state.column2Info[action.payload.metadata.project_metadata_id.toString()].operator;
+      const filterOperator = state.column2Info[action.payload.projectMetadata.id.toString()].operator;
       const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
       const currentFilter = getOrCreateFilter(state, action.payload.filterName);
@@ -212,7 +225,7 @@ export const searchSlice = createSlice({
         ...currentFilter.items,
         {
           id: uuidv4(),
-          column: action.payload.metadata.project_metadata_id,
+          column: action.payload.projectMetadata.id,
           operator: getDefaultOperator(filterOperatorType),
           value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
         },
