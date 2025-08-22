@@ -13,6 +13,7 @@ from systems.job_system.job_register_decorator import register_job
     router=router,
     device="gpu",
     result_ttl=JobResultTTL.NINETY_DAYS,
+    timeout=-1,  # infinite/no timeout
 )
 def llm_assistant(
     payload: LLMJobInput,

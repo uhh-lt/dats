@@ -26,6 +26,7 @@ def register_job(
     router: APIRouter | None = None,
     result_ttl: JobResultTTL = JobResultTTL.DEFAULT,
     retry: tuple[int, int] | None = None,
+    timeout: int = 1800,  # default timeout of 30 min (RQ default is 3 min [180])
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService
@@ -41,6 +42,7 @@ def register_job(
             router=router,
             result_ttl=result_ttl,
             retry=retry,
+            timeout=timeout,
         )
         return func
 

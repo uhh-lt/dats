@@ -42,9 +42,9 @@ class RegisteredJob(TypedDict):
     result_ttl: JobResultTTL  # how long to keep successful jobs and their results (defaults to 500 seconds)
     # failure_ttl  # how long to keep failed jobs (defaults to 1 year)
     # ttl  # how long to keep jobs in queue before they are discarded (defaults to infinite)
-    # timeout  # specifies maximum runtime before the job is interrupted and marked as failed
     # see https://python-rq.org/docs/jobs/#job-creation
     retry: tuple[int, int] | None
+    timeout: int  # maximum runtime before the job is interrupted and marked as failed (in seconds)
 
 
 class JobService(metaclass=SingletonMeta):
@@ -103,6 +103,7 @@ class JobService(metaclass=SingletonMeta):
         router: APIRouter | None,
         result_ttl: JobResultTTL,
         retry: tuple[int, int] | None,
+        timeout: int,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -130,6 +131,7 @@ class JobService(metaclass=SingletonMeta):
             "router": router,
             "result_ttl": result_ttl,
             "retry": retry,
+            "timeout": timeout,
         }
 
     def start_job(
