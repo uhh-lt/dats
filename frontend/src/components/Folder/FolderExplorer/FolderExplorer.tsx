@@ -10,7 +10,7 @@ import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
 import FolderCreateButton from "../FolderCreateButton.tsx";
 import FolderExplorerActionMenu from "./FolderExplorerActionMenu.tsx";
-import FolderToggleVisibilityButton from "./FolderToggleVisibilityButton.tsx";
+import FolderExplorerMenu from "./FolderExplorerMenu.tsx";
 import useComputeFolderTree from "./useComputeFolderTree.ts";
 
 const renderActions = (node: ITree<FolderRead>) => <FolderExplorerActionMenu node={node} />;
@@ -104,7 +104,7 @@ function ListActions() {
   return (
     <>
       <FolderCreateButton folderName="" />
-      <FolderToggleVisibilityButton />
+      <FolderExplorerMenu />
     </>
   );
 }

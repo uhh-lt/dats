@@ -21,6 +21,7 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.PROJECT]: "Import a complete project from a project export file",
   [ImportJobType.TAGS]: "Import document tags from a tags export file",
   [ImportJobType.CODES]: "Import annotation codes from a codes export file",
+  [ImportJobType.FOLDERS]: "Import folders from a folders export file",
   [ImportJobType.BBOX_ANNOTATIONS]: "Import bounding box annotations from a bbox export file",
   [ImportJobType.SPAN_ANNOTATIONS]: "Import span annotations from a span export file",
   [ImportJobType.SENTENCE_ANNOTATIONS]: "Import sentence annotations from a sentence export file",

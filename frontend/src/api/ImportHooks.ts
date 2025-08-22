@@ -48,6 +48,10 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
             console.log("Invalidating codes");
             queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, projectId] });
             break;
+          case ImportJobType.FOLDERS:
+            console.log("Invalidating folders");
+            queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_FOLDERS, projectId] });
+            break;
           case ImportJobType.PROJECT_METADATA:
             console.log("Invalidating project metadata");
             queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, projectId] });
