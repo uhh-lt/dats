@@ -132,9 +132,9 @@ function FolderCreateDialog() {
               <MenuItem
                 key={folderWithLevel.data.id}
                 value={folderWithLevel.data.id}
-                style={{ paddingLeft: folderWithLevel.level * 10 + 6 }}
+                style={{ paddingLeft: folderWithLevel.level * 10 + 16 }}
               >
-                <FolderRenderer folder={folderWithLevel.data} folderType={FolderType.NORMAL} />
+                <FolderRenderer folder={folderWithLevel.data} folderType={FolderType.NORMAL} renderName />
               </MenuItem>
             ))}
           </FormMenu>
