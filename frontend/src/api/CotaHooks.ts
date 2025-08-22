@@ -151,22 +151,25 @@ const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
       }),
     enabled: !!cotaRefinementJobId,
     refetchInterval: (query) => {
-      if (query.state.data?.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            // TODO: maybe invalidate the cota query here or set it directly (see CotaControl.tsx)
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      if (!query.state.data) {
+        return 1000;
       }
-      return false;
+
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          // TODO: maybe invalidate the cota query here or set it directly (see CotaControl.tsx)
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
+      }
     },
   });
 };

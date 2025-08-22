@@ -30,21 +30,20 @@ const usePollDuplicateFinderJob = (
       if (!query.state.data) {
         return 1000;
       }
-      if (query.state.data.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
       }
-      return false;
     },
     initialData,
   });
@@ -71,21 +70,20 @@ const usePollExportJob = (exportJobId: string | undefined) => {
       if (!query.state.data) {
         return 1000;
       }
-      if (query.state.data.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
       }
-      return false;
     },
   });
 };
@@ -114,21 +112,20 @@ const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead | unde
       if (!query.state.data) {
         return 1000;
       }
-      if (query.state.data.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
       }
-      return false;
     },
     initialData,
   });

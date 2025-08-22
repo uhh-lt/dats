@@ -36,21 +36,20 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
         return 1000;
       }
 
-      if (query.state.data.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
       }
-      return false;
     },
     initialData,
   });

@@ -190,6 +190,9 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
     // column visibility
     enableHiding: false,
     // mui components
+    muiTableContainerProps: {
+      ref: tableContainerRef, //get access to the table container element
+    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -256,12 +259,7 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
       </DATSToolbar>
       <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
       <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <MRT_TableContainer
-          table={table}
-          ref={tableContainerRef}
-          style={{ flexGrow: 1 }}
-          onScroll={handleTableScroll}
-        />
+        <MRT_TableContainer table={table} style={{ flexGrow: 1 }} onScroll={handleTableScroll} />
         <Box sx={{ p: 1 }}>
           <Divider />
           <Stack direction={"row"} spacing={1} alignItems="center" width="100%">

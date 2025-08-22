@@ -105,22 +105,22 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
             console.error("Unknown import job type");
             break;
         }
-
-        // determine the refetch interval based on the status
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
       }
-      return false;
+
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
+      }
     },
     initialData,
   });

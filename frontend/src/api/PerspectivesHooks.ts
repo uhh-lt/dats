@@ -143,21 +143,20 @@ const usePollPerspectivesJob = (
         queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.input.aspect_id] });
       }
 
-      if (query.state.data.status) {
-        switch (query.state.data.status) {
-          case JobStatus.CANCELED:
-          case JobStatus.FAILED:
-          case JobStatus.FINISHED:
-          case JobStatus.STOPPED:
-            return false;
-          case JobStatus.DEFERRED:
-          case JobStatus.QUEUED:
-          case JobStatus.SCHEDULED:
-          case JobStatus.STARTED:
-            return 1000;
-        }
+      switch (query.state.data.status) {
+        case JobStatus.CANCELED:
+        case JobStatus.FAILED:
+        case JobStatus.FINISHED:
+        case JobStatus.STOPPED:
+          return false;
+        case JobStatus.DEFERRED:
+        case JobStatus.QUEUED:
+        case JobStatus.SCHEDULED:
+        case JobStatus.STARTED:
+          return 1000;
+        default:
+          return false;
       }
-      return false;
     },
     initialData,
   });
