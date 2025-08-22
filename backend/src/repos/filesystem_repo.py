@@ -383,7 +383,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
     def write_df_to_temp_file(
         self,
         df: pd.DataFrame,
-        fn: str | None = None,
+        fn: str,
     ) -> Path:
         temp_file = self.create_temp_file(fn=fn)
         temp_file = temp_file.parent / (temp_file.name + ".csv")

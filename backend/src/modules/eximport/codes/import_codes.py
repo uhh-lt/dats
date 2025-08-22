@@ -57,26 +57,30 @@ class CodeImporter:
             )
 
             # Process each layer in order
-            create_dtos: list[CodeCreate] = []
+            create_dtos: list[list[CodeCreate]] = []
             for layer in sorted_layers:
+                # 1. construct create dtos per layer
+                layer_dtos: list[CodeCreate] = []
                 for code in layer:
                     create_dto = self._prepare_create_if_not_exists(code)
                     if create_dto:
-                        create_dtos.append(create_dto)
+                        layer_dtos.append(create_dto)
+                    create_dtos.append(layer_dtos)
+
+                # 2. bulk create layer
+                if not validate_only:
+                    created_codes = crud_code.create_multi(
+                        db=self.db,
+                        create_dtos=layer_dtos,
+                    )
+                    for code in created_codes:
+                        logger.info(f"Created code {code.name} with ID {code.id}")
+                        self.code_id_mapping[code.name] = code.id
 
             # If validate_only is True, we can stop here
             if validate_only:
                 logger.info("Validation successful. No codes were imported.")
                 return {}
-
-            # Everything is valid, now we can create the codes
-            created_codes = crud_code.create_multi(
-                db=self.db,
-                create_dtos=create_dtos,
-            )
-            for code in created_codes:
-                logger.info(f"Created code {code.name} with ID {code.id}")
-                self.code_id_mapping[code.name] = code.id
 
         except ValueError as e:
             logger.error(f"Failed to import codes: {e}")

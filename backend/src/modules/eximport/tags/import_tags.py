@@ -53,26 +53,30 @@ class TagImporter:
             )
 
             # Process each layer in order
-            create_dtos: list[TagCreate] = []
+            create_dtos: list[list[TagCreate]] = []
             for layer in sorted_layers:
+                # 1. construct create dtos per layer
+                layer_dtos: list[TagCreate] = []
                 for tag in layer:
                     create_dto = self._prepare_create_if_not_exists(tag)
                     if create_dto:
-                        create_dtos.append(create_dto)
+                        layer_dtos.append(create_dto)
+                    create_dtos.append(layer_dtos)
+
+                # 2. bulk create layer
+                if not validate_only:
+                    created_tags = crud_tag.create_multi(
+                        db=self.db,
+                        create_dtos=layer_dtos,
+                    )
+                    for tag in created_tags:
+                        logger.info(f"Created tag {tag.name} with ID {tag.id}")
+                        self.tag_id_mapping[tag.name] = tag.id
 
             # If validate_only is True, we can stop here
             if validate_only:
                 logger.info("Validation completed successfully. No tags were imported.")
                 return {}
-
-            # Everything is valid, we can create the tags
-            created_tags = crud_tag.create_multi(
-                db=self.db,
-                create_dtos=create_dtos,
-            )
-            for tag in created_tags:
-                logger.info(f"Created tag {tag.name} with ID {tag.id}")
-                self.tag_id_mapping[tag.name] = tag.id
 
         except ValueError as e:
             logger.error(f"Failed to import tags: {e}")
