@@ -44,6 +44,7 @@ class RegisteredJob(TypedDict):
     # ttl  # how long to keep jobs in queue before they are discarded (defaults to infinite)
     # timeout  # specifies maximum runtime before the job is interrupted and marked as failed
     # see https://python-rq.org/docs/jobs/#job-creation
+    retry: tuple[int, int] | None
 
 
 class JobService(metaclass=SingletonMeta):
@@ -100,7 +101,8 @@ class JobService(metaclass=SingletonMeta):
         device: Literal["gpu", "cpu"],
         generate_endpoints: EndpointGeneration,
         router: APIRouter | None,
-        result_ttl: JobResultTTL = JobResultTTL.DEFAULT,
+        result_ttl: JobResultTTL,
+        retry: tuple[int, int] | None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -127,6 +129,7 @@ class JobService(metaclass=SingletonMeta):
             "device": device,
             "router": router,
             "result_ttl": result_ttl,
+            "retry": retry,
         }
 
     def start_job(
@@ -139,6 +142,7 @@ class JobService(metaclass=SingletonMeta):
         job_info = self.job_registry.get(job_type)
         if not job_info:
             raise ValueError(f"Unknown job type: {job_type}")
+        retry = job_info["retry"]
 
         # Validate payload is of correct subclass type
         input_type = job_info["input_type"]
@@ -161,7 +165,7 @@ class JobService(metaclass=SingletonMeta):
                 "finished": None,
             },
             result_ttl=job_info["result_ttl"].value,
-            retry=rq.Retry(max=3, interval=30),
+            retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
         )
         return Job(rq_job)
 

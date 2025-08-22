@@ -25,6 +25,7 @@ def register_job(
     generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
     result_ttl: JobResultTTL = JobResultTTL.DEFAULT,
+    retry: tuple[int, int] | None = None,
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService
@@ -39,6 +40,7 @@ def register_job(
             generate_endpoints=generate_endpoints,
             router=router,
             result_ttl=result_ttl,
+            retry=retry,
         )
         return func
 
