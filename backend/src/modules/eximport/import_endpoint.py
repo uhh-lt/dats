@@ -54,6 +54,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
     ImportJobType.DOCUMENTS: ZIP_FILE_FORMAT,
     ImportJobType.CODES: CSV_FILE_FORMAT,
     ImportJobType.TAGS: CSV_FILE_FORMAT,
+    ImportJobType.FOLDERS: CSV_FILE_FORMAT,
     ImportJobType.BBOX_ANNOTATIONS: CSV_FILE_FORMAT,
     ImportJobType.SPAN_ANNOTATIONS: CSV_FILE_FORMAT,
     ImportJobType.SENTENCE_ANNOTATIONS: CSV_FILE_FORMAT,

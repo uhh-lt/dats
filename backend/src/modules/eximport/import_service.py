@@ -13,6 +13,7 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
+from modules.eximport.folder.import_folders import import_folders_to_proj
 from modules.eximport.import_exceptions import (
     ImportJobPreparationError,
     UnsupportedImportJobTypeError,
@@ -47,6 +48,7 @@ class ImportService(metaclass=SingletonMeta):
         cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
+            ImportJobType.FOLDERS: cls._import_folders_to_proj,
             ImportJobType.PROJECT: cls._import_project,
             ImportJobType.BBOX_ANNOTATIONS: cls._import_bbox_annotations_to_proj,
             ImportJobType.SPAN_ANNOTATIONS: cls._import_span_annotations_to_proj,
@@ -103,6 +105,16 @@ class ImportService(metaclass=SingletonMeta):
         path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
         df = pd.read_csv(path_to_file)
         import_codes_to_proj(db=db, df=df, project_id=payload.project_id)
+
+    def _import_folders_to_proj(
+        self,
+        db: Session,
+        payload: ImportJobInput,
+    ) -> None:
+        """Import folders to a project"""
+        path_to_file = self.fsr.get_dst_path_for_temp_file(payload.file_name)
+        df = pd.read_csv(path_to_file)
+        import_folders_to_proj(db=db, df=df, project_id=payload.project_id)
 
     def _import_tags_to_proj(
         self,

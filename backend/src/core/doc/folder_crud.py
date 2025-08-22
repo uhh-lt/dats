@@ -36,6 +36,15 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
             .all()
         )
 
+    def read_by_name_and_project(
+        self, db: Session, folder_name: str, proj_id: int
+    ) -> FolderORM | None:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == folder_name, self.model.project_id == proj_id)
+            .first()
+        )
+
     def move_folders(
         self, db: Session, *, folder_ids: list[int], target_folder_id: int
     ) -> list[FolderORM]:

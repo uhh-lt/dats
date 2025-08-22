@@ -14,6 +14,7 @@ from modules.eximport.export_job_dto import (
     ExportJobOutput,
     ExportJobType,
 )
+from modules.eximport.folder.export_folders import export_all_folders
 from modules.eximport.memos.export_memos import export_all_memos, export_selected_memos
 from modules.eximport.project.export_project import export_project
 from modules.eximport.project_metadata.export_project_metadata import (
@@ -77,6 +78,7 @@ class ExportService(metaclass=SingletonMeta):
             ExportJobType.ALL_SDOCS: export_all_sdocs,
             ExportJobType.ALL_CODES: export_all_codes,
             ExportJobType.ALL_TAGS: export_all_tags,
+            ExportJobType.ALL_FOLDERS: export_all_folders,
             ExportJobType.ALL_SPAN_ANNOTATIONS: export_all_span_annotations,
             ExportJobType.ALL_SENTENCE_ANNOTATIONS: export_all_sentence_annotations,
             ExportJobType.ALL_BBOX_ANNOTATIONS: export_all_bbox_annotations,

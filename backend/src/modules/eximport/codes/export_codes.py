@@ -50,15 +50,11 @@ def __generate_export_df_for_codes(codes: list[CodeORM]) -> pd.DataFrame:
     code_export_items = []
 
     for code in codes:
-        parent_code_name = None
-        if code.parent_id is not None:
-            parent_code_name = code.parent.name
-
         code_export_items.append(
             CodeExportSchema(
                 code_name=code.name,
                 color=code.color,
-                parent_code_name=parent_code_name,
+                parent_code_name=code.parent.name if code.parent else None,
                 description=code.description or "",
             )
         )

@@ -44,14 +44,11 @@ def __generate_export_df_for_tags(tags: list[TagORM]) -> pd.DataFrame:
     logger.info(f"Exporting {len(tags)} Tags ...")
     tag_export_items = []
     for tag in tags:
-        parent_tag_name = None
-        if tag.parent_id is not None:
-            parent_tag_name = tag.parent.name
         tag_export_items.append(
             TagExportSchema(
                 tag_name=tag.name,
                 color=tag.color,
-                parent_tag_name=parent_tag_name,
+                parent_tag_name=tag.parent.name if tag.parent else None,
                 description=tag.description or "",
             )
         )
