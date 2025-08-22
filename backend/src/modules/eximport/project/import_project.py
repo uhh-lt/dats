@@ -14,6 +14,7 @@ from modules.eximport.bbox_annotations.import_bbox_annotations import (
 )
 from modules.eximport.codes.import_codes import import_codes_to_proj
 from modules.eximport.cota.import_cota import import_cota_to_proj
+from modules.eximport.folder.import_folders import import_folders_to_proj
 from modules.eximport.memos.import_memos import import_memos_to_proj
 from modules.eximport.project_metadata.import_project_metadata import (
     import_project_metadata_to_proj,
@@ -38,6 +39,7 @@ class ExportEntity(Enum):
     BBOX_ANNOTATION = "bbox_annotation"
     CODE = "code"
     COTA = "cota"
+    FOLDER = "folder"
     MEMO = "memo"
     PROJECT_METADATA = "project_metadata"
     SDOC = "sdoc"
@@ -56,6 +58,8 @@ class ExportEntity(Enum):
                 return r"project_\d+_all_codes.csv"
             case ExportEntity.COTA:
                 return r"project_\d+_all_cota.csv"
+            case ExportEntity.FOLDER:
+                return r"project_\d+_all_folders.csv"
             case ExportEntity.MEMO:
                 return r"project_\d+_all_memos.csv"
             case ExportEntity.PROJECT_METADATA:
@@ -83,6 +87,8 @@ class ExportEntity(Enum):
                 import_codes_to_proj(db=db, df=data, project_id=project_id)
             case ExportEntity.COTA:
                 import_cota_to_proj(db=db, df=data, project_id=project_id)
+            case ExportEntity.FOLDER:
+                import_folders_to_proj(db=db, df=data, project_id=project_id)
             case ExportEntity.MEMO:
                 import_memos_to_proj(db=db, df=data, project_id=project_id)
             case ExportEntity.PROJECT_METADATA:
@@ -110,6 +116,7 @@ IMPORT_ORDER = [
     ExportEntity.USER,
     ExportEntity.CODE,
     ExportEntity.TAG,
+    ExportEntity.FOLDER,
     ExportEntity.SDOC,
     ExportEntity.BBOX_ANNOTATION,
     ExportEntity.SPAN_ANNOTATION,

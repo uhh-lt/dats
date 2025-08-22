@@ -11,6 +11,7 @@ from modules.eximport.bbox_annotations.export_bbox_annotations import (
 )
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota
+from modules.eximport.folder.export_folders import export_all_folders
 from modules.eximport.memos.export_memos import export_all_memos
 from modules.eximport.no_data_export_error import NoDataToExportError
 from modules.eximport.project_metadata.export_project_metadata import (
@@ -57,6 +58,7 @@ def __export_project(
         export_all_bbox_annotations,
         export_all_codes,
         export_all_cota,
+        export_all_folders,
         export_all_memos,
         export_all_project_metadatas,
         export_all_sdocs,
