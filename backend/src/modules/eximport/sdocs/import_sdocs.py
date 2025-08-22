@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from common.doc_type import DocType
 from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderCreate, FolderType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
@@ -16,12 +18,13 @@ from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataCreate
-from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentUpdate
 from core.metadata.project_metadata_orm import ProjectMetadataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
+from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from modules.doc_processing.image.image_thumbnail_generation_job import (
     generate_thumbnails,
 )
@@ -127,7 +130,37 @@ def import_sdocs_to_proj(
                 f"Tag '{tag_name}' does not exist in project {project_id}"
             )
 
-    # 4. TODO: Check if all folders exist
+    # 4.1 Check if all parent folders exist
+    needed_parent_folders: set[str] = set()
+    for sdoc in sdoc_collection.source_documents:
+        if sdoc.folder_parent_name:
+            needed_parent_folders.add(sdoc.folder_parent_name)
+    existing_folders = {
+        folder.name
+        for folder in project.folders
+        if folder.folder_type == FolderType.NORMAL
+    }
+    for folder_name in needed_parent_folders:
+        if folder_name not in existing_folders:
+            error_messages.append(
+                f"Parent folder '{folder_name}' does not exist in project {project_id}"
+            )
+
+    # 4.2 Check sdoc folders
+    sdoc_folder_names: set[str] = set()
+    for sdoc in sdoc_collection.source_documents:
+        sdoc_folder_names.add(sdoc.folder_name)
+    for sdoc_folder_name in sdoc_folder_names:
+        existing_folder = crud_folder.read_by_name_and_project(
+            db=db, folder_name=sdoc_folder_name, proj_id=project_id
+        )
+        if (
+            existing_folder is not None
+            and existing_folder.folder_type != FolderType.NORMAL
+        ):
+            error_messages.append(
+                f"Folder '{sdoc_folder_name}' is not a normal folder in project {project_id}"
+            )
 
     # 5. Check if all metadata keys exist
     needed_metadata_keys: dict[DocType, set[str]] = {}
@@ -168,18 +201,37 @@ def import_sdocs_to_proj(
         if DocType(sdoc_export.doctype) == DocType.image:
             generate_thumbnails(repo_path)
 
-        # 2. Create the source documents in the database
+        # 2.1 Create the sdoc folder (if it does not already exist)
+        sdoc_folder = crud_folder.read_by_name_and_project(
+            db=db, folder_name=sdoc_export.folder_name, proj_id=project_id
+        )
+        if sdoc_folder is None:
+            sdoc_folder = crud_folder.create(
+                db=db,
+                create_dto=FolderCreate(
+                    name=sdoc_export.folder_name,
+                    project_id=project_id,
+                    folder_type=FolderType.SDOC_FOLDER,
+                ),
+            )
+
+        # 2.2 Create the source documents in the database
         sdoc_create = SourceDocumentCreate(
             filename=sdoc_export.filename,
             name=sdoc_export.name,
             doctype=DocType(sdoc_export.doctype),
             project_id=project_id,
-            # FIXME status
-            # status=SDocStatus[sdoc_export.processed],
-            folder_id=None,  # Create folder automatically
+            folder_id=sdoc_folder.id,
+        )
+
+        # 2.3 Set the source document status to success
+        jobs = PROCESSING_JOBS[DocType(sdoc_export.doctype)]
+        sdoc_update = SourceDocumentUpdate(
+            **{job: sdoc_export.status for job in jobs},  # type: ignore
         )
 
         created_sdoc = crud_sdoc.create(db=db, create_dto=sdoc_create)
+        crud_sdoc.update(db=db, id=created_sdoc.id, update_dto=sdoc_update)
         imported_sdoc_ids.append(created_sdoc.id)
         filename_to_id_map[created_sdoc.filename] = created_sdoc.id
 
@@ -224,8 +276,6 @@ def import_sdocs_to_proj(
             )
             metadata_create_dtos.append(metadata_create)
         crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
-
-        # TODO: Folders
 
         # 5. Add embeddings to the vector database
         with WeaviateRepo().weaviate_session() as client:

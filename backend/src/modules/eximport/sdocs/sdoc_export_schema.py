@@ -12,13 +12,20 @@ class SourceDocumentExportSchema(BaseModel):
     filename: str = Field(description="Filename of the source document")
     name: str | None = Field(description="Name of the source document", default=None)
     doctype: str = Field(description="Document type of the source document")
-    status: SDocStatus = Field(description="Status of the source document")
+    status: int = Field(description="Status of the source document")
+
+    # Info about the folder that contains the source document
+    folder_name: str = Field(
+        description="Name of the sdoc folder that contains the source document"
+    )
+    folder_parent_name: str | None = Field(
+        description="Name of the normal folder that contains the sdoc folder (if any)"
+    )
 
     # Data attached to the source document
     tags: list[str] = Field(
         description="List of tags (tag names) associated with the source document"
     )
-    # TODO: Folder(s)
     word_frequencies: list[tuple[str, int]] = Field(
         description="List of word frequencies (word, frequency) associated with the source document"
     )
@@ -62,7 +69,7 @@ class SourceDocumentExportSchema(BaseModel):
         description="List of sentence embeddings of the source document"
     )
 
-    @field_validator("filename", "doctype", "status")
+    @field_validator("filename", "doctype", "folder_name")
     @classmethod
     def validate_required_fields(cls, v, info):
         if not v or v.strip() == "":
@@ -89,12 +96,10 @@ class SourceDocumentExportSchema(BaseModel):
     @classmethod
     def validate_status(cls, v):
         """Validate that the status is a member of the SDocStatus Enum."""
-        if not v or v.strip() == "":
-            raise ValueError("status cannot be empty")
+        # Attempt to convert the int to an SDocStatus Enum member
         try:
-            # Attempt to convert the string to an SDocStatus Enum member
-            SDocStatus[v]
-        except KeyError:
+            SDocStatus(v)
+        except ValueError:
             raise ValueError(f"status must be one of {[e.value for e in SDocStatus]}")
         except Exception as e:
             raise ValueError(f"Invalid status format: {str(e)}")

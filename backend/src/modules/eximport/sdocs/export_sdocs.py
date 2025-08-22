@@ -66,7 +66,7 @@ def __export_sdocs(
     # 2.1. Info about the source document itself (name, filename, doctype, status) [SourceDocumentORM]
     # 2.2. The source document's metadata (sdoc metadata) [SourceDocumentMetadataORM]
     # 2.3. The source document's tags (sdoc tags) [TagORM]
-    # 2.4. TODO: The source document's folder [FolderORM]
+    # 2.4. The source document's folder [FolderORM]
     # 2.5. The source document's word frequencies (sdoc word frequencies) [WordFrequencyORM]
     # 3. Processed data of the source document (content, html, tokens, sentences, times) [SourceDocumentDataORM]
     # 4. Embeddings of the source document
@@ -137,7 +137,9 @@ def __export_sdocs(
             filename=sdoc.filename,
             name=sdoc.name,
             doctype=sdoc.doctype,
-            status=sdoc.processed_status,
+            status=sdoc.processed_status.value,
+            folder_name=sdoc.folder.name,
+            folder_parent_name=sdoc.folder.parent.name if sdoc.folder.parent else None,
             tags=tags,
             word_frequencies=word_frequencies,
             metadata=metadata_list,
