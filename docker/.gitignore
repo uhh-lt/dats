@@ -2,9 +2,10 @@
 
 /api_cache/*
 /backend_repo/*
-/ollama_cache/*
 /ray_cache/*
 /rq_cache/*
+/vllm_cache/*
+/vllm_config/*
 
 /pg_data/*
 /redis_data/*

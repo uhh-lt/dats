@@ -97,26 +97,19 @@ elasticsearch:
   sniff_on_connection_fail: False
   sniffer_timeout: 120
 
-ollama:
-  host: ${oc.env:OLLAMA_HOST, localhost}
-  port: ${oc.env:OLLAMA_PORT, 13133}
+vllm:
   llm:
-    model: ${oc.env:OLLAMA_LLM_MODEL, gemma3:27b}
-    default_params:
-      num_ctx: 16384
+    host: ${oc.env:VLLM_LLM_HOST, vllm-gemma}
+    port: ${oc.env:VLLM_LLM_PORT, 8000}
+    model: ${oc.env:VLLM_LLM_MODEL, gemma-3-27b}
   vlm:
-    model: ${oc.env:OLLAMA_VLM_MODEL, gemma3:27b}
-    default_params:
-      num_ctx: 16384
-      # temperature: 0.0
-      # seed: 1337
-      # num_predict: 8192
-      # top_p: 0.9
-      # top_k: 40
-      # repetition_penalty: 1.1
+    host: ${oc.env:VLLM_VLM_HOST, vllm-gemma}
+    port: ${oc.env:VLLM_VLM_PORT, 8000}
+    model: ${oc.env:VLLM_VLM_MODEL, gemma-3-27b}
   emb:
-    model: ${oc.env:OLLAMA_EMB_MODEL, snowflake-arctic-embed2:568m}
-    default_params:
+    host: ${oc.env:VLLM_EMB_HOST, vllm-emb}
+    port: ${oc.env:VLLM_EMB_PORT, 8000}
+    model: ${oc.env:VLLM_EMB_MODEL, snowflake-arctic-embed2:568m}
 
 llm_assistant:
   sentence_annotation:

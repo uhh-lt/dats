@@ -7,13 +7,13 @@ from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 
 
-class OllamaMetadataExtractionResult(BaseModel):
+class LLMMetadataExtractionResult(BaseModel):
     key: str
     value: str
 
 
-class OllamaMetadataExtractionResults(BaseModel):
-    data: list[OllamaMetadataExtractionResult]
+class LLMMetadataExtractionResults(BaseModel):
+    data: list[LLMMetadataExtractionResult]
 
 
 # ENGLISH
@@ -134,7 +134,7 @@ class MetadataPromptBuilder(PromptBuilder):
             task_data, answer_template, answer_example
         )
 
-    def parse_result(self, result: OllamaMetadataExtractionResults) -> dict[int, str]:
+    def parse_result(self, result: LLMMetadataExtractionResults) -> dict[int, str]:
         out_dict: dict[int, str] = {}
         for metadata in result.data:
             metadata_name = metadata.key.lower()

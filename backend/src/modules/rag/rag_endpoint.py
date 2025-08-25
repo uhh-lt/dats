@@ -5,7 +5,7 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.rag.rag_dto import ChatSessionResponse
 from modules.rag.rag_service import RAGService
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 
 router = APIRouter(
     prefix="/rag", dependencies=[Depends(get_current_user)], tags=["rag"]
@@ -55,7 +55,7 @@ def chat_session(
     session_id: str | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
-    response, session_id = OllamaRepo().llm_chat_with_session(
+    response, session_id = LLMRepo().llm_chat_with_session(
         system_prompt="You are having a chat session with a user. Respond to their queries.",
         user_prompt=prompt,
         session_id=session_id,

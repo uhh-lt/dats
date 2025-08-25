@@ -7,18 +7,18 @@ from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 
 
-class OllamaParsedAnnotationResult(BaseModel):
+class LLMParsedAnnotationResult(BaseModel):
     code_id: int
     text: str
 
 
-class OllamaAnnotationResult(BaseModel):
+class LLMAnnotationResult(BaseModel):
     category: str
     text: str
 
 
-class OllamaAnnotationResults(BaseModel):
-    data: list[OllamaAnnotationResult]
+class LLMAnnotationResults(BaseModel):
+    data: list[LLMAnnotationResult]
 
 
 # ENGLISH
@@ -132,8 +132,8 @@ class AnnotationPromptBuilder(PromptBuilder):
         return self.prompt_templates[language].format(task_data, answer_example)
 
     def parse_result(
-        self, result: OllamaAnnotationResults
-    ) -> list[OllamaParsedAnnotationResult]:
+        self, result: LLMAnnotationResults
+    ) -> list[LLMParsedAnnotationResult]:
         parsed_results = []
         for annotation in result.data:
             if annotation.category.lower() not in self.codename2id_dict:
@@ -141,7 +141,7 @@ class AnnotationPromptBuilder(PromptBuilder):
 
             code_id = self.codename2id_dict[annotation.category.lower()]
             parsed_results.append(
-                OllamaParsedAnnotationResult(code_id=code_id, text=annotation.text)
+                LLMParsedAnnotationResult(code_id=code_id, text=annotation.text)
             )
 
         return parsed_results

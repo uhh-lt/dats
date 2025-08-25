@@ -1,0 +1,53 @@
+# docker compose -f compose.vllm.yml up -d
+
+x-vllm-common: &vllm-common
+  image: vllm/vllm-openai:v0.10.1.1
+  environment:
+    - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN?hf-hub-token-required!}
+    - VLLM_LOGGING_LEVEL=INFO
+    - TORCHINDUCTOR_CACHE_DIR=/.cache/torch_inductor_cache
+    - TRITON_CACHE_DIR=/.cache/triton_cache
+  restart: unless-stopped
+  ipc: host
+  user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
+  volumes:
+    - ./vllm_cache:/.cache
+    - ./vllm_config:/.config
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+    start_period: 60s
+    interval: 60s
+    timeout: 10s
+    retries: 5
+  networks:
+    - vllm_network
+
+services:
+  vllm-llm:
+    <<: *vllm-common
+    ports:
+      - ${VLLM_LLM_EXPOSED?vllm-llm-exposed-required!}:8000
+    command: "--served-model-name gemma-3-27b --model RedHatAI/gemma-3-27b-it-quantized.w4a16 --max-model-len 16384 --gpu-memory-utilization 0.25 --scheduling-policy priority"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${VLLM_LLM_DEVICE_ID?vllm-llm-device-id-required!}"]
+              capabilities: [gpu]
+  vllm-emb:
+    <<: *vllm-common
+    ports:
+      - ${VLLM_EMB_EXPOSED?vllm-emb-exposed-required!}:8000
+    command: "--served-model-name snowflake-arctic-embed-l-v2.0 --model Snowflake/snowflake-arctic-embed-l-v2.0 --gpu-memory-utilization 0.125"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${VLLM_EMB_DEVICE_ID?vllm-emb-device-id-required!}"]
+              capabilities: [gpu]
+
+networks:
+  vllm_network:
+    name: vllm_network

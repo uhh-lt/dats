@@ -16,7 +16,7 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
-from core.memo.memo_generation_service import generate_memo_ollama
+from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 
 router = APIRouter(
@@ -214,4 +214,4 @@ def generate_memo_suggestion(
 
     authz_user.assert_in_project(project_id=proj_id)
 
-    return generate_memo_ollama(attached_object, db)
+    return generate_memo_llm(attached_object, db)

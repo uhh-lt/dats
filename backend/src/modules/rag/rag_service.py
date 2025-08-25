@@ -6,13 +6,13 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_crud import crud_sdoc
 from modules.simsearch.simsearch_service import SimSearchService
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 
 
 class RAGService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sims: SimSearchService = SimSearchService()
-        cls.ollama: OllamaRepo = OllamaRepo()
+        cls.llm: LLMRepo = LLMRepo()
         return super(RAGService, cls).__new__(cls)
 
     def retrieval_augmented_generation_with_session(
@@ -60,7 +60,7 @@ class RAGService(metaclass=SingletonMeta):
             f"Answer:"
         )
 
-        response, session_id = self.ollama.llm_chat_with_session(
+        response, session_id = self.llm.llm_chat_with_session(
             system_prompt="You are an assistant helping answer questions based on internal documentation.",
             user_prompt=RAG_PROMPT,
             session_id=session_id,
