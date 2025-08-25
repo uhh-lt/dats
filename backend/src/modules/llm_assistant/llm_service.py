@@ -55,24 +55,24 @@ from modules.llm_assistant.llm_job_dto import (
 )
 from modules.llm_assistant.prompts.annotation_prompt_builder import (
     AnnotationPromptBuilder,
-    OllamaAnnotationResults,
+    LLMAnnotationResults,
 )
 from modules.llm_assistant.prompts.metadata_prompt_builder import (
+    LLMMetadataExtractionResults,
     MetadataPromptBuilder,
-    OllamaMetadataExtractionResults,
 )
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 from modules.llm_assistant.prompts.sentence_annotation_prompt_builder import (
-    OllamaSentenceAnnotationResults,
+    LLMSentenceAnnotationResults,
     SentenceAnnotationPromptBuilder,
 )
 from modules.llm_assistant.prompts.tagging_prompt_builder import (
-    OllamaTaggingResult,
+    LLMTaggingResult,
     TaggingPromptBuilder,
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
 from repos.db.sql_repo import SQLRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
@@ -83,7 +83,7 @@ lac = conf.llm_assistant
 class LLMAssistantService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqlr: SQLRepo = SQLRepo()
-        cls.ollama: OllamaRepo = OllamaRepo()
+        cls.llm: LLMRepo = LLMRepo()
         cls.ray: RayRepo = RayRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
 
@@ -439,10 +439,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollama.llm_chat(
+                response = self.llm.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
-                    response_model=OllamaTaggingResult,
+                    response_model=LLMTaggingResult,
                 )
                 logger.info(
                     f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
@@ -570,10 +570,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollama.llm_chat(
+                response = self.llm.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
-                    response_model=OllamaMetadataExtractionResults,
+                    response_model=LLMMetadataExtractionResults,
                 )
                 logger.info(f"Got chat response! Response={response.data}")
 
@@ -705,10 +705,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollama.llm_chat(
+                response = self.llm.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
-                    response_model=OllamaAnnotationResults,
+                    response_model=LLMAnnotationResults,
                 )
                 logger.info(f"Got chat response! Response={response}")
 
@@ -814,7 +814,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         ), "Wrong approach parameters!"
         is_fewshot = isinstance(approach_parameters, FewShotParams)
 
-        msg = f"Started LLMJob - Sentence Annotation (OLLAMA), num docs: {len(task_parameters.sdoc_ids)}"
+        msg = f"Started LLMJob - Sentence Annotation (LLM), num docs: {len(task_parameters.sdoc_ids)}"
         self._update_llm_job_description(
             job=job,
             description=msg,
@@ -901,10 +901,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 )
 
                 # prompt the model
-                response = self.ollama.llm_chat(
+                response = self.llm.llm_chat(
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
-                    response_model=OllamaSentenceAnnotationResults,
+                    response_model=LLMSentenceAnnotationResults,
                 )
                 logger.info(f"Got chat response! Response={response}")
 

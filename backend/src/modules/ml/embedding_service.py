@@ -23,7 +23,7 @@ from modules.ml.source_document_job_status_orm import (
 from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from utils.image_utils import image_to_base64, load_image
@@ -34,12 +34,12 @@ class EmbeddingService(metaclass=SingletonMeta):
         cls.sqlr: SQLRepo = SQLRepo()
         cls.fsr = FilesystemRepo()
         cls.ray: RayRepo = RayRepo()
-        cls.ollama: OllamaRepo = OllamaRepo()
+        cls.llm: LLMRepo = LLMRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(EmbeddingService, cls).__new__(cls)
 
     def encode_document(self, text: str) -> np.ndarray:
-        return self.ollama.llm_embed([text])
+        return self.llm.llm_embed([text])
 
     def encode_sentences(self, sentences: list[str]) -> np.ndarray:
         encoded_query = self.ray.clip_text_embedding(
@@ -199,7 +199,7 @@ class EmbeddingService(metaclass=SingletonMeta):
             return num_docs
 
         # Embed the documents
-        embeddings = self.ollama.llm_embed(content).tolist()
+        embeddings = self.llm.llm_embed(content).tolist()
 
         # Store the embeddings
         crud_document_embedding.add_embedding_batch(

@@ -16,9 +16,10 @@ mkdir -p ../docker/backend_repo
 # cache directories
 mkdir -p ../docker/api_cache
 mkdir -p ../docker/rq_cache
-mkdir -p ../docker/ollama_cache
 mkdir -p ../docker/ray_cache
 chmod 777 ../docker/ray_cache
+mkdir -p ../docker/vllm_cache
+mkdir -p ../docker/vllm_config
 
 # backup directories
 mkdir -p ../backups/weaviate
