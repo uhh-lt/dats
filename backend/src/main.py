@@ -20,7 +20,7 @@ from uvicorn.main import run
 from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
 from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from utils.import_utils import import_by_suffix
 
 #####################################################################################################################
@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
     logger.info("Stopping Discourse Analysis Tool Suite FastAPI!")
     FilesystemRepo().purge_temporary_files()
     # Close repo connections
-    OllamaRepo().close_connection()
+    LLMRepo().close_connection()
     ElasticSearchRepo().close_connection()
 
 

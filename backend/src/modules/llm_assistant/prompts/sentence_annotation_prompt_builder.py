@@ -12,18 +12,18 @@ from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 sent_anno_conf = conf.llm_assistant.sentence_annotation
 
 
-class OllamaParsedSentenceAnnotationResult(BaseModel):
+class LLMParsedSentenceAnnotationResult(BaseModel):
     sent_id: int
     code_id: int
 
 
-class OllamaSentenceAnnotationResult(BaseModel):
+class LLMSentenceAnnotationResult(BaseModel):
     sent_id: int
     category: str
 
 
-class OllamaSentenceAnnotationResults(BaseModel):
-    data: list[OllamaSentenceAnnotationResult]
+class LLMSentenceAnnotationResults(BaseModel):
+    data: list[LLMSentenceAnnotationResult]
 
 
 # ENGLISH
@@ -199,8 +199,8 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         return self.prompt_templates[language].format(task_data, answer_example)
 
     def parse_result(
-        self, result: OllamaSentenceAnnotationResults
-    ) -> list[OllamaParsedSentenceAnnotationResult]:
+        self, result: LLMSentenceAnnotationResults
+    ) -> list[LLMParsedSentenceAnnotationResult]:
         parsed_results = []
         for annotation in result.data:
             if annotation.category.lower() not in self.codename2id_dict:
@@ -208,7 +208,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
 
             code_id = self.codename2id_dict[annotation.category.lower()]
             parsed_results.append(
-                OllamaParsedSentenceAnnotationResult(
+                LLMParsedSentenceAnnotationResult(
                     sent_id=annotation.sent_id, code_id=code_id
                 )
             )

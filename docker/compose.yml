@@ -15,11 +15,15 @@ x-dats-common: &dats-common
     POSTGRES_USER: ${POSTGRES_USER?postgres-user-required!}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?postgres-password-required!}
     REDIS_PASSWORD: ${REDIS_PASSWORD?redis-password-required!}
-    OLLAMA_HOST: ${OLLAMA_HOST?ollama-host-required!}
-    OLLAMA_PORT: ${OLLAMA_PORT?ollama-port-required!}
-    OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL?ollama-llm-model-required!}
-    OLLAMA_VLM_MODEL: ${OLLAMA_VLM_MODEL?ollama-vlm-model-required!}
-    OLLAMA_EMB_MODEL: ${OLLAMA_EMB_MODEL?ollama-emb-model-required!}
+    VLLM_LLM_HOST: ${VLLM_LLM_HOST?vllm-llm-host-required!}
+    VLLM_VLM_HOST: ${VLLM_VLM_HOST?vllm-vlm-host-required!}
+    VLLM_EMB_HOST: ${VLLM_EMB_HOST?vllm-emb-host-required!}
+    VLLM_LLM_PORT: ${VLLM_LLM_PORT?vllm-llm-port-required!}
+    VLLM_VLM_PORT: ${VLLM_VLM_PORT?vllm-vlm-port-required!}
+    VLLM_EMB_PORT: ${VLLM_EMB_PORT?vllm-emb-port-required!}
+    VLLM_LLM_MODEL: ${VLLM_LLM_MODEL?vllm-llm-model-required!}
+    VLLM_VLM_MODEL: ${VLLM_VLM_MODEL?vllm-vlm-model-required!}
+    VLLM_EMB_MODEL: ${VLLM_EMB_MODEL?vllm-emb-model-required!}
     RAY_HOST: ${RAY_HOST?ray-host-required!}
     RAY_PORT: ${RAY_PORT?ray-port-required!}
     OIDC_ENABLED: ${OIDC_ENABLED?oidc-enabled-required!}
@@ -45,8 +49,8 @@ x-dats-common: &dats-common
       restart: true
   networks:
     - dats_network
-    - ollama_network
     - ray_network
+    - vllm_network
 
 services:
   postgres:
@@ -228,9 +232,9 @@ services:
 
 networks:
   dats_network:
-  ollama_network:
-    name: ollama_network
-    external: true
   ray_network:
     name: ray_network
+    external: true
+  vllm_network:
+    name: vllm_network
     external: true

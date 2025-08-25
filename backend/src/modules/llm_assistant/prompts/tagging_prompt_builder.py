@@ -5,12 +5,12 @@ from core.project.project_crud import crud_project
 from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
 
 
-class OllamaParsedTaggingResult(BaseModel):
+class LLMParsedTaggingResult(BaseModel):
     tag_ids: list[int]
     reasoning: str
 
 
-class OllamaTaggingResult(BaseModel):
+class LLMTaggingResult(BaseModel):
     categories: list[str]
     reasoning: str
 
@@ -104,8 +104,8 @@ class TaggingPromptBuilder(PromptBuilder):
 
         return self.prompt_templates[language].format(task_data, answer_example)
 
-    def parse_result(self, result: OllamaTaggingResult) -> OllamaParsedTaggingResult:
-        return OllamaParsedTaggingResult(
+    def parse_result(self, result: LLMTaggingResult) -> LLMParsedTaggingResult:
+        return LLMParsedTaggingResult(
             tag_ids=[
                 self.tagname2id_dict[category.lower()]
                 for category in result.categories

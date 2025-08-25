@@ -17,11 +17,11 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from utils.image_utils import image_to_base64, load_image
 
 
-class OllamaMemoResult(BaseModel):
+class LLMMemoResult(BaseModel):
     memo: str
 
 
@@ -135,7 +135,7 @@ SUMMARY_FUNCTIONS = {
 MEMO_GEN_PROMPT = "Don't use imperative form. Generate a concise, 1-2 sentence helpful memo about the following object:\n\n{obj_summary}"
 
 
-def generate_memo_ollama(
+def generate_memo_llm(
     obj: (
         SourceDocumentORM
         | TagORM
@@ -149,7 +149,7 @@ def generate_memo_ollama(
     db: Session,
 ) -> str:
     # 1. Update job description
-    msg = "Started Memo Generation (OLLAMA)"
+    msg = "Started Memo Generation (LLM)"
     logger.info(msg)
     # 2. Build the prompt for the memo suggestion
     summary_fn = SUMMARY_FUNCTIONS.get(type(obj))
@@ -158,17 +158,17 @@ def generate_memo_ollama(
     else:
         raise NotImplementedError(f"AttachedObjectType is not supported: {type(obj)}")
 
-    # 3. Send to Ollama for processing
+    # 3. Send to LLM for processing
     if isImage:
-        caption, _ = OllamaRepo().vlm_chat(
+        caption, _ = LLMRepo().vlm_chat(
             user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
         )
         return caption.strip()
     else:
-        response = OllamaRepo().llm_chat(
+        response = LLMRepo().llm_chat(
             system_prompt="You are a helpful assistant generating memos.",
             user_prompt=MEMO_GEN_PROMPT.format(obj_summary=obj_summary),
-            response_model=OllamaMemoResult,
+            response_model=LLMMemoResult,
         )
         logger.info(f"Got chat response for object ID {obj.id}! Response={response}")
 

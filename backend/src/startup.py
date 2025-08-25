@@ -156,10 +156,10 @@ def __init_repos__(
 
     WeaviateRepo(flush=reset_vector)
 
-    # import and init Ollama
-    from repos.ollama_repo import OllamaRepo
+    # import and init LLMRepo
+    from repos.llm_repo import LLMRepo
 
-    OllamaRepo()
+    LLMRepo()
 
     # TODO: This should be a repo, no?
     # import and init AuthService

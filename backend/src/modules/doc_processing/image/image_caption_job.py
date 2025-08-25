@@ -11,12 +11,12 @@ from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
 )
 from repos.db.sql_repo import SQLRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import image_to_base64, load_image
 
-ollama = OllamaRepo()
+llm = LLMRepo()
 sqlr = SQLRepo()
 
 
@@ -40,7 +40,7 @@ def handle_image_caption_job(
 ) -> ImageCaptionJobOutput:
     image = load_image(payload.filepath)
     image_b64 = image_to_base64(image)
-    caption, _ = ollama.vlm_chat(
+    caption, _ = llm.vlm_chat(
         user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[image_b64]
     )
 

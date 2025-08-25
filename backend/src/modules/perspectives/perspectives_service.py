@@ -55,7 +55,7 @@ from modules.perspectives.perspectives_job_dto import (
 from ray_model_worker.dto.promptembedder import PromptEmbedderInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ollama_repo import OllamaRepo
+from repos.llm_repo import LLMRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
@@ -66,7 +66,7 @@ class PerspectivesService:
         self.job = job
 
         self.ray: RayRepo = RayRepo()
-        self.ollama: OllamaRepo = OllamaRepo()
+        self.llm: LLMRepo = LLMRepo()
         self.sqlr: SQLRepo = SQLRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
@@ -168,21 +168,21 @@ class PerspectivesService:
         )
 
         # 2. Modify the documents
-        class OllamaResponse(BaseModel):
+        class LLMResponse(BaseModel):
             content: str
 
         create_dtos: list[DocumentAspectCreate] = []
         if aspect.doc_modification_prompt:
-            # if prompt is provided, use ollama to generate a modified document
+            # if prompt is provided, use LLM to generate a modified document
             for idx, (sdoc_id, sdoc_content) in enumerate(sdoc_data):
                 self._log_status_msg(
                     f"Modifying documents with LLM ({idx + 1} / {len(sdoc_data)})..."
                 )
 
-                response = self.ollama.llm_chat(
+                response = self.llm.llm_chat(
                     system_prompt="You are a document modification assistant.",
                     user_prompt=aspect.doc_modification_prompt,
-                    response_model=OllamaResponse,
+                    response_model=LLMResponse,
                 )
                 create_dtos.append(
                     DocumentAspectCreate(
@@ -799,7 +799,7 @@ class PerspectivesService:
         )
 
         # 2. Generate cluster name and description with LLM
-        class OllamaResponse(BaseModel):
+        class LLMResponse(BaseModel):
             description: str
             title: str
 
@@ -811,10 +811,10 @@ class PerspectivesService:
             self._log_status_msg(
                 f"Generating name and description for cluster {tw[:5]}..."
             )
-            response = self.ollama.llm_chat(
+            response = self.llm.llm_chat(
                 system_prompt="You are a cluster name and description generator.",
                 user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
-                response_model=OllamaResponse,
+                response_model=LLMResponse,
             )
             cluster_name[cluster_id] = response.title
             cluster_description[cluster_id] = response.description
