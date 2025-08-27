@@ -5,6 +5,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderRead
 from core.doc.folder_orm import FolderORM
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
+from core.doc.sdoc_kwic_dto import PaginatedElasticSearchKwicHits
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
@@ -223,4 +224,25 @@ def find_sdocs(
             folder.id: FolderRead.model_validate(folder) for folder in folders
         },
         total_results=data.total_results,
+    )
+
+
+def kwic_search(
+    self,
+    project_id: int,
+    search_query: str,
+    window: int = 5,
+    page_number: int | None = None,
+    page_size: int | None = None,
+) -> PaginatedElasticSearchKwicHits:
+    skip = (page_number * page_size) if page_number and page_size else None
+    limit = page_size or 10
+
+    return crud_elastic_sdoc.search_sdocs_for_kwic(
+        client=ElasticSearchRepo().client,
+        proj_id=project_id,
+        query=search_query,
+        window=window,
+        limit=limit,
+        skip=skip,
     )
