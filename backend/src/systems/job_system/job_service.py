@@ -154,9 +154,13 @@ class JobService(metaclass=SingletonMeta):
         queue = self.queues[(job_info["device"], job_info["priority"])]
         rq_job = queue.enqueue(
             rq_job_handler,
-            jobtype=job_type,
-            handler=job_info["handler"],
-            payload=input_obj,
+            # Our function parameters
+            kwargs={
+                "jobtype": job_type,
+                "handler": job_info["handler"],
+                "payload": input_obj,
+            },
+            # RQ Parameters
             meta={
                 "type": job_type,
                 "status_message": "Job enqueued",
@@ -168,6 +172,7 @@ class JobService(metaclass=SingletonMeta):
             },
             result_ttl=job_info["result_ttl"].value,
             retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
+            job_timeout=job_info["timeout"],
         )
         return Job(rq_job)
 
