@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.sdoc_kwic_dto import PaginatedElasticSearchKwicHits
-from fastapi import APIRouter, Depends
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -15,6 +14,7 @@ from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
     find_sdocs_info,
+    kwic_search,
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
@@ -109,7 +109,7 @@ def search_sdocs_kwic(
     authz_user: AuthzUser = Depends(),
 ):
     authz_user.assert_in_project(project_id)
-    return SdocSearchService().kwic_search(
+    return kwic_search(
         project_id=project_id,
         search_query=search_query,
         window=window,

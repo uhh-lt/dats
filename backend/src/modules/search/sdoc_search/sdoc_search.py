@@ -227,7 +227,6 @@ def find_sdocs(
 
 
 def kwic_search(
-    self,
     project_id: int,
     search_query: str,
     window: int = 5,
