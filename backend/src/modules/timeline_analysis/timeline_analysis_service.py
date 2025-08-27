@@ -35,7 +35,6 @@ from modules.timeline_analysis.timeline_analysis_dto import (
     TimelineAnalysisUpdateIntern,
 )
 from modules.timeline_analysis.timeline_analysis_orm import TimelineAnalysisORM
-from repos.db.sql_repo import SQLRepo
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.filtering import Filter
 from systems.search_system.search_builder import SearchBuilder
@@ -110,6 +109,7 @@ def update_timeline_analysis(
         if old_concept is None:
             # this is a new concept, we need to compute the results
             result = __compute_timeline_analysis(
+                db=db,
                 timeline_analysis=ta,
                 concept=new_concept,
             )
@@ -117,6 +117,7 @@ def update_timeline_analysis(
             if old_concept.filter_hash != new_concept.filter_hash:
                 # the filter has changed, we need to recompute the results
                 result = __compute_timeline_analysis(
+                    db=db,
                     timeline_analysis=ta,
                     concept=new_concept,
                 )
@@ -151,6 +152,7 @@ def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
     }
     for concept_id, concept in concepts.items():
         concept.results = __compute_timeline_analysis(
+            db=db,
             timeline_analysis=ta,
             concept=concept,
         )
@@ -168,6 +170,7 @@ def recompute_timeline_analysis(db: Session, id: int) -> TimelineAnalysisORM:
 
 
 def __compute_timeline_analysis(
+    db: Session,
     timeline_analysis: TimelineAnalysisRead,
     concept: TimelineAnalysisConcept,
 ) -> list[TimelineAnalysisResult]:
@@ -176,122 +179,115 @@ def __compute_timeline_analysis(
     if timeline_analysis.settings.date_metadata_id is None:
         return []
 
-    with SQLRepo().db_session() as db:
-        match concept.timeline_analysis_type:
-            case TimelineAnalysisType.DOCUMENT:
-                assert isinstance(
-                    concept.ta_specific_filter, SdocTimelineAnalysisFilter
-                ), "Invalid filter type, expected SdocTimelineAnalysisFilter"
-                result_rows = __sdoc_timeline_analysis(
-                    db=db,
-                    project_id=timeline_analysis.project_id,
-                    group_by=timeline_analysis.settings.group_by,
-                    project_metadata_id=timeline_analysis.settings.date_metadata_id,
-                    filter=concept.ta_specific_filter.filter,
-                )
-            case TimelineAnalysisType.SENT_ANNO:
-                assert isinstance(
-                    concept.ta_specific_filter, SentAnnoTimelineAnalysisFilter
-                ), "Invalid filter type, expected SentAnnoTimelineAnalysisFilter"
-                assert (
-                    timeline_analysis.settings.annotation_aggregation_type is not None
-                ), (
-                    "Annotation aggregation type is required for SentAnnoTimelineAnalysis"
-                    " but not provided in the settings"
-                )
-                result_rows = __sent_anno_timeline_analysis(
-                    db=db,
-                    project_id=timeline_analysis.project_id,
-                    group_by=timeline_analysis.settings.group_by,
-                    project_metadata_id=timeline_analysis.settings.date_metadata_id,
-                    filter=concept.ta_specific_filter.filter,
-                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
-                )
-            case TimelineAnalysisType.SPAN_ANNO:
-                assert isinstance(
-                    concept.ta_specific_filter, SpanAnnoTimelineAnalysisFilter
-                ), "Invalid filter type, expected SpanAnnoTimelineAnalysisFilter"
-                assert (
-                    timeline_analysis.settings.annotation_aggregation_type is not None
-                ), (
-                    "Annotation aggregation type is required for SpanAnnoTimelineAnalysis"
-                    " but not provided in the settings"
-                )
-                result_rows = __span_anno_timeline_analysis(
-                    db=db,
-                    project_id=timeline_analysis.project_id,
-                    group_by=timeline_analysis.settings.group_by,
-                    project_metadata_id=timeline_analysis.settings.date_metadata_id,
-                    filter=concept.ta_specific_filter.filter,
-                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
-                )
-            case TimelineAnalysisType.BBOX_ANNO:
-                assert isinstance(
-                    concept.ta_specific_filter, BBoxAnnoTimelineAnalysisFilter
-                ), "Invalid filter type, expected BBoxAnnoTimelineAnalysisFilter"
-                assert (
-                    timeline_analysis.settings.annotation_aggregation_type is not None
-                ), (
-                    "Annotation aggregation type is required for BBoxAnnoTimelineAnalysis"
-                    " but not provided in the settings"
-                )
-                result_rows = __bbox_anno_timeline_analysis(
-                    db=db,
-                    project_id=timeline_analysis.project_id,
-                    group_by=timeline_analysis.settings.group_by,
-                    project_metadata_id=timeline_analysis.settings.date_metadata_id,
-                    filter=concept.ta_specific_filter.filter,
-                    annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
-                )
-
-        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to list of rows
-        result_dict = {row["date"]: row for row in result_rows}
-
-        # find the date range (earliest and latest date)
-        date_results = (
-            db.query(
-                func.min(SourceDocumentMetadataORM.date_value),
-                func.max(SourceDocumentMetadataORM.date_value),
+    match concept.timeline_analysis_type:
+        case TimelineAnalysisType.DOCUMENT:
+            assert isinstance(concept.ta_specific_filter, SdocTimelineAnalysisFilter), (
+                "Invalid filter type, expected SdocTimelineAnalysisFilter"
             )
-            .filter(
-                SourceDocumentMetadataORM.project_metadata_id
-                == timeline_analysis.settings.date_metadata_id,
-                SourceDocumentMetadataORM.date_value.isnot(None),
+            result_rows = __sdoc_timeline_analysis(
+                db=db,
+                project_id=timeline_analysis.project_id,
+                group_by=timeline_analysis.settings.group_by,
+                project_metadata_id=timeline_analysis.settings.date_metadata_id,
+                filter=concept.ta_specific_filter.filter,
             )
-            .one()
+        case TimelineAnalysisType.SENT_ANNO:
+            assert isinstance(
+                concept.ta_specific_filter, SentAnnoTimelineAnalysisFilter
+            ), "Invalid filter type, expected SentAnnoTimelineAnalysisFilter"
+            assert timeline_analysis.settings.annotation_aggregation_type is not None, (
+                "Annotation aggregation type is required for SentAnnoTimelineAnalysis"
+                " but not provided in the settings"
+            )
+            result_rows = __sent_anno_timeline_analysis(
+                db=db,
+                project_id=timeline_analysis.project_id,
+                group_by=timeline_analysis.settings.group_by,
+                project_metadata_id=timeline_analysis.settings.date_metadata_id,
+                filter=concept.ta_specific_filter.filter,
+                annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
+            )
+        case TimelineAnalysisType.SPAN_ANNO:
+            assert isinstance(
+                concept.ta_specific_filter, SpanAnnoTimelineAnalysisFilter
+            ), "Invalid filter type, expected SpanAnnoTimelineAnalysisFilter"
+            assert timeline_analysis.settings.annotation_aggregation_type is not None, (
+                "Annotation aggregation type is required for SpanAnnoTimelineAnalysis"
+                " but not provided in the settings"
+            )
+            result_rows = __span_anno_timeline_analysis(
+                db=db,
+                project_id=timeline_analysis.project_id,
+                group_by=timeline_analysis.settings.group_by,
+                project_metadata_id=timeline_analysis.settings.date_metadata_id,
+                filter=concept.ta_specific_filter.filter,
+                annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
+            )
+        case TimelineAnalysisType.BBOX_ANNO:
+            assert isinstance(
+                concept.ta_specific_filter, BBoxAnnoTimelineAnalysisFilter
+            ), "Invalid filter type, expected BBoxAnnoTimelineAnalysisFilter"
+            assert timeline_analysis.settings.annotation_aggregation_type is not None, (
+                "Annotation aggregation type is required for BBoxAnnoTimelineAnalysis"
+                " but not provided in the settings"
+            )
+            result_rows = __bbox_anno_timeline_analysis(
+                db=db,
+                project_id=timeline_analysis.project_id,
+                group_by=timeline_analysis.settings.group_by,
+                project_metadata_id=timeline_analysis.settings.date_metadata_id,
+                filter=concept.ta_specific_filter.filter,
+                annotation_aggregation_type=timeline_analysis.settings.annotation_aggregation_type,
+            )
+
+    # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to list of rows
+    result_dict = {row["date"]: row for row in result_rows}
+
+    # find the date range (earliest and latest date)
+    date_results = (
+        db.query(
+            func.min(SourceDocumentMetadataORM.date_value),
+            func.max(SourceDocumentMetadataORM.date_value),
         )
-        if len(date_results) == 0:
-            return []
-        earliest_date, latest_date = date_results
-
-        # create a date range from earliest to latest (used for x-axis)
-        parse_str = "%Y"
-        freq = "Y"
-        if timeline_analysis.settings.group_by == DateGroupBy.MONTH:
-            parse_str = "%Y-%m"
-            freq = "M"
-        elif timeline_analysis.settings.group_by == DateGroupBy.DAY:
-            parse_str = "%Y-%m-%d"
-            freq = "D"
-        date_list = (
-            pd.date_range(earliest_date, latest_date, freq=freq, inclusive="both")
-            .strftime(parse_str)
-            .to_list()
+        .filter(
+            SourceDocumentMetadataORM.project_metadata_id
+            == timeline_analysis.settings.date_metadata_id,
+            SourceDocumentMetadataORM.date_value.isnot(None),
         )
-        date_list.append(datetime.strftime(date_results[-1], parse_str))
-        date_list = sorted(list(set(date_list)))
+        .one()
+    )
+    if len(date_results) == 0:
+        return []
+    earliest_date, latest_date = date_results
 
-        # create the result, mapping dates to sdoc counts
-        result = [
-            TimelineAnalysisResult(
-                data_ids=result_dict[date]["data_ids"] if date in result_dict else [],
-                date=date,
-                count=result_dict[date]["count"] if date in result_dict else 0,
-            )
-            for date in date_list
-        ]
+    # create a date range from earliest to latest (used for x-axis)
+    parse_str = "%Y"
+    freq = "Y"
+    if timeline_analysis.settings.group_by == DateGroupBy.MONTH:
+        parse_str = "%Y-%m"
+        freq = "M"
+    elif timeline_analysis.settings.group_by == DateGroupBy.DAY:
+        parse_str = "%Y-%m-%d"
+        freq = "D"
+    date_list = (
+        pd.date_range(earliest_date, latest_date, freq=freq, inclusive="both")
+        .strftime(parse_str)
+        .to_list()
+    )
+    date_list.append(datetime.strftime(date_results[-1], parse_str))
+    date_list = sorted(list(set(date_list)))
 
-        return result
+    # create the result, mapping dates to sdoc counts
+    result = [
+        TimelineAnalysisResult(
+            data_ids=result_dict[date]["data_ids"] if date in result_dict else [],
+            date=date,
+            count=result_dict[date]["count"] if date in result_dict else 0,
+        )
+        for date in date_list
+    ]
+
+    return result
 
 
 def preprend_zero(x: int):

@@ -32,12 +32,14 @@ router = APIRouter(
 )
 def word_frequency_analysis_info(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[WordFrequencyColumns]]:
     authz_user.assert_in_project(project_id)
 
     return word_frequency_info(
+        db=db,
         project_id=project_id,
     )
 
@@ -60,6 +62,7 @@ def word_frequency_analysis(
     authz_user.assert_in_project(project_id)
 
     return word_frequency(
+        db=db,
         project_id=project_id,
         filter=filter,
         page=page,
@@ -84,6 +87,7 @@ def word_frequency_analysis_export(
     authz_user.assert_in_project(project_id)
 
     return word_frequency_export(
+        db=db,
         project_id=project_id,
         filter=filter,
     )

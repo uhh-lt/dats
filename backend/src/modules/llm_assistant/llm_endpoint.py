@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user
+from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.llm_assistant.llm_job_dto import (
     ApproachRecommendation,
@@ -26,6 +27,7 @@ llms: LLMAssistantService = LLMAssistantService()
 )
 def create_prompt_templates(
     *,
+    db: Session = Depends(get_db_session),
     llm_job_params: LLMJobParameters,
     approach_type: ApproachType,
     example_ids: list[int] | None = None,
@@ -34,6 +36,7 @@ def create_prompt_templates(
     authz_user.assert_in_project(llm_job_params.project_id)
 
     return llms.create_prompt_templates(
+        db=db,
         llm_job_params=llm_job_params,
         approach_type=approach_type,
         example_ids=example_ids,
@@ -59,11 +62,14 @@ def create_training_parameters(
     summary="Determines the appropriate approach based on the provided input",
 )
 def determine_approach(
-    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
+    *,
+    db: Session = Depends(get_db_session),
+    llm_job_params: LLMJobParameters,
+    authz_user: AuthzUser = Depends(),
 ) -> ApproachRecommendation:
     authz_user.assert_in_project(llm_job_params.project_id)
 
-    return llms.determine_approach(llm_job_params=llm_job_params)
+    return llms.determine_approach(db=db, llm_job_params=llm_job_params)
 
 
 @router.post(
@@ -73,6 +79,7 @@ def determine_approach(
 )
 def count_existing_assistant_annotations(
     *,
+    db: Session = Depends(get_db_session),
     sdoc_ids: list[int],
     code_ids: list[int],
     task_type: TaskType,
@@ -80,6 +87,7 @@ def count_existing_assistant_annotations(
     authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
     return llms.count_existing_assistant_annotations(
+        db=db,
         approach_type=approach_type,
         task_type=task_type,
         sdoc_ids=sdoc_ids,

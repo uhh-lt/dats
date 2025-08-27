@@ -137,7 +137,7 @@ def make_project(
                 title=title,
                 description=description,
             ),
-            creating_user=system_user,
+            creating_user_id=system_user.id,
         )
         crud_project.associate_user(db=db, proj_id=project.id, user_id=user.id)
         return project

@@ -19,6 +19,7 @@ from systems.job_system.job_dto import (
 )
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
 fsr: FilesystemRepo = FilesystemRepo()
 
 
@@ -45,7 +46,7 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     if len(payload.urls) == 0:
         raise NoDataToCrawlError("Number of provided URLs must be at least one!")
 
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         crud_project.exists(
             db=db,
             id=payload.project_id,

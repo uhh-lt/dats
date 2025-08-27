@@ -8,8 +8,11 @@ from modules.concept_over_time_analysis.refinement_steps.init_search_space impor
     init_search_space,
 )
 from modules.concept_over_time_analysis.refinement_steps.store_in_db import store_in_db
+from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
+
+sqlr = SQLRepo()
 
 
 @register_job(
@@ -20,8 +23,6 @@ from systems.job_system.job_register_decorator import register_job
     result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
-    from repos.db.sql_repo import SQLRepo
-
     # init steps / current_step
     job.update(
         steps=[
@@ -32,7 +33,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
         current_step=0,
     )
 
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         # make sure the cota exists!
         db_obj = crud_cota.read(db=db, id=payload.cota_id)
         cota = COTARead.model_validate(db_obj)

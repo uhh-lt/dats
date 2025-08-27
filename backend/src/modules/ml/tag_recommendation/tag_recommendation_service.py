@@ -2,6 +2,7 @@ import statistics
 from collections import defaultdict
 from typing import Any, Callable, Iterable, Iterator, Sequence, TypeVar
 
+from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from common.singleton_meta import SingletonMeta
@@ -18,7 +19,6 @@ from modules.ml.tag_recommendation.tag_recommendation_dto import (
     TagRecommendationMethod,
 )
 from modules.simsearch.simsearch_dto import SimSearchDocumentHit
-from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_models import SimSearchResult
 from repos.vector.weaviate_repo import WeaviateRepo
 
@@ -44,12 +44,12 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         Returns:
             DocumentClassificationService: An instance of the class.
         """
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
         return super(DocumentClassificationService, cls).__new__(cls)
 
     def classify_untagged_documents(
         self,
+        db: Session,
         ml_job_id: str,
         project_id: int,
         tag_ids: list[int] = [],
@@ -69,16 +69,15 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             tag_ids (list[int]): The IDs of the tags to consider
             exclusive (bool): Whether tags are mutually exclusive, either A or B
         """
-        with self.sqlr.db_session() as db:
-            # Fetch all documents that already have tags for the given project
-            sdocs_with_tags = crud_sdoc.read_all_with_tags(
-                db=db, project_id=project_id, tag_ids=tag_ids
-            )
-            # Extract IDs from the tagged documents
-            sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
+        # Fetch all documents that already have tags for the given project
+        sdocs_with_tags = crud_sdoc.read_all_with_tags(
+            db=db, project_id=project_id, tag_ids=tag_ids
+        )
+        # Extract IDs from the tagged documents
+        sdoc_ids = {sdoc.id for sdoc in sdocs_with_tags}
 
-            # Retrieve a mapping: document_id -> list of associated TagORM objects
-            sdocs_and_tags = crud_tag.read_tags_for_documents(db, sdoc_ids=sdoc_ids)
+        # Retrieve a mapping: document_id -> list of associated TagORM objects
+        sdocs_and_tags = crud_tag.read_tags_for_documents(db, sdoc_ids=sdoc_ids)
 
         # Suggest similar documents based on the already tagged documents
         with self.weaviate.weaviate_session() as client:
@@ -89,6 +88,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
                     )
                 case TagRecommendationMethod.KNN:
                     dto_iter = self._knn_suggestions(
+                        db,
                         client,
                         ml_job_id,
                         project_id,
@@ -235,6 +235,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
 
     def _knn_suggestions(
         self,
+        db: Session,
         client: WeaviateClient,
         ml_job_id: str,
         project_id: int,
@@ -243,10 +244,9 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         tag_ids: list[int],
     ) -> Iterator[TagRecommendationLinkCreate]:
         """create suggestions using k-nearest neighbors"""
-        with self.sqlr.db_session() as db:
-            sdocs_without_tags = crud_sdoc.read_all_without_tags(
-                db=db, project_id=project_id, tag_ids=tag_ids
-            )
+        sdocs_without_tags = crud_sdoc.read_all_without_tags(
+            db=db, project_id=project_id, tag_ids=tag_ids
+        )
         sdoc_ids_to_classify = [sdoc.id for sdoc in sdocs_without_tags]
 
         nns: list[list[SimSearchResult[DocumentObjectIdentifier]]] = []

@@ -95,7 +95,7 @@ def test_create_remove_project(db: Session) -> None:
     id = crud_project.create(
         db=db,
         create_dto=ProjectCreate(title=title, description=description),
-        creating_user=system_user,
+        creating_user_id=system_user.id,
     ).id
 
     # check database again

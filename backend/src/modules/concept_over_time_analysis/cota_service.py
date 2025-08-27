@@ -22,7 +22,6 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTAUpdateIntern,
 )
 from modules.concept_over_time_analysis.cota_orm import ConceptOverTimeAnalysisORM
-from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_service import JobService
 
@@ -30,7 +29,6 @@ from systems.job_system.job_service import JobService
 class COTAService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.js = JobService()
         return super(COTAService, cls).__new__(cls)
 

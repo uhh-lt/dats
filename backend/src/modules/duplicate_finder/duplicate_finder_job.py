@@ -19,6 +19,8 @@ from systems.job_system.job_dto import (
 )
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
+
 
 class DuplicateFinderInput(JobInputBase):
     max_different_words: int = Field(
@@ -46,7 +48,7 @@ def find_duplicates_job(
 
     logger.info("Finding duplicate text sdocs")
     t0 = time.time()
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         result = crud_word_frequency.read_by_project_and_doctype(
             db, project_id=payload.project_id, doctype=DocType.text
         )

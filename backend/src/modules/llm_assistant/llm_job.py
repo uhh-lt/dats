@@ -1,8 +1,11 @@
 from common.job_type import JobType
 from modules.llm_assistant.llm_endpoint import router
 from modules.llm_assistant.llm_job_dto import LLMJobInput, LLMJobOutput
+from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import EndpointGeneration, Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
+
+sqlr = SQLRepo()
 
 
 @register_job(
@@ -21,7 +24,11 @@ def llm_assistant(
 ) -> LLMJobOutput:
     from modules.llm_assistant.llm_service import LLMAssistantService
 
-    return LLMAssistantService().handle_llm_job(
-        job=job,
-        payload=payload,
-    )
+    with sqlr.db_session() as db:
+        result = LLMAssistantService().handle_llm_job(
+            db=db,
+            job=job,
+            payload=payload,
+        )
+
+    return result

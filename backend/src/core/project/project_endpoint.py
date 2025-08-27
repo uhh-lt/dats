@@ -34,7 +34,9 @@ def create_new_project(
     proj: ProjectCreate,
     current_user: UserORM = Depends(get_current_user),
 ) -> ProjectRead:
-    db_obj = crud_project.create(db=db, create_dto=proj, creating_user=current_user)
+    db_obj = crud_project.create(
+        db=db, create_dto=proj, creating_user_id=current_user.id
+    )
     return ProjectRead.model_validate(db_obj)
 
 

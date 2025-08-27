@@ -30,6 +30,7 @@ router = APIRouter(
 )
 def code_frequencies(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     code_ids: list[int],
     user_ids: list[int],
@@ -39,7 +40,11 @@ def code_frequencies(
     authz_user.assert_in_project(project_id)
 
     return find_code_frequencies(
-        project_id=project_id, code_ids=code_ids, user_ids=user_ids, doctypes=doctypes
+        db=db,
+        project_id=project_id,
+        code_ids=code_ids,
+        user_ids=user_ids,
+        doctypes=doctypes,
     )
 
 
@@ -50,6 +55,7 @@ def code_frequencies(
 )
 def code_occurrences(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     user_ids: list[int],
     code_id: int,
@@ -58,7 +64,7 @@ def code_occurrences(
     authz_user.assert_in_project(project_id)
 
     return find_code_occurrences(
-        project_id=project_id, user_ids=user_ids, code_id=code_id
+        db=db, project_id=project_id, user_ids=user_ids, code_id=code_id
     )
 
 
@@ -69,6 +75,7 @@ def code_occurrences(
 )
 def count_sdocs_with_date_metadata(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     date_metadata_id: int,
     authz_user: AuthzUser = Depends(),
@@ -76,6 +83,7 @@ def count_sdocs_with_date_metadata(
     authz_user.assert_in_project(project_id)
 
     return compute_num_sdocs_with_date_metadata(
+        db=db,
         project_id=project_id,
         date_metadata_id=date_metadata_id,
     )
@@ -97,5 +105,5 @@ def sample_sdocs_by_tags(
 ) -> list[SampledSdocsResults]:
     authz_user.assert_in_project(project_id)
     return document_sampler_by_tags(
-        project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
+        db=db, project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )

@@ -192,7 +192,7 @@ async def oidc_callback(
         )
 
     try:
-        user = await oauth_service.authenticate_oidc(request)
+        user = await oauth_service.authenticate_oidc(db=db, request=request)
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
 

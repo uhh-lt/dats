@@ -26,7 +26,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
     ### CREATE OPERATIONS ###
 
     def create(
-        self, db: Session, *, create_dto: ProjectCreate, creating_user: UserORM
+        self, db: Session, *, create_dto: ProjectCreate, creating_user_id: int
     ) -> ProjectORM:
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
@@ -44,13 +44,13 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         self.associate_user(db=db, proj_id=project_id, user_id=ASSISTANT_TRAINED_ID)
 
         # 3) associate the user that created the project
-        if creating_user.id not in [
+        if creating_user_id not in [
             SYSTEM_USER_ID,
             ASSISTANT_ZEROSHOT_ID,
             ASSISTANT_FEWSHOT_ID,
             ASSISTANT_TRAINED_ID,
         ]:
-            self.associate_user(db=db, proj_id=project_id, user_id=creating_user.id)
+            self.associate_user(db=db, proj_id=project_id, user_id=creating_user_id)
 
         # 4) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=project_id)

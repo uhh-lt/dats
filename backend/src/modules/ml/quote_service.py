@@ -29,7 +29,6 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from ray_model_worker.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
-from repos.db.sql_repo import SQLRepo
 from repos.ray_repo import RayRepo
 
 
@@ -48,35 +47,37 @@ class _CodeQuoteId(NamedTuple):
 
 class QuoteService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.ray: RayRepo = RayRepo()
         return super(QuoteService, cls).__new__(cls)
 
     def perform_quotation_detection(
-        self, project_id: int, filter_criterion: ColumnElement, recompute=False
+        self,
+        db: Session,
+        project_id: int,
+        filter_criterion: ColumnElement,
+        recompute=False,
     ) -> int:
-        with self.sqlr.db_session() as db:
-            codes = _CodeQuoteId(
-                quote=self._get_code_id(db, "QUOTE", project_id),
-                direct=self._get_code_id(db, "DIRECT", project_id),
-                indirect=self._get_code_id(db, "INDIRECT", project_id),
-                reported=self._get_code_id(db, "REPORTED", project_id),
-                frin=self._get_code_id(db, "FREE_INDIRECT", project_id),
-                infr=self._get_code_id(db, "INDIRECT_FREE_INDIRECT", project_id),
-                frame=self._get_code_id(db, "FRAME", project_id),
-                speaker=self._get_code_id(db, "SPEAKER", project_id),
-                addr=self._get_code_id(db, "ADDRESSEE", project_id),
-                cue=self._get_code_id(db, "CUE", project_id),
+        codes = _CodeQuoteId(
+            quote=self._get_code_id(db, "QUOTE", project_id),
+            direct=self._get_code_id(db, "DIRECT", project_id),
+            indirect=self._get_code_id(db, "INDIRECT", project_id),
+            reported=self._get_code_id(db, "REPORTED", project_id),
+            frin=self._get_code_id(db, "FREE_INDIRECT", project_id),
+            infr=self._get_code_id(db, "INDIRECT_FREE_INDIRECT", project_id),
+            frame=self._get_code_id(db, "FRAME", project_id),
+            speaker=self._get_code_id(db, "SPEAKER", project_id),
+            addr=self._get_code_id(db, "ADDRESSEE", project_id),
+            cue=self._get_code_id(db, "CUE", project_id),
+        )
+        language_metadata = (
+            crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
+                db,
+                project_id,
+                "language",
+                MetaType.STRING.value,
+                DocType.text.value,
             )
-            language_metadata = (
-                crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
-                    db,
-                    project_id,
-                    "language",
-                    MetaType.STRING.value,
-                    DocType.text.value,
-                )
-            )
+        )
         if language_metadata is None:
             raise ValueError("error with project, no language metadata available")
 
@@ -84,6 +85,7 @@ class QuoteService(metaclass=SingletonMeta):
         num_processed = -1
         while num_processed != 0:
             num_processed = self._process_batch(
+                db,
                 filter_criterion,
                 project_id,
                 codes,
@@ -95,38 +97,36 @@ class QuoteService(metaclass=SingletonMeta):
 
     def _process_batch(
         self,
+        db: Session,
         filter_criterion: ColumnElement,
         project_id: int,
         code: _CodeQuoteId,
         language_metadata_id: int,
         recompute: bool = False,
     ):
-        with self.sqlr.db_session() as db:
-            query = (
-                db.query(SourceDocumentDataORM)
-                .join(
-                    SourceDocumentMetadataORM,
-                    SourceDocumentMetadataORM.source_document_id
-                    == SourceDocumentDataORM.id,
-                )
-                .outerjoin(
-                    SourceDocumentJobStatusORM,
-                    and_(
-                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                        SourceDocumentJobStatusORM.type
-                        == JobType.QUOTATION_ATTRIBUTION,
-                    ),
-                    full=True,
-                )
-                .filter(filter_criterion)
-                .filter(
-                    SourceDocumentMetadataORM.project_metadata_id
-                    == language_metadata_id,
-                    SourceDocumentMetadataORM.str_value == "de",
-                )
-                .limit(10)
+        query = (
+            db.query(SourceDocumentDataORM)
+            .join(
+                SourceDocumentMetadataORM,
+                SourceDocumentMetadataORM.source_document_id
+                == SourceDocumentDataORM.id,
             )
-            sdoc_data = query.all()
+            .outerjoin(
+                SourceDocumentJobStatusORM,
+                and_(
+                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    SourceDocumentJobStatusORM.type == JobType.QUOTATION_ATTRIBUTION,
+                ),
+                full=True,
+            )
+            .filter(filter_criterion)
+            .filter(
+                SourceDocumentMetadataORM.project_metadata_id == language_metadata_id,
+                SourceDocumentMetadataORM.str_value == "de",
+            )
+            .limit(10)
+        )
+        sdoc_data = query.all()
         sdoc_data = [doc for doc in sdoc_data if doc is not None]
         num_docs = len(sdoc_data)
 
@@ -166,71 +166,68 @@ class QuoteService(metaclass=SingletonMeta):
 
         quote_output = self.ray.quote_prediction(quote_input)
 
-        with self.sqlr.db_session() as db:
-            if recompute:
-                subquery = (
-                    db.query(SpanAnnotationORM.id)
-                    .join(SpanAnnotationORM.annotation_document)
-                    .filter(
-                        AnnotationDocumentORM.user_id == SYSTEM_USER_ID,
-                        AnnotationDocumentORM.source_document_id.in_(
-                            [sdoc.id for sdoc in sdoc_data]
-                        ),
-                        SpanAnnotationORM.code_id.in_(list(code)),
-                    )
-                    .scalar_subquery()
+        if recompute:
+            subquery = (
+                db.query(SpanAnnotationORM.id)
+                .join(SpanAnnotationORM.annotation_document)
+                .filter(
+                    AnnotationDocumentORM.user_id == SYSTEM_USER_ID,
+                    AnnotationDocumentORM.source_document_id.in_(
+                        [sdoc.id for sdoc in sdoc_data]
+                    ),
+                    SpanAnnotationORM.code_id.in_(list(code)),
                 )
-                db.query(SpanAnnotationORM).where(
-                    SpanAnnotationORM.id.in_(subquery)
-                ).delete()
-
-            span_dtos: list[SpanAnnotationCreateIntern] = []
-            group_dtos: list[SpanGroupCreateIntern] = []
-            group2annos: list[tuple[int, int]] = []
-            last_anno_count = 0
-            for doc in quote_output.documents:
-                adoc = crud_adoc.exists_or_create(
-                    db, user_id=SYSTEM_USER_ID, sdoc_id=doc.id
-                )
-                sdoc = sdoc_by_id[doc.id]
-                for quote in doc.quotes:
-                    qt = self._get_quote_type(quote.typ, code)
-                    self._make_span_anno(qt, quote.quote, adoc.id, sdoc, span_dtos)
-                    self._make_span_anno(
-                        code.frame, quote.frame, adoc.id, sdoc, span_dtos
-                    )
-                    self._make_span_anno(
-                        code.addr, quote.addressee, adoc.id, sdoc, span_dtos
-                    )
-                    self._make_span_anno(code.cue, quote.cue, adoc.id, sdoc, span_dtos)
-                    self._make_span_anno(
-                        code.speaker, quote.speaker, adoc.id, sdoc, span_dtos
-                    )
-                    group = SpanGroupCreateIntern(
-                        name="quote", annotation_document_id=adoc.id
-                    )
-                    group_dtos.append(group)
-                    group2annos.append((last_anno_count, len(span_dtos)))
-                    last_anno_count = len(span_dtos)
-            spans = crud_span_anno.create_multi(db, create_dtos=span_dtos)
-            groups = crud_span_group.create_multi(db, create_dtos=group_dtos)
-            links: dict[int, list[int]] = {
-                g.id: [spans[i].id for i in range(s, e)]
-                for g, (s, e) in zip(groups, group2annos)
-            }
-            crud_span_group.link_groups_spans_batch(db, links=links)
-            crud_sdoc_job_status.create_multi(
-                db,
-                create_dtos=[
-                    SourceDocumentJobStatusCreate(
-                        id=doc.id,
-                        type=JobType.QUOTATION_ATTRIBUTION,
-                        status=JobStatus.FINISHED,
-                        timestamp=datetime.now(),
-                    )
-                    for doc in quote_output.documents
-                ],
+                .scalar_subquery()
             )
+            db.query(SpanAnnotationORM).where(
+                SpanAnnotationORM.id.in_(subquery)
+            ).delete()
+
+        span_dtos: list[SpanAnnotationCreateIntern] = []
+        group_dtos: list[SpanGroupCreateIntern] = []
+        group2annos: list[tuple[int, int]] = []
+        last_anno_count = 0
+        for doc in quote_output.documents:
+            adoc = crud_adoc.exists_or_create(
+                db, user_id=SYSTEM_USER_ID, sdoc_id=doc.id
+            )
+            sdoc = sdoc_by_id[doc.id]
+            for quote in doc.quotes:
+                qt = self._get_quote_type(quote.typ, code)
+                self._make_span_anno(qt, quote.quote, adoc.id, sdoc, span_dtos)
+                self._make_span_anno(code.frame, quote.frame, adoc.id, sdoc, span_dtos)
+                self._make_span_anno(
+                    code.addr, quote.addressee, adoc.id, sdoc, span_dtos
+                )
+                self._make_span_anno(code.cue, quote.cue, adoc.id, sdoc, span_dtos)
+                self._make_span_anno(
+                    code.speaker, quote.speaker, adoc.id, sdoc, span_dtos
+                )
+                group = SpanGroupCreateIntern(
+                    name="quote", annotation_document_id=adoc.id
+                )
+                group_dtos.append(group)
+                group2annos.append((last_anno_count, len(span_dtos)))
+                last_anno_count = len(span_dtos)
+        spans = crud_span_anno.create_multi(db, create_dtos=span_dtos)
+        groups = crud_span_group.create_multi(db, create_dtos=group_dtos)
+        links: dict[int, list[int]] = {
+            g.id: [spans[i].id for i in range(s, e)]
+            for g, (s, e) in zip(groups, group2annos)
+        }
+        crud_span_group.link_groups_spans_batch(db, links=links)
+        crud_sdoc_job_status.create_multi(
+            db,
+            create_dtos=[
+                SourceDocumentJobStatusCreate(
+                    id=doc.id,
+                    type=JobType.QUOTATION_ATTRIBUTION,
+                    status=JobStatus.FINISHED,
+                    timestamp=datetime.now(),
+                )
+                for doc in quote_output.documents
+            ],
+        )
         return num_docs
 
     def _make_span_anno(

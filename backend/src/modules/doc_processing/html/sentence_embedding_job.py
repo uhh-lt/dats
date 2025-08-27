@@ -11,6 +11,8 @@ from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
+
 
 class TextSentenceEmbeddingJobInput(SdocProcessingJobInput):
     sdoc_id: int
@@ -27,7 +29,7 @@ def handle_text_sentence_embedding_job(
 ) -> None:
     # if we re-run this job, sentences is None, we need to query it from db
     if payload.sentences is None:
-        with SQLRepo().db_session() as db:
+        with sqlr.db_session() as db:
             sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
             payload.sentences = sdoc_data.sentences
 
