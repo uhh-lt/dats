@@ -71,7 +71,6 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     TaggingPromptBuilder,
 )
 from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
-from repos.db.sql_repo import SQLRepo
 from repos.llm_repo import LLMRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -82,7 +81,6 @@ lac = conf.llm_assistant
 
 class LLMAssistantService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.llm: LLMRepo = LLMRepo()
         cls.ray: RayRepo = RayRepo()
         cls.weaviate: WeaviateRepo = WeaviateRepo()
@@ -129,7 +127,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
     def _update_llm_job_description(self, job: Job, description: str) -> None:
         job.update(status_message=description)
 
-    def handle_llm_job(self, job: Job, payload: LLMJobInput) -> LLMJobOutput:
+    def handle_llm_job(
+        self, db: Session, job: Job, payload: LLMJobInput
+    ) -> LLMJobOutput:
         job.update(
             steps=[
                 f"Step {i}"
@@ -139,23 +139,22 @@ class LLMAssistantService(metaclass=SingletonMeta):
             status_message="Started LLM Assistant!",
         )
 
-        with self.sqlr.db_session() as db:
-            # get the llm method based on the jobtype
-            llm_method = self.llm_method_for_job_approach_type[payload.llm_job_type][
-                payload.llm_approach_type
-            ]
-            if llm_method is None:
-                raise UnsupportedLLMJobTypeError(payload.llm_job_type)
+        # get the llm method based on the jobtype
+        llm_method = self.llm_method_for_job_approach_type[payload.llm_job_type][
+            payload.llm_approach_type
+        ]
+        if llm_method is None:
+            raise UnsupportedLLMJobTypeError(payload.llm_job_type)
 
-            # execute the llm_method with the provided specific parameters
-            result = llm_method(
-                self=self,
-                db=db,
-                job=job,
-                project_id=payload.project_id,
-                approach_parameters=payload.specific_approach_parameters,
-                task_parameters=payload.specific_task_parameters,
-            )
+        # execute the llm_method with the provided specific parameters
+        result = llm_method(
+            self=self,
+            db=db,
+            job=job,
+            project_id=payload.project_id,
+            approach_parameters=payload.specific_approach_parameters,
+            task_parameters=payload.specific_task_parameters,
+        )
 
         job.update(
             current_step=len(job.get_steps()) - 1,
@@ -165,7 +164,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         return result
 
     def determine_approach(
-        self, llm_job_params: LLMJobParameters
+        self, db: Session, llm_job_params: LLMJobParameters
     ) -> ApproachRecommendation:
         match llm_job_params.llm_job_type:
             case TaskType.TAGGING:
@@ -206,20 +205,18 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 selected_code_ids = llm_job_params.specific_task_parameters.code_ids
 
                 # 1. Find the number of labeled sentences for each code
-                with self.sqlr.db_session() as db:
-                    sentence_annotations = [
-                        sa
-                        for sa in crud_sentence_anno.read_by_codes(
-                            db=db, code_ids=selected_code_ids
-                        )
-                        if sa.user_id
-                        not in SYSTEM_USER_IDS  # Filter out annotations of the system users
-                    ]
+                sentence_annotations = [
+                    sa
+                    for sa in crud_sentence_anno.read_by_codes(
+                        db=db, code_ids=selected_code_ids
+                    )
+                    if sa.user_id
+                    not in SYSTEM_USER_IDS  # Filter out annotations of the system users
+                ]
 
                 # 2. Find the code names
-                with self.sqlr.db_session() as db:
-                    codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
-                    code_id2name = {code.id: code.name for code in codes}
+                codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
+                code_id2name = {code.id: code.name for code in codes}
 
                 # 3. Count annotations by code_id, get the code names
                 code_id2num_sent_annos = {code.id: 0 for code in codes}
@@ -274,6 +271,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
     def count_existing_assistant_annotations(
         self,
+        db: Session,
         task_type: TaskType,
         code_ids: list[int],
         sdoc_ids: list[int],
@@ -282,18 +280,17 @@ class LLMAssistantService(metaclass=SingletonMeta):
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:
                 # 1. Find existing annotations
-                with self.sqlr.db_session() as db:
-                    approachtype2userid = {
-                        ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
-                        ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
-                        ApproachType.MODEL_TRAINING: ASSISTANT_TRAINED_ID,
-                    }
-                    existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-                        db=db,
-                        user_id=approachtype2userid[approach_type],
-                        sdoc_ids=sdoc_ids,
-                        code_ids=code_ids,
-                    )
+                approachtype2userid = {
+                    ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
+                    ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
+                    ApproachType.MODEL_TRAINING: ASSISTANT_TRAINED_ID,
+                }
+                existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                    db=db,
+                    user_id=approachtype2userid[approach_type],
+                    sdoc_ids=sdoc_ids,
+                    code_ids=code_ids,
+                )
 
                 # 2. Count the number of existing annotations per code
                 code_id2num_existing_annos = {code_id: 0 for code_id in code_ids}
@@ -315,30 +312,30 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
     def create_prompt_templates(
         self,
+        db: Session,
         llm_job_params: LLMJobParameters,
         approach_type: ApproachType,
         example_ids: list[int] | None = None,
     ) -> list[LLMPromptTemplates]:
-        with self.sqlr.db_session() as db:
-            # get the llm method based on the jobtype
-            llm_prompt_builder = self.llm_prompt_builder_for_job_type.get(
-                llm_job_params.llm_job_type, None
-            )
-            if llm_prompt_builder is None:
-                raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
+        # get the llm method based on the jobtype
+        llm_prompt_builder = self.llm_prompt_builder_for_job_type.get(
+            llm_job_params.llm_job_type, None
+        )
+        if llm_prompt_builder is None:
+            raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
 
-            # execute the the prompt builder with the provided specific parameters
-            prompt_builder = llm_prompt_builder(
-                db=db,
-                project_id=llm_job_params.project_id,
-                is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
-            )
-            return prompt_builder.build_prompt_templates(
-                example_ids=example_ids,
-                **llm_job_params.specific_task_parameters.model_dump(
-                    exclude={"llm_job_type"}
-                ),
-            )
+        # execute the the prompt builder with the provided specific parameters
+        prompt_builder = llm_prompt_builder(
+            db=db,
+            project_id=llm_job_params.project_id,
+            is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
+        )
+        return prompt_builder.build_prompt_templates(
+            example_ids=example_ids,
+            **llm_job_params.specific_task_parameters.model_dump(
+                exclude={"llm_job_type"}
+            ),
+        )
 
     def construct_prompt_dict(
         self, prompts: list[LLMPromptTemplates], prompt_builder: PromptBuilder
@@ -1048,73 +1045,72 @@ class LLMAssistantService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Find all relevant information for creating the training dataset
-        with self.sqlr.db_session() as db:
-            # 1.1 - Find the labeled sentences for each code
-            sentence_annotations = [
-                sa
-                for sa in crud_sentence_anno.read_by_codes(
-                    db=db, code_ids=task_parameters.code_ids
-                )
-                if sa.user_id
-                not in SYSTEM_USER_IDS  # Filter out annotations of the system users
+        # 1.1 - Find the labeled sentences for each code
+        sentence_annotations = [
+            sa
+            for sa in crud_sentence_anno.read_by_codes(
+                db=db, code_ids=task_parameters.code_ids
+            )
+            if sa.user_id
+            not in SYSTEM_USER_IDS  # Filter out annotations of the system users
+        ]
+        sdoc_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {}
+        for sa in sentence_annotations:
+            if sa.sdoc_id not in sdoc_id2sentence_annotations:
+                sdoc_id2sentence_annotations[sa.sdoc_id] = []
+            sdoc_id2sentence_annotations[sa.sdoc_id].append(sa)
+        logger.debug(
+            f"Found {len(sdoc_id2sentence_annotations)} sdocs with {len(sentence_annotations)} annotations."
+        )
+
+        # 1.2 - Find the corresponding sdocs
+        training_sdocs = crud_sdoc.read_data_batch(
+            db=db, ids=list(sdoc_id2sentence_annotations.keys())
+        )
+        # Santiy check: every sdoc has to have a corresponding sdoc data
+        if len(training_sdocs) != len(sdoc_id2sentence_annotations):
+            logger.error(
+                f"Number of sdoc data ({len(training_sdocs)}) and sdocs ({len(sdoc_id2sentence_annotations)}) do not match."
+            )
+        else:
+            logger.debug(
+                f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
+            )
+
+        # 1.3 - Find the corresponding sentence embeddings
+        with self.weaviate.weaviate_session() as client:
+            search_tuples = [
+                (sent_id, sdoc_data.id)
+                for sdoc_data in training_sdocs
+                if sdoc_data is not None
+                for sent_id in range(len(sdoc_data.sentences))
             ]
-            sdoc_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {}
-            for sa in sentence_annotations:
-                if sa.sdoc_id not in sdoc_id2sentence_annotations:
-                    sdoc_id2sentence_annotations[sa.sdoc_id] = []
-                sdoc_id2sentence_annotations[sa.sdoc_id].append(sa)
+            sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                client=client,
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                    for sent_id, sdoc_id in search_tuples
+                ],
+            )
             logger.debug(
-                f"Found {len(sdoc_id2sentence_annotations)} sdocs with {len(sentence_annotations)} annotations."
+                f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
             )
 
-            # 1.2 - Find the corresponding sdocs
-            training_sdocs = crud_sdoc.read_data_batch(
-                db=db, ids=list(sdoc_id2sentence_annotations.keys())
-            )
-            # Santiy check: every sdoc has to have a corresponding sdoc data
-            if len(training_sdocs) != len(sdoc_id2sentence_annotations):
-                logger.error(
-                    f"Number of sdoc data ({len(training_sdocs)}) and sdocs ({len(sdoc_id2sentence_annotations)}) do not match."
-                )
-            else:
-                logger.debug(
-                    f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
-                )
+        sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
+        for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
+            if sdoc_id not in sdoc_id2sent_embs:
+                sdoc_id2sent_embs[sdoc_id] = []
+            sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+        logger.debug(
+            f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
+        )
 
-            # 1.3 - Find the corresponding sentence embeddings
-            with self.weaviate.weaviate_session() as client:
-                search_tuples = [
-                    (sent_id, sdoc_data.id)
-                    for sdoc_data in training_sdocs
-                    if sdoc_data is not None
-                    for sent_id in range(len(sdoc_data.sentences))
-                ]
-                sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                    client=client,
-                    project_id=project_id,
-                    ids=[
-                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                        for sent_id, sdoc_id in search_tuples
-                    ],
-                )
-                logger.debug(
-                    f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
-                )
-
-            sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
-            for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
-                if sdoc_id not in sdoc_id2sent_embs:
-                    sdoc_id2sent_embs[sdoc_id] = []
-                sdoc_id2sent_embs[sdoc_id].append(sent_emb)
-            logger.debug(
-                f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
-            )
-
-            # 1.4 - Find the code names
-            codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
-            code_id2name = {code.id: code.name for code in codes}
-            code_name2id = {code.name: code.id for code in codes}
-            logger.debug(f"Found the {len(codes)} codes.")
+        # 1.4 - Find the code names
+        codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
+        code_id2name = {code.id: code.name for code in codes}
+        code_name2id = {code.name: code.id for code in codes}
+        logger.debug(f"Found the {len(codes)} codes.")
 
         # 1.5 - Build the training data
         training_dataset: list[SeqSentTaggerDoc] = []
@@ -1156,37 +1152,34 @@ class LLMAssistantService(metaclass=SingletonMeta):
         logger.info(msg)
 
         # Find all relevant information for creating the test dataset
-        with self.sqlr.db_session() as db:
-            # 1. Find the sdocs
-            test_sdocs = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
-            assert None not in test_sdocs, "Test sdocs contain None!"
-            test_sdocs = [
-                sdoc_data for sdoc_data in test_sdocs if sdoc_data is not None
-            ]
+        # 1. Find the sdocs
+        test_sdocs = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+        assert None not in test_sdocs, "Test sdocs contain None!"
+        test_sdocs = [sdoc_data for sdoc_data in test_sdocs if sdoc_data is not None]
 
-            # 3. Find the corresponding sentence embeddings
-            with self.weaviate.weaviate_session() as client:
-                search_tuples = [
-                    (sent_id, sdoc_data.id)
-                    for sdoc_data in test_sdocs
-                    if sdoc_data is not None
-                    for sent_id in range(len(sdoc_data.sentences))
-                ]
-                test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                    client=client,
-                    project_id=project_id,
-                    ids=[
-                        SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                        for sent_id, sdoc_id in search_tuples
-                    ],
-                )
-                test_sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
-                for sent_emb, (sent_id, sdoc_id) in zip(
-                    test_sentence_embeddings, search_tuples
-                ):
-                    if sdoc_id not in test_sdoc_id2sent_embs:
-                        test_sdoc_id2sent_embs[sdoc_id] = []
-                    test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
+        # 3. Find the corresponding sentence embeddings
+        with self.weaviate.weaviate_session() as client:
+            search_tuples = [
+                (sent_id, sdoc_data.id)
+                for sdoc_data in test_sdocs
+                if sdoc_data is not None
+                for sent_id in range(len(sdoc_data.sentences))
+            ]
+            test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
+                client=client,
+                project_id=project_id,
+                ids=[
+                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
+                    for sent_id, sdoc_id in search_tuples
+                ],
+            )
+            test_sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
+            for sent_emb, (sent_id, sdoc_id) in zip(
+                test_sentence_embeddings, search_tuples
+            ):
+                if sdoc_id not in test_sdoc_id2sent_embs:
+                    test_sdoc_id2sent_embs[sdoc_id] = []
+                test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
 
         # Build the test data
         test_dataset: list[SeqSentTaggerDoc] = []
@@ -1234,24 +1227,23 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
         # Step: 4 - Delete all existing sentence annotations for the test sdocs
         if task_parameters.delete_existing_annotations:
-            with self.sqlr.db_session() as db:
-                previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-                    db=db,
-                    user_id=ASSISTANT_TRAINED_ID,
-                    sdoc_ids=task_parameters.sdoc_ids,
-                    code_ids=task_parameters.code_ids,
-                )
+            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=ASSISTANT_TRAINED_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
 
-                msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
-                self._next_llm_job_step(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
+            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
+            self._next_llm_job_step(
+                job=job,
+                description=msg,
+            )
+            logger.info(msg)
 
-                crud_sentence_anno.delete_bulk(
-                    db=db, ids=[sa.id for sa in previous_annotations]
-                )
+            crud_sentence_anno.delete_bulk(
+                db=db, ids=[sa.id for sa in previous_annotations]
+            )
         else:
             msg = "Keeping existing annotations."
             self._next_llm_job_step(

@@ -8,6 +8,8 @@ from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
+
 
 class TextESIndexJobInput(SdocProcessingJobInput):
     filename: str | None
@@ -20,7 +22,7 @@ class TextESIndexJobInput(SdocProcessingJobInput):
 )
 def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
     # if we re-run this job, filename and text is None, we need to query it from db
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         if payload.filename is None or payload.text is None:
             sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
             payload.text = sdoc_data.content

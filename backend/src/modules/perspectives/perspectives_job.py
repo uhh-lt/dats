@@ -1,7 +1,10 @@
 from common.job_type import JobType
 from modules.perspectives.perspectives_job_dto import PerspectivesJobInput
+from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobResultTTL
 from systems.job_system.job_register_decorator import register_job
+
+sqlr = SQLRepo()
 
 
 @register_job(
@@ -13,5 +16,6 @@ from systems.job_system.job_register_decorator import register_job
 def perspectives_job(payload: PerspectivesJobInput, job: Job) -> None:
     from modules.perspectives.perspectives_service import PerspectivesService
 
-    ps = PerspectivesService(job=job)
-    ps.handle_perspectives_job(payload=payload)
+    with sqlr.db_session() as db:
+        ps = PerspectivesService(job=job)
+        ps.handle_perspectives_job(db=db, payload=payload)

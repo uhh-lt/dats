@@ -15,6 +15,8 @@ from repos.db.sql_repo import SQLRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
+
 
 class TextHTMLMappingJobInput(SdocProcessingJobInput):
     raw_html: str
@@ -204,7 +206,7 @@ def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> 
         current_position = html_end
     new_html += payload.raw_html[current_position:]
 
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         # update source document data in db
         crud_sdoc_data.update(
             db=db,

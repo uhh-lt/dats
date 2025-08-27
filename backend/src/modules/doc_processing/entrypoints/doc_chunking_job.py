@@ -18,6 +18,7 @@ from repos.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
+sqlr = SQLRepo()
 fsr = FilesystemRepo()
 ray = RayRepo()
 
@@ -62,7 +63,7 @@ def handle_pdf_chunking_job(
     # create folder if necessary
     folder_id = None
     if len(chunks) > 1:
-        with SQLRepo().db_session() as db:
+        with sqlr.db_session() as db:
             folder = crud_folder.create(
                 db,
                 create_dto=FolderCreate(

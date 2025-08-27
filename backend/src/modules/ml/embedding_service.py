@@ -2,6 +2,7 @@ from datetime import datetime
 
 import numpy as np
 from sqlalchemy import ColumnElement, and_
+from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from common.doc_type import DocType
@@ -31,7 +32,6 @@ from utils.image_utils import image_to_base64, load_image
 
 class EmbeddingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.fsr = FilesystemRepo()
         cls.ray: RayRepo = RayRepo()
         cls.llm: LLMRepo = LLMRepo()
@@ -48,7 +48,7 @@ class EmbeddingService(metaclass=SingletonMeta):
         return encoded_query.numpy()
 
     def encode_image(self, sdoc_id: int) -> np.ndarray:
-        with self.sqlr.db_session() as db:
+        with SQLRepo().db_session() as db:
             sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert sdoc.doctype == DocType.image, (
                 f"SourceDocument with {sdoc_id=} is not an image!"
@@ -66,7 +66,11 @@ class EmbeddingService(metaclass=SingletonMeta):
         return encoded_query.numpy().squeeze()
 
     def embed_sentences(
-        self, project_id: int, filter_criterion: ColumnElement, recompute=False
+        self,
+        db: Session,
+        project_id: int,
+        filter_criterion: ColumnElement,
+        recompute=False,
     ) -> int:
         total_processed = 0
         num_processed = -1
@@ -77,6 +81,7 @@ class EmbeddingService(metaclass=SingletonMeta):
 
             while num_processed != 0:
                 num_processed = self._process_sentences_batch(
+                    db,
                     client,
                     filter_criterion,
                     project_id,
@@ -86,26 +91,26 @@ class EmbeddingService(metaclass=SingletonMeta):
 
     def _process_sentences_batch(
         self,
+        db: Session,
         client: WeaviateClient,
         filter_criterion: ColumnElement,
         project_id: int,
         batch_size=16,
     ):
-        with self.sqlr.db_session() as db:
-            query = (
-                db.query(SourceDocumentDataORM)
-                .outerjoin(
-                    SourceDocumentJobStatusORM,
-                    and_(
-                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                        SourceDocumentJobStatusORM.type == JobType.SENTENCE_EMBEDDING,
-                    ),
-                    full=True,
-                )
-                .filter(filter_criterion)
-                .limit(batch_size)
+        query = (
+            db.query(SourceDocumentDataORM)
+            .outerjoin(
+                SourceDocumentJobStatusORM,
+                and_(
+                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    SourceDocumentJobStatusORM.type == JobType.SENTENCE_EMBEDDING,
+                ),
+                full=True,
             )
-            sdoc_data = query.all()
+            .filter(filter_criterion)
+            .limit(batch_size)
+        )
+        sdoc_data = query.all()
         doc_sentences = [doc.sentences for doc in sdoc_data]
         sdoc_ids = [doc.id for doc in sdoc_data]
         num_docs = len(doc_sentences)
@@ -147,7 +152,11 @@ class EmbeddingService(metaclass=SingletonMeta):
         return num_docs
 
     def embed_documents(
-        self, project_id: int, filter_criterion: ColumnElement, recompute=False
+        self,
+        db: Session,
+        project_id: int,
+        filter_criterion: ColumnElement,
+        recompute=False,
     ) -> int:
         total_processed = 0
         num_processed = -1
@@ -160,6 +169,7 @@ class EmbeddingService(metaclass=SingletonMeta):
 
             while num_processed != 0:
                 num_processed = self._process_document_batch(
+                    db,
                     client,
                     filter_criterion,
                     project_id,
@@ -170,27 +180,27 @@ class EmbeddingService(metaclass=SingletonMeta):
 
     def _process_document_batch(
         self,
+        db: Session,
         client: WeaviateClient,
         filter_criterion: ColumnElement,
         project_id: int,
         batch_size=8,
         force_override=False,
     ):
-        with self.sqlr.db_session() as db:
-            query = (
-                db.query(SourceDocumentDataORM)
-                .outerjoin(
-                    SourceDocumentJobStatusORM,
-                    and_(
-                        SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
-                        SourceDocumentJobStatusORM.type == JobType.DOCUMENT_EMBEDDING,
-                    ),
-                    full=True,
-                )
-                .filter(filter_criterion)
-                .limit(batch_size)
+        query = (
+            db.query(SourceDocumentDataORM)
+            .outerjoin(
+                SourceDocumentJobStatusORM,
+                and_(
+                    SourceDocumentJobStatusORM.id == SourceDocumentDataORM.id,
+                    SourceDocumentJobStatusORM.type == JobType.DOCUMENT_EMBEDDING,
+                ),
+                full=True,
             )
-            sdoc_data = query.all()
+            .filter(filter_criterion)
+            .limit(batch_size)
+        )
+        sdoc_data = query.all()
         content = [doc.content for doc in sdoc_data]
         sdoc_ids = [doc.id for doc in sdoc_data]
         num_docs = len(content)

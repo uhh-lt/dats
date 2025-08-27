@@ -1,16 +1,20 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from common.dependencies import get_current_user
+from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
 )
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.memo_search.memo_search import memo_info, memo_search
+from modules.search.memo_search.memo_search import find_memo_info, find_memos
 from modules.search.memo_search.memo_search_columns import MemoColumns
+from modules.search.sdoc_search.sdoc_search import (
+    find_sdocs,
+    find_sdocs_info,
+)
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from modules.search.search_dto import (
     BBoxAnnotationSearchResult,
     PaginatedSDocHits,
@@ -43,11 +47,14 @@ router = APIRouter(
     summary="Returns Search Info.",
 )
 def search_sdoc_info(
-    *, project_id: int, authz_user: AuthzUser = Depends()
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SdocColumns]]:
     authz_user.assert_in_project(project_id)
 
-    return SdocSearchService().search_info(project_id=project_id)
+    return find_sdocs_info(db=db, project_id=project_id)
 
 
 @router.post(
@@ -57,6 +64,7 @@ def search_sdoc_info(
 )
 def search_sdocs(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     search_query: str,
     expert_mode: bool,
@@ -69,7 +77,8 @@ def search_sdocs(
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedSDocHits:
     authz_user.assert_in_project(project_id)
-    return SdocSearchService().search(
+    return find_sdocs(
+        db=db,
         search_query=search_query,
         expert_mode=expert_mode,
         highlight=highlight,
@@ -92,7 +101,7 @@ def search_memo_info(
 ) -> list[ColumnInfo[MemoColumns]]:
     authz_user.assert_in_project(project_id)
 
-    return memo_info(project_id=project_id)
+    return find_memo_info(project_id=project_id)
 
 
 @router.post(
@@ -102,6 +111,7 @@ def search_memo_info(
 )
 def search_memos(
     *,
+    db: Session = Depends(get_db_session),
     search_query: str,
     project_id: int,
     search_content: bool,
@@ -113,7 +123,8 @@ def search_memos(
 ) -> PaginatedElasticSearchHits:
     authz_user.assert_in_project(project_id)
 
-    return memo_search(
+    return find_memos(
+        db=db,
         project_id=project_id,
         search_query=search_query,
         search_content=search_content,
@@ -131,11 +142,13 @@ def search_memos(
 )
 def search_span_annotation_info(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SpanColumns]]:
     authz_user.assert_in_project(project_id)
     return find_span_annotations_info(
+        db=db,
         project_id=project_id,
     )
 
@@ -147,6 +160,7 @@ def search_span_annotation_info(
 )
 def search_span_annotations(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     filter: Filter[SpanColumns],
     page: int | None = None,
@@ -157,6 +171,7 @@ def search_span_annotations(
     authz_user.assert_in_project(project_id)
 
     return find_span_annotations(
+        db=db,
         project_id=project_id,
         filter=filter,
         page=page,
@@ -172,11 +187,13 @@ def search_span_annotations(
 )
 def search_sentence_annotation_info(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[SentAnnoColumns]]:
     authz_user.assert_in_project(project_id)
     return find_sentence_annotations_info(
+        db=db,
         project_id=project_id,
     )
 
@@ -188,6 +205,7 @@ def search_sentence_annotation_info(
 )
 def search_sentence_annotations(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     filter: Filter[SentAnnoColumns],
     page: int | None = None,
@@ -198,6 +216,7 @@ def search_sentence_annotations(
     authz_user.assert_in_project(project_id)
 
     return find_sentence_annotations(
+        db=db,
         project_id=project_id,
         filter=filter,
         page=page,
@@ -213,11 +232,13 @@ def search_sentence_annotations(
 )
 def search_bbox_annotation_info(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> list[ColumnInfo[BBoxColumns]]:
     authz_user.assert_in_project(project_id)
     return find_bbox_annotations_info(
+        db=db,
         project_id=project_id,
     )
 
@@ -229,6 +250,7 @@ def search_bbox_annotation_info(
 )
 def search_bbox_annotations(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
     filter: Filter[BBoxColumns],
     page: int | None = None,
@@ -239,6 +261,7 @@ def search_bbox_annotations(
     authz_user.assert_in_project(project_id)
 
     return find_bbox_annotations(
+        db=db,
         project_id=project_id,
         filter=filter,
         page=page,

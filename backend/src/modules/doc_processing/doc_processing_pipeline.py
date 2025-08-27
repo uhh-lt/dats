@@ -124,11 +124,12 @@ def execute_pipeline_step(job_type: JobType, input, output, job_service):
 
 
 js = JobService()
+sqlr = SQLRepo()
 
 
 def handle_job_error(job_type: JobType, input: JobInputBase):
     if isinstance(input, SdocProcessingJobInput):
-        with SQLRepo().db_session() as db:
+        with sqlr.db_session() as db:
             crud_sdoc.update(
                 db,
                 id=input.sdoc_id,
@@ -142,7 +143,7 @@ def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
     if isinstance(input, SdocProcessingJobInput):
-        with SQLRepo().db_session() as db:
+        with sqlr.db_session() as db:
             crud_sdoc.update(
                 db,
                 id=input.sdoc_id,

@@ -1,8 +1,9 @@
+from sqlalchemy.orm import Session
+
 from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from modules.search.memo_search.memo_search_columns import MemoColumns
-from repos.db.sql_repo import SQLRepo
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.search_system.column_info import ColumnInfo
@@ -11,39 +12,40 @@ from systems.search_system.search_builder import SearchBuilder
 from systems.search_system.sorting import Sort
 
 
-def memo_info(
+def find_memo_info(
     project_id: int,
 ) -> list[ColumnInfo[MemoColumns]]:
     return [ColumnInfo[MemoColumns].from_column(column) for column in MemoColumns]
 
 
 def filter_memo_ids(
+    db: Session,
     project_id: int,
     filter: Filter[MemoColumns],
     sorts: list[Sort[MemoColumns]],
     page_number: int | None = None,
     page_size: int | None = None,
 ) -> tuple[list[int], int]:
-    with SQLRepo().db_session() as db:
-        builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
-        builder.init_query(
-            db.query(
-                MemoORM.id,
-            )
-            .join(MemoORM.attached_to)
-            .filter(
-                MemoORM.project_id == project_id,
-                ObjectHandleORM.project_id.is_(None),  # never search project memos
-            )
-        ).build_query()
-        result_rows, total_results = builder.execute_query(
-            page_number=page_number, page_size=page_size
+    builder = SearchBuilder(db=db, filter=filter, sorts=sorts)
+    builder.init_query(
+        db.query(
+            MemoORM.id,
         )
+        .join(MemoORM.attached_to)
+        .filter(
+            MemoORM.project_id == project_id,
+            ObjectHandleORM.project_id.is_(None),  # never search project memos
+        )
+    ).build_query()
+    result_rows, total_results = builder.execute_query(
+        page_number=page_number, page_size=page_size
+    )
 
-        return [row[0] for row in result_rows], total_results
+    return [row[0] for row in result_rows], total_results
 
 
-def memo_search(
+def find_memos(
+    db: Session,
     project_id: int,
     search_query: str,
     search_content: bool,
@@ -54,6 +56,7 @@ def memo_search(
 ) -> PaginatedElasticSearchHits:
     if search_query.strip() == "":
         memo_ids, total_results = filter_memo_ids(
+            db=db,
             project_id=project_id,
             filter=filter,
             page_number=page_number,
@@ -66,6 +69,7 @@ def memo_search(
         )
     else:
         filtered_memo_ids, _ = filter_memo_ids(
+            db=db,
             project_id=project_id,
             filter=filter,
             sorts=sorts,

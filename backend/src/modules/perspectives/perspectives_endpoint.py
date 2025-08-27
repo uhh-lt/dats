@@ -33,8 +33,8 @@ from modules.perspectives.perspectives_vis_dto import (
     PerspectivesDoc,
     PerspectivesVisualization,
 )
+from modules.search.sdoc_search.sdoc_search import find_sdoc_ids
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.sdoc_search.sdoc_search_service import SdocSearchService
 from systems.job_system.job_dto import RUNNING_JOB_STATUS, JobStatus
 from systems.job_system.job_service import JobService
 from systems.search_system.filtering import Filter
@@ -349,12 +349,13 @@ def visualize_documents(
     # Search documents
     sdoc_id_in_search_result: dict[int, bool]
     if len(filter.items) > 0 or search_query.strip() != "":
-        hits = SdocSearchService().search_ids(
+        hits = find_sdoc_ids(
+            db=db,
+            project_id=aspect.project_id,
+            folder_id=None,
             search_query=search_query,
             expert_mode=False,
             highlight=False,
-            project_id=aspect.project_id,
-            folder_id=None,
             filter=filter,
             sorts=sorts,
             page_number=None,

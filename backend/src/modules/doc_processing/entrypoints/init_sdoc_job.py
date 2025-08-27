@@ -12,7 +12,8 @@ from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
-fsr: FilesystemRepo = FilesystemRepo()
+sqlr = SQLRepo()
+fsr = FilesystemRepo()
 
 
 class SdocInitJobInput(ProcessingJobInput):
@@ -33,7 +34,7 @@ class SdocInitJobOutput(JobOutputBase):
     output_type=SdocInitJobOutput,
 )
 def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutput:
-    with SQLRepo().db_session() as db:
+    with sqlr.db_session() as db:
         # create sdoc (& optionally the corresponding folder)
         logger.info(f"Persisting SourceDocument for {payload.filepath.name}...")
         create_dto = SourceDocumentCreate(

@@ -2,6 +2,7 @@ from time import perf_counter_ns
 from typing import Any, Callable, Iterable, TypeVar
 
 import numpy as np
+from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -14,7 +15,6 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.simsearch.simsearch_dto import SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
-from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
 SimSearchHit = TypeVar("SimSearchHit")
@@ -25,7 +25,6 @@ SimSearchHit = TypeVar("SimSearchHit")
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.sqlr = SQLRepo()
         cls.sim = SimSearchService()
         cls.weaviate = WeaviateRepo()
 
@@ -33,6 +32,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def confirm_suggestions(
         self,
+        db: Session,
         project_id: int,
         user_id: int,
         code_id: int,
@@ -42,47 +42,46 @@ class AnnoScalingService(metaclass=SingletonMeta):
     ):
         sdoc_ids = {sdoc for sdoc, _ in accept + reject}
 
-        with self.sqlr.db_session() as db:
-            sdocs = (
-                db.query(SourceDocumentDataORM)
-                .filter(SourceDocumentDataORM.id.in_(sdoc_ids))
-                .all()
+        sdocs = (
+            db.query(SourceDocumentDataORM)
+            .filter(SourceDocumentDataORM.id.in_(sdoc_ids))
+            .all()
+        )
+        sdocs = {sdoc.id: sdoc for sdoc in sdocs}
+
+        to_create = []
+
+        for sdoc_id, sent in accept:
+            sdoc = sdocs[sdoc_id]
+            begin_char = sdoc.sentence_starts[sent]
+            end_char = sdoc.sentence_ends[sent]
+            span_anno = SpanAnnotationCreate(
+                code_id=code_id,
+                sdoc_id=sdoc_id,
+                begin=begin_char,
+                end=end_char,
+                begin_token=sdoc.sentence_token_starts[sent],
+                end_token=sdoc.sentence_token_ends[sent],
+                span_text=sdoc.content[begin_char:end_char],
             )
-            sdocs = {sdoc.id: sdoc for sdoc in sdocs}
+            to_create.append(span_anno)
 
-            to_create = []
+        for sdoc_id, sent in reject:
+            sdoc = sdocs[sdoc_id]
+            begin_char = sdoc.sentence_starts[sent]
+            end_char = sdoc.sentence_ends[sent]
+            span_anno = SpanAnnotationCreate(
+                code_id=reject_code_id,
+                sdoc_id=sdoc_id,
+                begin=begin_char,
+                end=end_char,
+                begin_token=sdoc.sentence_token_starts[sent],
+                end_token=sdoc.sentence_token_ends[sent],
+                span_text=sdoc.content[begin_char:end_char],
+            )
+            to_create.append(span_anno)
 
-            for sdoc_id, sent in accept:
-                sdoc = sdocs[sdoc_id]
-                begin_char = sdoc.sentence_starts[sent]
-                end_char = sdoc.sentence_ends[sent]
-                span_anno = SpanAnnotationCreate(
-                    code_id=code_id,
-                    sdoc_id=sdoc_id,
-                    begin=begin_char,
-                    end=end_char,
-                    begin_token=sdoc.sentence_token_starts[sent],
-                    end_token=sdoc.sentence_token_ends[sent],
-                    span_text=sdoc.content[begin_char:end_char],
-                )
-                to_create.append(span_anno)
-
-            for sdoc_id, sent in reject:
-                sdoc = sdocs[sdoc_id]
-                begin_char = sdoc.sentence_starts[sent]
-                end_char = sdoc.sentence_ends[sent]
-                span_anno = SpanAnnotationCreate(
-                    code_id=reject_code_id,
-                    sdoc_id=sdoc_id,
-                    begin=begin_char,
-                    end=end_char,
-                    begin_token=sdoc.sentence_token_starts[sent],
-                    end_token=sdoc.sentence_token_ends[sent],
-                    span_text=sdoc.content[begin_char:end_char],
-                )
-                to_create.append(span_anno)
-
-            crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
+        crud_span_anno.create_bulk(db, user_id=user_id, create_dtos=to_create)
 
     def __suggest_similar_sentences(
         self,
@@ -172,6 +171,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def suggest(
         self,
+        db: Session,
         project_id: int,
         user_ids: list[int],
         code_id: int,
@@ -180,15 +180,15 @@ class AnnoScalingService(metaclass=SingletonMeta):
     ) -> list[tuple[int, int, str]]:
         start_time = perf_counter_ns()
         # takes 4ms (small project)
-        occurrences = self.__get_annotations(project_id, user_ids, code_id)
-        rejections = self.__get_annotations(project_id, user_ids, reject_code_id)
+        occurrences = self.__get_annotations(db, project_id, user_ids, code_id)
+        rejections = self.__get_annotations(db, project_id, user_ids, reject_code_id)
         end_time = perf_counter_ns()
         print("it took", end_time - start_time, "ns to get annotations from the DB")
 
         start_time = perf_counter_ns()
         # takes 2ms (small project)
         sdoc_sentences = self.__get_sentences(
-            {id for _, _, id in occurrences + rejections}
+            db=db, sdoc_ids={id for _, _, id in occurrences + rejections}
         )
         end_time = perf_counter_ns()
         print("it took", end_time - start_time, "ns to get sentences from the DB")
@@ -208,7 +208,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
         print(
             "it took", end_time - start_time, "ns to get similar sentences from index"
         )
-        sim_doc_sentences = self.__get_sentences({hit.sdoc_id for hit in hits})
+        sim_doc_sentences = self.__get_sentences(
+            db=db, sdoc_ids={hit.sdoc_id for hit in hits}
+        )
 
         results = []
         for hit in hits:
@@ -234,45 +236,42 @@ class AnnoScalingService(metaclass=SingletonMeta):
         return sdoc_sent_ids
 
     def __get_annotations(
-        self, project_id: int, user_ids: list[int], code_id: int
+        self, db: Session, project_id: int, user_ids: list[int], code_id: int
     ) -> list[tuple[int, int, int]]:
-        with self.sqlr.db_session() as db:
-            query = (
-                db.query(
-                    SpanAnnotationORM.begin,
-                    SpanAnnotationORM.end,
-                    AnnotationDocumentORM.source_document_id,
-                )
-                .join(
-                    AnnotationDocumentORM,
-                    SpanAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
-                )
-                .join(
-                    SourceDocumentORM,
-                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
-                )
-                .filter(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id.in_(user_ids),
-                    SpanAnnotationORM.code_id == code_id,
-                )
+        query = (
+            db.query(
+                SpanAnnotationORM.begin,
+                SpanAnnotationORM.end,
+                AnnotationDocumentORM.source_document_id,
             )
-            res = query.all()
-            return [(r[0], r[1], r[2]) for r in res]
+            .join(
+                AnnotationDocumentORM,
+                SpanAnnotationORM.annotation_document_id == AnnotationDocumentORM.id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+                AnnotationDocumentORM.user_id.in_(user_ids),
+                SpanAnnotationORM.code_id == code_id,
+            )
+        )
+        res = query.all()
+        return [(r[0], r[1], r[2]) for r in res]
 
     def __get_sentences(
-        self, sdoc_ids: Iterable[int]
+        self, db: Session, sdoc_ids: Iterable[int]
     ) -> dict[int, tuple[list[int], list[int], str]]:
-        with self.sqlr.db_session() as db:
-            query = db.query(
-                SourceDocumentDataORM.id,
-                SourceDocumentDataORM.sentence_starts,
-                SourceDocumentDataORM.sentence_ends,
-                SourceDocumentDataORM.content,
-            ).filter(SourceDocumentDataORM.id.in_(sdoc_ids))
-            res = query.all()
-            return {r[0]: (r[1], r[2], r[3]) for r in res}
+        query = db.query(
+            SourceDocumentDataORM.id,
+            SourceDocumentDataORM.sentence_starts,
+            SourceDocumentDataORM.sentence_ends,
+            SourceDocumentDataORM.content,
+        ).filter(SourceDocumentDataORM.id.in_(sdoc_ids))
+        res = query.all()
+        return {r[0]: (r[1], r[2], r[3]) for r in res}
 
     def __best_match(self, starts: list[int], ends: list[int], begin: int, end: int):
         overlap = [self.__overlap(s, e, begin, end) for s, e in zip(starts, ends)]
