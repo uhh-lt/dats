@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from core.metadata.project_metadata_orm import ProjectMetadataORM
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
+    from modules.classifier.classifier_orm import ClassifierORM
     from modules.perspectives.aspect_orm import AspectORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
 
@@ -114,6 +115,13 @@ class ProjectORM(ORMBase):
 
     aspects: Mapped[list["AspectORM"]] = relationship(
         "AspectORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    classifiers: Mapped[list["ClassifierORM"]] = relationship(
+        "ClassifierORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,
