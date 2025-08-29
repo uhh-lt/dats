@@ -67,7 +67,7 @@ def handle_text_language_detection_job(
 
     with sqlr.db_session() as db:
         # Store language in db
-        crud_sdoc_meta.create_multi_with_doctype(
+        crud_sdoc_meta.update_multi_with_doctype(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,

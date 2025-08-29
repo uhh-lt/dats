@@ -6,6 +6,7 @@ from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -44,6 +45,14 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+
+        # create sdoc metadata
+        crud_sdoc_meta.create_initial_metadata(
+            db=db,
+            project_id=payload.project_id,
+            sdoc_id=sdoc_db_obj.id,
+            doctype=payload.doctype,
+        )
 
         return SdocInitJobOutput(
             sdoc_id=sdoc_db_obj.id,

@@ -105,7 +105,62 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
 
 # Properties for updating
 class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):
-    pass
+    @staticmethod
+    def with_metatype(
+        metatype: MetaType | str,
+        value=None,
+    ) -> "SourceDocumentMetadataUpdate":
+        match metatype:
+            case MetaType.STRING:
+                return SourceDocumentMetadataUpdate(
+                    str_value=str(value) if value is not None else "",
+                    boolean_value=None,
+                    date_value=None,
+                    int_value=None,
+                    list_value=None,
+                )
+            case MetaType.NUMBER:
+                return SourceDocumentMetadataUpdate(
+                    str_value=None,
+                    boolean_value=None,
+                    date_value=None,
+                    int_value=round(float(value)) if value is not None else 0,
+                    list_value=None,
+                )
+            case MetaType.DATE:
+                return SourceDocumentMetadataUpdate(
+                    str_value=None,
+                    boolean_value=None,
+                    date_value=value if value is not None else datetime.now(),
+                    int_value=None,
+                    list_value=None,
+                )
+            case MetaType.BOOLEAN:
+                return SourceDocumentMetadataUpdate(
+                    str_value=None,
+                    boolean_value=bool(value) if value is not None else False,
+                    date_value=None,
+                    int_value=None,
+                    list_value=None,
+                )
+            case MetaType.LIST:
+                list_value = value if value is not None else []
+                if isinstance(list_value, str):
+                    list_value = [list_value]
+                return SourceDocumentMetadataUpdate(
+                    str_value=None,
+                    boolean_value=None,
+                    date_value=None,
+                    int_value=None,
+                    list_value=list_value,
+                )
+        return SourceDocumentMetadataUpdate(
+            str_value=str(value),
+            boolean_value=None,
+            date_value=None,
+            int_value=None,
+            list_value=None,
+        )
 
 
 class SourceDocumentMetadataBulkUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):

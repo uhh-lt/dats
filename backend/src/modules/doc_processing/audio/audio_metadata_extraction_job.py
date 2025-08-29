@@ -43,7 +43,7 @@ def handle_audio_metadata_extraction_job(
 
     with sqlr.db_session() as db:
         # Store audio_metadata in db
-        crud_sdoc_meta.create_multi_with_doctype(
+        crud_sdoc_meta.update_multi_with_doctype(
             db=db,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
