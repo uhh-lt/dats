@@ -92,6 +92,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         keywords: ["health", "document", "status", "processing"],
       },
       {
+        id: "classifier",
+        title: "Open Classifiers",
+        description: "Go to project classifiers",
+        category: "Navigation",
+        icon: getIconComponent(Icon.CLASSIFIER),
+        route: `/project/${projectId}/classifiers`,
+        keywords: ["classifiers", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
+      },
+      {
         id: "annotation-view",
         title: "Annotation View",
         description: "Go to annotation view",
