@@ -1,13 +1,14 @@
-import { Card, CardContent, CardHeader, Divider } from "@mui/material";
+import { Card, CardContent, CardContentProps, CardHeader, Divider } from "@mui/material";
 import { ReactNode } from "react";
 
-interface DocumentImportSectionProps {
+interface DialogSectionProps {
   title: string;
   children: ReactNode;
   action?: ReactNode;
+  cardContentProps?: Omit<CardContentProps, "className">;
 }
 
-export function DialogSection({ title, children, action }: DocumentImportSectionProps) {
+export function DialogSection({ title, children, action, cardContentProps }: DialogSectionProps) {
   return (
     <Card className="h100 myFlexContainer" variant="outlined" sx={{ width: "100%" }}>
       <CardHeader
@@ -23,7 +24,9 @@ export function DialogSection({ title, children, action }: DocumentImportSection
         action={action}
       />
       <Divider />
-      <CardContent className="myFlexFillAllContainer">{children}</CardContent>
+      <CardContent className="myFlexFillAllContainer" {...cardContentProps}>
+        {children}
+      </CardContent>
     </Card>
   );
 }

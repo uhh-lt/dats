@@ -228,7 +228,6 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
 
   // search
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
-  console.log("fetch size:", fetchSize);
   const filter = useAppSelector((state) => state.search.filter[filterName]);
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
     queryKey: [

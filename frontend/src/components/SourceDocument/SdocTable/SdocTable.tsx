@@ -227,7 +227,6 @@ function SdocTable({
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
-      showGlobalFilter: true,
     },
     // search query
     manualFiltering: true, // turn of client-side filtering
