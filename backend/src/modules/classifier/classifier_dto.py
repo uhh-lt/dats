@@ -99,7 +99,6 @@ class ClassifierTrainingOutput(BaseModel):
 
 class ClassifierEvaluationOutput(BaseModel):
     task_type: Literal[ClassifierTask.EVALUATION]
-    eval_loss: list[ClassifierLoss] = Field(description="Evaluation loss per step")
     eval_data_stats: list[ClassifierData] = Field(
         description="Evaluation data statistics"
     )
@@ -131,10 +130,11 @@ class ClassifierJobOutput(JobOutputBase):
 class ClassifierCreate(BaseModel):
     project_id: int = Field(description="ID of the project this classifier belongs to")
     name: str = Field(description="Name of the classifier")
+    base_model: str = Field(description="Name of the base model")
     type: ClassifierModel = Field(description="Type of the classifier")
     path: str = Field(description="Name of the classifier")
-    class_ids: list[int] = Field(
-        description="List of class IDs the classifier was trained with (tag or code)"
+    labelid2classid: dict[int, int] = Field(
+        description="Mapping from internal model label id to code/tag id, depending on ClassifierModel."
     )
     # TRAINING
     batch_size: int = Field(description="Batch size used for training")
@@ -153,7 +153,6 @@ class ClassifierEvaluationCreate(BaseModel):
     precision: float = Field(description="Precision score")
     recall: float = Field(description="Recall score")
     accuracy: float = Field(description="Accuracy score")
-    eval_loss: list[ClassifierLoss] = Field(description="Evaluation loss per step")
     eval_data_stats: list[ClassifierData] = Field(
         description="Evaluation data statistics"
     )
@@ -171,6 +170,9 @@ class ClassifierRead(ClassifierCreate):
     created: datetime = Field(description="Creation timestamp of the classifier")
     updated: datetime = Field(description="Update timestamp of the classifier")
 
+    class_ids: list[int] = Field(
+        description="List of class IDs the classifier was trained with (tag or code)"
+    )
     evaluations: list[ClassifierEvaluationRead] = Field(
         description="List of evaluations for the classifier"
     )
