@@ -191,4 +191,12 @@ export const QueryKey = {
   LLM_JOB: "llmJob",
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
+
+  // managed by ClassifierHooks:
+  // llmjob (by llm job id)
+  CLASSIFIER_JOB: "classifierJob",
+  // all classifier jobs of a Project (by project id)
+  PROJECT_CLASSIFIER_JOBS: "projectClassifierJobs",
+  // all classifiers of a project (by project id)
+  PROJECT_CLASSIFIERS: "projectClassifiers",
 };
