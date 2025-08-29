@@ -3,13 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ClassifierData } from "./ClassifierData";
-import type { ClassifierLoss } from "./ClassifierLoss";
 export type ClassifierEvaluationOutput = {
   task_type: string;
-  /**
-   * Evaluation loss per step
-   */
-  eval_loss: Array<ClassifierLoss>;
   /**
    * Evaluation data statistics
    */
