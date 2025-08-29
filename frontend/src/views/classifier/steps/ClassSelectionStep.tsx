@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardContent, CardHeader, DialogActions, Divider, Stack } from "@mui/material";
+import { Alert, Box, Button, Card, CardContent, CardHeader, DialogActions, Divider } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
@@ -31,11 +31,11 @@ function ClassSelectionStep() {
 
   return (
     <>
-      <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
+      <Box p={2} className="myFlexFillAllContainer h100 myFlexContainer" sx={{ backgroundColor: "grey.100" }}>
         <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
           This is an info Alert.
         </Alert>
-        <Card sx={{ width: "100%" }} variant="outlined" className="h100 myFlexContainer">
+        <Card sx={{ width: "100%" }} variant="outlined" className="myFlexFillAllContainer">
           <CardHeader
             title="Select codes"
             slotProps={{
@@ -62,7 +62,7 @@ function ClassSelectionStep() {
             )}
           </CardContent>
         </Card>
-      </Stack>
+      </Box>
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handleBack}>Back</Button>

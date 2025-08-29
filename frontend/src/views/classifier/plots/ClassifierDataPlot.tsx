@@ -56,11 +56,13 @@ function CodeClassifierDataPlot({ data }: { data: ClassifierData[] }) {
   const classifierData = useMemo(() => {
     if (!projectCodeMap.data) return [];
 
-    return data.map((datum) => ({
-      ...datum,
-      name: projectCodeMap.data[datum.class_id]?.name || `Code ${datum.class_id}`,
-      color: projectCodeMap.data[datum.class_id]?.color || "#82ca9d",
-    }));
+    return data
+      .sort((a, b) => a.class_id - b.class_id)
+      .map((datum) => ({
+        ...datum,
+        name: projectCodeMap.data[datum.class_id]?.name || `Code ${datum.class_id}`,
+        color: projectCodeMap.data[datum.class_id]?.color || "#82ca9d",
+      }));
   }, [data, projectCodeMap.data]);
 
   return <ClassifierDataPlotContent data={classifierData} />;
