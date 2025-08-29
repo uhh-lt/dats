@@ -602,6 +602,259 @@
         }
       }
     },
+    "/classifier/project/{proj_id}": {
+      "get": {
+        "tags": ["classifier"],
+        "summary": "Returns all Classifiers of the Project with the given ID",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClassifierRead" },
+                  "title": "Response Classifier-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/{classifier_id}": {
+      "patch": {
+        "tags": ["classifier"],
+        "summary": "Updates the Classifier with the given ID.",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "classifier_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Classifier Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["classifier"],
+        "summary": "Deletes the Classifier with the given ID.",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "classifier_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Classifier Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/project/{proj_id}/datasetstatistics": {
+      "post": {
+        "tags": ["classifier"],
+        "summary": "Returns statistics of the dataset that would be created with these parameters",
+        "operationId": "compute_dataset_statistics",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "model",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ClassifierModel" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_classifier-compute_dataset_statistics" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClassifierData" },
+                  "title": "Response Classifier-Compute Dataset Statistics"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/classifier": {
+      "post": {
+        "tags": ["classifier"],
+        "summary": "Start Classifier job",
+        "operationId": "start_classifier_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/classifier/classifier/{job_id}": {
+      "get": {
+        "tags": ["classifier"],
+        "summary": "Get Classifier job",
+        "operationId": "get_classifier_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/classifier/{job_id}/abort": {
+      "post": {
+        "tags": ["classifier"],
+        "summary": "Abort Classifier job",
+        "operationId": "abort_classifier_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Classifier-Abort Classifier Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/classifier/{job_id}/retry": {
+      "post": {
+        "tags": ["classifier"],
+        "summary": "Retry Classifier job",
+        "operationId": "retry_classifier_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Classifier-Retry Classifier Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/classifier/classifier/project/{project_id}": {
+      "get": {
+        "tags": ["classifier"],
+        "summary": "Get all Classifier jobs by project",
+        "operationId": "get_classifier_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClassifierJobRead" },
+                  "title": "Response Classifier-Get Classifier Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/code": {
       "put": {
         "tags": ["code"],
@@ -6494,6 +6747,16 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
+      "Body_classifier-compute_dataset_statistics": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "user_ids", "class_ids"],
+        "title": "Body_classifier-compute_dataset_statistics"
+      },
       "Body_docprocessing-upload_files": {
         "properties": {
           "settings": { "type": "string", "title": "Settings", "description": "ProcessingSettings as JSON string" },
@@ -7075,6 +7338,393 @@
         "type": "object",
         "required": ["response", "session_id"],
         "title": "ChatSessionResponse"
+      },
+      "ClassifierData": {
+        "properties": {
+          "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
+          "num_examples": {
+            "type": "integer",
+            "title": "Num Examples",
+            "description": "Number of examples for the class (tag or code)"
+          }
+        },
+        "type": "object",
+        "required": ["class_id", "num_examples"],
+        "title": "ClassifierData"
+      },
+      "ClassifierEvaluationOutput": {
+        "properties": {
+          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
+          "eval_loss": {
+            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
+            "type": "array",
+            "title": "Eval Loss",
+            "description": "Evaluation loss per step"
+          },
+          "eval_data_stats": {
+            "items": { "$ref": "#/components/schemas/ClassifierData" },
+            "type": "array",
+            "title": "Eval Data Stats",
+            "description": "Evaluation data statistics"
+          },
+          "f1": { "type": "number", "title": "F1", "description": "F1 score" },
+          "precision": { "type": "number", "title": "Precision", "description": "Precision score" },
+          "recall": { "type": "number", "title": "Recall", "description": "Recall score" },
+          "accuracy": { "type": "number", "title": "Accuracy", "description": "Accuracy score" }
+        },
+        "type": "object",
+        "required": ["task_type", "eval_loss", "eval_data_stats", "f1", "precision", "recall", "accuracy"],
+        "title": "ClassifierEvaluationOutput"
+      },
+      "ClassifierEvaluationParams": {
+        "properties": {
+          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
+          "classifier_id": {
+            "type": "integer",
+            "title": "Classifier Id",
+            "description": "ID of the model to evaluate"
+          },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "List of SourceDocument IDs to evaluate on"
+          },
+          "user_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "User Ids",
+            "description": "User IDs whose annotations serve as gold labels"
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "classifier_id", "sdoc_ids", "user_ids"],
+        "title": "ClassifierEvaluationParams"
+      },
+      "ClassifierEvaluationRead": {
+        "properties": {
+          "classifier_id": { "type": "integer", "title": "Classifier Id", "description": "ID of the Classifier" },
+          "f1": { "type": "number", "title": "F1", "description": "F1 score" },
+          "precision": { "type": "number", "title": "Precision", "description": "Precision score" },
+          "recall": { "type": "number", "title": "Recall", "description": "Recall score" },
+          "accuracy": { "type": "number", "title": "Accuracy", "description": "Accuracy score" },
+          "eval_loss": {
+            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
+            "type": "array",
+            "title": "Eval Loss",
+            "description": "Evaluation loss per step"
+          },
+          "eval_data_stats": {
+            "items": { "$ref": "#/components/schemas/ClassifierData" },
+            "type": "array",
+            "title": "Eval Data Stats",
+            "description": "Evaluation data statistics"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier Evaluation" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Creation timestamp of the classifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "classifier_id",
+          "f1",
+          "precision",
+          "recall",
+          "accuracy",
+          "eval_loss",
+          "eval_data_stats",
+          "id",
+          "created"
+        ],
+        "title": "ClassifierEvaluationRead"
+      },
+      "ClassifierInferenceOutput": {
+        "properties": { "task_type": { "type": "string", "const": "inference", "title": "Task Type" } },
+        "type": "object",
+        "required": ["task_type"],
+        "title": "ClassifierInferenceOutput"
+      },
+      "ClassifierInferenceParams": {
+        "properties": {
+          "task_type": { "type": "string", "const": "inference", "title": "Task Type" },
+          "classifier_id": {
+            "type": "integer",
+            "title": "Classifier Id",
+            "description": "ID of the model to use for inference"
+          },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "List of SourceDocument IDs to apply the classifier on"
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "classifier_id", "sdoc_ids"],
+        "title": "ClassifierInferenceParams"
+      },
+      "ClassifierJobInput": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/ClassifierTask",
+            "description": "The type of the Classifier Task"
+          },
+          "model_type": {
+            "$ref": "#/components/schemas/ClassifierModel",
+            "description": "The type of the Classifier Model"
+          },
+          "task_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ClassifierTrainingParams" },
+              { "$ref": "#/components/schemas/ClassifierEvaluationParams" },
+              { "$ref": "#/components/schemas/ClassifierInferenceParams" }
+            ],
+            "title": "Task Parameters",
+            "description": "Specific parameters for the ClassifierJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "task_type",
+              "mapping": {
+                "evaluation": "#/components/schemas/ClassifierEvaluationParams",
+                "inference": "#/components/schemas/ClassifierInferenceParams",
+                "training": "#/components/schemas/ClassifierTrainingParams"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "task_type", "model_type", "task_parameters"],
+        "title": "ClassifierJobInput"
+      },
+      "ClassifierJobOutput": {
+        "properties": {
+          "task_type": {
+            "$ref": "#/components/schemas/ClassifierTask",
+            "description": "The type of the ClassifierJob"
+          },
+          "task_output": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ClassifierTrainingOutput" },
+              { "$ref": "#/components/schemas/ClassifierEvaluationOutput" },
+              { "$ref": "#/components/schemas/ClassifierInferenceOutput" }
+            ],
+            "title": "Task Output",
+            "description": "Specific outputs for the ClassifierJob w.r.t it's type",
+            "discriminator": {
+              "propertyName": "task_type",
+              "mapping": {
+                "evaluation": "#/components/schemas/ClassifierEvaluationOutput",
+                "inference": "#/components/schemas/ClassifierInferenceOutput",
+                "training": "#/components/schemas/ClassifierTrainingOutput"
+              }
+            }
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "task_output"],
+        "title": "ClassifierJobOutput"
+      },
+      "ClassifierJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": { "$ref": "#/components/schemas/ClassifierJobInput", "description": "Input for the job" },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/ClassifierJobOutput" }, { "type": "null" }],
+            "description": "Output for the job"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
+        "title": "ClassifierJobRead"
+      },
+      "ClassifierLoss": {
+        "properties": {
+          "step": { "type": "integer", "title": "Step", "description": "Training step" },
+          "value": { "type": "number", "title": "Value", "description": "Loss value" }
+        },
+        "type": "object",
+        "required": ["step", "value"],
+        "title": "ClassifierLoss"
+      },
+      "ClassifierModel": { "type": "string", "enum": ["document", "sentence", "span"], "title": "ClassifierModel" },
+      "ClassifierRead": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "ID of the project this classifier belongs to"
+          },
+          "name": { "type": "string", "title": "Name", "description": "Name of the classifier" },
+          "type": { "$ref": "#/components/schemas/ClassifierModel", "description": "Type of the classifier" },
+          "path": { "type": "string", "title": "Path", "description": "Name of the classifier" },
+          "class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "List of class IDs the classifier was trained with (tag or code)"
+          },
+          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size used for training" },
+          "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs for training" },
+          "train_loss": {
+            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
+            "type": "array",
+            "title": "Train Loss",
+            "description": "Training loss per step"
+          },
+          "train_data_stats": {
+            "items": { "$ref": "#/components/schemas/ClassifierData" },
+            "type": "array",
+            "title": "Train Data Stats",
+            "description": "Training data stats"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier" },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Creation timestamp of the classifier"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Update timestamp of the classifier"
+          },
+          "evaluations": {
+            "items": { "$ref": "#/components/schemas/ClassifierEvaluationRead" },
+            "type": "array",
+            "title": "Evaluations",
+            "description": "List of evaluations for the classifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "name",
+          "type",
+          "path",
+          "class_ids",
+          "batch_size",
+          "epochs",
+          "train_loss",
+          "train_data_stats",
+          "id",
+          "created",
+          "updated",
+          "evaluations"
+        ],
+        "title": "ClassifierRead"
+      },
+      "ClassifierTask": {
+        "type": "string",
+        "enum": ["training", "evaluation", "inference"],
+        "title": "ClassifierTask"
+      },
+      "ClassifierTrainingOutput": {
+        "properties": {
+          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
+          "train_loss": {
+            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
+            "type": "array",
+            "title": "Train Loss",
+            "description": "Training loss per step"
+          },
+          "train_data_stats": {
+            "items": { "$ref": "#/components/schemas/ClassifierData" },
+            "type": "array",
+            "title": "Train Data Stats",
+            "description": "Training data statistics"
+          }
+        },
+        "type": "object",
+        "required": ["task_type", "train_loss", "train_data_stats"],
+        "title": "ClassifierTrainingOutput"
+      },
+      "ClassifierTrainingParams": {
+        "properties": {
+          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
+          "classifier_name": {
+            "type": "string",
+            "title": "Classifier Name",
+            "description": "Name of the model to train"
+          },
+          "class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "List of class IDs to train on (tag or code)"
+          },
+          "user_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "User Ids",
+            "description": "List of user IDs to train on"
+          },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "List of SourceDocument IDs to train on"
+          },
+          "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs to train for" },
+          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size to use for training" }
+        },
+        "type": "object",
+        "required": ["task_type", "classifier_name", "class_ids", "user_ids", "sdoc_ids", "epochs", "batch_size"],
+        "title": "ClassifierTrainingParams"
+      },
+      "ClassifierUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Updated name of the classifier"
+          }
+        },
+        "type": "object",
+        "title": "ClassifierUpdate"
       },
       "ClusterCreate": {
         "properties": {
