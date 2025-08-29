@@ -2,10 +2,7 @@ from pathlib import Path
 
 from common.doc_type import DocType
 from common.job_type import JobType
-from common.meta_type import MetaType
-from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
-from core.metadata.source_document_metadata_dto import SourceDocumentMetadataCreate
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.llm_assistant.prompts.image_captioning_prompt import (
     IMG_CAPTION_USER_PROMPT,
@@ -46,25 +43,16 @@ def handle_image_caption_job(
 
     with sqlr.db_session() as db:
         # Store caption in the database
-        lang_project_metadata = (
-            crud_project_meta.read_by_project_and_key_and_metatype_and_doctype(
-                db=db,
-                project_id=payload.project_id,
-                key="caption",
-                metatype=MetaType.STRING,
-                doctype=DocType.image,
-            )
-        )
-        assert lang_project_metadata is not None, "Language metadata does not exist!"
-        crud_sdoc_meta.create(
+        crud_sdoc_meta.update_multi_with_doctype(
             db=db,
-            create_dto=SourceDocumentMetadataCreate.with_metatype(
-                value=caption,
-                source_document_id=payload.sdoc_id,
-                project_metadata_id=lang_project_metadata.id,
-                metatype=MetaType.STRING,
-            ),
+            project_id=payload.project_id,
+            sdoc_id=payload.sdoc_id,
+            doctype=DocType.image,
+            keys=["caption"],
+            values=[caption],
+            manual_commit=True,
         )
+
     return ImageCaptionJobOutput(
         text=caption, html=f"<html><body><p>{caption}</p></body></html>"
     )
