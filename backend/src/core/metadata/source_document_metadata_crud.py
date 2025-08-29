@@ -62,22 +62,18 @@ class CRUDSourceDocumentMetadata(
 
         return metadata_orm
 
-    def create_multi_with_doctype(
+    def create_initial_metadata(
         self,
         db: Session,
         *,
         project_id: int,
         sdoc_id: int,
         doctype: DocType,
-        keys: list[str],
-        values: list,
         manual_commit: bool = False,
     ) -> list[SourceDocumentMetadataORM]:
         from core.metadata.project_metadata_crud import crud_project_meta
 
-        assert len(keys) == len(values), "keys and values must have the same length"
-
-        # read the matching project metadata
+        # read all project metadata
         project_metadatas = {
             pm.key: pm
             for pm in crud_project_meta.read_by_project_and_doctype(
@@ -86,24 +82,11 @@ class CRUDSourceDocumentMetadata(
         }
 
         create_dtos: list[SourceDocumentMetadataCreate] = []
-        for key, value in zip(keys, values):
-            # ensure key exists
-            project_metadata = project_metadatas.get(key)
-            if project_metadata is None:
-                raise ValueError(f"Unknown project metadata key: {key}")
-
-            # ensure value conforms with metatype
-            metatype = MetaType(project_metadata.metatype)
-            if not metatype.is_value_of_type(value):
-                raise ValueError(
-                    f"Value for key '{key}' does not conform to metatype {metatype}"
-                )
-
+        for pm in project_metadatas.values():
             create_dtos.append(
                 SourceDocumentMetadataCreate.with_metatype(
-                    metatype=metatype,
-                    project_metadata_id=project_metadata.id,
-                    value=value,
+                    metatype=pm.metatype,
+                    project_metadata_id=pm.id,
                     source_document_id=sdoc_id,
                 )
             )
@@ -141,8 +124,6 @@ class CRUDSourceDocumentMetadata(
         *,
         key: str,
         sdoc_id: int,
-        skip: int | None = None,
-        limit: int | None = None,
     ) -> SourceDocumentMetadataORM:
         query = (
             db.query(self.model)
@@ -152,15 +133,28 @@ class CRUDSourceDocumentMetadata(
                 SourceDocumentMetadataORM.source_document_id == sdoc_id,
             )
         )
-        if skip is not None:
-            query = query.offset(skip)
-        if limit is not None:
-            query = query.limit(limit)
-
         db_obj = query.first()
         if db_obj is None:
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, key=key)
         return db_obj
+
+    def read_by_sdoc_and_keys(
+        self,
+        db: Session,
+        *,
+        keys: list[str],
+        sdoc_id: int,
+    ) -> list[tuple[ProjectMetadataORM, SourceDocumentMetadataORM]]:
+        query = (
+            db.query(ProjectMetadataORM, SourceDocumentMetadataORM)
+            .join(SourceDocumentMetadataORM.project_metadata)
+            .filter(
+                ProjectMetadataORM.key.in_(keys),
+                SourceDocumentMetadataORM.source_document_id == sdoc_id,
+            )
+        )
+        results = query.all()
+        return [(r[0], r[1]) for r in results]
 
     def read_by_sdoc(
         self, db: Session, sdoc_id: int
@@ -215,6 +209,57 @@ class CRUDSourceDocumentMetadata(
             )
             db_objs.append(db_obj)
         return db_objs
+
+    def update_multi_with_doctype(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        sdoc_id: int,
+        doctype: DocType,
+        keys: list[str],
+        values: list,
+        manual_commit: bool = False,
+    ) -> list[SourceDocumentMetadataORM]:
+        assert len(keys) == len(values), "keys and values must have the same length"
+
+        # read all sdoc metadata
+        metadatas = {
+            pm.key: (pm, sm)
+            for (pm, sm) in self.read_by_sdoc_and_keys(
+                db=db, sdoc_id=sdoc_id, keys=keys
+            )
+        }
+
+        update_dtos: list[SourceDocumentMetadataUpdate] = []
+        sdoc_metadata_ids: list[int] = []
+        for key, value in zip(keys, values):
+            # ensure key exists
+            project_metadata, sdoc_metadata = metadatas.get(key, (None, None))
+            if sdoc_metadata is None or project_metadata is None:
+                raise ValueError(f"Unknown metadata key: {key}")
+
+            # ensure value conforms with metatype
+            metatype = MetaType(project_metadata.metatype)
+            if not metatype.is_value_of_type(value):
+                raise ValueError(
+                    f"Value for key '{key}' does not conform to metatype {metatype}"
+                )
+
+            update_dtos.append(
+                SourceDocumentMetadataUpdate.with_metatype(
+                    metatype=metatype,
+                    value=value,
+                )
+            )
+            sdoc_metadata_ids.append(sdoc_metadata.id)
+
+        return self.update_multi(
+            db=db,
+            ids=sdoc_metadata_ids,
+            update_dtos=update_dtos,
+            manual_commit=manual_commit,
+        )
 
     ### DELETE OPERATIONS ###
 

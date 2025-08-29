@@ -94,7 +94,7 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
 
         # store outputs in db
-        crud_sdoc_meta.create_multi_with_doctype(
+        crud_sdoc_meta.update_multi_with_doctype(
             db=trans,
             project_id=payload.project_id,
             sdoc_id=payload.sdoc_id,
