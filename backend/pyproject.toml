@@ -65,6 +65,7 @@ dependencies = [
     "scrapy==2.10.0",
     "scrapy-playwright==0.0.31",
     "scrapy-selenium==0.0.7",
+    "seqeval>=1.2.2",
     "sqlalchemy==2.0.25",
     "sqlalchemy-utils==0.41.1",
     "srsly==2.4.8",

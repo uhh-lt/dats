@@ -19,6 +19,7 @@ from repos.db.orm_base import ORMBase
 if TYPE_CHECKING:
     from core.code.code_orm import CodeORM
     from core.project.project_orm import ProjectORM
+    from core.tag.tag_orm import TagORM
 
 
 class ClassifierORM(ORMBase):
@@ -31,22 +32,23 @@ class ClassifierORM(ORMBase):
     )
 
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    base_model: Mapped[str] = mapped_column(String, nullable=False, index=True)
     type: Mapped[ClassifierModel] = mapped_column(String, nullable=False, index=True)
     path: Mapped[str] = mapped_column(String, nullable=False)
     codes: Mapped[list["CodeORM"]] = relationship(
         "CodeORM", secondary="ClassifierCodeLinkTable".lower()
     )
+    tags: Mapped[list["TagORM"]] = relationship(
+        "TagORM", secondary="ClassifierTagLinkTable".lower()
+    )
+    labelid2classid: Mapped[dict[int, int]] = mapped_column(JSON, nullable=False)
 
     # TRAINING
     batch_size: Mapped[int] = mapped_column(Integer, nullable=False)
     epochs: Mapped[int] = mapped_column(Integer, nullable=False)
-    train_loss: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False
-    )  # todo: needs to be validated in DTO
+    train_loss: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
     # one to many
-    train_data_stats: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False
-    )  # todo: needs to be validated in DTO
+    train_data_stats: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
 
     # EVALUATION
     # one to many
@@ -74,7 +76,9 @@ class ClassifierORM(ORMBase):
     )
 
     @property
-    def code_ids(self) -> list[int]:
+    def class_ids(self) -> list[int]:
+        if self.type == ClassifierModel.DOCUMENT:
+            return [tag.id for tag in self.tags]
         return [code.id for code in self.codes]
 
     def get_project_id(self) -> int:
@@ -91,9 +95,6 @@ class ClassifierEvaluationORM(ORMBase):
     precision: Mapped[float] = mapped_column(Float, nullable=False)
     recall: Mapped[float] = mapped_column(Float, nullable=False)
     accuracy: Mapped[float] = mapped_column(Float, nullable=False)
-    eval_loss: Mapped[list[dict]] = mapped_column(
-        JSON, nullable=False
-    )  # todo: needs to be validated in DTO
     eval_data_stats: Mapped[list[dict]] = mapped_column(
         JSON, nullable=False
     )  # todo: needs to be validated in DTO
@@ -118,3 +119,10 @@ class ClassifierCodeLinkTable(ORMBase):
     code_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("code.id"), primary_key=True
     )
+
+
+class ClassifierTagLinkTable(ORMBase):
+    classifier_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("classifier.id", ondelete="CASCADE"), primary_key=True
+    )
+    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tag.id"), primary_key=True)

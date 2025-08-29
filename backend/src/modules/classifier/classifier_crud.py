@@ -19,6 +19,29 @@ from repos.db.crud_base import CRUDBase
 
 
 class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]):
+    def create(
+        self,
+        db: Session,
+        *,
+        create_dto: ClassifierCreate,
+        codes: list[CodeORM],
+        tags: list[TagORM],
+        manual_commit: bool = False,
+    ) -> ClassifierORM:
+        classifier = super().create(
+            db, create_dto=create_dto, manual_commit=manual_commit
+        )
+        if len(codes) > 0:
+            classifier.codes = codes
+        if len(tags) > 0:
+            classifier.tags = tags
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+        db.refresh(classifier)
+        return classifier
+
     def read_dataset(
         self,
         db: Session,
