@@ -2,6 +2,8 @@ import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { ApproachRecommendation } from "../api/openapi/models/ApproachRecommendation.ts";
 import { ApproachType } from "../api/openapi/models/ApproachType.ts";
+import { ClassifierModel } from "../api/openapi/models/ClassifierModel.ts";
+import { ClassifierTask } from "../api/openapi/models/ClassifierTask.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { FolderRead } from "../api/openapi/models/FolderRead.ts";
 import { LlmAssistantJobRead } from "../api/openapi/models/LlmAssistantJobRead.ts";
@@ -68,6 +70,17 @@ interface DialogState {
   llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobOutput | null | undefined;
+  // classifier dialog
+  isClassifierDialogOpen: boolean;
+  classifierProjectId: number;
+  classifierModel?: ClassifierModel;
+  classifierTask?: ClassifierTask;
+  classifierId?: number;
+  classifierStep: number;
+  classifierClassIds: number[];
+  classifierSdocIds: number[];
+  classifierUserIds: number[];
+  classifierJobId?: string;
   // quick command menu
   isQuickCommandMenuOpen: boolean;
 }
@@ -136,6 +149,17 @@ const initialState: DialogState = {
   },
   llmJobId: undefined,
   llmJobResult: undefined,
+  // classifier dialog
+  isClassifierDialogOpen: false,
+  classifierProjectId: -1,
+  classifierModel: undefined,
+  classifierTask: undefined,
+  classifierId: undefined,
+  classifierStep: 0,
+  classifierClassIds: [],
+  classifierSdocIds: [],
+  classifierUserIds: [],
+  classifierJobId: undefined,
   // quick command menu
   isQuickCommandMenuOpen: false,
 };
@@ -404,6 +428,56 @@ export const dialogSlice = createSlice({
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
       }
+    },
+    // classifier dialog
+    openClassifierDialog: (
+      state,
+      action: PayloadAction<{
+        projectId: number;
+        classifierModel?: ClassifierModel;
+        classifierTask?: ClassifierTask;
+        classifierId?: number;
+        classifierStep?: number;
+      }>,
+    ) => {
+      state.isClassifierDialogOpen = true;
+      state.classifierProjectId = action.payload.projectId;
+      state.classifierModel = action.payload.classifierModel;
+      state.classifierTask = action.payload.classifierTask;
+      state.classifierId = action.payload.classifierId;
+      state.classifierStep = action.payload.classifierStep || 0;
+    },
+    onClassifierDialogSelectClasses: (state, action: PayloadAction<number[]>) => {
+      state.classifierClassIds = action.payload;
+      state.classifierStep += 1;
+    },
+    onClassifierDialogSelectSdocs: (state, action: PayloadAction<number[]>) => {
+      state.classifierSdocIds = action.payload;
+    },
+    onClassifierDialogSelectAnnotators: (state, action: PayloadAction<number[]>) => {
+      state.classifierUserIds = action.payload;
+    },
+    onClassifierDialogStartJob: (state, action: PayloadAction<string>) => {
+      state.classifierJobId = action.payload;
+      state.classifierStep += 1;
+    },
+    nextClassifierDialogStep: (state) => {
+      state.classifierStep += 1;
+    },
+    previousClassifierDialogStep: (state) => {
+      state.classifierStep -= 1;
+    },
+    closeClassifierDialog: (state) => {
+      state.isClassifierDialogOpen = initialState.isClassifierDialogOpen;
+      state.classifierProjectId = initialState.classifierProjectId;
+      state.classifierModel = initialState.classifierModel;
+      state.classifierTask = initialState.classifierTask;
+      state.classifierId = initialState.classifierId;
+      state.classifierStep = initialState.classifierStep;
+      state.classifierUserIds = initialState.classifierUserIds;
+      state.classifierSdocIds = initialState.classifierSdocIds;
+      state.classifierClassIds = initialState.classifierClassIds;
+      state.classifierJobId = initialState.classifierJobId;
     },
     // quick command menu
     openQuickCommandMenu: (state) => {
