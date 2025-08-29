@@ -44,6 +44,7 @@ class JobType(str, Enum):
 
     # on demand jobs (long-lived)
     ML = "ml"
+    CLASSIFIER = "classifier"
     LLM_ASSISTANT = "llm_assistant"
     CRAWLER = "crawler"
     COTA_REFINEMENT = "cota_refinement"
