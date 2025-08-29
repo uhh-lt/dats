@@ -18,6 +18,7 @@ from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from core.user.user_crud import crud_user
+from modules.classifier.classifier_crud import crud_classifier
 from modules.concept_over_time_analysis.cota_crud import (
     crud_cota,
 )
@@ -39,6 +40,7 @@ class Crud(Enum):
     ASPECT = crud_aspect
     ANNOTATION_DOCUMENT = crud_adoc
     BBOX_ANNOTATION = crud_bbox_anno
+    CLASSIFIER = crud_classifier
     CLUSTER = crud_cluster
     CODE = crud_code
     COTA_ANALYSIS = crud_cota
