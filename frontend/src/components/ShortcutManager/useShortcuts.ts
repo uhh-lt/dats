@@ -68,11 +68,16 @@ export function useShortcuts() {
         ctrlmeta: true,
         shift: true,
       }),
+      createShortcut("goToClassifier", "c", "Go to Classifier", () => navigate("classifier"), {
+        ctrlmeta: true,
+        shift: true,
+      }),
       createShortcut("goToWhiteboard", "b", "Go to Whiteboard", () => navigate("whiteboard"), {
         ctrlmeta: true,
         shift: true,
       }),
       createShortcut("goToLogbook", "l", "Go to Logbook", () => navigate("logbook"), { ctrlmeta: true, shift: true }),
+      createShortcut("goToHealth", "h", "Go to Health", () => navigate("health"), { ctrlmeta: true, shift: true }),
       createShortcut("goToSettings", ",", "Go to Settings", () => dispatch(CRUDDialogActions.openProjectSettings()), {
         ctrlmeta: true,
         shift: true,

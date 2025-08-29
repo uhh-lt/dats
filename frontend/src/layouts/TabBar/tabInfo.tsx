@@ -47,6 +47,8 @@ function getIconForBase(base: string): Icon {
       return Icon.MAP;
     case "health":
       return Icon.HEALTH;
+    case "classifier":
+      return Icon.CLASSIFIER;
     default:
       return Icon.PROJECT;
   }

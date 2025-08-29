@@ -12,6 +12,7 @@ import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CircleIcon from "@mui/icons-material/Circle";
+import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -26,7 +27,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
-import CloseIcon from "@mui/icons-material/Close";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -123,6 +123,9 @@ export enum Icon {
 
   // SDOC HEALTH STATUS
   HEALTH = "health",
+
+  // SDOC HEALTH STATUS
+  CLASSIFIER = "classifier",
 
   // SETTINGS
   SETTINGS = "project_settings",
@@ -235,6 +238,9 @@ const iconMap: Record<Icon, IconFactory> = {
 
   // SDOC HEALTH STATUS
   [Icon.HEALTH]: (iconProps) => <MedicalServicesIcon {...iconProps} />,
+
+  // CLASSIFIER
+  [Icon.CLASSIFIER]: (iconProps) => <SmartToyIcon {...iconProps} />,
 
   // SETTINGS
   [Icon.SETTINGS]: (iconProps) => <SettingsIcon {...iconProps} />,
