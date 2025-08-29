@@ -160,8 +160,8 @@ class DATSAPI:
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        hits = r.json()["hits"]
-        return [hit["id"] for hit in hits]
+        sdocs: dict[str, dict] = r.json()["sdocs"]
+        return [int(sdoc_id) for sdoc_id in sdocs.keys()]
 
     def read_all_sdoc_ids_by_tags(self, proj_id: int, tags: list[int]):
         # get all sdoc ids
@@ -181,7 +181,7 @@ class DATSAPI:
                             }
                             for tag in tags
                         ],
-                        "logic_operator": "and",
+                        "logic_operator": "or",
                     },
                     "sorts": [],
                 }
@@ -189,8 +189,8 @@ class DATSAPI:
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
-        hits = r.json()["hits"]
-        return [hit["id"] for hit in hits]
+        sdocs: dict[str, dict] = r.json()["sdocs"]
+        return [int(sdoc_id) for sdoc_id in sdocs.keys()]
 
     def upload_files(
         self,
