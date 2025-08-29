@@ -1,4 +1,4 @@
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ClassifierLoss } from "../../../api/openapi/models/ClassifierLoss.ts";
 
 interface ClassifierLossPlotProps {
@@ -13,7 +13,6 @@ function ClassifierLossPlot({ loss }: ClassifierLossPlotProps) {
         <XAxis dataKey="step" />
         <YAxis />
         <Tooltip />
-        <Legend />
         <Line type="monotone" dataKey="value" stroke="#8884d8" />
       </LineChart>
     </ResponsiveContainer>

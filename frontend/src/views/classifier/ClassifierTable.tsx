@@ -1,11 +1,12 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Box, BoxProps, Button, Divider, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_LinearProgressBar,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_TableContainer,
+  MRT_TableOptions,
   MRT_ToggleDensePaddingButton,
   MRT_ToolbarAlertBanner,
   useMaterialReactTable,
@@ -15,10 +16,13 @@ import ClassifierHooks from "../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
 import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
+import CodeRenderer from "../../components/Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import CardContainer from "../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
+import TagRenderer from "../../components/Tag/TagRenderer.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import ClassifierDetailPanel from "./ClassifierDetailPanel.tsx";
 
 interface ClassifierTableProps {
@@ -31,20 +35,48 @@ const columns: MRT_ColumnDef<ClassifierRead>[] = [
     header: "Name",
     size: 400,
     accessorFn: (row) => row.name,
+    enableEditing: true,
   },
   {
     id: "type",
     header: "Type",
     accessorFn: (row) => row.type,
+    enableEditing: false,
+  },
+  {
+    id: "classes",
+    header: "Classes",
+    accessorFn: (row) => row.class_ids,
+    Cell: ({ row }) => {
+      if (row.original.type === ClassifierModel.DOCUMENT) {
+        return (
+          <>
+            {row.original.class_ids.map((tagId) => (
+              <TagRenderer key={tagId} tag={tagId} />
+            ))}
+          </>
+        );
+      } else {
+        return (
+          <>
+            {row.original.class_ids.map((codeId) => (
+              <CodeRenderer key={codeId} code={codeId} />
+            ))}
+          </>
+        );
+      }
+    },
+    enableEditing: false,
   },
   {
     id: "updated",
     header: "Updated",
     accessorFn: (row) => row.updated,
+    enableEditing: false,
   },
 ];
 
-function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProps) {
+function ClassifierTable({ projectId }: ClassifierTableProps) {
   // data
   const { data, isError, isFetching, isLoading, refetch } = ClassifierHooks.useGetAllClassifiers();
 
@@ -56,6 +88,28 @@ function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProp
       .map((key) => parseInt(key))
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
+
+  // rename
+  const { mutate: updateClassifier, isPending: isRenamePending } = ClassifierHooks.useUpdateClassifier();
+  const handleRenameClassifier: MRT_TableOptions<ClassifierRead>["onEditingRowSave"] = ({ row, values, table }) => {
+    if (!values.name || values.name === row.original.name) {
+      table.setEditingRow(null); //exit editing mode
+      return; // not provided OR no change
+    }
+    updateClassifier(
+      {
+        classifierId: row.original.id,
+        requestBody: {
+          name: values.name,
+        },
+      },
+      {
+        onSuccess() {
+          table.setEditingRow(null); //exit editing mode
+        },
+      },
+    );
+  };
 
   // classifier actions
   const dispatch = useAppDispatch();
@@ -112,9 +166,14 @@ function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProp
     state: {
       rowSelection: rowSelectionModel,
       isLoading: isLoading,
+      isSaving: isRenamePending,
       showAlertBanner: isError,
       showProgressBars: isFetching,
     },
+    // edit analysis inline
+    enableEditing: true,
+    editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
+    onEditingRowSave: handleRenameClassifier,
     // selection
     enableRowSelection: true,
     onRowSelectionChange: setRowSelectionModel,
@@ -134,12 +193,29 @@ function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProp
     }),
     // row actions
     enableRowActions: true,
+    positionActionsColumn: "last",
     renderRowActions: ({ row }) => (
-      <Box>
+      <Box sx={{ display: "flex", flexWrap: "nowrap", gap: "8px" }}>
+        <Tooltip title="Edit">
+          <IconButton
+            onClick={(event) => {
+              event.stopPropagation();
+              table.setEditingRow(row);
+              table.setCreatingRow(null); //exit creating mode
+            }}
+          >
+            <>{getIconComponent(Icon.EDIT)}</>
+          </IconButton>
+        </Tooltip>
         <Button onClick={() => handleEvaluateModel(row.original.id, row.original.type)}>Eval</Button>
         <Button onClick={() => handleInferenceModel(row.original.id, row.original.type)}>Infer</Button>
       </Box>
     ),
+    displayColumnDefOptions: {
+      "mrt-row-actions": {
+        size: 240, //make actions column wider
+      },
+    },
     // sorting
     // column resizing
     enableColumnResizing: true,
@@ -155,7 +231,7 @@ function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProp
   });
 
   return (
-    <Box {...props}>
+    <Card className="h100 myFlexContainer" variant="outlined">
       <DATSToolbar variant="dense">
         {selectedRows.length > 0 ? (
           <>
@@ -211,16 +287,10 @@ function ClassifierTable({ projectId, ...props }: ClassifierTableProps & BoxProp
         </Tooltip>
       </DATSToolbar>
       <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
-      <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <CardContainer sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />
-        <Box sx={{ p: 1 }}>
-          <Divider />
-          <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
-            <Typography>Fetched {data?.length} classifiers.</Typography>
-          </Stack>
-        </Box>
       </CardContainer>
-    </Box>
+    </Card>
   );
 }
 
