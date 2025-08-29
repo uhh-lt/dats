@@ -7355,12 +7355,6 @@
       "ClassifierEvaluationOutput": {
         "properties": {
           "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
-          "eval_loss": {
-            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
-            "type": "array",
-            "title": "Eval Loss",
-            "description": "Evaluation loss per step"
-          },
           "eval_data_stats": {
             "items": { "$ref": "#/components/schemas/ClassifierData" },
             "type": "array",
@@ -7373,7 +7367,7 @@
           "accuracy": { "type": "number", "title": "Accuracy", "description": "Accuracy score" }
         },
         "type": "object",
-        "required": ["task_type", "eval_loss", "eval_data_stats", "f1", "precision", "recall", "accuracy"],
+        "required": ["task_type", "eval_data_stats", "f1", "precision", "recall", "accuracy"],
         "title": "ClassifierEvaluationOutput"
       },
       "ClassifierEvaluationParams": {
@@ -7408,12 +7402,6 @@
           "precision": { "type": "number", "title": "Precision", "description": "Precision score" },
           "recall": { "type": "number", "title": "Recall", "description": "Recall score" },
           "accuracy": { "type": "number", "title": "Accuracy", "description": "Accuracy score" },
-          "eval_loss": {
-            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
-            "type": "array",
-            "title": "Eval Loss",
-            "description": "Evaluation loss per step"
-          },
           "eval_data_stats": {
             "items": { "$ref": "#/components/schemas/ClassifierData" },
             "type": "array",
@@ -7429,17 +7417,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "classifier_id",
-          "f1",
-          "precision",
-          "recall",
-          "accuracy",
-          "eval_loss",
-          "eval_data_stats",
-          "id",
-          "created"
-        ],
+        "required": ["classifier_id", "f1", "precision", "recall", "accuracy", "eval_data_stats", "id", "created"],
         "title": "ClassifierEvaluationRead"
       },
       "ClassifierInferenceOutput": {
@@ -7597,13 +7575,14 @@
             "description": "ID of the project this classifier belongs to"
           },
           "name": { "type": "string", "title": "Name", "description": "Name of the classifier" },
+          "base_model": { "type": "string", "title": "Base Model", "description": "Name of the base model" },
           "type": { "$ref": "#/components/schemas/ClassifierModel", "description": "Type of the classifier" },
           "path": { "type": "string", "title": "Path", "description": "Name of the classifier" },
-          "class_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Class Ids",
-            "description": "List of class IDs the classifier was trained with (tag or code)"
+          "labelid2classid": {
+            "additionalProperties": { "type": "integer" },
+            "type": "object",
+            "title": "Labelid2Classid",
+            "description": "Mapping from internal model label id to code/tag id, depending on ClassifierModel."
           },
           "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size used for training" },
           "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs for training" },
@@ -7632,6 +7611,12 @@
             "title": "Updated",
             "description": "Update timestamp of the classifier"
           },
+          "class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "List of class IDs the classifier was trained with (tag or code)"
+          },
           "evaluations": {
             "items": { "$ref": "#/components/schemas/ClassifierEvaluationRead" },
             "type": "array",
@@ -7643,9 +7628,10 @@
         "required": [
           "project_id",
           "name",
+          "base_model",
           "type",
           "path",
-          "class_ids",
+          "labelid2classid",
           "batch_size",
           "epochs",
           "train_loss",
@@ -7653,6 +7639,7 @@
           "id",
           "created",
           "updated",
+          "class_ids",
           "evaluations"
         ],
         "title": "ClassifierRead"
