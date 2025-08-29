@@ -16,6 +16,10 @@ export type ClassifierRead = {
    */
   name: string;
   /**
+   * Name of the base model
+   */
+  base_model: string;
+  /**
    * Type of the classifier
    */
   type: ClassifierModel;
@@ -24,9 +28,9 @@ export type ClassifierRead = {
    */
   path: string;
   /**
-   * List of class IDs the classifier was trained with (tag or code)
+   * Mapping from internal model label id to code/tag id, depending on ClassifierModel.
    */
-  class_ids: Array<number>;
+  labelid2classid: Record<string, number>;
   /**
    * Batch size used for training
    */
@@ -55,6 +59,10 @@ export type ClassifierRead = {
    * Update timestamp of the classifier
    */
   updated: string;
+  /**
+   * List of class IDs the classifier was trained with (tag or code)
+   */
+  class_ids: Array<number>;
   /**
    * List of evaluations for the classifier
    */

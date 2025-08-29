@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ClassifierData } from "./ClassifierData";
-import type { ClassifierLoss } from "./ClassifierLoss";
 export type ClassifierEvaluationRead = {
   /**
    * ID of the Classifier
@@ -25,10 +24,6 @@ export type ClassifierEvaluationRead = {
    * Accuracy score
    */
   accuracy: number;
-  /**
-   * Evaluation loss per step
-   */
-  eval_loss: Array<ClassifierLoss>;
   /**
    * Evaluation data statistics
    */
