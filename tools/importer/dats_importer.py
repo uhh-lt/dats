@@ -207,6 +207,17 @@ else:
     if project is None:
         project = api.create_project(title=title, description=args.project_description)
 
+# Make sure that no doc processing jobs are running
+num_processing_docs = len(
+    api.read_preprocessing_status(project_id=project["id"], status=0)
+)
+if num_processing_docs > 0:
+    print(
+        f"Project '{project['title']}' (id={project['id']}) has {num_processing_docs} documents still processing!"
+    )
+    print("Please try again later!")
+    exit()
+
 # create project metadata (if it does not exist already)
 project_metadatas = api.read_all_project_metadata(proj_id=project["id"])
 project_metadatas = [
@@ -293,13 +304,17 @@ settings = {
     "keyword_max_ngram_size": args.keyword_max_ngram_size,
     "language": args.language,
 }
-api.upload_files(
-    proj_id=project["id"],
-    files=uploading_files,
-    filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
-    settings=settings,
-)
-api.refresh_login()
+
+# Upload files in chunks
+for i in range(0, len(uploading_files), 100):
+    print(f"Uploading files {i} to {i + 100}")
+    api.upload_files(
+        proj_id=project["id"],
+        files=uploading_files[i : i + 100],
+        filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
+        settings=settings,
+    )
+    api.refresh_login()
 
 # wait for success
 sleep(30)
@@ -307,16 +322,15 @@ num_processing_docs = len(
     api.read_preprocessing_status(project_id=project["id"], status=0)
 )
 is_finished = num_processing_docs == 0
-with tqdm(
-    total=len(uploading_files), desc="Document Preprocessing: ", position=1
-) as pbar:
-    while not is_finished:
-        sleep(30)
-        num_processing_docs = len(
-            api.read_preprocessing_status(project_id=project["id"], status=0)
-        )
-        is_finished = num_processing_docs == 0
-        pbar.update(len(uploading_files) - num_processing_docs)
+while not is_finished:
+    sleep(30)
+    num_processing_docs = len(
+        api.read_preprocessing_status(project_id=project["id"], status=0)
+    )
+    is_finished = num_processing_docs == 0
+    print(
+        f"Document Processing: {num_processing_docs} / {len(uploading_files)} documents still processing!"
+    )
 
 # create new tag if it does not exist
 api.refresh_login()
