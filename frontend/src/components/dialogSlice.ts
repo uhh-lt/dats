@@ -80,6 +80,7 @@ interface DialogState {
   classifierClassIds: number[];
   classifierSdocIds: number[];
   classifierUserIds: number[];
+  classifierTagIds: number[];
   classifierJobId?: string;
   // quick command menu
   isQuickCommandMenuOpen: boolean;
@@ -159,6 +160,7 @@ const initialState: DialogState = {
   classifierClassIds: [],
   classifierSdocIds: [],
   classifierUserIds: [],
+  classifierTagIds: [],
   classifierJobId: undefined,
   // quick command menu
   isQuickCommandMenuOpen: false,
@@ -457,6 +459,9 @@ export const dialogSlice = createSlice({
     onClassifierDialogSelectAnnotators: (state, action: PayloadAction<number[]>) => {
       state.classifierUserIds = action.payload;
     },
+    onClassifierDialogSelectTags: (state, action: PayloadAction<number[]>) => {
+      state.classifierTagIds = action.payload;
+    },
     onClassifierDialogStartJob: (state, action: PayloadAction<string>) => {
       state.classifierJobId = action.payload;
       state.classifierStep += 1;
@@ -476,6 +481,7 @@ export const dialogSlice = createSlice({
       state.classifierStep = initialState.classifierStep;
       state.classifierUserIds = initialState.classifierUserIds;
       state.classifierSdocIds = initialState.classifierSdocIds;
+      state.classifierTagIds = initialState.classifierTagIds;
       state.classifierClassIds = initialState.classifierClassIds;
       state.classifierJobId = initialState.classifierJobId;
     },
