@@ -15,9 +15,10 @@ interface ClassifierDatum extends ClassifierData {
 interface ClassifierDataPlotProps {
   data: ClassifierData[];
   classifierModel: ClassifierModel;
+  minHeight?: string | number | undefined;
 }
 
-function ClassifierDataPlot({ data, classifierModel }: ClassifierDataPlotProps) {
+function ClassifierDataPlot({ data, classifierModel, minHeight }: ClassifierDataPlotProps) {
   if (data.length === 0) {
     return (
       <Typography color="textSecondary" style={{ fontStyle: "italic" }}>
@@ -27,13 +28,19 @@ function ClassifierDataPlot({ data, classifierModel }: ClassifierDataPlotProps) 
   }
 
   if (classifierModel === ClassifierModel.DOCUMENT) {
-    return <TagClassifierDataPlot data={data} />;
+    return <TagClassifierDataPlot data={data} minHeight={minHeight} />;
   } else {
-    return <CodeClassifierDataPlot data={data} />;
+    return <CodeClassifierDataPlot data={data} minHeight={minHeight} />;
   }
 }
 
-function TagClassifierDataPlot({ data }: { data: ClassifierData[] }) {
+function TagClassifierDataPlot({
+  data,
+  minHeight,
+}: {
+  data: ClassifierData[];
+  minHeight?: string | number | undefined;
+}) {
   const projectTags = TagHooks.useGetAllTags();
 
   const classifierData = useMemo(() => {
@@ -47,10 +54,16 @@ function TagClassifierDataPlot({ data }: { data: ClassifierData[] }) {
     }));
   }, [data, projectTags.data]);
 
-  return <ClassifierDataPlotContent data={classifierData} />;
+  return <ClassifierDataPlotContent data={classifierData} minHeight={minHeight} />;
 }
 
-function CodeClassifierDataPlot({ data }: { data: ClassifierData[] }) {
+function CodeClassifierDataPlot({
+  data,
+  minHeight,
+}: {
+  data: ClassifierData[];
+  minHeight?: string | number | undefined;
+}) {
   const projectCodeMap = CodeHooks.useGetAllCodesMap();
 
   const classifierData = useMemo(() => {
@@ -65,12 +78,18 @@ function CodeClassifierDataPlot({ data }: { data: ClassifierData[] }) {
       }));
   }, [data, projectCodeMap.data]);
 
-  return <ClassifierDataPlotContent data={classifierData} />;
+  return <ClassifierDataPlotContent data={classifierData} minHeight={minHeight} />;
 }
 
-function ClassifierDataPlotContent({ data }: { data: ClassifierDatum[] }) {
+function ClassifierDataPlotContent({
+  data,
+  minHeight,
+}: {
+  data: ClassifierDatum[];
+  minHeight?: string | number | undefined;
+}) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minHeight={minHeight}>
       <BarChart data={data}>
         <XAxis dataKey="name" />
         <YAxis dataKey="num_examples" />
