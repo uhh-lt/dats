@@ -2,9 +2,10 @@ from pydantic import BaseModel, Field
 
 
 class KwicSnippet(BaseModel):
-    left: str = Field(description="The text before the keyword.")
+    filename: str = Field(description="The filename of the Document.", default="")
+    left: list[str] = Field(description="The text before the keyword.")
     keyword: str = Field(description="The matched keyword.")
-    right: str = Field(description="The text after the keyword.")
+    right: list[str] = Field(description="The text after the keyword.")
 
 
 class ElasticSearchKwicHit(BaseModel):
@@ -24,4 +25,13 @@ class PaginatedElasticSearchKwicHits(BaseModel):
     )
     total_results: int = Field(
         description="The total number of KWIC hits. Used for pagination."
+    )
+
+
+class PaginatedElasticSearchKwicSnippets(BaseModel):
+    total_results: int = Field(
+        description="The total number of KWIC snippets. Used for pagination."
+    )
+    snippets: list[KwicSnippet] = Field(
+        description="The KWIC snippets for the matched keyword(s)."
     )
