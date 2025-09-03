@@ -22,8 +22,9 @@ import CardContainer from "../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
 import TagRenderer from "../../components/Tag/TagRenderer.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { dateToLocaleDate } from "../../utils/DateUtils.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
-import ClassifierDetailPanel from "./ClassifierDetailPanel.tsx";
+import ClassifierDetails from "./ClassifierDetails.tsx";
 
 interface ClassifierTableProps {
   projectId: number;
@@ -47,6 +48,7 @@ const columns: MRT_ColumnDef<ClassifierRead>[] = [
     id: "classes",
     header: "Classes",
     accessorFn: (row) => row.class_ids,
+    enableSorting: false,
     Cell: ({ row }) => {
       if (row.original.type === ClassifierModel.DOCUMENT) {
         return (
@@ -69,9 +71,10 @@ const columns: MRT_ColumnDef<ClassifierRead>[] = [
     enableEditing: false,
   },
   {
-    id: "updated",
-    header: "Updated",
-    accessorFn: (row) => row.updated,
+    id: "created",
+    header: "Created",
+    accessorFn: (row) => row.created,
+    Cell: ({ row }) => dateToLocaleDate(row.original.created).toLocaleString(),
     enableEditing: false,
   },
 ];
@@ -126,25 +129,27 @@ function ClassifierTable({ projectId }: ClassifierTableProps) {
     );
   };
 
-  const handleEvaluateModel = (classifierId: number, modelType: ClassifierModel) => {
+  const handleEvaluateModel = (classifierId: number, modelType: ClassifierModel, classIds: number[]) => {
     dispatch(
       CRUDDialogActions.openClassifierDialog({
         projectId: projectId,
         classifierModel: modelType,
         classifierId: classifierId,
         classifierTask: ClassifierTask.EVALUATION,
+        classifierClassIds: classIds,
         classifierStep: 0,
       }),
     );
   };
 
-  const handleInferenceModel = (classifierId: number, modelType: ClassifierModel) => {
+  const handleInferenceModel = (classifierId: number, modelType: ClassifierModel, classIds: number[]) => {
     dispatch(
       CRUDDialogActions.openClassifierDialog({
         projectId: projectId,
         classifierModel: modelType,
         classifierId: classifierId,
         classifierTask: ClassifierTask.INFERENCE,
+        classifierClassIds: classIds,
         classifierStep: 0,
       }),
     );
@@ -187,7 +192,7 @@ function ClassifierTable({ projectId }: ClassifierTableProps) {
     // pagination
     enablePagination: false,
     // detail panel
-    renderDetailPanel: ({ row }) => <ClassifierDetailPanel classifier={row.original} />,
+    renderDetailPanel: ({ row }) => <ClassifierDetails classifier={row.original} />,
     muiExpandButtonProps: ({ row, table }) => ({
       onClick: () => table.setExpanded({ [row.id]: !row.getIsExpanded() }), //set only this row to be expanded
     }),
@@ -207,8 +212,12 @@ function ClassifierTable({ projectId }: ClassifierTableProps) {
             <>{getIconComponent(Icon.EDIT)}</>
           </IconButton>
         </Tooltip>
-        <Button onClick={() => handleEvaluateModel(row.original.id, row.original.type)}>Eval</Button>
-        <Button onClick={() => handleInferenceModel(row.original.id, row.original.type)}>Infer</Button>
+        <Button onClick={() => handleEvaluateModel(row.original.id, row.original.type, row.original.class_ids)}>
+          Eval
+        </Button>
+        <Button onClick={() => handleInferenceModel(row.original.id, row.original.type, row.original.class_ids)}>
+          Infer
+        </Button>
       </Box>
     ),
     displayColumnDefOptions: {

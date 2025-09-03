@@ -6,9 +6,13 @@ import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ClassSelectionStep from "./steps/ClassSelectionStep.tsx";
-import DataSelectionStep from "./steps/DataSelectionStep.tsx";
+import EvalDataSelectionStep from "./steps/EvalDataSelectionStep.tsx";
+import InferDataSelectionStep from "./steps/InferDataSelectionStep.tsx";
+import InferenceSettingsStep from "./steps/InferSettingsStep.tsx";
 import ResultStep from "./steps/ResultStep.tsx";
 import StatusStep from "./steps/StatusStep.tsx";
+import TrainingDataSelectionStep from "./steps/TrainingDataSelectionStep.tsx";
+import TrainingSettingsStep from "./steps/TrainingSettingsStep.tsx";
 
 const taskTitle: Record<ClassifierTask, string> = {
   [ClassifierTask.TRAINING]: "Training",
@@ -26,6 +30,7 @@ const steps: Record<ClassifierTask, string[]> = {
   [ClassifierTask.TRAINING]: [
     "Select classes", // show code / tag selection
     "Select data", // show document selection, annotator selection & statistics.
+    "Training settings", // show training settings
     "Wait", // start job & show training process
     "View results", // show the training results, finished!
   ],
@@ -36,15 +41,22 @@ const steps: Record<ClassifierTask, string[]> = {
   ],
   [ClassifierTask.INFERENCE]: [
     "Select data", // show document selection, annotator selection & statistics.
+    "Inference settings", // show inference settings
     "Wait", // start job & show inference process
     "View results", // show the inference results, finished!
   ],
 };
 
 const content: Record<ClassifierTask, JSX.Element[]> = {
-  [ClassifierTask.TRAINING]: [<ClassSelectionStep />, <DataSelectionStep />, <StatusStep />, <ResultStep />],
-  [ClassifierTask.EVALUATION]: [<DataSelectionStep />, <StatusStep />, <ResultStep />],
-  [ClassifierTask.INFERENCE]: [<DataSelectionStep />, <StatusStep />, <ResultStep />],
+  [ClassifierTask.TRAINING]: [
+    <ClassSelectionStep />,
+    <TrainingDataSelectionStep />,
+    <TrainingSettingsStep />,
+    <StatusStep />,
+    <ResultStep />,
+  ],
+  [ClassifierTask.EVALUATION]: [<EvalDataSelectionStep />, <StatusStep />, <ResultStep />],
+  [ClassifierTask.INFERENCE]: [<InferDataSelectionStep />, <InferenceSettingsStep />, <StatusStep />, <ResultStep />],
 };
 
 function ClassifierDialog() {

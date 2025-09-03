@@ -23,8 +23,8 @@ function ClassSelectionStep() {
     dispatch(CRUDDialogActions.onClassifierDialogSelectClasses(selectedClassIds));
   }, [dispatch, selectedClassIds]);
 
-  const handleBack = useCallback(() => {
-    dispatch(CRUDDialogActions.previousClassifierDialogStep());
+  const handleClose = useCallback(() => {
+    dispatch(CRUDDialogActions.closeClassifierDialog());
   }, [dispatch]);
 
   if (model === undefined) return null;
@@ -63,9 +63,9 @@ function ClassSelectionStep() {
       </Stack>
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
-        <Button onClick={handleBack}>Back</Button>
+        <Button onClick={handleClose}>Close</Button>
         <Button disabled={selectedClassIds.length === 0} onClick={handleNext}>
-          Next!
+          Next
         </Button>
       </DialogActions>
     </>
