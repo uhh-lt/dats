@@ -12,6 +12,7 @@ from modules.classifier.classifier_dto import (
     ClassifierRead,
     ClassifierUpdate,
 )
+from modules.classifier.classifier_service import ClassifierService
 
 router = APIRouter(
     prefix="/classifier", dependencies=[Depends(get_current_user)], tags=["classifier"]
@@ -67,11 +68,10 @@ def delete_by_id(
 ) -> ClassifierRead:
     authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
 
-    db_obj = crud_classifier.read(db=db, id=classifier_id)
-    classifier_read = ClassifierRead.model_validate(db_obj)
-
-    crud_classifier.delete(db=db, id=classifier_id)
-    return classifier_read
+    db_obj = ClassifierService().delete_classifier_by_id(
+        db=db, classifier_id=classifier_id
+    )
+    return ClassifierRead.model_validate(db_obj)
 
 
 @router.post(
@@ -93,5 +93,28 @@ def compute_dataset_statistics(
 
     dataset = crud_classifier.read_dataset(
         db=db, model=model, sdoc_ids=sdoc_ids, user_ids=user_ids, class_ids=class_ids
+    )
+    return [ClassifierData.model_validate(d) for d in dataset]
+
+
+@router.post(
+    "/project/{proj_id}/datasetstatistics2",
+    response_model=list[ClassifierData],
+    summary="Returns statistics of the dataset that would be created with these parameters",
+)
+def compute_dataset_statistics2(
+    *,
+    proj_id: int,
+    tag_ids: list[int],
+    user_ids: list[int],
+    class_ids: list[int],
+    model: ClassifierModel,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
+) -> list[ClassifierData]:
+    authz_user.assert_in_project(proj_id)
+
+    dataset = crud_classifier.read_dataset2(
+        db=db, model=model, tag_ids=tag_ids, user_ids=user_ids, class_ids=class_ids
     )
     return [ClassifierData.model_validate(d) for d in dataset]

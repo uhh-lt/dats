@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,86 +44,6 @@ class ClassifierDataset(ClassifierData):
     )
 
 
-# ----- JOB DTOS -----
-
-
-class ClassifierTrainingParams(BaseModel):
-    task_type: Literal[ClassifierTask.TRAINING]
-    classifier_name: str = Field(description="Name of the model to train")
-    class_ids: list[int] = Field(
-        description="List of class IDs to train on (tag or code)"
-    )
-    user_ids: list[int] = Field(description="List of user IDs to train on")
-    sdoc_ids: list[int] = Field(description="List of SourceDocument IDs to train on")
-    epochs: int = Field(description="Number of epochs to train for")
-    batch_size: int = Field(description="Batch size to use for training")
-
-
-class ClassifierEvaluationParams(BaseModel):
-    task_type: Literal[ClassifierTask.EVALUATION]
-    classifier_id: int = Field(description="ID of the model to evaluate")
-    sdoc_ids: list[int] = Field(description="List of SourceDocument IDs to evaluate on")
-    user_ids: list[int] = Field(
-        description="User IDs whose annotations serve as gold labels"
-    )
-
-
-class ClassifierInferenceParams(BaseModel):
-    task_type: Literal[ClassifierTask.INFERENCE]
-    classifier_id: int = Field(description="ID of the model to use for inference")
-    sdoc_ids: list[int] = Field(
-        description="List of SourceDocument IDs to apply the classifier on"
-    )
-
-
-class ClassifierJobInput(JobInputBase):
-    task_type: ClassifierTask = Field(description="The type of the Classifier Task")
-    model_type: ClassifierModel = Field(description="The type of the Classifier Model")
-    task_parameters: (
-        ClassifierTrainingParams
-        | ClassifierEvaluationParams
-        | ClassifierInferenceParams
-    ) = Field(
-        description="Specific parameters for the ClassifierJob w.r.t it's type",
-        discriminator="task_type",
-    )
-
-
-class ClassifierTrainingOutput(BaseModel):
-    task_type: Literal[ClassifierTask.TRAINING]
-    train_loss: list[ClassifierLoss] = Field(description="Training loss per step")
-    train_data_stats: list[ClassifierData] = Field(
-        description="Training data statistics"
-    )
-
-
-class ClassifierEvaluationOutput(BaseModel):
-    task_type: Literal[ClassifierTask.EVALUATION]
-    eval_data_stats: list[ClassifierData] = Field(
-        description="Evaluation data statistics"
-    )
-    f1: float = Field(description="F1 score")
-    precision: float = Field(description="Precision score")
-    recall: float = Field(description="Recall score")
-    accuracy: float = Field(description="Accuracy score")
-
-
-class ClassifierInferenceOutput(BaseModel):
-    task_type: Literal[ClassifierTask.INFERENCE]
-
-
-class ClassifierJobOutput(JobOutputBase):
-    task_type: ClassifierTask = Field(description="The type of the ClassifierJob")
-    task_output: (
-        ClassifierTrainingOutput
-        | ClassifierEvaluationOutput
-        | ClassifierInferenceOutput
-    ) = Field(
-        description="Specific outputs for the ClassifierJob w.r.t it's type",
-        discriminator="task_type",
-    )
-
-
 # ----- CRUD DTOS -----
 
 
@@ -137,8 +57,7 @@ class ClassifierCreate(BaseModel):
         description="Mapping from internal model label id to code/tag id, depending on ClassifierModel."
     )
     # TRAINING
-    batch_size: int = Field(description="Batch size used for training")
-    epochs: int = Field(description="Number of epochs for training")
+    train_params: dict[str, Any] = Field(description="Training parameters")
     train_loss: list[ClassifierLoss] = Field(description="Training loss per step")
     train_data_stats: list[ClassifierData] = Field(description="Training data stats")
 
@@ -178,3 +97,96 @@ class ClassifierRead(ClassifierCreate):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ----- JOB DTOS -----
+
+
+class ClassifierTrainingParams(BaseModel):
+    task_type: Literal[ClassifierTask.TRAINING]
+    # required
+    classifier_name: str = Field(description="Name of the model to train")
+    base_name: str = Field(description="Name of the base model")
+    adapter_name: str | None = Field(description="Name of the adapter to use (if any)")
+    class_ids: list[int] = Field(
+        description="List of class IDs to train on (tag or code)"
+    )
+    # training data
+    user_ids: list[int] = Field(description="List of user IDs to train on")
+    tag_ids: list[int] = Field(description="List of Tag IDs to train on")
+    # training settings
+    epochs: int = Field(description="Number of epochs to train for")
+    batch_size: int = Field(description="Batch size to use for training")
+    early_stopping: bool = Field(description="Whether to use early stopping")
+    learning_rate: float = Field(description="Learning rate to use for training")
+    weight_decay: float = Field(description="Weight decay to use for training")
+    # specific training settings
+    is_bio: bool = Field(description="Whether to use BIO or IO tagging")
+
+    def get_train_params(self):
+        return {
+            "epochs": self.epochs,
+            "batch_size": self.batch_size,
+            "early_stopping": self.early_stopping,
+            "learning_rate": self.learning_rate,
+            "weight_decay": self.weight_decay,
+            "is_bio": self.is_bio,
+        }
+
+
+class ClassifierEvaluationParams(BaseModel):
+    task_type: Literal[ClassifierTask.EVALUATION]
+    classifier_id: int = Field(description="ID of the model to evaluate")
+    tag_ids: list[int] = Field(description="List of Tag IDs to evaluate on")
+    user_ids: list[int] = Field(
+        description="User IDs whose annotations serve as gold labels"
+    )
+
+
+class ClassifierInferenceParams(BaseModel):
+    task_type: Literal[ClassifierTask.INFERENCE]
+    classifier_id: int = Field(description="ID of the model to use for inference")
+    sdoc_ids: list[int] = Field(
+        description="List of SourceDocument IDs to apply the classifier on"
+    )
+
+
+class ClassifierJobInput(JobInputBase):
+    task_type: ClassifierTask = Field(description="The type of the Classifier Task")
+    model_type: ClassifierModel = Field(description="The type of the Classifier Model")
+    task_parameters: (
+        ClassifierTrainingParams
+        | ClassifierEvaluationParams
+        | ClassifierInferenceParams
+    ) = Field(
+        description="Specific parameters for the ClassifierJob w.r.t it's type",
+        discriminator="task_type",
+    )
+
+
+class ClassifierTrainingOutput(BaseModel):
+    task_type: Literal[ClassifierTask.TRAINING]
+    classifier: ClassifierRead = Field(description="The trained Classifier")
+
+
+class ClassifierEvaluationOutput(BaseModel):
+    task_type: Literal[ClassifierTask.EVALUATION]
+    evaluation: ClassifierEvaluationRead = Field(
+        description="The Classifier Evaluation"
+    )
+
+
+class ClassifierInferenceOutput(BaseModel):
+    task_type: Literal[ClassifierTask.INFERENCE]
+
+
+class ClassifierJobOutput(JobOutputBase):
+    task_type: ClassifierTask = Field(description="The type of the ClassifierJob")
+    task_output: (
+        ClassifierTrainingOutput
+        | ClassifierEvaluationOutput
+        | ClassifierInferenceOutput
+    ) = Field(
+        description="Specific outputs for the ClassifierJob w.r.t it's type",
+        discriminator="task_type",
+    )
