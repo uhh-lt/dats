@@ -7,6 +7,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Stack,
 } from "@mui/material";
 import React, { memo, useCallback } from "react";
 import TagHooks from "../../api/TagHooks.ts";
@@ -35,13 +36,16 @@ function TagSelectorMulti({ tagIds, onTagIdChange, title, ...props }: TagSelecto
 
   // render
   const renderValue = useCallback(
-    (tagIds: number[]) =>
-      tagIds.map((tagId, index) => (
-        <React.Fragment key={tagId}>
-          <TagRenderer tag={tagId} />
-          {index < tagIds.length - 1 && ", "}
-        </React.Fragment>
-      )),
+    (tagIds: number[]) => (
+      <Stack direction="row" spacing={1} flexWrap="wrap">
+        {tagIds.map((tagId, index) => (
+          <React.Fragment key={tagId}>
+            <TagRenderer tag={tagId} />
+            {index < tagIds.length - 1 && ", "}
+          </React.Fragment>
+        ))}
+      </Stack>
+    ),
     [],
   );
 

@@ -29,7 +29,7 @@ function TagRendererWithoutData({ tagId, ...props }: { tagId: number } & Omit<St
 
 function TagRendererWithData({ tag, ...props }: { tag: TagRead } & Omit<StackProps, "direction" | "alignItems">) {
   return (
-    <Stack spacing={1} direction="row" alignItems="center" {...props}>
+    <Stack spacing={0.5} direction="row" alignItems="center" {...props}>
       {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
       <Typography>{tag.name}</Typography>
     </Stack>
