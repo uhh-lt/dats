@@ -25,7 +25,10 @@
       "cwd": "${workspaceFolder}",
       "envFile": "${workspaceFolder}/.env",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/src"
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "RQ_WORKERS_CPU": "2",
+        "RQ_WORKERS_GPU": "2",
+        "CUDA_VISIBLE_DEVICES": "1"
       }
     },
     {
