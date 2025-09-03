@@ -1,4 +1,5 @@
-import re
+import pandas as pd
+from elasticsearch import Elasticsearch
 
 from core.doc.sdoc_elastic_dto import (
     ElasticSearchDocument,
@@ -7,11 +8,9 @@ from core.doc.sdoc_elastic_dto import (
 )
 from core.doc.sdoc_elastic_index import SdocIndex
 from core.doc.sdoc_kwic_dto import (
-    ElasticSearchKwicHit,
     KwicSnippet,
-    PaginatedElasticSearchKwicHits,
+    PaginatedElasticSearchKwicSnippets,
 )
-from elasticsearch import Elasticsearch
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.event_system.events import (
@@ -78,81 +77,112 @@ class CRUDElasticSdoc(
         window: int = 5,
         limit: int | None = None,
         skip: int | None = None,
-    ) -> PaginatedElasticSearchKwicHits:
+        direction: str = "left",  # "left", "right"
+    ) -> PaginatedElasticSearchKwicSnippets:
         """
         KWIC search using ES highlighting + match_phrase query.
-        Each hit may produce multiple KWIC snippets.
+        Snippets are sorted lexicographically by frequency of closest → 2nd → 3rd word
         """
+
+        if direction not in {"left", "right"}:
+            raise ValueError("direction must be 'left' or 'right'")
+
         index = self.index.get_index_name(proj_id)
         if not client.indices.exists(index=index):
             raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
 
         search_res = client.search(
             index=index,
-            query={
-                "match_phrase": {"content": query}
-            },  # match_phrase does not support fuzziness
-            _source=["filename"],  # we don’t need full content
+            query={"match_phrase": {"content": query}},
+            _source=["filename"],
             highlight={
                 "fields": {
                     "content": {
                         "type": "fvh",
-                        "fragment_size": window * 20,  # approx. 20 chars per word
-                        "number_of_fragments": 99999,  # return all fragments
+                        "fragment_size": window * 20,
+                        "number_of_fragments": 9999,
                         "no_match_size": 0,
                         "pre_tags": ["<em>"],
                         "post_tags": ["</em>"],
                     }
                 }
             },
-            from_=skip or 0,
-            size=limit or 10,
+            # from_=skip or 0,
+            size=9999,
         )
 
-        kwic_results = []
+        # STOPWORDS = {"the", "is", "in", "and", "to", "a"}
+        # def normalize_tokens(words: list[str]) -> list[str]:
+        #     return [
+        #         w.strip(string.punctuation).lower()
+        #         for w in words
+        #         if w.strip(string.punctuation).lower() not in STOPWORDS
+        #     ]
+
+        # KWIC snippets
+        rows = []
+        idx = (-1, -2, -3) if direction == "left" else (0, 1, 2)
         for hit in search_res["hits"]["hits"]:
-            snippets = []
+            filename = hit["_source"]["filename"]
             for frag in hit.get("highlight", {}).get("content", []):
-                snippets.extend(self.get_kwic_from_highlight(frag, window))
+                for snip in self.get_kwic_from_highlight(frag, window):
+                    textString = getattr(snip, direction)
+                    snip.filename = filename
+                    rows.append(
+                        {
+                            "snippet": snip,
+                            "text": " ".join(textString),
+                            "text1": textString[idx[0]] if len(textString) >= 1 else "",
+                            "text2": textString[idx[1]] if len(textString) >= 2 else "",
+                            "text3": textString[idx[2]] if len(textString) >= 3 else "",
+                        }
+                    )
 
-            kwic_results.append(
-                ElasticSearchKwicHit(
-                    id=hit["_id"],
-                    filename=hit["_source"]["filename"],
-                    score=hit["_score"],
-                    snippets=snippets,
-                )
-            )
+        if not rows:
+            return PaginatedElasticSearchKwicSnippets(total_results=0, snippets=[])
 
-        return PaginatedElasticSearchKwicHits(
-            hits=kwic_results,
-            total_results=search_res["hits"]["total"]["value"],
+        df = pd.DataFrame(rows)
+        # Counting frequencies
+        df["1_freq"] = df.groupby("text1")["text1"].transform("count")
+        df["2_freq"] = df.groupby("text2")["text2"].transform("count")
+        df["3_freq"] = df.groupby("text3")["text3"].transform("count")
+
+        # Sorting
+        df = df.sort_values(
+            by=["1_freq", "2_freq", "3_freq", "text"],
+            ascending=[False, False, False, True],
+        )
+        start = skip or 0
+        end = start + (limit or len(df))
+        paginated_snippets = df["snippet"].iloc[start:end].tolist()
+        return PaginatedElasticSearchKwicSnippets(
+            total_results=df.shape[0],
+            snippets=paginated_snippets,
         )
 
     def get_kwic_from_highlight(self, snippet: str, window: int = 5):
-        """
-        Extract KWIC snippets from an ES highlight snippet using regex.
-        Returns a list of KwicSnippet(left, keyword, right).
-        """
         results = []
-        pattern = re.compile(
-            rf"(?P<left>(?:\S+\s+){{0,{window}}})"
-            r"<em>(?P<keyword>.*?)</em>"
-            rf"(?P<right>(?:\s*\S+){{0,{window}}})"
-        )
 
-        for match in pattern.finditer(snippet):
-            left_text = (
-                match.group("left").replace("<em>", "").replace("</em>", "").strip()
-            )
-            keyword_text = match.group("keyword")
-            right_text = (
-                match.group("right").replace("<em>", "").replace("</em>", "").strip()
-            )
+        # tokenization
+        words = snippet.split(" ")
+        keyword_indices = []
+        for i, w in enumerate(words):
+            if "<em>" in w:
+                words[i] = w[4:-5]
+                keyword_indices.append(i)
 
+        # build snippet
+        for idx in keyword_indices:
+            left_idx = max(0, idx - window)
+            right_idx = min(len(words), idx + window + 1)
             results.append(
-                KwicSnippet(left=left_text, keyword=keyword_text, right=right_text)
+                KwicSnippet(
+                    left=words[left_idx:idx],
+                    keyword=words[idx],
+                    right=words[idx + 1 : right_idx],
+                )
             )
+
         return results
 
 
