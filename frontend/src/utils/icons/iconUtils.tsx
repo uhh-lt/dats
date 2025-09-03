@@ -27,6 +27,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
+import InfoIcon from "@mui/icons-material/Info";
 import LabelIcon from "@mui/icons-material/Label";
 import MapIcon from "@mui/icons-material/Map";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -161,6 +162,7 @@ export enum Icon {
   WIKI = "wiki",
   SAVE = "save",
   CLOSE = "close",
+  INFO = "info",
 }
 
 // Define a type for icon component factory functions
@@ -276,6 +278,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.WIKI]: (iconProps) => <AutoStoriesIcon {...iconProps} />,
   [Icon.SAVE]: (iconProps) => <SaveIcon {...iconProps} />,
   [Icon.CLOSE]: (iconProps) => <CloseIcon {...iconProps} />,
+  [Icon.INFO]: (iconProps) => <InfoIcon {...iconProps} />,
 };
 
 /**
