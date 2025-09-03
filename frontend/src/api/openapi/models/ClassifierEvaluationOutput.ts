@@ -2,27 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ClassifierData } from "./ClassifierData";
+import type { ClassifierEvaluationRead } from "./ClassifierEvaluationRead";
 export type ClassifierEvaluationOutput = {
   task_type: string;
   /**
-   * Evaluation data statistics
+   * The Classifier Evaluation
    */
-  eval_data_stats: Array<ClassifierData>;
-  /**
-   * F1 score
-   */
-  f1: number;
-  /**
-   * Precision score
-   */
-  precision: number;
-  /**
-   * Recall score
-   */
-  recall: number;
-  /**
-   * Accuracy score
-   */
-  accuracy: number;
+  evaluation: ClassifierEvaluationRead;
 };

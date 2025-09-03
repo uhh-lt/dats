@@ -728,6 +728,49 @@
         }
       }
     },
+    "/classifier/project/{proj_id}/datasetstatistics2": {
+      "post": {
+        "tags": ["classifier"],
+        "summary": "Returns statistics of the dataset that would be created with these parameters",
+        "operationId": "compute_dataset_statistics2",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "model",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/ClassifierModel" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_classifier-compute_dataset_statistics2" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ClassifierData" },
+                  "title": "Response Classifier-Compute Dataset Statistics2"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/classifier/classifier": {
       "post": {
         "tags": ["classifier"],
@@ -6757,6 +6800,16 @@
         "required": ["sdoc_ids", "user_ids", "class_ids"],
         "title": "Body_classifier-compute_dataset_statistics"
       },
+      "Body_classifier-compute_dataset_statistics2": {
+        "properties": {
+          "tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Tag Ids" },
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
+        },
+        "type": "object",
+        "required": ["tag_ids", "user_ids", "class_ids"],
+        "title": "Body_classifier-compute_dataset_statistics2"
+      },
       "Body_docprocessing-upload_files": {
         "properties": {
           "settings": { "type": "string", "title": "Settings", "description": "ProcessingSettings as JSON string" },
@@ -7355,19 +7408,13 @@
       "ClassifierEvaluationOutput": {
         "properties": {
           "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
-          "eval_data_stats": {
-            "items": { "$ref": "#/components/schemas/ClassifierData" },
-            "type": "array",
-            "title": "Eval Data Stats",
-            "description": "Evaluation data statistics"
-          },
-          "f1": { "type": "number", "title": "F1", "description": "F1 score" },
-          "precision": { "type": "number", "title": "Precision", "description": "Precision score" },
-          "recall": { "type": "number", "title": "Recall", "description": "Recall score" },
-          "accuracy": { "type": "number", "title": "Accuracy", "description": "Accuracy score" }
+          "evaluation": {
+            "$ref": "#/components/schemas/ClassifierEvaluationRead",
+            "description": "The Classifier Evaluation"
+          }
         },
         "type": "object",
-        "required": ["task_type", "eval_data_stats", "f1", "precision", "recall", "accuracy"],
+        "required": ["task_type", "evaluation"],
         "title": "ClassifierEvaluationOutput"
       },
       "ClassifierEvaluationParams": {
@@ -7378,11 +7425,11 @@
             "title": "Classifier Id",
             "description": "ID of the model to evaluate"
           },
-          "sdoc_ids": {
+          "tag_ids": {
             "items": { "type": "integer" },
             "type": "array",
-            "title": "Sdoc Ids",
-            "description": "List of SourceDocument IDs to evaluate on"
+            "title": "Tag Ids",
+            "description": "List of Tag IDs to evaluate on"
           },
           "user_ids": {
             "items": { "type": "integer" },
@@ -7392,7 +7439,7 @@
           }
         },
         "type": "object",
-        "required": ["task_type", "classifier_id", "sdoc_ids", "user_ids"],
+        "required": ["task_type", "classifier_id", "tag_ids", "user_ids"],
         "title": "ClassifierEvaluationParams"
       },
       "ClassifierEvaluationRead": {
@@ -7584,8 +7631,7 @@
             "title": "Labelid2Classid",
             "description": "Mapping from internal model label id to code/tag id, depending on ClassifierModel."
           },
-          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size used for training" },
-          "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs for training" },
+          "train_params": { "type": "object", "title": "Train Params", "description": "Training parameters" },
           "train_loss": {
             "items": { "$ref": "#/components/schemas/ClassifierLoss" },
             "type": "array",
@@ -7632,8 +7678,7 @@
           "type",
           "path",
           "labelid2classid",
-          "batch_size",
-          "epochs",
+          "train_params",
           "train_loss",
           "train_data_stats",
           "id",
@@ -7652,21 +7697,10 @@
       "ClassifierTrainingOutput": {
         "properties": {
           "task_type": { "type": "string", "const": "training", "title": "Task Type" },
-          "train_loss": {
-            "items": { "$ref": "#/components/schemas/ClassifierLoss" },
-            "type": "array",
-            "title": "Train Loss",
-            "description": "Training loss per step"
-          },
-          "train_data_stats": {
-            "items": { "$ref": "#/components/schemas/ClassifierData" },
-            "type": "array",
-            "title": "Train Data Stats",
-            "description": "Training data statistics"
-          }
+          "classifier": { "$ref": "#/components/schemas/ClassifierRead", "description": "The trained Classifier" }
         },
         "type": "object",
-        "required": ["task_type", "train_loss", "train_data_stats"],
+        "required": ["task_type", "classifier"],
         "title": "ClassifierTrainingOutput"
       },
       "ClassifierTrainingParams": {
@@ -7676,6 +7710,12 @@
             "type": "string",
             "title": "Classifier Name",
             "description": "Name of the model to train"
+          },
+          "base_name": { "type": "string", "title": "Base Name", "description": "Name of the base model" },
+          "adapter_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Adapter Name",
+            "description": "Name of the adapter to use (if any)"
           },
           "class_ids": {
             "items": { "type": "integer" },
@@ -7689,17 +7729,47 @@
             "title": "User Ids",
             "description": "List of user IDs to train on"
           },
-          "sdoc_ids": {
+          "tag_ids": {
             "items": { "type": "integer" },
             "type": "array",
-            "title": "Sdoc Ids",
-            "description": "List of SourceDocument IDs to train on"
+            "title": "Tag Ids",
+            "description": "List of Tag IDs to train on"
           },
           "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs to train for" },
-          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size to use for training" }
+          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size to use for training" },
+          "early_stopping": {
+            "type": "boolean",
+            "title": "Early Stopping",
+            "description": "Whether to use early stopping"
+          },
+          "learning_rate": {
+            "type": "number",
+            "title": "Learning Rate",
+            "description": "Learning rate to use for training"
+          },
+          "weight_decay": {
+            "type": "number",
+            "title": "Weight Decay",
+            "description": "Weight decay to use for training"
+          },
+          "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" }
         },
         "type": "object",
-        "required": ["task_type", "classifier_name", "class_ids", "user_ids", "sdoc_ids", "epochs", "batch_size"],
+        "required": [
+          "task_type",
+          "classifier_name",
+          "base_name",
+          "adapter_name",
+          "class_ids",
+          "user_ids",
+          "tag_ids",
+          "epochs",
+          "batch_size",
+          "early_stopping",
+          "learning_rate",
+          "weight_decay",
+          "is_bio"
+        ],
         "title": "ClassifierTrainingParams"
       },
       "ClassifierUpdate": {

@@ -32,13 +32,9 @@ export type ClassifierRead = {
    */
   labelid2classid: Record<string, number>;
   /**
-   * Batch size used for training
+   * Training parameters
    */
-  batch_size: number;
-  /**
-   * Number of epochs for training
-   */
-  epochs: number;
+  train_params: Record<string, any>;
   /**
    * Training loss per step
    */

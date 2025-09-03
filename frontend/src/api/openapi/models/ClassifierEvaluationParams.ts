@@ -9,9 +9,9 @@ export type ClassifierEvaluationParams = {
    */
   classifier_id: number;
   /**
-   * List of SourceDocument IDs to evaluate on
+   * List of Tag IDs to evaluate on
    */
-  sdoc_ids: Array<number>;
+  tag_ids: Array<number>;
   /**
    * User IDs whose annotations serve as gold labels
    */
