@@ -1,8 +1,8 @@
 """vscode launcher
 
-Revision ID: 3b42334deb40
+Revision ID: 07c06f167688
 Revises: b1b3562f9a29
-Create Date: 2025-08-29 11:01:31.568638
+Create Date: 2025-09-03 08:30:02.451890
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "3b42334deb40"
+revision: str = "07c06f167688"
 down_revision: str | None = "b1b3562f9a29"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -34,8 +34,7 @@ def upgrade() -> None:
         sa.Column("type", sa.String(), nullable=False),
         sa.Column("path", sa.String(), nullable=False),
         sa.Column("labelid2classid", sa.JSON(), nullable=False),
-        sa.Column("batch_size", sa.Integer(), nullable=False),
-        sa.Column("epochs", sa.Integer(), nullable=False),
+        sa.Column("train_params", sa.JSON(), nullable=False),
         sa.Column("train_loss", sa.JSON(), nullable=False),
         sa.Column("train_data_stats", sa.JSON(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
