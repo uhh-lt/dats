@@ -130,6 +130,11 @@ const useComputeDatasetStatistics = () =>
     mutationFn: ClassifierService.computeDatasetStatistics,
   });
 
+const useComputeDatasetStatistics2 = () =>
+  useMutation({
+    mutationFn: ClassifierService.computeDatasetStatistics2,
+  });
+
 const ClassifierHooks = {
   usePollClassifierJob,
   useStartClassifierJob,
@@ -139,6 +144,7 @@ const ClassifierHooks = {
   useUpdateClassifier,
   useDeleteClassifier,
   useComputeDatasetStatistics,
+  useComputeDatasetStatistics2,
 };
 
 export default ClassifierHooks;

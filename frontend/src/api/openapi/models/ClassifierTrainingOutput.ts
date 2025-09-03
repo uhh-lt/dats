@@ -2,16 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ClassifierData } from "./ClassifierData";
-import type { ClassifierLoss } from "./ClassifierLoss";
+import type { ClassifierRead } from "./ClassifierRead";
 export type ClassifierTrainingOutput = {
   task_type: string;
   /**
-   * Training loss per step
+   * The trained Classifier
    */
-  train_loss: Array<ClassifierLoss>;
-  /**
-   * Training data statistics
-   */
-  train_data_stats: Array<ClassifierData>;
+  classifier: ClassifierRead;
 };

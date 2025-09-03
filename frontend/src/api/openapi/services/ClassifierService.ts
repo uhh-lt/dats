@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_classifier_compute_dataset_statistics } from "../models/Body_classifier_compute_dataset_statistics";
+import type { Body_classifier_compute_dataset_statistics2 } from "../models/Body_classifier_compute_dataset_statistics2";
 import type { ClassifierData } from "../models/ClassifierData";
 import type { ClassifierJobInput } from "../models/ClassifierJobInput";
 import type { ClassifierJobRead } from "../models/ClassifierJobRead";
@@ -89,6 +90,36 @@ export class ClassifierService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/classifier/project/{proj_id}/datasetstatistics",
+      path: {
+        proj_id: projId,
+      },
+      query: {
+        model: model,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns statistics of the dataset that would be created with these parameters
+   * @returns ClassifierData Successful Response
+   * @throws ApiError
+   */
+  public static computeDatasetStatistics2({
+    projId,
+    model,
+    requestBody,
+  }: {
+    projId: number;
+    model: ClassifierModel;
+    requestBody: Body_classifier_compute_dataset_statistics2;
+  }): CancelablePromise<Array<ClassifierData>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/classifier/project/{proj_id}/datasetstatistics2",
       path: {
         proj_id: projId,
       },
