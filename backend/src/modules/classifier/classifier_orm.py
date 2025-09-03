@@ -41,13 +41,11 @@ class ClassifierORM(ORMBase):
     tags: Mapped[list["TagORM"]] = relationship(
         "TagORM", secondary="ClassifierTagLinkTable".lower()
     )
-    labelid2classid: Mapped[dict[int, int]] = mapped_column(JSON, nullable=False)
+    labelid2classid: Mapped[dict[str, int]] = mapped_column(JSON, nullable=False)
 
     # TRAINING
-    batch_size: Mapped[int] = mapped_column(Integer, nullable=False)
-    epochs: Mapped[int] = mapped_column(Integer, nullable=False)
+    train_params: Mapped[dict] = mapped_column(JSON, nullable=False)
     train_loss: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
-    # one to many
     train_data_stats: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
 
     # EVALUATION

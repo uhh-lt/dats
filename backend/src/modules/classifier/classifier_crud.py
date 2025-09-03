@@ -110,6 +110,30 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
             for row in results
         ]
 
+    def read_dataset2(
+        self,
+        db: Session,
+        model: ClassifierModel,
+        tag_ids: list[int],
+        user_ids: list[int],
+        class_ids: list[int],
+    ) -> list[ClassifierDataset]:
+        results = (
+            db.query(SourceDocumentORM.id)
+            .join(SourceDocumentORM.tags)
+            .filter(TagORM.id.in_(tag_ids))
+            .all()
+        )
+        sdoc_ids = [row.tuple()[0] for row in results]
+
+        return self.read_dataset(
+            db=db,
+            model=model,
+            sdoc_ids=sdoc_ids,
+            user_ids=user_ids,
+            class_ids=class_ids,
+        )
+
     def add_evaluation(
         self, db: Session, create_dto: ClassifierEvaluationCreate
     ) -> ClassifierORM:
