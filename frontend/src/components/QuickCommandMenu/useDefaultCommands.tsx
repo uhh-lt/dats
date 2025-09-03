@@ -97,8 +97,8 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         description: "Go to project classifiers",
         category: "Navigation",
         icon: getIconComponent(Icon.CLASSIFIER),
-        route: `/project/${projectId}/classifiers`,
-        keywords: ["classifiers", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
+        route: `/project/${projectId}/classifier`,
+        keywords: ["classifier", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
       },
       {
         id: "annotation-view",
