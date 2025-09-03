@@ -675,6 +675,13 @@ class FilesystemRepo(metaclass=SingletonMeta):
         )
         return name
 
+    def remove_dir(
+        self,
+        dir: Path,
+    ) -> None:
+        if dir.exists() and dir.is_dir():
+            shutil.rmtree(dir)
+
     def model_exists(
         self,
         proj_id: int,
