@@ -56,10 +56,13 @@ from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
 
 
-class DatasetRow(TypedDict):
+class InferenceDatasetRow(TypedDict):
     sdoc_id: int
-    user_id: int
     words: list[str]
+
+
+class DatasetRow(InferenceDatasetRow):
+    user_id: int
     labels: list[int]
 
 
@@ -114,6 +117,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         # )
         # self.model = get_peft_model(model, lora_config)
 
+        # Store params
         self.num_labels = num_labels
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
@@ -208,9 +212,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
-    def predict_step(
-        self, batch: dict[str, Any], batch_idx: int, dataloader_idx: int = 0
-    ) -> Any:
+    def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
         outputs = self.model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
@@ -240,9 +242,6 @@ class SpanClassificationModelService(TextClassificationModelService):
         classid2labelid: dict[int, int],
         tokenizer,
     ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset]:
-        """
-        Retrieves, groups, and builds the dataset from the database for model training or evaluation.
-        """
         # Find documents
         sdoc_ids = [
             sdoc.id
@@ -277,7 +276,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             defaultdict(lambda: defaultdict(list))
         )
         for row in results:
-            annotation, adoc = row.tuple()
+            annotation, adoc = row._tuple()
             user_id2sdoc_id2annotations[adoc.user_id][adoc.source_document_id].append(
                 annotation
             )
@@ -485,6 +484,9 @@ class SpanClassificationModelService(TextClassificationModelService):
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            # Special params
+            # precision=32,  # full precision training
+            # gradient_clip_val=1.0,  # Gradient clipping
         )
 
         # 3. Train the model
@@ -702,7 +704,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
         sdoc_id2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
-        inference_dataset = [
+        inference_dataset: list[InferenceDatasetRow] = [
             {"sdoc_id": sdoc_data.id, "words": sdoc_data.tokens}
             for sdoc_data in sdoc_datas
         ]
@@ -721,7 +723,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
             return tokenized_inputs
 
-        hf_dataset = Dataset.from_list(inference_dataset)
+        hf_dataset = Dataset.from_list(inference_dataset)  # type: ignore
         tokenized_hf_dataset = hf_dataset.map(tokenize_for_inference, batched=True)
         tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["words"])
 
