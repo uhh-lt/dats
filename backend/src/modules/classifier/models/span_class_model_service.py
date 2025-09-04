@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pathlib import Path
 from typing import Any, TypedDict
 from uuid import uuid4
 
@@ -13,16 +14,20 @@ from pytorch_lightning.loggers import CSVLogger
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
 from transformers import (
+    AutoConfig,
     AutoModelForTokenClassification,
     AutoTokenizer,
     DataCollatorForTokenClassification,
 )
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
+from core.annotation.span_annotation_crud import crud_span_anno
+from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.user.user_crud import ASSISTANT_TRAINED_ID
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierCreate,
@@ -58,23 +63,41 @@ class DatasetRow(TypedDict):
     labels: list[int]
 
 
+class AnnotationResult(TypedDict):
+    begin_token: int
+    end_token: int
+    class_id: int
+    sdoc_id: int
+
+
 class SpanClassificationLightningModel(pl.LightningModule):
     def __init__(
         self,
         base_name: str,
         num_labels: int,
+        dropout: float,
         learning_rate: float,
         weight_decay: float,
         class_weights: torch.Tensor,
+        id2label: dict[int, str] | None = None,
+        label2id: dict[str, int] | None = None,
     ):
         super().__init__()
         # Saves hyperparameters to the checkpoint
         self.save_hyperparameters()
 
         # Load the pre-trained model
+        self.config = AutoConfig.from_pretrained(base_name)
+        self.config.attention_dropout = dropout
+        self.config.classifier_dropout = dropout
+        self.config.embedding_dropout = dropout
+        self.config.mlp_dropout = dropout
+        self.config.num_labels = num_labels
+        self.config.id2label = id2label
+        self.config.label2id = label2id
         self.model = AutoModelForTokenClassification.from_pretrained(
             base_name,
-            num_labels=num_labels,
+            config=self.config,
         )
 
         # Add adapter
@@ -135,16 +158,24 @@ class SpanClassificationLightningModel(pl.LightningModule):
         # Post-process for seqeval
         labels = batch["labels"].tolist()
         true_predictions = [
-            [f"{p1}" for (p1, l1) in zip(prediction, label) if l1 != -100]
+            [
+                f"I-{p1}" if p1 != 0 else "O"
+                for (p1, l1) in zip(prediction, label)
+                if l1 != -100
+            ]
             for prediction, label in zip(predictions, labels)
         ]
         true_labels = [
-            [f"{l2}" for (p2, l2) in zip(prediction, label) if l2 != -100]
+            [
+                f"I-{l2}" if l2 != 0 else "O"
+                for (p2, l2) in zip(prediction, label)
+                if l2 != -100
+            ]
             for prediction, label in zip(predictions, labels)
         ]
 
         results = self.seqeval.compute(
-            predictions=true_predictions, references=true_labels, scheme="IOB2"
+            predictions=true_predictions, references=true_labels, scheme="IOB1"
         )
         assert results is not None, "SeqEval results are None"
 
@@ -187,7 +218,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         predictions = torch.argmax(outputs.logits, dim=2).tolist()
 
         return {
-            "ids": batch["id"],
+            "sdoc_ids": batch["sdoc_id"],
             "predictions": predictions,
         }
 
@@ -202,7 +233,8 @@ class SpanClassificationModelService(TextClassificationModelService):
     def _retrieve_and_build_dataset(
         self,
         db: Session,
-        sdoc_ids: list[int],
+        project_id: int,
+        tag_ids: list[int],
         user_ids: list[int],
         class_ids: list[int],
         classid2labelid: dict[int, int],
@@ -211,6 +243,16 @@ class SpanClassificationModelService(TextClassificationModelService):
         """
         Retrieves, groups, and builds the dataset from the database for model training or evaluation.
         """
+        # Find documents
+        sdoc_ids = [
+            sdoc.id
+            for sdoc in crud_sdoc.read_all_with_tags(
+                db=db,
+                project_id=project_id,
+                tag_ids=tag_ids,
+            )
+        ]
+
         # Get annotations
         results = (
             db.query(
@@ -314,28 +356,34 @@ class SpanClassificationModelService(TextClassificationModelService):
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
-        # 1. Create dataset
-        # Find documents
-        sdoc_ids = [
-            sdoc.id
-            for sdoc in crud_sdoc.read_all_with_tags(
-                db=db,
-                project_id=payload.project_id,
-                tag_ids=parameters.tag_ids,
-            )
-        ]
+        job.update(
+            steps=[
+                "Started classifier job",
+                "Creating dataset",
+                "Initializing PyTorch Lightning modules",
+                "Training model",
+                "Evaluating model",
+                "Retrieving statistics",
+                "Storing results",
+            ]
+        )
 
+        # 1. Create dataset
+        job.update(current_step=1)
         # Get codes and create mapping
         codes = crud_code.read_by_ids(db=db, ids=parameters.class_ids)
         classid2labelid: dict[int, int] = {
             code.id: i + 1 for i, code in enumerate(codes)
         }
         classid2labelid[0] = 0
+        id2label = {i + 1: code.name for i, code in enumerate(codes)}
+        id2label[0] = "O"
 
         # Build dataset
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
             db=db,
-            sdoc_ids=sdoc_ids,
+            project_id=payload.project_id,
+            tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             class_ids=parameters.class_ids,
             classid2labelid=classid2labelid,
@@ -391,13 +439,17 @@ class SpanClassificationModelService(TextClassificationModelService):
                 raise ValueError(f"Label '{label}' has zero count in training data!")
 
         # 2. Initialize PyTorch Lightning components
+        job.update(current_step=2)
         # Initialize the Lightning Model
         lightning_model = SpanClassificationLightningModel(
             base_name=parameters.base_name,
             num_labels=len(classid2labelid),
+            dropout=parameters.dropout,
             learning_rate=parameters.learning_rate,
             weight_decay=parameters.weight_decay,
             class_weights=torch.tensor(class_weights, dtype=torch.float32),
+            id2label=id2label,
+            label2id={v: k for k, v in id2label.items()},
         )
 
         # Create the Trainer
@@ -424,7 +476,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             early_stopping_callback = EarlyStopping(
                 monitor="eval_f1",
                 mode="max",
-                patience=3,  # You can adjust this value
+                patience=3,  # Wait for 3 epochs
             )
             callbacks.append(early_stopping_callback)
 
@@ -436,6 +488,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 3. Train the model
+        job.update(current_step=3)
         trainer.fit(
             lightning_model,
             train_dataloaders=train_dataloader,
@@ -443,12 +496,14 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 4. Evaluate the best model
+        job.update(current_step=4)
         best_model = SpanClassificationLightningModel.load_from_checkpoint(
             checkpoint_callback.best_model_path
         )
         eval_results = trainer.validate(best_model, dataloaders=val_dataloader)[0]
 
         # 5. Retrieve training statistics from the logs
+        job.update(current_step=5)
         metrics_df = pd.read_csv(csv_logger.log_dir + "/metrics.csv")
         # filter out all rows where train_loss is NaN
         train_df = metrics_df[metrics_df["train_loss"].notna()]
@@ -458,6 +513,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         train_loss_list = train_loss_df.to_dict(orient="records")  # type: ignore
 
         # 6. Store results
+        job.update(current_step=6)
         # 6.1 store the classifier in the db
         classifier = crud_classifier.create(
             db=db,
@@ -515,27 +571,32 @@ class SpanClassificationModelService(TextClassificationModelService):
             "Expected eval parameters!"
         )
 
+        job.update(
+            steps=[
+                "Started classifier job",
+                "Read classifier",
+                "Creating dataset",
+                "Loading model",
+                "Evaluating model",
+                "Storing results",
+            ]
+        )
+
         # 1. Get the trained classifier and its label mappings from the database
+        job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
         classid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
         # 2. Create dataset
-        # Find documents
-        sdoc_ids = [
-            sdoc.id
-            for sdoc in crud_sdoc.read_all_with_tags(
-                db=db,
-                project_id=payload.project_id,
-                tag_ids=parameters.tag_ids,
-            )
-        ]
+        job.update(current_step=2)
 
         # Build dataset
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
             db=db,
-            sdoc_ids=sdoc_ids,
+            project_id=payload.project_id,
+            tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             class_ids=classifier.class_ids,
             classid2labelid=classid2labelid,
@@ -559,13 +620,18 @@ class SpanClassificationModelService(TextClassificationModelService):
                 eval_dataset_stats[annotation.code_id] += 1
 
         # 3. Load the model
+        job.update(current_step=3)
         model = SpanClassificationLightningModel.load_from_checkpoint(classifier.path)
 
         # 4. Eval model
-        trainer = pl.Trainer()
+        job.update(current_step=4)
+        log_dir = Path(classifier.path).parent / "eval_logs"
+        csv_logger = CSVLogger(log_dir, name=classifier.name)
+        trainer = pl.Trainer(logger=csv_logger)
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
 
         # 5. Store the evaluation in the DB
+        job.update(current_step=5)
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -600,23 +666,59 @@ class SpanClassificationModelService(TextClassificationModelService):
             "Expected inference parameters!"
         )
 
+        job.update(
+            steps=[
+                "Started classifier job",
+                "Read classifier",
+                "Creating dataset",
+                "Loading model",
+                "Predicting with model",
+                "Post-processing the results",
+                "Storing results",
+            ]
+        )
+
         # 1. Get the trained classifier and its label mappings from the database
+        job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
+        labelid2classid = {
+            int(label): c for label, c in classifier.labelid2classid.items()
+        }
+
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
+        # Delete existing annotations (if requested by the user)
+        if parameters.delete_existing_work:
+            crud_span_anno.remove_by_user_sdocs_codes(
+                db=db,
+                user_id=ASSISTANT_TRAINED_ID,
+                sdoc_ids=parameters.sdoc_ids,
+                code_ids=classifier.class_ids,
+            )
+
         # 2. Create dataset
+        job.update(current_step=2)
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
+        sdoc_id2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
         inference_dataset = [
-            {"id": sdoc_data.id, "words": sdoc_data.tokens} for sdoc_data in sdoc_datas
+            {"sdoc_id": sdoc_data.id, "words": sdoc_data.tokens}
+            for sdoc_data in sdoc_datas
         ]
 
         # Construct a tokenized huggingface dataset
+        sdoc_id2word_ids: dict[int, list[int | None]] = {}
+
         def tokenize_for_inference(examples):
             tokenized_inputs = tokenizer(
                 examples["words"], truncation=True, is_split_into_words=True
             )
+
+            for i, sdoc_id in enumerate(examples["sdoc_id"]):
+                word_ids = tokenized_inputs.word_ids(batch_index=i)
+                sdoc_id2word_ids[sdoc_id] = word_ids
+
             return tokenized_inputs
 
         hf_dataset = Dataset.from_list(inference_dataset)
@@ -632,82 +734,103 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 3. Load the model
-        model = SpanClassificationLightningModel.load_from_checkpoint(classifier.path)
+        job.update(current_step=3)
+        model = SpanClassificationLightningModel.load_from_checkpoint(
+            classifier.path,
+        )
 
         # 4. Predict with model
+        job.update(current_step=4)
         trainer = pl.Trainer()
         predictions = trainer.predict(model, dataloaders=inference_dataloader)
         assert predictions is not None, "No predictions returned!"
 
-        # TODO: Test huggingface pipeline for inference! may be better
-        # https://huggingface.co/docs/transformers/main_classes/pipelines
+        # 5. Post-process the predictions to extract annotations
+        job.update(current_step=5)
+        # Flatten outputs
+        flat_predictions: list[list[int]] = []
+        flat_sdoc_ids: list[int] = []
+        for pred in predictions:
+            flat_sdoc_ids.extend([x.item() for x in pred["sdoc_ids"]])  # type: ignore
+            flat_predictions.extend(pred["predictions"])  # type: ignore
 
-        # 5. Post-process predictions
-        # predicted_annotations = []
-        # for pred_batch in predictions:
-        #     sdoc_ids_batch = pred_batch["ids"]
-        #     predicted_labels = pred_batch["predictions"]
+        # Map labels to words
+        # word_ids: [None, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6 None]
+        # labels:      [0, 0, 5, 5, 5, 5, 0, 0, 7, 7, 7, 0]
+        prev_label = 0
+        results: list[AnnotationResult] = []
+        current_annotation: AnnotationResult | None = None
+        for sdoc_id, labels in zip(flat_sdoc_ids, flat_predictions):
+            word_ids = sdoc_id2word_ids[sdoc_id]
 
-        #     # Map predictions to tokens and create annotations
-        #     for i, sdoc_id in enumerate(sdoc_ids_batch):
-        #         sdoc_tokens = sdoc_id2data[sdoc_id].tokens
-        #         current_word_ids = word_ids_batch[i]
-        #         current_predicted_labels = predicted_labels[i]
+            for word_id, label in zip(word_ids, labels):
+                # Skip special tokens
+                if word_id is None:
+                    continue
 
-        #         # We need to find spans of consecutive predicted labels
-        #         current_annotations: list[SpanAnnotationORM] = []
-        #         last_label = -1
-        #         begin_token = -1
+                if label != prev_label:
+                    # The current annotation ends
+                    if current_annotation is not None:
+                        current_annotation["end_token"] = word_id
+                        results.append(current_annotation)
+                        current_annotation = None
 
-        #         for token_idx, word_id in enumerate(current_word_ids):
-        #             if word_id is None:
-        #                 continue
+                    # A new annotation starts
+                    if label != 0:
+                        current_annotation = {
+                            "sdoc_id": sdoc_id,
+                            "begin_token": word_id,
+                            "class_id": labelid2classid[label],
+                            "end_token": -1,
+                        }
 
-        #             label_id = current_predicted_labels[token_idx]
+                prev_label = label
 
-        #             if label_id != last_label:
-        #                 # End of a span, if one exists
-        #                 if last_label > 0:
-        #                     code_id = labelid2codeid.get(last_label)
-        #                     if code_id is not None:
-        #                         current_annotations.append(
-        #                             SpanAnnotationORM(
-        #                                 source_document_id=sdoc_id,
-        #                                 code_id=code_id,
-        #                                 begin_token=begin_token,
-        #                                 end_token=word_id,  # This is the index of the next word, so it's a valid end
-        #                             )
-        #                         )
+            # Finish the current annotation
+            if current_annotation is not None and word_ids[-1] is not None:
+                current_annotation["end_token"] = word_ids[-1]
+                results.append(current_annotation)
+                current_annotation = None
 
-        #                 # Start of a new span, if not 'O'
-        #                 if label_id > 0:
-        #                     begin_token = word_id
+        # 6. Store annotations in DB
+        job.update(current_step=6)
+        # Convert to DTOs (and compute statistics)
+        create_dtos: list[SpanAnnotationCreate] = []
+        result_statistics: dict[int, int] = defaultdict(
+            int
+        )  # map from code_id to number of annotations
+        affected_sdoc_ids: set[int] = set()
+        for annotation in results:
+            sdoc_data = sdoc_id2data[annotation["sdoc_id"]]
+            begin_char = sdoc_data.token_starts[annotation["begin_token"]]
+            end_char = sdoc_data.token_ends[annotation["end_token"]]
+            create_dtos.append(
+                SpanAnnotationCreate(
+                    begin=begin_char,
+                    end=end_char,
+                    begin_token=annotation["begin_token"],
+                    end_token=annotation["end_token"],
+                    span_text=sdoc_data.content[begin_char:end_char],
+                    code_id=annotation["class_id"],
+                    sdoc_id=annotation["sdoc_id"],
+                )
+            )
+            result_statistics[annotation["class_id"]] += 1
+            affected_sdoc_ids.add(annotation["sdoc_id"])
 
-        #             last_label = label_id
-
-        #         # Check for a final span at the end of the document
-        #         if last_label > 0:
-        #             code_id = labelid2codeid.get(last_label)
-        #             if code_id is not None:
-        #                 current_annotations.append(
-        #                     SpanAnnotationORM(
-        #                         source_document_id=sdoc_id,
-        #                         code_id=code_id,
-        #                         begin_token=begin_token,
-        #                         end_token=len(sdoc_tokens),
-        #                     )
-        #                 )
-
-        #         predicted_annotations.append(
-        #             ClassifierInferencePrediction(
-        #                 sdoc_id=sdoc_id,
-        #                 annotations=current_annotations,
-        #             )
-        #         )
+        # Write to db
+        crud_span_anno.create_bulk(
+            db=db, user_id=ASSISTANT_TRAINED_ID, create_dtos=create_dtos
+        )
 
         return ClassifierJobOutput(
             task_type=ClassifierTask.INFERENCE,
             task_output=ClassifierInferenceOutput(
                 task_type=ClassifierTask.INFERENCE,
+                result_statistics=[
+                    ClassifierData(class_id=class_id, num_examples=count)
+                    for class_id, count in result_statistics.items()
+                ],
+                total_affected_docs=len(affected_sdoc_ids),
             ),
         )

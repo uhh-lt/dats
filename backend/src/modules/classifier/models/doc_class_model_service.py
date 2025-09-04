@@ -138,5 +138,7 @@ class DocClassificationModelService(TextClassificationModelService):
             task_type=ClassifierTask.INFERENCE,
             task_output=ClassifierInferenceOutput(
                 task_type=ClassifierTask.INFERENCE,
+                result_statistics=[],
+                total_affected_docs=0,
             ),
         )
