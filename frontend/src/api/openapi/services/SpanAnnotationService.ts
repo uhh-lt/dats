@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_spanAnnotation_count_annotations } from "../models/Body_spanAnnotation_count_annotations";
 import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
 import type { SpanAnnotationDeleted } from "../models/SpanAnnotationDeleted";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
@@ -269,6 +270,31 @@ export class SpanAnnotationService {
       path: {
         code_id: codeId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Counts the SpanAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countAnnotations({
+    userId,
+    requestBody,
+  }: {
+    userId: number;
+    requestBody: Body_spanAnnotation_count_annotations;
+  }): CancelablePromise<Record<string, number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/span/count_annotations/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

@@ -12,4 +12,8 @@ export type ClassifierInferenceParams = {
    * List of SourceDocument IDs to apply the classifier on
    */
   sdoc_ids: Array<number>;
+  /**
+   * Delete existing span/sent annotations or tags before creating new ones
+   */
+  delete_existing_work: boolean;
 };
