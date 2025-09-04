@@ -16,7 +16,7 @@ import { SubmitErrorHandler, useForm } from "react-hook-form";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
 import { ClassifierTrainingParams } from "../../../api/openapi/models/ClassifierTrainingParams.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import FormFreeSolo from "../../../components/FormInputs/FormFreeSolo.tsx";
+import FormFreeSolo, { FreeSoloOptions } from "../../../components/FormInputs/FormFreeSolo.tsx";
 import FormMenu from "../../../components/FormInputs/FormMenu.tsx";
 import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
 import FormSwitch from "../../../components/FormInputs/FormSwitch.tsx";
@@ -34,16 +34,17 @@ interface TrainingSettings {
   earlyStopping: boolean;
   learningRate: number;
   weightDecay: number;
+  dropout: number;
   // sequence classification settings
   isBio: boolean;
 }
 
-const baseModelOptions = [
-  "answerdotai/ModernBERT-base",
-  "answerdotai/ModernBERT-large",
-  "LSX-UniWue/ModernGBERT_134M",
-  "LSX-UniWue/ModernGBERT_1B",
-  "microsoft/mdeberta-v3-base",
+const baseModelOptions: FreeSoloOptions[] = [
+  { value: "answerdotai/ModernBERT-base", label: "ModernBERT-base (EN)" },
+  { value: "answerdotai/ModernBERT-large", label: "ModernBERT-large (EN)" },
+  { value: "LSX-UniWue/ModernGBERT_134M", label: "ModernGBERT_134M (DE)" },
+  { value: "LSX-UniWue/ModernGBERT_1B", label: "ModernGBERT_1B (DE)" },
+  { value: "microsoft/mdeberta-v3-base", label: "mdeberta-v3-base (MULTI)" },
 ];
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
@@ -68,11 +69,12 @@ function TrainingSettingsStep() {
       classifierName: "",
       baseModelName: "",
       adapterName: "No Adapter",
-      batchSize: 16,
+      batchSize: 4,
       epochs: 10,
       earlyStopping: true,
       learningRate: 0.00002,
       weightDecay: 0.01,
+      dropout: 0.2,
       isBio: false,
     },
   });
@@ -101,6 +103,7 @@ function TrainingSettingsStep() {
       early_stopping: data.earlyStopping,
       learning_rate: data.learningRate,
       weight_decay: data.weightDecay,
+      dropout: data.dropout,
       // specific training settings
       is_bio: data.isBio,
     };
@@ -172,6 +175,7 @@ function TrainingSettingsStep() {
                   helperText: <ErrorMessage errors={errors} name="adapterName" />,
                   variant: "filled",
                   fullWidth: true,
+                  disabled: true,
                 }}
               >
                 {adapterOptions.map((option) => (
@@ -191,12 +195,12 @@ function TrainingSettingsStep() {
                 rules={{
                   required: "Required",
                   min: { value: 1, message: "Must be at least 1" },
-                  max: { value: 10, message: "Must be at most 10" },
+                  max: { value: 100, message: "Must be at most 100" },
                 }}
                 textFieldProps={{
                   label: "# Epochs",
                   variant: "filled",
-                  inputProps: { min: 1, max: 10 },
+                  inputProps: { min: 1, max: 100 },
                   size: "small",
                   fullWidth: true,
                 }}
@@ -258,6 +262,24 @@ function TrainingSettingsStep() {
                 }}
                 textFieldProps={{
                   label: "Weight Decay",
+                  variant: "filled",
+                  inputProps: { min: 0, max: 1, step: 0.01 },
+                  size: "small",
+                  fullWidth: true,
+                }}
+              />
+            </FormItem>
+            <FormItem title="Dropout" subtitle="Choose the dropout rate for training.">
+              <FormNumber
+                name="dropout"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 0.0, message: "Must be at least 0" },
+                  max: { value: 1.0, message: "Must be at most 1" },
+                }}
+                textFieldProps={{
+                  label: "Dropout rate",
                   variant: "filled",
                   inputProps: { min: 0, max: 1, step: 0.01 },
                   size: "small",

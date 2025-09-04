@@ -1,10 +1,15 @@
 import { Autocomplete, TextField, TextFieldProps } from "@mui/material";
 import { Control, Controller, ControllerProps, FieldValues } from "react-hook-form";
 
+export interface FreeSoloOptions {
+  value: string;
+  label: string;
+}
+
 interface FormFreeSoloProps<T extends FieldValues> extends Omit<ControllerProps<T>, "render"> {
   textFieldProps?: Omit<TextFieldProps, "value" | "onChange" | "type">;
   control: Control<T>;
-  options: string[];
+  options: FreeSoloOptions[];
 }
 
 function FormFreeSolo<T extends FieldValues>({
@@ -26,7 +31,7 @@ function FormFreeSolo<T extends FieldValues>({
             field.onChange(newValue || "");
           }}
           inputValue={field.value}
-          getOptionLabel={(option) => option}
+          getOptionLabel={(option) => (typeof option === "string" ? option : option.label)}
           onInputChange={(_, newInputValue) => {
             field.onChange(newInputValue);
           }}

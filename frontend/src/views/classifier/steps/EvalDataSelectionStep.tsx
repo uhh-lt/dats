@@ -1,4 +1,4 @@
-import { Box, Button, DialogActions } from "@mui/material";
+import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useCallback } from "react";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationParams } from "../../../api/openapi/models/ClassifierEvaluationParams.ts";
@@ -59,6 +59,7 @@ function EvalDataSelectionStep() {
   return (
     <>
       <DataSelection />
+      <Divider />
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handleClose}>Close</Button>

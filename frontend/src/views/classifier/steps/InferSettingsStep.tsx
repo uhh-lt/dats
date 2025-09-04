@@ -5,21 +5,40 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CircularProgress,
   DialogActions,
   Divider,
   Stack,
   Typography,
 } from "@mui/material";
+import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
 import { ClassifierInferenceParams } from "../../../api/openapi/models/ClassifierInferenceParams.ts";
+import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
+import SentenceAnnotationHooks from "../../../api/SentenceAnnotationHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import FormSwitch from "../../../components/FormInputs/FormSwitch.tsx";
+import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { ASSISTANT_TRAINED_ID } from "../../../utils/GlobalConstants.ts";
 
 interface InferenceSettings {
-  isCool: boolean;
+  keepExisting: boolean;
 }
+
+const useCountBySdocsAndUser = (model: ClassifierModel) => {
+  switch (model) {
+    case ClassifierModel.DOCUMENT:
+      return SentenceAnnotationHooks.useCountBySdocsAndUser;
+    case ClassifierModel.SENTENCE:
+      return SentenceAnnotationHooks.useCountBySdocsAndUser;
+    case ClassifierModel.SPAN:
+      return SpanAnnotationHooks.useCountBySdocsAndUser;
+  }
+};
 
 function InferenceSettingsStep() {
   // dialog state
@@ -28,12 +47,25 @@ function InferenceSettingsStep() {
   const task = useAppSelector((state) => state.dialog.classifierTask);
   const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
   const sdocIds = useAppSelector((state) => state.dialog.classifierSdocIds);
+  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
   const dispatch = useAppDispatch();
+
+  // count existing classes by that user
+  const { mutate: countMutation, data: countData, isSuccess, isError, isPending } = useCountBySdocsAndUser(model!)();
+  useEffect(() => {
+    countMutation({
+      userId: ASSISTANT_TRAINED_ID,
+      requestBody: {
+        sdoc_ids: sdocIds,
+        code_ids: classIds,
+      },
+    });
+  }, [countMutation, sdocIds, classIds]);
 
   // form state
   const { control, handleSubmit } = useForm<InferenceSettings>({
     defaultValues: {
-      isCool: false,
+      keepExisting: true,
     },
   });
 
@@ -41,17 +73,17 @@ function InferenceSettingsStep() {
   const handlePrev = () => {
     dispatch(CRUDDialogActions.previousClassifierDialogStep());
   };
-  const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
+  const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: InferenceSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined || sdocIds.length === 0) return;
-
-    console.log("Data!", data);
 
     const inferenceParams: ClassifierInferenceParams = {
       // required
       task_type: task,
       classifier_id: classifierId,
       sdoc_ids: sdocIds,
+      // inference settings
+      delete_existing_work: !data.keepExisting,
     };
 
     startClassifierJobMutation(
@@ -79,22 +111,50 @@ function InferenceSettingsStep() {
           This is an info Alert.
         </Alert>
         <Stack spacing={2}>
-          <FormBox title="Cool configuration">
-            <FormItem title="Coolness" subtitle="Use Coolness?.">
-              <FormSwitch
-                name="isCool"
-                control={control}
-                boxProps={{ sx: { ml: 2 } }}
-                switchProps={{ size: "medium", color: "primary" }}
-              />
-            </FormItem>
+          <FormBox title="Existing Annotations">
+            {isPending ? (
+              <CircularProgress size={24} />
+            ) : isError ? (
+              <Alert severity="error">Failed to load existing annotations.</Alert>
+            ) : isSuccess && Object.entries(countData).length === 0 ? (
+              <Typography>There are no existing annotations. You can skip this step!</Typography>
+            ) : isSuccess && Object.entries(countData).length > 0 ? (
+              <Box>
+                <Typography>
+                  Some documents were already {model === ClassifierModel.DOCUMENT ? "tagged" : "annotated"} by a
+                  classifier:
+                </Typography>
+                {Object.entries(countData.data).map(([classId, count]) => (
+                  <Stack direction="row" key={classId}>
+                    {model === ClassifierModel.DOCUMENT ? (
+                      <TagRenderer tag={parseInt(classId)} />
+                    ) : (
+                      <CodeRenderer code={parseInt(classId)} />
+                    )}
+                    : {count}
+                  </Stack>
+                ))}
+                <FormItem
+                  title="Deletion Strategy"
+                  subtitle={`Keep existing ${model === ClassifierModel.DOCUMENT ? "tags" : "annotations"}?`}
+                >
+                  <FormSwitch
+                    name="keepExisting"
+                    control={control}
+                    boxProps={{ sx: { ml: 2 } }}
+                    switchProps={{ size: "medium", color: "primary" }}
+                  />
+                </FormItem>
+              </Box>
+            ) : null}
           </FormBox>
         </Stack>
       </Stack>
+      <Divider />
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handlePrev}>Back</Button>
-        <Button loading={isPending} loadingPosition="start" type="submit">
+        <Button loading={isStartJobPending} loadingPosition="start" type="submit">
           Next
         </Button>
       </DialogActions>

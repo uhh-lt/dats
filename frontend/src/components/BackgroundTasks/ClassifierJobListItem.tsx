@@ -2,6 +2,7 @@ import { Typography } from "@mui/material";
 import { memo, useMemo } from "react";
 import ClassifierHooks from "../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationOutput } from "../../api/openapi/models/ClassifierEvaluationOutput.ts";
+import { ClassifierInferenceOutput } from "../../api/openapi/models/ClassifierInferenceOutput.ts";
 import { ClassifierJobRead } from "../../api/openapi/models/ClassifierJobRead.ts";
 import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
 import { ClassifierTrainingOutput } from "../../api/openapi/models/ClassifierTrainingOutput.ts";
@@ -48,7 +49,11 @@ function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemPr
                 evaluation={(cj.data.output.task_output as ClassifierEvaluationOutput).evaluation}
               />
             ) : cj.data.input.task_type === ClassifierTask.INFERENCE ? (
-              <>TODO</>
+              <ClassifierDetails.Inference
+                classifierModel={cj.data.input.model_type}
+                statistics={(cj.data.output.task_output as ClassifierInferenceOutput).result_statistics}
+                affectedDocs={(cj.data.output.task_output as ClassifierInferenceOutput).total_affected_docs}
+              />
             ) : cj.data.input.task_type === ClassifierTask.TRAINING ? (
               <ClassifierDetails classifier={(cj.data.output.task_output as ClassifierTrainingOutput).classifier} />
             ) : null}
