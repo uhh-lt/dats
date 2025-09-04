@@ -124,7 +124,7 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
             .filter(TagORM.id.in_(tag_ids))
             .all()
         )
-        sdoc_ids = [row.tuple()[0] for row in results]
+        sdoc_ids = [row._tuple()[0] for row in results]
 
         return self.read_dataset(
             db=db,
