@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
+import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierTrainingParams } from "../../../api/openapi/models/ClassifierTrainingParams.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import FormFreeSolo, { FreeSoloOptions } from "../../../components/FormInputs/FormFreeSolo.tsx";
@@ -39,12 +40,18 @@ interface TrainingSettings {
   isBio: boolean;
 }
 
-const baseModelOptions: FreeSoloOptions[] = [
+const transformerModelOptions: FreeSoloOptions[] = [
   { value: "answerdotai/ModernBERT-base", label: "ModernBERT-base (EN)" },
   { value: "answerdotai/ModernBERT-large", label: "ModernBERT-large (EN)" },
   { value: "LSX-UniWue/ModernGBERT_134M", label: "ModernGBERT_134M (DE)" },
   { value: "LSX-UniWue/ModernGBERT_1B", label: "ModernGBERT_1B (DE)" },
   { value: "microsoft/mdeberta-v3-base", label: "mdeberta-v3-base (MULTI)" },
+];
+
+const embeddingModelOptions: FreeSoloOptions[] = [
+  { value: "Alibaba-NLP/gte-modernbert-base", label: "gte-modernbert-base (EN)" },
+  { value: "jinaai/jina-embeddings-v3", label: "jina-embeddings-v3 (MULTI)" },
+  { value: "Qwen/Qwen3-Embedding-0.6B", label: "Qwen3-Embedding-0.6B (MULTI)" },
 ];
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
@@ -72,7 +79,7 @@ function TrainingSettingsStep() {
       batchSize: 4,
       epochs: 10,
       earlyStopping: true,
-      learningRate: 0.00002,
+      learningRate: 0.0001,
       weightDecay: 0.01,
       dropout: 0.2,
       isBio: false,
@@ -150,13 +157,28 @@ function TrainingSettingsStep() {
             </FormItem>
             <FormItem
               title="Base Model Name"
-              subtitle="Choose a model that fits the language of your documents or specify a model from huggingface."
+              subtitle={
+                <>
+                  Choose a model that matches the language of your documents or specify HuggingFace model name.{" "}
+                  {model === ClassifierModel.SPAN ? (
+                    ""
+                  ) : (
+                    <>
+                      Check the{" "}
+                      <a href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank">
+                        MTEB Benchmark
+                      </a>{" "}
+                      for best text embedding models!
+                    </>
+                  )}
+                </>
+              }
             >
               <FormFreeSolo
                 name="baseModelName"
                 control={control}
                 rules={{ required: "Base Model is required" }}
-                options={baseModelOptions}
+                options={model === ClassifierModel.SPAN ? transformerModelOptions : embeddingModelOptions}
                 textFieldProps={{
                   label: "Base Model",
                   error: Boolean(errors.baseModelName),
@@ -288,19 +310,21 @@ function TrainingSettingsStep() {
               />
             </FormItem>
           </FormBox>
-          <FormBox title="Sequence classification configuration">
-            <FormItem
-              title="BIO Tagging"
-              subtitle="Use BIO tagging for span classification. If false, uses IO tagging."
-            >
-              <FormSwitch
-                name="isBio"
-                control={control}
-                boxProps={{ sx: { ml: 2 } }}
-                switchProps={{ size: "medium", color: "primary" }}
-              />
-            </FormItem>
-          </FormBox>
+          {model === ClassifierModel.SPAN && (
+            <FormBox title="Sequence classification configuration">
+              <FormItem
+                title="BIO Tagging"
+                subtitle="Use BIO tagging for span classification. If false, uses IO tagging."
+              >
+                <FormSwitch
+                  name="isBio"
+                  control={control}
+                  boxProps={{ sx: { ml: 2 } }}
+                  switchProps={{ size: "medium", color: "primary" }}
+                />
+              </FormItem>
+            </FormBox>
+          )}
         </Stack>
       </Stack>
       <DialogActions sx={{ width: "100%" }}>
@@ -336,7 +360,15 @@ function FormBox({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function FormItem({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function FormItem({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string | JSX.Element;
+  subtitle: string | JSX.Element;
+  children: React.ReactNode;
+}) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
       <Box width="50%">
