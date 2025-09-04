@@ -120,6 +120,7 @@ class ClassifierTrainingParams(BaseModel):
     early_stopping: bool = Field(description="Whether to use early stopping")
     learning_rate: float = Field(description="Learning rate to use for training")
     weight_decay: float = Field(description="Weight decay to use for training")
+    dropout: float = Field(description="Dropout rate to use in the model")
     # specific training settings
     is_bio: bool = Field(description="Whether to use BIO or IO tagging")
 
@@ -130,6 +131,7 @@ class ClassifierTrainingParams(BaseModel):
             "early_stopping": self.early_stopping,
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
+            "dropout": self.dropout,
             "is_bio": self.is_bio,
         }
 
@@ -148,6 +150,9 @@ class ClassifierInferenceParams(BaseModel):
     classifier_id: int = Field(description="ID of the model to use for inference")
     sdoc_ids: list[int] = Field(
         description="List of SourceDocument IDs to apply the classifier on"
+    )
+    delete_existing_work: bool = Field(
+        description="Delete existing span/sent annotations or tags before creating new ones"
     )
 
 
@@ -178,6 +183,12 @@ class ClassifierEvaluationOutput(BaseModel):
 
 class ClassifierInferenceOutput(BaseModel):
     task_type: Literal[ClassifierTask.INFERENCE]
+    result_statistics: list[ClassifierData] = Field(
+        description="Statistics of the inference results"
+    )
+    total_affected_docs: int = Field(
+        description="Number of SourceDocuments successfully affected by the classifier"
+    )
 
 
 class ClassifierJobOutput(JobOutputBase):

@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_crud import crud_adoc
@@ -263,6 +264,52 @@ class CRUDSentenceAnnotation(
         db.commit()
 
         return ids
+
+    def remove_by_user_sdocs_codes(
+        self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
+    ) -> list[int]:
+        # find all span annotations to be removed
+        query = (
+            db.query(self.model.id, AnnotationDocumentORM.id)
+            .join(self.model.annotation_document)
+            .filter(
+                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
+                AnnotationDocumentORM.user_id == user_id,
+                self.model.code_id.in_(code_ids),
+            )
+        )
+        removed_orms = query.all()
+        anno_ids = [removed_orm.tuple()[0] for removed_orm in removed_orms]
+        adoc_ids = list({removed_orm.tuple()[1] for removed_orm in removed_orms})
+
+        # delete the sdocs
+        self.remove_multi(db=db, ids=anno_ids)
+
+        # update the annotation document's timestamp
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        return anno_ids
+
+    def count_by_codes_and_sdocs_and_user(
+        self,
+        db: Session,
+        *,
+        code_ids: list[int],
+        sdoc_ids: list[int],
+        user_id: int,
+    ) -> dict[int, int]:
+        result = (
+            db.query(self.model.code_id, func.count(self.model.id))
+            .join(self.model.annotation_document)
+            .where(
+                self.model.code_id.in_(code_ids),
+                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
+                AnnotationDocumentORM.user_id == user_id,
+            )
+            .group_by(self.model.code_id)
+        )
+        return {code_id: count for code_id, count in result.all()}
 
 
 crud_sentence_anno = CRUDSentenceAnnotation(SentenceAnnotationORM)
