@@ -1,3 +1,4 @@
+import gc
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -88,6 +89,7 @@ class ClassifierService(metaclass=SingletonMeta):
                     )
         finally:
             # free the GPU memory after job is finished
+            gc.collect()
             torch.cuda.empty_cache()
 
         job.update(
