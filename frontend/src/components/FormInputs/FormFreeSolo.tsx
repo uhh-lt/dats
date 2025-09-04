@@ -28,7 +28,12 @@ function FormFreeSolo<T extends FieldValues>({
           {...field}
           value={field.value}
           onChange={(_, newValue) => {
-            field.onChange(newValue || "");
+            if (typeof newValue === "string") {
+              field.onChange(newValue);
+            }
+            if (typeof newValue === "object" && newValue !== null && "value" in newValue) {
+              field.onChange(newValue.value);
+            }
           }}
           inputValue={field.value}
           getOptionLabel={(option) => (typeof option === "string" ? option : option.label)}
