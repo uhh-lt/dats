@@ -1,4 +1,4 @@
-import { Box, Button, DialogActions } from "@mui/material";
+import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useCallback } from "react";
 import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
@@ -29,6 +29,7 @@ function TrainingDataSelectionStep() {
   return (
     <>
       <DataSelection />
+      <Divider />
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handlePrev}>Back</Button>

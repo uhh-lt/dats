@@ -61,6 +61,7 @@ function ClassSelectionStep() {
           )}
         </Card>
       </Stack>
+      <Divider />
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handleClose}>Close</Button>

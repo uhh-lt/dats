@@ -1,4 +1,4 @@
-import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
+import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
 import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
@@ -40,13 +40,18 @@ function StatusStep() {
 
   return (
     <>
-      <DialogContent>
+      <DialogContent sx={{ backgroundColor: "grey.100" }}>
         <Stack gap={2}>
+          {classifierJob.isSuccess && (
+            <Typography variant="caption" color="textSecondary" textAlign="center" mb={-3.5}>
+              {classifierJob.data.steps[classifierJob.data.current_step]}
+            </Typography>
+          )}
           <LinearProgressWithLabel
             sx={{ ml: 5 }}
             variant={classifierJob.isSuccess ? "determinate" : "indeterminate"}
             current={classifierJob.isSuccess ? classifierJob.data.current_step : 0}
-            max={classifierJob.isSuccess ? classifierJob.data.steps.length : 0}
+            max={classifierJob.isSuccess ? classifierJob.data.steps.length - 1 : 0}
             tooltip={progressTooltip}
           />
           {classifierJob.isSuccess && (
@@ -55,21 +60,26 @@ function StatusStep() {
                 Status: {classifierJob.data.status} - {classifierJob.data.status_message}
               </Typography>
               {classifierJob.data.status === JobStatus.FINISHED ? (
-                <Typography>
-                  I am done with {classifierJob.data.input.model_type.toLowerCase()}{" "}
-                  {classifierJob.data.input.task_type.toLowerCase()}. You can view the results now!
-                </Typography>
+                <Alert severity="success" sx={{ border: "1px solid", borderColor: "success.main" }}>
+                  Classifier task '{classifierJob.data.input.model_type.toLowerCase()} classifier{" "}
+                  {classifierJob.data.input.task_type.toLowerCase()}' finished successfully! You can view the results in
+                  the next step.
+                </Alert>
               ) : classifierJob.data.status === JobStatus.FAILED ? (
-                <Typography>An error occurred! I am very sorry. You can close this dialog now...</Typography>
-              ) : null}
+                <Alert severity="error" sx={{ border: "1px solid", borderColor: "error.main" }}>
+                  An error occurred! Please try again or contact the maintainers if the issue persists.
+                </Alert>
+              ) : (
+                <Typography mt={4} fontSize="0.9em" color="textSecondary">
+                  This may take a while. You can close the dialog and come back later. You can find all classifier jobs
+                  in the classifier view.
+                </Typography>
+              )}
             </>
           )}
-          <Typography mt={4} fontSize="0.9em" color="textSecondary">
-            This may take a while. You can close the dialog and come back later. You can find all classifier jobs in the
-            classifier view.
-          </Typography>
         </Stack>
       </DialogContent>
+      <Divider />
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
         <Button disabled={isNextDisabled} onClick={handleNext}>

@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { ClassifierData } from "../../api/openapi/models/ClassifierData.ts";
 import { ClassifierEvaluationRead } from "../../api/openapi/models/ClassifierEvaluationRead.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
@@ -127,7 +128,37 @@ function EvaluationDetails({
   );
 }
 
+function InferenceDetails({
+  classifierModel,
+  statistics,
+  affectedDocs,
+}: {
+  classifierModel: ClassifierModel;
+  statistics: ClassifierData[];
+  affectedDocs: number;
+}) {
+  return (
+    <Box width="100%">
+      <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+        <Typography variant="h6">Inference</Typography>
+      </Stack>
+      <Typography variant="body2" color="textSecondary">
+        The classifier {classifierModel === ClassifierModel.DOCUMENT ? "tagged" : "annotated"} <b>{affectedDocs}</b>{" "}
+        documents with the following {classifierModel === ClassifierModel.DOCUMENT ? "tags" : "codes"}:
+      </Typography>
+      <Stack spacing={2} width="100%">
+        <Typography fontWeight="bold" color="textSecondary" textAlign="center">
+          Inference Result Statistics
+        </Typography>
+
+        <ClassifierDataPlot data={statistics} classifierModel={classifierModel} minHeight={180} />
+      </Stack>
+    </Box>
+  );
+}
+
 ClassifierDetails.Training = TrainingDetails;
 ClassifierDetails.Evaluation = EvaluationDetails;
+ClassifierDetails.Inference = InferenceDetails;
 
 export default ClassifierDetails;

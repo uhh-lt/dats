@@ -1,7 +1,8 @@
-import { Button, DialogActions, DialogContent } from "@mui/material";
+import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useCallback } from "react";
 import ClassifierHooks from "../../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationOutput } from "../../../api/openapi/models/ClassifierEvaluationOutput.ts";
+import { ClassifierInferenceOutput } from "../../../api/openapi/models/ClassifierInferenceOutput.ts";
 import { ClassifierTask } from "../../../api/openapi/models/ClassifierTask.ts";
 import { ClassifierTrainingOutput } from "../../../api/openapi/models/ClassifierTrainingOutput.ts";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
@@ -21,24 +22,26 @@ function ResultStep() {
     dispatch(CRUDDialogActions.closeClassifierDialog());
   }, [dispatch]);
 
-  console.log(cj.data);
   if (!cj.data || !cj.data.output) return null;
   return (
     <>
-      <DialogContent>
-        <>
-          {cj.data.input.task_type === ClassifierTask.EVALUATION ? (
-            <ClassifierDetails.Evaluation
-              classifierModel={cj.data.input.model_type}
-              evaluation={(cj.data.output.task_output as ClassifierEvaluationOutput).evaluation}
-            />
-          ) : cj.data.input.task_type === ClassifierTask.INFERENCE ? (
-            <>TODO</>
-          ) : cj.data.input.task_type === ClassifierTask.TRAINING ? (
-            <ClassifierDetails classifier={(cj.data.output.task_output as ClassifierTrainingOutput).classifier} />
-          ) : null}
-        </>
+      <DialogContent sx={{ backgroundColor: "grey.100" }}>
+        {cj.data.input.task_type === ClassifierTask.EVALUATION ? (
+          <ClassifierDetails.Evaluation
+            classifierModel={cj.data.input.model_type}
+            evaluation={(cj.data.output.task_output as ClassifierEvaluationOutput).evaluation}
+          />
+        ) : cj.data.input.task_type === ClassifierTask.INFERENCE ? (
+          <ClassifierDetails.Inference
+            classifierModel={cj.data.input.model_type}
+            statistics={(cj.data.output.task_output as ClassifierInferenceOutput).result_statistics}
+            affectedDocs={(cj.data.output.task_output as ClassifierInferenceOutput).total_affected_docs}
+          />
+        ) : cj.data.input.task_type === ClassifierTask.TRAINING ? (
+          <ClassifierDetails classifier={(cj.data.output.task_output as ClassifierTrainingOutput).classifier} />
+        ) : null}
       </DialogContent>
+      <Divider />
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
       </DialogActions>
