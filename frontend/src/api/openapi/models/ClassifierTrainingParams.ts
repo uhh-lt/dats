@@ -49,6 +49,10 @@ export type ClassifierTrainingParams = {
    */
   weight_decay: number;
   /**
+   * Dropout rate to use in the model
+   */
+  dropout: number;
+  /**
    * Whether to use BIO or IO tagging
    */
   is_bio: boolean;

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_sentenceAnnotation_count_annotations } from "../models/Body_sentenceAnnotation_count_annotations";
 import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreate";
 import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
 import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
@@ -186,6 +187,31 @@ export class SentenceAnnotationService {
       path: {
         code_id: codeId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Counts the SentenceAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countAnnotations({
+    userId,
+    requestBody,
+  }: {
+    userId: number;
+    requestBody: Body_sentenceAnnotation_count_annotations;
+  }): CancelablePromise<Record<string, number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/sentence/count_annotations/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

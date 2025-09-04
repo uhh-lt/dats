@@ -264,6 +264,11 @@ const useDeleteBulkSpanAnnotation = () =>
     },
   });
 
+const useCountBySdocsAndUser = () =>
+  useMutation({
+    mutationFn: SpanAnnotationService.countAnnotations,
+  });
+
 const SpanAnnotationHooks = {
   useCreateSpanAnnotation,
   useCreateBulkAnnotations,
@@ -274,6 +279,7 @@ const SpanAnnotationHooks = {
   useUpdateBulkSpan,
   useDeleteSpanAnnotation,
   useDeleteBulkSpanAnnotation,
+  useCountBySdocsAndUser,
 };
 
 export default SpanAnnotationHooks;

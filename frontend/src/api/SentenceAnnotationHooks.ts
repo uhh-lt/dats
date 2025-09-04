@@ -356,6 +356,11 @@ const useDeleteBulkSentenceAnnotationSingleSdoc = () =>
     },
   });
 
+const useCountBySdocsAndUser = () =>
+  useMutation({
+    mutationFn: SentenceAnnotationService.countAnnotations,
+  });
+
 const SentenceAnnotationHooks = {
   useGetSentenceAnnotator,
   useGetAnnotation,
@@ -366,6 +371,7 @@ const SentenceAnnotationHooks = {
   useDeleteSentenceAnnotation,
   useDeleteBulkSentenceAnnotation,
   useDeleteBulkSentenceAnnotationSingleSdoc,
+  useCountBySdocsAndUser,
 };
 
 export default SentenceAnnotationHooks;

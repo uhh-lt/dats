@@ -3987,6 +3987,43 @@
         }
       }
     },
+    "/sentence/count_annotations/{user_id}": {
+      "post": {
+        "tags": ["sentenceAnnotation"],
+        "summary": "Counts the SentenceAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)",
+        "operationId": "count_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Body_sentenceAnnotation-count_annotations" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" },
+                  "title": "Response Sentenceannotation-Count Annotations"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/simsearch/sentences": {
       "post": {
         "tags": ["simsearch"],
@@ -4797,6 +4834,41 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SpanAnnotationRead" },
                   "title": "Response Spanannotation-Get By User Code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/span/count_annotations/{user_id}": {
+      "post": {
+        "tags": ["spanAnnotation"],
+        "summary": "Counts the SpanAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)",
+        "operationId": "count_annotations",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_spanAnnotation-count_annotations" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" },
+                  "title": "Response Spanannotation-Count Annotations"
                 }
               }
             }
@@ -6924,6 +6996,15 @@
         "required": ["filter", "sorts"],
         "title": "Body_search-search_span_annotations"
       },
+      "Body_sentenceAnnotation-count_annotations": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "code_ids"],
+        "title": "Body_sentenceAnnotation-count_annotations"
+      },
       "Body_simsearch-find_similar_images": {
         "properties": {
           "query": {
@@ -6947,6 +7028,15 @@
         "type": "object",
         "required": ["query", "filter"],
         "title": "Body_simsearch-find_similar_sentences"
+      },
+      "Body_spanAnnotation-count_annotations": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "code_ids"],
+        "title": "Body_spanAnnotation-count_annotations"
       },
       "Body_tag-update_tags_batch": {
         "properties": {
@@ -7468,9 +7558,22 @@
         "title": "ClassifierEvaluationRead"
       },
       "ClassifierInferenceOutput": {
-        "properties": { "task_type": { "type": "string", "const": "inference", "title": "Task Type" } },
+        "properties": {
+          "task_type": { "type": "string", "const": "inference", "title": "Task Type" },
+          "result_statistics": {
+            "items": { "$ref": "#/components/schemas/ClassifierData" },
+            "type": "array",
+            "title": "Result Statistics",
+            "description": "Statistics of the inference results"
+          },
+          "total_affected_docs": {
+            "type": "integer",
+            "title": "Total Affected Docs",
+            "description": "Number of SourceDocuments successfully affected by the classifier"
+          }
+        },
         "type": "object",
-        "required": ["task_type"],
+        "required": ["task_type", "result_statistics", "total_affected_docs"],
         "title": "ClassifierInferenceOutput"
       },
       "ClassifierInferenceParams": {
@@ -7486,10 +7589,15 @@
             "type": "array",
             "title": "Sdoc Ids",
             "description": "List of SourceDocument IDs to apply the classifier on"
+          },
+          "delete_existing_work": {
+            "type": "boolean",
+            "title": "Delete Existing Work",
+            "description": "Delete existing span/sent annotations or tags before creating new ones"
           }
         },
         "type": "object",
-        "required": ["task_type", "classifier_id", "sdoc_ids"],
+        "required": ["task_type", "classifier_id", "sdoc_ids", "delete_existing_work"],
         "title": "ClassifierInferenceParams"
       },
       "ClassifierJobInput": {
@@ -7752,6 +7860,7 @@
             "title": "Weight Decay",
             "description": "Weight decay to use for training"
           },
+          "dropout": { "type": "number", "title": "Dropout", "description": "Dropout rate to use in the model" },
           "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" }
         },
         "type": "object",
@@ -7768,6 +7877,7 @@
           "early_stopping",
           "learning_rate",
           "weight_decay",
+          "dropout",
           "is_bio"
         ],
         "title": "ClassifierTrainingParams"

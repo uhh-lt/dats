@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
+import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { ClassifierJobRead } from "./openapi/models/ClassifierJobRead.ts";
 import { ClassifierRead } from "./openapi/models/ClassifierRead.ts";
@@ -33,6 +34,17 @@ const usePollClassifierJob = (classifierJobId: string | undefined, initialData: 
       if (!query.state.data) {
         return 1000;
       }
+
+      // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
+      const localDate = new Date();
+      if (
+        query.state.data.finished &&
+        localDate.getTime() - dateToLocaleDate(query.state.data.finished).getTime() < 3 * 60 * 1000
+      ) {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, query.state.data.project_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, query.state.data.project_id] });
+      }
+
       switch (query.state.data.status) {
         case JobStatus.CANCELED:
         case JobStatus.FAILED:
