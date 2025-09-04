@@ -13,10 +13,14 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     try:
         output = handler(payload=payload, job=job)
     except Exception as e:
+        # erroneous job:
         job.update(status_message=str(e))
         handle_job_error(jobtype, input=payload)
         raise e
     finally:
+        # always set the time the job ended
         job.update(finished=datetime.now())
+
+    # successfully finished job:
     handle_job_finished(jobtype, input=payload, output=output)
     return output
