@@ -238,6 +238,10 @@ const router = createBrowserRouter([
         element: <MlAutomation />,
       },
       {
+        path: "/project/:projectId/tools/health",
+        element: <Health />,
+      },
+      {
         path: "/project/:projectId/perspectives",
         element: <Perspectives />,
       },
@@ -249,10 +253,7 @@ const router = createBrowserRouter([
         path: "/project/:projectId/perspectives/map/:aspectId",
         element: <Map />,
       },
-      {
-        path: "/project/:projectId/health",
-        element: <Health />,
-      },
+
       {
         path: "/project/:projectId/classifier",
         element: <Classifier />,
