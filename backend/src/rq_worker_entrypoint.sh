@@ -3,4 +3,5 @@
 set -e
 source .venv/bin/activate
 
-python src/worker.py work
+DEVICE=${1:-cpu}
+python src/worker.py work "$DEVICE"

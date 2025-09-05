@@ -58,7 +58,11 @@ services:
     networks:
       - dats_network
 
-  rq-worker:
+  rq-cpu-worker:
+    volumes:
+      - ../backend/src:/dats_code/src
+
+  rq-gpu-worker:
     volumes:
       - ../backend/src:/dats_code/src
 

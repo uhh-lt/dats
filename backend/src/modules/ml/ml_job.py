@@ -27,7 +27,7 @@ sqlr = SQLRepo()
     job_type=JobType.ML,
     input_type=MLJobInput,
     generate_endpoints=EndpointGeneration.ALL,
-    device="gpu",
+    device="api",
     result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:

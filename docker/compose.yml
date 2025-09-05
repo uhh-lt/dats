@@ -34,6 +34,11 @@ x-dats-common: &dats-common
     IS_STABLE: ${IS_STABLE?is-stable-required!}
     NUMBA_CACHE_DIR: /cache/numba_cache
     MPLCONFIGDIR: /cache/matplotlib
+    HUGGINGFACE_HUB_CACHE: /cache/hf_hub_cache
+    HF_HOME: /cache/hf_cache
+    TORCH_HOME: /cache/torch_cache
+    TORCHINDUCTOR_CACHE_DIR: /cache/torch_inductor_cache
+    TRITON_CACHE_DIR: /cache/triton_cache
   depends_on: &dats-common-depends-on
     postgres:
       condition: service_healthy
@@ -144,22 +149,47 @@ services:
     networks:
       - dats_network
 
-  rq-worker:
+  rq-cpu-worker:
     <<: *dats-common
     healthcheck:
       test: "/dats_code/.venv/bin/python /dats_code/src/worker.py healthcheck"
       interval: 30s
       timeout: 10s
       retries: 5
-    command: /dats_code/src/rq_worker_entrypoint.sh
+    command: /dats_code/src/rq_worker_entrypoint.sh cpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
+      RQ_WORKERS_API: ${RQ_WORKERS_API?rq-workers-api-required!}
+      LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
+    volumes:
+      - ./backend_repo:/tmp/dats
+      - ./rq_cpu_cache:/cache
+    profiles:
+      - rq
+
+  rq-gpu-worker:
+    <<: *dats-common
+    healthcheck:
+      test: "/dats_code/.venv/bin/python /dats_code/src/worker.py healthcheck"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: /dats_code/src/rq_worker_entrypoint.sh gpu
+    environment:
+      <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
     volumes:
       - ./backend_repo:/tmp/dats
-      - ./rq_cache:/cache
+      - ./rq_gpu_cache:/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${RQ_DEVICE_IDS?rq-device-ids-required!}"]
+              capabilities: [gpu]
     profiles:
       - rq
 
@@ -170,7 +200,10 @@ services:
       RQ_DASHBOARD_USERNAME: ${RQ_DASHBOARD_USERNAME?rq-dashboard-username-required!}
       RQ_DASHBOARD_PASSWORD: ${RQ_DASHBOARD_PASSWORD?rq-dashboard-password-required!}
     depends_on:
-      rq-worker:
+      rq-cpu-worker:
+        condition: service_healthy
+        restart: true
+      rq-gpu-worker:
         condition: service_healthy
         restart: true
     ports:
@@ -198,7 +231,10 @@ services:
       - ./api_cache:/cache
     depends_on:
       <<: *dats-common-depends-on
-      rq-worker:
+      rq-cpu-worker:
+        condition: service_healthy
+        restart: true
+      rq-gpu-worker:
         condition: service_healthy
         restart: true
     ports:

@@ -43,7 +43,7 @@ def do_healthcheck():
         sys.exit(1)
 
 
-def do_work():
+def do_work(device: str):
     # import all expensive stuff before forking, so that imports are only done once
     import_by_suffix("_repo.py")
     import_by_suffix("_service.py")
@@ -56,16 +56,26 @@ def do_work():
 
     ctx = mp.get_context("fork")
 
-    cpu = ctx.Process(
-        target=create_pool, args=("cpu", int(environ.get("RQ_WORKERS_CPU", "8")))
-    )
-    gpu = ctx.Process(
-        target=create_pool, args=("gpu", int(environ.get("RQ_WORKERS_GPU", "16")))
-    )
-    cpu.start()
-    gpu.start()
-    cpu.join()
-    gpu.join()
+    if device == "cpu":
+        cpu = ctx.Process(
+            target=create_pool, args=("cpu", int(environ.get("RQ_WORKERS_CPU", "8")))
+        )
+        api = ctx.Process(
+            target=create_pool, args=("api", int(environ.get("RQ_WORKERS_API", "16")))
+        )
+        cpu.start()
+        api.start()
+        cpu.join()
+        api.join()
+    elif device == "gpu":
+        gpu = ctx.Process(
+            target=create_pool, args=("gpu", int(environ.get("RQ_WORKERS_GPU", "1")))
+        )
+        gpu.start()
+        gpu.join()
+    else:
+        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
+        sys.exit(1)
 
 
 def create_pool(queue_name: str, num_workers: int):
@@ -90,11 +100,15 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         if sys.argv[1] == "healthcheck":
             do_healthcheck()
-        elif sys.argv[1] == "work":
-            do_work()
         else:
-            print("Usage: worker.py [healthcheck|work]")
+            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
+            sys.exit(1)
+    elif len(sys.argv) == 3:
+        if sys.argv[1] == "work":
+            do_work(sys.argv[2])
+        else:
+            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
             sys.exit(1)
     else:
-        print("Usage: worker.py [healthcheck|work]")
+        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
         sys.exit(1)

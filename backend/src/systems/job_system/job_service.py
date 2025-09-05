@@ -37,7 +37,7 @@ class RegisteredJob(TypedDict):
     output_type: type[JobOutputBase] | None
     generate_endpoints: EndpointGeneration
     priority: JobPriority
-    device: Literal["gpu", "cpu"]
+    device: Literal["gpu", "cpu", "api"]
     router: APIRouter | None
     result_ttl: JobResultTTL  # how long to keep successful jobs and their results (defaults to 500 seconds)
     # failure_ttl  # how long to keep failed jobs (defaults to 1 year)
@@ -75,7 +75,7 @@ class JobService(metaclass=SingletonMeta):
         # Define priority queues and their registries (every queue has its own 5 registries)
         cls.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
         cls.registries: dict[tuple[str, JobPriority], dict[str, BaseRegistry]] = {}
-        for device in ["cpu", "gpu"]:
+        for device in ["cpu", "gpu", "api"]:
             for priority in [JobPriority.HIGH, JobPriority.DEFAULT, JobPriority.LOW]:
                 qk = (device, priority)  # queue key
                 qn = f"{device}-{priority.value}"  # queue name
@@ -98,7 +98,7 @@ class JobService(metaclass=SingletonMeta):
         input_type: type[InputT],
         output_type: type[OutputT] | None,
         priority: JobPriority,
-        device: Literal["gpu", "cpu"],
+        device: Literal["gpu", "cpu", "api"],
         generate_endpoints: EndpointGeneration,
         router: APIRouter | None,
         result_ttl: JobResultTTL,

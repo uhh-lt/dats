@@ -14,7 +14,7 @@ sqlr = SQLRepo()
     output_type=LLMJobOutput,
     generate_endpoints=EndpointGeneration.ALL,
     router=router,
-    device="gpu",
+    device="api",
     result_ttl=JobResultTTL.NINETY_DAYS,
     timeout=-1,  # infinite/no timeout
 )
