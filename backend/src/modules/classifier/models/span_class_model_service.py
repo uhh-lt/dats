@@ -459,7 +459,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             model_prefix="span_classifier_",
         )
 
-        log_dir = model_dir / "logs"
+        log_dir = model_dir / "train_logs"
         csv_logger = CSVLogger(log_dir, name=f"span_classifier_{model_name}")
 
         callbacks = []

@@ -419,7 +419,7 @@ class DocClassificationModelService(TextClassificationModelService):
             model_prefix="doc_classifier_",
         )
 
-        log_dir = model_dir / "logs"
+        log_dir = model_dir / "train_logs"
         csv_logger = CSVLogger(log_dir, name=f"doc_classifier_{model_name}")
 
         callbacks = []
