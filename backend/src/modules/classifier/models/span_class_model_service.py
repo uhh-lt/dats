@@ -48,6 +48,7 @@ from modules.classifier.classifier_dto import (
     ClassifierTrainingParams,
 )
 from modules.classifier.classifier_exceptions import BaseModelDoesNotExistError
+from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import check_hf_model_exists
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
@@ -478,6 +479,9 @@ class SpanClassificationModelService(TextClassificationModelService):
                 patience=3,  # Wait for 3 epochs
             )
             callbacks.append(early_stopping_callback)
+
+        # append our own, custom callback to update the job progress
+        callbacks.append(JobProgressCallback(job=job))
 
         trainer = pl.Trainer(
             logger=csv_logger,
