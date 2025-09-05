@@ -10,7 +10,7 @@ sqlr = SQLRepo()
 @register_job(
     job_type=JobType.PERSPECTIVES,
     input_type=PerspectivesJobInput,
-    device="gpu",
+    device="api",
     result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def perspectives_job(payload: PerspectivesJobInput, job: Job) -> None:

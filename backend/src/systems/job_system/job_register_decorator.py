@@ -21,7 +21,7 @@ def register_job(
     input_type: type[InputT],
     output_type: type[OutputT] | None = None,
     priority: JobPriority = JobPriority.DEFAULT,
-    device: Literal["gpu", "cpu"] = "cpu",
+    device: Literal["gpu", "cpu", "api"] = "cpu",
     generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
     result_ttl: JobResultTTL = JobResultTTL.DEFAULT,

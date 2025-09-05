@@ -19,7 +19,7 @@ sqlr = SQLRepo()
     job_type=JobType.COTA_REFINEMENT,
     input_type=COTARefinementJobInput,
     output_type=None,
-    device="gpu",
+    device="api",
     result_ttl=JobResultTTL.NINETY_DAYS,
 )
 def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:

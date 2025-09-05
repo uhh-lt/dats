@@ -15,7 +15,8 @@ mkdir -p ../docker/backend_repo
 
 # cache directories
 mkdir -p ../docker/api_cache
-mkdir -p ../docker/rq_cache
+mkdir -p ../docker/rq_cpu_cache
+mkdir -p ../docker/rq_gpu_cache
 mkdir -p ../docker/ray_cache
 chmod 777 ../docker/ray_cache
 mkdir -p ../docker/vllm_cache

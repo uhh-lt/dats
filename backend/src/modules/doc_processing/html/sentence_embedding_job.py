@@ -22,7 +22,7 @@ class TextSentenceEmbeddingJobInput(SdocProcessingJobInput):
 @register_job(
     job_type=JobType.TEXT_SENTENCE_EMBEDDING,
     input_type=TextSentenceEmbeddingJobInput,
-    device="gpu",
+    device="api",
 )
 def handle_text_sentence_embedding_job(
     payload: TextSentenceEmbeddingJobInput, job: Job
