@@ -4,6 +4,7 @@ api:
   production_mode: 0
   is_stable: ${oc.env:IS_STABLE, False}
   uuid_namespace: ${oc.env:UUID_NAMESPACE, ""}
+  hf_hub_token: ${oc.env:HF_HUB_TOKEN, ""}
   auth:
     jwt:
       token_url: /authentication/login
