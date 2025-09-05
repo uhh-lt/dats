@@ -1,13 +1,13 @@
 import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useCallback } from "react";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { ClassifierEvaluationOutput } from "../../../api/openapi/models/ClassifierEvaluationOutput.ts";
-import { ClassifierInferenceOutput } from "../../../api/openapi/models/ClassifierInferenceOutput.ts";
-import { ClassifierTask } from "../../../api/openapi/models/ClassifierTask.ts";
-import { ClassifierTrainingOutput } from "../../../api/openapi/models/ClassifierTrainingOutput.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ClassifierDetails from "../ClassifierDetails.tsx";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierEvaluationOutput } from "../../../../api/openapi/models/ClassifierEvaluationOutput.ts";
+import { ClassifierInferenceOutput } from "../../../../api/openapi/models/ClassifierInferenceOutput.ts";
+import { ClassifierTask } from "../../../../api/openapi/models/ClassifierTask.ts";
+import { ClassifierTrainingOutput } from "../../../../api/openapi/models/ClassifierTrainingOutput.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import ClassifierDetails from "../../ClassifierDetails.tsx";
 
 function ResultStep() {
   // global client state

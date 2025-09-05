@@ -1,10 +1,10 @@
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useCallback } from "react";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { ClassifierEvaluationParams } from "../../../api/openapi/models/ClassifierEvaluationParams.ts";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierEvaluationParams } from "../../../../api/openapi/models/ClassifierEvaluationParams.ts";
+import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import DataSelection from "./DataSelection.tsx";
 
 function EvalDataSelectionStep() {

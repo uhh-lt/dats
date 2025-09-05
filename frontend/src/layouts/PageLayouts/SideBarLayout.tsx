@@ -2,6 +2,7 @@ import { Box, CssBaseline } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth.ts";
+import ClassifierDialog from "../../components/Classifier/Dialog/ClassifierDialog.tsx";
 import CodeCreateDialog from "../../components/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../components/Code/CodeEditDialog.tsx";
 import ConfirmationDialog from "../../components/ConfirmationDialog/ConfirmationDialog.tsx";
@@ -83,6 +84,7 @@ function SideBarLayout() {
           <ProjectSettingsDialog />
           <DocumentUploadDialog />
           <LLMDialog />
+          <ClassifierDialog />
           <QuickCommandMenu />
           <ShortcutManager />
         </>

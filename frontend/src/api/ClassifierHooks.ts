@@ -4,8 +4,11 @@ import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
+import { ClassifierInferenceParams } from "./openapi/models/ClassifierInferenceParams.ts";
 import { ClassifierJobRead } from "./openapi/models/ClassifierJobRead.ts";
+import { ClassifierModel } from "./openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "./openapi/models/ClassifierRead.ts";
+import { ClassifierTask } from "./openapi/models/ClassifierTask.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { ClassifierService } from "./openapi/services/ClassifierService.ts";
 
@@ -31,21 +34,30 @@ const usePollClassifierJob = (classifierJobId: string | undefined, initialData: 
       }),
     enabled: !!classifierJobId,
     refetchInterval: (query) => {
-      if (!query.state.data) {
+      const data = query.state.data;
+      if (!data) {
         return 1000;
       }
 
       // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
       const localDate = new Date();
-      if (
-        query.state.data.finished &&
-        localDate.getTime() - dateToLocaleDate(query.state.data.finished).getTime() < 3 * 60 * 1000
-      ) {
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, query.state.data.project_id] });
-        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, query.state.data.project_id] });
+      if (data.finished && localDate.getTime() - dateToLocaleDate(data.finished).getTime() < 3 * 60 * 1000) {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIER_JOBS, data.project_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CLASSIFIERS, data.project_id] });
+
+        // invalidate sdoc tags if it was an inference job with document classifier
+        if (
+          data.input.model_type === ClassifierModel.DOCUMENT &&
+          data.input.task_type === ClassifierTask.INFERENCE &&
+          data.output
+        ) {
+          (data.input.task_parameters as ClassifierInferenceParams).sdoc_ids.forEach((sdocId) => {
+            queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdocId] });
+          });
+        }
       }
 
-      switch (query.state.data.status) {
+      switch (data.status) {
         case JobStatus.CANCELED:
         case JobStatus.FAILED:
         case JobStatus.FINISHED:

@@ -16,6 +16,7 @@ import ClassifierHooks from "../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
 import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
+import ClassifierDetails from "../../components/Classifier/ClassifierDetails.tsx";
 import CodeRenderer from "../../components/Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import CardContainer from "../../components/MUI/CardContainer.tsx";
@@ -24,7 +25,6 @@ import TagRenderer from "../../components/Tag/TagRenderer.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { dateToLocaleDate } from "../../utils/DateUtils.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
-import ClassifierDetails from "./ClassifierDetails.tsx";
 
 interface ClassifierTableProps {
   projectId: number;

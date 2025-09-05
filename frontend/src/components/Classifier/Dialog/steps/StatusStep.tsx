@@ -1,10 +1,10 @@
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ClassifierJobProgressBar from "../ClassifierJobProgressBar.tsx";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { JobStatus } from "../../../../api/openapi/models/JobStatus.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import ClassifierJobProgressBar from "../../ClassifierJobProgressBar.tsx";
 
 function StatusStep() {
   // global state

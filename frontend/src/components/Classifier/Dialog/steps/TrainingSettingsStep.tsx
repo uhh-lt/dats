@@ -13,16 +13,16 @@ import {
   Typography,
 } from "@mui/material";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
-import { ClassifierTrainingParams } from "../../../api/openapi/models/ClassifierTrainingParams.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import FormFreeSolo, { FreeSoloOptions } from "../../../components/FormInputs/FormFreeSolo.tsx";
-import FormMenu from "../../../components/FormInputs/FormMenu.tsx";
-import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
-import FormSwitch from "../../../components/FormInputs/FormSwitch.tsx";
-import FormText from "../../../components/FormInputs/FormText.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
+import { ClassifierTrainingParams } from "../../../../api/openapi/models/ClassifierTrainingParams.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import FormFreeSolo, { FreeSoloOptions } from "../../../FormInputs/FormFreeSolo.tsx";
+import FormMenu from "../../../FormInputs/FormMenu.tsx";
+import FormNumber from "../../../FormInputs/FormNumber.tsx";
+import FormSwitch from "../../../FormInputs/FormSwitch.tsx";
+import FormText from "../../../FormInputs/FormText.tsx";
 
 interface TrainingSettings {
   // required

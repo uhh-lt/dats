@@ -8,8 +8,8 @@ import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
 import { ClassifierTrainingOutput } from "../../api/openapi/models/ClassifierTrainingOutput.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import ClassifierDetails from "../../views/classifier/ClassifierDetails.tsx";
-import ClassifierJobProgressBar from "../../views/classifier/ClassifierJobProgressBar.tsx";
+import ClassifierDetails from "../Classifier/ClassifierDetails.tsx";
+import ClassifierJobProgressBar from "../Classifier/ClassifierJobProgressBar.tsx";
 import JobListItem from "./JobListItem.tsx";
 import { jobStatusToSimple } from "./StatusToSimple.ts";
 
