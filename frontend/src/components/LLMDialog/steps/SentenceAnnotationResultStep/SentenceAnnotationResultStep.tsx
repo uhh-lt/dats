@@ -7,11 +7,7 @@ import { SentenceAnnotationLLMJobResult } from "../../../../api/openapi/models/S
 import { QueryKey } from "../../../../api/QueryKey.ts";
 import queryClient from "../../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import {
-  ASSISTANT_FEWSHOT_ID,
-  ASSISTANT_TRAINED_ID,
-  ASSISTANT_ZEROSHOT_ID,
-} from "../../../../utils/GlobalConstants.ts";
+import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "../../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../../../views/annotation/annoSlice.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
 import LLMUtterance from "../LLMUtterance.tsx";
@@ -19,7 +15,6 @@ import LLMUtterance from "../LLMUtterance.tsx";
 const approach2AssistantID: Record<ApproachType, number> = {
   [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
   [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
-  [ApproachType.MODEL_TRAINING]: ASSISTANT_TRAINED_ID,
 };
 
 function SentenceAnnotationResultStep() {

@@ -11,7 +11,6 @@ import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { LlmAssistantJobRead } from "../../api/openapi/models/LlmAssistantJobRead.ts";
 import { LLMJobOutput } from "../../api/openapi/models/LLMJobOutput.ts";
 import { LLMPromptTemplates } from "../../api/openapi/models/LLMPromptTemplates.ts";
-import { ModelTrainingParams } from "../../api/openapi/models/ModelTrainingParams.ts";
 import { ZeroShotParams } from "../../api/openapi/models/ZeroShotParams.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
@@ -88,8 +87,6 @@ function InputViewer({ llmJob }: { llmJob: LlmAssistantJobRead }) {
       return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as ZeroShotParams).prompts} />;
     case ApproachType.LLM_FEW_SHOT:
       return <PromptViewer prompts={(llmJob.input.specific_approach_parameters as FewShotParams).prompts} />;
-    case ApproachType.MODEL_TRAINING:
-      return <TrainingParameterViewer parameters={llmJob.input.specific_approach_parameters as ModelTrainingParams} />;
     default:
       return <>Approach is not supported!</>;
   }
@@ -134,16 +131,6 @@ function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
         </TabPanel>
       ))}
     </TabContext>
-  );
-}
-
-function TrainingParameterViewer({ parameters }: { parameters: ModelTrainingParams }) {
-  return (
-    <Stack gap={2} mt={2}>
-      {Object.entries(parameters.training_parameters).map(([key, value]) => (
-        <TextField key={key} fullWidth label={key} value={value} type="number" inputProps={{ readOnly: true }} />
-      ))}
-    </Stack>
   );
 }
 
