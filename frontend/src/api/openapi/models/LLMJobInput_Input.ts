@@ -6,7 +6,6 @@ import type { AnnotationParams } from "./AnnotationParams";
 import type { ApproachType } from "./ApproachType";
 import type { FewShotParams } from "./FewShotParams";
 import type { MetadataExtractionParams } from "./MetadataExtractionParams";
-import type { ModelTrainingParams } from "./ModelTrainingParams";
 import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
 import type { TaggingParams } from "./TaggingParams";
 import type { TaskType } from "./TaskType";
@@ -31,5 +30,5 @@ export type LLMJobInput_Input = {
   /**
    * Specific parameters for the approach w.r.t it's type
    */
-  specific_approach_parameters: ZeroShotParams | FewShotParams | ModelTrainingParams;
+  specific_approach_parameters: ZeroShotParams | FewShotParams;
 };
