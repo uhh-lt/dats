@@ -286,3 +286,24 @@ async def get_sdoc_counts(
 ) -> dict[int, int]:
     # TODO only if the user has access
     return crud_tag.read_tag_sdoc_counts(db, sdoc_ids)
+
+
+@router.post(
+    "/count_tags/{user_id}",
+    response_model=dict[int, int],
+    summary="Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)",
+)
+async def count_tags(
+    *,
+    db: Session = Depends(get_db_session),
+    user_id: int,
+    sdoc_ids: list[int],
+    class_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+) -> dict[int, int]:
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+
+    # TODO: users are not associated with tags...
+    return crud_tag.count_by_tags_and_sdocs_and_user(
+        db=db, tag_ids=class_ids, sdoc_ids=sdoc_ids, user_id=user_id
+    )
