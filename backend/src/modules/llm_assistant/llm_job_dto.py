@@ -80,7 +80,6 @@ class LLMJobParameters(JobInputBase):
 class ApproachType(str, Enum):
     LLM_ZERO_SHOT = "LLM_ZERO_SHOT"
     LLM_FEW_SHOT = "LLM_FEW_SHOT"
-    MODEL_TRAINING = "MODEL_TRAINING"
 
 
 # Prompt template
@@ -110,29 +109,11 @@ class FewShotParams(SpecificApproachParameters):
     )
 
 
-# Training Parameters (used for training the SequenceTaggingModel)
-class TrainingParameters(BaseModel):
-    max_epochs: int = Field(
-        description="The maximum number of epochs to train the model"
-    )
-    batch_size: int = Field(description="The batch size to use for training")
-    learning_rate: float = Field(description="The learning rate to use for training")
-
-
-class ModelTrainingParams(SpecificApproachParameters):
-    llm_approach_type: Literal[ApproachType.MODEL_TRAINING]
-    training_parameters: TrainingParameters = Field(
-        description="The training parameters to use for the job"
-    )
-
-
 class LLMJobInput(LLMJobParameters):
     llm_approach_type: ApproachType = Field(
         description="The approach to use for the LLMJob"
     )
-    specific_approach_parameters: (
-        ZeroShotParams | FewShotParams | ModelTrainingParams
-    ) = Field(
+    specific_approach_parameters: ZeroShotParams | FewShotParams = Field(
         description="Specific parameters for the approach w.r.t it's type",
         discriminator="llm_approach_type",
     )
