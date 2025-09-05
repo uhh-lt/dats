@@ -8,6 +8,7 @@ import pandas as pd
 import pytorch_lightning as pl
 import torch
 from datasets import Dataset
+from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sqlalchemy.orm import Session
@@ -19,13 +20,12 @@ from transformers import (
     DataCollatorWithPadding,
 )
 
-from core.annotation.span_annotation_crud import crud_span_anno
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
-from core.user.user_crud import ASSISTANT_TRAINED_ID
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierCreate,
@@ -60,7 +60,7 @@ class InferenceDatasetRow(TypedDict):
 
 
 class DatasetRow(InferenceDatasetRow):
-    label: int
+    labels: int
 
 
 class AnnotationResult(TypedDict):
@@ -93,6 +93,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         self.config.num_labels = num_labels
         self.config.id2label = id2label
         self.config.label2id = label2id
+        self.config.trust_remote_code = True
         self.model = AutoModelForSequenceClassification.from_pretrained(
             base_name,
             config=self.config,
@@ -158,7 +159,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         predictions = torch.argmax(outputs.logits, dim=1).tolist()
 
         # Compute metrics
-        golds = batch["label"]
+        golds = batch["labels"].tolist()
         a = self.accuracy.compute(predictions=predictions, references=golds)
         p = self.precision.compute(
             predictions=predictions, references=golds, average="macro"
@@ -203,7 +204,7 @@ class DocClassificationLightningModel(pl.LightningModule):
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
         )
-        predictions = torch.argmax(outputs.logits, dim=2).tolist()
+        predictions = torch.argmax(outputs.logits, dim=1).tolist()
 
         return {
             "sdoc_ids": batch["sdoc_id"],
@@ -236,6 +237,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 tag_ids=tag_ids,
             )
         ]
+        logger.info(f"Found {len(sdoc_ids)} source documents for training.")
 
         # Get annotations
         results = (
@@ -245,15 +247,20 @@ class DocClassificationModelService(TextClassificationModelService):
             )
             .join(SourceDocumentORM.tags)
             .filter(
-                TagORM.id.in_(class_ids),
                 SourceDocumentORM.id.in_(sdoc_ids),
+                TagORM.id.in_(class_ids),
             )
             .all()
         )
 
         # Get source document data
+        # Some documents may be erroneous and do not have data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-        sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
+        sdocid2data: dict[int, SourceDocumentDataORM | None] = {
+            sdoc_id: None for sdoc_id in sdoc_ids
+        }
+        for sdoc_data in sdoc_datas:
+            sdocid2data[sdoc_data.id] = sdoc_data
 
         # Group classifications by source document
         sdoc_id2annotations: dict[int, list[TagORM]] = {
@@ -266,15 +273,27 @@ class DocClassificationModelService(TextClassificationModelService):
         # Create a labeled dataset
         # Every source document is part of the training data
         dataset: list[DatasetRow] = []
-        for sdoc_id, annotations in sdoc_id2annotations.items():
+        for sdoc_id in sdoc_ids:
             sdoc_data = sdocid2data[sdoc_id]
+            if sdoc_data is None:
+                logger.info(
+                    f"Skipping source document {sdoc_id} without data for training."
+                )
+                continue  # skip documents without data
+
+            # We only use the first annotation (if multiple exist)
+            annotations = sdoc_id2annotations[sdoc_id]
+            annotation = annotations[0].id if len(annotations) > 0 else 0
             dataset.append(
                 {
                     "sdoc_id": sdoc_data.id,
                     "text": sdoc_data.content,
-                    "label": annotations[0].id if len(annotations) > 0 else 0,
+                    "labels": classid2labelid[annotation],
                 }
             )
+        logger.info(
+            f"Using {len(dataset)}/{len(sdoc_ids)} source documents for training."
+        )
 
         # Construct a tokenized huggingface dataset
         def tokenize_text(examples):
@@ -365,7 +384,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # Calculate class weights
         # Count the occurrences of each label in the training set
         label_counts = defaultdict(int)
-        for label in split_dataset["train"]["label"]:
+        for label in split_dataset["train"]["labels"]:
             label_counts[label] += 1
 
         # Calculate the weight for each label: A simple inverse frequency weighting
@@ -636,11 +655,11 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Delete existing annotations (if requested by the user)
         if parameters.delete_existing_work:
-            crud_span_anno.remove_by_user_sdocs_codes(
+            crud_tag.unlink_multiple_tags(
                 db=db,
-                user_id=ASSISTANT_TRAINED_ID,
+                # user_id=ASSISTANT_TRAINED_ID, # TODO, add user?
                 sdoc_ids=parameters.sdoc_ids,
-                code_ids=classifier.class_ids,
+                tag_ids=classifier.class_ids,
             )
 
         # 2. Create dataset
@@ -703,27 +722,29 @@ class DocClassificationModelService(TextClassificationModelService):
         # 6. Store annotations in DB
         job.update(current_step=6)
 
-        # current state
-        sdoc_ids2tags = crud_tag.read_tags_for_documents(
-            db=db, sdoc_ids=list({x["sdoc_id"] for x in results})
-        )
-        sdoc_ids2tag_ids = {
-            sdoc_id: {tag.id for tag in tags} for sdoc_id, tags in sdoc_ids2tags.items()
-        }
-
-        # update current state with results
+        # result state
         result_statistics: dict[int, int] = defaultdict(
             int
         )  # map from tag_id to number of annotations
-        for result in results:
-            sdoc_ids2tag_ids[result["sdoc_id"]].add(result["class_id"])
-            result_statistics[result["class_id"]] += 1
+        sdoc_ids2tag_ids: dict[int, set[int]] = {}
+        for r in results:
+            sdoc_ids2tag_ids[r["sdoc_id"]] = {r["class_id"]}
+            result_statistics[r["class_id"]] += 1
+
+        # add db state
+        sdoc_ids2tags = crud_tag.read_tags_for_documents(
+            db=db, sdoc_ids=list({x["sdoc_id"] for x in results})
+        )
+        for sdoc_id, tags in sdoc_ids2tags.items():
+            sdoc_ids2tag_ids[sdoc_id].update({tag.id for tag in tags})
 
         # write updated state to db
-        sdoc_ids2tag_ids_list = {
-            sdoc_id: list(tag_ids) for sdoc_id, tag_ids in sdoc_ids2tag_ids.items()
-        }
-        crud_tag.set_tags_batch(db=db, links=sdoc_ids2tag_ids_list)
+        crud_tag.set_tags_batch(
+            db=db,
+            links={
+                sdoc_id: list(tag_ids) for sdoc_id, tag_ids in sdoc_ids2tag_ids.items()
+            },
+        )
 
         return ClassifierJobOutput(
             task_type=ClassifierTask.INFERENCE,
@@ -733,6 +754,6 @@ class DocClassificationModelService(TextClassificationModelService):
                     ClassifierData(class_id=class_id, num_examples=count)
                     for class_id, count in result_statistics.items()
                 ],
-                total_affected_docs=len(sdoc_ids2tag_ids_list),
+                total_affected_docs=len(sdoc_ids2tag_ids),
             ),
         )

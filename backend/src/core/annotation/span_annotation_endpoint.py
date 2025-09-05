@@ -300,7 +300,7 @@ def get_by_user_code(
     "/count_annotations/{user_id}",
     response_model=dict[int, int],
     summary=(
-        "Counts the SpanAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)"
+        "Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)"
     ),
 )
 def count_annotations(
@@ -308,11 +308,11 @@ def count_annotations(
     db: Session = Depends(get_db_session),
     user_id: int,
     sdoc_ids: list[int],
-    code_ids: list[int],
+    class_ids: list[int],
     authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
     return crud_span_anno.count_by_codes_and_sdocs_and_user(
-        db=db, code_ids=code_ids, sdoc_ids=sdoc_ids, user_id=user_id
+        db=db, code_ids=class_ids, sdoc_ids=sdoc_ids, user_id=user_id
     )

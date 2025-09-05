@@ -202,5 +202,24 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
             modifications += self.set_tags(db, sdoc_id=sdoc_id, tag_ids=tag_ids)
         return modifications
 
+    def count_by_tags_and_sdocs_and_user(
+        self,
+        db: Session,
+        *,
+        tag_ids: list[int],
+        sdoc_ids: list[int],
+        user_id: int,
+    ) -> dict[int, int]:
+        result = (
+            db.query(self.model.id, func.count(self.model.id))
+            .join(self.model.source_documents)
+            .where(
+                self.model.id.in_(tag_ids),
+                SourceDocumentORM.id.in_(sdoc_ids),
+            )
+            .group_by(self.model.id)
+        )
+        return {tag_id: count for tag_id, count in result.all()}
+
 
 crud_tag = CRUDTag(TagORM)

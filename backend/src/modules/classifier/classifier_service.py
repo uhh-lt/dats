@@ -60,6 +60,10 @@ class ClassifierService(metaclass=SingletonMeta):
             status_message="Started ClassifierJob!",
         )
 
+        # free GPU memory before job starts
+        gc.collect()
+        torch.cuda.empty_cache()
+
         # get the correct classifier service
         tcs: TextClassificationModelService
         match payload.model_type:
