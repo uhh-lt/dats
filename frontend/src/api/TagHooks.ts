@@ -210,6 +210,11 @@ const useBulkUpdateTags = () =>
     },
   });
 
+const useCountBySdocsAndUser = () =>
+  useMutation({
+    mutationFn: TagService.countTags,
+  });
+
 const TagHooks = {
   useGetAllTags,
   useGetAllTagIdsBySdocId,
@@ -222,6 +227,7 @@ const TagHooks = {
   useBulkLinkTags,
   useBulkUnlinkTags,
   useGetTagDocumentCounts,
+  useCountBySdocsAndUser,
 };
 
 export default TagHooks;

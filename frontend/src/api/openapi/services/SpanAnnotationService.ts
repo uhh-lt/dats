@@ -276,7 +276,7 @@ export class SpanAnnotationService {
     });
   }
   /**
-   * Counts the SpanAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)
+   * Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)
    * @returns number Successful Response
    * @throws ApiError
    */
