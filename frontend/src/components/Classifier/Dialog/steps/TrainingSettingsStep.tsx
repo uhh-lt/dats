@@ -316,6 +316,7 @@ function TrainingSettingsStep() {
                   control={control}
                   boxProps={{ sx: { ml: 2 } }}
                   switchProps={{ size: "medium", color: "primary" }}
+                  disabled={true}
                 />
               </FormItem>
             </FormBox>
