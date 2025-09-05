@@ -743,7 +743,9 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 4. Predict with model
         job.update(current_step=4)
-        trainer = pl.Trainer()
+        log_dir = Path(classifier.path).parent / "infer_logs"
+        csv_logger = CSVLogger(log_dir, name=classifier.name)
+        trainer = pl.Trainer(logger=csv_logger)
         predictions = trainer.predict(model, dataloaders=inference_dataloader)
         assert predictions is not None, "No predictions returned!"
 
