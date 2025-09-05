@@ -3,7 +3,7 @@
 x-vllm-common: &vllm-common
   image: vllm/vllm-openai:v0.10.1.1
   environment:
-    - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN?hf-hub-token-required!}
+    - HUGGING_FACE_HUB_TOKEN=${VLLM_HF_HUB_TOKEN?vllm-hf-hub-token-required!}
     - VLLM_LOGGING_LEVEL=INFO
     - TORCHINDUCTOR_CACHE_DIR=/.cache/torch_inductor_cache
     - TRITON_CACHE_DIR=/.cache/triton_cache

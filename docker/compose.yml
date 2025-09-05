@@ -35,6 +35,7 @@ x-dats-common: &dats-common
     NUMBA_CACHE_DIR: /cache/numba_cache
     MPLCONFIGDIR: /cache/matplotlib
     HUGGINGFACE_HUB_CACHE: /cache/hf_hub_cache
+    HF_HUB_TOKEN: ${HF_HUB_TOKEN?hf-hub-token-required!}
     HF_HOME: /cache/hf_cache
     TORCH_HOME: /cache/torch_cache
     TORCHINDUCTOR_CACHE_DIR: /cache/torch_inductor_cache
