@@ -9,10 +9,10 @@ from modules.classifier.classifier_dto import (
     ClassifierJobInput,
     ClassifierJobOutput,
     ClassifierModel,
+    ClassifierRead,
     ClassifierTask,
 )
 from modules.classifier.classifier_exceptions import UnsupportedClassifierJobError
-from modules.classifier.classifier_orm import ClassifierORM
 from modules.classifier.models.doc_class_model_service import (
     DocClassificationModelService,
 )
@@ -39,16 +39,19 @@ class ClassifierService(metaclass=SingletonMeta):
     def _update_llm_job_description(self, job: Job, description: str) -> None:
         job.update(status_message=description)
 
-    def delete_classifier_by_id(self, db: Session, classifier_id: int) -> ClassifierORM:
+    def delete_classifier_by_id(
+        self, db: Session, classifier_id: int
+    ) -> ClassifierRead:
         # make sure that classifier exists
         db_obj = crud_classifier.read(db=db, id=classifier_id)
+        c_read = ClassifierRead.model_validate(db_obj)
 
         # delete classifier from filesystem
         FilesystemRepo().remove_dir(Path(db_obj.path).parent)
 
         # delete classifier from db
         crud_classifier.delete(db=db, id=classifier_id)
-        return db_obj
+        return c_read
 
     def handle_classifier_job(
         self, db: Session, job: Job, payload: ClassifierJobInput
