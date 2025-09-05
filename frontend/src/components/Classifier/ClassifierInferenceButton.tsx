@@ -79,7 +79,7 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
   // go to classifiers
   const navigate = useNavigate();
   const handleCreateClassifier = useCallback(() => {
-    navigate(`/projects/${projectId}/classifiers`);
+    navigate(`/project/${projectId}/classifier`);
   }, [navigate, projectId]);
 
   return (
