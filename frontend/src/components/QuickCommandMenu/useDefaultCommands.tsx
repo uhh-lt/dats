@@ -83,15 +83,6 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         keywords: ["perspectives", "map"],
       },
       {
-        id: "health",
-        title: "Open Document Health",
-        description: "Go to project document health",
-        category: "Navigation",
-        icon: getIconComponent(Icon.HEALTH),
-        route: `/project/${projectId}/health`,
-        keywords: ["health", "document", "status", "processing"],
-      },
-      {
         id: "classifier",
         title: "Open Classifiers",
         description: "Go to project classifiers",
@@ -227,6 +218,15 @@ export const useDefaultCommands = (projectId: string | undefined): CommandItem[]
         icon: getIconComponent(Icon.DOCUMENT_SAMPLER),
         route: `/project/${projectId}/tools/document-sampler`,
         keywords: ["go", "to", "navigate", "document", "sampler"],
+      },
+      {
+        id: "health",
+        title: "Document Health",
+        description: "Go to document health",
+        category: "Tools",
+        icon: getIconComponent(Icon.HEALTH),
+        route: `/project/${projectId}/tools/health`,
+        keywords: ["health", "document", "status", "processing"],
       },
       // Settings commands
       {

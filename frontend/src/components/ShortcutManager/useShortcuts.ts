@@ -77,7 +77,10 @@ export function useShortcuts() {
         shift: true,
       }),
       createShortcut("goToLogbook", "l", "Go to Logbook", () => navigate("logbook"), { ctrlmeta: true, shift: true }),
-      createShortcut("goToHealth", "h", "Go to Health", () => navigate("health"), { ctrlmeta: true, shift: true }),
+      createShortcut("goToHealth", "h", "Go to Health", () => navigate("tools/health"), {
+        ctrlmeta: true,
+        shift: true,
+      }),
       createShortcut("goToSettings", ",", "Go to Settings", () => dispatch(CRUDDialogActions.openProjectSettings()), {
         ctrlmeta: true,
         shift: true,
