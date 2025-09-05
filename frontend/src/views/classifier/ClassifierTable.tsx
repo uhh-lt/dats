@@ -156,9 +156,15 @@ function ClassifierTable({ projectId }: ClassifierTableProps) {
   };
 
   // classifier deletion
+  const deleteClassifierMutation = ClassifierHooks.useDeleteClassifier();
   const handleDeleteClassifier = () => {
     if (selectedRows.length === 0) return;
-    console.log("handle classifier deletion!", selectedRows);
+    selectedRows.forEach((classifierId) => {
+      deleteClassifierMutation.mutate({
+        classifierId,
+      });
+    });
+    setRowSelectionModel({}); // reset selection
   };
 
   // table

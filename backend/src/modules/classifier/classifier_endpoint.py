@@ -68,10 +68,9 @@ def delete_by_id(
 ) -> ClassifierRead:
     authz_user.assert_in_same_project_as(Crud.CLASSIFIER, classifier_id)
 
-    db_obj = ClassifierService().delete_classifier_by_id(
+    return ClassifierService().delete_classifier_by_id(
         db=db, classifier_id=classifier_id
     )
-    return ClassifierRead.model_validate(db_obj)
 
 
 @router.post(
