@@ -13,18 +13,18 @@ import {
 } from "@mui/material";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { ClassifierInferenceParams } from "../../../api/openapi/models/ClassifierInferenceParams.ts";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
-import SentenceAnnotationHooks from "../../../api/SentenceAnnotationHooks.ts";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
-import TagHooks from "../../../api/TagHooks.ts";
-import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import FormSwitch from "../../../components/FormInputs/FormSwitch.tsx";
-import TagRenderer from "../../../components/Tag/TagRenderer.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { ASSISTANT_TRAINED_ID } from "../../../utils/GlobalConstants.ts";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierInferenceParams } from "../../../../api/openapi/models/ClassifierInferenceParams.ts";
+import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
+import SentenceAnnotationHooks from "../../../../api/SentenceAnnotationHooks.ts";
+import SpanAnnotationHooks from "../../../../api/SpanAnnotationHooks.ts";
+import TagHooks from "../../../../api/TagHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { ASSISTANT_TRAINED_ID } from "../../../../utils/GlobalConstants.ts";
+import CodeRenderer from "../../../Code/CodeRenderer.tsx";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import FormSwitch from "../../../FormInputs/FormSwitch.tsx";
+import TagRenderer from "../../../Tag/TagRenderer.tsx";
 
 interface InferenceSettings {
   keepExisting: boolean;

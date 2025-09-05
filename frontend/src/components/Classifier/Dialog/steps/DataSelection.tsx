@@ -1,11 +1,11 @@
 import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, Stack } from "@mui/material";
-import ClassifierHooks from "../../../api/ClassifierHooks.ts";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import TagSelectorMulti from "../../../components/Tag/TagSelectorMulti.tsx";
-import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ClassifierDataPlot from "../plots/ClassifierDataPlot.tsx";
+import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import TagSelectorMulti from "../../../Tag/TagSelectorMulti.tsx";
+import UserSelectorMulti from "../../../User/UserSelectorMulti.tsx";
+import ClassifierDataPlot from "../../plots/ClassifierDataPlot.tsx";
 
 function DataSelection() {
   // dialog state

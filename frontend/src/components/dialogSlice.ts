@@ -441,6 +441,7 @@ export const dialogSlice = createSlice({
         classifierId?: number;
         classifierStep?: number;
         classifierClassIds?: number[];
+        classifierSdocIds?: number[];
       }>,
     ) => {
       state.isClassifierDialogOpen = true;
@@ -450,6 +451,7 @@ export const dialogSlice = createSlice({
       state.classifierId = action.payload.classifierId;
       state.classifierStep = action.payload.classifierStep || 0;
       state.classifierClassIds = action.payload.classifierClassIds || [];
+      state.classifierSdocIds = action.payload.classifierSdocIds || [];
     },
     onClassifierDialogSelectClasses: (state, action: PayloadAction<number[]>) => {
       state.classifierClassIds = action.payload;

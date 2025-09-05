@@ -1,7 +1,6 @@
 import { Stack } from "@mui/material";
 import { useParams } from "react-router";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
-import ClassifierDialog from "./ClassifierDialog.tsx";
 import ClassifierJobs from "./ClassifierJobs.tsx";
 import ClassifierTable from "./ClassifierTable.tsx";
 
@@ -16,7 +15,6 @@ function Classifier() {
           <ClassifierJobs projectId={projectId} />
         </Stack>
       </ContentContainerLayout>
-      <ClassifierDialog />
     </>
   );
 }

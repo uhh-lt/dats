@@ -2,22 +2,31 @@ import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@m
 import Stack from "@mui/material/Stack/Stack";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useMemo, useState } from "react";
-import MetadataHooks from "../../../api/MetadataHooks.ts";
-import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
-import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
-import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import MetadataHooks from "../../../../api/MetadataHooks.ts";
+import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../dialogSlice.ts";
+import SdocTable from "../../../SourceDocument/SdocTable/SdocTable.tsx";
 
 function InferDataSelectionStep() {
   // dialog state
   const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
+  const sdocIds = useAppSelector((state) => state.dialog.classifierSdocIds);
   const dispatch = useAppDispatch();
 
   // global server state
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
 
   // selection state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(
+    sdocIds.reduce(
+      (acc, curr) => {
+        acc[curr] = true;
+        return acc;
+      },
+      {} as Record<number, boolean>,
+    ),
+  );
   const selectedSdocIds = useMemo(() => {
     return Object.keys(rowSelectionModel)
       .filter((key) => rowSelectionModel[key])

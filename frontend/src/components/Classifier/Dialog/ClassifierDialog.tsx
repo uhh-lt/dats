@@ -1,10 +1,10 @@
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
-import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
-import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
-import { CRUDDialogActions } from "../../components/dialogSlice.ts";
-import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { memo, useCallback, useMemo, useState } from "react";
+import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
+import { ClassifierTask } from "../../../api/openapi/models/ClassifierTask.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../dialogSlice.ts";
+import DATSDialogHeader from "../../MUI/DATSDialogHeader.tsx";
 import ClassSelectionStep from "./steps/ClassSelectionStep.tsx";
 import EvalDataSelectionStep from "./steps/EvalDataSelectionStep.tsx";
 import InferDataSelectionStep from "./steps/InferDataSelectionStep.tsx";
@@ -105,4 +105,4 @@ function ClassifierDialog() {
   );
 }
 
-export default ClassifierDialog;
+export default memo(ClassifierDialog);

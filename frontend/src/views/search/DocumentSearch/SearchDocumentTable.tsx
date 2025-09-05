@@ -27,6 +27,7 @@ import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SearchService } from "../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
+import ClassifierInferenceButton from "../../../components/Classifier/ClassifierInferenceButton.tsx";
 import { Draggable } from "../../../components/DnD/Draggable.tsx";
 import DocumentUploadButton from "../../../components/DocumentUpload/DocumentUploadButton.tsx";
 import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumentsPlaceholder.tsx";
@@ -491,6 +492,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
           />
           <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
           <LLMAssistanceButton sdocIds={selectedSdocIds} projectId={projectId} />
+          <ClassifierInferenceButton sdocIds={selectedSdocIds} projectId={projectId} />
           <OpenInTabsButton sdocIds={selectedSdocIds} projectId={projectId} />
         </>
       );
