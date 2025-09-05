@@ -2124,28 +2124,6 @@
         }
       }
     },
-    "/llm/create_training_parameters": {
-      "post": {
-        "tags": ["llm"],
-        "summary": "Returns the default training parameters for the given llm task",
-        "operationId": "create_training_parameters",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobParameters" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainingParameters" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/llm/determine_approach": {
       "post": {
         "tags": ["llm"],
@@ -6563,11 +6541,7 @@
         "required": ["recommended_approach", "reasoning", "available_approaches"],
         "title": "ApproachRecommendation"
       },
-      "ApproachType": {
-        "type": "string",
-        "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT", "MODEL_TRAINING"],
-        "title": "ApproachType"
-      },
+      "ApproachType": { "type": "string", "enum": ["LLM_ZERO_SHOT", "LLM_FEW_SHOT"], "title": "ApproachType" },
       "AspectCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the aspect" },
@@ -9496,8 +9470,7 @@
           "specific_approach_parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/ZeroShotParams" },
-              { "$ref": "#/components/schemas/FewShotParams" },
-              { "$ref": "#/components/schemas/ModelTrainingParams" }
+              { "$ref": "#/components/schemas/FewShotParams" }
             ],
             "title": "Specific Approach Parameters",
             "description": "Specific parameters for the approach w.r.t it's type",
@@ -9505,8 +9478,7 @@
               "propertyName": "llm_approach_type",
               "mapping": {
                 "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
-                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
-                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
               }
             }
           }
@@ -9558,8 +9530,7 @@
           "specific_approach_parameters": {
             "oneOf": [
               { "$ref": "#/components/schemas/ZeroShotParams" },
-              { "$ref": "#/components/schemas/FewShotParams" },
-              { "$ref": "#/components/schemas/ModelTrainingParams" }
+              { "$ref": "#/components/schemas/FewShotParams" }
             ],
             "title": "Specific Approach Parameters",
             "description": "Specific parameters for the approach w.r.t it's type",
@@ -9567,8 +9538,7 @@
               "propertyName": "llm_approach_type",
               "mapping": {
                 "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
-                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams",
-                "MODEL_TRAINING": "#/components/schemas/ModelTrainingParams"
+                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
               }
             }
           }
@@ -10043,18 +10013,6 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "MlJobRead"
-      },
-      "ModelTrainingParams": {
-        "properties": {
-          "llm_approach_type": { "type": "string", "const": "MODEL_TRAINING", "title": "Llm Approach Type" },
-          "training_parameters": {
-            "$ref": "#/components/schemas/TrainingParameters",
-            "description": "The training parameters to use for the job"
-          }
-        },
-        "type": "object",
-        "required": ["llm_approach_type", "training_parameters"],
-        "title": "ModelTrainingParams"
       },
       "NoteNodeData": {
         "properties": {
@@ -12527,28 +12485,6 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
-      },
-      "TrainingParameters": {
-        "properties": {
-          "max_epochs": {
-            "type": "integer",
-            "title": "Max Epochs",
-            "description": "The maximum number of epochs to train the model"
-          },
-          "batch_size": {
-            "type": "integer",
-            "title": "Batch Size",
-            "description": "The batch size to use for training"
-          },
-          "learning_rate": {
-            "type": "number",
-            "title": "Learning Rate",
-            "description": "The learning rate to use for training"
-          }
-        },
-        "type": "object",
-        "required": ["max_epochs", "batch_size", "learning_rate"],
-        "title": "TrainingParameters"
       },
       "UserAuthorizationHeaderData": {
         "properties": {

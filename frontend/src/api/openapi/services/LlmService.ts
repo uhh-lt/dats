@@ -11,7 +11,6 @@ import type { LLMJobInput_Input } from "../models/LLMJobInput_Input";
 import type { LLMJobParameters } from "../models/LLMJobParameters";
 import type { LLMPromptTemplates } from "../models/LLMPromptTemplates";
 import type { TaskType } from "../models/TaskType";
-import type { TrainingParameters } from "../models/TrainingParameters";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -34,26 +33,6 @@ export class LlmService {
       query: {
         approach_type: approachType,
       },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns the default training parameters for the given llm task
-   * @returns TrainingParameters Successful Response
-   * @throws ApiError
-   */
-  public static createTrainingParameters({
-    requestBody,
-  }: {
-    requestBody: LLMJobParameters;
-  }): CancelablePromise<TrainingParameters> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/llm/create_training_parameters",
       body: requestBody,
       mediaType: "application/json",
       errors: {
