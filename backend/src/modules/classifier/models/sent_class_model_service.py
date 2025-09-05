@@ -510,7 +510,7 @@ class SentClassificationModelService(TextClassificationModelService):
             model_prefix="sent_classifier",
         )
 
-        log_dir = model_dir / "logs"
+        log_dir = model_dir / "train_logs"
         csv_logger = CSVLogger(log_dir, name=f"sent_classifier{model_name}")
 
         callbacks = []
