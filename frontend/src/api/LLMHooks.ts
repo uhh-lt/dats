@@ -69,14 +69,6 @@ const useCreatePromptTemplates = () =>
     },
   });
 
-const useCreateTrainingParameters = () =>
-  useMutation({
-    mutationFn: LlmService.createTrainingParameters,
-    meta: {
-      successMessage: () => `Created training parameters`,
-    },
-  });
-
 const useDetermineApproach = () =>
   useMutation({
     mutationFn: LlmService.determineApproach,
@@ -117,7 +109,6 @@ const LLMHooks = {
   useGetAllLLMJobs,
   useDetermineApproach,
   useCreatePromptTemplates,
-  useCreateTrainingParameters,
   useCountExistingAssistantAnnotations,
 };
 

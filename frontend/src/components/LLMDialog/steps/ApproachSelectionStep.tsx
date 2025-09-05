@@ -33,8 +33,6 @@ const explanations: Record<ApproachType, string> = {
     "Zero-shot learning is a type of machine learning that is used to compute results based on a prompt without any examples.",
   [ApproachType.LLM_FEW_SHOT]:
     "Few-shot learning is a type of machine learning that is used to compute results based on a prompt with a few examples. Hence, labeled examples are needed.",
-  [ApproachType.MODEL_TRAINING]:
-    "Model training is a type of machine learning that is used to train a model based on labeled training data. This approach yields the best performance, but requires many labeled examples.",
 };
 
 function ApproachSelectionStep() {
@@ -85,7 +83,6 @@ function ApproachSelectionStep() {
 
   // mutations
   const { mutate: createPromptTemplatesMutation, isPending: isPTPending } = LLMHooks.useCreatePromptTemplates();
-  const { mutate: createTrainingParametersMutation, isPending: isTPPending } = LLMHooks.useCreateTrainingParameters();
 
   const handleNext = useCallback(() => {
     if (!llmMethod) return;
@@ -125,23 +122,6 @@ function ApproachSelectionStep() {
           },
         );
         break;
-      case ApproachType.MODEL_TRAINING:
-        createTrainingParametersMutation(
-          {
-            requestBody: commonParams,
-          },
-          {
-            onSuccess(data) {
-              dispatch(
-                CRUDDialogActions.llmDialogGoToTrainingParameterEditor({
-                  trainingParameters: data,
-                  approach: approachType,
-                }),
-              );
-            },
-          },
-        );
-        break;
     }
   }, [
     llmMethod,
@@ -152,7 +132,6 @@ function ApproachSelectionStep() {
     sdocIds,
     approachType,
     createPromptTemplatesMutation,
-    createTrainingParametersMutation,
     dispatch,
     deleteExistingAnnotations,
   ]);
@@ -232,13 +211,13 @@ function ApproachSelectionStep() {
       </DialogContent>
       <DialogActions>
         <Box flexGrow={1} />
-        <Button disabled={isPTPending || isTPPending} onClick={handleBack}>
+        <Button disabled={isPTPending} onClick={handleBack}>
           Back
         </Button>
         <LoadingButton
           variant="contained"
           startIcon={<PlayCircleIcon />}
-          loading={isPTPending || isTPPending}
+          loading={isPTPending}
           loadingPosition="start"
           onClick={handleNext}
         >

@@ -12,7 +12,6 @@ import { LLMPromptTemplates } from "../api/openapi/models/LLMPromptTemplates.ts"
 import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead.ts";
 import { TagRead } from "../api/openapi/models/TagRead.ts";
 import { TaskType } from "../api/openapi/models/TaskType.ts";
-import { TrainingParameters } from "../api/openapi/models/TrainingParameters.ts";
 import { SnackbarEvent } from "../components/SnackbarDialog/SnackbarEvent.ts";
 import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 import { LLMAssistanceEvent } from "./LLMDialog/LLMEvent.ts";
@@ -67,7 +66,6 @@ interface DialogState {
   llmApproachRecommendation: ApproachRecommendation;
   llmDeleteExistingAnnotations: boolean;
   llmPrompts: LLMPromptTemplates[];
-  llmParameters: TrainingParameters;
   llmJobId?: string;
   llmJobResult: LLMJobOutput | null | undefined;
   // classifier dialog
@@ -143,11 +141,6 @@ const initialState: DialogState = {
   },
   llmDeleteExistingAnnotations: false,
   llmPrompts: [],
-  llmParameters: {
-    batch_size: 1,
-    max_epochs: 1,
-    learning_rate: 1,
-  },
   llmJobId: undefined,
   llmJobResult: undefined,
   // classifier dialog
@@ -326,8 +319,8 @@ export const dialogSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Select the approach and deletion strategy (zero-shot, few-shot, or model training)
-    // -> For zero-shot and few-shot, go to the prompt editor
+    // Step 3: Select the approach (zero-shot, few-shot) and deletion strategy
+    // Then, go to the prompt editor
     llmDialogGoToPromptEditor: (
       state,
       action: PayloadAction<{
@@ -350,39 +343,20 @@ export const dialogSlice = createSlice({
       state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
     },
-    // -> For model training, go to the training parameters editor
-    llmDialogGoToTrainingParameterEditor: (
-      state,
-      action: PayloadAction<{
-        approach: ApproachType;
-        trainingParameters: TrainingParameters;
-      }>,
-    ) => {
-      state.llmStep = 3;
-      state.llmApproach = action.payload.approach;
-      state.llmParameters = action.payload.trainingParameters;
-    },
     // Step 4 Variant A: Edit the prompts -> start the job & go to the waiting screen
-    // Step 4 Variant B: Edit the trainingParameters -> start the job & go to the waiting screen
     llmDialogGoToWaiting: (
       state,
       action: PayloadAction<{
         jobId: string;
-        trainingParameters?: TrainingParameters;
-        prompts?: LLMPromptTemplates[];
+        prompts: LLMPromptTemplates[];
       }>,
     ) => {
       state.isLLMDialogOpen = true;
       state.llmStep = 4;
       state.llmJobId = action.payload.jobId;
-      if (action.payload.trainingParameters) {
-        state.llmParameters = action.payload.trainingParameters;
-      }
-      if (action.payload.prompts) {
-        state.llmPrompts = action.payload.prompts;
-      }
+      state.llmPrompts = action.payload.prompts;
     },
-    // Step 4 Variant C: We click on View Results from Background Tasks
+    // Step 4 Variant B: We click on View Results from Background Tasks
     llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
       state.isLLMDialogOpen = true;
       state.llmStep = 4;
@@ -408,7 +382,6 @@ export const dialogSlice = createSlice({
       state.llmMetadata = initialState.llmMetadata;
       state.llmCodes = initialState.llmCodes;
       state.llmPrompts = initialState.llmPrompts;
-      state.llmParameters = initialState.llmParameters;
       state.llmApproach = initialState.llmApproach;
       state.llmApproachRecommendation = initialState.llmApproachRecommendation;
       state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
