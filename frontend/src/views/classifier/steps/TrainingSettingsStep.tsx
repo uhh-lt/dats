@@ -159,18 +159,12 @@ function TrainingSettingsStep() {
               title="Base Model Name"
               subtitle={
                 <>
-                  Choose a model that matches the language of your documents or specify HuggingFace model name.{" "}
-                  {model === ClassifierModel.SPAN ? (
-                    ""
-                  ) : (
-                    <>
-                      Check the{" "}
-                      <a href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank">
-                        MTEB Benchmark
-                      </a>{" "}
-                      for best text embedding models!
-                    </>
-                  )}
+                  Choose a model that matches the language of your documents or specify HuggingFace model name. Check
+                  the{" "}
+                  <a href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank">
+                    MTEB Benchmark
+                  </a>{" "}
+                  for best text embedding models!
                 </>
               }
             >
@@ -178,7 +172,7 @@ function TrainingSettingsStep() {
                 name="baseModelName"
                 control={control}
                 rules={{ required: "Base Model is required" }}
-                options={model === ClassifierModel.SPAN ? transformerModelOptions : embeddingModelOptions}
+                options={model === ClassifierModel.SENTENCE ? embeddingModelOptions : transformerModelOptions}
                 textFieldProps={{
                   label: "Base Model",
                   error: Boolean(errors.baseModelName),

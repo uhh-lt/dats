@@ -18,6 +18,7 @@ import { ClassifierInferenceParams } from "../../../api/openapi/models/Classifie
 import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
 import SentenceAnnotationHooks from "../../../api/SentenceAnnotationHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
 import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import { CRUDDialogActions } from "../../../components/dialogSlice.ts";
 import FormSwitch from "../../../components/FormInputs/FormSwitch.tsx";
@@ -32,7 +33,7 @@ interface InferenceSettings {
 const useCountBySdocsAndUser = (model: ClassifierModel) => {
   switch (model) {
     case ClassifierModel.DOCUMENT:
-      return SentenceAnnotationHooks.useCountBySdocsAndUser;
+      return TagHooks.useCountBySdocsAndUser;
     case ClassifierModel.SENTENCE:
       return SentenceAnnotationHooks.useCountBySdocsAndUser;
     case ClassifierModel.SPAN:
@@ -57,10 +58,12 @@ function InferenceSettingsStep() {
       userId: ASSISTANT_TRAINED_ID,
       requestBody: {
         sdoc_ids: sdocIds,
-        code_ids: classIds,
+        class_ids: classIds,
       },
     });
   }, [countMutation, sdocIds, classIds]);
+
+  console.log("Count data:", countData);
 
   // form state
   const { control, handleSubmit } = useForm<InferenceSettings>({
@@ -119,21 +122,23 @@ function InferenceSettingsStep() {
             ) : isSuccess && Object.entries(countData).length === 0 ? (
               <Typography>There are no existing annotations. You can skip this step!</Typography>
             ) : isSuccess && Object.entries(countData).length > 0 ? (
-              <Box>
-                <Typography>
-                  Some documents were already {model === ClassifierModel.DOCUMENT ? "tagged" : "annotated"} by a
-                  classifier:
+              <Stack>
+                <Typography mb={1.5}>
+                  Some documents were already{" "}
+                  {model === ClassifierModel.DOCUMENT ? "tagged" : "annotated  by a classifier"}:
                 </Typography>
-                {Object.entries(countData.data).map(([classId, count]) => (
-                  <Stack direction="row" key={classId}>
-                    {model === ClassifierModel.DOCUMENT ? (
-                      <TagRenderer tag={parseInt(classId)} />
-                    ) : (
-                      <CodeRenderer code={parseInt(classId)} />
-                    )}
-                    : {count}
-                  </Stack>
-                ))}
+                <Stack spacing={1} pl={2} mb={4}>
+                  {Object.entries(countData).map(([classId, count]) => (
+                    <Stack direction="row" key={classId}>
+                      {model === ClassifierModel.DOCUMENT ? (
+                        <TagRenderer tag={parseInt(classId)} />
+                      ) : (
+                        <CodeRenderer code={parseInt(classId)} />
+                      )}
+                      : {count}
+                    </Stack>
+                  ))}
+                </Stack>
                 <FormItem
                   title="Deletion Strategy"
                   subtitle={`Keep existing ${model === ClassifierModel.DOCUMENT ? "tags" : "annotations"}?`}
@@ -145,7 +150,7 @@ function InferenceSettingsStep() {
                     switchProps={{ size: "medium", color: "primary" }}
                   />
                 </FormItem>
-              </Box>
+              </Stack>
             ) : null}
           </FormBox>
         </Stack>
