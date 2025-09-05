@@ -1,4 +1,4 @@
-"""vscode launcher
+"""add classifier tables
 
 Revision ID: 07c06f167688
 Revises: b1b3562f9a29
