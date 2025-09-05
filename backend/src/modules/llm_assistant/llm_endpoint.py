@@ -9,7 +9,6 @@ from modules.llm_assistant.llm_job_dto import (
     LLMJobParameters,
     LLMPromptTemplates,
     TaskType,
-    TrainingParameters,
 )
 from modules.llm_assistant.llm_service import LLMAssistantService
 
@@ -41,19 +40,6 @@ def create_prompt_templates(
         approach_type=approach_type,
         example_ids=example_ids,
     )
-
-
-@router.post(
-    "/create_training_parameters",
-    response_model=TrainingParameters,
-    summary="Returns the default training parameters for the given llm task",
-)
-def create_training_parameters(
-    *, llm_job_params: LLMJobParameters, authz_user: AuthzUser = Depends()
-) -> TrainingParameters:
-    authz_user.assert_in_project(llm_job_params.project_id)
-
-    return llms.create_training_parameters(llm_job_params=llm_job_params)
 
 
 @router.post(

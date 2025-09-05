@@ -63,10 +63,6 @@ download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_
 COTA_ROOT_DIR=${COTA_ROOT_DIR:-"/tmp/dats/ray/cota"}
 mkdir -p $COTA_ROOT_DIR
 
-# create the SEQ_SENT_TAGGER_ROOT_DIR
-SEQ_SENT_TAGGER_ROOT_DIR=${SEQ_SENT_TAGGER_ROOT_DIR:-"/tmp/dats/ray/seqsenttagger"}
-mkdir -p $SEQ_SENT_TAGGER_ROOT_DIR
-
 # generate the ray spec file
 python generate_ray_model_worker_specs.py --spec_out_fp /tmp/spec.yaml || exit 1
 

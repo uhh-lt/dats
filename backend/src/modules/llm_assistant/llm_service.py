@@ -11,11 +11,8 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
 )
-from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.code.code_crud import crud_code
-from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
@@ -23,7 +20,6 @@ from core.metadata.source_document_metadata_dto import (
 )
 from core.user.user_crud import (
     ASSISTANT_FEWSHOT_ID,
-    ASSISTANT_TRAINED_ID,
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_IDS,
 )
@@ -42,7 +38,6 @@ from modules.llm_assistant.llm_job_dto import (
     MetadataExtractionLLMJobResult,
     MetadataExtractionParams,
     MetadataExtractionResult,
-    ModelTrainingParams,
     SentenceAnnotationLLMJobResult,
     SentenceAnnotationParams,
     SentenceAnnotationResult,
@@ -50,7 +45,6 @@ from modules.llm_assistant.llm_job_dto import (
     TaggingParams,
     TaggingResult,
     TaskType,
-    TrainingParameters,
     ZeroShotParams,
 )
 from modules.llm_assistant.prompts.annotation_prompt_builder import (
@@ -70,7 +64,6 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     LLMTaggingResult,
     TaggingPromptBuilder,
 )
-from ray_model_worker.dto.seqsenttagger import SeqSentTaggerDoc, SeqSentTaggerJobInput
 from repos.llm_repo import LLMRepo
 from repos.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
@@ -92,22 +85,18 @@ class LLMAssistantService(metaclass=SingletonMeta):
             TaskType.TAGGING: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_tagging,
                 ApproachType.LLM_FEW_SHOT: cls._llm_tagging,
-                ApproachType.MODEL_TRAINING: cls._llm_tagging,
             },
             TaskType.METADATA_EXTRACTION: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_metadata_extraction,
                 ApproachType.LLM_FEW_SHOT: cls._llm_metadata_extraction,
-                ApproachType.MODEL_TRAINING: cls._llm_metadata_extraction,
             },
             TaskType.ANNOTATION: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_annotation,
                 ApproachType.LLM_FEW_SHOT: cls._llm_annotation,
-                ApproachType.MODEL_TRAINING: cls._llm_annotation,
             },
             TaskType.SENTENCE_ANNOTATION: {
                 ApproachType.LLM_ZERO_SHOT: cls._llm_sentence_annotation,
                 ApproachType.LLM_FEW_SHOT: cls._llm_sentence_annotation,
-                ApproachType.MODEL_TRAINING: cls._ray_sentence_annotation,
             },
         }
 
@@ -173,7 +162,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     available_approaches={
                         ApproachType.LLM_ZERO_SHOT: True,
                         ApproachType.LLM_FEW_SHOT: False,
-                        ApproachType.MODEL_TRAINING: False,
                     },
                     reasoning="Only zero-shot approach is available for document tagging (yet).",
                 )
@@ -183,7 +171,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     available_approaches={
                         ApproachType.LLM_ZERO_SHOT: True,
                         ApproachType.LLM_FEW_SHOT: False,
-                        ApproachType.MODEL_TRAINING: False,
                     },
                     reasoning="Only zero-shot approach is available for metadata extraction (yet).",
                 )
@@ -193,7 +180,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     available_approaches={
                         ApproachType.LLM_ZERO_SHOT: True,
                         ApproachType.LLM_FEW_SHOT: False,
-                        ApproachType.MODEL_TRAINING: False,
                     },
                     reasoning="Only zero-shot approach is available for annotation (yet).",
                 )
@@ -248,20 +234,13 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     ApproachType.LLM_ZERO_SHOT: True,
                     ApproachType.LLM_FEW_SHOT: min_labeled_sentences
                     >= lac.sentence_annotation.few_shot_threshold,
-                    ApproachType.MODEL_TRAINING: min_labeled_sentences
-                    >= lac.sentence_annotation.model_training_threshold,
                 }
 
                 # 4.4 determine the recommended approach based on thresholds
                 if min_labeled_sentences < lac.sentence_annotation.few_shot_threshold:
                     recommended_approach = ApproachType.LLM_ZERO_SHOT
-                elif (
-                    min_labeled_sentences
-                    < lac.sentence_annotation.model_training_threshold
-                ):
-                    recommended_approach = ApproachType.LLM_FEW_SHOT
                 else:
-                    recommended_approach = ApproachType.MODEL_TRAINING
+                    recommended_approach = ApproachType.LLM_FEW_SHOT
 
                 return ApproachRecommendation(
                     recommended_approach=recommended_approach,
@@ -283,7 +262,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 approachtype2userid = {
                     ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
                     ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
-                    ApproachType.MODEL_TRAINING: ASSISTANT_TRAINED_ID,
                 }
                 existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                     db=db,
@@ -300,15 +278,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 return code_id2num_existing_annos
             case _:
                 return {}
-
-    def create_training_parameters(
-        self, llm_job_params: LLMJobParameters
-    ) -> TrainingParameters:
-        return TrainingParameters(
-            max_epochs=20,
-            batch_size=16,
-            learning_rate=0.0001,
-        )
 
     def create_prompt_templates(
         self,
@@ -998,336 +967,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         status="error",
                         status_message=str(e),
                         sdoc_id=sdoc_id,
-                        suggested_annotations=[],
-                    )
-                )
-
-        return LLMJobOutput(
-            llm_job_type=TaskType.SENTENCE_ANNOTATION,
-            specific_task_result=SentenceAnnotationLLMJobResult(
-                llm_job_type=TaskType.SENTENCE_ANNOTATION, results=results
-            ),
-        )
-
-    def _ray_sentence_annotation(
-        self,
-        *,
-        db: Session,
-        job: Job,
-        project_id: int,
-        approach_parameters: ModelTrainingParams,
-        task_parameters: SentenceAnnotationParams,
-    ) -> LLMJobOutput:
-        assert isinstance(task_parameters, SentenceAnnotationParams), (
-            "Wrong task parameters!"
-        )
-        assert isinstance(approach_parameters, ModelTrainingParams), (
-            "Wrong approach parameters!"
-        )
-
-        msg = f"Started LLMJob - Sentence Annotation (RAY), num docs: {len(task_parameters.sdoc_ids)}"
-        job.update(
-            steps=[
-                f"Step {i}"
-                for i in range(5 + 2)  # +1 for the start, end step
-            ],
-            current_step=1,
-            status_message=msg,
-        )
-        logger.info(msg)
-
-        # Step: 1 - Building the training dataset
-        msg = "Building training dataset."
-        self._next_llm_job_step(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        # Find all relevant information for creating the training dataset
-        # 1.1 - Find the labeled sentences for each code
-        sentence_annotations = [
-            sa
-            for sa in crud_sentence_anno.read_by_codes(
-                db=db, code_ids=task_parameters.code_ids
-            )
-            if sa.user_id
-            not in SYSTEM_USER_IDS  # Filter out annotations of the system users
-        ]
-        sdoc_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {}
-        for sa in sentence_annotations:
-            if sa.sdoc_id not in sdoc_id2sentence_annotations:
-                sdoc_id2sentence_annotations[sa.sdoc_id] = []
-            sdoc_id2sentence_annotations[sa.sdoc_id].append(sa)
-        logger.debug(
-            f"Found {len(sdoc_id2sentence_annotations)} sdocs with {len(sentence_annotations)} annotations."
-        )
-
-        # 1.2 - Find the corresponding sdocs
-        training_sdocs = crud_sdoc.read_data_batch(
-            db=db, ids=list(sdoc_id2sentence_annotations.keys())
-        )
-        # Santiy check: every sdoc has to have a corresponding sdoc data
-        if len(training_sdocs) != len(sdoc_id2sentence_annotations):
-            logger.error(
-                f"Number of sdoc data ({len(training_sdocs)}) and sdocs ({len(sdoc_id2sentence_annotations)}) do not match."
-            )
-        else:
-            logger.debug(
-                f"Got data of {len(training_sdocs)} from {len(sdoc_id2sentence_annotations)} sdocs."
-            )
-
-        # 1.3 - Find the corresponding sentence embeddings
-        with self.weaviate.weaviate_session() as client:
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in training_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                client=client,
-                project_id=project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                    for sent_id, sdoc_id in search_tuples
-                ],
-            )
-            logger.debug(
-                f"Found {len(sentence_embeddings)} corresponding sentence embeddings."
-            )
-
-        sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
-        for sent_emb, (sent_id, sdoc_id) in zip(sentence_embeddings, search_tuples):
-            if sdoc_id not in sdoc_id2sent_embs:
-                sdoc_id2sent_embs[sdoc_id] = []
-            sdoc_id2sent_embs[sdoc_id].append(sent_emb)
-        logger.debug(
-            f"Mapped the embeddings to the documents. {[f'{sdoc_id}:{len(embeddings)}' for sdoc_id, embeddings in sdoc_id2sent_embs.items()]}"
-        )
-
-        # 1.4 - Find the code names
-        codes = crud_code.read_by_ids(db=db, ids=task_parameters.code_ids)
-        code_id2name = {code.id: code.name for code in codes}
-        code_name2id = {code.name: code.id for code in codes}
-        logger.debug(f"Found the {len(codes)} codes.")
-
-        # 1.5 - Build the training data
-        training_dataset: list[SeqSentTaggerDoc] = []
-        for sdoc_id, annotations in sdoc_id2sentence_annotations.items():
-            sentence_embeddings = sdoc_id2sent_embs.get(sdoc_id, [])
-
-            if len(annotations) == 0 or len(sentence_embeddings) == 0:
-                continue
-
-            # build label set
-            # with this code, only one label is allowed per sentence
-            labels = ["O"] * len(sentence_embeddings)
-            for annotation in annotations:
-                for idx in range(
-                    annotation.sentence_id_start, annotation.sentence_id_end + 1
-                ):
-                    labels[idx] = code_id2name[annotation.code_id]
-
-            training_dataset.append(
-                SeqSentTaggerDoc(
-                    sent_embeddings=sentence_embeddings,
-                    sent_labels=labels,
-                )
-            )
-
-        msg = f"Built training dataset consisting of {len(training_dataset)} documents with a total of {len(sentence_annotations)} annotations."
-        self._update_llm_job_description(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        # Step: 2 - Building the test dataset
-        msg = "Building test dataset."
-        self._next_llm_job_step(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        # Find all relevant information for creating the test dataset
-        # 1. Find the sdocs
-        test_sdocs = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
-        assert None not in test_sdocs, "Test sdocs contain None!"
-        test_sdocs = [sdoc_data for sdoc_data in test_sdocs if sdoc_data is not None]
-
-        # 3. Find the corresponding sentence embeddings
-        with self.weaviate.weaviate_session() as client:
-            search_tuples = [
-                (sent_id, sdoc_data.id)
-                for sdoc_data in test_sdocs
-                if sdoc_data is not None
-                for sent_id in range(len(sdoc_data.sentences))
-            ]
-            test_sentence_embeddings = crud_sentence_embedding.get_embeddings(
-                client=client,
-                project_id=project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id)
-                    for sent_id, sdoc_id in search_tuples
-                ],
-            )
-            test_sdoc_id2sent_embs: dict[int, list[list[float]]] = {}
-            for sent_emb, (sent_id, sdoc_id) in zip(
-                test_sentence_embeddings, search_tuples
-            ):
-                if sdoc_id not in test_sdoc_id2sent_embs:
-                    test_sdoc_id2sent_embs[sdoc_id] = []
-                test_sdoc_id2sent_embs[sdoc_id].append(sent_emb)
-
-        # Build the test data
-        test_dataset: list[SeqSentTaggerDoc] = []
-        for sdoc_data in test_sdocs:
-            sentence_embeddings = test_sdoc_id2sent_embs.get(sdoc_data.id, [])
-
-            if len(sentence_embeddings) == 0:
-                continue
-
-            test_dataset.append(
-                SeqSentTaggerDoc(
-                    sent_embeddings=sentence_embeddings,
-                    sent_labels=["O"] * len(sentence_embeddings),
-                )
-            )
-        msg = f"Built test dataset consisting of {len(test_dataset)} documents."
-        self._update_llm_job_description(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        # Step: 3 - Model Training
-        msg = "Started model training and application with Ray."
-        self._next_llm_job_step(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        response = self.ray.seqsenttagger_train_apply(
-            input=SeqSentTaggerJobInput(
-                project_id=project_id,
-                training_data=training_dataset,
-                test_data=test_dataset,
-            )
-        )
-
-        msg = "Finished model training and application with Ray."
-        self._update_llm_job_description(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        # Step: 4 - Delete all existing sentence annotations for the test sdocs
-        if task_parameters.delete_existing_annotations:
-            previous_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
-                db=db,
-                user_id=ASSISTANT_TRAINED_ID,
-                sdoc_ids=task_parameters.sdoc_ids,
-                code_ids=task_parameters.code_ids,
-            )
-
-            msg = f"Deleting {len(previous_annotations)} previous sentence annotations."
-            self._next_llm_job_step(
-                job=job,
-                description=msg,
-            )
-            logger.info(msg)
-
-            crud_sentence_anno.delete_bulk(
-                db=db, ids=[sa.id for sa in previous_annotations]
-            )
-        else:
-            msg = "Keeping existing annotations."
-            self._next_llm_job_step(
-                job=job,
-                description=msg,
-            )
-            logger.info(msg)
-
-        # Step: 5 - Apply the new predictions
-        msg = "Applying suggested annotations."
-        self._next_llm_job_step(
-            job=job,
-            description=msg,
-        )
-        logger.info(msg)
-
-        if len(response.pred_data) != len(test_sdocs):
-            raise ValueError("Prediction mismatch!")
-
-        results: list[SentenceAnnotationResult] = []
-        for prediction, sdoc_data in zip(response.pred_data, test_sdocs):
-            try:
-                # we have list of labels, we need to convert them to sentence annotations
-                suggested_annotations: list[SentenceAnnotationCreate] = []
-                start = 0
-                previous_label = prediction.sent_labels[0]
-
-                for idx, label in enumerate(prediction.sent_labels[1:], start=1):
-                    if label != previous_label:
-                        if previous_label != "O":
-                            suggested_annotations.append(
-                                SentenceAnnotationCreate(
-                                    sdoc_id=sdoc_data.id,
-                                    code_id=code_name2id[previous_label],
-                                    sentence_id_start=start,
-                                    sentence_id_end=idx - 1,
-                                )
-                            )
-                        start = idx
-                    previous_label = label
-
-                # Add the last annotation
-                if previous_label != "O":
-                    suggested_annotations.append(
-                        SentenceAnnotationCreate(
-                            sdoc_id=sdoc_data.id,
-                            sentence_id_start=start,
-                            sentence_id_end=len(prediction.sent_labels) - 1,
-                            code_id=code_name2id[previous_label],
-                        )
-                    )
-
-                # create the suggested annotations
-                created_annos = crud_sentence_anno.create_bulk(
-                    db=db,
-                    user_id=ASSISTANT_TRAINED_ID,
-                    create_dtos=suggested_annotations,
-                )
-
-                results.append(
-                    SentenceAnnotationResult(
-                        status="finished",
-                        status_message="Sentence annotation successful",
-                        sdoc_id=sdoc_data.id,
-                        suggested_annotations=[
-                            SentenceAnnotationRead.model_validate(anno)
-                            for anno in created_annos
-                        ],
-                    )
-                )
-
-                msg = f"Applied {len(suggested_annotations)} suggested annotations to document {sdoc_data.id}."
-                self._update_llm_job_description(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
-
-            except Exception as e:
-                results.append(
-                    SentenceAnnotationResult(
-                        status="error",
-                        status_message=str(e),
-                        sdoc_id=sdoc_data.id,
                         suggested_annotations=[],
                     )
                 )

@@ -21,10 +21,6 @@ from ray_model_worker.dto.promptembedder import (
     PromptEmbedderOutput,
 )
 from ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
-from ray_model_worker.dto.seqsenttagger import (
-    SeqSentTaggerJobInput,
-    SeqSentTaggerJobResponse,
-)
 from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from ray_model_worker.dto.whisper import WhisperTranscriptionOutput
 
@@ -160,14 +156,6 @@ class RayRepo(metaclass=SingletonMeta):
             "/cota/finetune_apply_compute", input.model_dump()
         )
         return RayCOTAJobResponse.model_validate(response.json())
-
-    def seqsenttagger_train_apply(
-        self, input: SeqSentTaggerJobInput
-    ) -> SeqSentTaggerJobResponse:
-        response = self._make_post_request_with_json_data(
-            "/seqsenttagger/train_apply", input.model_dump()
-        )
-        return SeqSentTaggerJobResponse.model_validate(response.json())
 
     def quote_prediction(self, input: QuoteJobInput) -> QuoteJobOutput:
         response = self._make_post_request_with_json_data(
