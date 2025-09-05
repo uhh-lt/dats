@@ -50,8 +50,15 @@ const transformerModelOptions: FreeSoloOptions[] = [
 
 const embeddingModelOptions: FreeSoloOptions[] = [
   { value: "Alibaba-NLP/gte-modernbert-base", label: "gte-modernbert-base (EN)" },
-  { value: "jinaai/jina-embeddings-v3", label: "jina-embeddings-v3 (MULTI)" },
-  { value: "Qwen/Qwen3-Embedding-0.6B", label: "Qwen3-Embedding-0.6B (MULTI)" },
+  { value: "intfloat/multilingual-e5-small", label: "multilingual-e5-small (MULTI)" },
+  { value: "intfloat/multilingual-e5-large", label: "multilingual-e5-large (MULTI)" },
+  {
+    value: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    label: "paraphrase-multilingual-mpnet-base-v2 (MULTI)",
+  },
+  // { value: "google/embeddinggemma-300m", label: "embeddinggemma-300m (MULTI)" }, TODO: update hf library
+  // { value: "jinaai/jina-embeddings-v3", label: "jina-embeddings-v3 (MULTI)" }, TODO: update st library
+  // { value: "Qwen/Qwen3-Embedding-0.6B", label: "Qwen3-Embedding-0.6B (MULTI)" }, TODO: update hf library
 ];
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
@@ -227,7 +234,6 @@ function TrainingSettingsStep() {
               <FormSwitch
                 name="earlyStopping"
                 control={control}
-                rules={{ required: "Required" }}
                 switchProps={{ size: "medium", color: "primary" }}
                 boxProps={{ sx: { ml: 2 } }}
               />
