@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_tag_count_tags } from "../models/Body_tag_count_tags";
 import type { Body_tag_update_tags_batch } from "../models/Body_tag_update_tags_batch";
 import type { SourceDocumentTagLinks } from "../models/SourceDocumentTagLinks";
 import type { SourceDocumentTagMultiLink } from "../models/SourceDocumentTagMultiLink";
@@ -231,6 +232,31 @@ export class TagService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/tag/sdoc_counts",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static countTags({
+    userId,
+    requestBody,
+  }: {
+    userId: number;
+    requestBody: Body_tag_count_tags;
+  }): CancelablePromise<Record<string, number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/tag/count_tags/{user_id}",
+      path: {
+        user_id: userId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

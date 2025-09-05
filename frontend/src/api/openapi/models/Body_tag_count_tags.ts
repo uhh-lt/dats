@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type Body_spanAnnotation_count_annotations = {
+export type Body_tag_count_tags = {
   sdoc_ids: Array<number>;
   class_ids: Array<number>;
 };

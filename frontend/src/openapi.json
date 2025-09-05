@@ -3990,7 +3990,7 @@
     "/sentence/count_annotations/{user_id}": {
       "post": {
         "tags": ["sentenceAnnotation"],
-        "summary": "Counts the SentenceAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)",
+        "summary": "Counts the SentenceAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)",
         "operationId": "count_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4848,7 +4848,7 @@
     "/span/count_annotations/{user_id}": {
       "post": {
         "tags": ["spanAnnotation"],
-        "summary": "Counts the SpanAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)",
+        "summary": "Counts the SpanAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)",
         "operationId": "count_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5576,6 +5576,39 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/tag/count_tags/{user_id}": {
+      "post": {
+        "tags": ["tag"],
+        "summary": "Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)",
+        "operationId": "count_tags",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_tag-count_tags" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" },
+                  "title": "Response Tag-Count Tags"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/tagrecommendation/{project_id}": {
@@ -6999,10 +7032,10 @@
       "Body_sentenceAnnotation-count_annotations": {
         "properties": {
           "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
+          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
         },
         "type": "object",
-        "required": ["sdoc_ids", "code_ids"],
+        "required": ["sdoc_ids", "class_ids"],
         "title": "Body_sentenceAnnotation-count_annotations"
       },
       "Body_simsearch-find_similar_images": {
@@ -7032,11 +7065,20 @@
       "Body_spanAnnotation-count_annotations": {
         "properties": {
           "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "code_ids": { "items": { "type": "integer" }, "type": "array", "title": "Code Ids" }
+          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
         },
         "type": "object",
-        "required": ["sdoc_ids", "code_ids"],
+        "required": ["sdoc_ids", "class_ids"],
         "title": "Body_spanAnnotation-count_annotations"
+      },
+      "Body_tag-count_tags": {
+        "properties": {
+          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
+          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
+        },
+        "type": "object",
+        "required": ["sdoc_ids", "class_ids"],
+        "title": "Body_tag-count_tags"
       },
       "Body_tag-update_tags_batch": {
         "properties": {

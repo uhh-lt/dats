@@ -193,7 +193,7 @@ export class SentenceAnnotationService {
     });
   }
   /**
-   * Counts the SentenceAnnotations of the User (by user_id) per Codes (by code_ids) in Documents (by sdoc_ids)
+   * Counts the SentenceAnnotations of the User (by user_id) per Codes (by class_ids) in Documents (by sdoc_ids)
    * @returns number Successful Response
    * @throws ApiError
    */
