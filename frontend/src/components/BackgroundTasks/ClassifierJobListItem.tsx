@@ -9,7 +9,9 @@ import { ClassifierTrainingOutput } from "../../api/openapi/models/ClassifierTra
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import ClassifierDetails from "../../views/classifier/ClassifierDetails.tsx";
+import ClassifierJobProgressBar from "../../views/classifier/ClassifierJobProgressBar.tsx";
 import JobListItem from "./JobListItem.tsx";
+import { jobStatusToSimple } from "./StatusToSimple.ts";
 
 interface ClassifierJobListItemProps {
   initialClassifierJob: ClassifierJobRead;
@@ -34,6 +36,7 @@ function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemPr
   }, [cj.data]);
 
   if (cj.isSuccess) {
+    const simpleJobStatus = jobStatusToSimple[cj.data.status];
     return (
       <JobListItem
         jobStatus={cj.data.status}
@@ -41,7 +44,7 @@ function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemPr
         title={`${cj.data.input.model_type} - ${cj.data.input.task_type}`}
         subTitle={subTitle}
       >
-        {cj.data.output ? (
+        {simpleJobStatus === "finished" && cj.data.output ? (
           <>
             {cj.data.input.task_type === ClassifierTask.EVALUATION ? (
               <ClassifierDetails.Evaluation
@@ -58,9 +61,11 @@ function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemPr
               <ClassifierDetails classifier={(cj.data.output.task_output as ClassifierTrainingOutput).classifier} />
             ) : null}
           </>
-        ) : (
+        ) : simpleJobStatus === "running" ? (
+          <ClassifierJobProgressBar classifierJob={cj.data} />
+        ) : simpleJobStatus === "error" ? (
           <Typography>{cj.data.status_message}</Typography>
-        )}
+        ) : null}
       </JobListItem>
     );
   } else {
