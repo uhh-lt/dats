@@ -108,7 +108,7 @@ function InferenceSettingsStep() {
   const onError: SubmitErrorHandler<InferenceSettings> = (data) => console.error(data);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, onError)}>
+    <form onSubmit={handleSubmit(onSubmit, onError)} className="myFlexContainer myFlexFillAllContainer">
       <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
         <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
           Decide how to handle existing {model === ClassifierModel.DOCUMENT ? "tags" : "annotations"} on the selected
