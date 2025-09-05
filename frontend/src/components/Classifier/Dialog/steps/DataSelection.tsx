@@ -48,7 +48,8 @@ function DataSelection() {
   return (
     <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
       <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
-        This is an info Alert.
+        Choose one or more tags {model !== ClassifierModel.DOCUMENT && "and annotators"} to construct the training data.
+        It is recommended to tag training and evaluation data with a dedicated tag each (e.g. "train", "eval").
       </Alert>
       <Stack direction="row" spacing={2} alignItems="center">
         <Card variant="outlined" sx={{ flexShrink: 0, flexGrow: 1, flexBasis: 0 }}>

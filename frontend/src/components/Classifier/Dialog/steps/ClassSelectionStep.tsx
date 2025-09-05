@@ -33,7 +33,7 @@ function ClassSelectionStep() {
     <>
       <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
         <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
-          This is an info Alert.
+          Choose one or more classes for the classifier to learn during training.
         </Alert>
         <Card className="myFlexContainer myFlexFillAllContainer" sx={{ width: "100%" }} variant="outlined">
           <CardHeader

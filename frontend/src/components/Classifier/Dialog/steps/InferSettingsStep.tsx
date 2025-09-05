@@ -111,7 +111,8 @@ function InferenceSettingsStep() {
     <form onSubmit={handleSubmit(onSubmit, onError)}>
       <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
         <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
-          This is an info Alert.
+          Decide how to handle existing {model === ClassifierModel.DOCUMENT ? "tags" : "annotations"} on the selected
+          documents (if there are any).
         </Alert>
         <Stack spacing={2}>
           <FormBox title="Existing Annotations">

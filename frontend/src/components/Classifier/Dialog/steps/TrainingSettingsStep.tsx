@@ -137,7 +137,8 @@ function TrainingSettingsStep() {
     <form onSubmit={handleSubmit(onSubmit, onError)}>
       <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
         <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
-          This is an info Alert.
+          Configure the training settings for your classifier. Provide a unique name, select a base model, and adjust
+          the training parameters as needed.
         </Alert>
         <Stack spacing={2}>
           <FormBox title="Required configuration">
