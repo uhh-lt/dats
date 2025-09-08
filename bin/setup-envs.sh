@@ -45,6 +45,7 @@ SHARED_FILESYSTEM_ROOT="$(pwd)/docker/backend_repo"
 
 cp docker/.env.example docker/.env
 cp backend/.env.example backend/.env
+cp ray/.env.example ray/.env
 cp frontend/.env.example frontend/.env
 
 # setup docker .env file
@@ -62,6 +63,11 @@ sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" backend/.env
 sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
 sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" backend/.env
 sed -i "s|SHARED_FILESYSTEM_ROOT=/insert_path_to_dats_repo/docker/backend_repo|SHARED_FILESYSTEM_ROOT=${SHARED_FILESYSTEM_ROOT}|" backend/.env
+
+# setup ray .env file
+SPACY_MODELS_DIR="$(pwd)/docker/ray_cache/spacy_models"
+sed -i "s/131/${PORT_PREFIX}/g" ray/.env
+sed -i "s|SPACY_MODELS_DIR=/insert_path_to_dats_repo/docker/ray_cache/spacy_models|SPACY_MODELS_DIR=${SPACY_MODELS_DIR}|" ray/.env
 
 # setup frontend .env file
 sed -i "s/131/${PORT_PREFIX}/g" frontend/.env
