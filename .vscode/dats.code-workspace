@@ -9,6 +9,10 @@
       "path": "../backend",
     },
     {
+      "name": "ray",
+      "path": "../ray",
+    },
+    {
       "name": "frontend",
       "path": "../frontend",
     },
