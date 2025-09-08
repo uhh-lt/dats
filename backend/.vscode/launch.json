@@ -19,7 +19,7 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/src/worker.py",
-      "args": ["work"],
+      "args": ["work", "dev"],
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}",
