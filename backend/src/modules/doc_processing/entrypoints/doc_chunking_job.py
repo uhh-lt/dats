@@ -14,7 +14,7 @@ from repos.filesystem_repo import (
     FileDeletionNotAllowedError,
     FilesystemRepo,
 )
-from repos.ray_repo import RayRepo
+from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 

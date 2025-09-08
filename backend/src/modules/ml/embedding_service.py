@@ -21,11 +21,11 @@ from modules.ml.source_document_job_status_orm import (
     JobType,
     SourceDocumentJobStatusORM,
 )
-from ray_model_worker.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
-from repos.ray_repo import RayRepo
+from repos.ray.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
+from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from utils.image_utils import image_to_base64, load_image
 

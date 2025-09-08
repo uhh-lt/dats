@@ -26,8 +26,8 @@ from modules.ml.source_document_job_status_orm import (
     JobType,
     SourceDocumentJobStatusORM,
 )
-from ray_model_worker.dto.coref import CorefInputDoc, CorefJobInput
-from repos.ray_repo import RayRepo
+from repos.ray.dto.coref import CorefInputDoc, CorefJobInput
+from repos.ray.ray_repo import RayRepo
 
 
 class CorefService(metaclass=SingletonMeta):
