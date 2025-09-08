@@ -7,19 +7,18 @@ services:
       - ${RAY_API_EXPOSED?ray-api-exposed-required!}:8000
       - ${RAY_DASHBOARD_EXPOSED?ray-dashboard-exposed-required!}:8265
     build:
-      context: ../backend/src/ray_model_worker
+      context: ../ray
       dockerfile: Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
+      test: ["CMD-SHELL", "python /ray_code/src/check_health.py"]
       start_period: 60s
       interval: 60s
       timeout: 60s
       retries: 20
-    command: /dats_code_ray/ray_model_worker_entrypoint.sh
-    # user: ${UID:-1000}:${GID:-100}
+    command: /ray_code/src/ray_entrypoint.sh
+    # user: ${DOCKER_UID:-1000}:${DOCKER_GID:-100}
     environment:
       LOG_LEVEL: ${RAY_LOG_LEVEL?ray-log-level-required!}
-      RAY_CONFIG: ${RAY_CONFIG?ray-config-required!}
       SPACY_MODELS_DIR: /ray_cache/spacy_models
       HUGGINGFACE_HUB_CACHE: /ray_cache/hf_hub_cache
       HF_HOME: /ray_cache/hf_cache
@@ -27,10 +26,10 @@ services:
       NUMBA_CACHE_DIR: /ray_cache/numba_cache
       TORCHINDUCTOR_CACHE_DIR: /ray_cache/torch_inductor_cache
       TRITON_CACHE_DIR: /ray_cache/triton_cache
+      CUPY_CACHE_DIR: /ray_cache/cupy_cache
     volumes:
-      # - ../backend/src/ray_model_worker:/dats_code_ray # uncomment for dev
+      # - ../ray:/ray_code # uncomment for dev
       - "${RAY_CACHE_DIR:-./ray_cache}:/ray_cache"
-      #- "${RAY_CONFIG:-../backend/src/ray_model_worker/config_gpu.yaml}:/dats_code_ray/config_gpu.yaml" # uncomment to change config
     shm_size: 12gb
     deploy:
       resources:
