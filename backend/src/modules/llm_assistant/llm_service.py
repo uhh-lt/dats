@@ -65,7 +65,7 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     TaggingPromptBuilder,
 )
 from repos.llm_repo import LLMRepo
-from repos.ray_repo import RayRepo
+from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
 

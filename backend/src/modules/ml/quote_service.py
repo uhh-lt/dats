@@ -28,8 +28,8 @@ from modules.ml.source_document_job_status_orm import (
     JobType,
     SourceDocumentJobStatusORM,
 )
-from ray_model_worker.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
-from repos.ray_repo import RayRepo
+from repos.ray.dto.quote import QuoteInputDoc, QuoteJobInput, Span, Token
+from repos.ray.ray_repo import RayRepo
 
 
 class _CodeQuoteId(NamedTuple):

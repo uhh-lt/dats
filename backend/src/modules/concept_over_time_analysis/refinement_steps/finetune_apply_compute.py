@@ -9,12 +9,12 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTARead,
     COTASentence,
 )
-from ray_model_worker.dto.cota import (
+from repos.ray.dto.cota import (
     RayCOTAJobInput,
     RayCOTAJobResponse,
     RayCOTASentenceBase,
 )
-from repos.ray_repo import RayRepo
+from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
 

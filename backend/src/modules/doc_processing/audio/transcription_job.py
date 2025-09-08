@@ -14,7 +14,7 @@ from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ray_repo import RayRepo
+from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 

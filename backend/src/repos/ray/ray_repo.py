@@ -6,23 +6,23 @@ from requests import Response
 
 from common.singleton_meta import SingletonMeta
 from config import conf
-from ray_model_worker.dto.clip import (
+from repos.ray.dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
-from ray_model_worker.dto.coref import CorefJobInput, CorefJobOutput
-from ray_model_worker.dto.cota import RayCOTAJobInput, RayCOTAJobResponse
-from ray_model_worker.dto.detr import DETRImageInput, DETRObjectDetectionOutput
-from ray_model_worker.dto.docling import DoclingPDF2HTMLOutput
-from ray_model_worker.dto.glotlid import GlotLIDInput, GlotLIDOutput
-from ray_model_worker.dto.promptembedder import (
+from repos.ray.dto.coref import CorefJobInput, CorefJobOutput
+from repos.ray.dto.cota import RayCOTAJobInput, RayCOTAJobResponse
+from repos.ray.dto.detr import DETRImageInput, DETRObjectDetectionOutput
+from repos.ray.dto.docling import DoclingPDF2HTMLOutput
+from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
+from repos.ray.dto.promptembedder import (
     PromptEmbedderInput,
     PromptEmbedderOutput,
 )
-from ray_model_worker.dto.quote import QuoteJobInput, QuoteJobOutput
-from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
-from ray_model_worker.dto.whisper import WhisperTranscriptionOutput
+from repos.ray.dto.quote import QuoteJobInput, QuoteJobOutput
+from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
+from repos.ray.dto.whisper import WhisperTranscriptionOutput
 
 
 class RayRepo(metaclass=SingletonMeta):

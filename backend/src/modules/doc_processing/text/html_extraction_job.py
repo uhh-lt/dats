@@ -9,7 +9,7 @@ from common.doc_type import DocType
 from common.job_type import JobType
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_cleaning_utils import clean_html
-from repos.ray_repo import RayRepo
+from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image

@@ -21,11 +21,11 @@ from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.db.crud_base import NoSuchElementError
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from repos.ray_repo import RayRepo
+from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
+from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 

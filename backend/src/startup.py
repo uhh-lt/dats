@@ -151,7 +151,7 @@ def __init_repos__(
     MailRepo()
 
     # import and init Ray
-    from repos.ray_repo import RayRepo
+    from repos.ray.ray_repo import RayRepo
 
     RayRepo()
 
