@@ -104,6 +104,12 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
                 __create_demo_user__(db=db)
                 __create_assistant_users__(db=db)
 
+        if not startup_in_progress:
+            from repos.vector.weaviate_repo import WeaviateRepo
+
+            with WeaviateRepo().weaviate_session() as client:
+                __create_collections__(client=client)
+
     except Exception as e:
         msg = f"Error while booting the Discourse Analysis Tool Suite Backend! Exception: {str(e)}"
         logger.error(msg)
@@ -222,3 +228,17 @@ def __create_assistant_users__(db: Session) -> None:
                 password=str(conf.assistant_user.password),
             )
             crud_user.create_with_id(db=db, create_dto=create_dto, id=user_id)
+
+
+def __create_collections__(client) -> None:
+    from core.doc.document_collection import DocumentCollection
+    from core.doc.image_collection import ImageCollection
+    from core.doc.sentence_collection import SentenceCollection
+    from modules.perspectives.aspect_collection import AspectCollection
+    from modules.perspectives.cluster_collection import ClusterCollection
+
+    DocumentCollection.create_collection(client)
+    SentenceCollection.create_collection(client)
+    ImageCollection.create_collection(client)
+    AspectCollection.create_collection(client)
+    ClusterCollection.create_collection(client)
