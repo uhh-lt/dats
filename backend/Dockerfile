@@ -2,8 +2,10 @@
 # docker push uhhlt/dats_backend:<version>
 
 FROM ubuntu:jammy-20250404 AS ubuntu
+
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 CMD ["/bin/bash"]
 
 # makes CUDA devices visible to the container by default
