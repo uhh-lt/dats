@@ -119,7 +119,7 @@ function TrainingSettingsStep() {
       weight_decay: data.weightDecay,
       dropout: data.dropout,
       // specific training settings
-      is_bio: data.isBio,
+      is_bio: false, // data.isBio, // TODO: enable
     };
 
     startClassifierJobMutation(
