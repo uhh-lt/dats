@@ -1,27 +1,13 @@
-# ignore all env files
+__pycache__/
+
+.pytest_cache
+.ruff_cache
+.venv
+.vscode
+
+.dockerignore
 .env
 .env.example
-.env.testing
-.env.testing.example
-
-# ignore custom directories
-src/dev_notebooks
-src/data
-src/experiments
-sample_data
-notebooks
-
-# ignore caches
-.pytest_cache
-
-# others
-.dockerignore
 .gitignore
-.idea
-.run
-Dockerfile
-Makefile
-README.md
 
-# igore venv
-.venv
+Dockerfile

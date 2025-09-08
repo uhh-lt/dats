@@ -1,23 +1,7 @@
-# Custom folders
-src/dev_notebooks
-
-# Local configuration
-.env
-
-# Byte-compiled / optimized / DLL files
 __pycache__/
 
-# pytest
 .pytest_cache/
+.ruff_cache/
+.venv/
 
-# Scrapy:
-.scrapy
-
-# PyBuilder
-target/
-
-# Ray
-src/ray_model_worker/spec.yaml
-
-# Environments
-.venv
+.env
