@@ -3,11 +3,6 @@ from loguru import logger
 
 from common.singleton_meta import SingletonMeta
 from config import conf
-from core.doc.document_collection import DocumentCollection
-from core.doc.image_collection import ImageCollection
-from core.doc.sentence_collection import SentenceCollection
-from modules.perspectives.aspect_collection import AspectCollection
-from modules.perspectives.cluster_collection import ClusterCollection
 
 
 class WeaviateRepo(metaclass=SingletonMeta):
@@ -23,13 +18,6 @@ class WeaviateRepo(metaclass=SingletonMeta):
 
                 if flush:
                     client.collections.delete_all()
-
-                # Initialize collections
-                DocumentCollection.create_collection(client)
-                SentenceCollection.create_collection(client)
-                ImageCollection.create_collection(client)
-                AspectCollection.create_collection(client)
-                ClusterCollection.create_collection(client)
 
             return super(WeaviateRepo, cls).__new__(cls)
 
