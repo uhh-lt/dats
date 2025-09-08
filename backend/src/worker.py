@@ -56,26 +56,32 @@ def do_work(device: str):
 
     ctx = mp.get_context("fork")
 
-    if device == "cpu":
+    if device not in ["cpu", "gpu", "dev"]:
+        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu|dev]")
+        sys.exit(1)
+
+    processes = []
+    if device == "cpu" or device == "dev":
         cpu = ctx.Process(
             target=create_pool, args=("cpu", int(environ.get("RQ_WORKERS_CPU", "8")))
         )
         api = ctx.Process(
             target=create_pool, args=("api", int(environ.get("RQ_WORKERS_API", "16")))
         )
-        cpu.start()
-        api.start()
-        cpu.join()
-        api.join()
-    elif device == "gpu":
+        processes.append(cpu)
+        processes.append(api)
+
+    if device == "gpu" or device == "dev":
         gpu = ctx.Process(
             target=create_pool, args=("gpu", int(environ.get("RQ_WORKERS_GPU", "1")))
         )
-        gpu.start()
-        gpu.join()
-    else:
-        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
-        sys.exit(1)
+        processes.append(gpu)
+
+    for p in processes:
+        p.start()
+
+    for p in processes:
+        p.join()
 
 
 def create_pool(queue_name: str, num_workers: int):
@@ -101,14 +107,14 @@ if __name__ == "__main__":
         if sys.argv[1] == "healthcheck":
             do_healthcheck()
         else:
-            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
+            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu|dev]")
             sys.exit(1)
     elif len(sys.argv) == 3:
         if sys.argv[1] == "work":
             do_work(sys.argv[2])
         else:
-            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
+            print("Usage: worker.py healthcheck or worker.py work [cpu|gpu|dev]")
             sys.exit(1)
     else:
-        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu]")
+        print("Usage: worker.py healthcheck or worker.py work [cpu|gpu|dev]")
         sys.exit(1)
