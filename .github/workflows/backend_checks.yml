@@ -22,20 +22,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Check for changes in ray_model_worker (pull request)
-        id: check_ray_model_worker_changes_pr
+      - name: Check for changes in ray (pull request)
+        id: check_ray_changes_pr
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           base_branch="origin/${{ github.event.pull_request.base.ref }}"
-          if git diff --name-only $base_branch HEAD | grep -q -e '^backend/src/ray_model_worker/'; then
+          if git diff --name-only $base_branch HEAD | grep -q -e '^ray/'; then
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
-      - name: Check for changes in ray_model_worker (push)
-        id: check_ray_model_worker_changes_push
+      - name: Check for changes in ray (push)
+        id: check_ray_changes_push
         if: github.event_name == 'push'
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^backend/src/ray_model_worker/'; then
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^ray/'; then
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
       - name: Prepare environment
