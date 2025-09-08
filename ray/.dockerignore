@@ -1,0 +1,15 @@
+__pycache__/
+
+.pytest_cache
+.ruff_cache
+.venv
+.vscode
+
+.dockerignore
+.env
+.env.example
+.gitignore
+
+Dockerfile
+
+src/spec.yaml
