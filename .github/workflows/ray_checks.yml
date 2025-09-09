@@ -5,7 +5,7 @@ on:
       - main
   pull_request:
     paths:
-      - "backend/src/ray_model_worker/**"
+      - "ray/**"
       - ".github/workflows/ray_checks.yml"
 
 jobs:
