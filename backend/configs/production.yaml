@@ -121,6 +121,11 @@ cota:
   model: "paraphrase-multilingual-mpnet-base-v2"
   batch_size: 16
 
+promptembedder:
+  model: "intfloat/multilingual-e5-large-instruct"
+  max_seq_length: 512
+  batch_size: 8
+
 project_metadata:
   text_language:
     key: "language"
