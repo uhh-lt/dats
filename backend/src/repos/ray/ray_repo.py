@@ -12,7 +12,6 @@ from repos.ray.dto.clip import (
     ClipTextEmbeddingInput,
 )
 from repos.ray.dto.coref import CorefJobInput, CorefJobOutput
-from repos.ray.dto.cota import RayCOTAJobInput, RayCOTAJobResponse
 from repos.ray.dto.detr import DETRImageInput, DETRObjectDetectionOutput
 from repos.ray.dto.docling import DoclingPDF2HTMLOutput
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
@@ -150,12 +149,6 @@ class RayRepo(metaclass=SingletonMeta):
             "/promptembedder/embed", input.model_dump()
         )
         return PromptEmbedderOutput.model_validate(response.json())
-
-    def cota_finetune_apply_compute(self, input: RayCOTAJobInput) -> RayCOTAJobResponse:
-        response = self._make_post_request_with_json_data(
-            "/cota/finetune_apply_compute", input.model_dump()
-        )
-        return RayCOTAJobResponse.model_validate(response.json())
 
     def quote_prediction(self, input: QuoteJobInput) -> QuoteJobOutput:
         response = self._make_post_request_with_json_data(
