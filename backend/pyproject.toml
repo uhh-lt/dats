@@ -72,6 +72,7 @@ dependencies = [
     "scrapy-selenium==0.0.7",
     "sentence-transformers==4.1.0",
     "seqeval>=1.2.2",
+    "setfit==1.1.2",
     "sqlalchemy==2.0.25",
     "sqlalchemy-utils==0.41.1",
     "srsly==2.4.8",
