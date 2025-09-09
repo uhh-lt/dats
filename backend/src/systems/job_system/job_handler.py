@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from common.gpu_utils import find_unused_cuda_device
 from common.job_type import JobType
 from modules.doc_processing.doc_processing_pipeline import (
     handle_job_error,
@@ -11,6 +12,11 @@ from systems.job_system.job_dto import Job, JobInputBase
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
     try:
+        # figure out which gpu to use, if it is a gpu job
+        if job.get_device() == "gpu":
+            cuda_device = find_unused_cuda_device()
+            job.update(device=cuda_device)
+
         output = handler(payload=payload, job=job)
     except Exception as e:
         # erroneous job:

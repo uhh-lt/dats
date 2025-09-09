@@ -169,6 +169,7 @@ class JobService(metaclass=SingletonMeta):
                 "steps": ["Initial step"],
                 "created": datetime.now(),
                 "finished": None,
+                "device": job_info["device"],
             },
             result_ttl=job_info["result_ttl"].value,
             retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,

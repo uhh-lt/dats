@@ -20,6 +20,7 @@ from transformers import (
     DataCollatorForTokenClassification,
 )
 
+from common.gpu_utils import parse_device_string
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -483,11 +484,14 @@ class SpanClassificationModelService(TextClassificationModelService):
         # append our own, custom callback to update the job progress
         callbacks.append(JobProgressCallback(job=job))
 
+        accelerator, devices = parse_device_string(job.get_device())
         trainer = pl.Trainer(
             logger=csv_logger,
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            accelerator=accelerator,
+            devices=devices,
             # Special params
             # precision=32,  # full precision training
             # gradient_clip_val=1.0,  # Gradient clipping
@@ -633,7 +637,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         job.update(current_step=4)
         log_dir = Path(classifier.path).parent / "eval_logs"
         csv_logger = CSVLogger(log_dir, name=classifier.name)
-        trainer = pl.Trainer(logger=csv_logger)
+        accelerator, devices = parse_device_string(job.get_device())
+        trainer = pl.Trainer(
+            logger=csv_logger,
+            accelerator=accelerator,
+            devices=devices,
+        )
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
 
         # 5. Store the evaluation in the DB
@@ -749,7 +758,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         job.update(current_step=4)
         log_dir = Path(classifier.path).parent / "infer_logs"
         csv_logger = CSVLogger(log_dir, name=classifier.name)
-        trainer = pl.Trainer(logger=csv_logger)
+        accelerator, devices = parse_device_string(job.get_device())
+        trainer = pl.Trainer(
+            logger=csv_logger,
+            accelerator=accelerator,
+            devices=devices,
+        )
         predictions = trainer.predict(model, dataloaders=inference_dataloader)
         assert predictions is not None, "No predictions returned!"
 

@@ -55,6 +55,7 @@ class Job:
         current_step: int | None = None,
         steps: list[str] | None = None,
         finished: datetime | None = None,
+        device: str | None = None,
     ):
         if steps is not None:
             self.job.meta["steps"] = steps
@@ -64,6 +65,8 @@ class Job:
             self.job.meta["current_step"] = current_step
         if finished is not None:
             self.job.meta["finished"] = finished
+        if device is not None:
+            self.job.meta["device"] = device
         self.job.save_meta()
 
     def get_id(self) -> str:
@@ -83,6 +86,9 @@ class Job:
 
     def get_status(self) -> JobStatus:
         return JobStatus(self.job.get_status())
+
+    def get_device(self) -> str:
+        return self.job.meta.get("device", "unknown")
 
 
 class JobInputBase(BaseModel):
