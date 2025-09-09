@@ -1,3 +1,5 @@
+# --- CPU Deployments ---
+
 spacy:
   # note that the spacy models have to be installed in the env to use it! (docker!)
   model_dir: ${oc.env:SPACY_MODELS_DIR, /spacy_models}
@@ -6,19 +8,45 @@ spacy:
     de: de_core_news_lg-3.8.0
     it: it_core_news_lg-3.8.0
     default: en
-
   device: cpu
   max_text_length: 2000000 # in characters (1000000 is spaCy default)
-
   deployment:
-    ray_actor_options:
-      num_gpus: 0.
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 32
-      upscale_delay_s: 5
-      metrics_interval_s: 5
-      target_ongoing_requests: 1
+    api:
+      name: "spacy"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: 0.
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 32
+        upscale_delay_s: 5
+        metrics_interval_s: 5
+        target_ongoing_requests: 1
+
+glotlid:
+  model: "cis-lmu/glotlid"
+  version: "latest"
+  # the device is always CPU!
+  deployment:
+    api:
+      name: "glotlid"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .0
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 32
+        upscale_delay_s: 5
+        metrics_interval_s: 5
+        target_ongoing_requests: 1
+
+# --- GPU Deployments (required) ---
 
 whisper:
   model: deepdml/faster-whisper-large-v3-turbo-ct2
@@ -28,23 +56,34 @@ whisper:
     beam_size: 5
     best_of: 5
     batch_size: 8
-
   deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
+    api:
+      name: "whisper"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 1
 
 detr:
   model: "facebook/detr-resnet-101"
   device: cuda
   deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
+    api:
+      name: "detr"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 1
   object_detection:
     confidence_threshold: 0.75
     coco2017_labels:
@@ -151,14 +190,42 @@ clip:
     batch_size: 64
     device: cuda
   deployment:
-    ray_actor_options:
-      num_gpus: .05
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 8
-      upscale_delay_s: 5
-      metrics_interval_s: 5
-      target_ongoing_requests: 16
+    api:
+      name: "clip"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 1
+        # upscale_delay_s: 5
+        # metrics_interval_s: 5
+        # target_ongoing_requests: 16
+
+docling:
+  # scaling factor for images extracted from PDFs
+  image_resolution_scale: 3.0
+  # tmp directory for docling
+  tmp_dir: /tmp/dats/ray/docling
+  deployment:
+    api:
+      name: "docling"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 1
+        max_replicas: 32
+        upscale_delay_s: 5
+        metrics_interval_s: 5
+
+# --- GPU Deployments (optional) ---
 
 quote:
   model: "fynnos/quotect-mt5-base"
@@ -166,48 +233,30 @@ quote:
   num_beams: 1
   device: cuda
   deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
-
-glotlid:
-  model: "cis-lmu/glotlid"
-  version: "latest"
-  # the device is always CPU!
-  deployment:
-    ray_actor_options:
-      num_gpus: .0
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 32
-      upscale_delay_s: 5
-      metrics_interval_s: 5
-      target_ongoing_requests: 1
+    api:
+      name: "quote"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 0
+        max_replicas: 1
 
 coref:
   model_de: "fynnos/maverick-mes-de10"
   device: cuda
   deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
-
-docling:
-  # scaling factor for images extracted from PDFs
-  image_resolution_scale: 3.0
-  # pages per PDF chunk
-  max_pages_per_pdf_chunk: 10
-  # tmp directory for docling
-  tmp_dir: /tmp/dats/ray/docling
-  deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 32
-      upscale_delay_s: 5
-      metrics_interval_s: 5
+    api:
+      name: "coref"
+      num_replicas: 1
+      max_ongoing_requests: 128
+    model_worker:
+      max_ongoing_requests: 64
+      ray_actor_options:
+        num_gpus: .1
+      autoscaling_config:
+        min_replicas: 0
+        max_replicas: 1

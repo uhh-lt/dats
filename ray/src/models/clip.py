@@ -25,7 +25,7 @@ IMAGE_BATCH_SIZE = cc.image_encoder.batch_size
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(max_ongoing_requests=64, **build_ray_model_deployment_config("clip"))
+@serve.deployment(**build_ray_model_deployment_config("clip"))
 class ClipModel:
     def __init__(self):
         logger.debug(f"Loading ClipModel {TEXT_MODEL} for text ...")

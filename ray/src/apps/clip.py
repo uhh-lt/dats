@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.clip import (
     ClipEmbeddingOutput,
     ClipImageEmbeddingInput,
@@ -16,7 +17,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, name="clip", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("clip"))
 @serve.ingress(api)
 class ClipApi:
     def __init__(self, clip_model_handle: DeploymentHandle) -> None:
