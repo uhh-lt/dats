@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.spacy import SpacyInput, SpacyPipelineOutput
 from models.spacy import SpacyModel
 
@@ -12,7 +13,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="spacy", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("spacy"))
 @serve.ingress(api)
 class SpacyApi:
     def __init__(self, spacy_model_handle: DeploymentHandle) -> None:

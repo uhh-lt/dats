@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.quote import QuoteJobInput, QuoteJobOutput
 from models.quote import QuoteModel
 
@@ -12,7 +13,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="quote", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("quote"))
 @serve.ingress(api)
 class QuoteApi:
     def __init__(self, quote_model_handle: DeploymentHandle) -> None:

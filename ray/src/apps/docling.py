@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
-from config import conf
+from config import build_ray_api_deployment_config, conf
 from dto.docling import DoclingPDF2HTMLOutput
 from models.docling import DoclingModel
 from utils import write_bytes_to_file
@@ -21,7 +21,7 @@ cc = conf.docling
 TMP_DIR = Path(cc.tmp_dir)
 
 
-@serve.deployment(num_replicas=1, name="docling", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("docling"))
 @serve.ingress(api)
 class DoclingApi:
     def __init__(self, docling_model_handle: DeploymentHandle) -> None:

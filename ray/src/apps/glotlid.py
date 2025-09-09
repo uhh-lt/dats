@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.glotlid import GlotLIDInput, GlotLIDOutput
 from models.glotlid import GlotLIDModel
 
@@ -12,7 +13,7 @@ logger = logging.getLogger("ray.serve")
 api = FastAPI()
 
 
-@serve.deployment(num_replicas=1, name="glotlid", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("glotlid"))
 @serve.ingress(api)
 class GlotLIDApi:
     def __init__(self, glotlid_model_handle: DeploymentHandle) -> None:

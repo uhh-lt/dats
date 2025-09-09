@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.coref import CorefJobInput, CorefJobOutput
 from models.coref import CorefModel
 
@@ -12,7 +13,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="coref", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("coref"))
 @serve.ingress(api)
 class CorefApi:
     def __init__(self, coref_model_handle: DeploymentHandle) -> None:

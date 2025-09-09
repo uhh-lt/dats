@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from ray import serve
 from ray.serve.handle import DeploymentHandle
 
+from config import build_ray_api_deployment_config
 from dto.whisper import WhisperTranscriptionOutput
 from models.whisper import WhisperModel
 from utils import bytes_to_wav_data
@@ -13,7 +14,7 @@ api = FastAPI()
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(num_replicas=1, name="whisper", max_ongoing_requests=128)
+@serve.deployment(**build_ray_api_deployment_config("whisper"))
 @serve.ingress(api)
 class WhisperApi:
     def __init__(self, whisper_model_handle: DeploymentHandle) -> None:
