@@ -211,16 +211,3 @@ docling:
       max_replicas: 32
       upscale_delay_s: 5
       metrics_interval_s: 5
-
-promptembedder:
-  model: "intfloat/multilingual-e5-large-instruct"
-  max_seq_length: 512
-  batch_size: 8
-  device: cuda
-  deployment:
-    ray_actor_options:
-      num_gpus: .1
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 1
-  root_dir: /tmp/dats/ray/promptembedder
