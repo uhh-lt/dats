@@ -50,7 +50,6 @@ def handle_image_caption_job(
             doctype=DocType.image,
             keys=["caption"],
             values=[caption],
-            manual_commit=True,
         )
 
     return ImageCaptionJobOutput(
