@@ -16,7 +16,7 @@ services:
       timeout: 60s
       retries: 20
     command: /ray_code/src/ray_entrypoint.sh
-    # user: ${DOCKER_UID:-1000}:${DOCKER_GID:-100}
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-100}
     environment:
       LOG_LEVEL: ${RAY_LOG_LEVEL?ray-log-level-required!}
       SPACY_MODELS_DIR: /ray_cache/spacy_models
@@ -27,6 +27,8 @@ services:
       TORCHINDUCTOR_CACHE_DIR: /ray_cache/torch_inductor_cache
       TRITON_CACHE_DIR: /ray_cache/triton_cache
       CUPY_CACHE_DIR: /ray_cache/cupy_cache
+      UV_CACHE_DIR: /ray_cache/uv_cache
+      EASYOCR_MODULE_PATH: /ray_cache/EasyOCR
     volumes:
       # - ../ray:/ray_code # uncomment for dev
       - "${RAY_CACHE_DIR:-./ray_cache}:/ray_cache"
