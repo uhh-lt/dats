@@ -19,6 +19,22 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
         return cota.search_space
 
     # the search space is empty, we build the search space with simsearch
+    search_space = __build_search_space(cota=cota)
+
+    # add the sentences to the search space
+    search_space = __add_sentences_to_search_space(db=db, search_space=search_space)
+
+    # add the date to the search space
+    search_space = __add_dates_to_search_space(
+        db=db,
+        date_metadata_id=cota.timeline_settings.date_metadata_id,
+        search_space=search_space,
+    )
+
+    return search_space
+
+
+def __build_search_space(cota: COTARead) -> list[COTASentence]:
     search_space_dict: dict[str, COTASentence] = (
         dict()
     )  # we use a dict here to prevent duplicates in the search space
@@ -53,22 +69,10 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
             cota_sentence.concept_similarities[concept.id] = sent.score
             search_space_dict[cota_sentence_id] = cota_sentence
 
-    search_space = list(search_space_dict.values())
-
-    # add the sentences to the search space
-    search_space = add_sentences_to_search_space(db=db, search_space=search_space)
-
-    # add the date to the search space
-    search_space = add_dates_to_search_space(
-        db=db,
-        date_metadata_id=cota.timeline_settings.date_metadata_id,
-        search_space=search_space,
-    )
-
-    return search_space
+    return list(search_space_dict.values())
 
 
-def add_sentences_to_search_space(
+def __add_sentences_to_search_space(
     db: Session,
     search_space: list[COTASentence],
 ) -> list[COTASentence]:
@@ -106,7 +110,7 @@ def add_sentences_to_search_space(
     return search_space
 
 
-def add_dates_to_search_space(
+def __add_dates_to_search_space(
     db: Session, date_metadata_id: int | None, search_space: list[COTASentence]
 ) -> list[COTASentence]:
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))

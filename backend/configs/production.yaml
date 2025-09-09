@@ -117,6 +117,10 @@ llm_assistant:
     few_shot_threshold: 4
     model_training_threshold: 100
 
+cota:
+  model: "paraphrase-multilingual-mpnet-base-v2"
+  batch_size: 16
+
 project_metadata:
   text_language:
     key: "language"
