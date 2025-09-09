@@ -223,13 +223,24 @@ class LLMRepo(metaclass=SingletonMeta):
                     "content": system_prompt.strip(),
                 }
             )
+        # build content
+        if b64_images is None or len(b64_images) == 0:
+            content = user_prompt.strip()
+        else:
+            content = [{"type": "text", "text": user_prompt.strip()}]
+            for img in b64_images:
+                content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{img}"},
+                    }  # type: ignore
+                )
+
         # build user message
         user_message: dict = {
             "role": "user",
-            "content": user_prompt.strip(),
+            "content": content,
         }
-        if b64_images is not None and len(b64_images) > 0:
-            user_message["images"] = b64_images
         messages.append(user_message)
 
         # get response
