@@ -52,10 +52,12 @@ from modules.perspectives.perspectives_job_dto import (
     ResetModelParams,
     SplitClusterParams,
 )
+from modules.perspectives.prompt_embedder import (
+    PromptEmbedder,
+    PromptEmbedderInput,
+)
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
-from repos.ray.dto.promptembedder import PromptEmbedderInput
-from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
 
@@ -64,10 +66,11 @@ class PerspectivesService:
     def __init__(self, job: Job):
         self.job = job
 
-        self.ray: RayRepo = RayRepo()
         self.llm: LLMRepo = LLMRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
+
+        self.prompt_embedder = PromptEmbedder(device=job.get_device())
 
         self.perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
             PerspectivesJobType.CREATE_ASPECT: [
@@ -228,8 +231,9 @@ class PerspectivesService:
         self._log_status_msg(
             f"Computing embeddings for {len(doc_aspects)} document aspects with model {embedding_model}..."
         )
-        embedding_output = self.ray.promptembedder_embedding(
+        embedding_output = self.prompt_embedder.embed(
             input=PromptEmbedderInput(
+                project_id=project_id,
                 model_name=embedding_model,
                 prompt=embedding_prompt,
                 data=[da.content for da in doc_aspects],
@@ -1014,8 +1018,9 @@ class PerspectivesService:
             self._log_status_msg(
                 f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
             )
-            embedding_output = self.ray.promptembedder_embedding(
+            embedding_output = self.prompt_embedder.embed(
                 input=PromptEmbedderInput(
+                    project_id=aspect.project_id,
                     model_name=aspect.embedding_model,
                     prompt=aspect.doc_embedding_prompt,
                     data=[f"{params.create_dto.name}\n{params.create_dto.description}"],

@@ -15,10 +15,6 @@ from repos.ray.dto.coref import CorefJobInput, CorefJobOutput
 from repos.ray.dto.detr import DETRImageInput, DETRObjectDetectionOutput
 from repos.ray.dto.docling import DoclingPDF2HTMLOutput
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
-from repos.ray.dto.promptembedder import (
-    PromptEmbedderInput,
-    PromptEmbedderOutput,
-)
 from repos.ray.dto.quote import QuoteJobInput, QuoteJobOutput
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.dto.whisper import WhisperTranscriptionOutput
@@ -141,14 +137,6 @@ class RayRepo(metaclass=SingletonMeta):
             "/clip/embedding/image", input.model_dump()
         )
         return ClipEmbeddingOutput.model_validate(response.json())
-
-    def promptembedder_embedding(
-        self, input: PromptEmbedderInput
-    ) -> PromptEmbedderOutput:
-        response = self._make_post_request_with_json_data(
-            "/promptembedder/embed", input.model_dump()
-        )
-        return PromptEmbedderOutput.model_validate(response.json())
 
     def quote_prediction(self, input: QuoteJobInput) -> QuoteJobOutput:
         response = self._make_post_request_with_json_data(
