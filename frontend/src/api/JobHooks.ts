@@ -27,6 +27,9 @@ const usePollDuplicateFinderJob = (
       }),
     enabled: !!duplicateFinderJobId,
     refetchInterval: (query) => {
+      if (query.state.error) {
+        return false;
+      }
       if (!query.state.data) {
         return 1000;
       }
@@ -67,6 +70,9 @@ const usePollExportJob = (exportJobId: string | undefined) => {
       }),
     enabled: !!exportJobId,
     refetchInterval: (query) => {
+      if (query.state.error) {
+        return false;
+      }
       if (!query.state.data) {
         return 1000;
       }
@@ -109,6 +115,9 @@ const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead | unde
       }),
     enabled: !!mlJobId,
     refetchInterval: (query) => {
+      if (query.state.error) {
+        return false;
+      }
       if (!query.state.data) {
         return 1000;
       }

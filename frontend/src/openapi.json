@@ -8441,10 +8441,15 @@
             "type": "integer",
             "title": "Max Different Words",
             "description": "Number of different words allowed between duplicates"
+          },
+          "tag_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Tag Id",
+            "description": "Tag id to filter source documents. If not provided, all source documents are considered."
           }
         },
         "type": "object",
-        "required": ["project_id", "max_different_words"],
+        "required": ["project_id", "max_different_words", "tag_id"],
         "title": "DuplicateFinderInput"
       },
       "DuplicateFinderJobRead": {
