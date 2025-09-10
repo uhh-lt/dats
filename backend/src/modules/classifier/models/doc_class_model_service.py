@@ -233,7 +233,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # Find documents
         sdoc_ids = [
             sdoc.id
-            for sdoc in crud_sdoc.read_all_with_tags(
+            for sdoc in crud_sdoc.read_by_tags(
                 db=db,
                 project_id=project_id,
                 tag_ids=tag_ids,
@@ -247,10 +247,9 @@ class DocClassificationModelService(TextClassificationModelService):
                 SourceDocumentORM,
                 TagORM,
             )
-            .join(SourceDocumentORM.tags)
             .filter(
                 SourceDocumentORM.id.in_(sdoc_ids),
-                TagORM.id.in_(class_ids),
+                SourceDocumentORM.tags.any(TagORM.id.in_(class_ids)),
             )
             .all()
         )

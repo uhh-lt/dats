@@ -70,7 +70,7 @@ class DocumentClassificationService(metaclass=SingletonMeta):
             exclusive (bool): Whether tags are mutually exclusive, either A or B
         """
         # Fetch all documents that already have tags for the given project
-        sdocs_with_tags = crud_sdoc.read_all_with_tags(
+        sdocs_with_tags = crud_sdoc.read_by_tags(
             db=db, project_id=project_id, tag_ids=tag_ids
         )
         # Extract IDs from the tagged documents

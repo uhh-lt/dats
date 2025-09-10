@@ -190,17 +190,14 @@ class CRUDSourceDocument(
             .all()
         )
 
-    def read_all_with_tags(
+    def read_by_tags(
         self, db: Session, *, project_id: int, tag_ids: list[int] = []
     ) -> list[SourceDocumentORM]:
         return (
             db.query(SourceDocumentORM)
-            .filter(SourceDocumentORM.project_id == project_id)
-            .join(SourceDocumentORM.tags)
             .filter(
-                SourceDocumentORM.tags != None  # noqa: E711
-                if len(tag_ids) == 0
-                else TagORM.id.in_(tag_ids)
+                SourceDocumentORM.project_id == project_id,
+                SourceDocumentORM.tags.any(TagORM.id.in_(tag_ids)),
             )
             .all()
         )

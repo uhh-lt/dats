@@ -16,8 +16,7 @@ def document_sampler_by_tags(
 
     query = (
         db.query(SourceDocumentORM.id, aggregate_ids(TagORM.id, "tags"))
-        .join(SourceDocumentORM.tags)
-        .where(TagORM.id.in_(all_tag_ids))
+        .where(SourceDocumentORM.tags.any(TagORM.id.in_(all_tag_ids)))
         .group_by(SourceDocumentORM.id)
         # this having clause ensures that the document has one tag from each group
         .having(

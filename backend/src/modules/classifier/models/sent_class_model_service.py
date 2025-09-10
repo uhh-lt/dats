@@ -245,7 +245,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # Find documents
         sdoc_ids = [
             sdoc.id
-            for sdoc in crud_sdoc.read_all_with_tags(
+            for sdoc in crud_sdoc.read_by_tags(
                 db=db,
                 project_id=project_id,
                 tag_ids=tag_ids,

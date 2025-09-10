@@ -58,10 +58,9 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
                         func.array_agg(SourceDocumentORM.id).label("data_ids"),
                         func.count(SourceDocumentORM.id).label("num_examples"),
                     )
-                    .join(SourceDocumentORM.tags)
                     .filter(
                         SourceDocumentORM.id.in_(sdoc_ids),
-                        TagORM.id.in_(class_ids),
+                        SourceDocumentORM.tags.any(TagORM.id.in_(class_ids)),
                     )
                     .group_by(TagORM.id)
                     .all()
@@ -120,8 +119,7 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
     ) -> list[ClassifierDataset]:
         results = (
             db.query(SourceDocumentORM.id)
-            .join(SourceDocumentORM.tags)
-            .filter(TagORM.id.in_(tag_ids))
+            .filter(SourceDocumentORM.tags.any(TagORM.id.in_(tag_ids)))
             .all()
         )
         sdoc_ids = [row._tuple()[0] for row in results]
