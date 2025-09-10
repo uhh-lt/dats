@@ -1,5 +1,4 @@
 import {
-  Checkbox,
   FormControl,
   FormControlProps,
   InputLabel,
@@ -7,20 +6,19 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  Stack,
 } from "@mui/material";
-import React, { memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import TagHooks from "../../api/TagHooks.ts";
 import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
 interface TagSelectorProps {
-  tagIds: number[];
-  onTagIdChange: (tagIds: number[]) => void;
+  tagId: number | null;
+  onTagIdChange: (tagId: number | null) => void;
   title: string;
 }
 
-function TagSelectorMulti({ tagIds, onTagIdChange, title, ...props }: TagSelectorProps & FormControlProps) {
+function TagSelector({ tagId, onTagIdChange, title, ...props }: TagSelectorProps & FormControlProps) {
   // global server state (react query)
   const projectTags = TagHooks.useGetAllTags();
   // transform flat list into hierarchical strcutre
@@ -28,26 +26,20 @@ function TagSelectorMulti({ tagIds, onTagIdChange, title, ...props }: TagSelecto
 
   // handlers (for ui)
   const handleChange = useCallback(
-    (event: SelectChangeEvent<number[]>) => {
-      onTagIdChange(event.target.value as number[]);
+    (event: SelectChangeEvent<number>) => {
+      let value: number | null;
+      if (typeof event.target.value === "string") {
+        value = parseInt(event.target.value, 10);
+      } else {
+        value = event.target.value;
+      }
+      onTagIdChange(value === -1 ? null : value);
     },
     [onTagIdChange],
   );
 
   // render
-  const renderValue = useCallback(
-    (tagIds: number[]) => (
-      <Stack direction="row" spacing={1} flexWrap="wrap">
-        {tagIds.map((tagId, index) => (
-          <React.Fragment key={tagId}>
-            <TagRenderer tag={tagId} />
-            {index < tagIds.length - 1 && ", "}
-          </React.Fragment>
-        ))}
-      </Stack>
-    ),
-    [],
-  );
+  const renderValue = useCallback((tagId: number) => (tagId === -1 ? "All Tags" : <TagRenderer tag={tagId} />), []);
 
   return (
     <FormControl {...props}>
@@ -55,20 +47,21 @@ function TagSelectorMulti({ tagIds, onTagIdChange, title, ...props }: TagSelecto
       <Select
         labelId="multi-user-select-label"
         label={title}
-        value={tagIds}
-        multiple
+        value={tagId || -1}
         onChange={handleChange}
         disabled={!projectTags.isSuccess}
         fullWidth
         renderValue={renderValue}
       >
+        <MenuItem value={-1} style={{ paddingLeft: 8 }}>
+          <ListItemText>All tags</ListItemText>
+        </MenuItem>
         {tagsWithLevel.map((tagWithLevel) => (
           <MenuItem
             key={tagWithLevel.data.id}
             value={tagWithLevel.data.id}
             style={{ paddingLeft: tagWithLevel.level * 10 + 6 }}
           >
-            <Checkbox checked={tagIds.indexOf(tagWithLevel.data.id) !== -1} />
             <ListItemText>
               <TagRenderer tag={tagWithLevel.data} />
             </ListItemText>
@@ -79,4 +72,4 @@ function TagSelectorMulti({ tagIds, onTagIdChange, title, ...props }: TagSelecto
   );
 }
 
-export default memo(TagSelectorMulti);
+export default memo(TagSelector);

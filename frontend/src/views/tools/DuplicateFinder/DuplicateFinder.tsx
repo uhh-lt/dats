@@ -12,33 +12,28 @@ import {
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import JobHooks from "../../../api/JobHooks.ts";
-import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import { jobStatusToSimple } from "../../../components/BackgroundTasks/StatusToSimple.ts";
 import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
-import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
+import TagSelector from "../../../components/Tag/TagSelector.tsx";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { DuplicateFinderActions } from "./duplicateFinderSlice.ts";
 
 interface DuplicateDocumentData {
-  sdocId: string;
-  subRows?: DuplicateDocumentData[];
+  sdocId: number;
+  subRows: DuplicateDocumentData[];
 }
 
 const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
   {
     header: "File name",
     Cell: ({ row }) =>
-      row.original.subRows ? (
-        <>{`${row.originalSubRows?.length} duplicate documents`}</>
+      row.original.subRows.length > 0 ? (
+        <>{`${row.original.subRows.length} duplicate documents`}</>
       ) : (
-        <SdocRenderer sdoc={parseInt(row.original.sdocId.split("-")[1])} renderFilename link />
+        <SdocRenderer sdoc={row.original.sdocId} renderFilename link />
       ),
-  },
-  {
-    header: "Tags",
-    Cell: ({ row }) =>
-      row.original.subRows ? <></> : <SdocTagsRenderer sdocId={parseInt(row.original.sdocId.split("-")[1])} />,
   },
 ];
 
@@ -48,6 +43,7 @@ function ProjectDuplicateDocuments() {
   // local state
   const [maxDifferentWords, setMaxDifferentWords] = useState<number>(10);
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const [tagId, setTagId] = useState<number | null>(null);
 
   // global client state
   const dispatch = useAppDispatch();
@@ -61,6 +57,7 @@ function ProjectDuplicateDocuments() {
         requestBody: {
           project_id: projectId,
           max_different_words: maxDifferentWords,
+          tag_id: tagId,
         },
       },
       {
@@ -84,6 +81,7 @@ function ProjectDuplicateDocuments() {
               requestBody: {
                 project_id: projectId,
                 max_different_words: maxDifferentWords,
+                tag_id: tagId,
               },
             },
             {
@@ -97,14 +95,14 @@ function ProjectDuplicateDocuments() {
     );
   };
   const handleSelectAllButOnePerGroup = () => {
-    let selectedSdocIds: string[] = [];
+    let selectedSdocIds: number[] = [];
     data.forEach((duplicateDocGroup) => {
       if (duplicateDocGroup.subRows) {
         selectedSdocIds = selectedSdocIds.concat(duplicateDocGroup.subRows.map((subRow) => subRow.sdocId).slice(1));
       }
     });
     setRowSelection(
-      selectedSdocIds.reduce((acc, sdocId) => ({ ...acc, [sdocId]: true }), {} as Record<string, boolean>),
+      selectedSdocIds.reduce((acc, sdocId) => ({ ...acc, [sdocId]: true }), {} as Record<number, boolean>),
     );
   };
 
@@ -112,57 +110,57 @@ function ProjectDuplicateDocuments() {
   const duplicateFinderJob = JobHooks.usePollDuplicateFinderJob(lastDuplicateFinderJobId, undefined);
 
   // computed
-  const data = useMemo(() => {
+  const { data, rowCount } = useMemo(() => {
     if (duplicateFinderJob.data === undefined) {
-      return [];
+      return { data: [], rowCount: 0 };
     }
     if (!duplicateFinderJob.data.output) {
-      return [];
+      return { data: [], rowCount: 0 };
     }
 
     const result: DuplicateDocumentData[] = [];
-    duplicateFinderJob.data.output.duplicates.forEach((duplicateDocGroup, index) => {
+    duplicateFinderJob.data.output.duplicates.forEach((duplicateDocGroup) => {
       const duplicateDocGroupData: DuplicateDocumentData = {
-        sdocId: index.toString(),
-        subRows: duplicateDocGroup.length > 0 ? [] : undefined,
+        sdocId: duplicateDocGroup[0], // use the first document's id as the group id
+        subRows: duplicateDocGroup.map((sdocId) => ({ sdocId, subRows: [] })),
       };
-      duplicateDocGroup.forEach((duplicateDoc) => {
-        duplicateDocGroupData.subRows?.push({
-          sdocId: `${index}-${duplicateDoc}`,
-        });
-      });
       result.push(duplicateDocGroupData);
     });
 
-    return result;
+    return { data: result, rowCount: result.reduce((acc, group) => acc + group.subRows.length, 0) };
   }, [duplicateFinderJob.data]);
+
+  const isLoading =
+    isPending ||
+    duplicateFinderJob.isLoading ||
+    (duplicateFinderJob.data && jobStatusToSimple[duplicateFinderJob.data.status] === "running");
 
   // table
   const table = useMaterialReactTable<DuplicateDocumentData>({
     columns,
     data,
-    getRowId: (row) => row.sdocId,
+    getRowId: (row) => `${row.sdocId}`,
     // expansion
     enableExpandAll: false, //hide expand all double arrow in column header
     enableExpanding: true,
     // pagination
-    enablePagination: true,
-    paginateExpandedRows: false,
+    enablePagination: false,
+    // virtualization
+    enableRowVirtualization: true,
+    rowVirtualizerOptions: { overscan: 4 },
     // selection
     enableRowSelection(row) {
-      return !row.original.subRows;
+      return row.original.subRows.length === 0; //only allow selection of leaf rows
     },
     onRowSelectionChange: setRowSelection, //connect internal row selection state to your own
     state: {
       rowSelection, //pass our managed row selection state to the table to use
-      isLoading:
-        isPending ||
-        duplicateFinderJob.isLoading ||
-        (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED),
+      isLoading: isLoading,
     },
     // other
     filterFromLeafRows: true, //apply filtering to all rows instead of just parent rows
     getSubRows: (row) => row.subRows, //default
+    rowCount: rowCount,
     initialState: { expanded: true }, //expand all rows by default
     enableStickyHeader: true, //sticky header
     // style
@@ -190,9 +188,7 @@ function ProjectDuplicateDocuments() {
           loadingPosition="start"
           loading={deleteDocumentsMutation.isPending}
           onClick={() => {
-            const selectedSdocIds = table
-              .getSelectedRowModel()
-              .flatRows.map((row) => parseInt(row.original.sdocId.split("-")[1]));
+            const selectedSdocIds = table.getSelectedRowModel().flatRows.map((row) => row.original.sdocId);
             handleDeleteClick(selectedSdocIds);
           }}
           variant="contained"
@@ -228,6 +224,13 @@ function ProjectDuplicateDocuments() {
           }
           action={
             <>
+              <TagSelector
+                title="Filter by Tag"
+                tagId={tagId}
+                onTagIdChange={setTagId}
+                sx={{ minWidth: 150, mr: 1 }}
+                size="small"
+              />
               <TextField
                 label={"Max. different words"}
                 variant="outlined"
@@ -243,11 +246,7 @@ function ProjectDuplicateDocuments() {
                 startIcon={<TroubleshootIcon />}
                 sx={{ ml: 1 }}
                 onClick={handleClickFindDuplicateTextDocuments}
-                loading={
-                  isPending ||
-                  duplicateFinderJob.isLoading ||
-                  (duplicateFinderJob.data && duplicateFinderJob.data.status !== JobStatus.FINISHED)
-                }
+                loading={isLoading}
                 loadingPosition="start"
               >
                 Start
