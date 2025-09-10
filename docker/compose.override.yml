@@ -7,7 +7,7 @@ services:
 
   redis:
     volumes:
-      - "redis_data:/var/lib/redis/data"
+      - "redis_data:/data"
     ports:
       - "${REDIS_EXPOSED?redis-exposed-required!}:6379"
 

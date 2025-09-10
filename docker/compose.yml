@@ -85,7 +85,7 @@ services:
       start_period: 30s
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?redis-password-required!}
-    command: redis-server --requirepass "${REDIS_PASSWORD:?redis-password-required!}" --save 60 1
+    command: redis-server --requirepass "${REDIS_PASSWORD:?redis-password-required!}" --save 900 1 --save 300 10
     restart: always
     networks:
       - dats_network

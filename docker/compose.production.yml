@@ -7,7 +7,7 @@ services:
 
   redis:
     volumes:
-      - "./redis_data:/var/lib/redis/data"
+      - "./redis_data:/data"
 
   weaviate:
     volumes:
