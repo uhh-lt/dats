@@ -64,12 +64,13 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     LLMTaggingResult,
     TaggingPromptBuilder,
 )
-from repos.llm_repo import LLMRepo
+from repos.llm_repo import LLMMessage, LLMRepo
 from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
 
 lac = conf.llm_assistant
+BATCH_SIZE = 32
 
 
 class LLMAssistantService(metaclass=SingletonMeta):
@@ -119,12 +120,15 @@ class LLMAssistantService(metaclass=SingletonMeta):
     def handle_llm_job(
         self, db: Session, job: Job, payload: LLMJobInput
     ) -> LLMJobOutput:
+        num_batches = (
+            len(payload.specific_task_parameters.sdoc_ids) + BATCH_SIZE - 1
+        ) // BATCH_SIZE
+
         job.update(
-            steps=[
-                f"Step {i}"
-                for i in range(len(payload.specific_task_parameters.sdoc_ids) + 2)
-            ],
-            current_step=1,
+            steps=["Start"]
+            + [f"Batch Processing {i + 1}" for i in range(num_batches)]
+            + ["Finish"],
+            current_step=0,
             status_message="Started LLM Assistant!",
         )
 
@@ -362,27 +366,27 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
         # automatic document tagging
         result: list[TaggingResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(
-            zip(task_parameters.sdoc_ids, sdoc_datas)
-        ):
-            try:
-                # update job status
-                msg = f"Processing SDOC id={sdoc_id}"
-                self._next_llm_job_step(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
+        num_batches = (len(task_parameters.sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
+        for i in range(0, len(task_parameters.sdoc_ids), BATCH_SIZE):
+            # update job status
+            msg = f"Processing batch {i // BATCH_SIZE + 1} of {num_batches}"
+            self._next_llm_job_step(
+                job=job,
+                description=msg,
+            )
+            logger.info(msg)
 
+            # batch data
+            sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
+            sdata = sdoc_datas[i : i + BATCH_SIZE]
+
+            # prepare batch messages
+            batch_messages: list[LLMMessage] = []
+            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
                 if sdoc_data is None:
                     raise ValueError(
                         f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
                     )
-
-                # get current tag ids
-                current_tag_ids = [
-                    tag.id for tag in crud_sdoc.read(db=db, id=sdoc_data.id).tags
-                ]
 
                 # get language
                 language = crud_sdoc_meta.read_by_sdoc_and_key(
@@ -403,19 +407,30 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     user_prompt_template=prompt_dict[language]["user_prompt"],
                     document=sdoc_data.content,
                 )
-
-                # prompt the model
-                response = self.llm.llm_chat(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    response_model=LLMTaggingResult,
-                )
-                logger.info(
-                    f"Got chat response! Tags={response.categories}, Reason={response.reasoning}"
+                batch_messages.append(
+                    LLMMessage(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    )
                 )
 
-                # parse result
+            # prompt the model (batchwise)
+            responses = self.llm.llm_batch_chat(
+                messages=batch_messages,
+                response_model=LLMTaggingResult,
+            )
+
+            # parse the responses, preparing the suggested annotation creation
+            for response, sdoc_data in zip(responses, sdata):
+                assert sdoc_data is not None
+
+                # parse the response
                 parsed_result = prompt_builder.parse_result(result=response)
+
+                # get current tag ids
+                current_tag_ids = [
+                    tag.id for tag in crud_sdoc.read(db=db, id=sdoc_data.id).tags
+                ]
 
                 result.append(
                     TaggingResult(
@@ -425,18 +440,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         suggested_tag_ids=parsed_result.tag_ids,
                         current_tag_ids=current_tag_ids,
                         reasoning=parsed_result.reasoning,
-                    )
-                )
-
-            except Exception as e:
-                result.append(
-                    TaggingResult(
-                        status="error",
-                        status_message=str(e),
-                        sdoc_id=sdoc_id,
-                        suggested_tag_ids=[],
-                        current_tag_ids=[],
-                        reasoning="An error occurred!",
                     )
                 )
 
@@ -486,34 +489,27 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
         # automatic metadata extraction
         result: list[MetadataExtractionResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(
-            zip(task_parameters.sdoc_ids, sdoc_datas)
-        ):
-            try:
-                # update job status
-                msg = f"Processing SDOC id={sdoc_id}"
-                self._next_llm_job_step(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
+        num_batches = (len(task_parameters.sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
+        for i in range(0, len(task_parameters.sdoc_ids), BATCH_SIZE):
+            # update job status
+            msg = f"Processing batch {i // BATCH_SIZE + 1} of {num_batches}"
+            self._next_llm_job_step(
+                job=job,
+                description=msg,
+            )
+            logger.info(msg)
 
+            # batch data
+            sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
+            sdata = sdoc_datas[i : i + BATCH_SIZE]
+
+            # prepare batch messages
+            batch_messages: list[LLMMessage] = []
+            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
                 if sdoc_data is None:
                     raise ValueError(
                         f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
                     )
-
-                # get current metadata values
-                current_metadata = [
-                    SourceDocumentMetadataReadResolved.model_validate(metadata)
-                    for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
-                    if metadata.project_metadata_id
-                    in task_parameters.project_metadata_ids
-                ]
-                current_metadata_dict = {
-                    metadata.project_metadata.id: metadata
-                    for metadata in current_metadata
-                }
 
                 # get language
                 language = crud_sdoc_meta.read_by_sdoc_and_key(
@@ -534,20 +530,41 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     user_prompt_template=prompt_dict[language]["user_prompt"],
                     document=sdoc_data.content,
                 )
-
-                # prompt the model
-                response = self.llm.llm_chat(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    response_model=LLMMetadataExtractionResults,
+                batch_messages.append(
+                    LLMMessage(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    )
                 )
-                logger.info(f"Got chat response! Response={response.data}")
 
-                # transform the response
+            # prompt the model (batchwise)
+            responses = self.llm.llm_batch_chat(
+                messages=batch_messages,
+                response_model=LLMMetadataExtractionResults,
+            )
+
+            # transform the response
+            for response, sdoc_data in zip(responses, sdata):
+                assert sdoc_data is not None
+
+                suggested_metadata: list[SourceDocumentMetadataReadResolved] = []
+
+                # parse the response
                 parsed_response = prompt_builder.parse_result(result=response)
 
+                # get current metadata values
+                current_metadata = [
+                    SourceDocumentMetadataReadResolved.model_validate(metadata)
+                    for metadata in crud_sdoc.read(db=db, id=sdoc_data.id).metadata_
+                    if metadata.project_metadata_id
+                    in task_parameters.project_metadata_ids
+                ]
+                current_metadata_dict = {
+                    metadata.project_metadata.id: metadata
+                    for metadata in current_metadata
+                }
+
                 # create correct suggested metadata (map the parsed response to the current metadata)
-                suggested_metadata = []
                 for project_metadata_id in task_parameters.project_metadata_ids:
                     current = current_metadata_dict.get(project_metadata_id)
                     suggestion = parsed_response.get(project_metadata_id)
@@ -562,6 +579,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                             value=suggestion,
                         )
                     )
+
                 logger.info(
                     f"Parsed the response! suggested metadata={suggested_metadata}"
                 )
@@ -573,17 +591,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         sdoc_id=sdoc_data.id,
                         current_metadata=current_metadata,
                         suggested_metadata=suggested_metadata,
-                    )
-                )
-
-            except Exception as e:
-                result.append(
-                    MetadataExtractionResult(
-                        status="error",
-                        status_message=str(e),
-                        sdoc_id=sdoc_id,
-                        current_metadata=[],
-                        suggested_metadata=[],
                     )
                 )
 
@@ -633,18 +640,23 @@ class LLMAssistantService(metaclass=SingletonMeta):
         # automatic annotation
         annotation_id = 0
         result: list[AnnotationResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(
-            zip(task_parameters.sdoc_ids, sdoc_datas)
-        ):
-            try:
-                # update job status
-                msg = f"Processing SDOC id={sdoc_id}"
-                self._next_llm_job_step(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
+        num_batches = (len(task_parameters.sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
+        for i in range(0, len(task_parameters.sdoc_ids), BATCH_SIZE):
+            # update job status
+            msg = f"Processing batch {i // BATCH_SIZE + 1} of {num_batches}"
+            self._next_llm_job_step(
+                job=job,
+                description=msg,
+            )
+            logger.info(msg)
 
+            # batch data
+            sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
+            sdata = sdoc_datas[i : i + BATCH_SIZE]
+
+            # prepare batch messages
+            batch_messages: list[LLMMessage] = []
+            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
                 if sdoc_data is None:
                     raise ValueError(
                         f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -669,20 +681,28 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     user_prompt_template=prompt_dict[language]["user_prompt"],
                     document=sdoc_data.content,
                 )
-
-                # prompt the model
-                response = self.llm.llm_chat(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    response_model=LLMAnnotationResults,
+                batch_messages.append(
+                    LLMMessage(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    )
                 )
-                logger.info(f"Got chat response! Response={response}")
+
+            # prompt the model (batchwise)
+            responses = self.llm.llm_batch_chat(
+                messages=batch_messages,
+                response_model=LLMAnnotationResults,
+            )
+
+            # parse the responses, preparing the suggested annotation creation
+            suggested_annotations: list[SpanAnnotationRead] = []
+            for response, sdoc_data in zip(responses, sdata):
+                assert sdoc_data is not None
 
                 # parse the response
                 parsed_response = prompt_builder.parse_result(result=response)
 
                 # validate the response and create the suggested annotation
-                suggested_annotations: list[SpanAnnotationRead] = []
                 for x in parsed_response:
                     code_id = x.code_id
                     span_text = x.text
@@ -733,28 +753,27 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         )
                     )
                     annotation_id += 1
-                logger.info(
-                    f"Parsed the response! suggested annotations={suggested_annotations}"
-                )
+            logger.info(
+                f"Parsed the response! suggested annotations={suggested_annotations}"
+            )
 
-                result.append(
+            # create results for this batch
+            sdoc_id2created_annos: dict[int, list[SpanAnnotationRead]] = {}
+            for anno in suggested_annotations:
+                if anno.sdoc_id not in sdoc_id2created_annos:
+                    sdoc_id2created_annos[anno.sdoc_id] = []
+                sdoc_id2created_annos[anno.sdoc_id].append(anno)
+            result.extend(
+                [
                     AnnotationResult(
                         status="finished",
                         status_message="Annotation successful",
-                        sdoc_id=sdoc_data.id,
-                        suggested_annotations=suggested_annotations,
-                    )
-                )
-
-            except Exception as e:
-                result.append(
-                    AnnotationResult(
-                        status="error",
-                        status_message=str(e),
                         sdoc_id=sdoc_id,
-                        suggested_annotations=[],
+                        suggested_annotations=created_annos,
                     )
-                )
+                    for sdoc_id, created_annos in sdoc_id2created_annos.items()
+                ]
+            )
 
         return LLMJobOutput(
             llm_job_type=TaskType.ANNOTATION,
@@ -819,20 +838,24 @@ class LLMAssistantService(metaclass=SingletonMeta):
             )
 
         # automatic annotation
-        annotation_id = 0
         results: list[SentenceAnnotationResult] = []
-        for idx, (sdoc_id, sdoc_data) in enumerate(
-            zip(task_parameters.sdoc_ids, sdoc_datas)
-        ):
-            try:
-                # update job status
-                msg = f"Processing SDOC id={sdoc_id}"
-                self._next_llm_job_step(
-                    job=job,
-                    description=msg,
-                )
-                logger.info(msg)
+        num_batches = (len(task_parameters.sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
+        for i in range(0, len(task_parameters.sdoc_ids), BATCH_SIZE):
+            # update job status
+            msg = f"Processing batch {i // BATCH_SIZE + 1} of {num_batches}"
+            self._next_llm_job_step(
+                job=job,
+                description=msg,
+            )
+            logger.info(msg)
 
+            # batch data
+            sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
+            sdata = sdoc_datas[i : i + BATCH_SIZE]
+
+            # prepare batch messages
+            batch_messages: list[LLMMessage] = []
+            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
                 if sdoc_data is None:
                     raise ValueError(
                         f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
@@ -853,7 +876,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 system_prompt = prompt_builder.build_system_prompt(
                     system_prompt_template=prompt_dict[language]["system_prompt"]
                 )
-                # we need to provide documents entence by sentence for sentence annotation
+                # we need to provide document sentence by sentence for sentence annotation
                 document_sentences = "\n".join(
                     [
                         f"{idx + 1}: {sentence}"
@@ -865,14 +888,24 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     user_prompt_template=prompt_dict[language]["user_prompt"],
                     document=document_sentences,
                 )
-
-                # prompt the model
-                response = self.llm.llm_chat(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                    response_model=LLMSentenceAnnotationResults,
+                batch_messages.append(
+                    LLMMessage(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    )
                 )
-                logger.info(f"Got chat response! Response={response}")
+
+            # prompt the model (batchwise)
+            responses = self.llm.llm_batch_chat(
+                messages=batch_messages,
+                response_model=LLMSentenceAnnotationResults,
+            )
+
+            # parse the responses, preparing the suggested annotation creation
+            suggested_annotations: list[SentenceAnnotationCreate] = []
+            for response, sdoc_data in zip(responses, sdata):
+                assert sdoc_data is not None
+                num_sentences = len(sdoc_data.sentences)
 
                 # parse the response
                 parsed_response = prompt_builder.parse_result(result=response)
@@ -891,11 +924,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 ]
 
                 # create the suggested annotation
-                suggested_annotations: list[SentenceAnnotationCreate] = []
                 start = parsed_items[0][0]
                 previous_sentence_id = parsed_items[0][0]
                 previous_code_id = parsed_items[0][1]
-
                 if len(parsed_items) > 1:
                     for sentence_id, code_id in parsed_items[1:]:
                         # create annotation if sentence ids mismatch
@@ -908,7 +939,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                                     code_id=previous_code_id,
                                 )
                             )
-                            annotation_id += 1
                             start = sentence_id
 
                         # create annotation if code ids mismatch
@@ -921,7 +951,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                                     code_id=previous_code_id,
                                 )
                             )
-                            annotation_id += 1
                             start = sentence_id
 
                         previous_sentence_id = sentence_id
@@ -936,40 +965,36 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         code_id=previous_code_id,
                     )
                 )
-                logger.info(
-                    f"Parsed the response! suggested sentence annotations={suggested_annotations}"
-                )
+            logger.info(
+                f"Parsed the response! suggested sentence annotations={suggested_annotations}"
+            )
 
-                # create the suggested annotations
-                created_annos = crud_sentence_anno.create_bulk(
-                    db=db,
-                    user_id=ASSISTANT_FEWSHOT_ID
-                    if is_fewshot
-                    else ASSISTANT_ZEROSHOT_ID,
-                    create_dtos=suggested_annotations,
-                )
+            # create the suggested annotations for this batch
+            created_annos = crud_sentence_anno.create_bulk(
+                db=db,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+                create_dtos=suggested_annotations,
+            )
 
-                results.append(
+            # create results for this batch
+            sdoc_id2created_annos: dict[int, list[SentenceAnnotationRead]] = {}
+            for anno in created_annos:
+                if anno.sdoc_id not in sdoc_id2created_annos:
+                    sdoc_id2created_annos[anno.sdoc_id] = []
+                sdoc_id2created_annos[anno.sdoc_id].append(
+                    SentenceAnnotationRead.model_validate(anno)
+                )
+            results.extend(
+                [
                     SentenceAnnotationResult(
                         status="finished",
                         status_message="Sentence annotation successful",
-                        sdoc_id=sdoc_data.id,
-                        suggested_annotations=[
-                            SentenceAnnotationRead.model_validate(anno)
-                            for anno in created_annos
-                        ],
-                    )
-                )
-
-            except Exception as e:
-                results.append(
-                    SentenceAnnotationResult(
-                        status="error",
-                        status_message=str(e),
                         sdoc_id=sdoc_id,
-                        suggested_annotations=[],
+                        suggested_annotations=created_annos,
                     )
-                )
+                    for sdoc_id, created_annos in sdoc_id2created_annos.items()
+                ]
+            )
 
         return LLMJobOutput(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,

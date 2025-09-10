@@ -38,6 +38,7 @@ dependencies = [
     "isort==5.12.0",
     "itsdangerous==2.2.0",
     "lightning==2.5.1",
+    "litellm==1.77.0",
     "loguru==0.6",
     "lxml-html-clean>=0.4.1",
     "mammoth==1.6.0",

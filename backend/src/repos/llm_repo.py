@@ -3,6 +3,7 @@ from typing import Tuple, Type, TypedDict, TypeVar
 from uuid import uuid4
 
 import numpy as np
+from litellm import batch_completion
 from loguru import logger
 from openai import OpenAI
 from pydantic import BaseModel
@@ -11,6 +12,11 @@ from common.singleton_meta import SingletonMeta
 from config import conf
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class LLMMessage(BaseModel):
+    system_prompt: str
+    user_prompt: str
 
 
 class ModelDict(TypedDict):
@@ -171,6 +177,51 @@ class LLMRepo(metaclass=SingletonMeta):
             raise Exception(f"LLM response is None: {response}")
 
         return response_model.model_validate_json(msg.content)
+
+    def llm_batch_chat(
+        self,
+        messages: list[LLMMessage],
+        response_model: Type[T],
+    ) -> list[T]:
+        model, client = self.__models["llm"]
+
+        # prepare batch messages
+        batch_messages = [
+            [
+                {
+                    "role": "system",
+                    "content": message.system_prompt.strip(),
+                },
+                {
+                    "role": "user",
+                    "content": message.user_prompt.strip(),
+                },
+            ]
+            for message in messages
+        ]
+
+        # do batch inference
+        batch_responses = batch_completion(
+            model=f"hosted_vllm/{model}",
+            messages=batch_messages,
+            base_url=str(client.base_url),
+            api_key=client.api_key,
+            # temperature=self.sampling_parameters.temperature,
+            # top_p=self.sampling_parameters.top_p,
+            extra_body={"guided_json": response_model.model_json_schema()},
+        )
+
+        # parse responses
+        responses: list[T] = []
+        for response in batch_responses:
+            if response.get("choices", None) is None:
+                raise Exception(f"LLM response is invalid: {response}")
+            msg = response.choices[0].message
+            if msg.content is None:
+                raise Exception(f"LLM response is None: {response}")
+            responses.append(response_model.model_validate_json(msg.content))
+
+        return responses
 
     def _start_vlm_chat_session(self) -> str:
         session_id = str(uuid4())
