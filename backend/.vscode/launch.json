@@ -28,8 +28,7 @@
         "PYTHONPATH": "${workspaceFolder}/src",
         "RQ_WORKERS_CPU": "1",
         "RQ_WORKERS_API": "1",
-        "RQ_WORKERS_GPU": "1",
-        "CUDA_VISIBLE_DEVICES": "1"
+        "RQ_WORKERS_GPU": "1"
       }
     },
     {
