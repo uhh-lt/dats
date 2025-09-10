@@ -31,9 +31,14 @@ class JobPriority(str, enum.Enum):
     HIGH = "high"
 
 
-class JobResultTTL(int, enum.Enum):
-    DEFAULT = 500
+class JobTiming(int, enum.Enum):
+    TEN_MINUTES = 10 * 60
+    ONE_HOUR = 60 * 60
+    ONE_DAY = 24 * 60 * 60
+    ONE_WEEK = 7 * 24 * 60 * 60
+    THIRTY_DAYS = 30 * 24 * 60 * 60
     NINETY_DAYS = 90 * 24 * 60 * 60
+    INFINITY = -1
 
 
 class EndpointGeneration(str, enum.Enum):

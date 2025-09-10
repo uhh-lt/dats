@@ -9,7 +9,7 @@ from systems.job_system.job_dto import (
     JobInputBase,
     JobOutputBase,
     JobPriority,
-    JobResultTTL,
+    JobTiming,
 )
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -24,9 +24,9 @@ def register_job(
     device: Literal["gpu", "cpu", "api"] = "cpu",
     generate_endpoints: EndpointGeneration = EndpointGeneration.NONE,
     router: APIRouter | None = None,
-    result_ttl: JobResultTTL = JobResultTTL.DEFAULT,
+    result_ttl: JobTiming = JobTiming.TEN_MINUTES,
     retry: tuple[int, int] | None = None,
-    timeout: int = 1800,  # default timeout of 30 min (RQ default is 3 min [180])
+    timeout: JobTiming = JobTiming.ONE_HOUR,  # (RQ default is 3 min [180])
 ):
     def decorator(func: Callable[[InputT, Job], OutputT | None]):
         from systems.job_system.job_service import JobService

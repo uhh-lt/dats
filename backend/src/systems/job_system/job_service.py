@@ -24,7 +24,6 @@ from systems.job_system.job_dto import (
     JobInputBase,
     JobOutputBase,
     JobPriority,
-    JobResultTTL,
 )
 
 InputT = TypeVar("InputT", bound=JobInputBase)
@@ -39,7 +38,7 @@ class RegisteredJob(TypedDict):
     priority: JobPriority
     device: Literal["gpu", "cpu", "api"]
     router: APIRouter | None
-    result_ttl: JobResultTTL  # how long to keep successful jobs and their results (defaults to 500 seconds)
+    result_ttl: int  # how long to keep successful jobs and their results (in seconds)
     # failure_ttl  # how long to keep failed jobs (defaults to 1 year)
     # ttl  # how long to keep jobs in queue before they are discarded (defaults to infinite)
     # see https://python-rq.org/docs/jobs/#job-creation
@@ -101,7 +100,7 @@ class JobService(metaclass=SingletonMeta):
         device: Literal["gpu", "cpu", "api"],
         generate_endpoints: EndpointGeneration,
         router: APIRouter | None,
-        result_ttl: JobResultTTL,
+        result_ttl: int,
         retry: tuple[int, int] | None,
         timeout: int,
     ) -> None:
@@ -171,7 +170,7 @@ class JobService(metaclass=SingletonMeta):
                 "finished": None,
                 "device": job_info["device"],
             },
-            result_ttl=job_info["result_ttl"].value,
+            result_ttl=job_info["result_ttl"],
             retry=rq.Retry(max=retry[0], interval=retry[1]) if retry else None,
             job_timeout=job_info["timeout"],
         )

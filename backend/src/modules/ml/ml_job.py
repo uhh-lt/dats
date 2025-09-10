@@ -17,7 +17,7 @@ from modules.ml.source_document_job_status_orm import (
     SourceDocumentJobStatusORM,
 )
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import EndpointGeneration, Job, JobResultTTL
+from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -28,7 +28,7 @@ sqlr = SQLRepo()
     input_type=MLJobInput,
     generate_endpoints=EndpointGeneration.ALL,
     device="api",
-    result_ttl=JobResultTTL.NINETY_DAYS,
+    result_ttl=JobTiming.NINETY_DAYS,
 )
 def ml_job(payload: MLJobInput, job: Job) -> None:
     start_time = datetime.now()
