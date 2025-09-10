@@ -50,7 +50,7 @@ function StatusStep() {
             sx={{ ml: 5 }}
             variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
             current={llmJob.isSuccess ? llmJob.data.current_step : 0}
-            max={llmJob.isSuccess ? llmJob.data.steps.length : 0}
+            max={llmJob.isSuccess ? llmJob.data.steps.length - 1 : 0}
             tooltip={progressTooltip}
           />
           {llmJob.isSuccess && (
