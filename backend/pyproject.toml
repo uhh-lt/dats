@@ -9,7 +9,7 @@ authors = [
 maintainers = [
   {name = "Tim Fischer", email = "tim.fischer@uni-hamburg.de"},
 ]
-version = "1.8.1"
+version = "1.8.2"
 requires-python = "==3.11.*"
 description = "DATS is a machine-learning powered web application for multi-modal discourse analysis. It provides tools for the typical workflow of a discsourse analysis project including data collection, data management, exploration, annotation, qualitative & quantitative analysis, interpratation and reflection."
 readme = "../README.md"
