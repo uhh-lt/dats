@@ -57,9 +57,11 @@ from modules.perspectives.prompt_embedder import (
     PromptEmbedderInput,
 )
 from repos.filesystem_repo import FilesystemRepo
-from repos.llm_repo import LLMRepo
+from repos.llm_repo import LLMMessage, LLMRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
+
+BATCH_SIZE = 32
 
 
 class PerspectivesService:
@@ -158,14 +160,14 @@ class PerspectivesService:
         aspect = crud_aspect.read(db=db, id=aspect_id)
 
         # 1. Find all text source documents that do not have an aspect yet
-        sdoc_data = [
+        sdoc_datas = [
             (data.id, data.content)
             for data in crud_document_aspect.read_text_data_with_no_aspect(
                 db=db, aspect_id=aspect_id, project_id=aspect.project_id
             )
         ]
         self._log_status_msg(
-            f"Found {len(sdoc_data)} source documents without an aspect. Modifying them..."
+            f"Found {len(sdoc_datas)} source documents without an aspect. Modifying them..."
         )
 
         # 2. Modify the documents
@@ -173,30 +175,46 @@ class PerspectivesService:
             content: str
 
         create_dtos: list[DocumentAspectCreate] = []
+        # if prompt is provided, use LLM to generate a modified document
         if aspect.doc_modification_prompt:
-            # if prompt is provided, use LLM to generate a modified document
-            for idx, (sdoc_id, sdoc_content) in enumerate(sdoc_data):
+            num_batches = (len(sdoc_datas) + BATCH_SIZE - 1) // BATCH_SIZE
+            for i in range(0, len(sdoc_datas), BATCH_SIZE):
                 self._log_status_msg(
-                    f"Modifying documents with LLM ({idx + 1} / {len(sdoc_data)})..."
+                    f"Modifying documents with LLM! Processing batch ({i + 1} / {num_batches})..."
                 )
+                sdata = sdoc_datas[i : i + BATCH_SIZE]
 
-                response = self.llm.llm_chat(
-                    system_prompt="You are a document modification assistant.",
-                    user_prompt=aspect.doc_modification_prompt,
+                # 2.1 prepare batch messages
+                batch_messages: list[LLMMessage] = []
+                for sdoc_data in sdata:
+                    sdoc_id, sdoc_content = sdoc_data
+                    batch_messages.append(
+                        LLMMessage(
+                            system_prompt="You are a document modification assistant.",
+                            user_prompt=aspect.doc_modification_prompt
+                            + f"\n\nOriginal document:\n{sdoc_content}",
+                        )
+                    )
+
+                # 2.2 prompt the model (batchwise)
+                responses = self.llm.llm_batch_chat(
+                    messages=batch_messages,
                     response_model=LLMResponse,
                 )
-                create_dtos.append(
-                    DocumentAspectCreate(
-                        aspect_id=aspect_id,
-                        sdoc_id=sdoc_id,
-                        content=response.content,
-                    )
-                )
 
+                # 2.3 store the results
+                for response, (sdoc_id, sdoc_content) in zip(responses, sdata):
+                    create_dtos.append(
+                        DocumentAspectCreate(
+                            aspect_id=aspect_id,
+                            sdoc_id=sdoc_id,
+                            content=response.content,
+                        )
+                    )
         else:
             # if no prompt is provided, use the original document
             self._log_status_msg(
-                f"No prompt provided. Using the original document for {len(sdoc_data)} source documents."
+                f"No prompt provided. Using the original document for {len(sdoc_datas)} source documents."
             )
 
             create_dtos.extend(
@@ -206,7 +224,7 @@ class PerspectivesService:
                         sdoc_id=sdoc_id,
                         content=sdoc_content,
                     )
-                    for sdoc_id, sdoc_content in sdoc_data
+                    for sdoc_id, sdoc_content in sdoc_datas
                 ]
             )
 
@@ -808,16 +826,26 @@ class PerspectivesService:
         cluster_name: dict[int, str] = {}
         cluster_description: dict[int, str] = {}
         self._log_status_msg("Generating cluster names and descriptions with LLM...")
+
+        # 2.1 prepare batch messages
+        batch_messages: list[LLMMessage] = []
         for cluster_id in cluster_ids_to_update:
             tw = top_words[cluster_id]
-            self._log_status_msg(
-                f"Generating name and description for cluster {tw[:5]}..."
+            batch_messages.append(
+                LLMMessage(
+                    system_prompt="You are a cluster name and description generator.",
+                    user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
+                )
             )
-            response = self.llm.llm_chat(
-                system_prompt="You are a cluster name and description generator.",
-                user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
-                response_model=LLMResponse,
-            )
+
+        # 2.2 prompt the model (batch)
+        responses = self.llm.llm_batch_chat(
+            messages=batch_messages,
+            response_model=LLMResponse,
+        )
+
+        # 2.3 store the results
+        for response, cluster_id in zip(responses, cluster_ids_to_update):
             cluster_name[cluster_id] = response.title
             cluster_description[cluster_id] = response.description
 
@@ -879,7 +907,7 @@ class PerspectivesService:
             f"Computed cluster embeddings & top documents for {len(cluster_centroids)} clusters."
         )
 
-        # 8. Store the clusters in the databases ...
+        # 4. Store the clusters in the databases ...
         # ... store the cluster embeddings in vector DB
         crud_cluster_embedding.add_embedding_batch(
             client=client,
