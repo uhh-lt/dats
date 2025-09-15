@@ -2,11 +2,14 @@ import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, memo, useCallback, useState } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
 import CodeRenderer from "../../../Code/CodeRenderer.tsx";
+import { useWithLevel } from "../../../TreeExplorer/useWithLevel.ts";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
 const SpanAnnotationValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
   // global server state (react-query)
   const projectCodes = CodeHooks.useGetAllCodesList();
+  const codeTree = useWithLevel(projectCodes.data || []);
+
   const [value, setValue] = useState<string[]>(() => {
     // check if value is string[][] or string[], then make sure that value is string[]
     if (Array.isArray(filterExpression.value) && filterExpression.value.every((entry) => !Array.isArray(entry))) {
@@ -68,9 +71,13 @@ const SpanAnnotationValueSelector = memo(({ filterExpression, onChangeValue }: S
         <MenuItem key={"-1"} value={"-1"}>
           <i>None</i>
         </MenuItem>
-        {projectCodes.data?.map((code) => (
-          <MenuItem key={code.id} value={code.id.toString()}>
-            <CodeRenderer code={code} />
+        {codeTree.map((codeWithLevel) => (
+          <MenuItem
+            key={codeWithLevel.data.id}
+            value={codeWithLevel.data.id.toString()}
+            style={{ paddingLeft: codeWithLevel.level * 10 + 6 }}
+          >
+            <CodeRenderer code={codeWithLevel.data} />
           </MenuItem>
         ))}
       </TextField>
