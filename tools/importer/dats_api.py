@@ -1,4 +1,5 @@
 import json
+import os
 from time import sleep
 from typing import Any
 from urllib.parse import quote
@@ -145,6 +146,38 @@ class DATSAPI:
             return sdoc_id
         except Exception:
             return None
+
+    def resolve_sdoc_id_from_proj_and_filename_with_pages(
+        self, proj_id: int, filename: str
+    ) -> list[int]:
+        name_without_suffix = os.path.splitext(filename)[0]
+
+        # get all sdoc ids
+        r = requests.post(
+            self.BASE_PATH
+            + f"search/sdoc?search_query=%20&project_id={proj_id}&expert_mode=false&highlight=false",
+            data=json.dumps(
+                {
+                    "filter": {
+                        "id": "asdf",
+                        "items": [
+                            {
+                                "id": "asdf2",
+                                "column": "SD_SOURCE_DOCUMENT_FILENAME",
+                                "operator": "STRING_CONTAINS",
+                                "value": name_without_suffix + "_pages_",
+                            }
+                        ],
+                        "logic_operator": "or",
+                    },
+                    "sorts": [],
+                }
+            ),
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        sdocs: dict[str, dict] = r.json()["sdocs"]
+        return [int(sdoc_id) for sdoc_id in sdocs.keys()]
 
     def read_all_sdoc_ids(self, proj_id: int):
         # get all sdoc ids
@@ -371,6 +404,14 @@ class DATSAPI:
                     "list_value": value if metatype == "LIST" else None,
                 }
             ),
+            headers={"Authorization": f"Bearer {self.access_token}"},
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def delete_sdoc_by_id(self, sdoc_id: int):
+        r = requests.delete(
+            self.BASE_PATH + f"sdoc/{sdoc_id}",
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()

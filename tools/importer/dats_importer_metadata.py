@@ -64,6 +64,13 @@ parser.add_argument(
     required=True,
     dest="doctype",
 )
+parser.add_argument(
+    "--has_pages",
+    help="Whether the documents have page files associated (set if one document is split into multiple pages)",
+    default=False,
+    action="store_true",
+    dest="has_pages",
+)
 args = parser.parse_args()
 
 if len(args.metadata_keys) != len(args.metadata_types):
@@ -128,15 +135,25 @@ for idx, file in enumerate(
         data = json.loads(file.read_bytes())
         if data.get("filename"):
             filename = data["filename"]
-        sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
-            proj_id=project["id"], filename=filename
-        )
-        if sdoc_id is None:
+        if args.has_pages:
+            sdoc_ids = api.resolve_sdoc_id_from_proj_and_filename_with_pages(
+                proj_id=project["id"], filename=filename
+            )
+        else:
+            sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+                proj_id=project["id"], filename=filename
+            )
+            if sdoc_id is None:
+                sdoc_ids = []
+            else:
+                sdoc_ids = [sdoc_id]
+        if len(sdoc_ids) == 0:
             print(
                 f"Skipping file {filename} because it does not exists in the project!"
             )
             continue
-        json_data[sdoc_id] = data
+        for sdoc_id in sdoc_ids:
+            json_data[sdoc_id] = data
     except Exception as e:
         print(f"Error with file: {filename} --> {e}")
 

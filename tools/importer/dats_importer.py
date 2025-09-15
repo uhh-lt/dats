@@ -93,12 +93,11 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "--extract_images",
-    help="Whether to extract images during preprocessing (default: True)",
-    type=bool,
-    default=True,
-    required=False,
-    dest="extract_images",
+    "--no_extract_images",
+    help="Whether to NOT extract images during preprocessing",
+    default=False,
+    action="store_true",
+    dest="no_extract_images",
 )
 parser.add_argument(
     "--pages_per_chunk",
@@ -297,7 +296,7 @@ if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
 # upload files
 uploading_files = files[: args.max_num_docs] if args.max_num_docs != -1 else files
 settings = {
-    "extract_images": args.extract_images,
+    "extract_images": not args.no_extract_images,
     "pages_per_chunk": args.pages_per_chunk,
     "keyword_number": args.keyword_number,
     "keyword_deduplication_threshold": 0.5,
