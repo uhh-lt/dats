@@ -11,10 +11,11 @@ from zipfile import ZipFile
 
 import magic
 import pandas as pd
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 from loguru import logger
 
 from common.doc_type import DocType, get_doc_type
+from common.exception_handler import exception_handler
 from common.singleton_meta import SingletonMeta
 from config import conf
 from core.doc.source_document_dto import (
@@ -28,6 +29,7 @@ from core.doc.source_document_dto import (
 #           this service...
 
 
+@exception_handler(status.HTTP_404_NOT_FOUND)
 class SourceDocumentNotFoundInFilesystemError(Exception):
     def __init__(self, sdoc: SourceDocumentRead, dst: str | Path):
         super().__init__(
@@ -38,6 +40,7 @@ class SourceDocumentNotFoundInFilesystemError(Exception):
         )
 
 
+@exception_handler(status.HTTP_404_NOT_FOUND)
 class FileNotFoundInFilesystemError(Exception):
     def __init__(self, proj_id: int, filename: str | Path, dst: str | Path):
         super().__init__(
@@ -45,6 +48,7 @@ class FileNotFoundInFilesystemError(Exception):
         )
 
 
+@exception_handler(status.HTTP_409_CONFLICT)
 class FileAlreadyExistsInFilesystemError(Exception):
     def __init__(self, proj_id: int, filename: str | Path):
         super().__init__(
@@ -53,6 +57,7 @@ class FileAlreadyExistsInFilesystemError(Exception):
         )
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class FileDeletionNotAllowedError(Exception):
     def __init__(self, proj_id: int, sdoc_id: int, filename: str | Path, dst: str):
         super().__init__(
@@ -61,6 +66,7 @@ class FileDeletionNotAllowedError(Exception):
         )
 
 
+@exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 class FileRemovalError(Exception):
     def __init__(self, proj_id: int, filename: str | Path, dst: str):
         super().__init__(
@@ -68,6 +74,7 @@ class FileRemovalError(Exception):
         )
 
 
+@exception_handler(status.HTTP_409_CONFLICT)
 class ProjectAlreadyExistsInFilesystemError(Exception):
     def __init__(self, proj_id: int):
         super().__init__(
@@ -75,6 +82,7 @@ class ProjectAlreadyExistsInFilesystemError(Exception):
         )
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class UnsupportedDocTypeForSourceDocument(Exception):
     def __init__(self, dst_path: Path):
         super().__init__(
@@ -82,6 +90,7 @@ class UnsupportedDocTypeForSourceDocument(Exception):
         )
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class ErroneousArchiveException(Exception):
     def __init__(self, archive_path: Path, msg: str | None = None):
         super().__init__(

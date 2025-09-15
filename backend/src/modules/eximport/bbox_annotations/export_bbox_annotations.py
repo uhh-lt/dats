@@ -10,7 +10,7 @@ from modules.eximport.bbox_annotations.bbox_annotations_export_schema import (
     BBoxAnnotationExportCollection,
     BBoxAnnotationExportSchema,
 )
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from repos.filesystem_repo import FilesystemRepo
 
 

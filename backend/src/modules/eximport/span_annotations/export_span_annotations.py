@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_orm import SpanAnnotationORM
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.span_annotations.span_annotations_export_schema import (
     SpanAnnotationExportCollection,
     SpanAnnotationExportSchema,
