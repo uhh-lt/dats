@@ -4,7 +4,7 @@ import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.whiteboards.whiteboard_export_schema import (
     WhiteboardExportCollection,
     WhiteboardExportSchema,

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
 from core.user.user_orm import UserORM
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.user.user_export_schema import (
     UserExportCollection,
     UserExportSchema,

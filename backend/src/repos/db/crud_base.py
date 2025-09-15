@@ -1,9 +1,11 @@
 from typing import Generic, Type, TypeVar
 
+from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from common.exception_handler import exception_handler
 from repos.db.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
@@ -15,6 +17,7 @@ class UpdateNotAllowed(BaseModel):
     pass
 
 
+@exception_handler(status.HTTP_404_NOT_FOUND)
 class NoSuchElementError(Exception):
     def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model

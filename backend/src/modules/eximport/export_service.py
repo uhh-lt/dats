@@ -9,6 +9,7 @@ from modules.eximport.bbox_annotations.export_bbox_annotations import (
 )
 from modules.eximport.codes.export_codes import export_all_codes
 from modules.eximport.cota.export_cota import export_all_cota, export_selected_cota
+from modules.eximport.export_exceptions import UnsupportedExportJobTypeError
 from modules.eximport.export_job_dto import (
     ExportJobInput,
     ExportJobOutput,
@@ -41,28 +42,6 @@ from modules.eximport.whiteboards.export_whiteboards import (
 )
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-
-
-class ExportJobPreparationError(Exception):
-    def __init__(self, cause: Exception) -> None:
-        super().__init__(f"Cannot prepare and create the ExportJob! {cause}")
-
-
-class ExportJobAlreadyStartedOrDoneError(Exception):
-    def __init__(self, export_job_id: str) -> None:
-        super().__init__(
-            f"The ExportJob with ID {export_job_id} already started or is done!"
-        )
-
-
-class NoSuchExportJobError(Exception):
-    def __init__(self, export_job_id: str, cause: Exception) -> None:
-        super().__init__(f"There exists not ExportJob with ID {export_job_id}! {cause}")
-
-
-class UnsupportedExportJobTypeError(Exception):
-    def __init__(self, export_job_type: ExportJobType) -> None:
-        super().__init__(f"ExportJobType {export_job_type} is not supported! ")
 
 
 class ExportService(metaclass=SingletonMeta):

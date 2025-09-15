@@ -2,25 +2,27 @@ import os
 import subprocess
 from pathlib import Path
 
+from fastapi import status
 from loguru import logger
 from pydantic import Field
 
+from common.exception_handler import exception_handler
 from common.job_type import JobType
 from core.project.project_crud import crud_project
-from modules.crawler.crawler_exceptions import NoDataToCrawlError
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import (
-    EndpointGeneration,
-    Job,
-    JobOutputBase,
-    JobTiming,
-)
+from systems.job_system.job_dto import EndpointGeneration, Job, JobOutputBase, JobTiming
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 fsr: FilesystemRepo = FilesystemRepo()
+
+
+@exception_handler(status.HTTP_400_BAD_REQUEST)
+class NoDataToCrawlError(Exception):
+    def __init__(self, what_msg: str):
+        super().__init__(what_msg)
 
 
 class CrawlerJobInput(ProcessingJobInput):

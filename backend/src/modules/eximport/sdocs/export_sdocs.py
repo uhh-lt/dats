@@ -13,7 +13,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportCollection,
     SourceDocumentExportSchema,

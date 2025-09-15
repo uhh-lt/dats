@@ -1,14 +1,16 @@
 from typing import Sequence
 
-from fastapi import Depends
+from fastapi import Depends, status
 from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_db_session
+from common.exception_handler import exception_handler
 from repos.db.crud_base import NoSuchElementError
 from repos.db.orm_base import ORMBase
 
 
+@exception_handler(status.HTTP_400_BAD_REQUEST)
 class InvalidError(Exception):
     def __init__(self, note=None):
         note_description = f": {note}" if note is not None else ""

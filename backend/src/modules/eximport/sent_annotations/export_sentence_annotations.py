@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.doc.source_document_crud import crud_sdoc
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.sent_annotations.sentence_annotations_export_schema import (
     SentenceAnnotationExportCollection,
     SentenceAnnotationExportSchema,

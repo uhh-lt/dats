@@ -3,7 +3,6 @@
 
 import os
 from contextlib import asynccontextmanager
-from http import HTTPStatus
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,8 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.main import run
 
-from modules.crawler.crawler_exceptions import NoDataToCrawlError
-from repos.elastic.elastic_crud_base import NoSuchObjectInElasticSearchError
+from common.exception_handler import exception_handlers
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.llm_repo import LLMRepo
 from utils.import_utils import import_by_suffix
@@ -40,23 +38,10 @@ if not STARTUP_DONE:
     startup(reset_data=RESET_DATA, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
+from rq.exceptions import NoSuchJobError
+
 from config import conf
-from core.auth.authz_user import ForbiddenError
-from core.auth.validation import InvalidError
-from core.doc.source_document_crud import SourceDocumentPreprocessingUnfinishedError
-from modules.eximport.export_service import (
-    ExportJobPreparationError,
-    NoSuchExportJobError,
-)
-from modules.eximport.import_service import ImportJobPreparationError
-from modules.eximport.no_data_export_error import NoDataToExportError
-from repos.db.crud_base import NoSuchElementError
-from repos.filesystem_repo import (
-    FileAlreadyExistsInFilesystemError,
-    FileNotFoundInFilesystemError,
-    FilesystemRepo,
-    SourceDocumentNotFoundInFilesystemError,
-)
+from repos.filesystem_repo import FilesystemRepo
 
 # import all jobs dynamically
 import_by_suffix("_job.py")
@@ -126,73 +111,16 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(SessionMiddleware, secret_key=conf.api.auth.session.secret)
 
 
-# add custom exception handlers
-# TODO Flo: find a better place for this! (and Exceptions in general. move into own file)
-@app.exception_handler(NoSuchElementError)
-async def no_such_element_error_handler(_, exc: NoSuchElementError):
-    return PlainTextResponse(str(exc), status_code=404)
-
-
-@app.exception_handler(NoDataToCrawlError)
-async def no_data_to_crawl_handler(_, exc: NoDataToCrawlError):
-    return PlainTextResponse(str(exc), status_code=400)
-
-
-@app.exception_handler(NoDataToExportError)
-async def no_data_to_export_handler(_, exc: NoDataToExportError):
-    return PlainTextResponse(str(exc), status_code=404)
-
-
-@app.exception_handler(NoSuchExportJobError)
-async def no_such_export_job_handler(_, exc: NoSuchExportJobError):
-    return PlainTextResponse(str(exc), status_code=404)
-
-
-@app.exception_handler(ExportJobPreparationError)
-async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(ImportJobPreparationError)
-async def import_job_preparation_error_handler(_, exc: ImportJobPreparationError):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(NoSuchObjectInElasticSearchError)
-async def no_such_object_in_es_error_handler(_, exc: NoSuchObjectInElasticSearchError):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(SourceDocumentNotFoundInFilesystemError)
-async def source_document_not_found_in_filesystem_error_handler(
-    _, exc: SourceDocumentNotFoundInFilesystemError
-):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(SourceDocumentPreprocessingUnfinishedError)
-async def source_document_preprocessing_unfinished_error_handler(
-    _, exc: SourceDocumentPreprocessingUnfinishedError
-):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(FileNotFoundInFilesystemError)
-async def file_not_found_in_filesystem_error_handler(
-    _, exc: FileNotFoundInFilesystemError
-):
-    return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.exception_handler(FileAlreadyExistsInFilesystemError)
-async def file_already_exists_in_filesystem_error_handler(
-    _, exc: FileAlreadyExistsInFilesystemError
-):
-    return PlainTextResponse(str(exc), status_code=406)
+# import & register all endpoints dynamically
+endpoint_modules = import_by_suffix("_endpoint.py")
+endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
+for em in endpoint_modules:
+    app.include_router(em.router)
 
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(_, exc: IntegrityError):
+    logger.exception(exc)
     if isinstance(exc.orig, UniqueViolation):
         msg = str(exc.orig.pgerror).split("\n")[1]
         return PlainTextResponse(msg, status_code=409)
@@ -200,26 +128,15 @@ async def integrity_error_handler(_, exc: IntegrityError):
         return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(ForbiddenError)
-def forbidden_error_handler(_, exc: ForbiddenError):
-    return PlainTextResponse(str(exc), status_code=403)
+@app.exception_handler(NoSuchJobError)
+async def no_such_job_error_handler(_, exc: NoSuchJobError):
+    logger.exception(exc)
+    return PlainTextResponse(str(exc), status_code=404)
 
 
-@app.exception_handler(InvalidError)
-def invalid_error_handler(_, exc: InvalidError):
-    return PlainTextResponse(str(exc), status_code=HTTPStatus.BAD_REQUEST)
-
-
-# import & register all exception handlers dynamically
-exception_hanlders = import_by_suffix("_exception_handler.py")
-for eh in exception_hanlders:
-    eh.register_exception_handlers(app)
-
-# import & register all endpoints dynamically
-endpoint_modules = import_by_suffix("_endpoint.py")
-endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
-for em in endpoint_modules:
-    app.include_router(em.router)
+# register all exception handlers in fastAPI
+for ex_class, handler_func in exception_handlers:
+    app.add_exception_handler(ex_class, handler_func)
 
 
 def main() -> None:

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
 from core.tag.tag_orm import TagORM
-from modules.eximport.no_data_export_error import NoDataToExportError
+from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.tags.tag_export_schema import TagExportCollection, TagExportSchema
 from repos.filesystem_repo import FilesystemRepo
 
