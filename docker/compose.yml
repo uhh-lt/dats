@@ -163,6 +163,8 @@ services:
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
       RQ_WORKERS_API: ${RQ_WORKERS_API?rq-workers-api-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
+      POSTGRES_POOL_SIZE: ${RQ_POSTGRES_POOL_SIZE?rq-postgres-pool-size-required!}
+      POSTGRES_MAX_OVERFLOW: ${RQ_POSTGRES_MAX_OVERFLOW?rq-postgres-max-overflow-required!}
     volumes:
       - ./backend_repo:/tmp/dats
       - ./rq_cpu_cache:/cache
@@ -181,6 +183,8 @@ services:
       <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
+      POSTGRES_POOL_SIZE: ${RQ_POSTGRES_POOL_SIZE?rq-postgres-pool-size-required!}
+      POSTGRES_MAX_OVERFLOW: ${RQ_POSTGRES_MAX_OVERFLOW?rq-postgres-max-overflow-required!}
     volumes:
       - ./backend_repo:/tmp/dats
       - ./rq_gpu_cache:/cache
@@ -227,6 +231,8 @@ services:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
       LOG_LEVEL: ${API_LOG_LEVEL?api-log-level-required!}
+      POSTGRES_POOL_SIZE: ${BACKEND_POSTGRES_POOL_SIZE?backend-postgres-pool-size-required!}
+      POSTGRES_MAX_OVERFLOW: ${BACKEND_POSTGRES_MAX_OVERFLOW?backend-postgres-max-overflow-required!}
     volumes:
       - ./backend_repo:/tmp/dats
       - ./api_cache:/cache
