@@ -21,8 +21,8 @@ class SQLRepo(metaclass=SingletonMeta):
             engine = create_engine(
                 db_uri,
                 pool_pre_ping=True,
-                pool_size=conf.postgres.pool.pool_size,
-                max_overflow=conf.postgres.pool.max_overflow,
+                pool_size=int(conf.postgres.pool.pool_size),
+                max_overflow=int(conf.postgres.pool.max_overflow),
                 echo=kwargs["echo"] if "echo" in kwargs else False,
             )
             logger.info("Successfully established connection to PostgresSQL!")
