@@ -1,5 +1,5 @@
 import { MenuItem, TextField } from "@mui/material";
-import { ChangeEvent, memo, useCallback, useState } from "react";
+import { ChangeEvent, KeyboardEvent, memo, useCallback, useState } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
 import CodeRenderer from "../../../Code/CodeRenderer.tsx";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
@@ -14,6 +14,10 @@ const SpanAnnotationValueSelector = memo(({ filterExpression, onChangeValue }: S
     }
     return ["-1", ""];
   });
+
+  const handleEventStopPropagation = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+  }, []);
 
   const handleCodeValueChange = useCallback(
     (codeId: string) => {
@@ -70,7 +74,15 @@ const SpanAnnotationValueSelector = memo(({ filterExpression, onChangeValue }: S
           </MenuItem>
         ))}
       </TextField>
-      <TextField type="text" value={value[1]} onChange={handleTextChange} label="Text" variant="standard" fullWidth />
+      <TextField
+        type="text"
+        value={value[1]}
+        onChange={handleTextChange}
+        label="Text"
+        variant="standard"
+        fullWidth
+        onKeyDown={handleEventStopPropagation}
+      />
     </>
   );
 });
