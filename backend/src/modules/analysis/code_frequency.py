@@ -17,17 +17,14 @@ from core.project.project_crud import crud_project
 from modules.analysis.analysis_dto import CodeFrequency, CodeOccurrence
 
 
-def find_code_frequencies(
-    db: Session,
-    project_id: int,
-    user_ids: list[int],
-    code_ids: list[int],
-    doctypes: list[DocType],
-) -> list[CodeFrequency]:
+def __find_code_children(
+    db: Session, project_id: int, code_ids: list[int]
+) -> list[list[int]]:
     # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
     proj_db_obj = crud_project.read(db=db, id=project_id)
     all_codes = [code for code in proj_db_obj.codes if code.enabled]
 
+    # build a parent_id to child_ids mapping
     parent_code_id2child_code_ids = {}
     for code in all_codes:
         if code.parent_id not in parent_code_id2child_code_ids:
@@ -47,6 +44,19 @@ def find_code_frequencies(
             group.extend(b)
             a = b
         child_code_id_groups.append(group)
+
+    return child_code_id_groups
+
+
+def find_code_frequencies(
+    db: Session,
+    project_id: int,
+    user_ids: list[int],
+    code_ids: list[int],
+    doctypes: list[DocType],
+) -> list[CodeFrequency]:
+    # 1. find the children of all codes of interest
+    child_code_id_groups = __find_code_children(db, project_id, code_ids)
 
     # 2. query all span annotation occurrences of the codes of interest
     codes_of_interest = [
@@ -144,9 +154,19 @@ def find_code_frequencies(
 
 
 def find_code_occurrences(
-    db: Session, project_id: int, user_ids: list[int], code_id: int
+    db: Session,
+    project_id: int,
+    user_ids: list[int],
+    code_id: int,
+    return_children: bool = False,
 ) -> list[CodeOccurrence]:
-    # 1. query all span annotation occurrences of the code
+    filter_code_ids = [code_id]
+    if return_children:
+        # 1. find the children of all codes of interest
+        child_codes = __find_code_children(db, project_id, [code_id])[0]
+        filter_code_ids.extend(child_codes)
+
+    # 2. query all span annotation occurrences of the code
     query = (
         db.query(
             SourceDocumentORM,
@@ -170,7 +190,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id == code_id,
+            CodeORM.id.in_(filter_code_ids),
         )
     )
     query = query.group_by(SourceDocumentORM.id, CodeORM.id, SpanTextORM.text)
@@ -214,7 +234,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id == code_id,
+            CodeORM.id.in_(filter_code_ids),
         )
     )
     query = query.group_by(
@@ -266,7 +286,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id == code_id,
+            CodeORM.id.in_(filter_code_ids),
         )
     )
     query = query.group_by(

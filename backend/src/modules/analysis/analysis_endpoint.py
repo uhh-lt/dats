@@ -59,12 +59,17 @@ def code_occurrences(
     project_id: int,
     user_ids: list[int],
     code_id: int,
+    return_children: bool,
     authz_user: AuthzUser = Depends(),
 ) -> list[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
 
     return find_code_occurrences(
-        db=db, project_id=project_id, user_ids=user_ids, code_id=code_id
+        db=db,
+        project_id=project_id,
+        user_ids=user_ids,
+        code_id=code_id,
+        return_children=return_children,
     )
 
 
