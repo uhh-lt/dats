@@ -43,10 +43,12 @@ export class AnalysisService {
   public static codeOccurrences({
     projectId,
     codeId,
+    returnChildren,
     requestBody,
   }: {
     projectId: number;
     codeId: number;
+    returnChildren: boolean;
     requestBody: Array<number>;
   }): CancelablePromise<Array<CodeOccurrence>> {
     return __request(OpenAPI, {
@@ -55,6 +57,7 @@ export class AnalysisService {
       query: {
         project_id: projectId,
         code_id: codeId,
+        return_children: returnChildren,
       },
       body: requestBody,
       mediaType: "application/json",

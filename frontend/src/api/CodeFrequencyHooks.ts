@@ -19,14 +19,20 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
       }),
   });
 
-const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | null | undefined) =>
+const useCodeOccurrences = (
+  projectId: number,
+  userIds: number[],
+  codeId: number | null | undefined,
+  returnChildren: boolean,
+) =>
   useQuery<CodeOccurrence[], Error>({
-    queryKey: [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId],
+    queryKey: [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId, returnChildren],
     queryFn: () =>
       AnalysisService.codeOccurrences({
         projectId,
         codeId: codeId!,
         requestBody: userIds,
+        returnChildren,
       }),
     enabled: userIds.length > 0 && !!codeId,
   });

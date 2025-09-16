@@ -55,7 +55,13 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
+          { "name": "code_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "Code Id" } },
+          {
+            "name": "return_children",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Return Children" }
+          }
         ],
         "requestBody": {
           "required": true,

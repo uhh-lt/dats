@@ -1,4 +1,4 @@
-import { CardContent, CardHeader } from "@mui/material";
+import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -53,11 +53,17 @@ interface CodeOccurrenceTableProps {
 }
 
 function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTableProps) {
+  // with children toggle
+  const [withChildren, setWithChildren] = React.useState(false);
+  const handleWithChildrenChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setWithChildren(event.target.checked);
+  };
+
   // global server state (react-query)
   const code = CodeHooks.useGetCode(codeId);
 
   // computed
-  const codeOccurrences = AnalysisHooks.useCodeOccurrences(projectId, userIds, codeId);
+  const codeOccurrences = AnalysisHooks.useCodeOccurrences(projectId, userIds, codeId, withChildren);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -90,6 +96,16 @@ function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTable
         <MRT_ToggleFiltersButton table={table} />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
+      </>
+    ),
+    renderTopToolbarCustomActions: () => (
+      <>
+        <FormGroup>
+          <FormControlLabel
+            control={<Switch checked={withChildren} onChange={handleWithChildrenChange} />}
+            label="Show Children?"
+          />
+        </FormGroup>
       </>
     ),
     // mui components
