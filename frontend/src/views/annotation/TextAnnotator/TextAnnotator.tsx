@@ -234,6 +234,24 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       },
     );
   };
+  const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, code: CodeRead) => {
+    if ("id" in annotation && "begin_token" in annotation && "end_token" in annotation) {
+      const fakeAnnotation: SpanAnnotationCreate = {
+        begin: annotation.begin,
+        end: annotation.end,
+        begin_token: annotation.begin_token,
+        end_token: annotation.end_token,
+        span_text: annotation.text,
+        sdoc_id: annotation.sdoc_id,
+        code_id: code.id,
+      };
+      createMutation.mutate(fakeAnnotation, {
+        onSuccess: () => {
+          dispatch(AnnoActions.moveCodeToTop(code));
+        },
+      });
+    }
+  };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i am about to create an annotation
     if (fakeAnnotation) {
@@ -262,6 +280,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         onClose={handleCodeSelectorClose}
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
+        onDuplicate={handleCodeSelectorDuplicateAnnotation}
       />
       <DocumentRenderer
         className="myFlexFillAllContainer"

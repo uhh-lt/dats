@@ -1,5 +1,3 @@
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import {
   Autocomplete,
   Box,
@@ -25,6 +23,7 @@ import MemoButton from "../../../components/Memo/MemoButton.tsx";
 import { CodeReadWithLevel } from "../../../components/TreeExplorer/CodeReadWithLevel.ts";
 import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { Annotation, Annotations } from "../Annotation.ts";
 import { ICode } from "../ICode.ts";
 import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
@@ -36,6 +35,7 @@ interface CodeSelectorProps {
   onAdd?: (code: CodeRead, isNewCode: boolean) => void;
   onEdit?: (annotationToEdit: Annotation, newCode: ICode) => void;
   onDelete?: (annotationToDelete: Annotation) => void;
+  onDuplicate?: (annotationToDuplicate: Annotation, currentCode: CodeRead) => void;
 }
 
 export interface CodeSelectorHandle {
@@ -48,7 +48,7 @@ interface ICodeFilterWithLevel extends CodeReadWithLevel {
 }
 
 const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
-  ({ onClose, onAdd, onEdit, onDelete }, ref) => {
+  ({ onClose, onAdd, onEdit, onDelete, onDuplicate }, ref) => {
     const dispatch = useAppDispatch();
 
     // local client state
@@ -58,6 +58,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [isAutoCompleteOpen, setIsAutoCompleteOpen] = useState(false);
     const [annotationsToEdit, setAnnotationsToEdit] = useState<Annotations | undefined>(undefined);
     const [editingAnnotation, setEditingAnnotation] = useState<Annotation | undefined>(undefined);
+    const [duplicatingAnnotation, setDuplicatingAnnotation] = useState<Annotation | undefined>(undefined);
     const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilterWithLevel | null>(null);
 
     // computed
@@ -80,6 +81,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     // methods
     const openCodeSelector = (position: PopoverPosition, annotations?: Annotations) => {
       setEditingAnnotation(undefined);
+      setDuplicatingAnnotation(undefined);
       setAnnotationsToEdit(annotations);
       setShowCodeSelection(annotations === undefined);
       setIsPopoverOpen(true);
@@ -140,12 +142,21 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       closeCodeSelector();
     };
 
+    const handleDuplicate = (annotation: Annotation, code: CodeRead) => {
+      setAutoCompleteValue({ data: code, title: code.name, level: 0 });
+      setShowCodeSelection(true);
+      setDuplicatingAnnotation(annotation);
+    };
+
     // submit the code selector (either we edited or created a new code)
     const submit = (code: CodeRead, isNewCode: boolean) => {
+      console.log("HI THIS IS TIM!", editingAnnotation);
       // when the user selected an annotation to edit, we were editing
       if (editingAnnotation !== undefined) {
         if (onEdit) onEdit(editingAnnotation, code);
         // otherwise, we opened this to add a new code
+      } else if (duplicatingAnnotation !== undefined) {
+        if (onDuplicate) onDuplicate(duplicatingAnnotation, code);
       } else {
         if (onAdd) onAdd(code, isNewCode);
       }
@@ -177,6 +188,7 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 handleDelete={handleDelete}
                 handleEdit={handleEdit}
                 handleOpenMemo={closeCodeSelector}
+                handleDuplicate={handleDuplicate}
               />
             ))}
           </List>
@@ -253,6 +265,7 @@ interface CodeSelectorListItemProps {
   handleOpenMemo: () => void;
   handleDelete: (annotationToDelete: Annotation) => void;
   handleEdit: (annotationToEdit: Annotation, newCode: CodeRead) => void;
+  handleDuplicate: (annotationToEdit: Annotation, currentCode: CodeRead) => void;
 }
 
 const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationRead => {
@@ -269,6 +282,7 @@ function CodeSelectorListItem({
   handleOpenMemo,
   handleEdit,
   handleDelete,
+  handleDuplicate,
 }: CodeSelectorListItemProps) {
   // global server state (react query)
   const code = CodeHooks.useGetCode(codeId);
@@ -302,13 +316,14 @@ function CodeSelectorListItem({
             />
           )}
           <Tooltip title="Delete">
-            <IconButton onClick={() => handleDelete(annotation)}>
-              <DeleteIcon />
-            </IconButton>
+            <IconButton onClick={() => handleDelete(annotation)}>{getIconComponent(Icon.DELETE)}</IconButton>
           </Tooltip>
           <Tooltip title="Edit">
-            <IconButton edge="end" onClick={() => handleEdit(annotation, code.data)}>
-              <EditIcon />
+            <IconButton onClick={() => handleEdit(annotation, code.data)}>{getIconComponent(Icon.EDIT)}</IconButton>
+          </Tooltip>
+          <Tooltip title="Duplicate">
+            <IconButton edge="end" onClick={() => handleDuplicate(annotation, code.data)}>
+              {getIconComponent(Icon.DUPLICATE)}
             </IconButton>
           </Tooltip>
         </ListItem>
