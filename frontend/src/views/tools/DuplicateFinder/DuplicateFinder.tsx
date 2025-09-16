@@ -129,6 +129,7 @@ function ProjectDuplicateDocuments() {
 
     return { data: result, rowCount: result.reduce((acc, group) => acc + group.subRows.length, 0) };
   }, [duplicateFinderJob.data]);
+  console.log(data);
 
   const isLoading =
     isPending ||
@@ -150,7 +151,7 @@ function ProjectDuplicateDocuments() {
     rowVirtualizerOptions: { overscan: 4 },
     // selection
     enableRowSelection(row) {
-      return row.original.subRows.length === 0; //only allow selection of leaf rows
+      return row.subRows?.length === 0; //only allow selection of leaf rows
     },
     onRowSelectionChange: setRowSelection, //connect internal row selection state to your own
     state: {
