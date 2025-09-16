@@ -26,8 +26,8 @@ export function buildWithLevel<T extends NamedObjWithParent>(
  * Hook to transform a flat list of tags into a hierarchical structure
  */
 
-export function useWithLevel<T extends NamedObjWithParent>(data: T[]) {
+export function useWithLevel<T extends NamedObjWithParent>(data: T[], rootNodeId: number | null = null) {
   return useMemo(() => {
-    return buildWithLevel(data, null, 0);
-  }, [data]);
+    return buildWithLevel(data, rootNodeId);
+  }, [data, rootNodeId]);
 }

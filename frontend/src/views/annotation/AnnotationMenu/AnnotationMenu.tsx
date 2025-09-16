@@ -62,7 +62,8 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
     // computed
     const codes = useComputeCodesForSelection();
-    const codeTree = useWithLevel(codes);
+    const codeTree = useWithLevel(codes, codes[0]?.parent_id ?? null);
+    console.log(codeTree);
     const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
       return codeTree.map((c) => ({
         ...c,
