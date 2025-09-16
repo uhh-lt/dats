@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
@@ -16,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.main import run
 
-from common.exception_handler import exception_handlers
+from common.exception_handler import exception_handler, exception_handlers
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.llm_repo import LLMRepo
 from utils.import_utils import import_by_suffix
@@ -118,21 +117,16 @@ for em in endpoint_modules:
     app.include_router(em.router)
 
 
-@app.exception_handler(IntegrityError)
-async def integrity_error_handler(_, exc: IntegrityError):
-    logger.exception(exc)
-    if isinstance(exc.orig, UniqueViolation):
-        msg = str(exc.orig.pgerror).split("\n")[1]
-        return PlainTextResponse(msg, status_code=409)
-    else:
-        return PlainTextResponse(str(exc), status_code=500)
+exception_handler(
+    http_status_code=lambda exc: 409
+    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+    else 500,
+    extract_message=lambda exc: str(exc.orig.pgerror).split("\n")[1]
+    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+    else str(exc),
+)(IntegrityError)
 
-
-@app.exception_handler(NoSuchJobError)
-async def no_such_job_error_handler(_, exc: NoSuchJobError):
-    logger.exception(exc)
-    return PlainTextResponse(str(exc), status_code=404)
-
+exception_handler(404)(NoSuchJobError)
 
 # register all exception handlers in fastAPI
 for ex_class, handler_func in exception_handlers:
