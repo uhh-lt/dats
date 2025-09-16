@@ -79,8 +79,12 @@ function DocumentRenderer({
 
   const basicProcessingInstructions = useCallback(
     (options: HTMLReactParserOptions) => (domNode: Element) => {
+      // links
+      if (!isViewer && domNode.name === "a" && domNode.attribs.href) {
+        return <>{domToReact(domNode.children as DOMNode[], options)}</>;
+      }
       // images
-      if (domNode.name === "img" && domNode.attribs.src) {
+      else if (domNode.name === "img" && domNode.attribs.src) {
         const filename = domNode.attribs.src;
         return <SdocImage key={`image-link-${filename}`} filename={filename} projectId={projectId} />;
       }
