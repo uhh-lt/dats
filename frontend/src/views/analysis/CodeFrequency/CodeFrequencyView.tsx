@@ -35,6 +35,28 @@ interface CodeFrequencyViewProps {
   data: Node<ITree<CodeRead>>;
 }
 
+import type { TooltipProps } from "recharts";
+
+function CustomTooltip(props: TooltipProps<number, string>) {
+  const { active, payload, label } = props;
+  const isVisible = !!active && !!payload && payload.length > 0;
+
+  return (
+    <Card style={{ visibility: isVisible ? "visible" : "hidden", margin: "8px" }}>
+      {isVisible && (
+        <CardContent style={{ padding: "8px" }}>
+          <p>{label ?? "No Label"}</p>
+          <p>
+            Count: {payload?.[0]?.payload.count}
+            <br />
+            Total Count: {payload?.[0]?.payload.total_count}
+          </p>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode }: CodeFrequencyViewProps) {
   // local state
   const [selectedData, setSelectedData] = useState<Node<ITree<CodeRead>>>();
@@ -95,7 +117,7 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
                   <ChartTooltip />
                   <Pie
                     data={chartData.data}
-                    dataKey={(obj) => obj.count}
+                    dataKey={(obj) => obj.total_count}
                     nameKey={(obj) => codeId2Code.get(obj.code_id)?.name || "Error: Code not found"}
                     cx="50%"
                     cy="50%"
@@ -125,15 +147,15 @@ function CodeFrequencyView({ projectId, userIds, docTypes, data, setSelectedCode
                     height={100}
                   />
                   <YAxis
-                    dataKey={(codeFrequency) => codeFrequency.count}
+                    dataKey={(codeFrequency) => codeFrequency.total_count}
                     scale="log"
                     interval={"preserveEnd"}
                     domain={[0.5, "auto"]}
                     allowDataOverflow
                   />
                   <CartesianGrid stroke="#eee" />
-                  <ChartTooltip />
-                  <Bar dataKey={(codeFrequency) => codeFrequency.count} fill="#8884d8" onClick={handleClick}>
+                  <ChartTooltip content={CustomTooltip} />
+                  <Bar dataKey={(codeFrequency) => codeFrequency.total_count} fill="#8884d8" onClick={handleClick}>
                     {chartData.data.map((codeFrequency) => (
                       <Cell
                         key={`codecell-${codeFrequency.code_id}`}

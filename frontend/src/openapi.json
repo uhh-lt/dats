@@ -8011,10 +8011,20 @@
       "CodeFrequency": {
         "properties": {
           "code_id": { "type": "integer", "title": "Code Id", "description": "The id of the code." },
-          "count": { "type": "integer", "title": "Count", "description": "The number of occurrences of the code." }
+          "count": { "type": "integer", "title": "Count", "description": "The number of occurrences of the code." },
+          "child_count": {
+            "type": "integer",
+            "title": "Child Count",
+            "description": "The number of occurrences of all child codes of the code."
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count",
+            "description": "The total number of occurrences of the code and all its child codes."
+          }
         },
         "type": "object",
-        "required": ["code_id", "count"],
+        "required": ["code_id", "count", "child_count", "total_count"],
         "title": "CodeFrequency"
       },
       "CodeNodeData": {
