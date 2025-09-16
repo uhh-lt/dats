@@ -181,11 +181,16 @@ def find_sdocs(
     # 2. the sdoc folders
     folder_ids = [sdoc.folder_id for sdoc in sdoc_db_objs if sdoc.folder_id is not None]
     folders = crud_folder.read_by_ids(db=db, ids=list(set(folder_ids)))
+    # sort the folders, so that they are in the same order as folder_ids (which have the correct order, as the sdoc_ids)
+    folder_dict = {folder.id: folder for folder in folders}
+    folders = [
+        folder_dict[folder_id] for folder_id in folder_ids if folder_id in folder_dict
+    ]
 
-    # 2. the annotators
+    # 3. the annotators
     annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)
 
-    # 3. the tags
+    # 4. the tags
     tags = crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids)
 
     # construct the nested result object
