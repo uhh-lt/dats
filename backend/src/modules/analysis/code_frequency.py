@@ -35,25 +35,27 @@ def find_code_frequencies(
         parent_code_id2child_code_ids[code.parent_id].append(code.id)
 
     # bfs to find all children of the given codes
-    result = []
+    child_code_id_groups = []
     for code_id in code_ids:
         group = []
         a = [code_id]
         while len(a) > 0:
-            group.extend(a)
             b = []
             for code_id in a:
                 if code_id in parent_code_id2child_code_ids:
                     b.extend(parent_code_id2child_code_ids[code_id])
+            group.extend(b)
             a = b
-        result.append(group)
+        child_code_id_groups.append(group)
 
     # 2. query all span annotation occurrences of the codes of interest
-    codes_of_interest = [code_id for group in result for code_id in group]
+    codes_of_interest = [
+        code_id for group in child_code_id_groups for code_id in group
+    ] + code_ids
     query = (
         db.query(
             SpanAnnotationORM.code_id,
-            SpanAnnotationORM.id,
+            func.count(SpanAnnotationORM.id),
         )
         .join(
             AnnotationDocumentORM,
@@ -63,6 +65,7 @@ def find_code_frequencies(
             SourceDocumentORM,
             SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
         )
+        .group_by(SpanAnnotationORM.code_id)
     )
     # noinspection PyUnresolvedReferences
     query = query.filter(
@@ -76,7 +79,7 @@ def find_code_frequencies(
     query = (
         db.query(
             SentenceAnnotationORM.code_id,
-            SentenceAnnotationORM.id,
+            func.count(SentenceAnnotationORM.id),
         )
         .join(
             AnnotationDocumentORM,
@@ -86,6 +89,7 @@ def find_code_frequencies(
             SourceDocumentORM,
             SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
         )
+        .group_by(SentenceAnnotationORM.code_id)
     )
     # noinspection PyUnresolvedReferences
     query = query.filter(
@@ -99,7 +103,7 @@ def find_code_frequencies(
     query = (
         db.query(
             BBoxAnnotationORM.code_id,
-            BBoxAnnotationORM.id,
+            func.count(BBoxAnnotationORM.id),
         )
         .join(
             AnnotationDocumentORM,
@@ -109,6 +113,7 @@ def find_code_frequencies(
             SourceDocumentORM,
             SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
         )
+        .group_by(BBoxAnnotationORM.code_id)
     )
     # noinspection PyUnresolvedReferences
     query = query.filter(
@@ -120,13 +125,22 @@ def find_code_frequencies(
 
     # 4. count & aggregate the occurrences of each code and their children
     res = span_res + bbox_res + sent_res
-    return [
-        CodeFrequency(
-            code_id=code_id,
-            count=len([x for x in res if x[0] in result[idx]]),
+    res_dict = {code_id: count for code_id, count in res}
+
+    results: list[CodeFrequency] = []
+    for code_id, group in zip(code_ids, child_code_id_groups):
+        count = res_dict.get(code_id, 0)
+        child_count = sum([res_dict.get(cid, 0) for cid in group])
+        results.append(
+            CodeFrequency(
+                code_id=code_id,
+                total_count=count + child_count,
+                count=count,
+                child_count=child_count,
+            )
         )
-        for idx, code_id in enumerate(code_ids)
-    ]
+
+    return results
 
 
 def find_code_occurrences(

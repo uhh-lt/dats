@@ -26,6 +26,12 @@ class CodeOccurrence(BaseModel):
 class CodeFrequency(BaseModel):
     code_id: int = Field(description="The id of the code.")
     count: int = Field(description="The number of occurrences of the code.")
+    child_count: int = Field(
+        description="The number of occurrences of all child codes of the code."
+    )
+    total_count: int = Field(
+        description="The total number of occurrences of the code and all its child codes."
+    )
 
 
 class SampledSdocsResults(BaseModel):
