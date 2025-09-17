@@ -4,7 +4,7 @@ from os import environ
 
 import redis
 from loguru import logger
-from rq import SimpleWorker
+from rq import SimpleWorker, Worker
 from rq.worker_pool import WorkerPool
 
 from config import conf
@@ -97,7 +97,7 @@ def create_pool(queue_name: str, num_workers: int):
         queues,
         connection=redis_conn,
         num_workers=num_workers,
-        worker_class=SimpleWorker,
+        worker_class=Worker if "gpu" == queue_name else SimpleWorker,
     )
     worker.start()
 

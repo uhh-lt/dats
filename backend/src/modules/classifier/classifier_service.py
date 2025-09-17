@@ -58,6 +58,8 @@ class ClassifierService(metaclass=SingletonMeta):
     ) -> ClassifierJobOutput:
         import torch
 
+        torch.set_float32_matmul_precision("medium")
+
         job.update(
             current_step=0,
             status_message="Started ClassifierJob!",
