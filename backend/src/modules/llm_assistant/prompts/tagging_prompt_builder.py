@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
+from modules.llm_assistant.llm_job_dto import LLMPromptTemplates, TaggingParams
+from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
 
 
 class LLMParsedTaggingResult(BaseModel):
@@ -75,13 +76,31 @@ class TaggingPromptBuilder(PromptBuilder):
         "de": de_example_tempalate.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
-        super().__init__(db, project_id, is_fewshot)
-
+    def __init__(
+        self,
+        db: Session,
+        project_id: int,
+        is_fewshot: bool,
+        # either prompt templates are provided
+        prompt_templates: list[LLMPromptTemplates] | None = None,
+        # or the parameters to build them
+        params: TaggingParams | None = None,
+        example_ids: list[int] | None = None,
+    ):
         project = crud_project.read(db=db, id=project_id)
         self.tags = project.tags
         self.tagid2tag = {tag.id: tag for tag in self.tags}
         self.tagname2id_dict = {tag.name.lower(): tag.id for tag in self.tags}
+
+        super().__init__(
+            db,
+            project_id,
+            is_fewshot=is_fewshot,
+            valid_data_tags=[DataTag.DOCUMENT],
+            prompt_templates=prompt_templates,
+            params=params,
+            example_ids=example_ids,
+        )
 
     def _build_example(self, language: str, tag_id: int) -> str:
         tag = self.tagid2tag[tag_id]
@@ -89,18 +108,22 @@ class TaggingPromptBuilder(PromptBuilder):
         return self.example_templates[language].format(tag.name, tag.name)
 
     def _build_user_prompt_template(
-        self, *, language: str, tag_ids: list[int], **kwargs
+        self,
+        *,
+        language: str,
+        example_ids: list[int] | None = None,
+        params: TaggingParams,
     ) -> str:
         # create task data (the list of tags to use for classification)
         task_data = "\n".join(
             [
                 f"{self.tagid2tag[tag_id].name} - {self.tagid2tag[tag_id].description}"
-                for tag_id in tag_ids
+                for tag_id in params.tag_ids
             ]
         )
 
         # create answer example
-        answer_example = self._build_example(language, tag_ids[0])
+        answer_example = self._build_example(language, params.tag_ids[0])
 
         return self.prompt_templates[language].format(task_data, answer_example)
 

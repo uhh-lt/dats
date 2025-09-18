@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Callable, Type
+from typing import Callable, Type, TypeVar
 
 from loguru import logger
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
@@ -14,6 +15,7 @@ from core.annotation.sentence_annotation_dto import (
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
@@ -71,6 +73,8 @@ from systems.job_system.job_dto import Job
 
 lac = conf.llm_assistant
 BATCH_SIZE = 32
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class LLMAssistantService(metaclass=SingletonMeta):
@@ -297,37 +301,56 @@ class LLMAssistantService(metaclass=SingletonMeta):
         if llm_prompt_builder is None:
             raise UnsupportedLLMJobTypeError(llm_job_params.llm_job_type)
 
-        # execute the the prompt builder with the provided specific parameters
+        # init the prompt builder with the provided specific parameters
+        # the init process will generate prompt templates
         prompt_builder = llm_prompt_builder(
             db=db,
             project_id=llm_job_params.project_id,
             is_fewshot=approach_type == ApproachType.LLM_FEW_SHOT,
-        )
-        return prompt_builder.build_prompt_templates(
+            params=llm_job_params.specific_task_parameters,
             example_ids=example_ids,
-            **llm_job_params.specific_task_parameters.model_dump(
-                exclude={"llm_job_type"}
-            ),
+        )
+        return list(prompt_builder.lang2prompt_templates.values())
+
+    def __process_batch(
+        self,
+        prompt_builder: PromptBuilder,
+        db: Session,
+        sdoc_ids: list[int],
+        sdoc_datas: list[SourceDocumentDataORM | None],
+        response_model: Type[T],
+    ) -> tuple[list[T], list[int]]:
+        # prepare batch messages
+        batch_messages: list[LLMMessage] = []
+        bm_sids: list[int] = []  # sdoc_id corresponding to each batch_message
+        for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
+            if sdoc_data is None:
+                raise ValueError(
+                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
+                )
+
+            # get language
+            language = crud_sdoc_meta.read_by_sdoc_and_key(
+                db=db, sdoc_id=sdoc_data.id, key="language"
+            ).str_value
+            if language is None:
+                raise ValueError(f"Document with ID {sdoc_id} has no language!")
+
+            # construct prompts
+            prompts = prompt_builder.build_prompt(
+                language=language,
+                sdoc_data=sdoc_data,
+            )
+            batch_messages.extend(prompts)
+            bm_sids.extend([sdoc_id] * len(prompts))
+
+        # prompt the model (batchwise)
+        responses = self.llm.llm_batch_chat(
+            messages=batch_messages,
+            response_model=response_model,
         )
 
-    def construct_prompt_dict(
-        self, prompts: list[LLMPromptTemplates], prompt_builder: PromptBuilder
-    ) -> dict[str, dict[str, str]]:
-        prompt_dict = {}
-        for prompt in prompts:
-            # validate prompts
-            if not prompt_builder.is_system_prompt_valid(
-                system_prompt=prompt.system_prompt
-            ):
-                raise ValueError("system prompt is not valid!")
-            if not prompt_builder.is_user_prompt_valid(user_prompt=prompt.user_prompt):
-                raise ValueError("User prompt is not valid!")
-
-            prompt_dict[prompt.language] = {
-                "system_prompt": prompt.system_prompt,
-                "user_prompt": prompt.user_prompt,
-            }
-        return prompt_dict
+        return responses, bm_sids
 
     def _llm_tagging(
         self,
@@ -354,11 +377,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             is_fewshot=isinstance(approach_parameters, FewShotParams),
-        )
-
-        # build prompt dict (to validate and access prompts by language and system / user)
-        prompt_dict = self.construct_prompt_dict(
-            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
+            prompt_templates=approach_parameters.prompts,
         )
 
         # read sdocs
@@ -379,49 +398,22 @@ class LLMAssistantService(metaclass=SingletonMeta):
             # batch data
             sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
             sdata = sdoc_datas[i : i + BATCH_SIZE]
+            sid2sdata = {
+                sdoc_data.id: sdoc_data for sdoc_data in sdata if sdoc_data is not None
+            }
 
-            # prepare batch messages
-            batch_messages: list[LLMMessage] = []
-            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
-                if sdoc_data is None:
-                    raise ValueError(
-                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
-                    )
-
-                # get language
-                language = crud_sdoc_meta.read_by_sdoc_and_key(
-                    db=db, sdoc_id=sdoc_data.id, key="language"
-                ).str_value
-
-                if (
-                    language is None
-                    or language not in prompt_builder.supported_languages
-                ):
-                    raise ValueError("Language not supported")
-
-                # construct prompts
-                system_prompt = prompt_builder.build_system_prompt(
-                    system_prompt_template=prompt_dict[language]["system_prompt"]
-                )
-                user_prompt = prompt_builder.build_user_prompt(
-                    user_prompt_template=prompt_dict[language]["user_prompt"],
-                    document=sdoc_data.content,
-                )
-                batch_messages.append(
-                    LLMMessage(
-                        system_prompt=system_prompt,
-                        user_prompt=user_prompt,
-                    )
-                )
-
-            # prompt the model (batchwise)
-            responses = self.llm.llm_batch_chat(
-                messages=batch_messages,
+            # process the batch with LLM
+            responses, response_sdoc_ids = self.__process_batch(
+                prompt_builder=prompt_builder,
+                db=db,
+                sdoc_ids=sids,
+                sdoc_datas=sdata,
                 response_model=LLMTaggingResult,
             )
 
             # parse the responses, preparing the suggested annotation creation
-            for response, sdoc_data in zip(responses, sdata):
+            for response, sdoc_id in zip(responses, response_sdoc_ids):
+                sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
 
                 # parse the response
@@ -477,11 +469,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             is_fewshot=isinstance(approach_parameters, FewShotParams),
-        )
-
-        # build prompt dict (to validate and access prompts by language and system / user)
-        prompt_dict = self.construct_prompt_dict(
-            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
+            prompt_templates=approach_parameters.prompts,
         )
 
         # read sdocs
@@ -502,49 +490,22 @@ class LLMAssistantService(metaclass=SingletonMeta):
             # batch data
             sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
             sdata = sdoc_datas[i : i + BATCH_SIZE]
+            sid2sdata = {
+                sdoc_data.id: sdoc_data for sdoc_data in sdata if sdoc_data is not None
+            }
 
-            # prepare batch messages
-            batch_messages: list[LLMMessage] = []
-            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
-                if sdoc_data is None:
-                    raise ValueError(
-                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
-                    )
-
-                # get language
-                language = crud_sdoc_meta.read_by_sdoc_and_key(
-                    db=db, sdoc_id=sdoc_data.id, key="language"
-                ).str_value
-
-                if (
-                    language is None
-                    or language not in prompt_builder.supported_languages
-                ):
-                    raise ValueError("Language not supported")
-
-                # construct prompts
-                system_prompt = prompt_builder.build_system_prompt(
-                    system_prompt_template=prompt_dict[language]["system_prompt"]
-                )
-                user_prompt = prompt_builder.build_user_prompt(
-                    user_prompt_template=prompt_dict[language]["user_prompt"],
-                    document=sdoc_data.content,
-                )
-                batch_messages.append(
-                    LLMMessage(
-                        system_prompt=system_prompt,
-                        user_prompt=user_prompt,
-                    )
-                )
-
-            # prompt the model (batchwise)
-            responses = self.llm.llm_batch_chat(
-                messages=batch_messages,
+            # process the batch with LLM
+            responses, response_sdoc_ids = self.__process_batch(
+                prompt_builder=prompt_builder,
+                db=db,
+                sdoc_ids=sids,
+                sdoc_datas=sdata,
                 response_model=LLMMetadataExtractionResults,
             )
 
             # transform the response
-            for response, sdoc_data in zip(responses, sdata):
+            for response, sdoc_id in zip(responses, response_sdoc_ids):
+                sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
 
                 suggested_metadata: list[SourceDocumentMetadataReadResolved] = []
@@ -626,13 +587,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             is_fewshot=isinstance(approach_parameters, FewShotParams),
+            prompt_templates=approach_parameters.prompts,
         )
         project_codes = prompt_builder.codeids2code_dict
-
-        # build prompt dict (to validate and access prompts by language and system / user)
-        prompt_dict = self.construct_prompt_dict(
-            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
-        )
 
         # read sdocs
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
@@ -653,50 +610,23 @@ class LLMAssistantService(metaclass=SingletonMeta):
             # batch data
             sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
             sdata = sdoc_datas[i : i + BATCH_SIZE]
+            sid2sdata = {
+                sdoc_data.id: sdoc_data for sdoc_data in sdata if sdoc_data is not None
+            }
 
-            # prepare batch messages
-            batch_messages: list[LLMMessage] = []
-            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
-                if sdoc_data is None:
-                    raise ValueError(
-                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
-                    )
-
-                # get language
-                language = crud_sdoc_meta.read_by_sdoc_and_key(
-                    db=db, sdoc_id=sdoc_data.id, key="language"
-                ).str_value
-
-                if (
-                    language is None
-                    or language not in prompt_builder.supported_languages
-                ):
-                    raise ValueError("Language not supported")
-
-                # construct prompts
-                system_prompt = prompt_builder.build_system_prompt(
-                    system_prompt_template=prompt_dict[language]["system_prompt"]
-                )
-                user_prompt = prompt_builder.build_user_prompt(
-                    user_prompt_template=prompt_dict[language]["user_prompt"],
-                    document=sdoc_data.content,
-                )
-                batch_messages.append(
-                    LLMMessage(
-                        system_prompt=system_prompt,
-                        user_prompt=user_prompt,
-                    )
-                )
-
-            # prompt the model (batchwise)
-            responses = self.llm.llm_batch_chat(
-                messages=batch_messages,
+            # process the batch with LLM
+            responses, response_sdoc_ids = self.__process_batch(
+                prompt_builder=prompt_builder,
+                db=db,
+                sdoc_ids=sids,
+                sdoc_datas=sdata,
                 response_model=LLMAnnotationResults,
             )
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SpanAnnotationRead] = []
-            for response, sdoc_data in zip(responses, sdata):
+            for response, sdoc_id in zip(responses, response_sdoc_ids):
+                sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
 
                 # parse the response
@@ -810,13 +740,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
             db=db,
             project_id=project_id,
             is_fewshot=is_fewshot,
+            prompt_templates=approach_parameters.prompts,
         )
         project_codes = prompt_builder.codeids2code_dict
-
-        # build prompt dict (to validate and access prompts by language and system / user)
-        prompt_dict = self.construct_prompt_dict(
-            prompts=approach_parameters.prompts, prompt_builder=prompt_builder
-        )
 
         # read sdocs
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
@@ -852,58 +778,23 @@ class LLMAssistantService(metaclass=SingletonMeta):
             # batch data
             sids = task_parameters.sdoc_ids[i : i + BATCH_SIZE]
             sdata = sdoc_datas[i : i + BATCH_SIZE]
+            sid2sdata = {
+                sdoc_data.id: sdoc_data for sdoc_data in sdata if sdoc_data is not None
+            }
 
-            # prepare batch messages
-            batch_messages: list[LLMMessage] = []
-            for idx, (sdoc_id, sdoc_data) in enumerate(zip(sids, sdata)):
-                if sdoc_data is None:
-                    raise ValueError(
-                        f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
-                    )
-
-                # get language
-                language = crud_sdoc_meta.read_by_sdoc_and_key(
-                    db=db, sdoc_id=sdoc_data.id, key="language"
-                ).str_value
-
-                if (
-                    language is None
-                    or language not in prompt_builder.supported_languages
-                ):
-                    raise ValueError("Language not supported")
-
-                # construct prompts
-                system_prompt = prompt_builder.build_system_prompt(
-                    system_prompt_template=prompt_dict[language]["system_prompt"]
-                )
-                # we need to provide document sentence by sentence for sentence annotation
-                document_sentences = "\n".join(
-                    [
-                        f"{idx + 1}: {sentence}"
-                        for idx, sentence in enumerate(sdoc_data.sentences)
-                    ]
-                )
-                num_sentences = len(sdoc_data.sentences)
-                user_prompt = prompt_builder.build_user_prompt(
-                    user_prompt_template=prompt_dict[language]["user_prompt"],
-                    document=document_sentences,
-                )
-                batch_messages.append(
-                    LLMMessage(
-                        system_prompt=system_prompt,
-                        user_prompt=user_prompt,
-                    )
-                )
-
-            # prompt the model (batchwise)
-            responses = self.llm.llm_batch_chat(
-                messages=batch_messages,
+            # process the batch with LLM
+            responses, response_sdoc_ids = self.__process_batch(
+                prompt_builder=prompt_builder,
+                db=db,
+                sdoc_ids=sids,
+                sdoc_datas=sdata,
                 response_model=LLMSentenceAnnotationResults,
             )
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SentenceAnnotationCreate] = []
-            for response, sdoc_data in zip(responses, sdata):
+            for response, sdoc_id in zip(responses, response_sdoc_ids):
+                sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
                 num_sentences = len(sdoc_data.sentences)
 

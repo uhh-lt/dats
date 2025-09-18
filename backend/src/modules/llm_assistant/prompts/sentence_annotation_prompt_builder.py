@@ -5,9 +5,15 @@ from sqlalchemy.orm import Session
 
 from config import conf
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
 from core.user.user_crud import SYSTEM_USER_IDS
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
+from modules.llm_assistant.llm_job_dto import (
+    LLMPromptTemplates,
+    SentenceAnnotationParams,
+)
+from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
+from repos.llm_repo import LLMMessage
 
 sent_anno_conf = conf.llm_assistant.sentence_annotation
 
@@ -87,15 +93,67 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         "de": de_example_template.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
-        super().__init__(db, project_id, is_fewshot)
-
+    def __init__(
+        self,
+        db: Session,
+        project_id: int,
+        is_fewshot: bool,
+        # either prompt templates are provided
+        prompt_templates: list[LLMPromptTemplates] | None = None,
+        # or the parameters to build them
+        params: SentenceAnnotationParams | None = None,
+        example_ids: list[int] | None = None,
+    ):
         project = crud_project.read(db=db, id=project_id)
         self.db = db
         self.codes = project.codes
         self.codename2id_dict = {code.name.lower(): code.id for code in self.codes}
         self.codeid2name_dict = {code.id: code.name for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}
+
+        super().__init__(
+            db,
+            project_id,
+            is_fewshot=is_fewshot,
+            valid_data_tags=[DataTag.DOCUMENT, DataTag.SENTENCE],
+            prompt_templates=prompt_templates,
+            params=params,
+            example_ids=example_ids,
+        )
+
+    def build_prompt(
+        self, language: str, sdoc_data: SourceDocumentDataORM
+    ) -> list[LLMMessage]:
+        match self.data_tag:
+            case DataTag.DOCUMENT:
+                # we need to provide document sentence by sentence for sentence annotation
+                document_sentences = "\n".join(
+                    [
+                        f"{idx + 1}: {sentence}"
+                        for idx, sentence in enumerate(sdoc_data.sentences)
+                    ]
+                )
+                datas = [document_sentences]
+            case DataTag.SENTENCE:
+                datas = sdoc_data.sentences
+            case _:
+                raise ValueError(f"Data tag {self.data_tag} not supported!")  # type: ignore
+
+        messages: list[LLMMessage] = []
+        system_prompt = self._build_system_prompt(language)
+        for data in datas:
+            user_prompt = self._build_user_prompt(
+                language=language,
+                data=data,
+            )
+            messages.append(
+                LLMMessage(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                )
+            )
+
+        return messages
 
     def _build_example(self, language: str, code_ids: list[int]) -> str:
         examples: list[str] = []
@@ -119,9 +177,8 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
         self,
         *,
         language: str,
-        code_ids: list[int],
         example_ids: list[int] | None = None,
-        **kwargs,
+        params: SentenceAnnotationParams,
     ) -> str:
         if self.is_fewshot:
             from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -132,7 +189,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                 sentence_annotations = [
                     sa
                     for sa in crud_sentence_anno.read_by_codes(
-                        db=self.db, code_ids=code_ids
+                        db=self.db, code_ids=params.code_ids
                     )
                     if sa.user_id
                     not in SYSTEM_USER_IDS  # Filter out annotations of the system users
@@ -144,7 +201,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                 )
 
             code_id2sentence_annotations: dict[int, list[SentenceAnnotationORM]] = {
-                code_id: [] for code_id in code_ids
+                code_id: [] for code_id in params.code_ids
             }
             for sa in sentence_annotations:
                 if sa.code_id not in code_id2sentence_annotations:
@@ -185,17 +242,17 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                         ]
                     )
                     + "\n"
-                    for code_id in code_ids
+                    for code_id in params.code_ids
                 ]
             )
         else:
             task_data = "\n".join(
                 [
                     f"{self.codeids2code_dict[code_id].name}: {self.codeids2code_dict[code_id].description}"
-                    for code_id in code_ids
+                    for code_id in params.code_ids
                 ]
             )
-        answer_example = self._build_example(language, code_ids)
+        answer_example = self._build_example(language, params.code_ids)
         return self.prompt_templates[language].format(task_data, answer_example)
 
     def parse_result(

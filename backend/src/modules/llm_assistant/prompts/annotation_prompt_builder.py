@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
+from modules.llm_assistant.llm_job_dto import AnnotationParams, LLMPromptTemplates
+from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
 
 
 class LLMParsedAnnotationResult(BaseModel):
@@ -35,7 +36,7 @@ e.g.
 {}
 
 Document:
-<document>
+<sentence>
 
 Remember, you have to extract text passages that are relevant to the categories verbatim, do not generate passages!
 """
@@ -59,7 +60,7 @@ e.g.
 {}
 
 Dokument:
-<document>
+<sentence>
 
 Denke daran, dass du Textpassagen wörtlich extrahieren musst, die zu den Kategorien passen. Generiere keine neuen Textpassagen!
 """
@@ -81,9 +82,17 @@ class AnnotationPromptBuilder(PromptBuilder):
         "de": de_example_template.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
-        super().__init__(db, project_id, is_fewshot=is_fewshot)
-
+    def __init__(
+        self,
+        db: Session,
+        project_id: int,
+        is_fewshot: bool,
+        # either prompt templates are provided
+        prompt_templates: list[LLMPromptTemplates] | None = None,
+        # or the parameters to build them
+        params: AnnotationParams | None = None,
+        example_ids: list[int] | None = None,
+    ):
         project = crud_project.read(db=db, id=project_id)
         self.codes = project.codes
         self.codename2id_dict = {code.name.lower(): code.id for code in self.codes}
@@ -106,6 +115,16 @@ class AnnotationPromptBuilder(PromptBuilder):
                 )
         self.examples = examples
 
+        super().__init__(
+            db,
+            project_id,
+            is_fewshot=is_fewshot,
+            valid_data_tags=[DataTag.DOCUMENT, DataTag.SENTENCE],
+            prompt_templates=prompt_templates,
+            params=params,
+            example_ids=example_ids,
+        )
+
     def _build_example(self, language: str, code_ids: list[int]) -> str:
         examples: list[str] = []
         for code_id in code_ids:
@@ -120,15 +139,19 @@ class AnnotationPromptBuilder(PromptBuilder):
         return "\n".join(examples)
 
     def _build_user_prompt_template(
-        self, *, language: str, code_ids: list[int], **kwargs
+        self,
+        *,
+        language: str,
+        example_ids: list[int] | None = None,
+        params: AnnotationParams,
     ) -> str:
         task_data = "\n".join(
             [
                 f"{self.codeids2code_dict[code_id].name}: {self.codeids2code_dict[code_id].description}"
-                for code_id in code_ids
+                for code_id in params.code_ids
             ]
         )
-        answer_example = self._build_example(language, code_ids)
+        answer_example = self._build_example(language, params.code_ids)
         return self.prompt_templates[language].format(task_data, answer_example)
 
     def parse_result(

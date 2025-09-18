@@ -4,7 +4,11 @@ from sqlalchemy.orm import Session
 from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
+from modules.llm_assistant.llm_job_dto import (
+    LLMPromptTemplates,
+    MetadataExtractionParams,
+)
+from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
 
 
 class LLMMetadataExtractionResult(BaseModel):
@@ -65,9 +69,17 @@ class MetadataPromptBuilder(PromptBuilder):
         "de": de_prompt_template.strip(),
     }
 
-    def __init__(self, db: Session, project_id: int, is_fewshot: bool):
-        super().__init__(db, project_id, is_fewshot)
-
+    def __init__(
+        self,
+        db: Session,
+        project_id: int,
+        is_fewshot: bool,
+        # either prompt templates are provided
+        prompt_templates: list[LLMPromptTemplates] | None = None,
+        # or the parameters to build them
+        params: MetadataExtractionParams | None = None,
+        example_ids: list[int] | None = None,
+    ):
         project = crud_project.read(db=db, id=project_id)
         self.project_metadata = [
             ProjectMetadataRead.model_validate(pm) for pm in project.metadata_
@@ -78,6 +90,16 @@ class MetadataPromptBuilder(PromptBuilder):
         self.metadataname2metadata = {
             metadata.key.lower(): metadata for metadata in self.project_metadata
         }
+
+        super().__init__(
+            db,
+            project_id,
+            is_fewshot=is_fewshot,
+            valid_data_tags=[DataTag.DOCUMENT],
+            prompt_templates=prompt_templates,
+            params=params,
+            example_ids=example_ids,
+        )
 
     def _build_answer_template(self, project_metadata_ids: list[int]) -> str:
         # The example will be a list of metadata keys and some example values
@@ -120,16 +142,20 @@ class MetadataPromptBuilder(PromptBuilder):
         )
 
     def _build_user_prompt_template(
-        self, *, language: str, project_metadata_ids: list[int], **kwargs
+        self,
+        *,
+        language: str,
+        example_ids: list[int] | None = None,
+        params: MetadataExtractionParams,
     ) -> str:
         task_data = "\n".join(
             [
                 f"{self.metadataid2metadata[pmid].key} - {self.metadataid2metadata[pmid].description}"
-                for pmid in project_metadata_ids
+                for pmid in params.project_metadata_ids
             ]
         )
-        answer_template = self._build_answer_template(project_metadata_ids)
-        answer_example = self._build_example(project_metadata_ids)
+        answer_template = self._build_answer_template(params.project_metadata_ids)
+        answer_example = self._build_example(params.project_metadata_ids)
         return self.prompt_templates[language].format(
             task_data, answer_template, answer_example
         )
