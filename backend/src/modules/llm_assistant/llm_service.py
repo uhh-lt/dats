@@ -57,7 +57,7 @@ from modules.llm_assistant.prompts.metadata_prompt_builder import (
     LLMMetadataExtractionResults,
     MetadataPromptBuilder,
 )
-from modules.llm_assistant.prompts.prompt_builder import PromptBuilder
+from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
 from modules.llm_assistant.prompts.sentence_annotation_prompt_builder import (
     LLMSentenceAnnotationResults,
     SentenceAnnotationPromptBuilder,
@@ -319,10 +319,11 @@ class LLMAssistantService(metaclass=SingletonMeta):
         sdoc_ids: list[int],
         sdoc_datas: list[SourceDocumentDataORM | None],
         response_model: Type[T],
-    ) -> tuple[list[T], list[int]]:
+    ) -> tuple[list[T], list[int], list[int]]:
         # prepare batch messages
         batch_messages: list[LLMMessage] = []
         bm_sids: list[int] = []  # sdoc_id corresponding to each batch_message
+        bm_ids: list[int] = []  # message id corresponding to each batch_message
         for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
             if sdoc_data is None:
                 raise ValueError(
@@ -343,6 +344,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             )
             batch_messages.extend(prompts)
             bm_sids.extend([sdoc_id] * len(prompts))
+            bm_ids.extend(list(range(len(prompts))))
 
         # prompt the model (batchwise)
         responses = self.llm.llm_batch_chat(
@@ -350,7 +352,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             response_model=response_model,
         )
 
-        return responses, bm_sids
+        return responses, bm_sids, bm_ids
 
     def _llm_tagging(
         self,
@@ -403,7 +405,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids = self.__process_batch(
+            responses, response_sdoc_ids, _ = self.__process_batch(
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -495,7 +497,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids = self.__process_batch(
+            responses, response_sdoc_ids, _ = self.__process_batch(
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -615,7 +617,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids = self.__process_batch(
+            responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -625,9 +627,23 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SpanAnnotationRead] = []
-            for response, sdoc_id in zip(responses, response_sdoc_ids):
+            for response, sdoc_id, sentence_id in zip(
+                responses, response_sdoc_ids, response_sentence_ids
+            ):
                 sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
+
+                match prompt_builder.data_tag:
+                    case DataTag.SENTENCE:
+                        # the prompt was constructed per sentence, so we only annotate within this sentence only
+                        content = sdoc_data.sentences[sentence_id]
+                        start_offset = sdoc_data.sentence_starts[sentence_id]
+                    case DataTag.DOCUMENT:
+                        # the prompt was constructed on the entire document, so we can annotate anywhere in the document
+                        content = sdoc_data.content
+                        start_offset = 0
+                    case _:
+                        raise ValueError("Unknown DataTag!")  # type: ignore
 
                 # parse the response
                 parsed_response = prompt_builder.parse_result(result=response)
@@ -641,14 +657,16 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     if code_id not in project_codes:
                         continue
 
-                    document_text = sdoc_data.content.lower()
+                    document_text = content.lower()
                     annotation_text = span_text.lower()
 
                     # find start and end character of the annotation_text in the document_text
                     start = document_text.find(annotation_text)
-                    end = start + len(annotation_text)
                     if start == -1:
                         continue
+
+                    start += start_offset  # adjust to document/sentence offset
+                    end = start + len(annotation_text)
 
                     # find start and end token of the annotation_text in the document_tokens
                     # create a map of character offsets to token ids
@@ -783,7 +801,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids = self.__process_batch(
+            responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -793,26 +811,39 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SentenceAnnotationCreate] = []
-            for response, sdoc_id in zip(responses, response_sdoc_ids):
+            for response, sdoc_id, sentence_id in zip(
+                responses, response_sdoc_ids, response_sentence_ids
+            ):
                 sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
                 num_sentences = len(sdoc_data.sentences)
 
                 # parse the response
                 parsed_response = prompt_builder.parse_result(result=response)
-
-                # validate the response
-                # code ids should be valid and sentence ids should be valid
-                parsed_items = [
-                    (
-                        annotation.sent_id - 1,
-                        annotation.code_id,
-                    )  # LLM starts from 1, we start from 0
-                    for annotation in parsed_response
-                    if annotation.code_id in project_codes
-                    and annotation.sent_id > 0
-                    and annotation.sent_id <= num_sentences
-                ]
+                match prompt_builder.data_tag:
+                    case DataTag.SENTENCE:
+                        # the prompt was constructed per sentence, so we know the sentence id
+                        parsed_items = [
+                            (
+                                sentence_id,
+                                annotation.code_id,
+                            )
+                            for annotation in parsed_response
+                        ]
+                    case DataTag.DOCUMENT:
+                        # the prompt was constructed per document, so we have to rely on the generated output to get the sentence id
+                        parsed_items = [
+                            (
+                                annotation.sent_id - 1,
+                                annotation.code_id,
+                            )  # LLM starts from 1, we start from 0
+                            for annotation in parsed_response
+                            if annotation.code_id in project_codes
+                            and annotation.sent_id > 0
+                            and annotation.sent_id <= num_sentences
+                        ]
+                    case _:
+                        raise ValueError("Unknown DataTag!")  # type: ignore
 
                 # create the suggested annotation
                 start = parsed_items[0][0]

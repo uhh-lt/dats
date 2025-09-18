@@ -78,10 +78,8 @@ class PromptBuilder:
 
         # if no prompt templates are provided, create the default ones
         if prompt_templates is None:
-            if params is None or example_ids is None:
-                raise ValueError(
-                    "Either prompt_templates or params and example_ids must be provided!"
-                )
+            if params is None:
+                raise ValueError("Either prompt_templates or params must be provided!")
             prompt_templates = self._build_prompt_templates(
                 params=params, example_ids=example_ids
             )

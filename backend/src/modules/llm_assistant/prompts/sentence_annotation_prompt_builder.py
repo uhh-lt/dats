@@ -135,7 +135,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
                 )
                 datas = [document_sentences]
             case DataTag.SENTENCE:
-                datas = sdoc_data.sentences
+                datas = [f"1: {sentence}" for sentence in sdoc_data.sentences]
             case _:
                 raise ValueError(f"Data tag {self.data_tag} not supported!")  # type: ignore
 

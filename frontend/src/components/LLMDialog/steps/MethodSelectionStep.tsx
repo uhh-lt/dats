@@ -26,7 +26,7 @@ function MethodSelectionStep() {
           />
           <MethodButton
             method={TaskType.ANNOTATION}
-            headline="Annotation"
+            headline="Span Annotation"
             description="I will annotate your documents!"
           />
           <MethodButton
