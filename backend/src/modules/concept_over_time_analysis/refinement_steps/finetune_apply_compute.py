@@ -23,7 +23,7 @@ BATCH_SIZE = conf.cota.batch_size
 
 
 def finetune_apply_compute(
-    device_str: str, cota: COTARead, search_space: list[COTASentence]
+    cota: COTARead, search_space: list[COTASentence]
 ) -> list[COTASentence]:
     # 1. rank search space sentences for each concept
     # this can only be done if a concept has sentence annotations, because we need those to compute the concept representation
@@ -37,7 +37,6 @@ def finetune_apply_compute(
         # 1. train model
         model, sentences = __train_model(
             model_output_dir=model_path,
-            device_str=device_str,
             concept_ids=concept_ids,
             search_space=search_space,
         )
@@ -95,7 +94,6 @@ def finetune_apply_compute(
 
 def __train_model(
     model_output_dir: Path,
-    device_str: str,
     concept_ids: list[str],
     search_space: list[COTASentence],
 ) -> tuple[SetFitModel, list[str]]:
@@ -141,8 +139,8 @@ def __train_model(
     )
 
     # 2. load a SetFit model from Hub
-    logger.info(f"Loading COTA model {MODEL} on {device_str}")
-    model = SetFitModel.from_pretrained(MODEL, device=device_str)
+    model = SetFitModel.from_pretrained(MODEL)
+    logger.info(f"Loaded COTA model {MODEL} on {model.device}.")
 
     # 3. init training
     args = TrainingArguments(

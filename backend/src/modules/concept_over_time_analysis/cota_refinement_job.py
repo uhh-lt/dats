@@ -55,9 +55,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
 
         # 2. finetune, apply, compute
         job.update(current_step=1)
-        search_space = finetune_apply_compute(
-            device_str=job.get_device(), cota=cota, search_space=search_space
-        )
+        search_space = finetune_apply_compute(cota=cota, search_space=search_space)
 
         # 3. store in db
         job.update(current_step=2)

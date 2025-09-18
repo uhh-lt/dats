@@ -84,8 +84,9 @@ def find_duplicates_job(
     # create document vectors
     idx2sdoc_id = {}
     N = len(sdoc_id2word_id2word_freq)
-    device = job.get_device()
-    document_vectors = torch.zeros((N, vocab_size), dtype=torch.float32, device=device)
+    document_vectors = torch.zeros(
+        (N, vocab_size), dtype=torch.float32, device="cuda:0"
+    )
     for idx, sdoc_id in enumerate(sdoc_id2word_id2word_freq.keys()):
         idx2sdoc_id[idx] = sdoc_id
         word_id2_word_freq = sdoc_id2word_id2word_freq[sdoc_id]
@@ -100,7 +101,6 @@ def find_duplicates_job(
     # compute distances to identify duplicates
     t0 = time.time()
     duplicate_pairs = []
-    device = job.get_device()
     num_batches = (N + BATCH_SIZE - 1) // BATCH_SIZE
     for i in range(0, N, BATCH_SIZE):
         job.update(

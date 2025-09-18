@@ -72,7 +72,7 @@ class PerspectivesService:
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
 
-        self.prompt_embedder = PromptEmbedder(device=job.get_device())
+        self.prompt_embedder = PromptEmbedder(device="cuda:0")
 
         self.perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
             PerspectivesJobType.CREATE_ASPECT: [

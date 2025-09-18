@@ -12,12 +12,15 @@ from systems.job_system.job_dto import Job, JobInputBase
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     job = Job()
     try:
-        # figure out which gpu to use, if it is a gpu job
-        if job.get_device() == "gpu":
-            cuda_device = find_unused_cuda_device()
-            job.update(device=cuda_device)
+        # figure whether to run the job on gpu
+        if job.job.origin == "gpu":
+            import torch
 
-        output = handler(payload=payload, job=job)
+            cuda_device = find_unused_cuda_device()
+            with torch.cuda.device(cuda_device):
+                output = handler(payload=payload, job=job)
+        else:
+            output = handler(payload=payload, job=job)
     except Exception as e:
         # erroneous job:
         job.update(status_message=str(e))
