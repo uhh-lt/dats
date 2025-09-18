@@ -18,7 +18,7 @@ spacy:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: 0.
+        num_gpus: 0.0
       autoscaling_config:
         min_replicas: 1
         max_replicas: 32
@@ -38,7 +38,7 @@ glotlid:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .0
+        num_gpus: 0.0
       autoscaling_config:
         min_replicas: 1
         max_replicas: 32
@@ -64,7 +64,7 @@ whisper:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: 1.0
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -80,7 +80,7 @@ detr:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: 1.0
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -197,7 +197,7 @@ clip:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: 1.0
       autoscaling_config:
         min_replicas: 1
         max_replicas: 1
@@ -218,10 +218,10 @@ docling:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: .25
       autoscaling_config:
-        min_replicas: 1
-        max_replicas: 32
+        min_replicas: 1.0
+        max_replicas: 4.0
         upscale_delay_s: 5
         metrics_interval_s: 5
 
@@ -240,7 +240,7 @@ quote:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: 1.0
       autoscaling_config:
         min_replicas: 0
         max_replicas: 1
@@ -256,7 +256,7 @@ coref:
     model_worker:
       max_ongoing_requests: 64
       ray_actor_options:
-        num_gpus: .1
+        num_gpus: 1.0
       autoscaling_config:
         min_replicas: 0
         max_replicas: 1
