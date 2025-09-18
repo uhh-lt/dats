@@ -311,24 +311,19 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       return { flatData, totalFetchedSdocs: flatData.length, totalFetchedFolders: 0 };
     }
 
-    // if showFolders is true, we need to merge the sub_rows, highlights of the hits
+    // if showFolders is true, we need to merge the sub_rows
     const hits: Record<number, HierarchicalElasticSearchHit> = {};
     data.pages.forEach((page) => {
       page.hits.forEach((hit) => {
         // do the merging here!
         if (hits[hit.id]) {
           hits[hit.id].sub_rows.push(...hit.sub_rows);
-          if (hit.highlights) {
-            hits[hit.id].highlights?.push(...hit.highlights);
-          }
         } else {
           hits[hit.id] = JSON.parse(JSON.stringify(hit)); // deep clone to avoid mutating the original hit
         }
       });
     });
     const flatData = Object.values(hits);
-    console.log(data);
-    console.log(flatData);
     return {
       flatData,
       totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
