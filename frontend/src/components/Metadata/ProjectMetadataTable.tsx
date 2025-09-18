@@ -16,14 +16,17 @@ const columns: MRT_ColumnDef<ProjectMetadataRead>[] = [
     header: "ID",
   },
   {
+    grow: 0,
     accessorKey: "key",
     header: "Metadata",
   },
   {
+    grow: 0,
     accessorKey: "metatype",
     header: "Type",
   },
   {
+    grow: 1,
     accessorKey: "description",
     header: "Description",
   },

@@ -37,15 +37,19 @@ const columns: MRT_ColumnDef<CodeTableRow>[] = [
     accessorKey: "color",
     header: "Color",
     enableColumnFilter: false,
+    size: 120,
+    grow: 0,
     Cell: ({ row }) => {
       return <SquareIcon style={{ color: row.original.color, blockSize: 24 }} />;
     },
   },
   {
+    grow: 0,
     accessorKey: "name",
     header: "Name",
   },
   {
+    grow: 1,
     accessorKey: "description",
     header: "Description",
   },
@@ -184,6 +188,13 @@ function CodeTable({
     getSubRows,
     filterFromLeafRows: true, //search for child rows and preserve parent rows
     enableSubRowSelection: false,
+    // mui columns
+    displayColumnDefOptions: {
+      "mrt-row-expand": {
+        enableResizing: false, //allow resizing
+        grow: 0,
+      },
+    },
   });
 
   return <MaterialReactTable table={table} />;
