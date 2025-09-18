@@ -40,6 +40,7 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
         logger.info(f"Persisting SourceDocument for {payload.filepath.name}...")
         create_dto = SourceDocumentCreate(
             filename=payload.filepath.name,
+            name=payload.filepath.name,
             doctype=payload.doctype,
             project_id=payload.project_id,
             folder_id=payload.folder_id,

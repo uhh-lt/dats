@@ -38,13 +38,13 @@ function BBoxAnnotationTableSimple({ bboxAnnoIds }: { bboxAnnoIds: number[] }) {
         Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showCode />,
       },
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
         Cell: ({ row }) => (
           <BBoxAnnotationRenderer
             bboxAnnotation={row.original.bboxAnnoId}
             showSdoc
-            sdocRendererProps={{ renderFilename: true, link: true }}
+            sdocRendererProps={{ renderName: true, link: true }}
           />
         ),
       },

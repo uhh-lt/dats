@@ -18,7 +18,7 @@ function SdocAnnotationLink({ sdoc, annotation }: SdocAnnotationLinkProps) {
 
   return (
     <Link to={`/project/${sdoc.project_id}/annotation/${sdoc.id}`} onClick={handleClick}>
-      {sdoc.filename}
+      {sdoc.name}
     </Link>
   );
 }

@@ -43,9 +43,9 @@ function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
   const columns: MRT_ColumnDef<T>[] = useMemo(
     () => [
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderName />,
       },
       {
         id: "CurrentTags",

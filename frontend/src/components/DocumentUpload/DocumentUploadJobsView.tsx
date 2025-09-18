@@ -63,7 +63,7 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
               Documents in progress
             </Typography>
             {allSdocStatus.map((status) => (
-              <SdocStatusSimpleListItem key={status.filename} sdocStatus={status} />
+              <SdocStatusSimpleListItem key={status.name} sdocStatus={status} />
             ))}
           </Stack>
         )}

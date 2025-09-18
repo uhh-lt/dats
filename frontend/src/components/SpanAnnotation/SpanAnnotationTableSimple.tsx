@@ -43,13 +43,13 @@ function SpanAnnotationTableSimple({ spanAnnoIds }: { spanAnnoIds: number[] }) {
         Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showCode />,
       },
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
         Cell: ({ row }) => (
           <SpanAnnotationRenderer
             spanAnnotation={row.original.spanAnnoId}
             showSdoc
-            sdocRendererProps={{ renderFilename: true, link: true }}
+            sdocRendererProps={{ renderName: true, link: true }}
           />
         ),
       },

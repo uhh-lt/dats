@@ -10,7 +10,7 @@ class SourceDocumentExportSchema(BaseModel):
 
     # Info about the source document itself
     filename: str = Field(description="Filename of the source document")
-    name: str | None = Field(description="Name of the source document", default=None)
+    name: str = Field(description="Name of the source document (default is filename)")
     doctype: str = Field(description="Document type of the source document")
     status: int = Field(description="Status of the source document")
 

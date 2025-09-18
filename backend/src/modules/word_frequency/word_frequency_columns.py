@@ -20,7 +20,7 @@ class WordFrequencyColumns(str, AbstractColumns):
     WORD_PERCENT = "WF_WORD_PERCENT"
     SOURCE_DOCUMENT_FREQUENCY = "WF_SOURCE_DOCUMENT_FREQUENCY"
     SOURCE_DOCUMENT_PERCENT = "WF_SOURCE_DOCUMENT_PERCENT"
-    SOURCE_DOCUMENT_FILENAME = "WF_SOURCE_DOCUMENT_FILENAME"
+    SOURCE_DOCUMENT_NAME = "WF_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST = "WF_TAG_ID_LIST"
     CODE_ID_LIST = "WF_CODE_ID_LIST"
     USER_ID_LIST = "WF_USER_ID_LIST"
@@ -38,8 +38,8 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return WordFrequencyColumns.SOURCE_DOCUMENT_FREQUENCY
             case WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT:
                 return WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
-            case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case WordFrequencyColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case WordFrequencyColumns.TAG_ID_LIST:
                 return subquery_dict[WordFrequencyColumns.TAG_ID_LIST]
             case WordFrequencyColumns.CODE_ID_LIST:
@@ -61,7 +61,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return FilterOperator.NUMBER
             case WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT:
                 return FilterOperator.NUMBER
-            case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
+            case WordFrequencyColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
             case WordFrequencyColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
@@ -84,7 +84,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
+            case WordFrequencyColumns.SOURCE_DOCUMENT_NAME:
                 return FilterValueType.INFER_FROM_OPERATOR
             case WordFrequencyColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
@@ -107,8 +107,8 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return WordFrequencyColumns.SOURCE_DOCUMENT_FREQUENCY
             case WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT:
                 return WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT
-            case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case WordFrequencyColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case WordFrequencyColumns.TAG_ID_LIST:
                 return None
             case WordFrequencyColumns.CODE_ID_LIST:
@@ -130,7 +130,7 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return "Document frequency"
             case WordFrequencyColumns.SOURCE_DOCUMENT_PERCENT:
                 return "Document %"
-            case WordFrequencyColumns.SOURCE_DOCUMENT_FILENAME:
+            case WordFrequencyColumns.SOURCE_DOCUMENT_NAME:
                 return "Document name"
             case WordFrequencyColumns.TAG_ID_LIST:
                 return "Tags"

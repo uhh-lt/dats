@@ -86,10 +86,10 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
       },
       [
         {
-          id: "filename",
-          header: "Filename",
+          id: "name",
+          header: "Name",
           size: 400,
-          accessorFn: (row) => row.filename,
+          accessorFn: (row) => row.name,
         },
       ],
     );
