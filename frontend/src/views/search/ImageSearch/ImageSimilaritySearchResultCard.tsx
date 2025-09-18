@@ -45,13 +45,7 @@ function ImageSimilaritySearchResultCard({
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(hit.sdoc_id).data ?? "";
   const sdoc = SdocHooks.useGetDocument(hit.sdoc_id);
 
-  const title = sdoc.isLoading
-    ? "Loading"
-    : sdoc.isError
-      ? "Error: "
-      : sdoc.isSuccess
-        ? sdoc.data.name || sdoc.data.filename
-        : "";
+  const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error: " : sdoc.isSuccess ? sdoc.data.name : "";
 
   return (
     <>

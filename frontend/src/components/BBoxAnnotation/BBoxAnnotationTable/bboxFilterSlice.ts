@@ -8,7 +8,7 @@ import { ProjectActions } from "../../Project/projectSlice.ts";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME,
+  column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

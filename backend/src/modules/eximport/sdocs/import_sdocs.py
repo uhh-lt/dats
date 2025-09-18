@@ -218,7 +218,7 @@ def import_sdocs_to_proj(
         # 2.2 Create the source documents in the database
         sdoc_create = SourceDocumentCreate(
             filename=sdoc_export.filename,
-            name=sdoc_export.name,
+            name=sdoc_export.name or sdoc_export.filename,
             doctype=DocType(sdoc_export.doctype),
             project_id=project_id,
             folder_id=sdoc_folder.id,

@@ -6,7 +6,7 @@ import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 
 export interface SdocRendererSharedProps {
   link?: boolean;
-  renderFilename?: boolean;
+  renderName?: boolean;
   renderDoctypeIcon?: boolean;
 }
 
@@ -37,13 +37,13 @@ function SdocRendererWithoutData({ sdocId, ...props }: { sdocId: number } & Sdoc
 function SdocRendererWithData({
   sdoc,
   link,
-  renderFilename,
+  renderName: renderName,
   renderDoctypeIcon,
 }: { sdoc: SourceDocumentRead } & SdocRendererSharedProps) {
   const content = (
     <Stack direction="row" alignItems="center">
       {renderDoctypeIcon && docTypeToIcon[sdoc.doctype]}
-      {renderFilename && (sdoc.name ? sdoc.name : sdoc.filename)}
+      {renderName && sdoc.name}
     </Stack>
   );
 

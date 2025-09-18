@@ -179,7 +179,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
                 <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />
               ),
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
+        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
             size: 360,
@@ -187,7 +187,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
               row.original.is_folder ? (
                 <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderName />
               ) : (
-                <SdocRenderer sdoc={row.original.id} renderFilename />
+                <SdocRenderer sdoc={row.original.id} renderName />
               ),
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_TAG_ID_LIST:

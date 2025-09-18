@@ -195,9 +195,9 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
   const columns = useMemo<MRT_ColumnDef<MetadataExtractionResultRow>[]>(() => {
     const result: MRT_ColumnDef<MetadataExtractionResultRow>[] = [
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderName />,
       },
     ];
 

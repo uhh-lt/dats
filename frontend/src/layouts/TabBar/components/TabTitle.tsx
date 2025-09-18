@@ -38,7 +38,7 @@ function TabTitle({ tab }: TabTitleProps) {
     // Return appropriate title based on the base type and loaded data
     switch (tab.base) {
       case "annotation":
-        return sdoc?.data?.name || sdoc.data?.filename || `Document ${tab.data_id}`;
+        return sdoc?.data?.name || `Document ${tab.data_id}`;
       case "whiteboard":
         return whiteboard?.data?.title || `Whiteboard ${tab.data_id}`;
       case "concepts-over-time-analysis":
@@ -56,7 +56,6 @@ function TabTitle({ tab }: TabTitleProps) {
     tab.data_id,
     tab.base,
     sdoc.data?.name,
-    sdoc.data?.filename,
     whiteboard?.data?.title,
     cota?.data?.name,
     timeline?.data?.name,

@@ -225,7 +225,7 @@ function Annotation() {
                       {sdoc.isSuccess && sdocData.isSuccess && isBoxReady ? (
                         <>
                           <EditableTypography
-                            value={sdoc.data.name || sdoc.data.filename}
+                            value={sdoc.data.name}
                             onChange={handleUpdateName}
                             variant="h4"
                             whiteColor={false}

@@ -52,7 +52,7 @@ class SourceDocumentStatusSimple(SourceDocumentBaseDTO):
 
 class SdocStatusRow(BaseModel):
     sdoc_id: int = Field(description="ID of the SourceDocument")
-    filename: str = Field(description="Filename of the SourceDocument")
+    name: str = Field(description="Name of the SourceDocument")
     status: dict[str, SDocStatus] = Field(
         description="Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
     )
@@ -63,7 +63,7 @@ class SdocStatusRow(BaseModel):
         status: dict[str, SDocStatus] = {s: getattr(sdoc, s) for s in status_fields}
         return cls(
             sdoc_id=sdoc.id,
-            filename=sdoc.filename,
+            name=sdoc.name,
             status=status,
         )
 

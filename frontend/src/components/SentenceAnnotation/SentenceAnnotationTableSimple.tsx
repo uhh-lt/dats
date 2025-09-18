@@ -43,13 +43,13 @@ function SentenceAnnotationTableSimple({ sentAnnoIds }: { sentAnnoIds: number[] 
         Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showCode />,
       },
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
         Cell: ({ row }) => (
           <SentenceAnnotationRenderer
             sentenceAnnotation={row.original.sentAnnoId}
             showSdoc
-            sdocRendererProps={{ renderFilename: true, link: true }}
+            sdocRendererProps={{ renderName: true, link: true }}
           />
         ),
       },

@@ -42,7 +42,7 @@ interface SearchState {
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: SdocColumns.SD_SOURCE_DOCUMENT_FILENAME,
+  column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

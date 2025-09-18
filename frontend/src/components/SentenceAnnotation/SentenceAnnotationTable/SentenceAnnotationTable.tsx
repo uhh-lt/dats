@@ -72,10 +72,10 @@ function SentenceAnnotationTable({
       };
 
       switch (column.column) {
-        case SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_FILENAME:
+        case SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
-            accessorFn: (row) => row.sdoc.filename,
+            accessorFn: (row) => row.sdoc.name,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         case SentAnnoColumns.SENT_ANNO_TAG_ID_LIST:

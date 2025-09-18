@@ -17,7 +17,7 @@ function SdocListItem({ sdocId, ...props }: SdocListItemProps & Omit<ListItemBut
       {sdoc.isSuccess ? (
         <>
           <ListItemIcon>{docTypeToIcon[sdoc.data.doctype]}</ListItemIcon>
-          <ListItemText primary={sdoc.data.name ? sdoc.data.name : sdoc.data.filename} />
+          <ListItemText primary={sdoc.data.name} />
         </>
       ) : sdoc.isError ? (
         <ListItemText primary={sdoc.error.message} />

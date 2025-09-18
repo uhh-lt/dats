@@ -10,9 +10,9 @@ export type SourceDocumentStatusSimple = {
    */
   filename: string;
   /**
-   * User-defined name of the document
+   * User-defined name of the document (defaults is the filename)
    */
-  name?: string | null;
+  name: string;
   /**
    * DOCTYPE of the SourceDocument
    */
