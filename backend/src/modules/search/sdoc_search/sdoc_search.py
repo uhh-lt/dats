@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType
@@ -11,10 +13,7 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
-from modules.search.search_dto import (
-    HierarchicalElasticSearchHit,
-    PaginatedSDocHits,
-)
+from modules.search.search_dto import HierarchicalElasticSearchHit, PaginatedSDocHits
 from repos.elastic.elastic_dto_base import ElasticSearchHit, PaginatedElasticSearchHits
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from systems.search_system.column_info import ColumnInfo
@@ -179,8 +178,8 @@ def find_sdocs(
     sdocs = {sdoc.id: SourceDocumentRead.model_validate(sdoc) for sdoc in sdoc_db_objs}
 
     # 2. the sdoc folders
-    folder_ids = list({sdoc.folder_id for sdoc in sdoc_db_objs})
-    folders = crud_folder.read_by_ids(db=db, ids=folder_ids)
+    folder_ids = [sdoc.folder_id for sdoc in sdoc_db_objs]
+    folders = crud_folder.read_by_ids(db=db, ids=list(OrderedDict.fromkeys(folder_ids)))
 
     # 3. the annotators
     annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)
