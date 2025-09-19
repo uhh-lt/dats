@@ -9,7 +9,7 @@ export type SourceDocumentRead = {
    */
   filename: string;
   /**
-   * User-defined name of the document (defaults is the filename)
+   * User-defined name of the document (default is the filename)
    */
   name: string;
   /**
