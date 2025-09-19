@@ -7883,6 +7883,33 @@
             "description": "Weight decay to use for training"
           },
           "dropout": { "type": "number", "title": "Dropout", "description": "Dropout rate to use in the model" },
+          "chunk_size": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Chunk Size",
+            "description": "Slice long documents into chunks of size x"
+          },
+          "precision": {
+            "anyOf": [
+              { "type": "integer", "enum": [64, 32, 16] },
+              {
+                "type": "string",
+                "enum": [
+                  "transformer-engine",
+                  "transformer-engine-float16",
+                  "16-true",
+                  "16-mixed",
+                  "bf16-true",
+                  "bf16-mixed",
+                  "32-true",
+                  "64-true"
+                ]
+              },
+              { "type": "string", "enum": ["64", "32", "16", "bf16"] },
+              { "type": "null" }
+            ],
+            "title": "Precision",
+            "description": "Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
+          },
           "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" }
         },
         "type": "object",
@@ -7900,6 +7927,8 @@
           "learning_rate",
           "weight_decay",
           "dropout",
+          "chunk_size",
+          "precision",
           "is_bio"
         ],
         "title": "ClassifierTrainingParams"

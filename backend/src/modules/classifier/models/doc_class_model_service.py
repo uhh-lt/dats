@@ -149,7 +149,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         # labels = batch["labels"]
         # loss = self.loss_fn(logits.view(-1, self.num_labels), labels.view(-1))
 
-        self.log("train_loss", loss, on_step=False, on_epoch=True)
+        self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
 
     def _val_test_step(
@@ -186,6 +186,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         )
         return outputs.loss
 
+    @torch.no_grad()
     def validation_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
         return self._val_test_step(
             prefix="eval",
@@ -193,6 +194,7 @@ class DocClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def test_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
         return self._val_test_step(
             prefix="test",
@@ -200,6 +202,7 @@ class DocClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
         outputs = self.model(
             input_ids=batch["input_ids"],
@@ -214,7 +217,10 @@ class DocClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+            self.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            fused=True,
         )
         return optimizer
 
@@ -399,17 +405,6 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
-        # Initialize the Lightning Model
-        lightning_model = DocClassificationLightningModel(
-            base_name=parameters.base_name,
-            num_labels=len(classid2labelid),
-            dropout=parameters.dropout,
-            learning_rate=parameters.learning_rate,
-            weight_decay=parameters.weight_decay,
-            class_weights=torch.tensor(class_weights, dtype=torch.float32),
-            id2label=id2label,
-            label2id={v: k for k, v in id2label.items()},
-        )
 
         # Create the Trainer
         model_name: str = str(uuid4())
@@ -447,10 +442,23 @@ class DocClassificationModelService(TextClassificationModelService):
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            precision=parameters.precision,
             # Special params
-            # precision=32,  # full precision training
             # gradient_clip_val=1.0,  # Gradient clipping
         )
+
+        with trainer.init_module():
+            # Initialize the Lightning Model
+            lightning_model = DocClassificationLightningModel(
+                base_name=parameters.base_name,
+                num_labels=len(classid2labelid),
+                dropout=parameters.dropout,
+                learning_rate=parameters.learning_rate,
+                weight_decay=parameters.weight_decay,
+                class_weights=torch.tensor(class_weights, dtype=torch.float32),
+                id2label=id2label,
+                label2id={v: k for k, v in id2label.items()},
+            )
 
         # 3. Train the model
         job.update(current_step=3)
