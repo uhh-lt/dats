@@ -36,6 +36,8 @@ interface TrainingSettings {
   learningRate: number;
   weightDecay: number;
   dropout: number;
+  chunkSize: number;
+  precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
   // sequence classification settings
   isBio: boolean;
 }
@@ -63,6 +65,8 @@ const embeddingModelOptions: FreeSoloOptions[] = [
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
 
+const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
+
 function TrainingSettingsStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
@@ -83,12 +87,14 @@ function TrainingSettingsStep() {
       classifierName: "",
       baseModelName: "",
       adapterName: "No Adapter",
-      batchSize: 4,
+      batchSize: 8,
       epochs: 10,
       earlyStopping: true,
-      learningRate: 0.0001,
+      learningRate: 0.001,
       weightDecay: 0.01,
-      dropout: 0.2,
+      dropout: 0.3,
+      chunkSize: 1024,
+      precision: "bf16-mixed",
       isBio: false,
     },
   });
@@ -118,8 +124,10 @@ function TrainingSettingsStep() {
       learning_rate: data.learningRate,
       weight_decay: data.weightDecay,
       dropout: data.dropout,
+      chunk_size: data.chunkSize,
+      precision: data.precision,
       // specific training settings
-      is_bio: false, // data.isBio, // TODO: enable
+      is_bio: false,
     };
 
     startClassifierJobMutation(
@@ -309,6 +317,43 @@ function TrainingSettingsStep() {
                   fullWidth: true,
                 }}
               />
+            </FormItem>
+            <FormItem title="Chunk Size" subtitle="Choose the chunk size for training.">
+              <FormNumber
+                name="chunkSize"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 128, message: "Must be at least 128" },
+                  max: { value: 8192, message: "Must be at most 8192" },
+                }}
+                textFieldProps={{
+                  label: "Chunk Size",
+                  variant: "filled",
+                  inputProps: { min: 128, max: 8192, step: 128 },
+                  size: "small",
+                  fullWidth: true,
+                }}
+              />
+            </FormItem>
+            <FormItem title="Precision" subtitle="Choose a precision for training">
+              <FormMenu
+                name="precision"
+                control={control}
+                textFieldProps={{
+                  label: "Precision",
+                  error: Boolean(errors.precision),
+                  helperText: <ErrorMessage errors={errors} name="precision" />,
+                  variant: "filled",
+                  fullWidth: true,
+                }}
+              >
+                {precisionOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </FormMenu>
             </FormItem>
           </FormBox>
           {model === ClassifierModel.SPAN && (

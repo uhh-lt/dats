@@ -65,9 +65,13 @@ class ClassifierService(metaclass=SingletonMeta):
             status_message="Started ClassifierJob!",
         )
 
-        # free GPU memory before job starts
-        gc.collect()
-        torch.cuda.empty_cache()
+        gpu_mem_limit_gb = 20
+        gpu_mem_limit_bytes = gpu_mem_limit_gb * 1024 * 1024 * 1024
+
+        # set GPU memory limit for job
+        total = torch.cuda.get_device_properties().total_memory
+        allowed_fraction = gpu_mem_limit_bytes / total
+        torch.cuda.set_per_process_memory_fraction(allowed_fraction)
 
         # get the correct classifier service
         tcs: TextClassificationModelService

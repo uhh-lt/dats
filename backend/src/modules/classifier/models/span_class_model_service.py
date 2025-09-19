@@ -82,7 +82,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         dropout: float,
         learning_rate: float,
         weight_decay: float,
-        class_weights: torch.Tensor,
+        class_weights: list[float],
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
     ):
@@ -127,7 +127,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         self.seqeval = evaluate.load("seqeval")
 
         # Define custom loss function
-        self.loss_fn = nn.CrossEntropyLoss(weight=class_weights)
+        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(class_weights))
 
     def forward(
         self,
@@ -150,7 +150,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         labels = batch["labels"]
         loss = self.loss_fn(logits.view(-1, self.num_labels), labels.view(-1))
 
-        self.log("train_loss", loss, on_step=False, on_epoch=True)
+        self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
 
     def _val_test_step(
@@ -185,7 +185,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         assert results is not None, "SeqEval results are None"
 
         # Log metrics
-        self.log(f"{prefix}_loss", outputs.loss, on_step=False, on_epoch=True)
+        self.log(f"{prefix}_loss", outputs.loss.detach(), on_step=False, on_epoch=True)
         self.log_dict(
             {
                 f"{prefix}_precision": results["overall_precision"],
@@ -197,8 +197,9 @@ class SpanClassificationLightningModel(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
         )
-        return outputs.loss
+        return outputs.loss.detach()
 
+    @torch.no_grad()
     def validation_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
         return self._val_test_step(
             prefix="eval",
@@ -206,6 +207,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def test_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
         return self._val_test_step(
             prefix="test",
@@ -213,6 +215,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
         outputs = self.model(
             input_ids=batch["input_ids"],
@@ -227,7 +230,10 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+            self.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            fused=True,
         )
         return optimizer
 
@@ -306,9 +312,12 @@ class SpanClassificationModelService(TextClassificationModelService):
                 )
 
         # Construct a tokenized huggingface dataset
-        def tokenize_and_align_labels(examples):
+        def tokenize_and_align_labels(examples: dict):
             tokenized_inputs = tokenizer(
-                examples["words"], truncation=True, is_split_into_words=True
+                examples["words"],
+                truncation=False,
+                is_split_into_words=True,
+                add_special_tokens=False,
             )
 
             labels = []
@@ -354,6 +363,8 @@ class SpanClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
+        if parameters.chunk_size:
+            tokenizer.model_max_length = parameters.chunk_size
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
         job.update(
@@ -392,17 +403,56 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Train test split
         split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
+
+        def split_in_chunks(examples: dict):
+            chunk_len = tokenizer.model_max_length - 2
+            for key, values in examples.items():
+                if "labels" == key:
+                    pre = [-100]
+                    post = [-100]
+                elif "attention_mask" == key:
+                    pre = [1]
+                    post = [1]
+                elif "input_ids" == key:
+                    pre = [tokenizer.added_tokens_encoder["[CLS]"]]
+                    post = [tokenizer.added_tokens_encoder["[SEP]"]]
+                else:
+                    raise ValueError(f"Unsupported {key} in batch examples dict")
+
+                result = []
+                for val in values:
+                    chunks = [
+                        pre + val[i : i + chunk_len] + post
+                        for i in range(0, len(val), chunk_len)
+                    ]
+                    result.extend(chunks)
+                examples[key] = result
+            return examples
+
+        train_dataset = (
+            split_dataset["train"]
+            .remove_columns(["sdoc_id", "user_id"])
+            .map(split_in_chunks, batched=True)
+        )
+        val_dataset = (
+            split_dataset["test"]
+            .remove_columns(["sdoc_id", "user_id"])
+            .map(split_in_chunks, batched=True)
+        )
+
         train_dataloader = DataLoader(
-            split_dataset["train"],  # type: ignore
+            train_dataset,  # type: ignore
             shuffle=True,
             collate_fn=data_collator,
             batch_size=parameters.batch_size,
+            pin_memory=True,
         )
         val_dataloader = DataLoader(
-            split_dataset["test"],  # type: ignore
+            val_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
             batch_size=parameters.batch_size,
+            pin_memory=True,
         )
 
         # Dataset statistics (number of annotations per code)
@@ -440,17 +490,6 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
-        # Initialize the Lightning Model
-        lightning_model = SpanClassificationLightningModel(
-            base_name=parameters.base_name,
-            num_labels=len(classid2labelid),
-            dropout=parameters.dropout,
-            learning_rate=parameters.learning_rate,
-            weight_decay=parameters.weight_decay,
-            class_weights=torch.tensor(class_weights, dtype=torch.float32),
-            id2label=id2label,
-            label2id={v: k for k, v in id2label.items()},
-        )
 
         # Create the Trainer
         model_name: str = str(uuid4())
@@ -484,14 +523,28 @@ class SpanClassificationModelService(TextClassificationModelService):
         callbacks.append(JobProgressCallback(job=job))
 
         trainer = pl.Trainer(
+            accelerator="gpu",
             logger=csv_logger,
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            precision=parameters.precision,
             # Special params
-            # precision=32,  # full precision training
             # gradient_clip_val=1.0,  # Gradient clipping
         )
+
+        with trainer.init_module():
+            # Initialize the Lightning Model
+            lightning_model = SpanClassificationLightningModel(
+                base_name=parameters.base_name,
+                num_labels=len(classid2labelid),
+                dropout=parameters.dropout,
+                learning_rate=parameters.learning_rate,
+                weight_decay=parameters.weight_decay,
+                class_weights=class_weights,
+                id2label=id2label,
+                label2id={v: k for k, v in id2label.items()},
+            )
 
         # 3. Train the model
         job.update(current_step=3)

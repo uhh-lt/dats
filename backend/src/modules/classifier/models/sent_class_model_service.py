@@ -225,7 +225,10 @@ class SentClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+            self.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            fused=True,
         )
         return optimizer
 
@@ -485,23 +488,6 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
-        # Initialize the Lightning Model
-        lightning_model = SentClassificationLightningModel(
-            # embedding model params
-            embedding_model_name=parameters.base_name,
-            embedding_dim=embedding_dim,
-            # sent classifier specific params
-            hidden_dim=int(embedding_dim / 2),
-            use_lstm=True,
-            # training params
-            num_labels=len(classid2labelid),
-            dropout=parameters.dropout,
-            learning_rate=parameters.learning_rate,
-            weight_decay=parameters.weight_decay,
-            class_weights=torch.tensor(class_weights, dtype=torch.float32),
-            id2label=id2label,
-            label2id={v: k for k, v in id2label.items()},
-        )
 
         # Create the Trainer
         model_name: str = str(uuid4())
@@ -539,10 +525,29 @@ class SentClassificationModelService(TextClassificationModelService):
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            precision=parameters.precision,
             # Special params
-            # precision=32,  # full precision training
             # gradient_clip_val=1.0,  # Gradient clipping
         )
+
+        with trainer.init_module():
+            # Initialize the Lightning Model
+            lightning_model = SentClassificationLightningModel(
+                # embedding model params
+                embedding_model_name=parameters.base_name,
+                embedding_dim=embedding_dim,
+                # sent classifier specific params
+                hidden_dim=int(embedding_dim / 2),
+                use_lstm=True,
+                # training params
+                num_labels=len(classid2labelid),
+                dropout=parameters.dropout,
+                learning_rate=parameters.learning_rate,
+                weight_decay=parameters.weight_decay,
+                class_weights=torch.tensor(class_weights, dtype=torch.float32),
+                id2label=id2label,
+                label2id={v: k for k, v in id2label.items()},
+            )
 
         # 3. Train the model
         job.update(current_step=3)
