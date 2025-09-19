@@ -74,7 +74,7 @@ def __generate_export_df_for_bbox_annotations(
         annotation_export_items.append(
             BBoxAnnotationExportSchema(
                 uuid=bbox.uuid,
-                sdoc_name=sdoc.name,
+                sdoc_name=sdoc.filename,
                 user_email=user.email,
                 user_first_name=user.first_name,
                 user_last_name=user.last_name,
