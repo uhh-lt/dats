@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
+from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
 from pydantic import BaseModel, ConfigDict, Field
 
 from repos.db.dto_base import UpdateDTOBase
@@ -121,6 +122,12 @@ class ClassifierTrainingParams(BaseModel):
     learning_rate: float = Field(description="Learning rate to use for training")
     weight_decay: float = Field(description="Weight decay to use for training")
     dropout: float = Field(description="Dropout rate to use in the model")
+    chunk_size: int | None = Field(
+        description="Slice long documents into chunks of size x"
+    )
+    precision: _PRECISION_INPUT | None = Field(
+        description="Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
+    )
     # specific training settings
     is_bio: bool = Field(description="Whether to use BIO or IO tagging")
 

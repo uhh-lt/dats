@@ -53,6 +53,30 @@ export type ClassifierTrainingParams = {
    */
   dropout: number;
   /**
+   * Slice long documents into chunks of size x
+   */
+  chunk_size: number | null;
+  /**
+   * Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed
+   */
+  precision:
+    | 64
+    | 32
+    | 16
+    | "transformer-engine"
+    | "transformer-engine-float16"
+    | "16-true"
+    | "16-mixed"
+    | "bf16-true"
+    | "bf16-mixed"
+    | "32-true"
+    | "64-true"
+    | "64"
+    | "32"
+    | "16"
+    | "bf16"
+    | null;
+  /**
    * Whether to use BIO or IO tagging
    */
   is_bio: boolean;
