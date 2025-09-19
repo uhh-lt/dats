@@ -14,7 +14,7 @@ import { TableState, initialTableState, resetProjectTableState, tableReducer } f
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),
-  column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_FILENAME,
+  column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };

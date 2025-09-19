@@ -107,11 +107,11 @@ function SentenceSimilaritySearchTable({
             size: 100,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
+        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
             size: 360,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderName />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
         case SdocColumns.SD_TAG_ID_LIST:
           return {

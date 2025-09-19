@@ -1,12 +1,7 @@
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from common.doc_type import (
-    DocType,
-    get_doc_type,
-    is_archive_file,
-    mime_type_supported,
-)
+from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
 from core.doc.source_document_orm import SourceDocumentORM
@@ -127,7 +122,7 @@ class DocProcessingService(metaclass=SingletonMeta):
         if len(sorts) > 0:
             query = query.order_by(*[s.get_sqlalchemy_expression() for s in sorts])
         else:
-            query = query.order_by(SourceDocumentORM.filename.asc())
+            query = query.order_by(SourceDocumentORM.name.asc())
 
         # pagination
         if page is not None and page_size is not None:

@@ -28,8 +28,8 @@ const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {
     header: "Document",
     id: "document",
-    accessorFn: (params) => params.sdoc.filename,
-    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc} link renderFilename />,
+    accessorFn: (params) => params.sdoc.name,
+    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc} link renderName />,
   },
   {
     header: "Code",

@@ -18,7 +18,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 class SdocColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_TYPE = "SD_SOURCE_DOCUMENT_TYPE"
-    SOURCE_DOCUMENT_FILENAME = "SD_SOURCE_DOCUMENT_FILENAME"
+    SOURCE_DOCUMENT_NAME = "SD_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST = "SD_TAG_ID_LIST"
     CODE_ID_LIST = "SD_CODE_ID_LIST"
     USER_ID_LIST = "SD_USER_ID_LIST"
@@ -26,8 +26,8 @@ class SdocColumns(str, AbstractColumns):
 
     def get_filter_column(self, subquery_dict: dict):
         match self:
-            case SdocColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case SdocColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
             case SdocColumns.TAG_ID_LIST:
@@ -41,7 +41,7 @@ class SdocColumns(str, AbstractColumns):
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
-            case SdocColumns.SOURCE_DOCUMENT_FILENAME:
+            case SdocColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterOperator.ID
@@ -56,7 +56,7 @@ class SdocColumns(str, AbstractColumns):
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:
-            case SdocColumns.SOURCE_DOCUMENT_FILENAME:
+            case SdocColumns.SOURCE_DOCUMENT_NAME:
                 return FilterValueType.INFER_FROM_OPERATOR
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterValueType.DOC_TYPE
@@ -71,8 +71,8 @@ class SdocColumns(str, AbstractColumns):
 
     def get_sort_column(self):
         match self:
-            case SdocColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case SdocColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
             case SdocColumns.TAG_ID_LIST:
@@ -86,7 +86,7 @@ class SdocColumns(str, AbstractColumns):
 
     def get_label(self) -> str:
         match self:
-            case SdocColumns.SOURCE_DOCUMENT_FILENAME:
+            case SdocColumns.SOURCE_DOCUMENT_NAME:
                 return "Document name"
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return "Type"

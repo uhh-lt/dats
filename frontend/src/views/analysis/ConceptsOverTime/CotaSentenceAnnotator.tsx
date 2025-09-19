@@ -190,7 +190,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       {
         id: "sdoc",
         header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderName />,
       },
       {
         id: "sentence",

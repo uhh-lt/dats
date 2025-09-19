@@ -16,13 +16,13 @@ from systems.search_system.search_builder import SearchBuilder
 class BBoxColumns(str, AbstractColumns):
     CODE_ID = "BB_CODE_ID"
     MEMO_CONTENT = "BB_MEMO_CONTENT"
-    SOURCE_DOCUMENT_FILENAME = "BB_SOURCE_SOURCE_DOCUMENT_FILENAME"
+    SOURCE_DOCUMENT_NAME = "BB_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST = "BB_TAG_ID_LIST"
 
     def get_filter_column(self, subquery_dict):
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case BBoxColumns.TAG_ID_LIST:
                 return subquery_dict[BBoxColumns.TAG_ID_LIST.value]
             case BBoxColumns.CODE_ID:
@@ -32,7 +32,7 @@ class BBoxColumns(str, AbstractColumns):
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
             case BBoxColumns.TAG_ID_LIST:
                 return FilterOperator.ID_LIST
@@ -43,7 +43,7 @@ class BBoxColumns(str, AbstractColumns):
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return FilterValueType.INFER_FROM_OPERATOR
             case BBoxColumns.TAG_ID_LIST:
                 return FilterValueType.TAG_ID
@@ -54,8 +54,8 @@ class BBoxColumns(str, AbstractColumns):
 
     def get_sort_column(self):
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
+                return SourceDocumentORM.name
             case BBoxColumns.TAG_ID_LIST:
                 return None
             case BBoxColumns.CODE_ID:
@@ -65,7 +65,7 @@ class BBoxColumns(str, AbstractColumns):
 
     def get_label(self) -> str:
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return "Document name"
             case BBoxColumns.TAG_ID_LIST:
                 return "Tags"
@@ -96,7 +96,7 @@ class BBoxColumns(str, AbstractColumns):
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case BBoxColumns.SOURCE_DOCUMENT_FILENAME:
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 query_builder._join_query(
                     AnnotationDocumentORM,
                     AnnotationDocumentORM.id

@@ -57,12 +57,12 @@ function DocAspectTable({ aspectId, height, cluster }: DocAspectTableProps) {
   const columns: MRT_ColumnDef<PerspectivesDoc>[] = useMemo(
     () => [
       {
-        id: "Filename",
-        header: "Filename",
+        id: "Name",
+        header: "Name",
         minSize: 100,
         size: 200,
         grow: false,
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderName />,
       },
       {
         id: "Cluster",

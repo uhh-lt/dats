@@ -128,7 +128,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
   const tabs = useMemo(
     () =>
       Object.keys(annotations).map((sdocId) => (
-        <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderFilename />} value={sdocId} />
+        <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderName />} value={sdocId} />
       )),
     [annotations],
   );

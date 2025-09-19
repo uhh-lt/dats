@@ -98,10 +98,10 @@ function BBoxAnnotationTable({
       };
 
       switch (column.column) {
-        case BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME:
+        case BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
-            accessorFn: (row) => row.sdoc.filename,
+            accessorFn: (row) => row.sdoc.name,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_TAG_ID_LIST:
           return {

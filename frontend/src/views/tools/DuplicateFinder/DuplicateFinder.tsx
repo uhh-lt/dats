@@ -32,7 +32,7 @@ const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
       row.original.subRows.length > 0 ? (
         <>{`${row.original.subRows.length} duplicate documents`}</>
       ) : (
-        <SdocRenderer sdoc={row.original.sdocId} renderFilename link />
+        <SdocRenderer sdoc={row.original.sdocId} renderName link />
       ),
   },
 ];

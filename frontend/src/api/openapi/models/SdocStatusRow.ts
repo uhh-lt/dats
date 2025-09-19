@@ -9,9 +9,9 @@ export type SdocStatusRow = {
    */
   sdoc_id: number;
   /**
-   * Filename of the SourceDocument
+   * Name of the SourceDocument
    */
-  filename: string;
+  name: string;
   /**
    * Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)
    */

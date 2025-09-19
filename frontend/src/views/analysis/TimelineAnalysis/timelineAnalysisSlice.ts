@@ -33,25 +33,25 @@ const defaultAnalysisType = TimelineAnalysisType.DOCUMENT;
 const defaultFilterExpressions: Record<TimelineAnalysisType, MyFilterExpression> = {
   [TimelineAnalysisType.DOCUMENT]: {
     id: uuidv4(),
-    column: SdocColumns.SD_SOURCE_DOCUMENT_FILENAME,
+    column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.SENTENCE_ANNOTATION]: {
     id: uuidv4(),
-    column: SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    column: SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.BBOX_ANNOTATION]: {
     id: uuidv4(),
-    column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.SPAN_ANNOTATION]: {
     id: uuidv4(),
-    column: SpanColumns.SP_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    column: SpanColumns.SP_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },

@@ -17,7 +17,7 @@ function SdocStatusSimpleListItem({ sdocStatus }: SdocStatusSimpleListItemProps)
       <Box width="50%" display="flex" alignItems="center">
         <ListItemIcon>{docTypeToIcon[sdocStatus.doctype]}</ListItemIcon>
         <ListItemText
-          primary={sdocStatus.filename}
+          primary={sdocStatus.name}
           primaryTypographyProps={{
             sx: {
               whiteSpace: "normal",

@@ -1885,6 +1885,49 @@
         }
       }
     },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/job/ml": {
       "post": {
         "tags": ["job"],
@@ -1996,49 +2039,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/duplicate_finder": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start DuplicateFinder job",
-        "operationId": "start_duplicate_finder_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/duplicate_finder/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get DuplicateFinder job",
-        "operationId": "get_duplicate_finder_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6846,7 +6846,7 @@
       },
       "BBoxColumns": {
         "type": "string",
-        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_FILENAME", "BB_TAG_ID_LIST"],
+        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_NAME", "BB_TAG_ID_LIST"],
         "title": "BBoxColumns"
       },
       "Body_analysis-code_frequencies": {
@@ -10617,7 +10617,7 @@
         "type": "string",
         "enum": [
           "SD_SOURCE_DOCUMENT_TYPE",
-          "SD_SOURCE_DOCUMENT_FILENAME",
+          "SD_SOURCE_DOCUMENT_NAME",
           "SD_TAG_ID_LIST",
           "SD_CODE_ID_LIST",
           "SD_USER_ID_LIST",
@@ -10679,7 +10679,7 @@
       "SdocStatusRow": {
         "properties": {
           "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the SourceDocument" },
-          "filename": { "type": "string", "title": "Filename", "description": "Filename of the SourceDocument" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the SourceDocument" },
           "status": {
             "additionalProperties": { "$ref": "#/components/schemas/SDocStatus" },
             "type": "object",
@@ -10688,7 +10688,7 @@
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "filename", "status"],
+        "required": ["sdoc_id", "name", "status"],
         "title": "SdocStatusRow"
       },
       "SdocTimelineAnalysisFilter-Input": {
@@ -10721,7 +10721,7 @@
           "SentAnno_CODE_ID",
           "SentAnno_USER_ID",
           "SentAnno_MEMO_CONTENT",
-          "SentAnno_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME",
           "SentAnno_TAG_ID_LIST"
         ],
         "title": "SentAnnoColumns"
@@ -11405,9 +11405,9 @@
             "description": "Filename of the SourceDocument"
           },
           "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "type": "string",
             "title": "Name",
-            "description": "User-defined name of the document"
+            "description": "User-defined name of the document (defaults is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
           "project_id": {
@@ -11435,7 +11435,7 @@
           }
         },
         "type": "object",
-        "required": ["filename", "doctype", "project_id", "id", "created", "updated", "folder_id"],
+        "required": ["filename", "name", "doctype", "project_id", "id", "created", "updated", "folder_id"],
         "title": "SourceDocumentRead"
       },
       "SourceDocumentStatusSimple": {
@@ -11447,9 +11447,9 @@
             "description": "Filename of the SourceDocument"
           },
           "name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "type": "string",
             "title": "Name",
-            "description": "User-defined name of the document"
+            "description": "User-defined name of the document (defaults is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
           "project_id": {
@@ -11474,7 +11474,16 @@
           }
         },
         "type": "object",
-        "required": ["filename", "doctype", "project_id", "id", "processed_jobs", "total_jobs", "processed_status"],
+        "required": [
+          "filename",
+          "name",
+          "doctype",
+          "project_id",
+          "id",
+          "processed_jobs",
+          "total_jobs",
+          "processed_status"
+        ],
         "title": "SourceDocumentStatusSimple"
       },
       "SourceDocumentTagLinks": {
@@ -11866,7 +11875,7 @@
           "SP_CODE_ID",
           "SP_USER_ID",
           "SP_MEMO_CONTENT",
-          "SP_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "SP_SOURCE_SOURCE_DOCUMENT_NAME",
           "SP_TAG_ID_LIST"
         ],
         "title": "SpanColumns"
@@ -13038,7 +13047,7 @@
           "WF_WORD_PERCENT",
           "WF_SOURCE_DOCUMENT_FREQUENCY",
           "WF_SOURCE_DOCUMENT_PERCENT",
-          "WF_SOURCE_DOCUMENT_FILENAME",
+          "WF_SOURCE_DOCUMENT_NAME",
           "WF_TAG_ID_LIST",
           "WF_CODE_ID_LIST",
           "WF_USER_ID_LIST",

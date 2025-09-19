@@ -137,7 +137,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
         }
         backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
-        <CardHeader title={<SdocRenderer sdoc={props.data.sdocId} link renderDoctypeIcon renderFilename />} />
+        <CardHeader title={<SdocRenderer sdoc={props.data.sdocId} link renderDoctypeIcon renderName />} />
         <CardContent>
           {sdoc.isSuccess ? (
             <>

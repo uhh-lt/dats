@@ -79,7 +79,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 <Tooltip title={"Filename/Title of this document"} placement="left">
                   <span style={{ flexGrow: 1, flexBasis: 1, justifyContent: "start" }}>
                     <Button color="inherit" startIcon={getIconComponent(Icon.TEXT_DOCUMENT)} disabled>
-                      Filename
+                      Name
                     </Button>
                   </span>
                 </Tooltip>
@@ -101,7 +101,7 @@ function SelectionInformation({ aspectId }: SelectionInformationProps) {
                   </Box>
                 )}
                 {sdoc.isError && <span>{sdoc.error.message}</span>}
-                {sdoc.isSuccess && <Typography>{sdoc.data.name || sdoc.data.filename}</Typography>}
+                {sdoc.isSuccess && <Typography>{sdoc.data.name}</Typography>}
               </Stack>
             </Stack>
 

@@ -73,11 +73,11 @@ function SdocTable({
             ...colDef,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case SdocColumns.SD_SOURCE_DOCUMENT_FILENAME:
+        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderFilename />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
           } as MRT_ColumnDef<ElasticSearchHit>;
         case SdocColumns.SD_TAG_ID_LIST:
           return {

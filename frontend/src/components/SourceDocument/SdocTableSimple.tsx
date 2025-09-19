@@ -40,9 +40,9 @@ function SdocTableSimple({ sdocIds }: { sdocIds: number[] }) {
         Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
       },
       {
-        id: "Filename",
+        id: "Name",
         header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderFilename />,
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderName />,
       },
       {
         id: "Tags",

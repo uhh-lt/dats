@@ -16,8 +16,8 @@ class SourceDocumentBaseDTO(BaseModel):
         description="Filename of the SourceDocument",
         max_length=SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH,
     )
-    name: str | None = Field(
-        description="User-defined name of the document", default=None
+    name: str = Field(
+        description="User-defined name of the document (default is the filename)"
     )
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")

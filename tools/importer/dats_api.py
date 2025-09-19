@@ -163,7 +163,7 @@ class DATSAPI:
                         "items": [
                             {
                                 "id": "asdf2",
-                                "column": "SD_SOURCE_DOCUMENT_FILENAME",
+                                "column": "SD_SOURCE_DOCUMENT_NAME",
                                 "operator": "STRING_CONTAINS",
                                 "value": name_without_suffix + "_pages_",
                             }

@@ -59,12 +59,7 @@ function AttachedObjectRenderer({ attachedObject, attachedObjectType, link }: At
       return <CodeRenderer code={attachedObject as CodeRead | number} />;
     case AttachedObjectType.SOURCE_DOCUMENT:
       return (
-        <SdocRenderer
-          sdoc={attachedObject as SourceDocumentRead | number}
-          renderFilename
-          renderDoctypeIcon
-          link={link}
-        />
+        <SdocRenderer sdoc={attachedObject as SourceDocumentRead | number} renderName renderDoctypeIcon link={link} />
       );
     case AttachedObjectType.PROJECT:
       return <ProjectRenderer project={attachedObject as ProjectRead | number} />;
