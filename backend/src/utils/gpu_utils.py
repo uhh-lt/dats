@@ -32,6 +32,17 @@ def find_unused_cuda_device() -> str:
         return "cuda:0"
 
 
+def set_cuda_memory_limit(limit_gb: int):
+    import torch
+
+    limit_bytes = limit_gb * 1024 * 1024 * 1024
+
+    # set GPU memory limit for job
+    total = torch.cuda.get_device_properties().total_memory
+    allowed_fraction = limit_bytes / total
+    torch.cuda.set_per_process_memory_fraction(allowed_fraction)
+
+
 def parse_device_string(device_str: str) -> tuple[str, list[int]]:
     """
     Parses a device string and returns the appropriate device configuration.

@@ -112,6 +112,9 @@ vllm:
     port: ${oc.env:VLLM_EMB_PORT, 8000}
     model: ${oc.env:VLLM_EMB_MODEL, snowflake-arctic-embed2:568m}
 
+job:
+  gpu_memory_limit: ${oc.env:RQ_WORKER_GPU_MEM_GB, 20}
+
 llm_assistant:
   sentence_annotation:
     few_shot_threshold: 4

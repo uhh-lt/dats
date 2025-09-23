@@ -77,7 +77,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         dropout: float,
         learning_rate: float,
         weight_decay: float,
-        class_weights: torch.Tensor,
+        class_weights: list[float],
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
     ):
@@ -455,7 +455,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
-                class_weights=torch.tensor(class_weights, dtype=torch.float32),
+                class_weights=class_weights,
                 id2label=id2label,
                 label2id={v: k for k, v in id2label.items()},
             )
