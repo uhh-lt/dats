@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from common.gpu_utils import find_unused_cuda_device
 from common.job_type import JobType
+from config import conf
 from modules.doc_processing.doc_processing_pipeline import (
     handle_job_error,
     handle_job_finished,
 )
 from systems.job_system.job_dto import Job, JobInputBase
+from utils.gpu_utils import find_unused_cuda_device, set_cuda_memory_limit
 
 
 def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
@@ -18,6 +19,7 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
 
             cuda_device = find_unused_cuda_device()
             with torch.cuda.device(cuda_device):
+                set_cuda_memory_limit(conf.job.gpu_memory_limit)
                 output = handler(payload=payload, job=job)
         else:
             output = handler(payload=payload, job=job)

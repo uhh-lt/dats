@@ -523,7 +523,6 @@ class SpanClassificationModelService(TextClassificationModelService):
         callbacks.append(JobProgressCallback(job=job))
 
         trainer = pl.Trainer(
-            accelerator="gpu",
             logger=csv_logger,
             max_epochs=parameters.epochs,
             callbacks=callbacks,
