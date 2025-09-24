@@ -248,6 +248,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         class_ids: list[int],
         classid2labelid: dict[int, int],
         tokenizer,
+        use_chunking: bool,
     ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset]:
         # Find documents
         sdoc_ids = [
@@ -315,9 +316,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         def tokenize_and_align_labels(examples: dict):
             tokenized_inputs = tokenizer(
                 examples["words"],
-                truncation=False,
+                truncation=not use_chunking,
                 is_split_into_words=True,
-                add_special_tokens=False,
+                add_special_tokens=not use_chunking,
             )
 
             labels = []
@@ -399,6 +400,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             class_ids=parameters.class_ids,
             classid2labelid=classid2labelid,
             tokenizer=tokenizer,
+            use_chunking=True,
         )
 
         # Train test split
@@ -659,6 +661,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             class_ids=classifier.class_ids,
             classid2labelid=classid2labelid,
             tokenizer=tokenizer,
+            use_chunking=False,
         )
 
         # Build dataloader

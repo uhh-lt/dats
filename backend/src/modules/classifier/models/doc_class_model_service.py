@@ -25,7 +25,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_crud import crud_tag
-from core.tag.tag_orm import TagORM
+from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierCreate,
@@ -234,7 +234,8 @@ class DocClassificationModelService(TextClassificationModelService):
         class_ids: list[int],
         classid2labelid: dict[int, int],
         tokenizer,
-    ) -> tuple[dict[int, list[TagORM]], Dataset]:
+        use_chunking: bool,
+    ) -> tuple[dict[int, list[int]], Dataset]:
         # Find documents
         sdoc_ids = [
             sdoc.id
@@ -248,10 +249,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Get annotations
         results = (
-            db.query(
-                SourceDocumentORM,
-                TagORM,
-            )
+            db.query(SourceDocumentTagLinkTable)
             .filter(
                 SourceDocumentORM.id.in_(sdoc_ids),
                 SourceDocumentORM.tags.any(TagORM.id.in_(class_ids)),
@@ -269,12 +267,11 @@ class DocClassificationModelService(TextClassificationModelService):
             sdocid2data[sdoc_data.id] = sdoc_data
 
         # Group classifications by source document
-        sdoc_id2annotations: dict[int, list[TagORM]] = {
+        sdoc_id2annotation_ids: dict[int, list[int]] = {
             sdoc_id: [] for sdoc_id in sdoc_ids
         }
         for row in results:
-            doc, tag = row._tuple()
-            sdoc_id2annotations[doc.id].append(tag)
+            sdoc_id2annotation_ids[row.source_document_id].append(row.tag_id)
 
         # Create a labeled dataset
         # Every source document is part of the training data
@@ -288,8 +285,8 @@ class DocClassificationModelService(TextClassificationModelService):
                 continue  # skip documents without data
 
             # We only use the first annotation (if multiple exist)
-            annotations = sdoc_id2annotations[sdoc_id]
-            annotation = annotations[0].id if len(annotations) > 0 else 0
+            annotations = sdoc_id2annotation_ids[sdoc_id]
+            annotation = annotations[0] if len(annotations) > 0 else 0
             dataset.append(
                 {
                     "sdoc_id": sdoc_data.id,
@@ -303,13 +300,19 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Construct a tokenized huggingface dataset
         def tokenize_text(examples):
-            return tokenizer(examples["text"], truncation=True)
+            tokenized_inputs = tokenizer(
+                examples["text"],
+                truncation=not use_chunking,
+                is_split_into_words=False,
+                add_special_tokens=not use_chunking,
+            )
+            return tokenized_inputs
 
         hf_dataset = Dataset.from_list(dataset)  # type: ignore
         tokenized_hf_dataset = hf_dataset.map(tokenize_text, batched=True)
         tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["text"])
 
-        return sdoc_id2annotations, tokenized_hf_dataset
+        return sdoc_id2annotation_ids, tokenized_hf_dataset
 
     def train(
         self, db: Session, job: Job, payload: ClassifierJobInput
@@ -328,6 +331,8 @@ class DocClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
+        if parameters.chunk_size:
+            tokenizer.model_max_length = parameters.chunk_size
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         job.update(
@@ -352,25 +357,66 @@ class DocClassificationModelService(TextClassificationModelService):
         id2label[0] = "O"
 
         # Build dataset
-        sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
+        sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=parameters.class_ids,
             classid2labelid=classid2labelid,
             tokenizer=tokenizer,
+            use_chunking=True,
         )
 
         # Train test split
         split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
+
+        def split_in_chunks(examples: dict):
+            chunk_len = tokenizer.model_max_length - 2
+            for key, values in examples.items():
+                if "labels" == key:
+                    continue
+                elif "attention_mask" == key:
+                    pre = [1]
+                    post = [1]
+                elif "input_ids" == key:
+                    pre = [tokenizer.added_tokens_encoder["[CLS]"]]
+                    post = [tokenizer.added_tokens_encoder["[SEP]"]]
+                else:
+                    raise ValueError(f"Unsupported {key} in batch examples dict")
+
+                result = []
+                original_labels = examples["labels"]
+                labels = []
+                for val, lab in zip(values, original_labels):
+                    chunks = [
+                        pre + val[i : i + chunk_len] + post
+                        for i in range(0, len(val), chunk_len)
+                    ]
+                    result.extend(chunks)
+                    labels.extend([lab] * len(chunks))
+                examples[key] = result
+                examples["labels"] = labels
+            return examples
+
+        train_dataset = (
+            split_dataset["train"]
+            .remove_columns(["sdoc_id"])
+            .map(split_in_chunks, batched=True)
+        )
+        val_dataset = (
+            split_dataset["test"]
+            .remove_columns(["sdoc_id"])
+            .map(split_in_chunks, batched=True)
+        )
+
         train_dataloader = DataLoader(
-            split_dataset["train"],  # type: ignore
+            train_dataset,  # type: ignore
             shuffle=True,
             collate_fn=data_collator,
             batch_size=parameters.batch_size,
         )
         val_dataloader = DataLoader(
-            split_dataset["test"],  # type: ignore
+            val_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
             batch_size=parameters.batch_size,
@@ -379,13 +425,13 @@ class DocClassificationModelService(TextClassificationModelService):
         # Dataset statistics (number of annotations per code)
         train_dataset_stats: dict[int, int] = {tag.id: 0 for tag in tags}
         for sdoc_id in split_dataset["train"]["sdoc_id"]:
-            for annotation in sdoc_id2annotations[sdoc_id]:
-                train_dataset_stats[annotation.id] += 1
+            for annotation in sdoc_id2annotation_ids[sdoc_id]:
+                train_dataset_stats[annotation] += 1
 
         eval_dataset_stats: dict[int, int] = {tag.id: 0 for tag in tags}
         for sdoc_id in split_dataset["test"]["sdoc_id"]:
-            for annotation in sdoc_id2annotations[sdoc_id]:
-                eval_dataset_stats[annotation.id] += 1
+            for annotation in sdoc_id2annotation_ids[sdoc_id]:
+                eval_dataset_stats[annotation] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -568,13 +614,14 @@ class DocClassificationModelService(TextClassificationModelService):
         job.update(current_step=2)
 
         # Build dataset
-        sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
+        sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=classifier.class_ids,
             classid2labelid=classid2labelid,
             tokenizer=tokenizer,
+            use_chunking=False,
         )
 
         # Build dataloader
@@ -590,8 +637,8 @@ class DocClassificationModelService(TextClassificationModelService):
             tag_id: 0 for tag_id, label_id in classid2labelid.items() if label_id != 0
         }
         for sdoc_id in dataset["sdoc_id"]:
-            for annotation in sdoc_id2annotations[sdoc_id]:
-                eval_dataset_stats[annotation.id] += 1
+            for annotation in sdoc_id2annotation_ids[sdoc_id]:
+                eval_dataset_stats[annotation] += 1
 
         # 3. Load the model
         job.update(current_step=3)
