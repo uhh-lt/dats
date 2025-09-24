@@ -75,7 +75,7 @@ class SentClassificationLightningModel(pl.LightningModule):
         dropout: float,
         learning_rate: float,
         weight_decay: float,
-        class_weights: torch.Tensor,
+        class_weights: list[float],
         # special params
         embedding_model_name: str,
         embedding_dim: int,
@@ -200,6 +200,7 @@ class SentClassificationLightningModel(pl.LightningModule):
         )
         return loss
 
+    @torch.no_grad()
     def validation_step(self, batch, batch_idx):
         return self._val_test_step(
             prefix="eval",
@@ -207,6 +208,7 @@ class SentClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def test_step(self, batch, batch_idx):
         return self._val_test_step(
             prefix="test",
@@ -214,6 +216,7 @@ class SentClassificationLightningModel(pl.LightningModule):
             batch_idx=batch_idx,
         )
 
+    @torch.no_grad()
     def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
         # Get predictions and ground truth tags
         predictions = self(sentences=batch["sentences"], mask=batch["mask"])
@@ -225,7 +228,10 @@ class SentClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+            self.parameters(),
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay,
+            fused=True,
         )
         return optimizer
 
@@ -485,23 +491,6 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
-        # Initialize the Lightning Model
-        lightning_model = SentClassificationLightningModel(
-            # embedding model params
-            embedding_model_name=parameters.base_name,
-            embedding_dim=embedding_dim,
-            # sent classifier specific params
-            hidden_dim=int(embedding_dim / 2),
-            use_lstm=True,
-            # training params
-            num_labels=len(classid2labelid),
-            dropout=parameters.dropout,
-            learning_rate=parameters.learning_rate,
-            weight_decay=parameters.weight_decay,
-            class_weights=torch.tensor(class_weights, dtype=torch.float32),
-            id2label=id2label,
-            label2id={v: k for k, v in id2label.items()},
-        )
 
         # Create the Trainer
         model_name: str = str(uuid4())
@@ -539,10 +528,29 @@ class SentClassificationModelService(TextClassificationModelService):
             max_epochs=parameters.epochs,
             callbacks=callbacks,
             enable_progress_bar=True,
+            precision=parameters.precision,
             # Special params
-            # precision=32,  # full precision training
             # gradient_clip_val=1.0,  # Gradient clipping
         )
+
+        with trainer.init_module():
+            # Initialize the Lightning Model
+            lightning_model = SentClassificationLightningModel(
+                # embedding model params
+                embedding_model_name=parameters.base_name,
+                embedding_dim=embedding_dim,
+                # sent classifier specific params
+                hidden_dim=int(embedding_dim / 2),
+                use_lstm=True,
+                # training params
+                num_labels=len(classid2labelid),
+                dropout=parameters.dropout,
+                learning_rate=parameters.learning_rate,
+                weight_decay=parameters.weight_decay,
+                class_weights=class_weights,
+                id2label=id2label,
+                label2id={v: k for k, v in id2label.items()},
+            )
 
         # 3. Train the model
         job.update(current_step=3)
