@@ -15,7 +15,7 @@ RUN apt-get update -q && \
 
 # install ubuntu packages
 RUN apt-get update -q && \
-    apt-get install -q -y --no-install-recommends ffmpeg curl ca-certificates
+    apt-get install -q -y --no-install-recommends ffmpeg curl ca-certificates wget
 
 # clean up apt cache
 RUN apt-get clean && \
