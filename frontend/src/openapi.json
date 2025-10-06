@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.8.3" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.8.4" },
   "paths": {
     "/analysis/code_frequencies": {
       "post": {
@@ -1885,49 +1885,6 @@
         }
       }
     },
-    "/job/duplicate_finder": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start DuplicateFinder job",
-        "operationId": "start_duplicate_finder_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/duplicate_finder/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get DuplicateFinder job",
-        "operationId": "get_duplicate_finder_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/job/ml": {
       "post": {
         "tags": ["job"],
@@ -2039,6 +1996,49 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -11436,7 +11436,7 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "User-defined name of the document (defaults is the filename)"
+            "description": "User-defined name of the document (default is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
           "project_id": {
@@ -11478,7 +11478,7 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "User-defined name of the document (defaults is the filename)"
+            "description": "User-defined name of the document (default is the filename)"
           },
           "doctype": { "$ref": "#/components/schemas/DocType", "description": "DOCTYPE of the SourceDocument" },
           "project_id": {
