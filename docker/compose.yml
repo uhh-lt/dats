@@ -139,7 +139,7 @@ services:
       # http.publish_port=${ELASTICSEARCH_EXPOSED_PORT:-9200}
       - xpack.security.enabled=false # no auth
       - discovery.type=single-node # single node cluster
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # heap size, can be changed to -Xms2g
     ulimits:
       memlock:
         soft: -1
