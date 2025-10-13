@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.doc.sdoc_kwic_dto import PaginatedElasticSearchKwicSnippets
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations,
     find_bbox_annotations_info,
@@ -14,7 +13,6 @@ from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
     find_sdocs_info,
-    kwic_search,
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
@@ -90,33 +88,6 @@ def search_sdocs(
         sorts=sorts,
         page_number=page_number,
         page_size=page_size,
-    )
-
-
-@router.post(
-    "/sdoc/kwic",
-    # response_model=PaginatedElasticSearchKwicHits,
-    summary="Returns KWIC search results. Sorting direction is to the left or right.",
-)
-def search_sdocs_kwic(
-    *,
-    project_id: int,
-    search_query: str,
-    window: int = 5,
-    direction: str = "left",  # "left" or "right"
-    # fuzziness: int = 0,
-    page_number: int = 1,
-    page_size: int = 10,
-    authz_user: AuthzUser = Depends(),
-) -> PaginatedElasticSearchKwicSnippets:
-    authz_user.assert_in_project(project_id)
-    return kwic_search(
-        project_id=project_id,
-        search_query=search_query,
-        window=window,
-        page_number=page_number,
-        page_size=page_size,
-        direction=direction,
     )
 
 
