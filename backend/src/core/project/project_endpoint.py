@@ -132,7 +132,7 @@ def get_user_projects(
 
 
 @router.get(
-    "{project_id}/sdoc/status/{status}",
+    "/{project_id}/sdoc/status/{status}",
     response_model=int,
     summary="Returns all Projects of the logged-in User",
 )
