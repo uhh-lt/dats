@@ -139,3 +139,6 @@ addopts = [
 testpaths = [
     "test"
 ]
+markers = [
+  "api: fast API endpoint tests"
+]
