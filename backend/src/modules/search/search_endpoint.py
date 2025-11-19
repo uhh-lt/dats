@@ -13,11 +13,13 @@ from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
     find_sdocs_info,
+    search_and_auto_annotate,
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
     BBoxAnnotationSearchResult,
     PaginatedSDocHits,
+    PaginatedSpanAnnotationHits,
     SentenceAnnotationSearchResult,
     SpanAnnotationSearchResult,
 )
@@ -267,4 +269,24 @@ def search_bbox_annotations(
         page=page,
         page_size=page_size,
         sorts=sorts,
+    )
+
+
+@router.post(
+    "/auto_annotate",
+    response_model=PaginatedSpanAnnotationHits,
+    summary="Returns the character & token-level positions needed for creating SpanAnnotations.",
+)
+def auto_annotate(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    query: str,
+    authz_user: AuthzUser = Depends(),
+) -> PaginatedSpanAnnotationHits:
+    authz_user.assert_in_project(project_id)
+    return search_and_auto_annotate(
+        db=db,
+        project_id=project_id,
+        query=query,
     )
