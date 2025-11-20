@@ -100,17 +100,21 @@ elasticsearch:
 
 vllm:
   llm:
-    host: ${oc.env:VLLM_LLM_HOST, vllm-gemma}
-    port: ${oc.env:VLLM_LLM_PORT, 8000}
+    host: ${oc.env:VLLM_LLM_HOST, localhost}
+    port: ${oc.env:VLLM_LLM_PORT, 13133}
     model: ${oc.env:VLLM_LLM_MODEL, gemma-3-27b}
   vlm:
-    host: ${oc.env:VLLM_VLM_HOST, vllm-gemma}
-    port: ${oc.env:VLLM_VLM_PORT, 8000}
+    host: ${oc.env:VLLM_VLM_HOST, localhost}
+    port: ${oc.env:VLLM_VLM_PORT, 13133}
     model: ${oc.env:VLLM_VLM_MODEL, gemma-3-27b}
   emb:
-    host: ${oc.env:VLLM_EMB_HOST, vllm-emb}
-    port: ${oc.env:VLLM_EMB_PORT, 8000}
+    host: ${oc.env:VLLM_EMB_HOST, localhost}
+    port: ${oc.env:VLLM_EMB_PORT, 13137}
     model: ${oc.env:VLLM_EMB_MODEL, snowflake-arctic-embed2:568m}
+
+docling:
+  host: ${oc.env:DOCLING_HOST, localhost}
+  port: ${oc.env:DOCLING_PORT, 13139}
 
 job:
   gpu_memory_limit: ${oc.env:RQ_WORKER_GPU_MEM_GB, 20}

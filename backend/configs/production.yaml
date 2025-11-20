@@ -112,6 +112,10 @@ vllm:
     port: ${oc.env:VLLM_EMB_PORT, 8000}
     model: ${oc.env:VLLM_EMB_MODEL, snowflake-arctic-embed2:568m}
 
+docling:
+  host: ${oc.env:DOCLING_HOST, docling}
+  port: ${oc.env:DOCLING_PORT, 5001}
+
 job:
   gpu_memory_limit: ${oc.env:RQ_WORKER_GPU_MEM_GB, 20}
 
