@@ -2,6 +2,8 @@ from typing import Any
 
 from elasticsearch import Elasticsearch
 
+from config import conf
+
 
 class IndexBase:
     name: str
@@ -11,7 +13,7 @@ class IndexBase:
 
     @classmethod
     def get_index_name(cls, proj_id: int) -> str:
-        return f"dats_project_{proj_id}_{cls.name}"
+        return f"{conf.elasticsearch.index_prefix}_project_{proj_id}_{cls.name}"
 
     @classmethod
     def create_index(
