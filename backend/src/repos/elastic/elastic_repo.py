@@ -6,7 +6,7 @@ from config import conf
 
 
 class ElasticSearchRepo(metaclass=SingletonMeta):
-    def __new__(cls, flush: bool = False):
+    def __new__(cls, remove_if_exists: bool = False):
         try:
             # ElasticSearch Connection
             esc = Elasticsearch(
@@ -41,7 +41,7 @@ class ElasticSearchRepo(metaclass=SingletonMeta):
 
         logger.info("Successfully established connection to ElasticSearch!")
 
-        if flush:
+        if remove_if_exists:
             logger.warning("Removing all ElasticSearch indices!")
             esc.indices.delete(index="dats_*", allow_no_indices=True)
 

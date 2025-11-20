@@ -26,13 +26,13 @@ class SQLRepo(metaclass=SingletonMeta):
                 echo=kwargs["echo"] if "echo" in kwargs else False,
             )
             logger.info("Successfully established connection to PostgresSQL!")
-            cls.__engine: Engine = engine
+            cls.engine: Engine = engine
             cls.session_maker = sessionmaker(autoflush=False, bind=engine)
 
-            if kwargs.get("reset_database") is True:
-                if database_exists(cls.__engine.url):
+            if kwargs.get("remove_if_exists") is True:
+                if database_exists(cls.engine.url):
                     logger.warning("Dropping existing DB!")
-                    drop_database(cls.__engine.url)
+                    drop_database(cls.engine.url)
 
             return super(SQLRepo, cls).__new__(cls)
 
@@ -42,24 +42,24 @@ class SQLRepo(metaclass=SingletonMeta):
             raise SystemExit(msg)
 
     def __del__(self):
-        self.__engine.dispose()
+        self.engine.dispose()
 
     def drop_database(self):
-        if database_exists(self.__engine.url):
+        if database_exists(self.engine.url):
             logger.warning("Dropping existing DB!")
-            drop_database(self.__engine.url)
+            drop_database(self.engine.url)
 
     def create_database_if_not_exists(self):
-        if not database_exists(self.__engine.url):
+        if not database_exists(self.engine.url):
             # create the DB
-            create_database(self.__engine.url)
+            create_database(self.engine.url)
             logger.debug("Created DB!")
 
     def database_contains_data(self):
-        if not database_exists(self.__engine.url):
+        if not database_exists(self.engine.url):
             return False
 
-        inspector = inspect(self.__engine)
+        inspector = inspect(self.engine)
         schemas = inspector.get_schema_names()
 
         for schema in schemas:
