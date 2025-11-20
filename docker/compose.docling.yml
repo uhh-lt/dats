@@ -1,0 +1,51 @@
+services:
+  docling:
+    image: ghcr.io/docling-project/docling-serve-cu126:main
+    # user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
+    # group_add:
+    #   - "1001"
+    ports:
+      - ${DOCLING_EXPOSED?docling-exposed-required!}:5001
+    environment:
+      # Config: https://github.com/docling-project/docling-serve/blob/main/docs/configuration.md
+      DOCLING_SERVE_ENABLE_UI: "true"
+      DOCLING_SERVE_MAX_DOCUMENT_TIMEOUT: 604800 # 7 days
+      DOCLING_NUM_THREADS: 4
+      DOCLING_PERF_PAGE_BATCH_SIZE: 4 # Number of pages processed in the same batch
+      # Local compute engine configs
+      DOCLING_SERVE_ENG_KIND: "local"
+      DOCLING_PERF_ELEMENTS_BATCH_SIZE: 8 # Number of document items/elements processed in the same batch during enrichment
+      DOCLING_SERVE_ENG_LOC_NUM_WORKERS: 2 # Number of workers/threads processing the incoming tasks.
+      DOCLING_SERVE_ENG_LOC_SHARE_MODELS: "false" # Whether to share model instances between workers
+      # Model configs
+      DOCLING_DEVICE: "cuda"
+      DOCLING_SERVE_LOAD_MODELS_AT_BOOT: "true"
+      DOCLING_SERVE_OPTIONS_CACHE_SIZE: 2 # number of converters (including models) to keep in memory
+      NVIDIA_VISIBLE_DEVICES: "all" # https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html
+      # Data configs
+      # DOCLING_SERVE_ARTIFACTS_PATH: /doclingdata/artifacts
+      # DOCLING_SERVE_STATIC_PATH: /doclingdata/static
+      # DOCLING_SERVE_SCRATCH_PATH: /doclingdata/scratch
+      # HUGGINGFACE_HUB_CACHE: /cache/hf_hub_cache
+      # DOCLING_SERVE_MAX_NUM_PAGES
+      # DOCLING_SERVE_MAX_FILE_SIZE
+      # DOCLING_SERVE_SYNC_POLL_INTERVAL=2 # seconds
+      # DOCLING_SERVE_QUEUE_MAX_SIZE
+      # DOCLING_SERVE_OCR_BATCH_SIZE
+      # DOCLING_SERVE_LAYOUT_BATCH_SIZE
+      # DOCLING_SERVE_TABLE_BATCH_SIZE
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${DOCLING_DEVICE_IDS?docling-device-ids-required!}"]
+              capabilities: [gpu]
+    #volumes:
+    #  - ./docling_cache/cache:/opt/app-root/src/.cache
+    #  - ./docling/data:/doclingdata
+    restart: always
+
+networks:
+  docling_network:
+    name: docling_network
