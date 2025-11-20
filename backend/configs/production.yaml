@@ -55,6 +55,7 @@ filesystem:
 weaviate:
   host: weaviate
   port: 8080
+  collection_postfix: ${oc.env:WEAVIATE_COLLECTION_POSTFIX,""}
   grpc_port: 50051
 
 postgres:
