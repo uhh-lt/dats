@@ -45,6 +45,8 @@ services:
     #  - ./docling_cache/cache:/opt/app-root/src/.cache
     #  - ./docling/data:/doclingdata
     restart: always
+    networks:
+      - docling_network
 
 networks:
   docling_network:
