@@ -141,7 +141,7 @@ def __init_repos__(
     # create SQL DBs and Tables
     from repos.db.sql_repo import SQLRepo
 
-    SQLRepo(echo=sql_echo, reset_database=reset_db)
+    SQLRepo(echo=sql_echo, remove_if_exists=reset_db)
 
     # create CRUDs
     from common.crud_enum import Crud  # noqa: F401
@@ -149,7 +149,7 @@ def __init_repos__(
     # import and init ElasticSearch
     from repos.elastic.elastic_repo import ElasticSearchRepo
 
-    ElasticSearchRepo(flush=reset_elastic)
+    ElasticSearchRepo(remove_if_exists=reset_elastic)
 
     # import and init Mail
     from repos.mail_repo import MailRepo
@@ -164,7 +164,7 @@ def __init_repos__(
     # import and init Weaviate
     from repos.vector.weaviate_repo import WeaviateRepo
 
-    WeaviateRepo(flush=reset_vector)
+    WeaviateRepo(remove_if_exists=reset_vector)
 
     # import and init LLMRepo
     from repos.llm_repo import LLMRepo
