@@ -92,6 +92,7 @@ logging:
 elasticsearch:
   host: elasticsearch
   port: 9200
+  index_prefix: ${oc.env:ES_INDEX_PREFIX, dats}
   use_ssl: False
   verify_certs: False
   sniff_on_start: False
