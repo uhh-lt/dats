@@ -59,6 +59,7 @@ x-dats-common: &dats-common
     - dats_network
     - ray_network
     - vllm_network
+    - docling_network
 
 services:
   postgres:
@@ -283,4 +284,7 @@ networks:
     external: true
   vllm_network:
     name: vllm_network
+    external: true
+  docling_network:
+    name: docling_network
     external: true
