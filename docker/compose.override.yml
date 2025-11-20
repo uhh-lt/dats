@@ -25,8 +25,6 @@ services:
       - "${WEAVIATEAPP_EXPOSED?weaviateapp-exposed-required!}:8501"
     extra_hosts:
       - "localhost:host-gateway"
-    profiles:
-      - weaviate
 
   elasticsearch:
     volumes:
