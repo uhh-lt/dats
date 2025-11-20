@@ -24,6 +24,8 @@ x-dats-common: &dats-common
     VLLM_LLM_MODEL: ${VLLM_LLM_MODEL?vllm-llm-model-required!}
     VLLM_VLM_MODEL: ${VLLM_VLM_MODEL?vllm-vlm-model-required!}
     VLLM_EMB_MODEL: ${VLLM_EMB_MODEL?vllm-emb-model-required!}
+    DOCLING_HOST: ${DOCLING_HOST?docling-host-required!}
+    DOCLING_PORT: ${DOCLING_PORT?docling-port-required!}
     RAY_HOST: ${RAY_HOST?ray-host-required!}
     RAY_PORT: ${RAY_PORT?ray-port-required!}
     OIDC_ENABLED: ${OIDC_ENABLED?oidc-enabled-required!}
