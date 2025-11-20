@@ -13,7 +13,6 @@ from repos.ray.dto.clip import (
 )
 from repos.ray.dto.coref import CorefJobInput, CorefJobOutput
 from repos.ray.dto.detr import DETRImageInput, DETRObjectDetectionOutput
-from repos.ray.dto.docling import DoclingPDF2HTMLOutput
 from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.dto.quote import QuoteJobInput, QuoteJobOutput
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
@@ -155,9 +154,3 @@ class RayRepo(metaclass=SingletonMeta):
             "/coref/predict", input.model_dump()
         )
         return CorefJobOutput.model_validate(response.json())
-
-    def docling_pdf_to_html(self, pdf_bytes: bytes) -> DoclingPDF2HTMLOutput:
-        response = self._make_post_request_with_binary_data(
-            "/docling/pdf2html", pdf_bytes
-        )
-        return DoclingPDF2HTMLOutput.model_validate(response.json())
