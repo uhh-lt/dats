@@ -6,7 +6,7 @@ from config import conf
 
 
 class WeaviateRepo(metaclass=SingletonMeta):
-    def __new__(cls, flush: bool = False):
+    def __new__(cls, remove_if_exists: bool = False):
         try:
             with cls.weaviate_session() as client:
                 # Check if client is ready
@@ -16,7 +16,7 @@ class WeaviateRepo(metaclass=SingletonMeta):
                     raise RuntimeError(msg)
                 logger.info("Successfully established connection to Weaviate DB!")
 
-                if flush:
+                if remove_if_exists:
                     client.collections.delete_all()
 
             return super(WeaviateRepo, cls).__new__(cls)
