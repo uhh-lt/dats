@@ -16,6 +16,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { SdocHealthResult } from "../../api/openapi/models/SdocHealthResult.ts";
 import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
@@ -31,6 +32,12 @@ const sdocStatus2Icon: Record<SDocStatus, JSX.Element> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
   [SDocStatus._0]: <HourglassTopOutlinedIcon sx={{ color: "primary.main" }} />,
   [SDocStatus._1]: <TaskAltIcon sx={{ color: "success.main" }} />,
+};
+
+const sdocStatus2Text: Record<SDocStatus, string> = {
+  [SDocStatus["_-100"]]: "Error",
+  [SDocStatus._0]: "Waiting/In Progress",
+  [SDocStatus._1]: "Completed",
 };
 
 interface SdocStatusTableProps {
@@ -56,9 +63,14 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
   }, [rowSelectionModel]);
 
   // actions
+  const { mutate: retryDocProcessingJobs } = DocProcessingHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
-    console.log("Retrying...");
-  }, []);
+    retryDocProcessingJobs({
+      projId: projectId,
+      doctype: doctype,
+      requestBody: selectedRows,
+    });
+  }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
   const handleRecompute = useCallback((step: string) => {
     console.log(`Recomputing step ${step}...`);
@@ -80,7 +92,28 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
           header: current,
           size: 200,
           accessorFn: (row) => row.status[current],
-          Cell: ({ row }) => sdocStatus2Icon[row.original.status[current]] ?? null,
+          Cell: ({ row }) => {
+            const errorMsg = row.original.failed_job_status_msgs[current];
+            const jobId = row.original.failed_job_uuids[current];
+            return (
+              <Tooltip
+                title={
+                  errorMsg && jobId ? (
+                    <>
+                      Error Message: {errorMsg}
+                      <br />
+                      Job ID: {jobId}
+                    </>
+                  ) : (
+                    <>Status: {sdocStatus2Text[row.original.status[current]]}</>
+                  )
+                }
+                placement="top-start"
+              >
+                {sdocStatus2Icon[row.original.status[current]] ?? null}
+              </Tooltip>
+            );
+          },
         });
         return prev;
       },
