@@ -10,10 +10,108 @@ import type { ExportJobInput } from "../models/ExportJobInput";
 import type { ExportJobRead } from "../models/ExportJobRead";
 import type { MLJobInput_Input } from "../models/MLJobInput_Input";
 import type { MlJobRead } from "../models/MlJobRead";
+import type { TextLanguageDetectionJobInput_Input } from "../models/TextLanguageDetectionJobInput_Input";
+import type { TextLanguageDetectionJobRead } from "../models/TextLanguageDetectionJobRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class JobService {
+  /**
+   * Start TextLanguageDetection job
+   * @returns TextLanguageDetectionJobRead Successful Response
+   * @throws ApiError
+   */
+  public static startTextLanguageDetectionJob({
+    requestBody,
+  }: {
+    requestBody: TextLanguageDetectionJobInput_Input;
+  }): CancelablePromise<TextLanguageDetectionJobRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/text_language_detection",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get TextLanguageDetection job
+   * @returns TextLanguageDetectionJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getTextLanguageDetectionJobById({
+    jobId,
+  }: {
+    jobId: string;
+  }): CancelablePromise<TextLanguageDetectionJobRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/text_language_detection/{job_id}",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Abort TextLanguageDetection job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static abortTextLanguageDetectionJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/text_language_detection/{job_id}/abort",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Retry TextLanguageDetection job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static retryTextLanguageDetectionJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/text_language_detection/{job_id}/retry",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get all TextLanguageDetection jobs by project
+   * @returns TextLanguageDetectionJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getTextLanguageDetectionJobsByProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<TextLanguageDetectionJobRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/text_language_detection/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
   /**
    * Start Crawler job
    * @returns CrawlerJobRead Successful Response

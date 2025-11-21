@@ -122,6 +122,14 @@ const usePollProcessingSimpleSdocStatus = (projectId: number) => {
   });
 };
 
+const useRetryDocProcessingJobs = () =>
+  useMutation({
+    mutationFn: DocprocessingService.retryFailedSdocs,
+    meta: {
+      successMessage: (data: string) => data,
+    },
+  });
+
 const DocProcessingHooks = {
   // crawler
   useStartCrawlerJob,
@@ -129,6 +137,8 @@ const DocProcessingHooks = {
   useGetAllCrawlerJobs,
   useUploadDocument,
   usePollProcessingSimpleSdocStatus,
+  // sdoc health
+  useRetryDocProcessingJobs,
 };
 
 export default DocProcessingHooks;
