@@ -1436,6 +1436,34 @@
         }
       }
     },
+    "/docprocessing/project/{proj_id}/retry": {
+      "post": {
+        "tags": ["docprocessing"],
+        "summary": "Retries doc processing jobs for SourceDocuments in the given Project and document type",
+        "operationId": "retry_failed_sdocs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          { "name": "doctype", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/DocType" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SdocHealthResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/folder/{folder_id}": {
       "get": {
         "tags": ["folder"],
@@ -1759,6 +1787,139 @@
         "operationId": "root_to_docs",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+        }
+      }
+    },
+    "/job/text_language_detection": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start TextLanguageDetection job",
+        "operationId": "start_text_language_detection_job",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/TextLanguageDetectionJobInput-Input" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TextLanguageDetectionJobRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/text_language_detection/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get TextLanguageDetection job",
+        "operationId": "get_text_language_detection_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TextLanguageDetectionJobRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/text_language_detection/{job_id}/abort": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Abort TextLanguageDetection job",
+        "operationId": "abort_text_language_detection_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Abort Text Language Detection Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/text_language_detection/{job_id}/retry": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Retry TextLanguageDetection job",
+        "operationId": "retry_text_language_detection_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean", "title": "Response Job-Retry Text Language Detection Job" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/job/text_language_detection/project/{project_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get all TextLanguageDetection jobs by project",
+        "operationId": "get_text_language_detection_jobs_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TextLanguageDetectionJobRead" },
+                  "title": "Response Job-Get Text Language Detection Jobs By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
         }
       }
     },
@@ -10714,10 +10875,22 @@
             "type": "object",
             "title": "Status",
             "description": "Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
+          },
+          "failed_job_uuids": {
+            "additionalProperties": { "type": "string" },
+            "type": "object",
+            "title": "Failed Job Uuids",
+            "description": "UUIDs of the failed processing jobs (the keys are the processing step/job and differ per doctype)"
+          },
+          "failed_job_status_msgs": {
+            "additionalProperties": { "type": "string" },
+            "type": "object",
+            "title": "Failed Job Status Msgs",
+            "description": "Status messages of the failed processing jobs (the keys are the processing step/job and differ per doctype)"
           }
         },
         "type": "object",
-        "required": ["sdoc_id", "name", "status"],
+        "required": ["sdoc_id", "name", "status", "failed_job_uuids", "failed_job_status_msgs"],
         "title": "SdocStatusRow"
       },
       "SdocTimelineAnalysisFilter-Input": {
@@ -12291,6 +12464,99 @@
         "type": "string",
         "enum": ["TAGGING", "METADATA_EXTRACTION", "ANNOTATION", "SENTENCE_ANNOTATION"],
         "title": "TaskType"
+      },
+      "TextLanguageDetectionJobInput-Input": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "SDoc ID" },
+          "html": { "type": "string", "title": "Html" },
+          "text": { "type": "string", "title": "Text" },
+          "doctype": { "$ref": "#/components/schemas/DocType" }
+        },
+        "type": "object",
+        "required": ["project_id", "settings", "sdoc_id", "html", "text", "doctype"],
+        "title": "TextLanguageDetectionJobInput"
+      },
+      "TextLanguageDetectionJobInput-Output": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "SDoc ID" },
+          "html": { "type": "string", "title": "Html" },
+          "text": { "type": "string", "title": "Text" },
+          "doctype": { "$ref": "#/components/schemas/DocType" }
+        },
+        "type": "object",
+        "required": ["project_id", "settings", "sdoc_id", "html", "text", "doctype"],
+        "title": "TextLanguageDetectionJobInput"
+      },
+      "TextLanguageDetectionJobOutput": {
+        "properties": {
+          "language": { "type": "string", "title": "Language" },
+          "text": { "type": "string", "title": "Text" }
+        },
+        "type": "object",
+        "required": ["language", "text"],
+        "title": "TextLanguageDetectionJobOutput"
+      },
+      "TextLanguageDetectionJobRead": {
+        "properties": {
+          "job_id": { "type": "string", "title": "Job Id", "description": "RQ job ID" },
+          "job_type": { "type": "string", "title": "Job Type", "description": "Type of the job" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project ID associated with the job"
+          },
+          "status": { "$ref": "#/components/schemas/JobStatus", "description": "Current status of the job" },
+          "status_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Status Message",
+            "description": "Status message"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step",
+            "description": "Current step in the job process"
+          },
+          "steps": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Steps",
+            "description": "Total number of steps in the job process"
+          },
+          "input": {
+            "$ref": "#/components/schemas/TextLanguageDetectionJobInput-Output",
+            "description": "Input for the job"
+          },
+          "output": {
+            "anyOf": [{ "$ref": "#/components/schemas/TextLanguageDetectionJobOutput" }, { "type": "null" }],
+            "description": "Output for the job"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the job"
+          },
+          "finished": {
+            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
+            "title": "Finished",
+            "description": "Finished timestamp of the job"
+          }
+        },
+        "type": "object",
+        "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
+        "title": "TextLanguageDetectionJobRead"
       },
       "TextNodeData": {
         "properties": {

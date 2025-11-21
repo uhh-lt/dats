@@ -114,4 +114,34 @@ export class DocprocessingService {
       },
     });
   }
+  /**
+   * Retries doc processing jobs for SourceDocuments in the given Project and document type
+   * @returns SdocHealthResult Successful Response
+   * @throws ApiError
+   */
+  public static retryFailedSdocs({
+    projId,
+    doctype,
+    requestBody,
+  }: {
+    projId: number;
+    doctype: DocType;
+    requestBody: Array<number>;
+  }): CancelablePromise<SdocHealthResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/docprocessing/project/{proj_id}/retry",
+      path: {
+        proj_id: projId,
+      },
+      query: {
+        doctype: doctype,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

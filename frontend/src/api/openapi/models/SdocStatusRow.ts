@@ -16,4 +16,12 @@ export type SdocStatusRow = {
    * Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)
    */
   status: Record<string, SDocStatus>;
+  /**
+   * UUIDs of the failed processing jobs (the keys are the processing step/job and differ per doctype)
+   */
+  failed_job_uuids: Record<string, string>;
+  /**
+   * Status messages of the failed processing jobs (the keys are the processing step/job and differ per doctype)
+   */
+  failed_job_status_msgs: Record<string, string>;
 };
