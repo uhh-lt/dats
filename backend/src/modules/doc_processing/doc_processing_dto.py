@@ -56,6 +56,12 @@ class SdocStatusRow(BaseModel):
     status: dict[str, SDocStatus] = Field(
         description="Processing status of the SourceDocument (the keys are the processing step/job and differ per doctype)"
     )
+    failed_job_uuids: dict[str, str] = Field(
+        description="UUIDs of the failed processing jobs (the keys are the processing step/job and differ per doctype)",
+    )
+    failed_job_status_msgs: dict[str, str] = Field(
+        description="Status messages of the failed processing jobs (the keys are the processing step/job and differ per doctype)",
+    )
 
     @classmethod
     def from_sdoc_orm(cls, sdoc: SourceDocumentORM) -> "SdocStatusRow":
@@ -65,6 +71,8 @@ class SdocStatusRow(BaseModel):
             sdoc_id=sdoc.id,
             name=sdoc.name,
             status=status,
+            failed_job_uuids={},
+            failed_job_status_msgs={},
         )
 
 

@@ -15,7 +15,6 @@ sqlr = SQLRepo()
 
 
 class TextSentenceEmbeddingJobInput(SdocProcessingJobInput):
-    sdoc_id: int
     sentences: list[str] | None
 
 

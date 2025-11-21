@@ -127,6 +127,18 @@ js = JobService()
 sqlr = SQLRepo()
 
 
+def handle_job_started(jobtype: JobType, input: JobInputBase):
+    if isinstance(input, SdocProcessingJobInput):
+        with sqlr.db_session() as db:
+            crud_sdoc.update(
+                db,
+                id=input.sdoc_id,
+                update_dto=SourceDocumentUpdate(
+                    **{jobtype.value: SDocStatus.processing},  # type: ignore
+                ),
+            )
+
+
 def handle_job_error(job_type: JobType, input: JobInputBase):
     if isinstance(input, SdocProcessingJobInput):
         with sqlr.db_session() as db:
