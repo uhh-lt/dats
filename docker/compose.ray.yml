@@ -31,6 +31,7 @@ services:
       EASYOCR_MODULE_PATH: /ray_cache/EasyOCR
     volumes:
       # - ../ray:/ray_code # uncomment for dev
+      - ../ray/configs/ray_config.yaml:/ray_code/configs/ray_config.yaml:ro
       - "${RAY_CACHE_DIR:-./ray_cache}:/ray_cache"
     shm_size: 12gb
     deploy:
