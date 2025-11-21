@@ -109,3 +109,23 @@ def upload_files(
         project_id=proj_id, uploaded_files=uploaded_files, settings=settings_obj
     )
     return len(jobs)
+
+
+@router.post(
+    "/project/{proj_id}/retry",
+    response_model=str,
+    summary="Retries doc processing jobs for SourceDocuments in the given Project and document type",
+)
+def retry_failed_sdocs(
+    *,
+    proj_id: int,
+    doctype: DocType,
+    sdoc_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+) -> str:
+    authz_user.assert_in_project(proj_id)
+    return DocProcessingService().retry_jobs(
+        project_id=proj_id,
+        doctype=doctype,
+        sdoc_ids=sdoc_ids,
+    )

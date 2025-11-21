@@ -1,4 +1,7 @@
+from collections import defaultdict
+
 from fastapi import HTTPException, UploadFile
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
@@ -9,17 +12,21 @@ from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
     SdocHealthResult,
     SdocHealthSort,
+    SdocProcessingJobInput,
     SdocStatusRow,
 )
+from modules.doc_processing.doc_processing_steps import PROCESSING_JOBS
 from modules.doc_processing.entrypoints.archive_extraction_job import (
     ArchiveExtractionJobInput,
 )
 from modules.doc_processing.entrypoints.doc_chunking_job import DocChunkingJobInput
 from modules.doc_processing.entrypoints.init_sdoc_job import SdocInitJobInput
 from repos.filesystem_repo import FilesystemRepo
-from systems.job_system.job_dto import Job
+from systems.job_system.job_dto import Job, JobOutputBase, JobRead
 from systems.job_system.job_service import JobService
 from systems.search_system.pagination import apply_pagination
+
+SdocPreprocessingJob = JobRead[SdocProcessingJobInput, JobOutputBase | None]
 
 
 class DocProcessingService(metaclass=SingletonMeta):
@@ -137,7 +144,78 @@ class DocProcessingService(metaclass=SingletonMeta):
             total_results = len(result_rows)
 
         # transform to dto
-        return SdocHealthResult(
+        results = SdocHealthResult(
             total_results=total_results,
             data=[SdocStatusRow.from_sdoc_orm(sdoc) for sdoc in result_rows],
+        )
+
+        # Retrieve information about failed jobs
+        # 1. retrieve all failed jobs in this project
+        failed_project_jobs = self.js.get_failed_jobs_by_project(
+            project_id=project_id,
+            job_types=[JobType(jt) for jt in PROCESSING_JOBS[DocType(doctype)]],
+        )
+
+        # 2. convert to SdocProcessingJob and build dict for easy access
+        failed_jobs_dict: dict[int, list[SdocPreprocessingJob]] = defaultdict(list)
+        for job in failed_project_jobs:
+            try:
+                spj = SdocPreprocessingJob.from_rq_job(job)
+            except Exception:
+                continue
+            failed_jobs_dict[spj.input.sdoc_id].append(spj)
+
+        # 3. populate the results
+        for row in results.data:
+            if row.sdoc_id in failed_jobs_dict:
+                for failed_job in failed_jobs_dict[row.sdoc_id]:
+                    row.failed_job_uuids[failed_job.job_type] = failed_job.job_id
+                    row.failed_job_status_msgs[failed_job.job_type] = (
+                        failed_job.status_message or ""
+                    )
+
+        return results
+
+    def retry_jobs(
+        self,
+        *,
+        project_id: int,
+        doctype: DocType,
+        sdoc_ids: list[int],
+    ) -> str:
+        # Retrieve information about failed jobs
+        # 1. retrieve all failed jobs in this project
+        failed_project_jobs = self.js.get_failed_jobs_by_project(
+            project_id=project_id,
+            job_types=[JobType(jt) for jt in PROCESSING_JOBS[doctype]],
+        )
+
+        # 2. convert to SdocProcessingJob and collect by sdoc_id
+        jobs_to_retry: list[SdocPreprocessingJob] = []
+        for job in failed_project_jobs:
+            try:
+                spj = SdocPreprocessingJob.from_rq_job(job)
+            except Exception:
+                continue
+            if spj.input.sdoc_id in sdoc_ids:
+                jobs_to_retry.append(spj)
+
+        # Retry the jobs
+        successesful_retries = 0
+        msgs = []
+        for job in jobs_to_retry:
+            logger.info(
+                f"Retrying job '{job.job_type}' of SDOC '{job.input.sdoc_id}' with UUID '{job.job_id}'..."
+            )
+            success = self.js.retry_job(job.job_id)
+            if success:
+                successesful_retries += 1
+            if not success:
+                msgs.append(
+                    f"- Failed to retry job '{job.job_type}' of SDOC '{job.input.sdoc_id}' with UUID '{job.job_id}'!"
+                )
+
+        return (
+            f"Retried {successesful_retries} / {len(jobs_to_retry)} jobs of {len(sdoc_ids)} document(s) successfully. "
+            + "\n".join(msgs)
         )

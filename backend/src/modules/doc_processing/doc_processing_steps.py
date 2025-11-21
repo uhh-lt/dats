@@ -3,6 +3,7 @@ from common.doc_type import (
 )
 
 # This has to match doc_processing_pipeline!
+# This has to match job_type!
 # Here, we list which steps/jobs are run per document type
 
 PROCESSING_JOBS = {

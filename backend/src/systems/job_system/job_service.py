@@ -217,6 +217,25 @@ class JobService(metaclass=SingletonMeta):
 
         return jobs
 
+    def get_failed_jobs_by_project(
+        self, project_id: int, job_types: list[JobType] | None
+    ) -> list[Job]:
+        jobs = []
+
+        for registry in self.registries.values():
+            failed_registry = registry["failed"]
+            for job_id in failed_registry.get_job_ids():
+                try:
+                    job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
+                    if job.meta.get("project_id") == project_id:
+                        if job_types is None or job.meta.get("type") in job_types:
+                            jobs.append(Job(job))
+                except Exception:
+                    # Job might have been deleted or corrupted, skip it
+                    continue
+
+        return jobs
+
     def stop_job(self, job_id: str) -> bool:
         job = rq.job.Job.fetch(job_id, connection=self.redis_conn)
         if job and job.is_started:
