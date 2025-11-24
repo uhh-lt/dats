@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from common.doc_type import DocType, get_doc_type, is_archive_file, mime_type_supported
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
+from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.doc_processing.doc_processing_dto import (
     ProcessingSettings,
@@ -219,3 +220,45 @@ class DocProcessingService(metaclass=SingletonMeta):
             f"Retried {successesful_retries} / {len(jobs_to_retry)} jobs of {len(sdoc_ids)} document(s) successfully. "
             + "\n".join(msgs)
         )
+
+    def recompute_processing_step(
+        self,
+        db: Session,
+        project_id: int,
+        sdoc_ids: list[int],
+        settings: ProcessingSettings,
+        processing_step: str,
+    ) -> list[Job]:
+        # Validate inputs
+        # 1. check that sdoc_ids are in the given project
+        sdocs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+        for sdoc in sdocs:
+            if sdoc.project_id != project_id:
+                raise ValueError(f"SDOC '{sdoc.id}' is not in project '{project_id}'")
+
+        # 2. check that sdocs all have the same doctype
+        doctype = sdocs[0].doctype
+        for sdoc in sdocs:
+            if sdoc.doctype != doctype:
+                raise ValueError(
+                    f"SDOC '{sdoc.id}' has doctype '{sdoc.doctype}' which is different from doctype '{doctype}' of SDOC '{sdocs[0].id}'"
+                )
+
+        # 3. check that processing_step is valid for the doctype
+        if processing_step not in PROCESSING_JOBS[DocType(doctype)]:
+            raise ValueError(
+                f"Processing step '{processing_step}' is not valid for doctype '{doctype}'"
+            )
+
+        # Start recompute jobs for the specified processing step
+        jobs = []
+        for sdoc_id in sdoc_ids:
+            job = self.js.start_job(
+                job_type=JobType(processing_step),
+                payload=SdocProcessingJobInput(
+                    project_id=project_id, sdoc_id=sdoc_id, settings=settings
+                ),
+            )
+            jobs.append(job)
+
+        return jobs

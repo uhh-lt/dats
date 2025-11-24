@@ -15,23 +15,33 @@ sqlr = SQLRepo()
 
 
 class TextSentenceEmbeddingJobInput(SdocProcessingJobInput):
-    sentences: list[str] | None
+    sentences: list[str]
+
+
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> TextSentenceEmbeddingJobInput:
+    with sqlr.db_session() as db:
+        sdoc_data = crud_sdoc_data.read(
+            db=db,
+            id=payload.sdoc_id,
+        )
+
+        return TextSentenceEmbeddingJobInput(
+            **payload.model_dump(),
+            sentences=sdoc_data.sentences,
+        )
 
 
 @register_job(
     job_type=JobType.TEXT_SENTENCE_EMBEDDING,
     input_type=TextSentenceEmbeddingJobInput,
     device="api",
+    enricher=enrich_for_recompute,
 )
 def handle_text_sentence_embedding_job(
     payload: TextSentenceEmbeddingJobInput, job: Job
 ) -> None:
-    # if we re-run this job, sentences is None, we need to query it from db
-    if payload.sentences is None:
-        with sqlr.db_session() as db:
-            sdoc_data = crud_sdoc_data.read(db=db, id=payload.sdoc_id)
-            payload.sentences = sdoc_data.sentences
-
     if len(payload.sentences) > 0:
         # embed the sentences
         embeddings = (

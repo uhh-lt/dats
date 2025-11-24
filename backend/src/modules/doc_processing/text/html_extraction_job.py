@@ -7,12 +7,20 @@ from loguru import logger
 
 from common.doc_type import DocType
 from common.job_type import JobType
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataUpdate
+from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.doc_processing.html.html_cleaning_utils import clean_html
+from repos.db.sql_repo import SQLRepo
 from repos.docling_repo import DoclingRepo
+from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 from utils.image_utils import base64_to_image
+
+fsr = FilesystemRepo()
+sqlr = SQLRepo()
 
 
 class ExtractHTMLJobInput(SdocProcessingJobInput):
@@ -22,15 +30,35 @@ class ExtractHTMLJobInput(SdocProcessingJobInput):
 
 
 class ExtractHTMLJobOutput(JobOutputBase):
-    html: str
+    raw_html: str
     image_paths: list[Path]
     folder_id: int | None
+
+
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> ExtractHTMLJobInput:
+    with sqlr.db_session() as db:
+        sdoc_data = crud_sdoc_data.read(
+            db=db,
+            id=payload.sdoc_id,
+        )
+        sdoc = SourceDocumentRead.model_validate(sdoc_data.source_document)
+        filepath = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+
+        return ExtractHTMLJobInput(
+            **payload.model_dump(),
+            filepath=filepath,
+            doctype=sdoc.doctype,
+            folder_id=sdoc.folder_id,
+        )
 
 
 @register_job(
     job_type=JobType.EXTRACT_HTML,
     input_type=ExtractHTMLJobInput,
     output_type=ExtractHTMLJobOutput,
+    enricher=enrich_for_recompute,
 )
 def handle_extract_html_job(
     payload: ExtractHTMLJobInput, job: Job
@@ -54,10 +82,20 @@ def handle_extract_html_job(
         raise Exception(f"Unsupported file type: {payload.filepath.suffix}")
 
     # Clean HTML (may use readability, always uses heuristics)
-    html = clean_html(doc_html)
+    raw_html = clean_html(doc_html)
+
+    # Store HTML in sdoc data
+    with sqlr.db_session() as db:
+        crud_sdoc_data.update(
+            db=db,
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
+                raw_html=raw_html,
+            ),
+        )
 
     return ExtractHTMLJobOutput(
-        html=html, image_paths=extracted_images, folder_id=payload.folder_id
+        raw_html=raw_html, image_paths=extracted_images, folder_id=payload.folder_id
     )
 
 

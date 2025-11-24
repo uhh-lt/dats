@@ -19,8 +19,19 @@ class ImageEmbeddingJobInput(SdocProcessingJobInput):
     pass
 
 
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> ImageEmbeddingJobInput:
+    return ImageEmbeddingJobInput(
+        **payload.model_dump(),
+    )
+
+
 @register_job(
-    job_type=JobType.IMAGE_EMBEDDING, input_type=ImageEmbeddingJobInput, device="api"
+    job_type=JobType.IMAGE_EMBEDDING,
+    input_type=ImageEmbeddingJobInput,
+    device="api",
+    enricher=enrich_for_recompute,
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
     # embed the image
