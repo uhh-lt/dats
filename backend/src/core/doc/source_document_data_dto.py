@@ -11,11 +11,16 @@ class WordLevelTranscription(BaseModel):
 
 class SourceDocumentDataBase(BaseModel):
     id: int = Field(description="ID of the SourceDocument")
-    content: str = Field(description="Raw,original content of the SourceDocument")
+    content: str = Field(description="text content of the SourceDocument")
     repo_url: str = Field(
-        description="Relative ppath to the the SourceDocument in the repository"
+        description="Relative path to the the SourceDocument in the repository"
     )
-    html: str = Field(description="Processed HTML of the SourceDocument")
+    raw_html: str = Field(
+        description="The raw HTML content of the SourceDocument, extracted from the file and cleaned."
+    )
+    html: str = Field(
+        description="Our DATS custom HTML of the SourceDocument (with sent and t tags)"
+    )
     token_starts: list[int] = Field(
         description="Start of each token in character offsets in content"
     )
@@ -58,6 +63,10 @@ class SourceDocumentDataRead(BaseModel):
 
 
 class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
+    repo_url: str | None = Field(
+        description="Relative path to the the SourceDocument in the repository",
+        default=None,
+    )
     token_starts: list[int] | None = Field(
         description="Start of each token in character offsets in content", default=None
     )
@@ -77,7 +86,14 @@ class SourceDocumentDataUpdate(BaseModel, UpdateDTOBase):
     token_time_ends: list[int] | None = Field(
         description="End times of each token in transcript", default=None
     )
-    html: str | None = Field(description="HTML of the SourceDocument", default=None)
+    raw_html: str | None = Field(
+        description="The raw HTML content of the SourceDocument, extracted from the file and cleaned.",
+        default=None,
+    )
+    html: str | None = Field(
+        description="Our DATS custom HTML of the SourceDocument (with sent and t tags)",
+        default=None,
+    )
     content: str | None = Field(
         description="Content of the SourceDocument", default=None
     )
