@@ -251,7 +251,25 @@ class CRUDBBoxAnnotation(
 
         return bbox_annos
 
-    def delete_by_adoc(self, db: Session, *, adoc_id: int) -> list[int]:
+    def delete_by_sdoc(
+        self, db: Session, *, sdoc_id: int, manual_commit: bool = False
+    ) -> int:
+        num_deletions = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .filter(AnnotationDocumentORM.source_document_id == sdoc_id)
+            .delete()
+        )
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+
+        return num_deletions
+
+    def delete_by_adoc(
+        self, db: Session, *, adoc_id: int, manual_commit: bool = False
+    ) -> list[int]:
         # find all bbox annotations to be removed
         query = db.query(self.model).filter(
             self.model.annotation_document_id == adoc_id
@@ -266,7 +284,11 @@ class CRUDBBoxAnnotation(
 
         # delete the bbox annotations
         query.delete()
-        db.commit()
+
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
 
         return ids
 
