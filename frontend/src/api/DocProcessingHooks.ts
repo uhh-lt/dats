@@ -1,6 +1,7 @@
 import { Query, useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
 import queryClient from "../plugins/ReactQueryClient.ts";
+import { Body_docprocessing_recompute_processing_step } from "./openapi/models/Body_docprocessing_recompute_processing_step.ts";
 import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { SDocStatus } from "./openapi/models/SDocStatus.ts";
@@ -130,6 +131,18 @@ const useRetryDocProcessingJobs = () =>
     },
   });
 
+const useRecomputeDocProcessingJobs = () =>
+  useMutation({
+    mutationFn: DocprocessingService.recomputeProcessingStep,
+    meta: {
+      successMessage: (
+        data: number,
+        variables: { processingStep: string; requestBody: Body_docprocessing_recompute_processing_step },
+      ) =>
+        `Successfully started '${variables.processingStep}' recompute job for ${variables.requestBody.sdoc_ids.length} / ${data} documents!`,
+    },
+  });
+
 const DocProcessingHooks = {
   // crawler
   useStartCrawlerJob,
@@ -139,6 +152,7 @@ const DocProcessingHooks = {
   usePollProcessingSimpleSdocStatus,
   // sdoc health
   useRetryDocProcessingJobs,
+  useRecomputeDocProcessingJobs,
 };
 
 export default DocProcessingHooks;
