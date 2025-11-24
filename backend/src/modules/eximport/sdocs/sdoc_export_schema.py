@@ -36,6 +36,7 @@ class SourceDocumentExportSchema(BaseModel):
     # Processed data of the source document
     content: str | None = Field(description="Content of the source document")
     html: str = Field(description="HTML representation of the source document")
+    raw_html: str = Field(description="Raw HTML representation of the source document")
     token_starts: list[int] = Field(
         description="List of start positions of tokens in the source document"
     )

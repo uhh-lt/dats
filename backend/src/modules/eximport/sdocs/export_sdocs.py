@@ -145,6 +145,7 @@ def __export_sdocs(
             metadata=metadata_list,
             content=sdoc_data.content,
             html=sdoc_data.html,
+            raw_html=sdoc_data.raw_html,
             token_starts=sdoc_data.token_starts,
             token_ends=sdoc_data.token_ends,
             sentence_starts=sdoc_data.sentence_starts,
