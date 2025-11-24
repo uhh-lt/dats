@@ -55,5 +55,16 @@ class CRUDWordFrequency(
     def update(self, db: Session, *, id: int, update_dto):
         raise NotImplementedError()
 
+    ### DELETE OPERATIONS ###
+
+    def delete_by_sdoc_id(
+        self, db: Session, *, sdoc_id: int, manual_commit: bool = False
+    ) -> None:
+        db.query(WordFrequencyORM).filter(WordFrequencyORM.sdoc_id == sdoc_id).delete()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+
 
 crud_word_frequency = CRUDWordFrequency(WordFrequencyORM)
