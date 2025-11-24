@@ -254,16 +254,19 @@ class CRUDBBoxAnnotation(
     def delete_by_sdoc(
         self, db: Session, *, sdoc_id: int, manual_commit: bool = False
     ) -> int:
-        num_deletions = (
-            db.query(self.model)
+        # 1. find all affected annotation ids
+        anno_ids = (
+            db.query(self.model.id)
             .join(self.model.annotation_document)
             .filter(AnnotationDocumentORM.source_document_id == sdoc_id)
-            .delete()
+            .all()
         )
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        anno_ids = [anno_id_tuple[0] for anno_id_tuple in anno_ids]
+
+        # 2. delete all by ids
+        num_deletions = self.remove_multi(
+            db=db, ids=anno_ids, manual_commit=manual_commit
+        )
 
         return num_deletions
 
