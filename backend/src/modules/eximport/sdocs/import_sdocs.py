@@ -241,6 +241,7 @@ def import_sdocs_to_proj(
             repo_url=relative_url,
             content=sdoc_export.content if sdoc_export.content else "",
             html=sdoc_export.html,
+            raw_html=sdoc_export.raw_html,
             token_starts=sdoc_export.token_starts,
             token_ends=sdoc_export.token_ends,
             sentence_starts=sdoc_export.sentence_starts,
