@@ -18,12 +18,15 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
+import { Language } from "../../api/openapi/models/Language.ts";
+import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { SdocHealthResult } from "../../api/openapi/models/SdocHealthResult.ts";
 import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
 import { SdocStatusRow } from "../../api/openapi/models/SdocStatusRow.ts";
 import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { DocprocessingService } from "../../api/openapi/services/DocprocessingService.ts";
 import { QueryKey } from "../../api/QueryKey.ts";
+import ProcessingSettingsButton from "../../components/DocumentUpload/ProcessingSettingsButton.tsx";
 import CardContainer from "../../components/MUI/CardContainer.tsx";
 import DATSToolbar from "../../components/MUI/DATSToolbar.tsx";
 import { useTableInfiniteScroll } from "../../utils/useTableInfiniteScroll.ts";
@@ -63,7 +66,7 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
   }, [rowSelectionModel]);
 
   // actions
-  const { mutate: retryDocProcessingJobs } = DocProcessingHooks.useRetryDocProcessingJobs();
+  const { mutate: retryDocProcessingJobs, isPending: isRetryPending } = DocProcessingHooks.useRetryDocProcessingJobs();
   const handleRetry = useCallback(() => {
     retryDocProcessingJobs({
       projId: projectId,
@@ -72,10 +75,29 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
     });
   }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
-  const handleRecompute = useCallback((step: string) => {
-    console.log(`Recomputing step ${step}...`);
-    setAnchorEl(null);
-  }, []);
+  const [settings, setSettings] = useState<ProcessingSettings>({
+    extract_images: true,
+    pages_per_chunk: 10,
+    keyword_deduplication_threshold: 0.5,
+    keyword_max_ngram_size: 2,
+    keyword_number: 5,
+    language: Language.AUTO,
+  });
+  const { mutate: recomputeDocProcessingJobs, isPending: isRecomputePending } =
+    DocProcessingHooks.useRecomputeDocProcessingJobs();
+  const handleRecompute = useCallback(
+    (step: string) => {
+      recomputeDocProcessingJobs({
+        projId: projectId,
+        processingStep: step,
+        requestBody: {
+          sdoc_ids: selectedRows,
+          settings: settings,
+        },
+      });
+    },
+    [projectId, recomputeDocProcessingJobs, selectedRows, settings],
+  );
 
   // table columns
   const tableColumnInfo = useQuery({
@@ -249,7 +271,9 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
               placement="top-start"
             >
               <span>
-                <Button onClick={() => handleRetry()}>Retry</Button>
+                <Button onClick={() => handleRetry()} loading={isRetryPending}>
+                  Retry
+                </Button>
               </span>
             </Tooltip>
             <Tooltip
@@ -262,7 +286,9 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
               placement="top-start"
             >
               <span>
-                <Button onClick={(e) => setAnchorEl(e.currentTarget)}>Recompute</Button>
+                <Button onClick={(e) => setAnchorEl(e.currentTarget)} loading={isRecomputePending}>
+                  Recompute
+                </Button>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
@@ -277,6 +303,7 @@ function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
                 </Menu>
               </span>
             </Tooltip>
+            <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />
