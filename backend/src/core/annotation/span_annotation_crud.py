@@ -268,6 +268,22 @@ class CRUDSpanAnnotation(
 
         return span_anno
 
+    def delete_by_sdoc(
+        self, db: Session, *, sdoc_id: int, manual_commit: bool = False
+    ) -> int:
+        num_deletions = (
+            db.query(self.model)
+            .join(self.model.annotation_document)
+            .filter(AnnotationDocumentORM.source_document_id == sdoc_id)
+            .delete()
+        )
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+
+        return num_deletions
+
     def remove_bulk(self, db: Session, *, ids: list[int]) -> list[SpanAnnotationORM]:
         span_annos = []
         for id in ids:
