@@ -1,6 +1,9 @@
 from pathlib import Path
 
+from common.doc_type import DocType
 from common.job_type import JobType
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
@@ -15,9 +18,29 @@ class AudioThumbnailJobInput(SdocProcessingJobInput):
     filepath: Path
 
 
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> AudioThumbnailJobInput:
+    with sqlr.db_session() as db:
+        sdoc = SourceDocumentRead.model_validate(
+            crud_sdoc.read(db=db, id=payload.sdoc_id)
+        )
+        assert sdoc.doctype == DocType.audio, (
+            f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
+        )
+
+    audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+
+    return AudioThumbnailJobInput(
+        **payload.model_dump(),
+        filepath=audio_path,
+    )
+
+
 @register_job(
     job_type=JobType.AUDIO_THUMBNAIL,
     input_type=AudioThumbnailJobInput,
+    enricher=enrich_for_recompute,
 )
 def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> None:
     thumbnail_filename = fsr.generate_sdoc_filename(
@@ -29,6 +52,23 @@ def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> Non
         payload.filepath, webp=True, thumbnail=False
     )
     print(webp_filename)
+
+    # Store link to webp image in DB
+    # with sqlr.db_session() as db:
+    #     sdoc = SourceDocumentRead.model_validate(
+    #         crud_sdoc.read(db=db, id=payload.sdoc_id)
+    #     )
+    #     repo_url = FilesystemRepo().get_sdoc_url(
+    #         sdoc=sdoc,
+    #         relative=True,
+    #         webp=True,
+    #         thumbnail=False,
+    #     )
+    #     crud_sdoc_data.update(
+    #         db=db,
+    #         id=payload.sdoc_id,
+    #         update_dto=SourceDocumentDataUpdate(repo_url=repo_url),
+    #     )
 
     # TODO: Implement correctly!
 

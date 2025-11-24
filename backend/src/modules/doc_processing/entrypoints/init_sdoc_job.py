@@ -5,7 +5,9 @@ from loguru import logger
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_dto import SourceDocumentCreate, SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import ProcessingJobInput
 from repos.db.sql_repo import SQLRepo
@@ -46,6 +48,27 @@ def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutp
             folder_id=payload.folder_id,
         )
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+
+        # find repo path
+        repo_url = FilesystemRepo().get_sdoc_url(
+            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
+        )
+
+        # create empty sdoc data
+        crud_sdoc_data.create(
+            db=db,
+            create_dto=SourceDocumentDataCreate(
+                id=sdoc_db_obj.id,
+                repo_url=repo_url,
+                content="",
+                raw_html="",
+                html="",
+                token_starts=[],
+                token_ends=[],
+                sentence_starts=[],
+                sentence_ends=[],
+            ),
+        )
 
         # create sdoc metadata
         crud_sdoc_meta.create_initial_metadata(

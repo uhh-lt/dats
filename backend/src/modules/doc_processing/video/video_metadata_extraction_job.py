@@ -4,12 +4,16 @@ import ffmpeg
 
 from common.doc_type import DocType
 from common.job_type import JobType
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
+from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
+fsr = FilesystemRepo()
 sqlr = SQLRepo()
 
 EXPECTED_METADATA = [
@@ -30,9 +34,29 @@ class VideoMetadataExtractionJobInput(SdocProcessingJobInput):
     filepath: Path
 
 
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> VideoMetadataExtractionJobInput:
+    with sqlr.db_session() as db:
+        sdoc = SourceDocumentRead.model_validate(
+            crud_sdoc.read(db=db, id=payload.sdoc_id)
+        )
+        assert sdoc.doctype == DocType.video, (
+            f"SourceDocument with {payload.sdoc_id=} is not a video file!"
+        )
+
+    video_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+
+    return VideoMetadataExtractionJobInput(
+        **payload.model_dump(),
+        filepath=video_path,
+    )
+
+
 @register_job(
     job_type=JobType.VIDEO_METADATA_EXTRACTION,
     input_type=VideoMetadataExtractionJobInput,
+    enricher=enrich_for_recompute,
 )
 def handle_video_metadata_extraction_job(
     payload: VideoMetadataExtractionJobInput, job: Job

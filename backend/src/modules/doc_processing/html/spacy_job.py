@@ -6,24 +6,20 @@ import yake
 from common.doc_type import DocType
 from common.job_type import JobType
 from core.annotation.annotation_document_crud import crud_adoc
+from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreateIntern
 from core.code.code_crud import crud_code
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import (
-    SourceDocumentDataCreate,
     SourceDocumentDataUpdate,
 )
-from core.doc.source_document_dto import SourceDocumentRead
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
-from repos.db.crud_base import NoSuchElementError
 from repos.db.sql_repo import SQLRepo
-from repos.filesystem_repo import FilesystemRepo
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
@@ -38,7 +34,7 @@ class SpacyJobInput(SdocProcessingJobInput):
     doctype: DocType
     text: str
     language: str
-    html: str
+    raw_html: str
 
 
 class SpacyJobOutput(JobOutputBase):
@@ -49,10 +45,36 @@ class SpacyJobOutput(JobOutputBase):
     sentences: list[str]
 
 
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> SpacyJobInput:
+    with sqlr.db_session() as db:
+        sdoc_data = crud_sdoc_data.read(
+            db=db,
+            id=payload.sdoc_id,
+        )
+
+        language = crud_sdoc_meta.read_by_sdoc_and_key(
+            db=db, key="language", sdoc_id=payload.sdoc_id
+        )
+        assert language.str_value is not None, (
+            "Language must be set for Spacy processing!"
+        )
+
+        return SpacyJobInput(
+            **payload.model_dump(),
+            doctype=DocType(sdoc_data.source_document.doctype),
+            text=sdoc_data.content,
+            raw_html=sdoc_data.raw_html,
+            language=language.str_value,
+        )
+
+
 @register_job(
     job_type=JobType.TEXT_SPACY,
     input_type=SpacyJobInput,
     output_type=SpacyJobOutput,
+    enricher=enrich_for_recompute,
 )
 def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
     # 1. call spacy in ray
@@ -103,41 +125,27 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             values=[keywords],
             manual_commit=True,
         )
+        crud_word_frequency.delete_by_sdoc_id(
+            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
+        )
         crud_word_frequency.create_multi(
             db=trans, create_dtos=word_frequencies, manual_commit=True
+        )
+        crud_span_anno.delete_by_sdoc(
+            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
+        )
+        crud_sentence_anno.delete_by_sdoc(
+            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
         )
         crud_span_anno.create_multi(
             trans, create_dtos=span_annotations, manual_commit=True
         )
 
-        # it is possible that sdoc data already exists (if coming from audio or video pipeline)
-        # in this case, we are only interested in sentence splitting (tokenization already done by whisper)
-        try:
-            existing_sdoc_data = crud_sdoc_data.read(db=trans, id=payload.sdoc_id)
-            sdoc_data = {
-                "token_starts": existing_sdoc_data.token_starts,
-                "token_ends": existing_sdoc_data.token_ends,
-                "sentence_starts": sdoc_data["sentence_starts"],
-                "sentence_ends": sdoc_data["sentence_ends"],
-            }
-        except NoSuchElementError:
-            existing_sdoc_data = None
-
-        if existing_sdoc_data is None:
-            sdoc = crud_sdoc.read(trans, payload.sdoc_id)
-            url = FilesystemRepo().get_sdoc_url(
-                sdoc=SourceDocumentRead.model_validate(sdoc),
-                relative=True,
-                webp=sdoc.doctype == DocType.image,
-                thumbnail=False,
-            )
-            crud_sdoc_data.create(
+        if payload.doctype in {DocType.text, DocType.image}:
+            crud_sdoc_data.update(
                 db=trans,
-                create_dto=SourceDocumentDataCreate(
-                    id=payload.sdoc_id,
-                    repo_url=url,
-                    content=payload.text,
-                    html=payload.html,
+                id=payload.sdoc_id,
+                update_dto=SourceDocumentDataUpdate(
                     token_starts=sdoc_data["token_starts"],
                     token_ends=sdoc_data["token_ends"],
                     sentence_starts=sdoc_data["sentence_starts"],
@@ -146,6 +154,10 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
                 manual_commit=True,
             )
         else:
+            # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
+            existing_sdoc_data = crud_sdoc_data.read(db=trans, id=payload.sdoc_id)
+            sdoc_data["token_starts"] = existing_sdoc_data.token_starts
+            sdoc_data["token_ends"] = existing_sdoc_data.token_ends
             crud_sdoc_data.update(
                 db=trans,
                 id=payload.sdoc_id,

@@ -44,6 +44,7 @@ class RegisteredJob(TypedDict):
     # see https://python-rq.org/docs/jobs/#job-creation
     retry: tuple[int, int] | None
     timeout: int  # maximum runtime before the job is interrupted and marked as failed (in seconds)
+    enricher: Callable | None
 
 
 class JobService(metaclass=SingletonMeta):
@@ -103,6 +104,7 @@ class JobService(metaclass=SingletonMeta):
         result_ttl: int,
         retry: tuple[int, int] | None,
         timeout: int,
+        enricher: Callable[[InputT], InputT] | None = None,
     ) -> None:
         # Enforce that the only parameter is named 'payload'
         sig = inspect.signature(handler_func)
@@ -131,6 +133,7 @@ class JobService(metaclass=SingletonMeta):
             "result_ttl": result_ttl,
             "retry": retry,
             "timeout": timeout,
+            "enricher": enricher,
         }
 
     def start_job(
@@ -147,7 +150,21 @@ class JobService(metaclass=SingletonMeta):
 
         # Validate payload is of correct subclass type
         input_type = job_info["input_type"]
-        input_obj = input_type.model_validate(payload.model_dump())
+        try:
+            input_obj = input_type.model_validate(payload.model_dump())
+        except Exception as e:
+            # Use the enricher if available
+            enricher = job_info.get("enricher")
+            if enricher:
+                try:
+                    input_obj = enricher(payload)
+                    input_obj = input_type.model_validate(input_obj.model_dump())
+                except Exception as enrich_e:
+                    raise ValueError(
+                        f"Invalid payload for job type {job_type}, even after enrichment: {enrich_e}"
+                    ) from enrich_e
+            else:
+                raise ValueError(f"Invalid payload for job type {job_type}: {e}")
 
         # Enqueue the job
         queue = self.queues[(job_info["device"], job_info["priority"])]

@@ -9,7 +9,9 @@ from common.job_type import JobType
 from common.languages_enum import Language
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_data_dto import (
+    SourceDocumentDataUpdate,
+)
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
@@ -18,6 +20,7 @@ from repos.ray.ray_repo import RayRepo
 from systems.job_system.job_dto import Job, JobOutputBase
 from systems.job_system.job_register_decorator import register_job
 
+fsr = FilesystemRepo()
 ray = RayRepo()
 sqlr = SQLRepo()
 
@@ -32,9 +35,28 @@ class TranscriptionJobOutput(JobOutputBase):
     token_time_starts: list[int]
     token_time_ends: list[int]
     content: str
-    html: str
+    raw_html: str
     language: str
     language_probability: float
+
+
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> TranscriptionJobInput:
+    with sqlr.db_session() as db:
+        sdoc = SourceDocumentRead.model_validate(
+            crud_sdoc.read(db=db, id=payload.sdoc_id)
+        )
+        assert sdoc.doctype == DocType.audio, (
+            f"SourceDocument with {payload.sdoc_id=} is not an audio file!"
+        )
+
+    audio_path = fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+
+    return TranscriptionJobInput(
+        **payload.model_dump(),
+        filepath=audio_path,
+    )
 
 
 @register_job(
@@ -42,6 +64,7 @@ class TranscriptionJobOutput(JobOutputBase):
     input_type=TranscriptionJobInput,
     output_type=TranscriptionJobOutput,
     device="api",
+    enricher=enrich_for_recompute,
 )
 def handle_transcription_job(
     payload: TranscriptionJobInput, job: Job
@@ -50,34 +73,22 @@ def handle_transcription_job(
     pcm_bytes = convert_to_pcm(payload.filepath)
 
     with sqlr.db_session() as db:
-        # get required data to create sdoc data
-        sdoc = crud_sdoc.read(db, payload.sdoc_id)
-        url = FilesystemRepo().get_sdoc_url(
-            sdoc=SourceDocumentRead.model_validate(sdoc),
-            relative=True,
-            webp=sdoc.doctype == DocType.image,
-            thumbnail=False,
-        )
-
         # generate transcription using ray
         transcription = generate_automatic_transcription(
             payload=payload, audio_bytes=pcm_bytes
         )
 
         # create sdoc data
-        sdoc_data = crud_sdoc_data.create(
+        sdoc_data = crud_sdoc_data.update(
             db=db,
-            create_dto=SourceDocumentDataCreate(
-                id=payload.sdoc_id,
-                repo_url=url,
-                sentence_starts=[],
-                sentence_ends=[],
+            id=payload.sdoc_id,
+            update_dto=SourceDocumentDataUpdate(
                 token_starts=transcription["token_starts"],
                 token_ends=transcription["token_ends"],
                 token_time_starts=transcription["token_time_starts"],
                 token_time_ends=transcription["token_time_ends"],
                 content=transcription["content"],
-                html=transcription["html"],
+                raw_html=transcription["html"],
             ),
         )
 
@@ -87,7 +98,7 @@ def handle_transcription_job(
         token_time_starts=sdoc_data.token_time_starts,
         token_time_ends=sdoc_data.token_time_ends,
         content=sdoc_data.content,
-        html=sdoc_data.html,
+        raw_html=sdoc_data.raw_html,
         language=transcription["language"],
         language_probability=transcription["language_probability"],
     )

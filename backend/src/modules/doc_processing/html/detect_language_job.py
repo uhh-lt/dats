@@ -1,6 +1,7 @@
 from common.doc_type import DocType
 from common.job_type import JobType
 from common.languages_enum import Language
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from repos.db.sql_repo import SQLRepo
@@ -21,7 +22,7 @@ class LanguageNotSupportedError(Exception):
 
 
 class TextLanguageDetectionJobInput(SdocProcessingJobInput):
-    html: str
+    raw_html: str
     text: str
     doctype: DocType
 
@@ -31,10 +32,28 @@ class TextLanguageDetectionJobOutput(JobOutputBase):
     text: str
 
 
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> TextLanguageDetectionJobInput:
+    with sqlr.db_session() as db:
+        sdoc_data = crud_sdoc_data.read(
+            db=db,
+            id=payload.sdoc_id,
+        )
+
+        return TextLanguageDetectionJobInput(
+            **payload.model_dump(),
+            raw_html=sdoc_data.raw_html,
+            text=sdoc_data.content,
+            doctype=DocType(sdoc_data.source_document.doctype),
+        )
+
+
 @register_job(
     job_type=JobType.TEXT_LANGUAGE_DETECTION,
     input_type=TextLanguageDetectionJobInput,
     output_type=TextLanguageDetectionJobOutput,
+    enricher=enrich_for_recompute,
 )
 def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job

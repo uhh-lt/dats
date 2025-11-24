@@ -1,18 +1,12 @@
-import re
-from html.parser import HTMLParser
-from io import StringIO
-from itertools import accumulate
-from typing import TypedDict
-
 from loguru import logger
 
-from common.doc_type import DocType
 from common.job_type import JobType
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataUpdate
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper, StringBuilder
 from repos.db.sql_repo import SQLRepo
-from systems.job_system.job_dto import Job, JobOutputBase
+from systems.job_system.job_dto import Job
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
@@ -26,146 +20,34 @@ class TextHTMLMappingJobInput(SdocProcessingJobInput):
     token_ends: list[int]
 
 
-class TextExtractionJobInput(SdocProcessingJobInput):
-    html: str
-    filename: str
-    doctype: DocType
-
-
-class TextExtractionJobOutput(JobOutputBase):
-    text: str
-    text2html_character_offsets: list[int]
-
-
-class Text(TypedDict):
-    text: str
-    start: int
-    end: int
-
-
-class CustomLineHTMLParser(HTMLParser):
-    result: list[Text]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.result = []
-
-    def reset(self):
-        super().reset()
-        self.result = []
-
-    @property
-    def current_index(self):
-        line, char = self.getpos()
-        return self.line_lengths[line - 1] + char
-
-    def __call__(self, data: str) -> list[Text]:
-        self.reset()
-        self.line_lengths = [0] + list(
-            accumulate(len(line) for line in data.splitlines(keepends=True))
-        )
-        self.feed(data)
-        self.close()
-        return self.result
-
-
-class HTMLTextMapper(CustomLineHTMLParser):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.result = []
-        self.text: Text | None = None
-        self.end_spaces = 0
-
-    def reset(self):
-        super().reset()
-        self.result = []
-        self.text = None
-
-    def handle_data(self, data: str):
-        # only add text if it is not only whitespaces!
-        if not data.isspace():
-            match = re.match(r"^(\s+)", data)
-            start_spaces = 0
-            if match and match.group(1):
-                start_spaces = len(match.group(1))
-
-            match2 = re.match(r".*(\s+)$", data)
-            if match2 and match2.group(1):
-                self.end_spaces = len(match2.group(1))
-
-            self.text = {
-                "text": data.strip(),
-                "start": self.current_index + start_spaces,
-                "end": -1,
-            }
-
-    def handle_starttag(self, tag, attrs):
-        self.text_end()
-
-    def handle_endtag(self, tag):
-        self.text_end()
-
-    def handle_comment(self, data):
-        self.text_end()
-
-    def text_end(self):
-        if self.text:
-            self.text["end"] = self.current_index - self.end_spaces
-            self.result.append(self.text)
-            self.text = None
-            self.end_spaces = 0
-
-    def close(self):
-        super().close()
-        self.text_end()
-
-
-class StringBuilder(StringIO):
-    def __iadd__(self, str: str):
-        self.write(str)
-        return self
-
-    def build(self):
-        return self.getvalue()
-
-
-@register_job(
-    job_type=JobType.TEXT_EXTRACTION,
-    input_type=TextExtractionJobInput,
-    output_type=TextExtractionJobOutput,
-)
-def handle_text_extraction_job(
-    payload: TextExtractionJobInput,
-    job: Job,
-) -> TextExtractionJobOutput:
-    content_in_html = payload.html
-
-    parser = HTMLTextMapper()
-    results = parser(content_in_html)
-
-    text = " ".join([str(r["text"]) for r in results])
-    text2html_character_offsets: list[int] = []
-    for result in results:
-        text2html_character_offsets.extend(
-            range(int(result["start"]), int(result["end"]) + 1)
+def enrich_for_recompute(
+    payload: SdocProcessingJobInput,
+) -> TextHTMLMappingJobInput:
+    with sqlr.db_session() as db:
+        sdoc_data = crud_sdoc_data.read(
+            db=db,
+            id=payload.sdoc_id,
         )
 
-    return TextExtractionJobOutput(
-        text=text, text2html_character_offsets=text2html_character_offsets
-    )
+        return TextHTMLMappingJobInput(
+            **payload.model_dump(),
+            raw_html=sdoc_data.html,
+            sentence_starts=sdoc_data.sentence_starts,
+            sentence_ends=sdoc_data.sentence_ends,
+            token_starts=sdoc_data.token_starts,
+            token_ends=sdoc_data.token_ends,
+        )
 
 
 @register_job(
     job_type=JobType.TEXT_HTML_MAPPING,
     input_type=TextHTMLMappingJobInput,
+    enricher=enrich_for_recompute,
 )
 def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> None:
     # parse html
     parser = HTMLTextMapper()
     html_parse = parser(payload.raw_html)
-
-    # compute text here?
-    # text = " ".join([str(r["text"]) for r in results])
 
     # compute offsets
     text2html_character_offsets: list[int] = []

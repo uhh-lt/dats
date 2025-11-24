@@ -129,3 +129,28 @@ def retry_failed_sdocs(
         doctype=doctype,
         sdoc_ids=sdoc_ids,
     )
+
+
+@router.post(
+    "/project/{proj_id}/recompute",
+    response_model=int,
+    summary="Recomputes the processing step for all SourceDocuments in the Project",
+)
+def recompute_processing_step(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    processing_step: str,
+    sdoc_ids: list[int],
+    settings: ProcessingSettings,
+    authz_user: AuthzUser = Depends(),
+) -> int:
+    authz_user.assert_in_project(proj_id)
+    jobs = DocProcessingService().recompute_processing_step(
+        db=db,
+        project_id=proj_id,
+        sdoc_ids=sdoc_ids,
+        processing_step=processing_step,
+        settings=settings,
+    )
+    return len(jobs)
