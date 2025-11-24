@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_docprocessing_recompute_processing_step } from "../models/Body_docprocessing_recompute_processing_step";
 import type { Body_docprocessing_upload_files } from "../models/Body_docprocessing_upload_files";
 import type { DocType } from "../models/DocType";
 import type { SdocHealthResult } from "../models/SdocHealthResult";
@@ -116,7 +117,7 @@ export class DocprocessingService {
   }
   /**
    * Retries doc processing jobs for SourceDocuments in the given Project and document type
-   * @returns SdocHealthResult Successful Response
+   * @returns string Successful Response
    * @throws ApiError
    */
   public static retryFailedSdocs({
@@ -127,7 +128,7 @@ export class DocprocessingService {
     projId: number;
     doctype: DocType;
     requestBody: Array<number>;
-  }): CancelablePromise<SdocHealthResult> {
+  }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/docprocessing/project/{proj_id}/retry",
@@ -136,6 +137,36 @@ export class DocprocessingService {
       },
       query: {
         doctype: doctype,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Recomputes the processing step for all SourceDocuments in the Project
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static recomputeProcessingStep({
+    projId,
+    processingStep,
+    requestBody,
+  }: {
+    projId: number;
+    processingStep: string;
+    requestBody: Body_docprocessing_recompute_processing_step;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/docprocessing/project/{proj_id}/recompute",
+      path: {
+        proj_id: projId,
+      },
+      query: {
+        processing_step: processingStep,
       },
       body: requestBody,
       mediaType: "application/json",
