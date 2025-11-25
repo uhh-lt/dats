@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import httpx
@@ -62,10 +63,30 @@ class DoclingRepo(metaclass=SingletonMeta):
             "files": (pdf_chunk.name, open(pdf_chunk, "rb"), "application/pdf"),
         }
 
+        # 1. submit task
         with httpx.Client(timeout=300) as client:
             response = client.post(
-                url=f"{self.url}/v1/convert/file", files=files, data=parameters
+                url=f"{self.url}/v1/convert/file/async", files=files, data=parameters
             )
+            response.raise_for_status()
+            task = response.json()
+
+        # 2. poll for result
+        with httpx.Client(timeout=300) as client:
+            while task["task_status"] not in ["success", "failure"]:
+                response = client.get(
+                    url=f"{self.url}/v1/status/poll/{task['task_id']}"
+                )
+                response.raise_for_status()
+                task = response.json()
+                time.sleep(5)
+
+        # 3. fetch result
+        if task["task_status"] == "failure":
+            raise ValueError("Docling conversion failed!")
+
+        with httpx.Client(timeout=300) as client:
+            response = client.get(url=f"{self.url}/v1/result/{task['task_id']}")
             response.raise_for_status()
             result = response.json()
 
