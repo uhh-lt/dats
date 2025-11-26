@@ -592,7 +592,7 @@ requires-dist = [
     { name = "ujson", specifier = ">=5.10.0" },
     { name = "umap-learn", specifier = "==0.5.5" },
     { name = "uvicorn", specifier = "==0.23.2" },
-    { name = "weaviate-client", specifier = "==4.14.4" },
+    { name = "weaviate-client", specifier = "==4.18.1" },
     { name = "webdriver-manager", specifier = "==4.0.1" },
     { name = "yake", specifier = "==0.4.8" },
 ]
@@ -940,42 +940,6 @@ wheels = [
 ]
 
 [[package]]
-name = "grpcio-health-checking"
-version = "1.71.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "grpcio" },
-    { name = "protobuf" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/0e/62743c098e80dde057afc50f9d681a5ef06cfbd4be377801d0d7e2a0737d/grpcio_health_checking-1.71.0.tar.gz", hash = "sha256:ff9bd55beb97ce3322fda2ae58781c9d6c6fcca6a35ca3b712975d9f75dd30af", size = 16766, upload-time = "2025-03-10T19:28:56.88Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/7b/55fafdff4a7ec6b4721484eb1a2483da14db8c106980a82d4736ddcbf047/grpcio_health_checking-1.71.0-py3-none-any.whl", hash = "sha256:b7d9b7a7606ab4cd02d23bd1d3943843f784ffc987c9bfec14c9d058d9e279db", size = 18922, upload-time = "2025-03-10T19:26:06.537Z" },
-]
-
-[[package]]
-name = "grpcio-tools"
-version = "1.71.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "grpcio" },
-    { name = "protobuf" },
-    { name = "setuptools" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/05/d2/c0866a48c355a6a4daa1f7e27e210c7fa561b1f3b7c0bce2671e89cfa31e/grpcio_tools-1.71.0.tar.gz", hash = "sha256:38dba8e0d5e0fb23a034e09644fdc6ed862be2371887eee54901999e8f6792a8", size = 5326008, upload-time = "2025-03-10T19:29:03.38Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/ec/73b9797ffec80e1faf039ce3e2f0513e26e1a68eedc525ed294ae2a44d03/grpcio_tools-1.71.0-cp311-cp311-linux_armv7l.whl", hash = "sha256:1f19b16b49afa5d21473f49c0966dd430c88d089cd52ac02404d8cef67134efb", size = 2385557, upload-time = "2025-03-10T19:27:27.62Z" },
-    { url = "https://files.pythonhosted.org/packages/bf/87/42c6e192b7b09c9610a53e771797f7826aee4f6e769683985ae406a2d862/grpcio_tools-1.71.0-cp311-cp311-macosx_10_14_universal2.whl", hash = "sha256:459c8f5e00e390aecd5b89de67deb3ec7188a274bc6cb50e43cef35ab3a3f45d", size = 5954404, upload-time = "2025-03-10T19:27:29.835Z" },
-    { url = "https://files.pythonhosted.org/packages/25/30/3fd385a56d32dce34cde09a64dbaf7cf85d395f2bcd86dd41e4b4ee5938f/grpcio_tools-1.71.0-cp311-cp311-manylinux_2_17_aarch64.whl", hash = "sha256:edab7e6518de01196be37f96cb1e138c3819986bf5e2a6c9e1519b4d716b2f5a", size = 2352061, upload-time = "2025-03-10T19:27:31.624Z" },
-    { url = "https://files.pythonhosted.org/packages/87/eb/e9971c7693a2d85e7f55760f7906211a95ff74af4d41b05d187849d7fb58/grpcio_tools-1.71.0-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8b93b9f6adc7491d4c10144c0643409db298e5e63c997106a804f6f0248dbaf4", size = 2745033, upload-time = "2025-03-10T19:27:33.787Z" },
-    { url = "https://files.pythonhosted.org/packages/15/72/4e69beae87a1b334f80da9e93c8e2f5c8fe4860c956a781246a092dc4c97/grpcio_tools-1.71.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ae5f2efa9e644c10bf1021600bfc099dfbd8e02b184d2d25dc31fcd6c2bc59e", size = 2476743, upload-time = "2025-03-10T19:27:35.896Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/f3/336d2c83f1bfc00a5376bf20dd2273d7aa891b03dd91b11c71ca47392351/grpcio_tools-1.71.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:65aa082f4435571d65d5ce07fc444f23c3eff4f3e34abef599ef8c9e1f6f360f", size = 2853693, upload-time = "2025-03-10T19:27:37.624Z" },
-    { url = "https://files.pythonhosted.org/packages/62/ba/cc7ace518c11501a4b8620df5edb8188e81470e5b82dc6829212f3e9b2ff/grpcio_tools-1.71.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:1331e726e08b7bdcbf2075fcf4b47dff07842b04845e6e220a08a4663e232d7f", size = 3304474, upload-time = "2025-03-10T19:27:39.351Z" },
-    { url = "https://files.pythonhosted.org/packages/00/0d/4b843654af3d5aa2f1a5775df1d583e6e3471e6d569106fd3213ad185a98/grpcio_tools-1.71.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:6693a7d3ba138b0e693b3d1f687cdd9db9e68976c3fa2b951c17a072fea8b583", size = 2916147, upload-time = "2025-03-10T19:27:41.022Z" },
-    { url = "https://files.pythonhosted.org/packages/e4/14/047e1c817422bc3d434247b9c640c51fd51ca4e047583ff31d927c3dea73/grpcio_tools-1.71.0-cp311-cp311-win32.whl", hash = "sha256:6d11ed3ff7b6023b5c72a8654975324bb98c1092426ba5b481af406ff559df00", size = 949374, upload-time = "2025-03-10T19:27:42.999Z" },
-    { url = "https://files.pythonhosted.org/packages/86/cb/739a1b6d517672693796022c0f9061f63eaa243ec70cbbfa59bf881ed9fb/grpcio_tools-1.71.0-cp311-cp311-win_amd64.whl", hash = "sha256:072b2a5805ac97e4623b3aa8f7818275f3fb087f4aa131b0fce00471065f6eaa", size = 1120786, upload-time = "2025-03-10T19:27:44.706Z" },
-]
-
-[[package]]
 name = "h11"
 version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -997,7 +961,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c1/84/6b010387b795f774e1ec695df3c8660c15abd041783647d5e7e4076bfc6b/hdbscan-0.8.40.tar.gz", hash = "sha256:c9e383ff17beee0591075ff65d524bda5b5a35dfb01d218245a7ba30c8d48a17", size = 6904096, upload-time = "2024-11-18T16:14:05.384Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/26/6b/88b8c8023c0c0b27589ad83c82084a1b751917a3e09bdf7fcacf7e6bd523/hdbscan-0.8.40-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:5e958f0d7a33cd2b5e8e927b47f7360bf8a3e7d72355dd65a701e8aabe407b27", size = 1491349, upload-time = "2024-11-18T16:16:10.666Z" },
-    { url = "https://files.pythonhosted.org/packages/e5/72/84bc7b6ea9eb59ca6c5e4d3f32313cdfa8f4ab5cfece6fb6dfef4c9149fc/hdbscan-0.8.40-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:b95447c9c2cf6c95f98210c0edee3dc463d0a237e5531076855d9776495c96fc", size = 4459927 },
     { url = "https://files.pythonhosted.org/packages/e5/72/84bc7b6ea9eb59ca6c5e4d3f32313cdfa8f4ab5cfece6fb6dfef4c9149fc/hdbscan-0.8.40-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:b95447c9c2cf6c95f98210c0edee3dc463d0a237e5531076855d9776495c96fc", size = 4459927, upload-time = "2025-10-11T11:55:49.958Z" },
     { url = "https://files.pythonhosted.org/packages/a3/ef/32c8a0b3dc6e6c4e433b85b30c3723d8eb48d115c0185b82ab89e1a0ef89/hdbscan-0.8.40-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6e0d6197ee045b173e1f16e6884386f335a56091e373a839dd24f7331a8fa9ed", size = 4576215, upload-time = "2024-11-18T16:14:11.241Z" },
     { url = "https://files.pythonhosted.org/packages/64/b1/96c347c7740efa1ac803be64155159284f92fafcff88c1077344e64eead5/hdbscan-0.8.40-cp311-cp311-win_amd64.whl", hash = "sha256:127cbe8c858dc77adfde33a3e1ce4f3bea810f78b01d2bd47b1147d4b5a50472", size = 732173, upload-time = "2024-11-18T16:18:40.361Z" },
@@ -3234,21 +3197,20 @@ wheels = [
 
 [[package]]
 name = "weaviate-client"
-version = "4.14.4"
+version = "4.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "authlib" },
     { name = "deprecation" },
     { name = "grpcio" },
-    { name = "grpcio-health-checking" },
-    { name = "grpcio-tools" },
     { name = "httpx" },
+    { name = "protobuf" },
     { name = "pydantic" },
     { name = "validators" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/c3/ce01b557855a79877d4aa36173fb94cdde1df8aa2a8458180d5e9762159a/weaviate_client-4.14.4.tar.gz", hash = "sha256:d149f11793d33e45a8e77d33cfbb92227a87509d2e1a6a51a617220bb22a6d0a", size = 664038, upload-time = "2025-05-19T15:36:28.817Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/18/f37689c69984c426a5ae75a5fefa324654e0cd09be3a15d12b5aa16b4b85/weaviate_client-4.18.1.tar.gz", hash = "sha256:df682f7e91b51ac4428d85a092297203ab688a532851ac11f855a97ea85b7283", size = 780326, upload-time = "2025-11-21T12:31:21.629Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/19/def7550b7134d63b31b4426e4943caead74faf8cac34f788dae57a6f9f45/weaviate_client-4.14.4-py3-none-any.whl", hash = "sha256:73151ef3c6a05c976c30485e34d549d1936ed82d5036f8b1d7c95f5c5ace15d5", size = 437012, upload-time = "2025-05-19T15:36:26.917Z" },
+    { url = "https://files.pythonhosted.org/packages/de/df/54c14564b96cfc71e41f73fc431fbbce2251374e55eb1d86010d36e811dd/weaviate_client-4.18.1-py3-none-any.whl", hash = "sha256:18929badab8b5c05b8464467029972aabccd19d0bad79624c0067abc2ca3c05e", size = 598077, upload-time = "2025-11-21T12:31:19.942Z" },
 ]
 
 [[package]]
