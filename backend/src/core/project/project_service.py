@@ -69,7 +69,7 @@ class ProjectService(metaclass=SingletonMeta):
 
     def create_project(
         self, db: Session, create_dto: ProjectCreate, creating_user_id: int
-    ):
+    ) -> ProjectORM:
         # 1) create the project
         proj = crud_project.create(db=db, create_dto=create_dto)
         project_id = proj.id
@@ -119,6 +119,8 @@ class ProjectService(metaclass=SingletonMeta):
 
         # 8) re-load fresh instance to avoid detachment
         fresh = db.get(ProjectORM, project_id)
+        if fresh is None:
+            raise ValueError("Failed to reload freshly created project from DB")
         return fresh
 
     def delete_project(self, db: Session, *, proj_id: int) -> ProjectORM:
