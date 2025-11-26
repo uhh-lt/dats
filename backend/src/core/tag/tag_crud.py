@@ -1,51 +1,95 @@
+from collections import defaultdict
 from typing import Iterable
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from core.doc.source_document_orm import SourceDocumentORM
+from config import conf
 from core.tag.tag_dto import TagCreate, TagUpdate
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
 from repos.db.crud_base import CRUDBase
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
     ### READ OPERATIONS ###
 
+    def read_by_project(self, db: Session, project_id: int) -> list[TagORM]:
+        return db.query(TagORM).filter(TagORM.project_id == project_id).all()
+
     def read_by_name_and_project(
         self, db: Session, name: str, project_id: int
     ) -> TagORM | None:
         return (
-            db.query(self.model)
-            .filter(self.model.name == name, self.model.project_id == project_id)
+            db.query(TagORM)
+            .filter(TagORM.name == name, TagORM.project_id == project_id)
             .first()
         )
 
-    # Return a dictionary in the following format:
-    # tag id => count of documents that have this tag
-    # for all tags in the database
-    def read_tag_sdoc_counts(self, db: Session, sdoc_ids: list[int]) -> dict[int, int]:
-        # Get the source documents matching the `sdoc_ids` parameter
-        # and count how many of them have each tag
-        sdocs_query = (
-            select(TagORM.id, func.count(SourceDocumentORM.id).label("count"))
-            .join(TagORM.source_documents)
-            .filter(SourceDocumentORM.id.in_(sdoc_ids))
-            .group_by(TagORM.id)
-            .subquery()
+    def read_by_names(
+        self,
+        db: Session,
+        project_id: int,
+        names: list[str],
+    ) -> list[TagORM]:
+        return (
+            db.query(TagORM)
+            .filter(TagORM.name.in_(names), TagORM.project_id == project_id)
+            .all()
         )
 
-        # Get *all* tags in the database and join the matching sdoc count from the subquery,
-        # using 0 as a default instead of `NULL`
-        query = select(TagORM.id, func.coalesce(sdocs_query.c.count, 0)).join_from(
-            TagORM,
-            sdocs_query,
-            TagORM.id == sdocs_query.c.id,
-            isouter=True,
-        )
-        rows = db.execute(query)
+    # for all tags in the project
+    def read_tag_sdoc_counts(
+        self, db: Session, project_id: int, sdoc_ids: list[int]
+    ) -> dict[int, int]:
+        """
+        Counts how many of the specified source documents (sdoc_ids) have each tag in the project.
+        Args:
+            db (Session): The current database session used for querying.
+            project_id (int): The project ID to filter tags.
+            sdoc_ids (list[int]): A list of source document IDs to consider for counting.
 
-        return dict((tag_id, count) for tag_id, count in rows)
+        Returns:
+            dict[int, int]: A dictionary mapping each tag ID to the count of source documents
+                            (from sdoc_ids) that have that tag.
+        """
+        # 1. Get ALL tag IDs that exist in the project
+        all_tag_ids = [
+            tag.id for tag in self.read_by_project(db=db, project_id=project_id)
+        ]
+
+        # Initialize the results dictionary with all tags having a count of 0
+        results: dict[int, int] = {tag_id: 0 for tag_id in all_tag_ids}
+
+        if not sdoc_ids:
+            return results
+
+        # 2. Process sdoc_ids in Batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 3. Build the SELECT statement for the current batch
+            stmt = (
+                select(
+                    SourceDocumentTagLinkTable.tag_id,
+                    func.count(SourceDocumentTagLinkTable.tag_id),
+                )
+                .where(
+                    SourceDocumentTagLinkTable.source_document_id.in_(batch_ids),
+                    SourceDocumentTagLinkTable.tag_id.in_(all_tag_ids),
+                )
+                .group_by(SourceDocumentTagLinkTable.tag_id)
+            )
+
+            # 4. Execute the statement and fetch the results for the batch
+            batch_rows = db.execute(stmt).all()
+
+            # 5. Aggregate the counts
+            for tag_id, count in batch_rows:
+                results[tag_id] += count
+
+        return results
 
     def read_tags_for_documents(
         self, db: Session, *, sdoc_ids: Iterable[int]
@@ -60,33 +104,36 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
         Returns:
             dict[int, list[TagORM]]: A dictionary mapping each document ID to a list of associated tags.
         """
-        if not sdoc_ids:
+        sdoc_id_list = list(sdoc_ids)
+        if not sdoc_id_list:
             return {}
 
-        # Query to get all tags linked to the provided sdoc_ids
-        query = (
-            db.query(
-                SourceDocumentTagLinkTable.source_document_id,
-                TagORM.id,
-                TagORM.name,
-            )
-            .join(
-                TagORM,
-                SourceDocumentTagLinkTable.tag_id == TagORM.id,
-            )
-            .filter(SourceDocumentTagLinkTable.source_document_id.in_(sdoc_ids))
-            .all()
-        )
+        # result aggregation
+        result: dict[int, list[TagORM]] = defaultdict(list)
 
-        # Organize results into a dictionary {sdoc_id: [tag1, tag2, ...]}
-        result: dict[int, list[TagORM]] = {}
-        for sdoc_id, tag_id, tag_name in query:
-            tag = TagORM(id=tag_id, name=tag_name)
-            if sdoc_id not in result:
-                result[sdoc_id] = []
-            result[sdoc_id].append(tag)
+        # 1. Process in Batches
+        for i in range(0, len(sdoc_id_list), BATCH_SIZE):
+            batch_ids = sdoc_id_list[i : i + BATCH_SIZE]
 
-        return result
+            # 2. Build the 2.0 SELECT Statement
+            stmt = (
+                select(SourceDocumentTagLinkTable.source_document_id, TagORM)
+                .join_from(
+                    SourceDocumentTagLinkTable,
+                    TagORM,
+                    SourceDocumentTagLinkTable.tag_id == TagORM.id,
+                )
+                .filter(SourceDocumentTagLinkTable.source_document_id.in_(batch_ids))
+            )
+
+            # 3. Execute the statement and fetch the results
+            batch_rows = db.execute(stmt).all()
+
+            # 4. Aggregate the results
+            for sdoc_id, tag_obj in batch_rows:
+                result[sdoc_id].append(tag_obj)
+
+        return dict(result)
 
     ### UPDATE OPERATIONS ###
 
@@ -104,21 +151,19 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
     ) -> bool:
         if parent_id:
             return (
-                db.query(self.model)
+                db.query(TagORM)
                 .filter(
-                    self.model.project_id == project_id,
-                    self.model.parent_id == parent_id,
-                    self.model.name == tag_name,
+                    TagORM.project_id == project_id,
+                    TagORM.parent_id == parent_id,
+                    TagORM.name == tag_name,
                 )
                 .first()
                 is not None
             )
         else:
             return (
-                db.query(self.model)
-                .filter(
-                    self.model.project_id == project_id, self.model.name == tag_name
-                )
+                db.query(TagORM)
+                .filter(TagORM.project_id == project_id, TagORM.name == tag_name)
                 .first()
                 is not None
             )
@@ -156,23 +201,34 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
         self, db: Session, *, sdoc_ids: list[int], tag_ids: list[int]
     ) -> int:
         """
-        Unlinks all DocTags with all SDocs
+        Unlinks specified tags from specified source documents, using batched deletion.
+        Returns the total count of rows deleted.
         """
-        if len(sdoc_ids) == 0 or len(tag_ids) == 0:
+        if not sdoc_ids or not tag_ids:
             return 0
 
-        # remove links (sdoc <-> tag)
-        del_rows = db.execute(
-            delete(SourceDocumentTagLinkTable)
-            .where(
-                SourceDocumentTagLinkTable.source_document_id.in_(sdoc_ids),
+        total_deleted_count = 0
+
+        # 1. Process sdoc_ids in Batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the DELETE Statement
+            stmt = delete(SourceDocumentTagLinkTable).where(
+                SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
                 SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
             )
-            .returning(SourceDocumentTagLinkTable.source_document_id)
-        ).fetchall()
+
+            # 3. Execute the statement
+            result = db.execute(stmt)
+
+            # Add the count of deleted rows from this batch
+            total_deleted_count += result.rowcount
+
+        # 4. Commit all batched deletions
         db.commit()
 
-        return len(del_rows)
+        return total_deleted_count
 
     def set_tags(self, db: Session, *, sdoc_id: int, tag_ids: list[int]) -> int:
         """
@@ -210,16 +266,37 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
         sdoc_ids: list[int],
         user_id: int,
     ) -> dict[int, int]:
-        result = (
-            db.query(self.model.id, func.count(self.model.id))
-            .join(self.model.source_documents)
-            .where(
-                self.model.id.in_(tag_ids),
-                SourceDocumentORM.id.in_(sdoc_ids),
+        # Initialize the results dictionary: {tag_id: 0} for all input tags
+        results: dict[int, int] = {tag_id: 0 for tag_id in tag_ids}
+
+        if not tag_ids or not sdoc_ids:
+            return results
+
+        # 1. Process sdoc_ids in Batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the SELECT Statement
+            stmt = (
+                select(
+                    SourceDocumentTagLinkTable.tag_id,
+                    func.count(SourceDocumentTagLinkTable.tag_id),
+                )
+                .where(
+                    SourceDocumentTagLinkTable.tag_id.in_(tag_ids),
+                    SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
+                )
+                .group_by(SourceDocumentTagLinkTable.tag_id)
             )
-            .group_by(self.model.id)
-        )
-        return {tag_id: count for tag_id, count in result.all()}
+
+            # 3. Execute the statement and fetch the results
+            batch_rows = db.execute(stmt).all()
+
+            # 4. Aggregate the counts
+            for tag_id, count in batch_rows:
+                results[tag_id] += count
+
+        return results
 
 
 crud_tag = CRUDTag(TagORM)

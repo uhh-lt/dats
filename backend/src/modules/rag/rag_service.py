@@ -4,7 +4,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
-from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.simsearch.simsearch_service import SimSearchService
 from repos.llm_repo import LLMRepo
 
@@ -41,7 +41,7 @@ class RAGService(metaclass=SingletonMeta):
 
         extracted_sentences = []
         for sdoc_id, hits in sdoc_to_hits.items():
-            sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+            sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
             for hit in hits:
                 try:
                     sentence_text = sdoc_data.sentences[hit.sentence_id]

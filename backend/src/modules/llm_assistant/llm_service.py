@@ -15,6 +15,7 @@ from core.annotation.sentence_annotation_dto import (
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
@@ -201,7 +202,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 # 1. Find the number of labeled sentences for each code
                 sentence_annotations = [
                     sa
-                    for sa in crud_sentence_anno.read_by_codes(
+                    for sa in crud_sentence_anno.read_by_code_ids(
                         db=db, code_ids=selected_code_ids
                     )
                     if sa.user_id
@@ -317,7 +318,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         prompt_builder: PromptBuilder,
         db: Session,
         sdoc_ids: list[int],
-        sdoc_datas: list[SourceDocumentDataORM | None],
+        sdoc_datas: list[SourceDocumentDataORM],
         response_model: Type[T],
     ) -> tuple[list[T], list[int], list[int]]:
         # prepare batch messages
@@ -325,11 +326,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
         bm_sids: list[int] = []  # sdoc_id corresponding to each batch_message
         bm_ids: list[int] = []  # message id corresponding to each batch_message
         for idx, (sdoc_id, sdoc_data) in enumerate(zip(sdoc_ids, sdoc_datas)):
-            if sdoc_data is None:
-                raise ValueError(
-                    f"Could not find SourceDocumentDataORM for sdoc_id {sdoc_id}!"
-                )
-
             # get language
             language = crud_sdoc_meta.read_by_sdoc_and_key(
                 db=db, sdoc_id=sdoc_data.id, key="language"
@@ -383,7 +379,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic document tagging
         result: list[TaggingResult] = []
@@ -475,7 +471,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         )
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic metadata extraction
         result: list[MetadataExtractionResult] = []
@@ -594,7 +590,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         project_codes = prompt_builder.codeids2code_dict
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=task_parameters.sdoc_ids)
 
         # automatic annotation
         annotation_id = 0
@@ -763,7 +759,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         project_codes = prompt_builder.codeids2code_dict
 
         # read sdocs
-        sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=task_parameters.sdoc_ids)
 
         # Delete all existing sentence annotations for the sdocs
         if task_parameters.delete_existing_annotations:

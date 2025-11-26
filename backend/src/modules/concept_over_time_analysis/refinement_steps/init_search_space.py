@@ -1,8 +1,10 @@
 from datetime import datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from core.doc.source_document_crud import crud_sdoc
+from config import conf
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
@@ -11,6 +13,8 @@ from modules.concept_over_time_analysis.cota_dto import (
     COTASentence,
 )
 from modules.simsearch.simsearch_service import SimSearchService
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
@@ -79,7 +83,7 @@ def __add_sentences_to_search_space(
     sdoc_ids = list(set([cota_sent.sdoc_id for cota_sent in search_space]))
 
     # get the data from the database
-    sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=sdoc_ids)
+    sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
 
     # map the data
     sdoc_id2sdocdata: dict[int, SourceDocumentDataORM] = {
@@ -120,22 +124,23 @@ def __add_dates_to_search_space(
 
     # this is only possible if the cota has a date_metadata_id
     if date_metadata_id is not None:
-        query = (
-            db.query(
-                SourceDocumentORM.id,
-                SourceDocumentMetadataORM.date_value,
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_ids = sdoc_ids[i : i + BATCH_SIZE]
+            stmt = (
+                select(
+                    SourceDocumentORM.id,
+                    SourceDocumentMetadataORM.date_value,
+                )
+                .join(SourceDocumentORM.metadata_)
+                .where(
+                    SourceDocumentORM.id.in_(batch_ids),
+                    SourceDocumentMetadataORM.project_metadata_id == date_metadata_id,
+                    SourceDocumentMetadataORM.date_value.is_not(None),
+                )
             )
-            .join(SourceDocumentORM.metadata_)
-            .filter(
-                SourceDocumentORM.id.in_(sdoc_ids),
-                SourceDocumentMetadataORM.project_metadata_id == date_metadata_id,
-                SourceDocumentMetadataORM.date_value.isnot(None),
-            )
-        )
-        result_rows = query.all()
-
-        for row in result_rows:
-            sdoc_id_to_date[row[0]] = row[1]
+            result_rows = db.execute(stmt).all()
+            for row in result_rows:
+                sdoc_id_to_date[row[0]] = row[1]
 
     # otherwise, we set the date to today for every sdoc
     else:

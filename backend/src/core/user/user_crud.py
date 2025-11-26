@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from core.auth.security import generate_password_hash, verify_password
@@ -64,6 +65,10 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
             .first()
         )
         return user
+
+    def read_by_emails(self, db: Session, *, emails: list[str]) -> list[UserORM]:
+        stmt = select(self.model).where(self.model.email.in_(emails))
+        return list(db.scalars(stmt).all())
 
     ### UPDATE OPERATIONS ###
 

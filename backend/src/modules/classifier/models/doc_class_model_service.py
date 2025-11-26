@@ -11,6 +11,7 @@ from datasets import Dataset
 from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
 from transformers import (
@@ -20,12 +21,12 @@ from transformers import (
     DataCollatorWithPadding,
 )
 
+from config import conf
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_crud import crud_tag
-from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
+from core.tag.tag_orm import SourceDocumentTagLinkTable
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierCreate,
@@ -53,6 +54,8 @@ from modules.classifier.models.text_class_model_service import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
+
+SQL_BATCH_SIZE = conf.postgres.batch_size
 
 
 class InferenceDatasetRow(TypedDict):
@@ -247,15 +250,26 @@ class DocClassificationModelService(TextClassificationModelService):
         ]
         logger.info(f"Found {len(sdoc_ids)} source documents for training.")
 
-        # Get annotations
-        results = (
-            db.query(SourceDocumentTagLinkTable)
-            .filter(
-                SourceDocumentORM.id.in_(sdoc_ids),
-                SourceDocumentORM.tags.any(TagORM.id.in_(class_ids)),
+        # Get annotations by source document
+        # 1. construct result object, grouping annotations by source document
+        sdoc_id2annotation_ids: dict[int, list[int]] = {
+            sdoc_id: [] for sdoc_id in sdoc_ids
+        }
+
+        # 2. retrieve annotations from the database, in batches
+        for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
+
+            # 3. Build the SELECT statement
+            stmt = select(SourceDocumentTagLinkTable).where(
+                SourceDocumentTagLinkTable.source_document_id.in_(batch_sdoc_ids),
+                SourceDocumentTagLinkTable.tag_id.in_(class_ids),
             )
-            .all()
-        )
+
+            # 4. Execute the statement and fetch the results
+            batch_result = db.scalars(stmt).all()
+            for row in batch_result:
+                sdoc_id2annotation_ids[row.source_document_id].append(row.tag_id)
 
         # Get source document data
         # Some documents may be erroneous and do not have data
@@ -265,13 +279,6 @@ class DocClassificationModelService(TextClassificationModelService):
         }
         for sdoc_data in sdoc_datas:
             sdocid2data[sdoc_data.id] = sdoc_data
-
-        # Group classifications by source document
-        sdoc_id2annotation_ids: dict[int, list[int]] = {
-            sdoc_id: [] for sdoc_id in sdoc_ids
-        }
-        for row in results:
-            sdoc_id2annotation_ids[row.source_document_id].append(row.tag_id)
 
         # Create a labeled dataset
         # Every source document is part of the training data

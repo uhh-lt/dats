@@ -1,7 +1,8 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import tuple_, update
+from sqlalchemy import select, tuple_, update
 from sqlalchemy.orm import Session
 
+from config import conf
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_cluster_dto import (
     DocumentClusterCreate,
@@ -9,6 +10,8 @@ from modules.perspectives.document_cluster_dto import (
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDDocumentCluster(
@@ -41,11 +44,34 @@ class CRUDDocumentCluster(
         """
         if not ids:
             return []
-        return (
-            db.query(self.model)
-            .filter(tuple_(self.model.sdoc_id, self.model.cluster_id).in_(ids))
-            .all()
-        )
+
+        db_objects: list[DocumentClusterORM] = []
+
+        # 1. Process the composite key list in batches
+        for i in range(0, len(ids), BATCH_SIZE):
+            batch_ids = ids[i : i + BATCH_SIZE]
+
+            # 2. Build the SELECT statement
+            stmt = select(self.model).filter(
+                tuple_(self.model.sdoc_id, self.model.cluster_id).in_(batch_ids)
+            )
+
+            # 3. Execute the statement and fetch the results
+            batch_objects = db.scalars(stmt).all()
+            db_objects.extend(batch_objects)
+
+        # 4. Sort the results to match the input order
+        id_map: dict[tuple[int, int], DocumentClusterORM] = {
+            (obj.sdoc_id, obj.cluster_id): obj for obj in db_objects
+        }
+        result: list[DocumentClusterORM] = []
+        for key in ids:
+            if key in id_map:
+                result.append(id_map[key])
+            else:
+                raise NoSuchElementError(self.model, sdoc_id=key[0], cluster_id=key[1])
+
+        return result
 
     def read_by_aspect_id(
         self, db: Session, *, aspect_id: int
@@ -181,23 +207,40 @@ class CRUDDocumentCluster(
         Returns:
             The number of DocumentClusterORM objects that were updated
         """
-        if not sdoc_ids:
-            return 0
+        total_updated_count = 0
 
-        stmt = (
-            update(self.model)
-            .where(
-                self.model.sdoc_id.in_(sdoc_ids),
-                self.model.cluster_id == ClusterORM.id,
-                ClusterORM.aspect_id == aspect_id,
+        if not sdoc_ids:
+            return total_updated_count
+
+        # 1. Process sdoc_ids in Batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the UPDATE Statement for the current batch
+            stmt = (
+                update(self.model)
+                .where(
+                    self.model.sdoc_id.in_(batch_sdoc_ids),
+                )
+                .where(
+                    self.model.cluster_id == ClusterORM.id,
+                    ClusterORM.aspect_id == aspect_id,
+                )
+                .values(is_accepted=is_accepted)
+                .execution_options(synchronize_session=False)
             )
-            .values(is_accepted=is_accepted)
-            .execution_options(synchronize_session=False)
-        )
-        results = db.execute(stmt)
+
+            # 3. Execute the statement
+            results = db.execute(stmt)
+
+            # Accumulate the count of updated rows from this batch
+            count = results.rowcount if results.rowcount is not None else 0
+            total_updated_count += count
+
+        # 4. Commit all batched updates
         db.commit()
 
-        return results.rowcount if results.rowcount is not None else 0
+        return total_updated_count
 
     def set_labels2(
         self,
@@ -219,23 +262,40 @@ class CRUDDocumentCluster(
         Returns:
             The number of DocumentClusterORM objects that were updated
         """
-        if not sdoc_ids:
-            return 0
+        total_updated_count = 0
 
-        stmt = (
-            update(self.model)
-            .where(
-                self.model.sdoc_id.in_(sdoc_ids),
-                self.model.cluster_id == ClusterORM.id,
-                ClusterORM.aspect_id == aspect_id,
+        if not sdoc_ids:
+            return total_updated_count
+
+        # 1. Process sdoc_ids in Batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the UPDATE Statement for the current batch
+            stmt = (
+                update(self.model)
+                .where(
+                    self.model.sdoc_id.in_(batch_sdoc_ids),
+                )
+                .where(
+                    self.model.cluster_id == ClusterORM.id,
+                    ClusterORM.aspect_id == aspect_id,
+                )
+                .values(cluster_id=cluster_id, is_accepted=is_accepted)
+                .execution_options(synchronize_session=False)
             )
-            .values(cluster_id=cluster_id, is_accepted=is_accepted)
-            .execution_options(synchronize_session=False)
-        )
-        results = db.execute(stmt)
+
+            # 3. Execute the statement
+            results = db.execute(stmt)
+
+            # Accumulate the count of updated rows from this batch
+            count = results.rowcount if results.rowcount is not None else 0
+            total_updated_count += count
+
+        # 4. Commit all batched updates
         db.commit()
 
-        return results.rowcount if results.rowcount is not None else 0
+        return total_updated_count
 
 
 crud_document_cluster = CRUDDocumentCluster(DocumentClusterORM)

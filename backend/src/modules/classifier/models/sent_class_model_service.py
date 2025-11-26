@@ -12,11 +12,13 @@ from datasets import Dataset
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sentence_transformers import SentenceTransformer
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 from torch.utils.data import DataLoader
 from torchcrf import CRF
 
+from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
@@ -52,6 +54,8 @@ from modules.classifier.models.text_class_model_service import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
+
+SQL_BATCH_SIZE = conf.postgres.batch_size
 
 
 class DatasetRow(TypedDict):
@@ -257,34 +261,41 @@ class SentClassificationModelService(TextClassificationModelService):
             )
         ]
 
-        # Get annotations
-        results = (
-            db.query(
-                SentenceAnnotationORM,
-                AnnotationDocumentORM,
+        # Get annotations by user and source document
+        # 1. construct result object, grouping annotations by user and source document
+        user_id2sdoc_id2annotations: dict[
+            int, dict[int, list[SentenceAnnotationORM]]
+        ] = defaultdict(lambda: defaultdict(list))
+
+        # 2. retrieve annotations from the database, in batches
+        for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
+
+            # 3. Build the SELECT statement
+            stmt = (
+                select(
+                    SentenceAnnotationORM,
+                    AnnotationDocumentORM,
+                )
+                .join(SentenceAnnotationORM.annotation_document)
+                .where(
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
+                    SentenceAnnotationORM.code_id.in_(class_ids),
+                )
             )
-            .join(SentenceAnnotationORM.annotation_document)
-            .filter(
-                AnnotationDocumentORM.user_id.in_(user_ids),
-                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                SentenceAnnotationORM.code_id.in_(class_ids),
-            )
-            .all()
-        )
+
+            # 4. Execute the statement and fetch the results
+            batch_result = db.execute(stmt).all()
+            for row in batch_result:
+                annotation, adoc = row._tuple()
+                user_id2sdoc_id2annotations[adoc.user_id][
+                    adoc.source_document_id
+                ].append(annotation)
 
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
         sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
-
-        # Group annotations by user and source document
-        user_id2sdoc_id2annotations: dict[
-            int, dict[int, list[SentenceAnnotationORM]]
-        ] = defaultdict(lambda: defaultdict(list))
-        for row in results:
-            annotation, adoc = row._tuple()
-            user_id2sdoc_id2annotations[adoc.user_id][adoc.source_document_id].append(
-                annotation
-            )
 
         # Create a labeled, embedded dataset
         # Every annotated source document is part of the training data

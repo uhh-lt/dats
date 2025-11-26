@@ -2,18 +2,19 @@ from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
+from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
 from systems.search_system.search_builder import SearchBuilder
-
-# TODO: How to do text search?
 
 
 class SentAnnoColumns(str, AbstractColumns):
@@ -149,32 +150,14 @@ class SentAnnoColumns(str, AbstractColumns):
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
             case SentAnnoColumns.TAG_ID_LIST:
-                result = (
-                    db.query(TagORM)
-                    .filter(
-                        TagORM.id.in_(ids),
-                    )
-                    .all()
-                )
-                return [tag.name for tag in result]
+                tags = crud_tag.read_by_ids(db, ids=ids)
+                return [tag.name for tag in tags]
             case SentAnnoColumns.CODE_ID:
-                result = (
-                    db.query(CodeORM)
-                    .filter(
-                        CodeORM.id.in_(ids),
-                    )
-                    .all()
-                )
-                return [code.name for code in result]
+                codes = crud_code.read_by_ids(db, ids=ids)
+                return [code.name for code in codes]
             case SentAnnoColumns.USER_ID:
-                result = (
-                    db.query(UserORM)
-                    .filter(
-                        UserORM.id.in_(ids),
-                    )
-                    .all()
-                )
-                return [user.email for user in result]
+                users = crud_user.read_by_ids(db, ids=ids)
+                return [user.email for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -183,33 +166,13 @@ class SentAnnoColumns(str, AbstractColumns):
     ) -> list[int]:
         match self:
             case SentAnnoColumns.TAG_ID_LIST:
-                result = (
-                    db.query(TagORM)
-                    .filter(
-                        TagORM.project_id == project_id,
-                        TagORM.name.in_(names),
-                    )
-                    .all()
-                )
+                result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
             case SentAnnoColumns.CODE_ID:
-                result = (
-                    db.query(CodeORM)
-                    .filter(
-                        CodeORM.project_id == project_id,
-                        CodeORM.name.in_(names),
-                    )
-                    .all()
-                )
+                result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case SentAnnoColumns.USER_ID:
-                result = (
-                    db.query(UserORM)
-                    .filter(
-                        UserORM.email.in_(names),
-                    )
-                    .all()
-                )
+                result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
