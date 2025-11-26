@@ -266,3 +266,14 @@ class JobService(metaclass=SingletonMeta):
             job.requeue()
             return True
         return False
+
+    def remove_jobs_by_project(self, project_id: int) -> int:
+        removed_jobs = 0
+        for registries in self.registries.values():
+            for registry in registries.values():
+                for job_id in registry.get_job_ids():
+                    registry.remove(job_id, delete_job=True)
+                    removed_jobs += 1
+
+        logger.info(f"Removed {removed_jobs} jobs for project {project_id}")
+        return removed_jobs

@@ -9,8 +9,6 @@ from core.doc.sdoc_elastic_index import SdocIndex
 from repos.elastic.elastic_crud_base import ElasticCrudBase
 from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.event_system.events import (
-    project_created,
-    project_deleted,
     source_document_deleted,
 )
 
@@ -77,24 +75,5 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
     crud_elastic_sdoc.delete(
         client=ElasticSearchRepo().client,
         id=sdoc_id,
-        proj_id=project_id,
-    )
-
-
-@project_created.connect
-def handle_project_created(sender, project_id: int):
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-
-    crud_elastic_sdoc.index.create_index(
-        client=ElasticSearchRepo().client, proj_id=project_id
-    )
-
-
-@project_deleted.connect
-def handle_project_deleted(sender, project_id: int):
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-
-    crud_elastic_sdoc.index.delete_index(
-        client=ElasticSearchRepo().client,
         proj_id=project_id,
     )
