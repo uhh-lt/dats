@@ -4,7 +4,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from test.factories.bbox_annotation_factory import BBoxAnnotationFactory
+from test.factories.code_factory import CodeFactory
 from test.factories.project_factory import ProjectFactory
+from test.factories.span_annotation_factory import SpanAnnotationFactory
+from test.factories.tag_factory import TagFactory
 from test.factories.user_factory import UserFactory
 
 from core.user.user_dto import UserRead
@@ -117,6 +121,26 @@ def project_factory(db_session: Session) -> ProjectFactory:
 @pytest.fixture(scope="function")
 def user_factory(db_session: Session) -> UserFactory:
     return UserFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def code_factory(db_session: Session) -> CodeFactory:
+    return CodeFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def tag_factory(db_session: Session) -> TagFactory:
+    return TagFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def span_annotaion_factory(db_session: Session) -> SpanAnnotationFactory:
+    return SpanAnnotationFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def bbox_annotation_factory(db_session: Session) -> BBoxAnnotationFactory:
+    return BBoxAnnotationFactory(db_session=db_session)
 
 
 # ---------------------------------------------------------------------------
