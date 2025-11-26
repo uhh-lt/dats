@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from common.dependencies import get_current_user, get_db_session, skip_limit_params
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
+from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpdate
 from core.user.user_orm import UserORM
@@ -107,7 +108,7 @@ def associate_user_to_project(
     authz_user.assert_in_project(proj_id)
 
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
-    crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
+    ProjectService().associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
     return UserRead.model_validate(user_db_obj)
 
 

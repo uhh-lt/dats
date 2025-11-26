@@ -3,6 +3,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
+from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from modules.eximport.user.user_export_schema import UserExportCollection
@@ -81,7 +82,7 @@ def import_users_to_proj(
             )
             continue
         # Associate the user with the project
-        imported_user = crud_project.associate_user(
+        imported_user = ProjectService().associate_user(
             db=db, proj_id=project_id, user_id=user.id
         )
         imported_user_ids.append(imported_user.id)
