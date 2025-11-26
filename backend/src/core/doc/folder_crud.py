@@ -1,8 +1,12 @@
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.doc.folder_dto import FolderCreate, FolderType, FolderUpdate
 from core.doc.folder_orm import FolderORM
 from repos.db.crud_base import CRUDBase
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
@@ -59,6 +63,7 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
         Returns:
             list[FolderORM]: A list of FolderORM objects representing the moved folders.
         """
+        # 1. Determine the Parent ID (tfid)
         if target_folder_id == -1:
             tfid = None
         else:
@@ -68,11 +73,21 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
                 raise ValueError("Target folder must be of type NORMAL")
             tfid = target_folder_id
 
-        db.query(self.model).filter(self.model.id.in_(folder_ids)).update(
-            {self.model.parent_id: tfid}
-        )
+        # 2. Batch UPDATE Operations
+        update_payload = {self.model.parent_id: tfid}
+        for i in range(0, len(folder_ids), BATCH_SIZE):
+            batch_ids = folder_ids[i : i + BATCH_SIZE]
+            stmt = (
+                update(self.model)
+                .where(self.model.id.in_(batch_ids))
+                .values(update_payload)
+            )
+            db.execute(stmt)
+        # Commit all batched updates at once
         db.commit()
-        return db.query(self.model).filter(self.model.id.in_(folder_ids)).all()
+
+        # 3. Retrieve and Return Updated Folders
+        return self.read_by_ids(db=db, ids=folder_ids)
 
 
 crud_folder = CRUDFolder(FolderORM)

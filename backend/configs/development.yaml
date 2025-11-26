@@ -63,6 +63,7 @@ postgres:
   db: ${oc.env:POSTGRES_DB, dats}
   user: ${oc.env:POSTGRES_USER, datsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dats123}
+  batch_size: 1000
   pool:
     pool_size: 32
     max_overflow: 16

@@ -11,7 +11,7 @@ from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
-from core.doc.source_document_data_orm import SourceDocumentDataORM
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.simsearch.simsearch_dto import SimSearchSentenceHit
 from modules.simsearch.simsearch_service import SimSearchService
@@ -40,14 +40,9 @@ class AnnoScalingService(metaclass=SingletonMeta):
         accept: list[tuple[int, int]],
         reject: list[tuple[int, int]],
     ):
-        sdoc_ids = {sdoc for sdoc, _ in accept + reject}
-
-        sdocs = (
-            db.query(SourceDocumentDataORM)
-            .filter(SourceDocumentDataORM.id.in_(sdoc_ids))
-            .all()
-        )
-        sdocs = {sdoc.id: sdoc for sdoc in sdocs}
+        sdoc_ids = list({sdoc for sdoc, _ in accept + reject})
+        sdoc_data = crud_sdoc_data.read_by_ids(db, ids=sdoc_ids)
+        sdocs = {sdoc.id: sdoc for sdoc in sdoc_data}
 
         to_create = []
 
@@ -264,14 +259,16 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __get_sentences(
         self, db: Session, sdoc_ids: Iterable[int]
     ) -> dict[int, tuple[list[int], list[int], str]]:
-        query = db.query(
-            SourceDocumentDataORM.id,
-            SourceDocumentDataORM.sentence_starts,
-            SourceDocumentDataORM.sentence_ends,
-            SourceDocumentDataORM.content,
-        ).filter(SourceDocumentDataORM.id.in_(sdoc_ids))
-        res = query.all()
-        return {r[0]: (r[1], r[2], r[3]) for r in res}
+        sdoc_datas = crud_sdoc_data.read_by_ids(db, ids=list(sdoc_ids))
+        result: dict[int, tuple[list[int], list[int], str]] = {}
+        for sdoc in sdoc_datas:
+            result[sdoc.id] = (
+                sdoc.sentence_starts,
+                sdoc.sentence_ends,
+                sdoc.content,
+            )
+
+        return result
 
     def __best_match(self, starts: list[int], ends: list[int], begin: int, end: int):
         overlap = [self.__overlap(s, e, begin, end) for s, e in zip(starts, ends)]

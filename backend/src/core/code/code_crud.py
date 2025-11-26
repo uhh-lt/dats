@@ -68,6 +68,15 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def read_by_name(self, db: Session, code_name: str) -> list[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name).all()
 
+    def read_by_names(
+        self, db: Session, project_id: int, names: list[str]
+    ) -> list[CodeORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.project_id == project_id, self.model.name.in_(names))
+            .all()
+        )
+
     def read_system_codes_by_project(self, db: Session, proj_id: int) -> list[CodeORM]:
         return (
             db.query(self.model)

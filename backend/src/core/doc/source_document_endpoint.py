@@ -5,6 +5,7 @@ from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdate
 from repos.filesystem_repo import FilesystemRepo
@@ -51,7 +52,7 @@ def get_by_id_with_data(
     if not only_if_finished:
         crud_sdoc.read_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
     return SourceDocumentDataRead.model_validate(sdoc_data)
 
 

@@ -11,6 +11,7 @@ import torch.nn as nn
 from datasets import Dataset
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
 from transformers import (
@@ -20,6 +21,7 @@ from transformers import (
     DataCollatorForTokenClassification,
 )
 
+from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
@@ -55,6 +57,8 @@ from modules.classifier.models.text_class_model_service import (
 )
 from repos.filesystem_repo import FilesystemRepo
 from systems.job_system.job_dto import Job
+
+SQL_BATCH_SIZE = conf.postgres.batch_size
 
 
 class InferenceDatasetRow(TypedDict):
@@ -260,34 +264,41 @@ class SpanClassificationModelService(TextClassificationModelService):
             )
         ]
 
-        # Get annotations
-        results = (
-            db.query(
-                SpanAnnotationORM,
-                AnnotationDocumentORM,
-            )
-            .join(SpanAnnotationORM.annotation_document)
-            .filter(
-                AnnotationDocumentORM.user_id.in_(user_ids),
-                AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                SpanAnnotationORM.code_id.in_(class_ids),
-            )
-            .all()
+        # Get annotations by user and source document
+        # 1. construct result object, grouping annotations by user and source document
+        user_id2sdoc_id2annotations: dict[int, dict[int, list[SpanAnnotationORM]]] = (
+            defaultdict(lambda: defaultdict(list))
         )
+
+        # 2. retrieve annotations from the database, in batches
+        for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
+
+            # 3. Build the SELECT statement
+            stmt = (
+                select(
+                    SpanAnnotationORM,
+                    AnnotationDocumentORM,
+                )
+                .join(SpanAnnotationORM.annotation_document)
+                .where(
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
+                    SpanAnnotationORM.code_id.in_(class_ids),
+                )
+            )
+
+            # 4. Execute the statement and fetch the results
+            batch_result = db.execute(stmt).all()
+            for row in batch_result:
+                annotation, adoc = row._tuple()
+                user_id2sdoc_id2annotations[adoc.user_id][
+                    adoc.source_document_id
+                ].append(annotation)
 
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
         sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
-
-        # Group annotations by user and source document
-        user_id2sdoc_id2annotations: dict[int, dict[int, list[SpanAnnotationORM]]] = (
-            defaultdict(lambda: defaultdict(list))
-        )
-        for row in results:
-            annotation, adoc = row._tuple()
-            user_id2sdoc_id2annotations[adoc.user_id][adoc.source_document_id].append(
-                annotation
-            )
 
         # Create a labeled dataset
         # Every annotated source document is part of the training data

@@ -14,7 +14,7 @@ from core.annotation.sentence_annotation_dto import (
 )
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
-from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 
 router = APIRouter(
     prefix="/sentence",
@@ -105,7 +105,7 @@ def get_by_sdoc_and_user(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
 
     # read sentences
-    sdoc_data = crud_sdoc.read_data(db=db, id=sdoc_id)
+    sdoc_data = crud_sdoc_data.read(db=db, id=sdoc_id)
     if sdoc_data is None:
         raise ValueError("SourceDocument is not a text document")
 

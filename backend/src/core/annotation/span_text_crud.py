@@ -2,9 +2,12 @@ import tenacity
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.span_text_dto import SpanTextCreate
 from core.annotation.span_text_orm import SpanTextORM
 from repos.db.crud_base import CRUDBase, UpdateNotAllowed
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
@@ -65,7 +68,19 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         return db.query(self.model).filter(self.model.text == text).first()
 
     def read_all_by_text(self, db: Session, *, texts: list[str]) -> list[SpanTextORM]:
-        return db.query(self.model).filter(self.model.text.in_(texts)).all()
+        db_objects: list[SpanTextORM] = []
+
+        # Process in batches
+        for i in range(0, len(texts), BATCH_SIZE):
+            batch_texts = texts[i : i + BATCH_SIZE]
+            batch_objects = (
+                db.query(self.model).filter(self.model.text.in_(batch_texts)).all()
+            )
+            db_objects.extend(batch_objects)
+
+        # Maintain the order of the input texts
+        text_map = {obj.text: obj for obj in db_objects}
+        return [text_map[text] for text in texts]
 
     ### UPDATE OPERATIONS ###
 

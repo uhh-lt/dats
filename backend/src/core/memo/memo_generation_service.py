@@ -8,7 +8,7 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
-from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
@@ -29,7 +29,7 @@ def summarize_sdoc(
     obj: SourceDocumentORM,
     db: Session,
 ) -> tuple[bool, str]:
-    sdoc_data = crud_sdoc.read_data(db=db, id=obj.id)
+    sdoc_data = crud_sdoc_data.read(db=db, id=obj.id)
     if sdoc_data is None:
         raise ValueError("SourceDocumentData not found")
     if obj.doctype == DocType.text:
@@ -96,7 +96,7 @@ def summarize_sent_anno(
     obj: SentenceAnnotationORM,
     db: Session,
 ) -> tuple[bool, str]:
-    sdoc_data = crud_sdoc.read_data(
+    sdoc_data = crud_sdoc_data.read(
         db=db, id=obj.annotation_document.source_document_id
     )
     return (

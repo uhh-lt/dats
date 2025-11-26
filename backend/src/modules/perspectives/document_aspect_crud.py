@@ -1,8 +1,9 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import tuple_
+from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType
+from config import conf
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
 from modules.perspectives.cluster_orm import ClusterORM
@@ -13,6 +14,8 @@ from modules.perspectives.document_aspect_dto import (
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDDocumentAspect(
@@ -43,23 +46,67 @@ class CRUDDocumentAspect(
         """
         if not ids:
             return []
-        return (
-            db.query(self.model)
-            .filter(tuple_(self.model.sdoc_id, self.model.aspect_id).in_(ids))
-            .all()
-        )
+
+        db_objects: list[DocumentAspectORM] = []
+
+        # 1. Process the composite key list in batches
+        for i in range(0, len(ids), BATCH_SIZE):
+            batch_ids = ids[i : i + BATCH_SIZE]
+
+            # 2. Build the SELECT statement
+            stmt = select(self.model).filter(
+                tuple_(self.model.sdoc_id, self.model.aspect_id).in_(batch_ids)
+            )
+
+            # 3. Execute the statement and fetch the results
+            batch_objects = db.scalars(stmt).all()
+            db_objects.extend(batch_objects)
+
+        # 4. Sort the results to match the input order
+        id_map: dict[tuple[int, int], DocumentAspectORM] = {
+            (obj.sdoc_id, obj.aspect_id): obj for obj in db_objects
+        }
+        result: list[DocumentAspectORM] = []
+        for key in ids:
+            if key in id_map:
+                result.append(id_map[key])
+            else:
+                raise NoSuchElementError(self.model, sdoc_id=key[0], aspect_id=key[1])
+
+        return result
 
     def read_by_aspect_and_sdoc_ids(
         self, db, *, sdoc_ids: list[int], aspect_id: int
     ) -> list[DocumentAspectORM]:
-        return (
-            db.query(self.model)
-            .filter(
+        if not sdoc_ids:
+            return []
+
+        db_objects: list[DocumentAspectORM] = []
+
+        # 1. Process the ids in batches
+        for i in range(0, len(sdoc_ids), BATCH_SIZE):
+            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the SELECT statement
+            stmt = select(self.model).filter(
                 self.model.aspect_id == aspect_id,
-                self.model.sdoc_id.in_(sdoc_ids),
+                self.model.sdoc_id.in_(batch_sdoc_ids),
             )
-            .all()
-        )
+
+            # 3. Execute the statement and fetch the results
+            batch_objects = db.scalars(stmt).all()
+            db_objects.extend(batch_objects)
+
+        # 4. Sort the results to match the input order
+        id_map: dict[int, DocumentAspectORM] = {obj.sdoc_id: obj for obj in db_objects}
+        result: list[DocumentAspectORM] = []
+        for key in sdoc_ids:
+            if key in id_map:
+                result.append(id_map[key])
+            else:
+                raise NoSuchElementError(self.model, sdoc_id=key, aspect_id=aspect_id)
+
+        return result
 
     def read_by_aspect_and_cluster_id(
         self, db, *, aspect_id: int, cluster_id: int

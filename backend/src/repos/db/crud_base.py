@@ -3,14 +3,18 @@ from typing import Generic, Type, TypeVar
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from common.exception_handler import exception_handler
+from config import conf
 from repos.db.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)
 UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class UpdateNotAllowed(BaseModel):
@@ -42,9 +46,41 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 
-    def read_by_ids(self, db: Session, ids: list[int]) -> list[ORMModelType]:
-        db_objects = db.query(self.model).filter(self.model.id.in_(ids)).all()
-        return sorted(db_objects, key=lambda x: ids.index(x.id))
+    def read_by_ids(
+        self, db: Session, ids: list[int], id_field: str = "id"
+    ) -> list[ORMModelType]:
+        if not ids:
+            return []
+
+        db_objects: list[ORMModelType] = []
+
+        # 1. Get the SQLA column object dynamically (e.g., self.model.id or self.model.code_id)
+        try:
+            model_column = getattr(self.model, id_field)
+        except AttributeError:
+            # Handle case where the specified key_field doesn't exist on the model
+            raise ValueError(
+                f"Model {self.model.__name__} does not have a field named '{id_field}'"
+            )
+
+        # Process in batches to avoid overwhelming the database with too many IDs at once
+        for i in range(0, len(ids), BATCH_SIZE):
+            batch_ids = ids[i : i + BATCH_SIZE]
+            batch_objects = (
+                db.query(self.model).filter(model_column.in_(batch_ids)).all()
+            )
+            db_objects.extend(batch_objects)
+
+        # Maintain the order of the input IDs
+        id_map = {getattr(obj, id_field): obj for obj in db_objects}
+        result: list[ORMModelType] = []
+        for id in ids:
+            if id in id_map:
+                result.append(id_map[id])
+            else:
+                raise NoSuchElementError(self.model, **{id_field: id})
+
+        return result
 
     def read_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
@@ -150,9 +186,30 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def remove_multi(
         self, db: Session, *, ids: list[int], manual_commit: bool = False
     ) -> int:
-        count = db.query(self.model).filter(self.model.id.in_(ids)).delete()
+        """
+        Deletes objects by ID, processing in batches.
+        Returns the total count of rows deleted.
+        """
+        if not ids:
+            return 0
+
+        total_deleted_count = 0
+
+        # 1. Process ids in Batches
+        for i in range(0, len(ids), BATCH_SIZE):
+            batch_ids = ids[i : i + BATCH_SIZE]
+
+            # 2. Build the DELETE Statement
+            stmt = delete(self.model).where(self.model.id.in_(batch_ids))
+
+            # 3. Execute the statement
+            result = db.execute(stmt)
+            total_deleted_count += result.rowcount
+
+        # 4. Handle Commit/Flush
         if manual_commit:
             db.flush()
         else:
             db.commit()
-        return count
+
+        return total_deleted_count

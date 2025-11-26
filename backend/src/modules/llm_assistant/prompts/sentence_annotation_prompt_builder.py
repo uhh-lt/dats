@@ -182,13 +182,13 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
     ) -> str:
         if self.is_fewshot:
             from core.annotation.sentence_annotation_crud import crud_sentence_anno
-            from core.doc.source_document_crud import crud_sdoc
+            from core.doc.source_document_data_crud import crud_sdoc_data
 
             # find sentence annotations
             if example_ids is None:
                 sentence_annotations = [
                     sa
-                    for sa in crud_sentence_anno.read_by_codes(
+                    for sa in crud_sentence_anno.read_by_code_ids(
                         db=self.db, code_ids=params.code_ids
                     )
                     if sa.user_id
@@ -222,7 +222,7 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
             sdoc_ids = [sa.sdoc_id for sa in sentence_annotations]
             sdoc_id2data = {
                 sdoc.id: sdoc
-                for sdoc in crud_sdoc.read_data_batch(db=self.db, ids=sdoc_ids)
+                for sdoc in crud_sdoc_data.read_by_ids(db=self.db, ids=sdoc_ids)
                 if sdoc is not None
             }
 

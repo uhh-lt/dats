@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.sent_annotations.sentence_annotations_export_schema import (
     SentenceAnnotationExportCollection,
@@ -80,7 +80,7 @@ def __generate_export_df_for_sentence_annotations(
     # find all sdoc_data
     sdoc_data = {
         sdoc_data.id: sdoc_data
-        for sdoc_data in crud_sdoc.read_data_batch(db=db, ids=list(unique_sdoc_ids))
+        for sdoc_data in crud_sdoc_data.read_by_ids(db=db, ids=list(unique_sdoc_ids))
         if sdoc_data is not None
     }
 
