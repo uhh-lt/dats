@@ -4,7 +4,7 @@ from weaviate.classes.query import Filter
 from modules.perspectives.aspect_collection import AspectCollection
 from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
-from systems.event_system.events import project_deleted, source_document_deleted
+from systems.event_system.events import source_document_deleted
 
 
 class CRUDAspectEmbedding(CRUDBase[AspectObjectIdentifier, AspectCollection]):
@@ -97,14 +97,4 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
     with WeaviateRepo().weaviate_session() as client:
         crud_aspect_embedding.delete_by_sdoc_id(
             client=client, project_id=project_id, sdoc_id=sdoc_id
-        )
-
-
-@project_deleted.connect
-def handle_project_deleted(sender, project_id: int):
-    from repos.vector.weaviate_repo import WeaviateRepo
-
-    with WeaviateRepo().weaviate_session() as client:
-        crud_aspect_embedding.remove_embeddings_by_project(
-            client=client, project_id=project_id
         )

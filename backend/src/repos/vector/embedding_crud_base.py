@@ -38,13 +38,13 @@ class CRUDBase(Generic[ID, COLLECTION]):
         """Initialize with collection class"""
         self.object_identifier = object_identifier
         self.collection_class = collection_class
-        self.collection_name = collection_class.name
 
     def _get_collection(self, client: WeaviateClient, project_id: int):
         """Get the collection from weaviate client"""
-        return client.collections.get(self.collection_name).with_tenant(
-            f"Project{project_id}"
-        )
+        tenant_name = self.collection_class.get_tenant_name(project_id)
+        return client.collections.get(
+            self.collection_class.get_collection_name()
+        ).with_tenant(tenant=tenant_name)
 
     def _tenant_exists(self, client: WeaviateClient, project_id: int) -> bool:
         """
@@ -55,9 +55,9 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Returns:
             True if tenant exists, False otherwise
         """
-        collection = client.collections.get(self.collection_name)
-        tenant = f"Project{project_id}"
-        return collection.tenants.exists(tenant)
+        collection = client.collections.get(self.collection_class.get_collection_name())
+        tenant_name = self.collection_class.get_tenant_name(project_id)
+        return collection.tenants.exists(tenant=tenant_name)
 
     def _validate_properties(
         self, properties: dict[str, Any], must_identify_object: bool
@@ -171,9 +171,9 @@ class CRUDBase(Generic[ID, COLLECTION]):
         Args:
             project_id: Project ID
         """
-        client.collections.get(self.collection_name).tenants.remove(
-            [f"Project{project_id}"]
-        )
+        client.collections.get(
+            self.collection_class.get_collection_name()
+        ).tenants.remove([f"Project{project_id}"])
 
     def get_embedding(
         self, client: WeaviateClient, project_id: int, id: ID

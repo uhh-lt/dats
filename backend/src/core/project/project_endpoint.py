@@ -12,6 +12,7 @@ from core.project.project_dto import (
     ProjectRead,
     ProjectUpdate,
 )
+from core.project.project_service import ProjectService
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
@@ -34,7 +35,7 @@ def create_new_project(
     proj: ProjectCreate,
     current_user: UserORM = Depends(get_current_user),
 ) -> ProjectRead:
-    db_obj = crud_project.create(
+    db_obj = ProjectService().create_project(
         db=db, create_dto=proj, creating_user_id=current_user.id
     )
     return ProjectRead.model_validate(db_obj)
@@ -86,7 +87,7 @@ def delete_project(
     authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
-    db_obj = crud_project.delete(db=db, id=proj_id)
+    db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
     return ProjectRead.model_validate(db_obj)
 
 
