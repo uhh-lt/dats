@@ -6,7 +6,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from test.factories.bbox_annotation_factory import BBoxAnnotationFactory
 from test.factories.code_factory import CodeFactory
+from test.factories.folder_factory import FolderFactory
+from test.factories.memo_factory import MemoFactory
 from test.factories.project_factory import ProjectFactory
+from test.factories.project_metadata_factory import ProjectMetadataFactory
+from test.factories.sentence_annotation_factory import SentenceAnnotationFactory
+from test.factories.source_document_factory import SourceDocumentFactory
+from test.factories.source_document_metadata_factory import (
+    SourceDocumentMetadataFactory,
+)
 from test.factories.span_annotation_factory import SpanAnnotationFactory
 from test.factories.tag_factory import TagFactory
 from test.factories.user_factory import UserFactory
@@ -141,6 +149,38 @@ def span_annotaion_factory(db_session: Session) -> SpanAnnotationFactory:
 @pytest.fixture(scope="function")
 def bbox_annotation_factory(db_session: Session) -> BBoxAnnotationFactory:
     return BBoxAnnotationFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def project_metadata_factory(db_session: Session) -> ProjectMetadataFactory:
+    return ProjectMetadataFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def sentence_annotation_factory(db_session: Session) -> SentenceAnnotationFactory:
+    return SentenceAnnotationFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def memo_factory(db_session: Session) -> MemoFactory:
+    return MemoFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def source_document_factory(db_session: Session) -> SourceDocumentFactory:
+    return SourceDocumentFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def source_document_metadata_factory(
+    db_session: Session,
+) -> SourceDocumentMetadataFactory:
+    return SourceDocumentMetadataFactory(db_session=db_session)
+
+
+@pytest.fixture(scope="function")
+def folder_factory(db_session: Session) -> FolderFactory:
+    return FolderFactory(db_session=db_session)
 
 
 # ---------------------------------------------------------------------------
