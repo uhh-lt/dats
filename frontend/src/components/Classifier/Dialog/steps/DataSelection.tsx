@@ -3,7 +3,7 @@ import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import TagSelectorMulti from "../../../Tag/TagSelectorMulti.tsx";
+import TagSelector from "../../../Tag/TagSelector.tsx";
 import UserSelectorMulti from "../../../User/UserSelectorMulti.tsx";
 import ClassifierDataPlot from "../../plots/ClassifierDataPlot.tsx";
 
@@ -64,7 +64,7 @@ function DataSelection() {
           />
           <Divider />
           <CardContent>
-            <TagSelectorMulti tagIds={tagIds} onTagIdChange={handleTagSelection} title="Select Tags" fullWidth />
+            <TagSelector multiple tagIds={tagIds} onTagIdChange={handleTagSelection} title="Select Tags" fullWidth />
           </CardContent>
         </Card>
         {model !== ClassifierModel.DOCUMENT && (
