@@ -43,4 +43,5 @@ TODO
 When writing frontend code, follow these guidelines:
 
 - Use type hints for function signatures and variable declarations.
-- Write docstrings for all public functions and classes.
+- Write docstrings for all public functions, classes, and React components to explain their purpose and usage, using the @param and @returns tags where applicable.
+- When building a form, use the React Hook Form library to manage form state and validation and the components in `frontend/src/components/FormInputs`.
