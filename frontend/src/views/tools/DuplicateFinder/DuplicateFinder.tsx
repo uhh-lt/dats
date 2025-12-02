@@ -227,7 +227,7 @@ function ProjectDuplicateDocuments() {
             <>
               <TagSelector
                 title="Filter by Tag"
-                tagId={tagId}
+                tagIds={tagId}
                 onTagIdChange={setTagId}
                 sx={{ minWidth: 150, mr: 1 }}
                 size="small"
