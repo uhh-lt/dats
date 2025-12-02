@@ -1,6 +1,11 @@
 import { ErrorMessage } from "@hookform/error-message";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SaveIcon from "@mui/icons-material/Save";
+import TuneIcon from "@mui/icons-material/Tune";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Button,
   Card,
   CardActionArea,
@@ -8,11 +13,13 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  MenuItem,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { AspectCreate } from "../../api/openapi/models/AspectCreate.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -31,6 +38,32 @@ interface AspectTemplate {
   doc_embedding_prompt: string;
   doc_modification_prompt?: string | null;
 }
+
+/** Advanced pipeline parameters for expert users */
+interface AdvancedSettings {
+  // UMAP parameters
+  umap_n_neighbors: number;
+  umap_min_dist: number;
+  umap_metric: "cosine" | "euclidean";
+  // HDBSCAN parameters
+  hdbscan_min_samples: number;
+  hdbscan_metric: "euclidean" | "cosine";
+  // Keyword extraction parameters
+  num_keywords: number;
+}
+
+const defaultAdvancedSettings: AdvancedSettings = {
+  umap_n_neighbors: 15,
+  umap_min_dist: 0.0,
+  umap_metric: "cosine",
+  hdbscan_min_samples: 40,
+  hdbscan_metric: "euclidean",
+  num_keywords: 50,
+};
+
+/** Combined form data type for perspective creation */
+type PerspectiveFormData = Pick<AspectCreate, "name" | "doc_embedding_prompt" | "doc_modification_prompt"> &
+  AdvancedSettings;
 
 const templates: AspectTemplate[] = [
   {
@@ -75,26 +108,34 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
   const navigate = useNavigate();
   const [selectedDocType, setSelectedDocType] = useState<DocType>(DocType.TEXT);
   const [tagId, setTagId] = useState<number | null>(null);
+
+  // expert mode toggle
+  const [expertMode, setExpertMode] = useState(false);
+
   const {
     handleSubmit,
     formState: { errors },
     control,
     setValue,
     reset,
-  } = useForm<AspectCreate>({
+  } = useForm<PerspectiveFormData>({
     defaultValues: {
       name: "",
       doc_embedding_prompt: "",
       doc_modification_prompt: "",
+      ...defaultAdvancedSettings,
     },
   });
+
   const createAspectMutation = PerspectivesHooks.useCreateAspect();
-  const handleAspectCreation: SubmitHandler<AspectCreate> = (data) => {
+  const handleAspectCreation: SubmitHandler<PerspectiveFormData> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");
       return;
     }
 
+    // TODO: Send advanced settings to backend when API is ready
+    // Currently only sending the base aspect creation fields
     createAspectMutation.mutate(
       {
         requestBody: {
@@ -103,6 +144,13 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
           doc_modification_prompt: data.doc_modification_prompt || null,
           is_hierarchical: false,
           project_id: projectId,
+          // Advanced settings (uncomment when backend supports them):
+          // umap_n_neighbors: data.umap_n_neighbors,
+          // umap_min_dist: data.umap_min_dist,
+          // umap_metric: data.umap_metric,
+          // hdbscan_min_samples: data.hdbscan_min_samples,
+          // hdbscan_metric: data.hdbscan_metric,
+          // num_keywords: data.num_keywords,
         },
       },
       {
@@ -110,7 +158,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
       },
     );
   };
-  const handleError: SubmitErrorHandler<AspectCreate> = (error) => {
+  const handleError: SubmitErrorHandler<PerspectiveFormData> = (error) => {
     console.error(error);
   };
 
@@ -202,10 +250,189 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
               helperText: <ErrorMessage errors={errors} name="doc_modification_prompt" />,
             }}
           />
+
+          <Accordion
+            expanded={expertMode}
+            onChange={(_, expanded) => setExpertMode(expanded)}
+            variant="outlined"
+            sx={{ mt: 2 }}
+            disableGutters
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <TuneIcon fontSize="small" />
+                <Typography variant="button">Advanced Pipeline Settings</Typography>
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={3}>
+                {/* UMAP Settings */}
+                <Typography variant="subtitle2" color="text.secondary">
+                  Dimensionality Reduction (UMAP)
+                </Typography>
+                <Stack direction="row" spacing={2}>
+                  <Controller
+                    name="umap_n_neighbors"
+                    control={control}
+                    rules={{
+                      required: "N Neighbors is required",
+                      min: { value: 2, message: "Minimum value is 2" },
+                      max: { value: 100, message: "Maximum value is 100" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="N Neighbors"
+                        type="number"
+                        size="small"
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_neighbors)
+                        }
+                        inputProps={{ min: 2, max: 100 }}
+                        error={Boolean(errors.umap_n_neighbors)}
+                        helperText={
+                          errors.umap_n_neighbors?.message || "Number of neighbors for local structure (default: 15)"
+                        }
+                        fullWidth
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="umap_min_dist"
+                    control={control}
+                    rules={{
+                      required: "Min Distance is required",
+                      min: { value: 0, message: "Minimum value is 0" },
+                      max: { value: 1, message: "Maximum value is 1" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Min Distance"
+                        type="number"
+                        size="small"
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value) || defaultAdvancedSettings.umap_min_dist)
+                        }
+                        inputProps={{ min: 0, max: 1, step: 0.05 }}
+                        error={Boolean(errors.umap_min_dist)}
+                        helperText={errors.umap_min_dist?.message || "Minimum distance between points (default: 0.0)"}
+                        fullWidth
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="umap_metric"
+                    control={control}
+                    rules={{ required: "Distance metric is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Distance Metric"
+                        select
+                        size="small"
+                        error={Boolean(errors.umap_metric)}
+                        helperText={errors.umap_metric?.message || "Metric for measuring distances"}
+                        fullWidth
+                      >
+                        <MenuItem value="cosine">Cosine</MenuItem>
+                        <MenuItem value="euclidean">Euclidean</MenuItem>
+                      </TextField>
+                    )}
+                  />
+                </Stack>
+
+                {/* HDBSCAN Settings */}
+                <Typography variant="subtitle2" color="text.secondary">
+                  Density-based Clustering (HDBSCAN)
+                </Typography>
+                <Stack direction="row" spacing={2}>
+                  <Controller
+                    name="hdbscan_min_samples"
+                    control={control}
+                    rules={{
+                      required: "Min Samples is required",
+                      min: { value: 1, message: "Minimum value is 1" },
+                      max: { value: 200, message: "Maximum value is 200" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Min Samples"
+                        type="number"
+                        size="small"
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_samples)
+                        }
+                        inputProps={{ min: 1, max: 200 }}
+                        error={Boolean(errors.hdbscan_min_samples)}
+                        helperText={errors.hdbscan_min_samples?.message || "Minimum cluster size (default: 40)"}
+                        fullWidth
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="hdbscan_metric"
+                    control={control}
+                    rules={{ required: "Distance metric is required" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Distance Metric"
+                        select
+                        size="small"
+                        error={Boolean(errors.hdbscan_metric)}
+                        helperText={errors.hdbscan_metric?.message || "Metric for measuring distances"}
+                        fullWidth
+                      >
+                        <MenuItem value="euclidean">Euclidean</MenuItem>
+                        <MenuItem value="cosine">Cosine</MenuItem>
+                      </TextField>
+                    )}
+                  />
+                </Stack>
+
+                {/* Keyword Extraction Settings */}
+                <Typography variant="subtitle2" color="text.secondary">
+                  Cluster Representation (c-TF-IDF)
+                </Typography>
+                <Controller
+                  name="num_keywords"
+                  control={control}
+                  rules={{
+                    required: "Number of keywords is required",
+                    min: { value: 5, message: "Minimum value is 5" },
+                    max: { value: 200, message: "Maximum value is 200" },
+                  }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Number of Keywords"
+                      type="number"
+                      size="small"
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)}
+                      inputProps={{ min: 5, max: 200 }}
+                      error={Boolean(errors.num_keywords)}
+                      helperText={
+                        errors.num_keywords?.message || "Number of keywords to extract per cluster (default: 50)"
+                      }
+                      sx={{ maxWidth: 300 }}
+                    />
+                  )}
+                />
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3 }}>
-        <Button onClick={() => reset()}>Reset Parameters</Button>
+        <Button
+          onClick={() => {
+            reset();
+          }}
+        >
+          Reset Parameters
+        </Button>
         <Button
           variant="contained"
           color="primary"
