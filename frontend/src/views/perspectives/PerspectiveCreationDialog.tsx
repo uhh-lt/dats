@@ -1,7 +1,6 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import {
-  Box,
   Button,
   Card,
   CardActionArea,
@@ -16,12 +15,15 @@ import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { AspectCreate } from "../../api/openapi/models/AspectCreate.ts";
+import { DocType } from "../../api/openapi/models/DocType.ts";
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
 import FormText from "../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
+import TagSelector from "../../components/Tag/TagSelector.tsx";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
+import DocTypeSelector from "../analysis/CodeFrequency/DocTypeSelector.tsx";
 
 interface AspectTemplate {
   name: string;
@@ -69,8 +71,10 @@ interface PerspectiveCreationDialogProps {
 function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogProps) {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
 
-  // project creation
+  // perspective creation
   const navigate = useNavigate();
+  const [selectedDocType, setSelectedDocType] = useState<DocType>(DocType.TEXT);
+  const [tagId, setTagId] = useState<number | null>(null);
   const {
     handleSubmit,
     formState: { errors },
@@ -112,7 +116,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
 
   // handle click on card
   const handleClick = (template: AspectTemplate) => () => {
-    setValue("name", template.name);
+    // setValue("name", template.name);
     setValue("doc_embedding_prompt", template.doc_embedding_prompt);
     setValue("doc_modification_prompt", template.doc_modification_prompt || "");
   };
@@ -141,22 +145,6 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
       />
       <DialogContent>
         <Stack spacing={2}>
-          <Box>
-            <Typography variant="button">Templates</Typography>
-            <Stack direction="row" spacing={2} sx={{ overflowX: "auto", paddingBottom: 2, mt: 0.5 }}>
-              {templates.map((template, index) => (
-                <Card key={index} elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.dark" }}>
-                  <CardActionArea onClick={handleClick(template)}>
-                    <CardContent style={{ textAlign: "center" }} sx={{ color: "primary.contrastText", p: 2 }}>
-                      <h3 style={{ marginTop: 0 }}>{template.name}</h3>
-                      {template.description}
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              ))}
-            </Stack>
-          </Box>
-          <Typography variant="button">Parameters</Typography>
           <FormText
             name="name"
             control={control}
@@ -168,8 +156,25 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
               variant: "outlined",
               fullWidth: true,
               error: Boolean(errors.name),
+              helperText: <ErrorMessage errors={errors} name="name" />,
             }}
           />
+          <Typography variant="button">Documents</Typography>
+          <DocTypeSelector docTypes={selectedDocType} onDocTypeChange={setSelectedDocType} title="Modality" fullWidth />
+          <TagSelector tagIds={tagId} onTagIdChange={setTagId} title="Select Tag" fullWidth />
+          <Typography variant="button">Parameters</Typography>
+          <Stack direction="row" spacing={2} sx={{ overflowX: "auto", paddingBottom: 2, mt: 0.5 }}>
+            {templates.map((template, index) => (
+              <Card key={index} elevation={5} style={{ width: "100%" }} sx={{ backgroundColor: "primary.dark" }}>
+                <CardActionArea onClick={handleClick(template)}>
+                  <CardContent style={{ textAlign: "center" }} sx={{ color: "primary.contrastText", p: 2 }}>
+                    <h3 style={{ marginTop: 0 }}>{template.name}</h3>
+                    {template.description}
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            ))}
+          </Stack>
           <FormText
             name="doc_embedding_prompt"
             control={control}
@@ -177,7 +182,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
               required: "Document embedding prompt is required",
             }}
             textFieldProps={{
-              label: "Document embedding prompt",
+              label: "Document embedding instruction",
               placeholder: "Describe on which aspect you want the model to focus.",
               variant: "outlined",
               fullWidth: true,
