@@ -8,7 +8,7 @@ import UserSelectorMulti from "../../../components/User/UserSelectorMulti.tsx";
 import ContentContentLayout from "../../../layouts/ContentLayouts/ContentContentLayout.tsx";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
-import DocTypeSelectorMulti from "./DocTypeSelectorMulti.tsx";
+import DocTypeSelector from "./DocTypeSelector.tsx";
 
 function CodeFrequencyAnalysis() {
   // global client state (react-router)
@@ -34,7 +34,8 @@ function CodeFrequencyAnalysis() {
               fullWidth
               sx={{ bgcolor: "background.paper" }}
             />
-            <DocTypeSelectorMulti
+            <DocTypeSelector
+              multiple
               docTypes={selectedDocTypes}
               onDocTypeChange={setSelectedDocTypes}
               title="Modalities"
