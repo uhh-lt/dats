@@ -65,6 +65,6 @@ We use the following suffixes to indicate file types:
 
 When writing backend code, follow these guidelines:
 
-- Use type hints for function signatures and variable declarations.
+- Use modern type hints (list, dict, etc.) for function signatures and variable declarations.
 - Write docstrings for all public functions and classes.
 - Use loguru for logging sensible events and errors.
