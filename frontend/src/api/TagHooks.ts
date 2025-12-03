@@ -47,11 +47,11 @@ const useGetAllTagIdsBySdocId = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useGetTagDocumentCounts = (sdocIds: number[]) =>
+const useGetTagDocumentCounts = (projectId: number, sdocIds: number[]) =>
   useQuery<Map<number, number>, Error>({
-    queryKey: [QueryKey.TAG_SDOC_COUNT, sdocIds],
+    queryKey: [QueryKey.TAG_SDOC_COUNT, projectId, sdocIds],
     queryFn: async () => {
-      const stringRecord = await TagService.getSdocCounts({ requestBody: sdocIds });
+      const stringRecord = await TagService.getSdocCounts({ projectId, requestBody: sdocIds });
       return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
     },
   });

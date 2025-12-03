@@ -25,13 +25,14 @@ interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
   anchorEl: HTMLElement | null;
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  projectId: number;
   sdocIds: number[];
 }
 
 function TagMenu(props: TagMenuProps) {
   // global server state (react-query)
   const allTags = TagHooks.useGetAllTags();
-  const tagCounts = TagHooks.useGetTagDocumentCounts(props.sdocIds);
+  const tagCounts = TagHooks.useGetTagDocumentCounts(props.projectId, props.sdocIds);
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!tagCounts.data) return undefined;
 
