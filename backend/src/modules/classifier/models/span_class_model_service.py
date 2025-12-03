@@ -14,12 +14,10 @@ from pytorch_lightning.loggers import CSVLogger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
-from transformers import (
-    AutoConfig,
-    AutoModelForTokenClassification,
-    AutoTokenizer,
-    DataCollatorForTokenClassification,
-)
+from transformers.data.data_collator import DataCollatorForTokenClassification
+from transformers.models.auto.configuration_auto import AutoConfig
+from transformers.models.auto.modeling_auto import AutoModelForTokenClassification
+from transformers.models.auto.tokenization_auto import AutoTokenizer
 
 from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM

@@ -14,12 +14,10 @@ from pytorch_lightning.loggers import CSVLogger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
-from transformers import (
-    AutoConfig,
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    DataCollatorWithPadding,
-)
+from transformers.data.data_collator import DataCollatorWithPadding
+from transformers.models.auto.configuration_auto import AutoConfig
+from transformers.models.auto.modeling_auto import AutoModelForSequenceClassification
+from transformers.models.auto.tokenization_auto import AutoTokenizer
 
 from config import conf
 from core.doc.source_document_crud import crud_sdoc
