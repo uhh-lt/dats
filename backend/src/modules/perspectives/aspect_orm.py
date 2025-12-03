@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from core.tag.tag_orm import TagORM
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
@@ -25,6 +27,10 @@ class AspectORM(ORMBase):
     embedding_model: Mapped[str] = mapped_column(
         String, server_default="default", nullable=False
     )
+    modality: Mapped[str] = mapped_column(String, nullable=False, server_default="text")
+    pipeline_settings: Mapped[str] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
 
     # many to one
     project_id: Mapped[int] = mapped_column(
@@ -34,6 +40,14 @@ class AspectORM(ORMBase):
         index=True,
     )
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="aspects")
+
+    tag_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("tag.id", ondelete="CASCADE"),
+        nullable=True,
+        index=False,
+    )
+    tag: Mapped["TagORM"] = relationship("TagORM")
 
     # one to many
     clusters: Mapped[list["ClusterORM"]] = relationship(
