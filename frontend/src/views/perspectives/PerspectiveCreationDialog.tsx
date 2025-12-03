@@ -23,6 +23,7 @@ import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-ho
 import { useNavigate } from "react-router-dom";
 import { AspectCreate } from "../../api/openapi/models/AspectCreate.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
+import { PipelineSettings } from "../../api/openapi/models/PipelineSettings.ts";
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
 import FormText from "../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
@@ -40,19 +41,8 @@ interface AspectTemplate {
 }
 
 /** Advanced pipeline parameters for expert users */
-interface AdvancedSettings {
-  // UMAP parameters
-  umap_n_neighbors: number;
-  umap_min_dist: number;
-  umap_metric: "cosine" | "euclidean";
-  // HDBSCAN parameters
-  hdbscan_min_samples: number;
-  hdbscan_metric: "euclidean" | "cosine";
-  // Keyword extraction parameters
-  num_keywords: number;
-}
 
-const defaultAdvancedSettings: AdvancedSettings = {
+const defaultAdvancedSettings: PipelineSettings = {
   umap_n_neighbors: 15,
   umap_min_dist: 0.0,
   umap_metric: "cosine",
@@ -63,7 +53,7 @@ const defaultAdvancedSettings: AdvancedSettings = {
 
 /** Combined form data type for perspective creation */
 type PerspectiveFormData = Pick<AspectCreate, "name" | "doc_embedding_prompt" | "doc_modification_prompt"> &
-  AdvancedSettings;
+  PipelineSettings;
 
 const templates: AspectTemplate[] = [
   {
@@ -144,13 +134,17 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
           doc_modification_prompt: data.doc_modification_prompt || null,
           is_hierarchical: false,
           project_id: projectId,
-          // Advanced settings (uncomment when backend supports them):
-          // umap_n_neighbors: data.umap_n_neighbors,
-          // umap_min_dist: data.umap_min_dist,
-          // umap_metric: data.umap_metric,
-          // hdbscan_min_samples: data.hdbscan_min_samples,
-          // hdbscan_metric: data.hdbscan_metric,
-          // num_keywords: data.num_keywords,
+          modality: selectedDocType,
+          tag_id: tagId,
+          pipeline_settings: {
+            ...defaultAdvancedSettings,
+            umap_min_dist: data.umap_min_dist,
+            umap_metric: data.umap_metric,
+            umap_n_neighbors: data.umap_n_neighbors,
+            hdbscan_metric: data.hdbscan_metric,
+            hdbscan_min_samples: data.hdbscan_min_samples,
+            num_keywords: data.num_keywords,
+          },
         },
       },
       {
