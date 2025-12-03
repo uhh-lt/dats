@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DocType } from "./DocType";
+import type { PipelineSettings } from "./PipelineSettings";
 export type AspectRead = {
   /**
    * Name of the aspect
@@ -19,6 +21,18 @@ export type AspectRead = {
    * Whether the aspect is hierarchical
    */
   is_hierarchical: boolean;
+  /**
+   * Modality of the documents of this aspect
+   */
+  modality: DocType;
+  /**
+   * Pipeline settings for this aspect
+   */
+  pipeline_settings: PipelineSettings;
+  /**
+   * ID of the tag associated with this aspect.
+   */
+  tag_id?: number | null;
   /**
    * ID of the aspect
    */
