@@ -6637,6 +6637,19 @@
             "title": "Is Hierarchical",
             "description": "Whether the aspect is hierarchical"
           },
+          "modality": {
+            "$ref": "#/components/schemas/DocType",
+            "description": "Modality of the documents of this aspect"
+          },
+          "pipeline_settings": {
+            "$ref": "#/components/schemas/PipelineSettings",
+            "description": "Pipeline settings for this aspect"
+          },
+          "tag_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Tag Id",
+            "description": "ID of the tag associated with this aspect."
+          },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -6644,7 +6657,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "project_id"],
+        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "modality", "pipeline_settings", "project_id"],
         "title": "AspectCreate"
       },
       "AspectRead": {
@@ -6665,6 +6678,19 @@
             "title": "Is Hierarchical",
             "description": "Whether the aspect is hierarchical"
           },
+          "modality": {
+            "$ref": "#/components/schemas/DocType",
+            "description": "Modality of the documents of this aspect"
+          },
+          "pipeline_settings": {
+            "$ref": "#/components/schemas/PipelineSettings",
+            "description": "Pipeline settings for this aspect"
+          },
+          "tag_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Tag Id",
+            "description": "ID of the tag associated with this aspect."
+          },
           "id": { "type": "integer", "title": "Id", "description": "ID of the aspect" },
           "project_id": {
             "type": "integer",
@@ -6678,7 +6704,15 @@
           }
         },
         "type": "object",
-        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "id", "project_id"],
+        "required": [
+          "name",
+          "doc_embedding_prompt",
+          "is_hierarchical",
+          "modality",
+          "pipeline_settings",
+          "id",
+          "project_id"
+        ],
         "title": "AspectRead"
       },
       "AspectUpdate": {
@@ -10446,6 +10480,48 @@
         "type": "object",
         "required": ["aspect_id", "clusters", "docs"],
         "title": "PerspectivesVisualization"
+      },
+      "PipelineSettings": {
+        "properties": {
+          "umap_n_neighbors": {
+            "type": "integer",
+            "title": "Umap N Neighbors",
+            "description": "Number of neighbors for UMAP dimensionality reduction",
+            "default": 15
+          },
+          "umap_min_dist": {
+            "type": "number",
+            "title": "Umap Min Dist",
+            "description": "Minimum distance for UMAP dimensionality reduction",
+            "default": 0
+          },
+          "umap_metric": {
+            "type": "string",
+            "title": "Umap Metric",
+            "description": "Metric for UMAP dimensionality reduction",
+            "default": "cosine"
+          },
+          "hdbscan_min_samples": {
+            "type": "integer",
+            "title": "Hdbscan Min Samples",
+            "description": "Minimum samples for HDBSCAN clustering",
+            "default": 40
+          },
+          "hdbscan_metric": {
+            "type": "string",
+            "title": "Hdbscan Metric",
+            "description": "Metric for HDBSCAN clustering",
+            "default": "euclidean"
+          },
+          "num_keywords": {
+            "type": "integer",
+            "title": "Num Keywords",
+            "description": "Number of keywords to extract per cluster",
+            "default": 50
+          }
+        },
+        "type": "object",
+        "title": "PipelineSettings"
       },
       "ProcessingSettings": {
         "properties": {
