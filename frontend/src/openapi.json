@@ -5606,11 +5606,20 @@
         "tags": ["tag"],
         "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
         "operationId": "get_sdoc_counts",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
-            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
-          },
-          "required": true
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
+          }
         },
         "responses": {
           "200": {
@@ -5618,8 +5627,8 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": { "type": "integer" },
                   "type": "object",
+                  "additionalProperties": { "type": "integer" },
                   "title": "Response Tag-Get Sdoc Counts"
                 }
               }
@@ -5629,8 +5638,7 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
     "/tag/count_tags/{user_id}": {

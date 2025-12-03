@@ -20,7 +20,7 @@ export const QueryKey = {
   PROJECT_TAGS: "projectTags",
   // all TagRead Ids of a SourceDocument (by sdoc id)
   SDOC_TAGS: "sdocTags",
-  // Record[docTagId, docTagCount] of SourceDocuments (by sdoc ids)
+  // Record[docTagId, docTagCount] of SourceDocuments (by project id, sdoc ids)
   TAG_SDOC_COUNT: "sdocTagCount",
 
   // managed by ProjectHooks
