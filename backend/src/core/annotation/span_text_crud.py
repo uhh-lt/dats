@@ -41,7 +41,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         text_to_create_dto = {create_dto.text: create_dto for create_dto in create_dtos}
         unique_create_dtos = list(text_to_create_dto.values())
 
-        existing_texts = self.read_all_by_text(
+        existing_texts = self.read_all_by_text_unordered(
             db, texts=[dto.text for dto in unique_create_dtos]
         )
         text_to_db_obj_map: dict[str, SpanTextORM] = {
@@ -67,7 +67,9 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
     def read_by_text(self, db: Session, *, text: str) -> SpanTextORM | None:
         return db.query(self.model).filter(self.model.text == text).first()
 
-    def read_all_by_text(self, db: Session, *, texts: list[str]) -> list[SpanTextORM]:
+    def read_all_by_text_unordered(
+        self, db: Session, *, texts: list[str]
+    ) -> list[SpanTextORM]:
         db_objects: list[SpanTextORM] = []
 
         # Process in batches
@@ -78,9 +80,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
             )
             db_objects.extend(batch_objects)
 
-        # Maintain the order of the input texts
-        text_map = {obj.text: obj for obj in db_objects}
-        return [text_map[text] for text in texts]
+        return db_objects
 
     ### UPDATE OPERATIONS ###
 
