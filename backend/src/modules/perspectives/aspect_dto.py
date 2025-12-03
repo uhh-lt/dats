@@ -1,6 +1,29 @@
-from pydantic import BaseModel, ConfigDict, Field
+import srsly
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from common.doc_type import DocType
 from repos.db.dto_base import UpdateDTOBase
+
+
+class PipelineSettings(BaseModel):
+    umap_n_neighbors: int = Field(
+        default=15, description="Number of neighbors for UMAP dimensionality reduction"
+    )
+    umap_min_dist: float = Field(
+        default=0.0, description="Minimum distance for UMAP dimensionality reduction"
+    )
+    umap_metric: str = Field(
+        default="cosine", description="Metric for UMAP dimensionality reduction"
+    )
+    hdbscan_min_samples: int = Field(
+        default=40, description="Minimum samples for HDBSCAN clustering"
+    )
+    hdbscan_metric: str = Field(
+        default="euclidean", description="Metric for HDBSCAN clustering"
+    )
+    num_keywords: int = Field(
+        default=50, description="Number of keywords to extract per cluster"
+    )
 
 
 # Properties shared across all DTOs
@@ -11,6 +34,28 @@ class AspectBase(BaseModel):
         default=None, description="Prompt for document modification"
     )
     is_hierarchical: bool = Field(description="Whether the aspect is hierarchical")
+    modality: DocType = Field(description="Modality of the documents of this aspect")
+    pipeline_settings: PipelineSettings = Field(
+        description="Pipeline settings for this aspect"
+    )
+    tag_id: int | None = Field(
+        default=None, description="ID of the tag associated with this aspect."
+    )
+
+    @field_validator("pipeline_settings", mode="before")
+    def json_loads_settings(cls, v) -> PipelineSettings:
+        if v is None:
+            return PipelineSettings()
+        if isinstance(v, str):
+            data = srsly.json_loads(v)
+            if not isinstance(data, dict):
+                raise ValueError(
+                    "Invalid JSON for pipeline_settings. Must be a JSON object."
+                )
+            return PipelineSettings(**data)
+        if isinstance(v, dict):
+            return PipelineSettings(**v)
+        return v
 
 
 # Properties for creation
