@@ -6,23 +6,34 @@ from repos.db.dto_base import UpdateDTOBase
 
 
 class PipelineSettings(BaseModel):
+    """
+    Settings for the perspective creation pipeline.
+    When updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)
+    """
+
     umap_n_neighbors: int = Field(
         default=15, description="Number of neighbors for UMAP dimensionality reduction"
     )
+    umap_n_components: int = Field(
+        default=10, description="Number of components for UMAP dimensionality reduction"
+    )
     umap_min_dist: float = Field(
-        default=0.0, description="Minimum distance for UMAP dimensionality reduction"
+        default=0.1, description="Minimum distance for UMAP dimensionality reduction"
     )
     umap_metric: str = Field(
         default="cosine", description="Metric for UMAP dimensionality reduction"
     )
-    hdbscan_min_samples: int = Field(
-        default=40, description="Minimum samples for HDBSCAN clustering"
+    hdbscan_min_cluster_size: int = Field(
+        default=10, description="Minimum cluster size for HDBSCAN clustering"
     )
     hdbscan_metric: str = Field(
         default="euclidean", description="Metric for HDBSCAN clustering"
     )
     num_keywords: int = Field(
         default=50, description="Number of keywords to extract per cluster"
+    )
+    num_top_documents: int = Field(
+        default=5, description="Number of top documents to extract per cluster"
     )
 
 

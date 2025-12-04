@@ -511,6 +511,7 @@ class PerspectivesService:
         """
 
         aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
 
         # 1. Read the document aspects
         if sdoc_ids is None or len(sdoc_ids) == 0:
@@ -540,7 +541,11 @@ class PerspectivesService:
             f"Reducing the dimensionality of the embeddings from {embeddings.shape} to 10 dimensions..."
         )
         reducer = UMAP(
-            n_neighbors=15, n_components=10, metric="cosine", low_memory=False
+            n_neighbors=aspect_dto.pipeline_settings.umap_n_neighbors,
+            n_components=aspect_dto.pipeline_settings.umap_n_components,
+            metric=aspect_dto.pipeline_settings.umap_metric,
+            min_dist=aspect_dto.pipeline_settings.umap_min_dist,
+            low_memory=False,
         )
         reduced_embeddings = np.array(reducer.fit_transform(embeddings))
         self._log_status_msg(
@@ -549,7 +554,10 @@ class PerspectivesService:
 
         # 3. Cluster the reduced embeddings
         self._log_status_msg("Clustering the reduced embeddings with HDBSCAN...")
-        hdbscan_model = HDBSCAN(min_cluster_size=10, metric="euclidean")
+        hdbscan_model = HDBSCAN(
+            min_cluster_size=aspect_dto.pipeline_settings.hdbscan_min_cluster_size,
+            metric=aspect_dto.pipeline_settings.hdbscan_metric,
+        )
         hdb_clusters = hdbscan_model.fit_predict(reduced_embeddings).tolist()
         hdb_cluster_ids = set(hdb_clusters)
         self._log_status_msg(f"Found {len(hdb_cluster_ids)} clusters with HDBSCAN")
@@ -736,6 +744,7 @@ class PerspectivesService:
     def __compute_top_words(
         self,
         db: Session,
+        num_words: int,
         all_cluster_ids: list[int],
         doc_aspects: list[DocumentAspectORM],
         assigned_clusters: list[int],
@@ -766,7 +775,7 @@ class PerspectivesService:
 
         # 1.3. Find the most important words for each cluster
         # Use numpy to get top-k values and indices for each cluster (row)
-        k = 50
+        k = num_words
         top_words: dict[int, list[str]] = {}
         top_word_scores: dict[int, list[float]] = {}
         for row, cluster_id in zip(c_tf_idf, all_cluster_ids):
@@ -805,6 +814,7 @@ class PerspectivesService:
         """
 
         aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
         level = 0  # TODO: we only consider 1 level for now (level 0)
 
         # 0. Read all required data
@@ -844,6 +854,7 @@ class PerspectivesService:
         # 1. Identify key words for each cluster
         top_words, top_word_scores = self.__compute_top_words(
             db=db,
+            num_words=aspect_dto.pipeline_settings.num_keywords,
             all_cluster_ids=[c.id for c in all_clusters],
             doc_aspects=doc_aspects,
             assigned_clusters=assigned_clusters,
@@ -921,9 +932,11 @@ class PerspectivesService:
             # ... compute the cluster coordinates (mean of the 2D coordinates)
             cluster_coordinates[cluster_id] = np.mean(doc_coordinates, axis=0)
 
-            # .. compute the top 3 documents
+            # .. compute the top documents
             similarities = doc_embeddings @ cluster_centroids[cluster_id]
-            num_top_docs_to_retrieve = min(3, len(doc_embeddings))
+            num_top_docs_to_retrieve = min(
+                aspect_dto.pipeline_settings.num_top_documents, len(doc_embeddings)
+            )
             top_doc_indices = np.argsort(similarities)[:num_top_docs_to_retrieve]
             top_docs[cluster_id] = [sdoc_ids[i].item() for i in top_doc_indices]
 
