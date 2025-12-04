@@ -8,6 +8,10 @@ export type PipelineSettings = {
    */
   umap_n_neighbors?: number;
   /**
+   * Number of components for UMAP dimensionality reduction
+   */
+  umap_n_components?: number;
+  /**
    * Minimum distance for UMAP dimensionality reduction
    */
   umap_min_dist?: number;
@@ -16,9 +20,9 @@ export type PipelineSettings = {
    */
   umap_metric?: string;
   /**
-   * Minimum samples for HDBSCAN clustering
+   * Minimum cluster size for HDBSCAN clustering
    */
-  hdbscan_min_samples?: number;
+  hdbscan_min_cluster_size?: number;
   /**
    * Metric for HDBSCAN clustering
    */
@@ -27,4 +31,8 @@ export type PipelineSettings = {
    * Number of keywords to extract per cluster
    */
   num_keywords?: number;
+  /**
+   * Number of top documents to extract per cluster
+   */
+  num_top_documents?: number;
 };
