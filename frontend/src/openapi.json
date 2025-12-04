@@ -10497,11 +10497,17 @@
             "description": "Number of neighbors for UMAP dimensionality reduction",
             "default": 15
           },
+          "umap_n_components": {
+            "type": "integer",
+            "title": "Umap N Components",
+            "description": "Number of components for UMAP dimensionality reduction",
+            "default": 10
+          },
           "umap_min_dist": {
             "type": "number",
             "title": "Umap Min Dist",
             "description": "Minimum distance for UMAP dimensionality reduction",
-            "default": 0
+            "default": 0.1
           },
           "umap_metric": {
             "type": "string",
@@ -10509,11 +10515,11 @@
             "description": "Metric for UMAP dimensionality reduction",
             "default": "cosine"
           },
-          "hdbscan_min_samples": {
+          "hdbscan_min_cluster_size": {
             "type": "integer",
-            "title": "Hdbscan Min Samples",
-            "description": "Minimum samples for HDBSCAN clustering",
-            "default": 40
+            "title": "Hdbscan Min Cluster Size",
+            "description": "Minimum cluster size for HDBSCAN clustering",
+            "default": 10
           },
           "hdbscan_metric": {
             "type": "string",
@@ -10526,6 +10532,12 @@
             "title": "Num Keywords",
             "description": "Number of keywords to extract per cluster",
             "default": 50
+          },
+          "num_top_documents": {
+            "type": "integer",
+            "title": "Num Top Documents",
+            "description": "Number of top documents to extract per cluster",
+            "default": 5
           }
         },
         "type": "object",

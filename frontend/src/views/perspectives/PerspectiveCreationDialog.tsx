@@ -44,11 +44,13 @@ interface AspectTemplate {
 
 const defaultAdvancedSettings: PipelineSettings = {
   umap_n_neighbors: 15,
-  umap_min_dist: 0.0,
+  umap_n_components: 10,
+  umap_min_dist: 0.1,
   umap_metric: "cosine",
-  hdbscan_min_samples: 40,
+  hdbscan_min_cluster_size: 10,
   hdbscan_metric: "euclidean",
   num_keywords: 50,
+  num_top_documents: 5,
 };
 
 /** Combined form data type for perspective creation */
@@ -142,8 +144,9 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
             umap_metric: data.umap_metric,
             umap_n_neighbors: data.umap_n_neighbors,
             hdbscan_metric: data.hdbscan_metric,
-            hdbscan_min_samples: data.hdbscan_min_samples,
+            hdbscan_min_cluster_size: data.hdbscan_min_cluster_size,
             num_keywords: data.num_keywords,
+            num_top_documents: data.num_top_documents,
           },
         },
       },
@@ -286,7 +289,35 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
                         inputProps={{ min: 2, max: 100 }}
                         error={Boolean(errors.umap_n_neighbors)}
                         helperText={
-                          errors.umap_n_neighbors?.message || "Number of neighbors for local structure (default: 15)"
+                          errors.umap_n_neighbors?.message ||
+                          `Number of neighbors for local structure (default: ${defaultAdvancedSettings.umap_n_neighbors})`
+                        }
+                        fullWidth
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="umap_n_components"
+                    control={control}
+                    rules={{
+                      required: "N Components is required",
+                      min: { value: 2, message: "Minimum value is 2" },
+                      max: { value: 100, message: "Maximum value is 100" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="N Components"
+                        type="number"
+                        size="small"
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.umap_n_components)
+                        }
+                        inputProps={{ min: 2, max: 100 }}
+                        error={Boolean(errors.umap_n_components)}
+                        helperText={
+                          errors.umap_n_components?.message ||
+                          `Number of components for dimensionality reduction (default: ${defaultAdvancedSettings.umap_n_components})`
                         }
                         fullWidth
                       />
@@ -311,7 +342,10 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
                         }
                         inputProps={{ min: 0, max: 1, step: 0.05 }}
                         error={Boolean(errors.umap_min_dist)}
-                        helperText={errors.umap_min_dist?.message || "Minimum distance between points (default: 0.0)"}
+                        helperText={
+                          errors.umap_min_dist?.message ||
+                          `Minimum distance between points (default: ${defaultAdvancedSettings.umap_min_dist})`
+                        }
                         fullWidth
                       />
                     )}
@@ -343,25 +377,28 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
                 </Typography>
                 <Stack direction="row" spacing={2}>
                   <Controller
-                    name="hdbscan_min_samples"
+                    name="hdbscan_min_cluster_size"
                     control={control}
                     rules={{
-                      required: "Min Samples is required",
+                      required: "Min Cluster Size is required",
                       min: { value: 1, message: "Minimum value is 1" },
                       max: { value: 200, message: "Maximum value is 200" },
                     }}
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Min Samples"
+                        label="Min Cluster Size"
                         type="number"
                         size="small"
                         onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_samples)
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.hdbscan_min_cluster_size)
                         }
                         inputProps={{ min: 1, max: 200 }}
-                        error={Boolean(errors.hdbscan_min_samples)}
-                        helperText={errors.hdbscan_min_samples?.message || "Minimum cluster size (default: 40)"}
+                        error={Boolean(errors.hdbscan_min_cluster_size)}
+                        helperText={
+                          errors.hdbscan_min_cluster_size?.message ||
+                          `Minimum cluster size (default: ${defaultAdvancedSettings.hdbscan_min_cluster_size})`
+                        }
                         fullWidth
                       />
                     )}
@@ -391,30 +428,62 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
                 <Typography variant="subtitle2" color="text.secondary">
                   Cluster Representation (c-TF-IDF)
                 </Typography>
-                <Controller
-                  name="num_keywords"
-                  control={control}
-                  rules={{
-                    required: "Number of keywords is required",
-                    min: { value: 5, message: "Minimum value is 5" },
-                    max: { value: 200, message: "Maximum value is 200" },
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Number of Keywords"
-                      type="number"
-                      size="small"
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)}
-                      inputProps={{ min: 5, max: 200 }}
-                      error={Boolean(errors.num_keywords)}
-                      helperText={
-                        errors.num_keywords?.message || "Number of keywords to extract per cluster (default: 50)"
-                      }
-                      sx={{ maxWidth: 300 }}
-                    />
-                  )}
-                />
+                <Stack direction="row" spacing={2}>
+                  <Controller
+                    name="num_keywords"
+                    control={control}
+                    rules={{
+                      required: "Number of keywords is required",
+                      min: { value: 5, message: "Minimum value is 5" },
+                      max: { value: 200, message: "Maximum value is 200" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Number of Keywords"
+                        type="number"
+                        size="small"
+                        fullWidth
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_keywords)
+                        }
+                        inputProps={{ min: 5, max: 200 }}
+                        error={Boolean(errors.num_keywords)}
+                        helperText={
+                          errors.num_keywords?.message ||
+                          `Number of keywords to extract per cluster (default: ${defaultAdvancedSettings.num_keywords})`
+                        }
+                      />
+                    )}
+                  />
+                  <Controller
+                    name="num_top_documents"
+                    control={control}
+                    rules={{
+                      required: "Number of top documents is required",
+                      min: { value: 1, message: "Minimum value is 1" },
+                      max: { value: 200, message: "Maximum value is 200" },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Number of Top Documents"
+                        type="number"
+                        size="small"
+                        fullWidth
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || defaultAdvancedSettings.num_top_documents)
+                        }
+                        inputProps={{ min: 1, max: 200 }}
+                        error={Boolean(errors.num_top_documents)}
+                        helperText={
+                          errors.num_top_documents?.message ||
+                          `Number of top documents to extract per cluster (default: ${defaultAdvancedSettings.num_top_documents})`
+                        }
+                      />
+                    )}
+                  />
+                </Stack>
               </Stack>
             </AccordionDetails>
           </Accordion>

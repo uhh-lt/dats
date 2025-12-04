@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
 import type { Body_tag_count_tags } from "../models/Body_tag_count_tags";
 import type { Body_tag_update_tags_batch } from "../models/Body_tag_update_tags_batch";
 import type { SourceDocumentTagLinks } from "../models/SourceDocumentTagLinks";
@@ -12,6 +9,9 @@ import type { SourceDocumentTagMultiLink } from "../models/SourceDocumentTagMult
 import type { TagCreate } from "../models/TagCreate";
 import type { TagRead } from "../models/TagRead";
 import type { TagUpdate } from "../models/TagUpdate";
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
 export class TagService {
   /**
    * Creates a new Tag and returns it with the generated ID.
