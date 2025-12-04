@@ -251,9 +251,13 @@ def test_user(user_factory: UserFactory) -> UserRead:
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function")
 def app(db_session: Session, test_user: UserORM) -> FastAPI:
+    # See main.py! This function should replicate our main.py application entrypoint!
     from fastapi import FastAPI
+    from psycopg2.errors import UniqueViolation
+    from sqlalchemy.exc import IntegrityError
 
     from common.dependencies import get_current_user
+    from common.exception_handler import exception_handler, exception_handlers
     from core.user.user_crud import crud_user
     from utils.import_utils import import_by_suffix
 
@@ -264,10 +268,28 @@ def app(db_session: Session, test_user: UserORM) -> FastAPI:
         db=db_session, email=test_user.email
     )
 
+    # import & register all endpoints dynamically
     modules = import_by_suffix("_endpoint.py")
     modules.sort(key=lambda m: m.__name__)
     for m in modules:
         app.include_router(m.router)
+
+    # register all exception handlers in fastAPI
+    from rq.exceptions import NoSuchJobError
+
+    exception_handler(
+        http_status_code=lambda exc: 409
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else 500,
+        extract_message=lambda exc: str(exc.orig.pgerror).split("\n")[1]
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else str(exc),
+    )(IntegrityError)
+
+    exception_handler(404)(NoSuchJobError)
+
+    for ex_class, handler_func in exception_handlers:
+        app.add_exception_handler(ex_class, handler_func)
 
     return app
 
