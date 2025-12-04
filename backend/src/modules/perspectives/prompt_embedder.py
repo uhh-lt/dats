@@ -89,6 +89,12 @@ class PromptEmbedder:
             for text in inputs
         ]
 
+    def _prepare_input(self, modality: DocType, prompt: str, inputs: list[str]) -> list:
+        if modality == DocType.image:
+            return self.__prepare_image_input(prompt, inputs)
+        else:
+            return self.__prepare_text_input(prompt, inputs)
+
     def embed(self, input: PromptEmbedderInput) -> PromptEmbedderOutput:
         # validate input: either all values of data and train_docs are str or all are Path
         if input.modality == DocType.audio or input.modality == DocType.video:
@@ -111,7 +117,7 @@ class PromptEmbedder:
             model_dir = FilesystemRepo().get_model_dir(
                 proj_id=input.project_id,
                 model_name=input.model_name,
-                model_prefix="prompt_embedder_",
+                model_prefix=f"prompt_embedder_{input.modality}_",
             )
             if not model_dir.exists():
                 # Train custom model
@@ -129,7 +135,7 @@ class PromptEmbedder:
                 checkpoint_dir = FilesystemRepo().get_model_dir(
                     proj_id=input.project_id,
                     model_name=input.model_name,
-                    model_prefix="prompt_embedder_chkpt_",
+                    model_prefix=f"prompt_embedder_chkpt_{input.modality}_",
                 )
                 encoder = self._finetune(
                     model_dir=model_dir,
@@ -137,6 +143,7 @@ class PromptEmbedder:
                     instruction=input.prompt,
                     train_docs=input.train_docs,
                     train_labels=input.train_labels,
+                    modality=input.modality,
                 )
             else:
                 # Load custom model
@@ -148,15 +155,12 @@ class PromptEmbedder:
                 encoder = setfit_model.model_body
 
         # init model correctly for inference
-        # encoder.max_seq_length = MAX_SEQ_LEN
+        encoder.max_seq_length = self.model_conf[input.modality]["max_seq_length"]
         encoder = encoder.half().to(self.device)
         encoder = encoder.eval()
 
         # Prepare input data
-        if input.modality == DocType.image:
-            data = self.__prepare_image_input(input.prompt, input.data)
-        else:
-            data = self.__prepare_text_input(input.prompt, input.data)
+        data = self._prepare_input(input.modality, input.prompt, input.data)
 
         # Embed data
         result = PromptEmbedderOutput(embeddings=[])
@@ -187,7 +191,7 @@ class PromptEmbedder:
         instruction: str,
         train_docs: list[str],
         train_labels: list[str],
-        modality: DocType = DocType.text,
+        modality: DocType,
     ) -> SentenceTransformer:
         if not len(train_docs) == len(train_labels):
             raise ValueError("Training documents and labels must have the same length.")
@@ -196,10 +200,10 @@ class PromptEmbedder:
         label_names = list(set(train_labels))
         label2id = {label: i for i, label in enumerate(label_names)}
         labels = [label2id[label] for label in train_labels]
-        train_texts = self.__prepare_text_input(instruction, train_docs)
+        train_data = self._prepare_input(modality, instruction, train_docs)
         train_ds = Dataset.from_dict(
             {
-                "text": train_texts,
+                "text": train_data,
                 "label": labels,
             }
         )
