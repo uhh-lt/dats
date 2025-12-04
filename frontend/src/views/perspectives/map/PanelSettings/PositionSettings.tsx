@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useMemo } from "react";
+import { DocType } from "../../../../api/openapi/models/DocType.ts";
 import { PerspectivesJobType } from "../../../../api/openapi/models/PerspectivesJobType.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
@@ -27,6 +28,9 @@ interface PositionSettingsProps {
 }
 
 function PositionSettings({ aspectId }: PositionSettingsProps) {
+  // aspect (to check modality and disable refinment)
+  const aspect = PerspectivesHooks.useGetAspect(aspectId);
+
   // position settings
   const xAxis = useAppSelector((state) => state.perspectives.xAxis);
   const yAxis = useAppSelector((state) => state.perspectives.yAxis);
@@ -139,7 +143,7 @@ function PositionSettings({ aspectId }: PositionSettingsProps) {
           Review Statistics
         </Typography>
         <Stack direction="row" px={1} spacing={1} alignItems="center">
-          <Button onClick={handleRefineTM} disabled={isPending}>
+          <Button onClick={handleRefineTM} disabled={isPending || aspect?.data?.modality !== DocType.TEXT}>
             Refine Positioning
           </Button>
           <Button

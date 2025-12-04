@@ -426,7 +426,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
 
                 {/* Keyword Extraction Settings */}
                 <Typography variant="subtitle2" color="text.secondary">
-                  Cluster Representation (c-TF-IDF)
+                  Cluster Representation
                 </Typography>
                 <Stack direction="row" spacing={2}>
                   <Controller

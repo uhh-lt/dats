@@ -2,6 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+/**
+ * Settings for the perspective creation pipeline.
+ * When updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)
+ */
 export type PipelineSettings = {
   /**
    * Number of neighbors for UMAP dimensionality reduction

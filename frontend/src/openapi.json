@@ -2622,7 +2622,8 @@
                   { "$ref": "#/components/schemas/SplitClusterParams" },
                   { "$ref": "#/components/schemas/ChangeClusterParams" },
                   { "$ref": "#/components/schemas/RefineModelParams" },
-                  { "$ref": "#/components/schemas/ResetModelParams" }
+                  { "$ref": "#/components/schemas/ResetModelParams" },
+                  { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
                 ],
                 "title": "Perspectives Job Params"
               }
@@ -10380,7 +10381,8 @@
               { "$ref": "#/components/schemas/SplitClusterParams" },
               { "$ref": "#/components/schemas/ChangeClusterParams" },
               { "$ref": "#/components/schemas/RefineModelParams" },
-              { "$ref": "#/components/schemas/ResetModelParams" }
+              { "$ref": "#/components/schemas/ResetModelParams" },
+              { "$ref": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams" }
             ],
             "title": "Parameters",
             "description": "Parameters for the PerspectivesJob. The type depends on the PerspectivesJobType.",
@@ -10393,6 +10395,7 @@
                 "create_cluster_with_name": "#/components/schemas/CreateClusterWithNameParams",
                 "create_cluster_with_sdocs": "#/components/schemas/CreateClusterWithSdocsParams",
                 "merge_clusters": "#/components/schemas/MergeClustersParams",
+                "recompute_cluster_title_and_description": "#/components/schemas/RecomputeClusterTitleAndDescriptionParams",
                 "refine_model": "#/components/schemas/RefineModelParams",
                 "remove_cluster": "#/components/schemas/RemoveClusterParams",
                 "reset_model": "#/components/schemas/ResetModelParams",
@@ -10461,7 +10464,8 @@
           "split_cluster",
           "change_cluster",
           "refine_model",
-          "reset_model"
+          "reset_model",
+          "recompute_cluster_title_and_description"
         ],
         "title": "PerspectivesJobType"
       },
@@ -10541,7 +10545,8 @@
           }
         },
         "type": "object",
-        "title": "PipelineSettings"
+        "title": "PipelineSettings",
+        "description": "Settings for the perspective creation pipeline.\nWhen updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)"
       },
       "ProcessingSettings": {
         "properties": {
@@ -10744,6 +10749,25 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "QuotationAttributionParams"
+      },
+      "RecomputeClusterTitleAndDescriptionParams": {
+        "properties": {
+          "perspectives_job_type": {
+            "type": "string",
+            "const": "recompute_cluster_title_and_description",
+            "title": "Perspectives Job Type",
+            "description": "Type of the PerspectivesJob",
+            "default": "recompute_cluster_title_and_description"
+          },
+          "cluster_id": {
+            "type": "integer",
+            "title": "Cluster Id",
+            "description": "ID of the cluster to recompute title and description for."
+          }
+        },
+        "type": "object",
+        "required": ["cluster_id"],
+        "title": "RecomputeClusterTitleAndDescriptionParams"
       },
       "RefineModelParams": {
         "properties": {

@@ -13,4 +13,5 @@ export enum PerspectivesJobType {
   CHANGE_CLUSTER = "change_cluster",
   REFINE_MODEL = "refine_model",
   RESET_MODEL = "reset_model",
+  RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION = "recompute_cluster_title_and_description",
 }
