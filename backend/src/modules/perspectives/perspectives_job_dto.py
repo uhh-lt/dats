@@ -18,6 +18,7 @@ class PerspectivesJobType(str, Enum):
     CHANGE_CLUSTER = "change_cluster"
     REFINE_MODEL = "refine_model"
     RESET_MODEL = "reset_model"
+    RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION = "recompute_cluster_title_and_description"
 
 
 class CreateAspectParams(BaseModel):
@@ -115,6 +116,18 @@ class ResetModelParams(BaseModel):
     )
 
 
+class RecomputeClusterTitleAndDescriptionParams(BaseModel):
+    perspectives_job_type: Literal[
+        PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION
+    ] = Field(
+        default=PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION,
+        description="Type of the PerspectivesJob",
+    )
+    cluster_id: int = Field(
+        description="ID of the cluster to recompute title and description for."
+    )
+
+
 PerspectivesJobParamsNoCreate = (
     AddMissingDocsToAspectParams
     | CreateClusterWithNameParams
@@ -125,6 +138,7 @@ PerspectivesJobParamsNoCreate = (
     | ChangeClusterParams
     | RefineModelParams
     | ResetModelParams
+    | RecomputeClusterTitleAndDescriptionParams
 )
 
 PerspectivesJobParams = (
@@ -138,6 +152,7 @@ PerspectivesJobParams = (
     | ChangeClusterParams
     | RefineModelParams
     | ResetModelParams
+    | RecomputeClusterTitleAndDescriptionParams
 )
 
 

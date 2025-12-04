@@ -50,6 +50,7 @@ from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobInput,
     PerspectivesJobParams,
     PerspectivesJobType,
+    RecomputeClusterTitleAndDescriptionParams,
     RefineModelParams,
     RemoveClusterParams,
     ResetModelParams,
@@ -123,6 +124,10 @@ class PerspectivesService:
                 "Add Missing Docs to Aspect"
             ],
             PerspectivesJobType.RESET_MODEL: ["Reset Cluster Model"],
+            PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION: [
+                "Retrieve Top Words",
+                "Compute Title and Description",
+            ],
         }
         self.method_for_job_type: dict[
             PerspectivesJobType, Callable[[Session, int, PerspectivesJobParams], None]
@@ -137,6 +142,7 @@ class PerspectivesService:
             PerspectivesJobType.CHANGE_CLUSTER: self.change_cluster,
             PerspectivesJobType.REFINE_MODEL: self.refine_cluster_model,
             PerspectivesJobType.RESET_MODEL: self.reset_cluster_model,
+            PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION: self.recompute_cluster_title_and_description,
         }
 
     def handle_perspectives_job(self, db: Session, payload: PerspectivesJobInput):
@@ -793,6 +799,50 @@ class PerspectivesService:
 
         return top_words, top_word_scores
 
+    def __generate_cluster_title_and_description(
+        self,
+        top_words: dict[int, list[str]],
+        cluster_ids: list[int],
+    ) -> tuple[dict[int, str], dict[int, str]]:
+        """
+        Generates cluster titles and descriptions using an LLM based on the provided top words.
+        :param top_words: A dictionary mapping cluster IDs to their top words.
+        :param cluster_ids: A list of cluster IDs for which to generate titles and descriptions.
+        :return: Two dictionaries mapping cluster IDs to their generated titles and descriptions.
+        """
+
+        class LLMResponse(BaseModel):
+            description: str
+            title: str
+
+        cluster_name: dict[int, str] = {}
+        cluster_description: dict[int, str] = {}
+        self._log_status_msg("Generating cluster names and descriptions with LLM...")
+
+        # 1. prepare batch messages
+        batch_messages: list[LLMMessage] = []
+        for cluster_id in cluster_ids:
+            tw = top_words[cluster_id]
+            batch_messages.append(
+                LLMMessage(
+                    system_prompt="You are a cluster name and description generator.",
+                    user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
+                )
+            )
+
+        # 2. prompt the model (batch)
+        responses = self.llm.llm_batch_chat(
+            messages=batch_messages,
+            response_model=LLMResponse,
+        )
+
+        # 3. store the results
+        for response, cluster_id in zip(responses, cluster_ids):
+            cluster_name[cluster_id] = response.title
+            cluster_description[cluster_id] = response.description
+
+        return cluster_name, cluster_description
+
     def _extract_clusters(
         self,
         db: Session,
@@ -861,35 +911,11 @@ class PerspectivesService:
         )
 
         # 2. Generate cluster name and description with LLM
-        class LLMResponse(BaseModel):
-            description: str
-            title: str
-
-        cluster_name: dict[int, str] = {}
-        cluster_description: dict[int, str] = {}
-        self._log_status_msg("Generating cluster names and descriptions with LLM...")
-
-        # 2.1 prepare batch messages
-        batch_messages: list[LLMMessage] = []
-        for cluster_id in cluster_ids_to_update:
-            tw = top_words[cluster_id]
-            batch_messages.append(
-                LLMMessage(
-                    system_prompt="You are a cluster name and description generator.",
-                    user_prompt=f"Generate a name and description for the cluster with the following words: {', '.join(tw)}",
-                )
+        cluster_name, cluster_description = (
+            self.__generate_cluster_title_and_description(
+                top_words=top_words, cluster_ids=cluster_ids_to_update
             )
-
-        # 2.2 prompt the model (batch)
-        responses = self.llm.llm_batch_chat(
-            messages=batch_messages,
-            response_model=LLMResponse,
         )
-
-        # 2.3 store the results
-        for response, cluster_id in zip(responses, cluster_ids_to_update):
-            cluster_name[cluster_id] = response.title
-            cluster_description[cluster_id] = response.description
 
         # 3. Based on embeddings...
         coordinates = np.array([[da.x, da.y] for da in doc_aspects])
@@ -1676,3 +1702,46 @@ class PerspectivesService:
         ), "ResetModelParams expected"
 
         pass
+
+    def recompute_cluster_title_and_description(
+        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+    ):
+        assert isinstance(
+            params,
+            RecomputeClusterTitleAndDescriptionParams,
+        ), "RecomputeClusterTitleAndDescriptionParams expected"
+
+        # 1. Read cluster
+        self._log_status_step(0)
+        self._log_status_msg(f"Reading top words of cluster {params.cluster_id}...")
+        cluster = crud_cluster.read(db=db, id=params.cluster_id)
+        top_words = cluster.top_words
+        if top_words is None:
+            raise ValueError(
+                f"Cluster {cluster.id} has no top words, cannot recompute title and description."
+            )
+
+        # 2. Compute new title and description
+        self._log_status_step(1)
+        self._log_status_msg(
+            f"Computing new title and description for cluster {cluster.id}..."
+        )
+        cluster_name, cluster_description = (
+            self.__generate_cluster_title_and_description(
+                top_words={cluster.id: top_words},
+                cluster_ids=[cluster.id],
+            )
+        )
+        self._log_status_msg(
+            f"Successfully computed new title and description for cluster {cluster.id}."
+        )
+
+        # Store the new title and description in database
+        crud_cluster.update(
+            db=db,
+            id=cluster.id,
+            update_dto=ClusterUpdateIntern(
+                name=cluster_name[cluster.id],
+                description=cluster_description[cluster.id],
+            ),
+        )
