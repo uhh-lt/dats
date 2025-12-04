@@ -234,6 +234,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
           />
           <FormTextMultiline
             name="doc_modification_prompt"
+            disabled={selectedDocType !== DocType.TEXT}
             control={control}
             textFieldProps={{
               label: "Document modification prompt",
