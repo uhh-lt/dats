@@ -107,7 +107,7 @@ function DocumentTagStatButtonContent({
     <StatsDisplayButton
       {...props}
       disabled={!tag.isSuccess}
-      term={tag.isSuccess ? tag.data.name : tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : "Error"}
+      term={tag.data ? tag.data.name : tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : "Error"}
     />
   );
 }
