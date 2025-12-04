@@ -117,6 +117,7 @@ for em in endpoint_modules:
     app.include_router(em.router)
 
 
+# register all exception handlers in fastAPI
 exception_handler(
     http_status_code=lambda exc: 409
     if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
@@ -128,7 +129,6 @@ exception_handler(
 
 exception_handler(404)(NoSuchJobError)
 
-# register all exception handlers in fastAPI
 for ex_class, handler_func in exception_handlers:
     app.add_exception_handler(ex_class, handler_func)
 
