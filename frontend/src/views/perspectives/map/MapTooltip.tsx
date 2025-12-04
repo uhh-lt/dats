@@ -1,5 +1,6 @@
 import { Box, Card, CardContent, PopoverPosition, Typography } from "@mui/material";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
 
 export interface MapTooltipData {
   id?: string;
@@ -12,6 +13,8 @@ interface MapTooltipProps {
 
 function MapTooltip({ data }: MapTooltipProps) {
   const sdocId = parseInt(data.id || "0", 10);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
+
   const sdocData = SdocHooks.useGetDocumentData(sdocId);
   if (data.id && data.position) {
     return (
@@ -29,11 +32,18 @@ function MapTooltip({ data }: MapTooltipProps) {
           <CardContent>
             {sdocData.data ? (
               <Typography>
-                <b>Preview:</b> {sdocData.data.sentences[0]}...
+                <b>Preview:</b> {sdocData.data.sentences[0]} {sdocData.data.sentences.length > 1 ? "..." : ""}
               </Typography>
             ) : (
               <Typography>Loading...</Typography>
             )}
+            {sdoc.data && sdocData.data && sdoc.data.doctype === DocType.IMAGE ? (
+              <img
+                src={encodeURI("/content/" + sdocData.data.repo_url)}
+                alt="Image Preview"
+                style={{ maxWidth: "100%", marginTop: "10px" }}
+              />
+            ) : null}
           </CardContent>
         </Card>
       </Box>
