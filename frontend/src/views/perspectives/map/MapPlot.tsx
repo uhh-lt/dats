@@ -214,9 +214,13 @@ function MapPlot({ vis }: MapPlotProps) {
   });
   const handleHover = useCallback((event: any) => {
     setTooltipData((oldData) => {
+      if (oldData.id === event.points[0].id) {
+        return oldData; // No change
+      }
+
       const newData = { ...oldData };
       if (!newData.position) {
-        newData.position = { top: event.event.y - 4, left: event.event.x + 4 };
+        newData.position = { top: event.event.y - 40, left: event.event.x + 40 };
       }
       if (event.points.length > 0) {
         newData.id = event.points[0].id;
