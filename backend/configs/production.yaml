@@ -130,9 +130,14 @@ cota:
   batch_size: 16
 
 promptembedder:
-  model: "intfloat/multilingual-e5-large-instruct"
-  max_seq_length: 512
-  batch_size: 8
+  text:
+    model: "intfloat/multilingual-e5-large-instruct"
+    max_seq_length: 512
+    batch_size: 8
+  image:
+    model: "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct"
+    max_seq_length: 2048
+    batch_size: 8
 
 project_metadata:
   text_language:
