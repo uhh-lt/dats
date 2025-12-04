@@ -16,8 +16,11 @@ from sqlalchemy.orm import Session
 from umap import UMAP
 from weaviate import WeaviateClient
 
+from common.doc_type import DocType
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from modules.perspectives.aspect_crud import crud_aspect
-from modules.perspectives.aspect_dto import AspectUpdateIntern
+from modules.perspectives.aspect_dto import AspectRead, AspectUpdateIntern
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
 from modules.perspectives.cluster_crud import crud_cluster
@@ -158,12 +161,17 @@ class PerspectivesService:
 
     def _modify_documents(self, db: Session, aspect_id: int):
         aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
 
-        # 1. Find all text source documents that do not have an aspect yet
+        # 1. Find all source documents that do not have an aspect yet
         sdoc_datas = [
             (data.id, data.content)
-            for data in crud_document_aspect.read_text_data_with_no_aspect(
-                db=db, aspect_id=aspect_id, project_id=aspect.project_id
+            for data in crud_document_aspect.read_data_by_doctype_with_no_aspect(
+                db=db,
+                aspect_id=aspect_id,
+                project_id=aspect.project_id,
+                doctype=aspect_dto.modality,
+                tag_id=aspect_dto.tag_id,
             )
         ]
         self._log_status_msg(
@@ -176,7 +184,7 @@ class PerspectivesService:
 
         create_dtos: list[DocumentAspectCreate] = []
         # if prompt is provided, use LLM to generate a modified document
-        if aspect.doc_modification_prompt:
+        if aspect_dto.modality == DocType.text and aspect.doc_modification_prompt:
             num_batches = (len(sdoc_datas) + BATCH_SIZE - 1) // BATCH_SIZE
             for i in range(0, len(sdoc_datas), BATCH_SIZE):
                 self._log_status_msg(
@@ -212,9 +220,9 @@ class PerspectivesService:
                         )
                     )
         else:
-            # if no prompt is provided, use the original document
+            # if no prompt is provided or modality is not text, use the original document
             self._log_status_msg(
-                f"No prompt provided. Using the original document for {len(sdoc_datas)} source documents."
+                f"No prompt provided or modality is not text. Using the original document for {len(sdoc_datas)} source documents."
             )
 
             create_dtos.extend(
@@ -237,29 +245,31 @@ class PerspectivesService:
         self,
         project_id: int,
         aspect_id: int,
+        modality: DocType,
         embedding_model: str,
         embedding_prompt: str,
-        doc_aspects: list[DocumentAspectORM],
+        document_data: list[str],
         train_docs: list[str] | None = None,
         train_labels: list[str] | None = None,
     ) -> tuple[list[list[float]], list[tuple[float, float]]]:
-        assert len(doc_aspects) > 0, "No document aspects provided."
+        assert len(document_data) > 0, "No document data provided."
 
         # 1. Embed the document aspects
         self._log_status_msg(
-            f"Computing embeddings for {len(doc_aspects)} document aspects with model {embedding_model}..."
+            f"Computing embeddings for {len(document_data)} document aspects with model {embedding_model}..."
         )
         embedding_output = self.prompt_embedder.embed(
             input=PromptEmbedderInput(
                 project_id=project_id,
                 model_name=embedding_model,
                 prompt=embedding_prompt,
-                data=[da.content for da in doc_aspects],
+                modality=modality,
+                data=document_data,
                 train_docs=train_docs,
                 train_labels=train_labels,
             ),
         )
-        assert len(embedding_output.embeddings) == len(doc_aspects), (
+        assert len(embedding_output.embeddings) == len(document_data), (
             "The number of embeddings does not match the number of documents."
         )
 
@@ -274,7 +284,7 @@ class PerspectivesService:
         # No model exists, we need to fit a new UMAP model
         if not umap_model_path.exists():
             self._log_status_msg(
-                f"Fitting a new UMAP model for {len(doc_aspects)} document aspects..."
+                f"Fitting a new UMAP model for {len(document_data)} document aspects..."
             )
 
             # Fit a new UMAP model
@@ -294,11 +304,11 @@ class PerspectivesService:
 
         # Compute the 2D coordinates
         self._log_status_msg(
-            f"Computing 2D coordinates for {len(doc_aspects)} document aspects using the UMAP model..."
+            f"Computing 2D coordinates for {len(document_data)} document aspects using the UMAP model..."
         )
         coords = reducer.transform(embeddings).tolist()
         self._log_status_msg(
-            f"Computed 2D coordinates for {len(doc_aspects)} document aspects."
+            f"Computed 2D coordinates for {len(document_data)} document aspects."
         )
 
         return embedding_output.embeddings, coords
@@ -376,26 +386,47 @@ class PerspectivesService:
 
         # 1. Read the document aspects
         aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
         if sdoc_ids is None or len(sdoc_ids) == 0:
             # Read all document aspects
             doc_aspects = aspect.document_aspects
         else:
-            # 2. Read the document aspects for the given source document IDs
+            # Read the document aspects for the given source document IDs
             doc_aspects = crud_document_aspect.read_by_aspect_and_sdoc_ids(
                 db=db, aspect_id=aspect_id, sdoc_ids=sdoc_ids
             )
 
+        match aspect_dto.modality:
+            case DocType.text:
+                document_data = [da.content for da in doc_aspects]
+            case DocType.image:
+                sdocs = crud_sdoc.read_by_ids(
+                    db=db, ids=[da.sdoc_id for da in doc_aspects]
+                )
+                sdoc_reads = [SourceDocumentRead.model_validate(sdoc) for sdoc in sdocs]
+                document_data = [
+                    str(
+                        self.fsr.get_path_to_sdoc_file(
+                            sdoc_read, raise_if_not_exists=True
+                        )
+                    )
+                    for sdoc_read in sdoc_reads
+                ]
+            case _:
+                raise ValueError(f"Unsupported modality: {aspect_dto.modality}")
+
         # 2. Compute embedding & coordinates, then store them in the DB
-        if len(doc_aspects) > 0:
+        if len(document_data) > 0:
             self._log_status_msg(
-                f"Embedding {len(doc_aspects)} document aspects for aspect {aspect_id}..."
+                f"Embedding {len(document_data)} document aspects for aspect {aspect_id}..."
             )
             embeddings, coords = self.__compute_embeddings_and_coordinates(
                 project_id=aspect.project_id,
                 aspect_id=aspect.id,
                 embedding_model=aspect.embedding_model,
                 embedding_prompt=aspect.doc_embedding_prompt,
-                doc_aspects=doc_aspects,
+                document_data=document_data,
+                modality=aspect_dto.modality,
                 train_docs=train_docs,
                 train_labels=train_labels,
             )
@@ -1028,6 +1059,7 @@ class PerspectivesService:
         with self.weaviate.weaviate_session() as client:
             # Read the aspect
             aspect = crud_aspect.read(db=db, id=aspect_id)
+            aspect_dto = AspectRead.model_validate(aspect)
 
             # Read the current document <-> cluster assignments
             document_clusters = crud_document_cluster.read_by_aspect_id(
@@ -1051,6 +1083,7 @@ class PerspectivesService:
                     project_id=aspect.project_id,
                     model_name=aspect.embedding_model,
                     prompt=aspect.doc_embedding_prompt,
+                    modality=aspect_dto.modality,
                     data=[f"{params.create_dto.name}\n{params.create_dto.description}"],
                 ),
             )

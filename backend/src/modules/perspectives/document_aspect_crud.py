@@ -6,6 +6,7 @@ from common.doc_type import DocType
 from config import conf
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.tag.tag_orm import TagORM
 from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_dto import (
     DocumentAspectCreate,
@@ -144,19 +145,27 @@ class CRUDDocumentAspect(
             .all()
         )
 
-    def read_text_data_with_no_aspect(
-        self, db: Session, *, project_id: int, aspect_id: int
+    def read_data_by_doctype_with_no_aspect(
+        self,
+        db: Session,
+        *,
+        project_id: int,
+        aspect_id: int,
+        tag_id: int | None,
+        doctype: DocType,
     ) -> list[SourceDocumentDataORM]:
         """
-        Read all source documents that have no aspect and are of type text.
+        Read all source documents that have no aspect and are of the given type.
         This is used to find all source documents that need to be preprocessed.
 
         :param db: The database session.
         :param project_id: The ID of the project.
         :param aspect_id: The ID of the aspect.
-        :return: A list of source documents of the given project that have no aspect and are of type text.
+        :param tag_id: The ID of the tag.
+        :param doctype: The type of the source document.
+        :return: A list of source documents of the given project that have no aspect and are of the given type.
         """
-        return (
+        query = (
             db.query(SourceDocumentDataORM)
             .join(SourceDocumentORM, SourceDocumentORM.id == SourceDocumentDataORM.id)
             .outerjoin(
@@ -168,10 +177,18 @@ class CRUDDocumentAspect(
                 DocumentAspectORM.sdoc_id.is_(None),
                 DocumentAspectORM.aspect_id.is_(None),
                 SourceDocumentORM.project_id == project_id,
-                SourceDocumentORM.doctype == DocType.text,
+                SourceDocumentORM.doctype == doctype,
             )
-            .all()
         )
+
+        if tag_id is not None:
+            query = query.join(
+                SourceDocumentORM.tags,
+            ).filter(
+                SourceDocumentORM.tags.any(TagORM.id == tag_id),
+            )
+
+        return query.all()
 
     def update_multi(
         self,

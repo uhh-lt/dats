@@ -1,5 +1,6 @@
 from collections import Counter
 from pathlib import Path
+from typing import TypedDict
 
 import numpy as np
 import torch
@@ -9,12 +10,15 @@ from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 from setfit import SetFitModel, Trainer, TrainingArguments, sample_dataset
 
+from common.doc_type import DocType
 from config import conf
 from repos.filesystem_repo import FilesystemRepo
 
-DEFAULT_MODEL = conf.promptembedder.model
-MAX_SEQ_LEN = conf.promptembedder.max_seq_length
-BATCH_SIZE = conf.promptembedder.batch_size
+
+class EmbeddingModelConfig(TypedDict):
+    model_name: str
+    batch_size: int
+    max_seq_length: int
 
 
 class PromptEmbedderInput(BaseModel):
@@ -23,6 +27,7 @@ class PromptEmbedderInput(BaseModel):
         description="Model Name. If 'default', uses default model, otherwise a model is trained or loaded."
     )
     prompt: str = Field(description="Prompt for the model")
+    modality: DocType = Field(description="Modality of the input data")
     data: list[str] = Field(description="Text Data to embed")
     train_docs: list[str] | None = Field(
         default=None, description="Documents to train the model on"
@@ -38,7 +43,7 @@ class PromptEmbedderOutput(BaseModel):
 
 class PromptEmbedder:
     """
-    This service handles the embedding of text data using a specified model and prompt.
+    This service handles the embedding of data using a specified model and prompt.
     It can use a default pre-trained model or train/load a custom model based on the provided input.
 
     Note: This service must be run by a GPU worker!
@@ -47,15 +52,62 @@ class PromptEmbedder:
     def __init__(self, device: str):
         self.device = device
 
+        self.model_conf: dict[DocType, EmbeddingModelConfig] = {
+            DocType.text: EmbeddingModelConfig(
+                model_name=conf.promptembedder.text.model,
+                batch_size=conf.promptembedder.text.batch_size,
+                max_seq_length=conf.promptembedder.text.max_seq_length,
+            ),
+            DocType.image: EmbeddingModelConfig(
+                model_name=conf.promptembedder.image.model,
+                batch_size=conf.promptembedder.image.batch_size,
+                max_seq_length=conf.promptembedder.image.max_seq_length,
+            ),
+        }
+
+    def __prepare_image_input(self, prompt: str, inputs: list[str]) -> list:
+        data = []
+        for i in inputs:
+            if Path(i).is_file():
+                # a) Input is an image file path
+                if Path(i).exists():
+                    data.append(dict(image=str(i), prompt=prompt))
+                else:
+                    raise ValueError(f"Image file {i} does not exist.")
+            else:
+                # b) Input is a text
+                data.append(dict(text=i, prompt=prompt))
+
+        return data
+
+    def __prepare_text_input(self, prompt: str, inputs: list[str]) -> list:
+        def _remove_linebreaks(text: str) -> str:
+            return " ".join(text.splitlines()).strip()
+
+        return [
+            f"Instruct: {prompt.strip()}\nQuery: {_remove_linebreaks(text)}"
+            for text in inputs
+        ]
+
     def embed(self, input: PromptEmbedderInput) -> PromptEmbedderOutput:
+        # validate input: either all values of data and train_docs are str or all are Path
+        if input.modality == DocType.audio or input.modality == DocType.video:
+            raise ValueError(f"Modality {input.modality} is not supported.")
+
         # Load (or train) model
         if input.model_name == "default":
-            # Use default model
-            logger.info(f"Loading default model {DEFAULT_MODEL} ...")
+            default_model = self.model_conf[input.modality]["model_name"]
+            logger.info(f"Loading default model {default_model} ...")
             encoder = SentenceTransformer(
-                DEFAULT_MODEL, trust_remote_code=True, device="cpu"
+                default_model, trust_remote_code=True, device="cpu"
             )
         else:
+            # Skip fine-tuning for image models
+            if input.modality == DocType.image:
+                raise ValueError(
+                    "Custom models are not supported for image embeddings."
+                )
+
             model_dir = FilesystemRepo().get_model_dir(
                 proj_id=input.project_id,
                 model_name=input.model_name,
@@ -96,21 +148,22 @@ class PromptEmbedder:
                 encoder = setfit_model.model_body
 
         # init model correctly for inference
-        encoder.max_seq_length = MAX_SEQ_LEN
+        # encoder.max_seq_length = MAX_SEQ_LEN
         encoder = encoder.half().to(self.device)
         encoder = encoder.eval()
+
+        # Prepare input data
+        if input.modality == DocType.image:
+            data = self.__prepare_image_input(input.prompt, input.data)
+        else:
+            data = self.__prepare_text_input(input.prompt, input.data)
 
         # Embed data
         result = PromptEmbedderOutput(embeddings=[])
         with torch.no_grad():
             embeddings = encoder.encode(
-                sentences=[
-                    self._get_detailed_instruct(
-                        task_description=input.prompt, query=text
-                    )
-                    for text in input.data
-                ],
-                batch_size=BATCH_SIZE,
+                data,
+                batch_size=self.model_conf[input.modality]["batch_size"],
                 show_progress_bar=False,
                 normalize_embeddings=True,
                 convert_to_numpy=True,
@@ -134,6 +187,7 @@ class PromptEmbedder:
         instruction: str,
         train_docs: list[str],
         train_labels: list[str],
+        modality: DocType = DocType.text,
     ) -> SentenceTransformer:
         if not len(train_docs) == len(train_labels):
             raise ValueError("Training documents and labels must have the same length.")
@@ -142,12 +196,10 @@ class PromptEmbedder:
         label_names = list(set(train_labels))
         label2id = {label: i for i, label in enumerate(label_names)}
         labels = [label2id[label] for label in train_labels]
+        train_texts = self.__prepare_text_input(instruction, train_docs)
         train_ds = Dataset.from_dict(
             {
-                "text": [
-                    self._get_detailed_instruct(task_description=instruction, query=doc)
-                    for doc in train_docs
-                ],
+                "text": train_texts,
                 "label": labels,
             }
         )
@@ -164,16 +216,16 @@ class PromptEmbedder:
 
         # 2. Initialize model
         model = SetFitModel.from_pretrained(
-            DEFAULT_MODEL,
+            self.model_conf[modality]["model_name"],
             device=self.device,
             trust_remote_code=True,
         )
         assert model.model_body is not None, "Model body is None"
-        model.model_body.max_seq_length = MAX_SEQ_LEN
+        model.model_body.max_seq_length = self.model_conf[modality]["max_seq_length"]
 
         # 3. Init training
         args = TrainingArguments(
-            batch_size=BATCH_SIZE,
+            batch_size=self.model_conf[modality]["batch_size"],
             num_epochs=1,
             output_dir=str(checkpoint_dir),
             use_amp=True,
@@ -194,9 +246,3 @@ class PromptEmbedder:
         model.save_pretrained(model_dir)
 
         return model.model_body
-
-    def _remove_linebreaks(self, text: str) -> str:
-        return " ".join(text.splitlines()).strip()
-
-    def _get_detailed_instruct(self, task_description: str, query: str) -> str:
-        return f"Instruct: {task_description.strip()}\nQuery: {self._remove_linebreaks(query)}"
