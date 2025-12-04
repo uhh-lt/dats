@@ -16,6 +16,7 @@ const perspectivesJobType2Title: Record<PerspectivesJobType, string> = {
   [PerspectivesJobType.SPLIT_CLUSTER]: "Split Cluster in Map",
   [PerspectivesJobType.MERGE_CLUSTERS]: "Merge Cluster in Map",
   [PerspectivesJobType.CHANGE_CLUSTER]: "Change Cluster",
+  [PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION]: "Recompute Cluster Description",
   // Embedding Model
   [PerspectivesJobType.REFINE_MODEL]: "Refine Model",
   [PerspectivesJobType.RESET_MODEL]: "Reset Model",

@@ -15,6 +15,7 @@ import type { MergeClustersParams } from "../models/MergeClustersParams";
 import type { PerspectivesClusterSimilarities } from "../models/PerspectivesClusterSimilarities";
 import type { PerspectivesJobRead } from "../models/PerspectivesJobRead";
 import type { PerspectivesVisualization } from "../models/PerspectivesVisualization";
+import type { RecomputeClusterTitleAndDescriptionParams } from "../models/RecomputeClusterTitleAndDescriptionParams";
 import type { RefineModelParams } from "../models/RefineModelParams";
 import type { RemoveClusterParams } from "../models/RemoveClusterParams";
 import type { ResetModelParams } from "../models/ResetModelParams";
@@ -42,7 +43,8 @@ export class PerspectivesService {
       | SplitClusterParams
       | ChangeClusterParams
       | RefineModelParams
-      | ResetModelParams;
+      | ResetModelParams
+      | RecomputeClusterTitleAndDescriptionParams;
   }): CancelablePromise<PerspectivesJobRead> {
     return __request(OpenAPI, {
       method: "POST",

@@ -8,6 +8,7 @@ import { RootState } from "../../../store/store.ts";
 import DocAspectTable from "../components/DocAspectTable.tsx";
 import { PerspectivesActions } from "../perspectivesSlice.ts";
 import ClusterWordCloud from "./ClusterWordCloud.tsx";
+import RecomputeClusterDescriptionButton from "./RecomputeClusterDescriptionButton.tsx";
 
 interface ClusterDetailDialogProps {
   aspectId: number;
@@ -47,9 +48,12 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
         <DialogContent>
           <Stack spacing={2} pt={1}>
             <Box>
-              <Typography variant="h4" component="h1" color="primary.dark">
-                {cluster.name}
-              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+                <Typography variant="h4" component="h1" color="primary.dark">
+                  {cluster.name}
+                </Typography>
+                <RecomputeClusterDescriptionButton aspectId={aspectId} clusterId={cluster.id} />
+              </Stack>
               <Typography pt={1} color="textSecondary">
                 <Markdown>{cluster.description}</Markdown>
               </Typography>

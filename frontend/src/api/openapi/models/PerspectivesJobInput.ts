@@ -9,6 +9,7 @@ import type { CreateClusterWithNameParams } from "./CreateClusterWithNameParams"
 import type { CreateClusterWithSdocsParams } from "./CreateClusterWithSdocsParams";
 import type { MergeClustersParams } from "./MergeClustersParams";
 import type { PerspectivesJobType } from "./PerspectivesJobType";
+import type { RecomputeClusterTitleAndDescriptionParams } from "./RecomputeClusterTitleAndDescriptionParams";
 import type { RefineModelParams } from "./RefineModelParams";
 import type { RemoveClusterParams } from "./RemoveClusterParams";
 import type { ResetModelParams } from "./ResetModelParams";
@@ -39,5 +40,6 @@ export type PerspectivesJobInput = {
     | SplitClusterParams
     | ChangeClusterParams
     | RefineModelParams
-    | ResetModelParams;
+    | ResetModelParams
+    | RecomputeClusterTitleAndDescriptionParams;
 };
