@@ -28,7 +28,7 @@ function MapTooltip({ data }: MapTooltipProps) {
           zIndex: 9999,
         }}
       >
-        <Card>
+        <Card elevation={8}>
           <CardContent>
             {sdocData.data ? (
               <Typography>
