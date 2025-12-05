@@ -4,6 +4,7 @@ import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from 
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import CodeTable from "../Code/CodeTable.tsx";
@@ -56,10 +57,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   }, [selectedCodeId, annotationIds, updateAnnotationBulkMutation, handleClose, onEdit]);
 
   // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
@@ -67,7 +65,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
         title={`Changing the code of ${annotationIds.length} annotation${annotationIds.length > 1 && "s"}`}
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <CodeTable
         projectId={projectId}

@@ -9,6 +9,7 @@ import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import FormText from "../../../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../../../components/FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../../../hooks/useDialogMaximize.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../../store/store.ts";
 
@@ -65,11 +66,8 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
     console.error(error);
   };
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <>
@@ -103,7 +101,7 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
           title="Create new cluster"
           onClose={handleClose}
           isMaximized={isMaximized}
-          onToggleMaximize={handleToggleMaximize}
+          onToggleMaximize={toggleMaximize}
         />
         <DialogContent>
           <Stack spacing={2} pt={1}>

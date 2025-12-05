@@ -1,6 +1,7 @@
 import { Box, Dialog, Stack } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
@@ -18,11 +19,8 @@ export default function DocumentUploadDialog() {
     dispatch(CRUDDialogActions.closeDocumentUpload());
   }, [dispatch]);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const toggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>

@@ -1,6 +1,7 @@
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { TaskType } from "../../api/openapi/models/TaskType.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
@@ -95,11 +96,8 @@ function LLMDialog() {
     dispatch(CRUDDialogActions.closeLLMDialog());
   }, [dispatch]);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // rendering
   const dialogTitle = `LLM Assistant${method ? ` - ${title[method]}` : ""}`;
@@ -119,7 +117,7 @@ function LLMDialog() {
         title={dialogTitle}
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <Stepper activeStep={step} sx={{ p: 2 }}>
         {stepLabels}

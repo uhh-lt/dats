@@ -1,18 +1,22 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { memo, useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus.ts";
+import { useDialog } from "../../hooks/useDialog.ts";
 import { ConfirmationEvent } from "./ConfirmationAPI.ts";
 
 function ConfirmationDialog() {
   // state
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog();
   const [confirmationEventData, setConfirmationEventData] = useState<ConfirmationEvent>();
 
   // listen to open-memo event and open the dialog
-  const openModal = useCallback((event: CustomEventInit<ConfirmationEvent>) => {
-    setOpen(true);
-    setConfirmationEventData(event.detail);
-  }, []);
+  const openModal = useCallback(
+    (event: CustomEventInit<ConfirmationEvent>) => {
+      dialog.open();
+      setConfirmationEventData(event.detail);
+    },
+    [dialog],
+  );
 
   useEffect(() => {
     eventBus.on("open-confirmation-dialog", openModal);
@@ -23,9 +27,9 @@ function ConfirmationDialog() {
 
   // ui events
   const handleClose = useCallback(() => {
-    setOpen(false);
+    dialog.close();
     setConfirmationEventData(undefined);
-  }, []);
+  }, [dialog]);
 
   const handleReject = useCallback(() => {
     handleClose();
@@ -38,7 +42,7 @@ function ConfirmationDialog() {
   }, [confirmationEventData, handleClose]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={dialog.isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       {confirmationEventData && (
         <>
           <DialogTitle id="alert-dialog-title">{"Warning!"}</DialogTitle>

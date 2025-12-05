@@ -12,10 +12,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import React, { useState } from "react";
+import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SentenceSearchActions } from "./sentenceSearchSlice.ts";
 
@@ -130,11 +131,8 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
     setOpen(false);
   };
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   if (thumbnail.isSuccess) {
     return (
@@ -157,7 +155,7 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
             title="Image Preview"
             onClose={handleClose}
             isMaximized={isMaximized}
-            onToggleMaximize={handleToggleMaximize}
+            onToggleMaximize={toggleMaximize}
           />
           <DialogContent>
             <img src={thumbnail.data} />

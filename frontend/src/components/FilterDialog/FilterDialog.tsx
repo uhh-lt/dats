@@ -2,7 +2,8 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Switch } from "@mui/material";
-import { ChangeEvent, memo, useCallback, useState } from "react";
+import { ChangeEvent, memo, useCallback } from "react";
+import { useDialog } from "../../hooks/useDialog.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import FilterRenderer from "./FilterRenderer/FilterRenderer.tsx";
 import FilterRendererSimple from "./FilterRenderer/FilterRendererSimple.tsx";
@@ -38,21 +39,21 @@ function FilterDialog({
   ...props
 }: FilterDialogProps & FilterRendererProps) {
   // local client state
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog();
   // global client state (redux)
   const numFilterExpressions = countFilterExpressions(filter);
   const dispatch = useAppDispatch();
 
   // actions
   const handleOpenEditDialog = useCallback(() => {
-    setOpen(true);
+    dialog.open();
     dispatch(props.filterActions.onStartFilterEdit({ filterId: filterName }));
-  }, [dispatch, filterName, props.filterActions]);
+  }, [dispatch, filterName, props.filterActions, dialog]);
 
   const handleApplyChanges = useCallback(() => {
-    setOpen(false);
+    dialog.close();
     dispatch(props.filterActions.onFinishFilterEdit());
-  }, [dispatch, props.filterActions]);
+  }, [dispatch, props.filterActions, dialog]);
 
   const handleRemoveAll = useCallback(() => {
     dispatch(props.filterActions.resetEditFilter());
@@ -66,8 +67,8 @@ function FilterDialog({
   );
 
   const handlePopoverClose = useCallback(() => {
-    setOpen(false);
-  }, []);
+    dialog.close();
+  }, [dialog]);
 
   return (
     <>
@@ -75,7 +76,7 @@ function FilterDialog({
         <b>Filter ({numFilterExpressions})</b>
       </Button>
       <Popover
-        open={open}
+        open={dialog.isOpen}
         onClose={handlePopoverClose}
         anchorEl={anchorEl}
         anchorOrigin={anchorOrigin}

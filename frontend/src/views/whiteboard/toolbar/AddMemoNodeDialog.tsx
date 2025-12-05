@@ -8,6 +8,8 @@ import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadata
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import MemoTable from "../../../components/Memo/MemoTable/MemoTable.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -22,44 +24,35 @@ export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddMemoNodeDialog({ projectId, buttonProps, ...props }: AddMemoNodeDialogProps) {
-  // local state
-  const [open, setOpen] = useState(false);
+  // dialog state
+  const dialog = useDialog();
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // actions
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
-
   return (
     <>
       <Tooltip title="Add memos" placement="right" arrow>
-        <Button onClick={handleOpen} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.MEMO)}
         </Button>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select memos to add to Whiteboard"
-              onClose={handleClose}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
-            <AddMemoNodeDialogContent onClose={handleClose} projectId={projectId} metadata={metadata.data} {...props} />
+            <AddMemoNodeDialogContent
+              onClose={dialog.close}
+              projectId={projectId}
+              metadata={metadata.data}
+              {...props}
+            />
           </>
         ) : metadata.isLoading ? (
           <CircularProgress />

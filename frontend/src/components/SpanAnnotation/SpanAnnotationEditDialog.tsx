@@ -5,6 +5,7 @@ import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/mate
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import CodeTable from "../Code/CodeTable.tsx";
@@ -56,11 +57,8 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
     );
   }, [annotationIds, handleClose, onEdit, selectedCodeId, updateAnnotationBulkMutation]);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
@@ -68,7 +66,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
         title={`Changing the code of ${annotationIds.length} annotation${annotationIds.length > 1 && "s"}`}
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <CodeTable
         projectId={projectId}

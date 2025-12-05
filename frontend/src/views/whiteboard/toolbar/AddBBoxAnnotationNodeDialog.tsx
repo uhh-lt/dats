@@ -7,6 +7,8 @@ import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -21,45 +23,31 @@ export interface AddBBoxAnnotationNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddBBoxAnnotationNodeDialogProps) {
-  // local state
-  const [open, setOpen] = useState(false);
+  // dialog state
+  const dialog = useDialog();
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // memoized handlers
-  const handleOpen = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-  }, []);
-
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
-
   return (
     <>
       <Tooltip title="Add bbox annotations" placement="right" arrow>
-        <Button onClick={handleOpen} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.BBOX_ANNOTATION)}
         </Button>
       </Tooltip>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select bbox annotations to add to Whiteboard"
-              onClose={handleClose}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
             <AddBBoxAnnotationNodeDialogContent
-              onClose={handleClose}
+              onClose={dialog.close}
               projectId={projectId}
               metadata={metadata.data}
               {...props}

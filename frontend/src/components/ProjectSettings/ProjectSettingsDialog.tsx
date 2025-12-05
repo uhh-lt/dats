@@ -6,6 +6,7 @@ import Tab from "@mui/material/Tab";
 import React, { memo, useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
@@ -54,11 +55,8 @@ function ProjectSettingsDialog() {
     }
   }, [project.data, deleteProject, navigate]);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog
@@ -79,7 +77,7 @@ function ProjectSettingsDialog() {
             title={(project.isSuccess ? project.data.title : "Project name") + " - Settings"}
             onClose={handleClose}
             isMaximized={isMaximized}
-            onToggleMaximize={handleToggleMaximize}
+            onToggleMaximize={toggleMaximize}
           />
 
           <Tabs value={tab} onChange={handleChangeTab} variant="scrollable" textColor="inherit">

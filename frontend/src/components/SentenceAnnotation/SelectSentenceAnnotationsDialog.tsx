@@ -5,6 +5,8 @@ import MetadataHooks from "../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../api/openapi/models/SentenceAnnotationRow.ts";
+import { useDialog } from "../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { FilterTableToolbarProps } from "../FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
@@ -20,44 +22,32 @@ interface SelectSentenceAnnotationsDialogProps {
 
 function SelectSentenceAnnotationsDialog({ projectId, buttonProps, ...props }: SelectSentenceAnnotationsDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog();
 
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // actions
-  const handleOpen = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-  }, []);
-
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <>
       <Tooltip title="Add sentence annotations" placement="right" arrow>
-        <Button onClick={handleOpen} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.SENTENCE_ANNOTATION)}
         </Button>
       </Tooltip>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select sentence annotations"
-              onClose={handleClose}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
             <SelectSentenceAnnotationsDialogContent
-              onClose={handleClose}
+              onClose={dialog.close}
               projectId={projectId}
               metadata={metadata.data}
               {...props}
