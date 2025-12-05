@@ -17,7 +17,6 @@ function DocumentClusterScatterPlot({ aspectId, height }: DocumentClusterScatter
 
   // global server state
   const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
-  console.log(vis.data);
 
   // computed
   const chartData = useMemo(() => {
