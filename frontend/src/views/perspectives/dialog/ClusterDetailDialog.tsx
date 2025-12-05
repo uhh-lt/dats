@@ -137,7 +137,7 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
                     </>
                   ) : (
                     <>
-                      <Tooltip title="Edit Details">
+                      <Tooltip title="Edit title and description">
                         <IconButton onClick={() => setIsEditing(true)}>
                           <Edit />
                         </IconButton>
