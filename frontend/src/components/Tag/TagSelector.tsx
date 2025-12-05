@@ -65,7 +65,7 @@ function TagSelector({ tagIds, onTagIdChange, title, multiple, ...props }: TagSe
       <Select
         labelId="tag-select-label"
         label={title}
-        value={multiple ? tagIds : tagIds ?? -1}
+        value={multiple ? tagIds : (tagIds ?? -1)}
         multiple={multiple}
         onChange={handleChange}
         disabled={!projectTags.isSuccess}
