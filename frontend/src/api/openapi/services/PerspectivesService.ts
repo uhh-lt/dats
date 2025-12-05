@@ -9,6 +9,7 @@ import type { AspectUpdate } from "../models/AspectUpdate";
 import type { Body_perspectives_visualize_documents } from "../models/Body_perspectives_visualize_documents";
 import type { ChangeClusterParams } from "../models/ChangeClusterParams";
 import type { ClusterRead } from "../models/ClusterRead";
+import type { ClusterUpdate } from "../models/ClusterUpdate";
 import type { CreateClusterWithNameParams } from "../models/CreateClusterWithNameParams";
 import type { CreateClusterWithSdocsParams } from "../models/CreateClusterWithSdocsParams";
 import type { MergeClustersParams } from "../models/MergeClustersParams";
@@ -333,6 +334,31 @@ export class PerspectivesService {
         aspect_id: aspectId,
         sdoc_id: sdocId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Cluster's name and description.
+   * @returns ClusterRead Successful Response
+   * @throws ApiError
+   */
+  public static updateClusterDetails({
+    clusterId,
+    requestBody,
+  }: {
+    clusterId: number;
+    requestBody: ClusterUpdate;
+  }): CancelablePromise<ClusterRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/perspectives/cluster/{cluster_id}/details",
+      path: {
+        cluster_id: clusterId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

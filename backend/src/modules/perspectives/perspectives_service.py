@@ -912,15 +912,17 @@ class PerspectivesService:
         )
 
         # 2. Generate cluster name and description with LLM
-        ids_to_generate_names_for = (
-            [
-                cid
-                for cid in cluster_ids_to_update
-                if cid not in (skip_name_generation_ids or [])
-            ]
-            if skip_name_generation_ids
-            else cluster_ids_to_update
-        )
+
+        # determine which clusters to update: we skip user edited clusters and clusters that are in the skip list
+        ids_to_generate_names_for = []
+        cluster_id2is_user_edited = {c.id: c.is_user_edited for c in all_clusters}
+        skip_ids = set(skip_name_generation_ids or [])
+        for cid in cluster_ids_to_update:
+            if cid in skip_ids:
+                continue
+            if cluster_id2is_user_edited.get(cid, False):
+                continue
+            ids_to_generate_names_for.append(cid)
 
         cluster_name, cluster_description = (
             self.__generate_cluster_title_and_description(
@@ -1758,5 +1760,6 @@ class PerspectivesService:
             update_dto=ClusterUpdateIntern(
                 name=cluster_name[cluster.id],
                 description=cluster_description[cluster.id],
+                is_user_edited=False,
             ),
         )

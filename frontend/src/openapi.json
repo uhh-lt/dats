@@ -2990,6 +2990,36 @@
         }
       }
     },
+    "/perspectives/cluster/{cluster_id}/details": {
+      "patch": {
+        "tags": ["perspectives"],
+        "summary": "Updates the Cluster's name and description.",
+        "operationId": "update_cluster_details",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "cluster_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Cluster Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClusterUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClusterRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project": {
       "put": {
         "tags": ["project"],
@@ -8142,6 +8172,22 @@
           "top_docs"
         ],
         "title": "ClusterRead"
+      },
+      "ClusterUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "New name of the cluster"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "New description of the cluster"
+          }
+        },
+        "type": "object",
+        "title": "ClusterUpdate"
       },
       "CodeCreate": {
         "properties": {
