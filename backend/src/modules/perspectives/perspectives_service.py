@@ -849,6 +849,7 @@ class PerspectivesService:
         client: WeaviateClient,
         aspect_id: int,
         cluster_ids: list[int] | None,
+        skip_name_generation_ids: list[int] | None = None,
     ):
         """
         Extracts all topis of the given Aspect by:
@@ -911,9 +912,19 @@ class PerspectivesService:
         )
 
         # 2. Generate cluster name and description with LLM
+        ids_to_generate_names_for = (
+            [
+                cid
+                for cid in cluster_ids_to_update
+                if cid not in (skip_name_generation_ids or [])
+            ]
+            if skip_name_generation_ids
+            else cluster_ids_to_update
+        )
+
         cluster_name, cluster_description = (
             self.__generate_cluster_title_and_description(
-                top_words=top_words, cluster_ids=cluster_ids_to_update
+                top_words=top_words, cluster_ids=ids_to_generate_names_for
             )
         )
 
@@ -998,17 +1009,20 @@ class PerspectivesService:
         # ... store the clusters in the database
         update_dtos: list[ClusterUpdateIntern] = []
         for cluster_id in cluster_ids_to_update:
-            update_dtos.append(
-                ClusterUpdateIntern(
-                    name=cluster_name[cluster_id],
-                    description=cluster_description[cluster_id],
-                    top_words=top_words[cluster_id],
-                    top_word_scores=top_word_scores[cluster_id],
-                    top_docs=top_docs[cluster_id],
-                    x=cluster_coordinates[cluster_id][0],
-                    y=cluster_coordinates[cluster_id][1],
-                )
+            update_dto = ClusterUpdateIntern(
+                top_words=top_words[cluster_id],
+                top_word_scores=top_word_scores[cluster_id],
+                top_docs=top_docs[cluster_id],
+                x=cluster_coordinates[cluster_id][0],
+                y=cluster_coordinates[cluster_id][1],
             )
+            if cluster_id in cluster_name:
+                update_dto.name = cluster_name[cluster_id]
+
+            if cluster_id in cluster_description:
+                update_dto.description = cluster_description[cluster_id]
+
+            update_dtos.append(update_dto)
         crud_cluster.update_multi(
             db=db, ids=cluster_ids_to_update, update_dtos=update_dtos
         )
@@ -1200,6 +1214,7 @@ class PerspectivesService:
                     db=db,
                     aspect_id=aspect.id,
                     cluster_ids=list(modified_clusters),
+                    skip_name_generation_ids=[new_cluster.id],
                 )
 
             self._log_status_msg("Successfully created cluster with name&description!")
