@@ -6,6 +6,7 @@ import { RootState } from "../store/store.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { AspectRead } from "./openapi/models/AspectRead.ts";
+import { ClusterRead } from "./openapi/models/ClusterRead.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
 import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
@@ -219,6 +220,16 @@ const useGetClusterSimilarities = (aspectId: number) => {
 };
 
 // Clusters
+const useUpdateClusterDetails = () =>
+  useMutation({
+    mutationFn: PerspectivesService.updateClusterDetails,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, data.aspect_id] });
+    },
+    meta: {
+      successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
+    },
+  });
 
 const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: number | null | undefined) =>
   useQuery({
@@ -256,6 +267,7 @@ const PerspectivesHooks = {
   useGetClusterSimilarities,
   // cluster
   useGetClustersBySdocId,
+  useUpdateClusterDetails,
   // chat
   useRAGChat,
 };

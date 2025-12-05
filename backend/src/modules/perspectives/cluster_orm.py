@@ -15,6 +15,7 @@ class ClusterORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_user_edited: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     top_words: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)

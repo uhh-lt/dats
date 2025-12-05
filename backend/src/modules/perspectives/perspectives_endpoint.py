@@ -17,7 +17,11 @@ from modules.perspectives.aspect_dto import (
 )
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
 from modules.perspectives.cluster_crud import crud_cluster
-from modules.perspectives.cluster_dto import ClusterRead
+from modules.perspectives.cluster_dto import (
+    ClusterRead,
+    ClusterUpdate,
+    ClusterUpdateIntern,
+)
 from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
@@ -505,3 +509,30 @@ def get_clusters_for_sdoc(
         db=db, aspect_id=aspect_id, sdoc_id=sdoc_id
     )
     return [ClusterRead.model_validate(dc) for dc in document_clusters]
+
+
+@router.patch(
+    "/cluster/{cluster_id}/details",
+    response_model=ClusterRead,
+    summary="Updates the Cluster's name and description.",
+)
+def update_cluster_details(
+    *,
+    db: Session = Depends(get_db_session),
+    cluster_id: int,
+    cluster_update: ClusterUpdate,
+    authz_user: AuthzUser = Depends(),
+) -> ClusterRead:
+    cluster = crud_cluster.read(db=db, id=cluster_id)
+    authz_user.assert_in_same_project_as(Crud.ASPECT, cluster.aspect_id)
+
+    # Perform update
+    update_dto = ClusterUpdateIntern(
+        **cluster_update.model_dump(exclude_unset=True), is_user_edited=True
+    )
+    updated_cluster = crud_cluster.update(
+        db=db,
+        id=cluster_id,
+        update_dto=update_dto,
+    )
+    return ClusterRead.model_validate(updated_cluster)

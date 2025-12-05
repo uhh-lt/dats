@@ -30,7 +30,10 @@ class ClusterCreateIntern(BaseModel):
 
 # Properties for updating
 class ClusterUpdate(BaseModel, UpdateDTOBase):
-    pass
+    name: str | None = Field(default=None, description="New name of the cluster")
+    description: str | None = Field(
+        default=None, description="New description of the cluster"
+    )
 
 
 # Properties for internal update
@@ -38,9 +41,10 @@ class ClusterUpdateIntern(ClusterUpdate):
     parent_cluster_id: int | None = Field(
         default=None, description="Updated ID of the parent cluster"
     )
-    name: str | None = Field(default=None, description="New name of the cluster")
-    description: str | None = Field(
-        default=None, description="New description of the cluster"
+    # name and description are inherited from ClusterUpdate
+    is_user_edited: bool | None = Field(
+        default=None,
+        description="Whether the cluster name/description was manually edited",
     )
     x: float | None = Field(
         default=None, description="Updated X coordinate for visualization"
