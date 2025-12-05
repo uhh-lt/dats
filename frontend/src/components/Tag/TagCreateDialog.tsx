@@ -2,11 +2,12 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
 import { TagCreate } from "../../api/openapi/models/TagCreate.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
@@ -33,11 +34,8 @@ function TagCreateDialog() {
     dispatch(CRUDDialogActions.closeTagCreateDialog());
   }, [dispatch]);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // form
   const {
@@ -110,7 +108,7 @@ function TagCreateDialog() {
         title="Create a new tag"
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={3}>

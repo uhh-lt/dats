@@ -1,12 +1,13 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept.ts";
 import FormColorPicker from "../../../components/FormInputs/FormColorPicker.tsx";
 import FormText from "../../../components/FormInputs/FormText.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ConceptFilterEditor from "./ConceptFilterEditor.tsx";
 
@@ -46,11 +47,8 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
   };
   const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog
@@ -66,7 +64,7 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
         title="Edit concept"
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>

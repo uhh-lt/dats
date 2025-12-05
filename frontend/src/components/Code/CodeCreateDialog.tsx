@@ -2,11 +2,12 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
@@ -43,11 +44,8 @@ function CodeCreateDialog() {
     dispatch(CRUDDialogActions.closeCodeCreateDialog());
   }, [dispatch]);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // form
   const {
@@ -129,7 +127,7 @@ function CodeCreateDialog() {
         title="Create a new code"
         onClose={handleCloseCodeCreateDialog}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={3}>

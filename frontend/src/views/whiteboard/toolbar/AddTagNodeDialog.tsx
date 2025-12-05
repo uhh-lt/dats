@@ -5,6 +5,8 @@ import { XYPosition } from "reactflow";
 import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import TagTable from "../../../components/Tag/TagTable.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -18,32 +20,22 @@ export interface AddTagNodeDialogProps extends AddNodeDialogProps {
 
 function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const dialog = useDialog({
+    onClose: () => setRowSelectionModel({}),
+  });
 
-  const handleOpenDialogClick = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setRowSelectionModel({});
-  };
-
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const handleConfirmSelection = useCallback(
     (tags: TagRead[]) => {
       const addTagNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
         reactFlowService.addNodes(createTagNodes({ tags, position: position }));
       onClick(addTagNode);
-      handleClose();
+      dialog.close();
     },
-    [onClick],
+    [onClick, dialog],
   );
 
   // rendering
@@ -62,16 +54,16 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
   return (
     <>
       <Tooltip title="Add tags" placement="right" arrow>
-        <Button onClick={handleOpenDialogClick} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.TAG)}
         </Button>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select tags to add to Whiteboard"
-          onClose={handleClose}
+          onClose={dialog.close}
           isMaximized={isMaximized}
-          onToggleMaximize={handleToggleMaximize}
+          onToggleMaximize={toggleMaximize}
         />
         <TagTable
           projectId={projectId}

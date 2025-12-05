@@ -8,6 +8,8 @@ import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadata
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -22,43 +24,32 @@ export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
 
 function AddDocumentNodeDialog({ projectId, buttonProps, ...props }: AddDocumentNodeDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog();
 
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  const handleOpenDialogClick = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   // maximize
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <>
       <Tooltip title="Add document" placement="right" arrow>
-        <Button onClick={handleOpenDialogClick} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.DOCUMENT)}
         </Button>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select documents to add to Whiteboard"
-              onClose={handleClose}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
             <AddDocumentNodeDialogContent
-              onClose={handleClose}
+              onClose={dialog.close}
               projectId={projectId}
               metadata={metadata.data}
               {...props}

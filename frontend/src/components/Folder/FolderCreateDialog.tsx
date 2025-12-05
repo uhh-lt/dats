@@ -2,12 +2,13 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import FolderHooks from "../../api/FolderHooks.ts";
 import { FolderCreate } from "../../api/openapi/models/FolderCreate.ts";
 import { FolderType } from "../../api/openapi/models/FolderType.ts";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
 import FormMenu from "../FormInputs/FormMenu.tsx";
@@ -31,11 +32,8 @@ function FolderCreateDialog() {
     dispatch(CRUDDialogActions.closeFolderCreateDialog());
   }, [dispatch]);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // form
   const {
@@ -106,7 +104,7 @@ function FolderCreateDialog() {
         title="Create a new folder"
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={3}>

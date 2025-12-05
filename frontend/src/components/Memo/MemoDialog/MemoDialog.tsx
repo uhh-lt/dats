@@ -4,6 +4,8 @@ import eventBus from "../../../EventBus.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import DATSDialogHeader from "../../MUI/DATSDialogHeader.tsx";
 import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
 import { MemoEvent } from "./MemoDialogAPI.ts";
@@ -11,14 +13,17 @@ import MemoDialogContent from "./MemoDialogContent.tsx";
 
 function MemoDialog() {
   // state
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog();
   const [memoEventData, setMemoEventData] = useState<MemoEvent>();
 
   // listen to open-memo event and open the dialog
-  const openModal = useCallback((event: CustomEventInit<MemoEvent>) => {
-    setOpen(true);
-    setMemoEventData(event.detail);
-  }, []);
+  const openModal = useCallback(
+    (event: CustomEventInit<MemoEvent>) => {
+      dialog.open();
+      setMemoEventData(event.detail);
+    },
+    [dialog],
+  );
 
   useEffect(() => {
     eventBus.on("open-memo", openModal);
@@ -28,23 +33,20 @@ function MemoDialog() {
   }, [openModal]);
 
   const handleClose = useCallback(() => {
-    setOpen(false);
+    dialog.close();
     setMemoEventData(undefined);
-  }, []);
+  }, [dialog]);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={dialog.isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Memo"
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       {memoEventData?.memoId ? (
         <MemoDialogByID

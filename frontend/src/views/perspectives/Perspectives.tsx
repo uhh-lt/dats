@@ -2,6 +2,7 @@ import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography }
 import { ChangeEvent, useState } from "react";
 
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
+import { useDialog } from "../../hooks/useDialog.ts";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { useDebounce } from "../../utils/useDebounce.ts";
@@ -31,17 +32,11 @@ function Perspectives() {
     }) || [];
 
   // creation dialog
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const creationDialog = useDialog();
 
   return (
     <>
-      <PerspectiveCreationDialog open={open} onClose={handleClose} />
+      <PerspectiveCreationDialog open={creationDialog.isOpen} onClose={creationDialog.close} />
       <ContentContainerLayout>
         <Stack spacing={2} pb={2}>
           <Stack spacing={2} direction={"row"} alignItems="center" justifyContent="space-between">
@@ -53,7 +48,12 @@ function Perspectives() {
                 Create your custom document visualization!
               </Typography>
             </Box>
-            <Button onClick={handleOpen} variant="contained" color="primary" endIcon={getIconComponent(Icon.CREATE)}>
+            <Button
+              onClick={creationDialog.open}
+              variant="contained"
+              color="primary"
+              endIcon={getIconComponent(Icon.CREATE)}
+            >
               Create Perspective
             </Button>
           </Stack>

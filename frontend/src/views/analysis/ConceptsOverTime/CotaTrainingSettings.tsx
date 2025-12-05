@@ -1,13 +1,14 @@
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Divider, MenuItem, Stack } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
 import FormMenu from "../../../components/FormInputs/FormMenu.tsx";
 import FormNumber from "../../../components/FormInputs/FormNumber.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface CotaTrainingSettingsProps {
@@ -41,11 +42,8 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
   };
   const handleError: SubmitErrorHandler<COTATrainingSettings> = (data) => console.error(data);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog
@@ -61,7 +59,7 @@ function CotaTrainingSettings({ onUpdate, onCancel }: CotaTrainingSettingsProps)
         title="Advanced Training Settings"
         onClose={onCancel}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>

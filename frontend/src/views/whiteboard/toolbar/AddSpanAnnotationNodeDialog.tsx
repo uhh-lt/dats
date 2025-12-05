@@ -9,6 +9,8 @@ import { SpanColumns } from "../../../api/openapi/models/SpanColumns.ts";
 import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
 import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -23,45 +25,31 @@ interface AddSpanAnnotationNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddSpanAnnotationNodeDialog({ projectId, buttonProps, ...props }: AddSpanAnnotationNodeDialogProps) {
-  // local state
-  const [open, setOpen] = useState(false);
+  // dialog state
+  const dialog = useDialog();
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   // global server state
   const metadata = MetadataHooks.useGetProjectMetadataList();
 
-  // actions
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
-
   return (
     <>
       <Tooltip title="Add span annotations" placement="right" arrow>
-        <Button onClick={handleOpen} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.SPAN_ANNOTATION)}
         </Button>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select span annotations to add to Whiteboard"
-              onClose={handleClose}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
             <AddSpanAnnotationNodeDialogContent
-              onClose={handleClose}
+              onClose={dialog.close}
               projectId={projectId}
               metadata={metadata.data}
               {...props}

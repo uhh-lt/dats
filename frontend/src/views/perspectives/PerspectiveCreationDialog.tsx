@@ -29,6 +29,7 @@ import FormText from "../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
 import TagSelector from "../../components/Tag/TagSelector.tsx";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { RootState } from "../../store/store.ts";
 import DocTypeSelector from "../analysis/CodeFrequency/DocTypeSelector.tsx";
@@ -41,7 +42,6 @@ interface AspectTemplate {
 }
 
 /** Advanced pipeline parameters for expert users */
-
 const defaultAdvancedSettings: PipelineSettings = {
   umap_n_neighbors: 15,
   umap_n_components: 10,
@@ -126,8 +126,6 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
       return;
     }
 
-    // TODO: Send advanced settings to backend when API is ready
-    // Currently only sending the base aspect creation fields
     createAspectMutation.mutate(
       {
         requestBody: {
@@ -167,10 +165,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
   };
 
   // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog
@@ -186,7 +181,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
         title="Create Perspective"
         onClose={onClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={2}>

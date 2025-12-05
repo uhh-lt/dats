@@ -5,6 +5,8 @@ import { XYPosition } from "reactflow";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeTable from "../../../components/Code/CodeTable.tsx";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialog } from "../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
@@ -18,31 +20,20 @@ export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
 
 function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-
-  const onOpenDialogClick = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setRowSelectionModel({});
-  };
-
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  const dialog = useDialog({
+    onClose: () => setRowSelectionModel({}),
+  });
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const handleConfirmSelection = useCallback(
     (codes: CodeRead[]) => {
       const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
         reactFlowService.addNodes(createCodeNodes({ codes, position: position }));
       onClick(addNode);
-      handleClose();
+      dialog.close();
     },
-    [onClick],
+    [onClick, dialog],
   );
 
   // rendering
@@ -61,16 +52,16 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
   return (
     <>
       <Tooltip title="Add code" placement="right" arrow>
-        <Button onClick={onOpenDialogClick} {...buttonProps}>
+        <Button onClick={dialog.open} {...buttonProps}>
           {getIconComponent(Icon.CODE)}
         </Button>
       </Tooltip>
-      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog open={dialog.isOpen} onClose={dialog.close} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         <DATSDialogHeader
           title="Select codes to add to Whiteboard"
-          onClose={handleClose}
+          onClose={dialog.close}
           isMaximized={isMaximized}
-          onToggleMaximize={handleToggleMaximize}
+          onToggleMaximize={toggleMaximize}
         />
         <CodeTable
           projectId={projectId}

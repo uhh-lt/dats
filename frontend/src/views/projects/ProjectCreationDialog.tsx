@@ -2,7 +2,6 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
-import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
@@ -10,6 +9,7 @@ import { ProjectCreate } from "../../api/openapi/models/ProjectCreate.ts";
 import FormText from "../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 
 interface ProjectCreationDialogProps {
   open: boolean;
@@ -47,11 +47,8 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
     console.error(error);
   };
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog
@@ -67,7 +64,7 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
         title="Create new project"
         onClose={onClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <DialogContent>
         <Stack spacing={2} pt={1}>

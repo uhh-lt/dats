@@ -10,6 +10,8 @@ import { LogicalOperator } from "../../../../api/openapi/models/LogicalOperator.
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../../../api/openapi/models/SentenceAnnotationRow.ts";
+import { useDialog } from "../../../../hooks/useDialog.ts";
+import { useDialogMaximize } from "../../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
 import { FilterTableToolbarProps } from "../../../FilterTable/FilterTableToolbarProps.ts";
@@ -42,12 +44,12 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
   // dialog
   const dispatch = useAppDispatch();
   const metadata = MetadataHooks.useGetProjectMetadataList();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const dialog = useDialog();
   const [selectedCodeId, setSelectedCodeId] = useState<number | null>(null);
   const handleOpenDialog = useCallback(
     (codeId: number) => {
       setAnchorEl(null);
-      setIsDialogOpen(true);
+      dialog.open();
       setSelectedCodeId(codeId);
       dispatch(
         SEATFilterActions.setFilter({
@@ -67,17 +69,10 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
         }),
       );
     },
-    [dispatch],
+    [dispatch, dialog],
   );
 
-  const handleCloseDialog = useCallback(() => {
-    setIsDialogOpen(false);
-  }, []);
-
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const handleConfirmExampleSelection = useCallback(
     (annotationIds: number[]) => {
@@ -111,17 +106,17 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
           </MenuItem>
         ))}
       </Menu>
-      <Dialog onClose={handleCloseDialog} open={isDialogOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
+      <Dialog onClose={dialog.close} open={dialog.isOpen} maxWidth="lg" fullWidth fullScreen={isMaximized}>
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
               title="Select sentence annotation examples"
-              onClose={handleCloseDialog}
+              onClose={dialog.close}
               isMaximized={isMaximized}
-              onToggleMaximize={handleToggleMaximize}
+              onToggleMaximize={toggleMaximize}
             />
             <SelectSentenceAnnotationsDialogContent
-              onClose={handleCloseDialog}
+              onClose={dialog.close}
               projectId={projectId}
               metadata={metadata.data}
               onConfirmSelection={handleConfirmExampleSelection}

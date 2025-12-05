@@ -1,8 +1,9 @@
 import { Box, Dialog, DialogContent, Stack, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Markdown from "react-markdown";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import DATSDialogHeader from "../../../components/MUI/DATSDialogHeader.tsx";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import DocAspectTable from "../components/DocAspectTable.tsx";
@@ -30,11 +31,8 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
     return vis.data.clusters.find((t) => t.id === clusterId);
   }, [vis.data, clusterId]);
 
-  // maximize dialog
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog open={open && !!cluster} onClose={handleClose} maxWidth="lg" fullWidth fullScreen={isMaximized}>
@@ -42,7 +40,7 @@ function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
         title="Cluster Details"
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       {cluster && (
         <DialogContent>

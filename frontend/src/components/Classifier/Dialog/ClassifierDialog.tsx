@@ -1,7 +1,8 @@
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierTask } from "../../../api/openapi/models/ClassifierTask.ts";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../dialogSlice.ts";
 import DATSDialogHeader from "../../MUI/DATSDialogHeader.tsx";
@@ -72,11 +73,8 @@ function ClassifierDialog() {
     dispatch(CRUDDialogActions.closeClassifierDialog());
   }, [dispatch]);
 
-  // maximize feature
-  const [isMaximized, setIsMaximized] = useState(false);
-  const handleToggleMaximize = () => {
-    setIsMaximized((prev) => !prev);
-  };
+  // maximize
+  const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   const dialogTitle = `${model ? `${modelTitle[model]}` : ""} - ${task ? `${taskTitle[task]}` : ""}`;
   const stepLabels = useMemo(
@@ -94,7 +92,7 @@ function ClassifierDialog() {
         title={dialogTitle}
         onClose={handleClose}
         isMaximized={isMaximized}
-        onToggleMaximize={handleToggleMaximize}
+        onToggleMaximize={toggleMaximize}
       />
       <Stepper activeStep={step} sx={{ p: 2 }}>
         {stepLabels}
