@@ -36,7 +36,7 @@ const operator2HumanReadable: Record<FilterOperators, string> = {
   [DateOperator.DATE_GT]: ">",
   [DateOperator.DATE_LT]: "<",
   [DateOperator.DATE_GTE]: ">=",
-  [DateOperator.DATE_LTE]: "<+",
+  [DateOperator.DATE_LTE]: "<=",
   [BooleanOperator.BOOLEAN_EQUALS]: "is",
   [BooleanOperator.BOOLEAN_NOT_EQUALS]: "is not",
 };
