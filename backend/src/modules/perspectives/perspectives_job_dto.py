@@ -19,6 +19,9 @@ class PerspectivesJobType(str, Enum):
     REFINE_MODEL = "refine_model"
     RESET_MODEL = "reset_model"
     RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION = "recompute_cluster_title_and_description"
+    REVERT = "revert"
+    UNDO = "undo"
+    REDO = "redo"
 
 
 class CreateAspectParams(BaseModel):
@@ -116,6 +119,20 @@ class ResetModelParams(BaseModel):
     )
 
 
+class UndoParams(BaseModel):
+    perspectives_job_type: Literal[PerspectivesJobType.UNDO] = Field(
+        default=PerspectivesJobType.UNDO,
+        description="Type of the PerspectivesJob",
+    )
+
+
+class RedoParams(BaseModel):
+    perspectives_job_type: Literal[PerspectivesJobType.REDO] = Field(
+        default=PerspectivesJobType.REDO,
+        description="Type of the PerspectivesJob",
+    )
+
+
 class RecomputeClusterTitleAndDescriptionParams(BaseModel):
     perspectives_job_type: Literal[
         PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION
@@ -125,6 +142,16 @@ class RecomputeClusterTitleAndDescriptionParams(BaseModel):
     )
     cluster_id: int = Field(
         description="ID of the cluster to recompute title and description for."
+    )
+
+
+class RevertParams(BaseModel):
+    perspectives_job_type: Literal[PerspectivesJobType.REVERT] = Field(
+        default=PerspectivesJobType.REVERT,
+        description="Type of the PerspectivesJob",
+    )
+    history_id: int | None = Field(
+        description="ID of the history item to revert to. If None, reverts to initial state."
     )
 
 
@@ -139,6 +166,8 @@ PerspectivesJobParamsNoCreate = (
     | RefineModelParams
     | ResetModelParams
     | RecomputeClusterTitleAndDescriptionParams
+    | UndoParams
+    | RedoParams
 )
 
 PerspectivesJobParams = (
@@ -153,6 +182,8 @@ PerspectivesJobParams = (
     | RefineModelParams
     | ResetModelParams
     | RecomputeClusterTitleAndDescriptionParams
+    | UndoParams
+    | RedoParams
 )
 
 

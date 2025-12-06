@@ -26,6 +26,8 @@ from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.document_aspect_crud import crud_document_aspect
 from modules.perspectives.document_cluster_crud import crud_document_cluster
+from modules.perspectives.history_dto import HistoryRead
+from modules.perspectives.history_orm import PerspectiveHistoryORM
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
@@ -536,3 +538,28 @@ def update_cluster_details(
         update_dto=update_dto,
     )
     return ClusterRead.model_validate(updated_cluster)
+
+
+# --- START HISTORY --- #
+
+
+@router.get(
+    "/history/{aspect_id}",
+    response_model=list[HistoryRead],
+    summary="Returns the history of actions for the given Aspect.",
+)
+def get_history(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[HistoryRead]:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+
+    history = (
+        db.query(PerspectiveHistoryORM)
+        .filter(PerspectiveHistoryORM.aspect_id == aspect_id)
+        .order_by(PerspectiveHistoryORM.created_at.desc())
+        .all()
+    )
+    return [HistoryRead.model_validate(h) for h in history]

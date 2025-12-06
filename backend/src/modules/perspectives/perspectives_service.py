@@ -1,7 +1,7 @@
 import re
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import Callable
+from typing import Any, Callable
 
 import joblib
 import matplotlib.pyplot as plt
@@ -40,6 +40,8 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.history_dto import HistoryActionType
+from modules.perspectives.perspective_history_service import PerspectiveHistoryService
 from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,
     ChangeClusterParams,
@@ -75,6 +77,7 @@ class PerspectivesService:
         self.llm: LLMRepo = LLMRepo()
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
+        self.history_service = PerspectiveHistoryService(self.weaviate)
 
         self.prompt_embedder = PromptEmbedder(device="cuda:0")
 
@@ -128,6 +131,7 @@ class PerspectivesService:
                 "Retrieve Top Words",
                 "Compute Title and Description",
             ],
+            PerspectivesJobType.REVERT: ["Revert History"],
         }
         self.method_for_job_type: dict[
             PerspectivesJobType, Callable[[Session, int, PerspectivesJobParams], None]
@@ -143,6 +147,7 @@ class PerspectivesService:
             PerspectivesJobType.REFINE_MODEL: self.refine_cluster_model,
             PerspectivesJobType.RESET_MODEL: self.reset_cluster_model,
             PerspectivesJobType.RECOMPUTE_CLUSTER_TITLE_AND_DESCRIPTION: self.recompute_cluster_title_and_description,
+            PerspectivesJobType.REVERT: self.revert_to_history,
         }
 
     def handle_perspectives_job(self, db: Session, payload: PerspectivesJobInput):
@@ -164,6 +169,15 @@ class PerspectivesService:
 
     def _log_status_step(self, step: int):
         self.job.update(current_step=step)
+
+    def revert_to_history(
+        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+    ):
+        from modules.perspectives.perspectives_job_dto import RevertParams
+
+        assert isinstance(params, RevertParams), "RevertParams expected"
+
+        self.history_service.revert_to_history(db, aspect_id, params.history_id)
 
     def _modify_documents(self, db: Session, aspect_id: int):
         aspect = crud_aspect.read(db=db, id=aspect_id)
@@ -442,10 +456,7 @@ class PerspectivesService:
                 client=client,
                 project_id=aspect.project_id,
                 ids=[
-                    AspectObjectIdentifier(
-                        aspect_id=aspect.id,
-                        sdoc_id=da.sdoc_id,
-                    )
+                    AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
                     for da in doc_aspects
                 ],
                 embeddings=embeddings,
@@ -1104,7 +1115,11 @@ class PerspectivesService:
         pass
 
     def create_cluster_with_name(
-        self, db: Session, aspect_id: int, params: PerspectivesJobParams
+        self,
+        db: Session,
+        aspect_id: int,
+        params: PerspectivesJobParams,
+        forced_id: int | None = None,
     ):
         assert isinstance(
             params,
@@ -1158,6 +1173,10 @@ class PerspectivesService:
                     is_outlier=False,
                 ),
             )
+            # If forced_id was provided, we need to ensure the DB knows about it if auto-increment is on.
+            # But typically, if we provide ID, it just works.
+            db.flush()
+            # new_cluster_id = new_cluster.id
 
             # 2. Document assignment
             # - For all source documents in the aspect, decide whether to assign the new cluster or not. Track the changes/affected clusters!
@@ -1166,6 +1185,10 @@ class PerspectivesService:
             update_dtos: list[DocumentClusterUpdate] = []
             update_ids: list[tuple[int, int]] = []
             modified_clusters: set[int] = set()
+
+            # For history: capture previous assignments of modified docs
+            history_prev_assignments: list[dict[str, Any]] = []
+
             results = crud_aspect_embedding.search_near_vector_in_aspect(
                 client=client,
                 project_id=aspect.project_id,
@@ -1195,6 +1218,15 @@ class PerspectivesService:
                     modified_clusters.add(doc_cluster.cluster_id)
                     modified_clusters.add(new_cluster.id)
 
+                    history_prev_assignments.append(
+                        {
+                            "sdoc_id": doc_cluster.sdoc_id,
+                            "prev_cluster_id": doc_cluster.cluster_id,
+                            "prev_accepted": doc_cluster.is_accepted,
+                            "prev_similarity": doc_cluster.similarity,
+                        }
+                    )
+
             # - Store the new cluster assignments in the database
             if len(update_dtos) > 0:
                 crud_document_cluster.update_multi(
@@ -1220,6 +1252,36 @@ class PerspectivesService:
                 )
 
             self._log_status_msg("Successfully created cluster with name&description!")
+
+            # 4. Record History
+            if forced_id is None:
+                # Create:
+                # Undo: Restore assignments (as if cluster never existed), Delete Cluster.
+                # Redo: Restore Cluster, Restore New Assignments.
+
+                undo_snapshots = [
+                    self.history_service.snapshot_assignments(
+                        db, [x[0] for x in update_ids]
+                    ),
+                    self.history_service.snapshot_cluster_deletion(
+                        db, new_cluster.id, aspect_id, aspect.project_id
+                    ),
+                ]
+
+                redo_snapshots = [
+                    self.history_service.snapshot_cluster(db, new_cluster.id),
+                    self.history_service.snapshot_assignments(
+                        db, [x[0] for x in update_ids]
+                    ),
+                ]
+
+                self.history_service.record_history(
+                    db=db,
+                    aspect_id=aspect_id,
+                    action_type=HistoryActionType.CREATE_CLUSTER_WITH_NAME,
+                    undo_snapshots=undo_snapshots,
+                    redo_snapshots=redo_snapshots,
+                )
 
     def create_cluster_with_sdocs(
         self, db: Session, aspect_id: int, params: PerspectivesJobParams
@@ -1352,6 +1414,33 @@ class PerspectivesService:
             )
 
             # 1. Document Assignment
+            # Capture state before modification for History
+            doc_clusters_before = document_clusters
+            assignments_before = [
+                {
+                    "sdoc_id": dt.sdoc_id,
+                    "cluster_id": dt.cluster_id,  # This is the cluster being removed
+                    "is_accepted": dt.is_accepted,
+                    "similarity": dt.similarity,
+                }
+                for dt in doc_clusters_before
+            ]
+
+            # Capture cluster embedding
+            cluster_embedding_obj = crud_cluster_embedding.get_embeddings(
+                client=client,
+                project_id=aspect.project_id,
+                ids=[
+                    ClusterObjectIdentifier(aspect_id=aspect.id, cluster_id=cluster.id)
+                ],
+            )
+            cluster_embedding_vector = (
+                cluster_embedding_obj[0] if cluster_embedding_obj else None
+            )
+
+            # Capture Cluster Data
+            # This is done by `self.history_service.snapshot_cluster` now.
+
             # - Compute the similarities of the document embeddings to the remaining cluster embeddings
             self._log_status_step(0)
 
@@ -1418,6 +1507,84 @@ class PerspectivesService:
                 )
 
             self._log_status_msg("Successfully removed cluster!")
+
+            # Record History
+            # Undo: Restore Cluster, Restore Assignments
+            # Redo: Delete Cluster, Restore New Assignments (Implied by current state)
+
+            # NOTE: We need to snapshot BEFORE deletion to get the cluster data.
+            # But the cluster is already deleted in Step 2.
+            # `self.remove_cluster` does: 1. Reassign (update_multi), 2. Delete.
+            # We read cluster at Step 0. So we have `cluster` object.
+            # But `snapshot_cluster` reads from DB.
+            # If we call `snapshot_cluster` now, it will fail.
+            # We should have called it at start?
+            # Or we manually construct the snapshot from `cluster` object we have?
+            # `cluster` is an ORM object detached? It was read in step 0.
+            # Yes, `cluster = crud_cluster.read(...)`.
+
+            # IMPROVEMENT: We should just use the `cluster` object we have to build the snapshot manually
+            # OR refactor `snapshot_cluster` to accept an object.
+            # For now I'll manually build it since logic is moved.
+            # actually `PerspectiveHistoryService.snapshot_cluster` reads from DB.
+            # I can't use it here after deletion.
+
+            # However! The original code did `undo_data = { cluster_data: ... }`.
+            # I should pre-snapshot at start of method.
+            # But I can't change start of method easily with `multi_replace`.
+            # Wait, I CAN if I target the top.
+
+            # Let's fix this: I'll manually construct the snapshot dict here reusing the data I already have in variables
+            # (`cluster`, `cluster_embedding_vector`, `assignments_before`).
+            # This is cleaner than refactoring the whole method flow now.
+
+            undo_cluster_snapshot = {
+                "type": "CLUSTER_SNAPSHOT",
+                "cluster_data": {
+                    k: getattr(cluster, k)
+                    for k in [
+                        "id",
+                        "aspect_id",
+                        "parent_cluster_id",
+                        "level",
+                        "name",
+                        "description",
+                        "is_outlier",
+                        "x",
+                        "y",
+                        "top_words",
+                        "top_word_scores",
+                        "top_docs",
+                        "is_user_edited",
+                    ]
+                },
+                "cluster_embedding": cluster_embedding_vector,  # We have this!
+                "project_id": aspect.project_id,
+            }
+
+            # Redo: Delete Cluster, Assign to New (outliers/merged)
+            redo_snapshots = [
+                self.history_service.snapshot_cluster_deletion(
+                    db, cluster.id, aspect_id, aspect.project_id
+                ),
+                self.history_service.snapshot_assignments(
+                    db, [uid[0] for uid in update_ids]
+                ),
+                # Note: `update_dtos` has no sdoc_id?
+                # we zip `update_ids` and `update_dtos`.
+                # update_ids is list of (sdoc_id, old_cluster_id).
+            ]
+
+            self.history_service.record_history(
+                db=db,
+                aspect_id=aspect_id,
+                action_type=HistoryActionType.REMOVE_CLUSTER,
+                undo_snapshots=[
+                    undo_cluster_snapshot,
+                    {"type": "ASSIGNMENT_SNAPSHOT", "assignments": assignments_before},
+                ],
+                redo_snapshots=redo_snapshots,
+            )
 
     def merge_clusters(
         self, db: Session, aspect_id: int, params: PerspectivesJobParams
