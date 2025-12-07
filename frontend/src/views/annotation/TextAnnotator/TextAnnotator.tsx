@@ -3,7 +3,6 @@ import React, { MouseEvent, useRef, useState } from "react";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
 
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
@@ -14,9 +13,7 @@ import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
-import { ICode } from "../ICode.ts";
 import { AnnoActions, TagStyle } from "../annoSlice.ts";
-
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
 };
@@ -209,32 +206,32 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       },
     });
   };
-  const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
+  const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
     updateMutation.mutate({
       spanAnnotationToUpdate: annotation as SpanAnnotationRead,
       requestBody: {
-        code_id: code.id,
+        code_id: codeId,
       },
     });
   };
-  const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
+  const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
     if (!fakeAnnotation) return;
     createMutation.mutate(
       {
         ...fakeAnnotation,
-        code_id: code.id,
+        code_id: codeId,
       },
       {
         onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(code.id));
+            dispatch(AnnoActions.moveCodeToTop(codeId));
           }
         },
       },
     );
   };
-  const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, code: CodeRead) => {
+  const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, codeId: number) => {
     if ("id" in annotation && "begin_token" in annotation && "end_token" in annotation) {
       const fakeAnnotation: SpanAnnotationCreate = {
         begin: annotation.begin,
@@ -243,11 +240,11 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         end_token: annotation.end_token,
         span_text: annotation.text,
         sdoc_id: annotation.sdoc_id,
-        code_id: code.id,
+        code_id: codeId,
       };
       createMutation.mutate(fakeAnnotation, {
         onSuccess: () => {
-          dispatch(AnnoActions.moveCodeToTop(code.id));
+          dispatch(AnnoActions.moveCodeToTop(codeId));
         },
       });
     }
