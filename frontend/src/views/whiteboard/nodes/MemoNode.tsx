@@ -210,7 +210,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
 
   // global server state (react-query)
   const memo = MemoHooks.useGetMemo(props.data.memoId);
-  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
+  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type, memo.data?.attached_object_id);
 
   useEffect(() => {
     if (!memo.data || !attachedObject.data) return;

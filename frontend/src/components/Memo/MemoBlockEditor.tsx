@@ -22,7 +22,7 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
   // global client state
   const { user } = useAuth();
   const memo = MemoHooks.useGetMemo(memoId);
-  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
+  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type, memo.data?.attached_object_id);
 
   const isEditable = useMemo(() => user?.id === memo.data?.user_id, [user?.id, memo.data?.user_id]);
 
@@ -66,8 +66,8 @@ function MemoBlockEditor({ memoId, renderToolbar, onDelete, onStarred }: MemoBlo
       ) : memo.isError ? (
         <div>Error: {memo.error.message}</div>
       ) : attachedObject.isError ? (
-        <div>Error: {attachedObject.error.message}</div>
-      ) : memo.isSuccess && attachedObject.isSuccess ? (
+        <div>Error: {attachedObject.error?.message}</div>
+      ) : memo.isSuccess && attachedObject.isSuccess && attachedObject.data ? (
         <>
           <Stack direction="row" alignItems="center" justifyContent="space-between" p={0.5}>
             <Typography>

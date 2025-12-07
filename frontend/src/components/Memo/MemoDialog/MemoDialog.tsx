@@ -122,7 +122,7 @@ function MemoDialog2({
   // 1. memoId is set, attachedObjectId is set
   // 2. memoId is not set, attachedObjectId is set
   // 3. memoId is set, attachedObjectId is not set
-  const attachedObject = useGetMemosAttachedObject(attachedObjectType)(attachedObjectId);
+  const attachedObject = useGetMemosAttachedObject(attachedObjectType, attachedObjectId);
 
   return (
     <>
