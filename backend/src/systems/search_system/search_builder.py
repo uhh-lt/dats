@@ -33,6 +33,16 @@ T = TypeVar("T", bound="AbstractColumns")
 
 
 class SearchBuilder:
+    """
+    To debug a query, you should set a breakpoint in the `execute_query` method, e.g. after befor running the query with `query.all()`.
+    Then, inspect the `self.query` and `self.subquery` attributes to see the built SQLAlchemy queries.
+    You can convert them to raw SQL strings using the `str()` function, e.g.
+    ```python
+    str(query)
+    ```
+    This will give you the raw SQL that SQLAlchemy has generated, which you can then analyze or run directly against your database for debugging purposes.
+    """
+
     def __init__(self, db: Session, filter: Filter[T], sorts: list[Sort[T]]) -> None:
         self.db = db
         self.filter = filter
@@ -147,7 +157,7 @@ class SearchBuilder:
             self.subquery.add_column(
                 metadata_value_column.label(f"METADATA-{project_metadata_id}")
             )
-            .join(
+            .outerjoin(
                 metadata,
                 (SourceDocumentORM.id == metadata.source_document_id)
                 & (metadata.project_metadata_id == project_metadata_id),
