@@ -29,7 +29,7 @@ function MemoCardWithContent({
   onDeleteClick,
   onStarredClick,
 }: MemoCardSharedProps & { memo: MemoRead }) {
-  const attachedObject = useGetMemosAttachedObject(memo.attached_object_type)(memo.attached_object_id);
+  const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
 
   const handleClick = useCallback(() => {
     if (onClick) {
