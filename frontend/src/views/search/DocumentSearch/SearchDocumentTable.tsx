@@ -313,6 +313,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
 
     // if showFolders is true, we need to merge the sub_rows
     const hits: Record<number, HierarchicalElasticSearchHit> = {};
+    const sortedHitIds: number[] = [];
     data.pages.forEach((page) => {
       page.hits.forEach((hit) => {
         // do the merging here!
@@ -321,9 +322,14 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         } else {
           hits[hit.id] = JSON.parse(JSON.stringify(hit)); // deep clone to avoid mutating the original hit
         }
+
+        // keep track of the order
+        if (!sortedHitIds.includes(hit.id)) {
+          sortedHitIds.push(hit.id);
+        }
       });
     });
-    const flatData = Object.values(hits);
+    const flatData = sortedHitIds.map((id) => hits[id]);
     return {
       flatData,
       totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
