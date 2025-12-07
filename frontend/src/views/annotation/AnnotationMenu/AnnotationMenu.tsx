@@ -25,17 +25,16 @@ import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { Annotation, Annotations } from "../Annotation.ts";
-import { ICode } from "../ICode.ts";
 import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
 
 interface CodeSelectorProps {
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
-  onAdd?: (code: CodeRead, isNewCode: boolean) => void;
-  onEdit?: (annotationToEdit: Annotation, newCode: ICode) => void;
+  onAdd?: (codeId: number, isNewCode: boolean) => void;
+  onEdit?: (annotationToEdit: Annotation, codeId: number) => void;
   onDelete?: (annotationToDelete: Annotation) => void;
-  onDuplicate?: (annotationToDuplicate: Annotation, currentCode: CodeRead) => void;
+  onDuplicate?: (annotationToDuplicate: Annotation, codeId: number) => void;
 }
 
 export interface CodeSelectorHandle {
@@ -150,15 +149,14 @@ const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
     // submit the code selector (either we edited or created a new code)
     const submit = (code: CodeRead, isNewCode: boolean) => {
-      console.log("HI THIS IS TIM!", editingAnnotation);
       // when the user selected an annotation to edit, we were editing
       if (editingAnnotation !== undefined) {
-        if (onEdit) onEdit(editingAnnotation, code);
+        if (onEdit) onEdit(editingAnnotation, code.id);
         // otherwise, we opened this to add a new code
       } else if (duplicatingAnnotation !== undefined) {
-        if (onDuplicate) onDuplicate(duplicatingAnnotation, code);
+        if (onDuplicate) onDuplicate(duplicatingAnnotation, code.id);
       } else {
-        if (onAdd) onAdd(code, isNewCode);
+        if (onAdd) onAdd(code.id, isNewCode);
       }
       closeCodeSelector();
     };

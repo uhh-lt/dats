@@ -2,7 +2,6 @@ import { Box, BoxProps } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import CodeHooks from "../../../../api/CodeHooks.ts";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
@@ -10,7 +9,6 @@ import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.t
 import { AnnoActions } from "../../annoSlice.ts";
 import { Annotation } from "../../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../../AnnotationMenu/AnnotationMenu.tsx";
-import { ICode } from "../../ICode.ts";
 
 import SentenceAnnotationHooks from "../../../../api/SentenceAnnotationHooks.ts";
 import { useGetSentenceAnnotator } from "../useGetSentenceAnnotator.ts";
@@ -61,21 +59,21 @@ function SentenceAnnotationComparison({
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     deleteMutation.mutate(annotation as SentenceAnnotationRead);
   };
-  const handleCodeSelectorEditCode = (annotation: Annotation, code: ICode) => {
+  const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
     updateMutation.mutate({
       sentenceAnnoToUpdate: annotation as SentenceAnnotationRead,
       update: {
-        code_id: code.id,
+        code_id: codeId,
       },
     });
   };
-  const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
+  const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
     setSelectedSentences([]);
     setLastClickedIndex(null);
     createMutation.mutate(
       {
         requestBody: {
-          code_id: code.id,
+          code_id: codeId,
           sdoc_id: sdocData.id,
           sentence_id_start: selectedSentences[0],
           sentence_id_end: selectedSentences[selectedSentences.length - 1],
@@ -85,7 +83,7 @@ function SentenceAnnotationComparison({
         onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(code.id));
+            dispatch(AnnoActions.moveCodeToTop(codeId));
           }
         },
       },

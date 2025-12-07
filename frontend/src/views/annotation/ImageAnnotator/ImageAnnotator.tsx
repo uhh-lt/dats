@@ -10,7 +10,6 @@ import ConfirmationAPI from "../../../components/ConfirmationDialog/Confirmation
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
-import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
 
@@ -202,14 +201,14 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   };
 
   // code selector events
-  const onCodeSelectorAddCode = (code: ICode) => {
+  const onCodeSelectorAddCode = (codeId: number) => {
     const myRect = d3.select(rectRef.current);
     const x = parseInt(myRect.attr("x"));
     const y = parseInt(myRect.attr("y"));
     const width = parseInt(myRect.attr("width"));
     const height = parseInt(myRect.attr("height"));
     createMutation.mutate({
-      code_id: code.id,
+      code_id: codeId,
       sdoc_id: sdocData.id,
       x_min: x,
       x_max: x + width,
@@ -218,12 +217,12 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     });
   };
 
-  const onCodeSelectorEditCode = (_annotationToEdit: Annotation, code: ICode) => {
+  const onCodeSelectorEditCode = (_annotationToEdit: Annotation, codeId: number) => {
     if (selectedBbox) {
       updateMutation.mutate({
         bboxToUpdate: selectedBbox,
         requestBody: {
-          code_id: code.id,
+          code_id: codeId,
         },
       });
     } else {
