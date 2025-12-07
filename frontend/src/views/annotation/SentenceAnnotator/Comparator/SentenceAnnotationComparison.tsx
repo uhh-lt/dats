@@ -41,7 +41,7 @@ function SentenceAnnotationComparison({
   const annotatorRight = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: rightUserId });
 
   // selection
-  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
+  const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
   const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -85,7 +85,7 @@ function SentenceAnnotationComparison({
         onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(code));
+            dispatch(AnnoActions.moveCodeToTop(code.id));
           }
         },
       },
@@ -93,10 +93,10 @@ function SentenceAnnotationComparison({
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i clicked away because i like the annotation as is
-    if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
+    if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCodeId) {
       createMutation.mutate({
         requestBody: {
-          code_id: mostRecentCode.id,
+          code_id: mostRecentCodeId,
           sdoc_id: sdocData.id,
           sentence_id_start: selectedSentences[0],
           sentence_id_end: selectedSentences[selectedSentences.length - 1],
@@ -359,7 +359,7 @@ function SentenceAnnotationComparison({
                   sentenceId={sentId}
                   sentence={sentence}
                   isSelected={selectedSentences.includes(sentId)}
-                  selectedCode={mostRecentCode}
+                  selectedCodeId={mostRecentCodeId}
                   onSentenceMouseDown={handleSentenceMouseDown}
                   onSentenceMouseEnter={handleSentenceMouseEnter}
                   onAnnotationClick={handleAnnotationClick}

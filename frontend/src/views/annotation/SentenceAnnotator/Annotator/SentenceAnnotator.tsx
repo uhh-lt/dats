@@ -29,7 +29,7 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
   const annotator = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: visibleUserId });
 
   // selection
-  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
+  const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
   const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -72,7 +72,7 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
         onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(code));
+            dispatch(AnnoActions.moveCodeToTop(code.id));
           }
         },
       },
@@ -80,10 +80,10 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i clicked away because i like the annotation as is
-    if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCode) {
+    if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCodeId) {
       createMutation.mutate({
         requestBody: {
-          code_id: mostRecentCode.id,
+          code_id: mostRecentCodeId,
           sdoc_id: sdocData.id,
           sentence_id_start: selectedSentences[0],
           sentence_id_end: selectedSentences[selectedSentences.length - 1],
@@ -245,7 +245,7 @@ function SentenceAnnotator({ sdocData, virtualizerScrollElementRef, ...props }: 
                     sentenceAnnotations={annotator.annotatorResult!.sentence_annotations[item.index]}
                     sentence={sentence}
                     isSelected={selectedSentences.includes(item.index)}
-                    selectedCode={mostRecentCode}
+                    selectedCodeId={mostRecentCodeId}
                     onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, item.index)}
                     onAnnotationMouseEnter={handleAnnotationMouseEnter}
                     onAnnotationMouseLeave={handleAnnotationMouseLeave}

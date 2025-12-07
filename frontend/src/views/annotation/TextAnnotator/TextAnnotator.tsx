@@ -32,7 +32,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
   // global client state (redux)
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
-  const mostRecentCode = useAppSelector((state) => state.annotations.mostRecentCode);
+  const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
@@ -108,7 +108,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
     // the selection is valid
 
-    if (!mostRecentCode && !selectedCodeId) {
+    if (!mostRecentCodeId && !selectedCodeId) {
       openSnackbar({
         severity: "warning",
         text: "Select a code in the Code Explorer (left) first!",
@@ -147,7 +147,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       .join(" ");
 
     const requestBody: SpanAnnotationCreate = {
-      code_id: mostRecentCode?.id || selectedCodeId || -1,
+      code_id: mostRecentCodeId || selectedCodeId || -1,
       sdoc_id: sdocData.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
@@ -228,7 +228,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         onSuccess: () => {
           if (!isNewCode) {
             // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(code));
+            dispatch(AnnoActions.moveCodeToTop(code.id));
           }
         },
       },
@@ -247,7 +247,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       };
       createMutation.mutate(fakeAnnotation, {
         onSuccess: () => {
-          dispatch(AnnoActions.moveCodeToTop(code));
+          dispatch(AnnoActions.moveCodeToTop(code.id));
         },
       });
     }
@@ -258,7 +258,14 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       // i clicked away because i like the annotation as is
       if (reason === "backdropClick") {
         // add the annotation as is
-        createMutation.mutate({ ...fakeAnnotation });
+        createMutation.mutate(
+          { ...fakeAnnotation },
+          {
+            onSuccess: () => {
+              dispatch(AnnoActions.moveCodeToTop(fakeAnnotation.code_id));
+            },
+          },
+        );
       }
       // i clicked escape because i want to cancel the annotation
       if (reason === "escapeKeyDown") {
