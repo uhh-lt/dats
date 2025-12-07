@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { ProjectActions } from "../../components/Project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
 import AnnotationMode from "./AnnotationMode.ts";
@@ -16,7 +15,7 @@ export interface AnnoState {
   selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.
   selectedCodeId: number | undefined; // the code selected in the code explorer, used to compute which codes are shown in the annotation menu.
   hoveredCodeId: number | undefined; // the code hovered in the code explorer, used to compute highlightings.
-  mostRecentCode: CodeRead | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
+  mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
   visibleUserId: number | undefined; // the user id of the user whose annotations are shown in the Annotator.
@@ -32,7 +31,7 @@ const initialState: AnnoState = {
   selectedAnnotationId: undefined,
   selectedCodeId: undefined,
   hoveredCodeId: undefined,
-  mostRecentCode: undefined,
+  mostRecentCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleUserId: undefined,
@@ -102,8 +101,8 @@ export const annoSlice = createSlice({
       }
       state.visibleUserId = action.payload;
     },
-    moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
-      state.mostRecentCode = action.payload;
+    moveCodeToTop: (state, action: PayloadAction<number>) => {
+      state.mostRecentCodeId = action.payload;
     },
     onSetAnnotatorTagStyle: (state, action: PayloadAction<TagStyle>) => {
       if (action.payload !== undefined && action.payload !== null) {
@@ -134,7 +133,7 @@ export const annoSlice = createSlice({
       state.selectedAnnotationId = initialState.selectedAnnotationId;
       state.selectedCodeId = initialState.selectedCodeId;
       state.hoveredCodeId = initialState.hoveredCodeId;
-      state.mostRecentCode = initialState.mostRecentCode;
+      state.mostRecentCodeId = initialState.mostRecentCodeId;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;
       state.visibleUserId = initialState.visibleUserId;

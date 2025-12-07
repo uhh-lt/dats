@@ -13,7 +13,7 @@ interface MarkProps {
 function Mark({ codeId, isStart, isEnd, height, top, groups }: MarkProps) {
   const code = CodeHooks.useGetCode(codeId);
 
-  if (code.isSuccess) {
+  if (code.data) {
     let color: string;
     if (code.data.is_system && code.data.name === "MENTION" && groups && groups.length === 1) {
       // coreference annotation

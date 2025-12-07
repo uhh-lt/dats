@@ -1,14 +1,13 @@
 import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { useMemo } from "react";
 import { CodeMap } from "../../../../api/CodeHooks.ts";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import ColorUtils from "../../../../utils/ColorUtils.ts";
 
 interface DocumentSentenceProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCode: CodeRead | undefined;
+  selectedCodeId: number | undefined;
   selectedSentAnnoId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
@@ -28,7 +27,7 @@ interface DocumentSentenceProps {
 function DocumentSentence({
   sentenceId,
   isSelected,
-  selectedCode,
+  selectedCodeId,
   selectedSentAnnoId,
   hoveredSentAnnoId,
   hoveredCodeId,
@@ -59,8 +58,8 @@ function DocumentSentence({
   const sentAnnoCodeIds = useMemo(() => sentenceAnnotations.map((anno) => anno.code_id), [sentenceAnnotations]);
 
   const highlightedColor = useMemo(() => {
-    if (isSelected) {
-      return selectedCode?.color || "rgb(255, 0, 0)";
+    if (isSelected && selectedCodeId) {
+      return codeMap[selectedCodeId]?.color || "rgb(255, 0, 0)";
     }
     if (hoveredSentAnnoId) {
       const sa = sentAnnoMap[hoveredSentAnnoId];
@@ -80,7 +79,7 @@ function DocumentSentence({
     sentAnnoCodeIds,
     selectedSentAnnoId,
     sentAnnoMap,
-    selectedCode?.color,
+    selectedCodeId,
     codeMap,
   ]);
 

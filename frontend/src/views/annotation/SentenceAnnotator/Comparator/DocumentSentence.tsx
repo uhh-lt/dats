@@ -5,7 +5,6 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box, IconButton, ListItemButton, Stack, Tooltip } from "@mui/material";
 import { useMemo } from "react";
 import { CodeMap } from "../../../../api/CodeHooks.ts";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import ColorUtils from "../../../../utils/ColorUtils.ts";
 import { UseGetSentenceAnnotator } from "../useGetSentenceAnnotator.ts";
@@ -15,7 +14,7 @@ import { SentAnnoMap, useComputeSentAnnoMap } from "./useComputeSentAnnoMap.ts";
 interface DocumentSentenceProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCode: CodeRead | undefined;
+  selectedCodeId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -40,7 +39,7 @@ interface DocumentSentenceProps {
 function DocumentSentence({
   sentenceId,
   isSelected,
-  selectedCode,
+  selectedCodeId,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -66,7 +65,7 @@ function DocumentSentence({
       <DocumentSentencePart
         sentenceId={sentenceId}
         isSelected={isAnnotationAllowedLeft && isSelected}
-        selectedCode={selectedCode}
+        selectedCodeId={selectedCodeId}
         hoveredSentAnnoId={hoveredSentAnnoId}
         hoveredCodeId={hoveredCodeId}
         sentence={sentence}
@@ -100,7 +99,7 @@ function DocumentSentence({
       <DocumentSentencePart
         sentenceId={sentenceId}
         isSelected={isAnnotationAllowedRight && isSelected}
-        selectedCode={selectedCode}
+        selectedCodeId={selectedCodeId}
         hoveredSentAnnoId={hoveredSentAnnoId}
         hoveredCodeId={hoveredCodeId}
         sentence={sentence}
@@ -121,7 +120,7 @@ function DocumentSentence({
 interface DocumentSentencePartProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCode: CodeRead | undefined;
+  selectedCodeId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -142,7 +141,7 @@ interface DocumentSentencePartProps {
 function DocumentSentencePart({
   sentenceId,
   isSelected,
-  selectedCode,
+  selectedCodeId,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -159,8 +158,8 @@ function DocumentSentencePart({
   const sentAnnoCodeIds = useMemo(() => Object.values(sentAnnoMap).map((anno) => anno.code_id), [sentAnnoMap]);
 
   const highlightedColor = useMemo(() => {
-    if (isSelected) {
-      return selectedCode?.color || "rgb(255, 0, 0)";
+    if (isSelected && selectedCodeId) {
+      return codeMap[selectedCodeId]?.color || "rgb(255, 0, 0)";
     }
     if (hoveredSentAnnoId) {
       const sa = sentAnnoMap[hoveredSentAnnoId];
@@ -169,7 +168,7 @@ function DocumentSentencePart({
     if (hoveredCodeId && sentAnnoCodeIds.includes(hoveredCodeId)) {
       return codeMap[hoveredCodeId]?.color;
     }
-  }, [isSelected, hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, selectedCode?.color, sentAnnoMap, codeMap]);
+  }, [isSelected, hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, selectedCodeId, sentAnnoMap, codeMap]);
 
   return (
     <>

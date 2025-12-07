@@ -11,7 +11,7 @@ interface CodeIndicatorProps {
 function CodeIndicator({ codeId, annotationId, isSelected, groups }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
 
-  if (code.isSuccess) {
+  if (code.data) {
     let text: string;
     let color: string;
     if (code.data.is_system && code.data.name === "MENTION" && groups && groups.length === 1) {

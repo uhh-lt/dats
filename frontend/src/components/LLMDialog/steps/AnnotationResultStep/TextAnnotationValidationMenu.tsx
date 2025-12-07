@@ -224,7 +224,7 @@ function AnnotationMenuListItem({ annotation, handleEdit, handleDelete }: Annota
     handleDelete(annotation);
   }, [annotation, handleDelete]);
 
-  if (code.isSuccess) {
+  if (code.data) {
     return (
       <ListItem>
         <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
