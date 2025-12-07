@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from sqlalchemy.orm import Session
 
 from common.doc_type import DocType
@@ -179,7 +177,7 @@ def find_sdocs(
 
     # 2. the sdoc folders
     folder_ids = [sdoc.folder_id for sdoc in sdoc_db_objs]
-    folders = crud_folder.read_by_ids(db=db, ids=list(OrderedDict.fromkeys(folder_ids)))
+    folders = crud_folder.read_by_ids(db=db, ids=folder_ids)
 
     # 3. the annotators
     annotators = crud_sdoc.read_annotators(db=db, sdoc_ids=sdoc_ids)
