@@ -26,6 +26,12 @@ import { ProjectActions } from "../../../components/Project/projectSlice.ts";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../components/tableSlice.ts";
 import { getValue } from "../metadataUtils.ts";
 
+export enum FolderSelection {
+  FOLDER = "FOLDER",
+  SDOC = "SDOC",
+  UNKNOWN = "UNKNOWN",
+}
+
 interface SearchState {
   // project state:
   selectedDocumentId: number | undefined; // the id of the selected document. Used to highlight the selected document in the table, and to show the document information (tags, metadata etc.).
@@ -35,6 +41,7 @@ interface SearchState {
   selectedFolderId: number; // the id of the selected folder. (the root folder is -1)
   showFolders: boolean; // whether the folders are shown in search table.
   scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
+  folderSelectionType: FolderSelection; // whether a folder or a document is selected
   // app state:
   expertSearchMode: boolean; // whether the expert search mode is enabled.
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
@@ -58,6 +65,7 @@ const initialState: FilterState & TableState & SearchState = {
   selectedFolderId: -1, // the root folder is -1
   showFolders: true,
   scrollPosition: 0,
+  folderSelectionType: FolderSelection.UNKNOWN,
   // app state:
   expertSearchMode: false,
   sortStatsByGlobal: false,
@@ -117,6 +125,10 @@ export const searchSlice = createSlice({
       for (const sdocId of action.payload) {
         delete state.rowSelectionModel[`${sdocId}`];
       }
+    },
+    // folder selection type
+    onFolderSelectionChange: (state, action: PayloadAction<FolderSelection>) => {
+      state.folderSelectionType = action.payload;
     },
     // tag explorer
     setExpandedTagIds: (state, action: PayloadAction<string[]>) => {
@@ -241,6 +253,7 @@ export const searchSlice = createSlice({
         state.scrollPosition = initialState.scrollPosition;
         state.expandedFolderIds = initialState.expandedFolderIds;
         state.selectedFolderId = initialState.selectedFolderId;
+        state.folderSelectionType = initialState.folderSelectionType;
         resetProjectTableState(state);
         resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "search" });
       })

@@ -15,7 +15,7 @@ import {
   MRT_Updater,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderMap } from "../../../api/FolderHooks.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
@@ -54,17 +54,11 @@ import { useTableFetchMoreOnScroll } from "../../../utils/useTableInfiniteScroll
 import { useInitSearchFilterSlice } from "../useInitSearchFilterSlice.ts";
 import OpenInTabsButton from "./OpenInTabsButton.tsx";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
-import { SearchActions } from "./searchSlice.ts";
+import { FolderSelection, SearchActions } from "./searchSlice.ts";
 
 // this has to match Search.tsx!
 const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
-
-enum FolderSelection {
-  FOLDER = "FOLDER",
-  SDOC = "SDOC",
-  UNKNOWN = "UNKNOWN",
-}
 
 const rowSelection = (fs: FolderSelection) => (row: MRT_Row<HierarchicalElasticSearchHit>) => {
   switch (fs) {
@@ -91,7 +85,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   const dispatch = useAppDispatch();
 
   // custom row selection state (it distinguishes between folders and source documents)
-  const [folderSelectionType, setFolderSelectionType] = useState<FolderSelection>(FolderSelection.UNKNOWN);
+  const folderSelectionType = useAppSelector((state) => state.search.folderSelectionType);
   const rowSelectionModel = useAppSelector((state) => state.search.rowSelectionModel);
   const setRowSelectionModel = useCallback(
     (updater: MRT_Updater<MRT_RowSelectionState>) => {
@@ -100,7 +94,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       // if it contains any numbers, it's SDOC, otherwise it's FOLDER
       if (Object.keys(rowSelectionModel).length === 0) {
         if (Object.keys(newState).some((key) => !isNaN(Number(key)))) {
-          setFolderSelectionType(FolderSelection.SDOC);
+          dispatch(SearchActions.onFolderSelectionChange(FolderSelection.SDOC));
           // remove all keys that are not numbers
           Object.keys(newState).forEach((key) => {
             if (isNaN(Number(key))) {
@@ -108,12 +102,12 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
             }
           });
         } else {
-          setFolderSelectionType(FolderSelection.FOLDER);
+          dispatch(SearchActions.onFolderSelectionChange(FolderSelection.FOLDER));
         }
       }
       // if new state is empty, reset the folder selection type
       if (Object.keys(newState).length === 0) {
-        setFolderSelectionType(FolderSelection.UNKNOWN);
+        dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
       }
       dispatch(SearchActions.onRowSelectionChange(newState));
     },
@@ -132,6 +126,10 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.search.columnVisibilityModel,
     SearchActions.onColumnVisibilityChange,
+  );
+  const [expandedModel, setExpandedModel] = useReduxConnector(
+    (state) => state.search.expandedModel,
+    SearchActions.onExpandedChange,
   );
   const [columnSizingModel, setColumnSizingModel] = useReduxConnector(
     (state) => state.search.columnSizingModel,
@@ -355,9 +353,11 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     columns: columns,
     getRowId: (row) => (row.is_folder ? `folder-${row.id}` : `${row.id}`),
     // sub rows / folders
-    enableExpanding: showFolders,
     getSubRows: showFolders ? (originalRow) => originalRow.sub_rows : undefined, //default, can customize
     rowCount: folderSelectionType === FolderSelection.FOLDER ? totalFetchedFolders : totalFetchedSdocs,
+    //expansion
+    enableExpanding: showFolders,
+    onExpandedChange: setExpandedModel,
     // state
     state: {
       globalFilter: searchQuery,
@@ -370,6 +370,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
       showAlertBanner: isError,
       showProgressBars: isFetching,
       showGlobalFilter: true,
+      expanded: expandedModel,
     },
     // search query
     autoResetAll: false,

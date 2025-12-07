@@ -2,6 +2,7 @@ import { Draft, PayloadAction, createSelector } from "@reduxjs/toolkit";
 import {
   MRT_ColumnSizingState,
   MRT_DensityState,
+  MRT_ExpandedState,
   MRT_RowSelectionState,
   MRT_SortingState,
   MRT_VisibilityState,
@@ -14,6 +15,7 @@ export interface TableState {
   columnVisibilityModel: MRT_VisibilityState;
   columnSizingModel: MRT_ColumnSizingState;
   gridDensityModel: MRT_DensityState;
+  expandedModel: MRT_ExpandedState;
   fetchSize: number;
 }
 
@@ -24,6 +26,7 @@ export const initialTableState: TableState = {
   sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
+  expandedModel: {},
   fetchSize: 20,
   // app state:
   gridDensityModel: "comfortable",
@@ -51,6 +54,10 @@ export const tableReducer = {
   // column visibility
   onColumnVisibilityChange: (state: Draft<TableState>, action: PayloadAction<MRT_VisibilityState>) => {
     state.columnVisibilityModel = action.payload;
+  },
+  // expanded
+  onExpandedChange: (state: Draft<TableState>, action: PayloadAction<MRT_ExpandedState>) => {
+    state.expandedModel = action.payload;
   },
   // column sizing
   onColumnSizingChange: (state: Draft<TableState>, action: PayloadAction<MRT_ColumnSizingState>) => {
