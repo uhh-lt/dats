@@ -6,9 +6,11 @@ import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnota
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { Annotation } from "../Annotation.ts";
 import AnnotationMenu, { CodeSelectorHandle } from "../AnnotationMenu/AnnotationMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
@@ -23,6 +25,8 @@ interface TextAnnotatorProps {
 }
 
 function TextAnnotator({ sdocData }: TextAnnotatorProps) {
+  const { user } = useAuth();
+
   // local state
   const spanMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
@@ -172,7 +176,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         code_id: requestBody.code_id,
         created: "",
         updated: "",
-        user_id: 0,
+        user_id: user?.id || SYSTEM_USER_ID,
         group_ids: [],
         memo_ids: [],
       };
