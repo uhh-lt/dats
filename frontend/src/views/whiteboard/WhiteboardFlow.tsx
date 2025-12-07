@@ -481,7 +481,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             }}
           >
             <Panel position="top-left">
-              <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
+              <Paper elevation={1} sx={{ width: "fit-content" }}>
                 <Stack spacing={1} sx={{ p: 1 }}>
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <EditableTypography
@@ -503,7 +503,9 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   </Stack>
                 </Stack>
               </Paper>
-              <Paper elevation={1} sx={{ mb: 3, width: "fit-content" }}>
+            </Panel>
+            <Panel position="top-left" style={{ top: "64px" }}>
+              <Paper elevation={1} sx={{ width: "fit-content" }}>
                 <Stack>
                   <AddDocumentNodeDialog
                     projectId={projectId}
@@ -542,6 +544,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   />
                 </Stack>
               </Paper>
+            </Panel>
+            <Panel position="top-left" style={{ top: "360px" }}>
               <Paper elevation={1} sx={{ width: "fit-content" }}>
                 <Stack>
                   <AddNoteNodeButton
