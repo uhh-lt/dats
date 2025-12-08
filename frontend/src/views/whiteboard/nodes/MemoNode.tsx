@@ -54,6 +54,7 @@ import {
   isMemoTagEdge,
 } from "../whiteboardUtils.ts";
 import BaseCardNode from "./BaseCardNode.tsx";
+import Markdown from "react-markdown";
 
 const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
@@ -285,7 +286,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
           <>
             <CardHeader title={<MemoRenderer memo={memo.data} showIcon showTitle />} />
             <CardContent>
-              <Typography>{memo.data.content}</Typography>
+              <Markdown>{memo.data.content}</Markdown>
             </CardContent>
           </>
         ) : memo.isError ? (
