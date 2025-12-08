@@ -1,7 +1,8 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
-import { Stack, StackProps } from "@mui/material";
+import { Box, Stack, StackProps } from "@mui/material";
 import { memo } from "react";
+import Markdown from "react-markdown";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
@@ -91,7 +92,11 @@ export function MemoRendererWithData({
     <Stack direction="row" alignItems="center" {...props}>
       {showIcon && getIconComponent(Icon.MEMO, { sx: { mr: 1 } })}
       {showTitle && memo.title}
-      {showContent && memo.content}
+      {showContent && (
+        <Box>
+          <Markdown>{memo.content}</Markdown>
+        </Box>
+      )}
       {showUser && <UserRenderer user={memo.user_id} />}
       {showStar && (memo.starred ? <StarIcon /> : <StarOutlineIcon />)}
       {showAttachedObject && (
