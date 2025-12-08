@@ -12,7 +12,7 @@ const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined
   const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
 
   return useQuery<SpanEntityStat[], Error>({
-    queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, sdocIds, codeId, sortStatsByGlobal],
+    queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, codeId, sdocIds, sortStatsByGlobal],
     queryFn: () =>
       StatisticsService.filterCodeStats({
         codeId,

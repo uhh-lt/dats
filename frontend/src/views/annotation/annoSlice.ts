@@ -126,6 +126,25 @@ export const annoSlice = createSlice({
       state.compareWithUserId = undefined;
       state.isCompareMode = false;
     },
+    onDeleteCode: (state, action: PayloadAction<number>) => {
+      // remove references to deleted code
+      if (state.selectedCodeId === action.payload) {
+        state.selectedCodeId = undefined;
+      }
+      if (state.mostRecentCodeId === action.payload) {
+        state.mostRecentCodeId = undefined;
+      }
+      if (state.hoveredCodeId === action.payload) {
+        state.hoveredCodeId = undefined;
+      }
+      if (state.expandedCodeIds.length > 0) {
+        state.expandedCodeIds = state.expandedCodeIds.filter((id) => parseInt(id, 10) !== action.payload);
+      }
+      if (state.hiddenCodeIds.length > 0) {
+        state.hiddenCodeIds = state.hiddenCodeIds.filter((id) => id !== action.payload);
+      }
+      state.selectedAnnotationId = undefined;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
