@@ -1,6 +1,5 @@
 import { Box, BoxProps } from "@mui/material";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import "./DocumentRenderer.css";
 
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
@@ -32,23 +31,6 @@ function DocumentRenderer({
   projectId,
   ...props
 }: DocumentRendererProps & BoxProps) {
-  // computed
-  const htmlPages = useMemo(() => {
-    let content = html;
-    if (content.startsWith("<div>")) {
-      content = content.substring(5);
-    }
-    if (content.endsWith("</div>")) {
-      content = content.substring(0, content.length - 6);
-    }
-    content = content.trim();
-    const regex = /<section pagenum="\d+">|<\/section><section pagenum="\d+">|<\/section>/gm;
-    let splitted = content.split(regex);
-    splitted = splitted.filter((s) => s.length > 0);
-    return splitted;
-  }, [html]);
-  const numPages = htmlPages.length;
-
   // jump to annotations
   const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
   useEffect(() => {
@@ -68,14 +50,6 @@ function DocumentRenderer({
       }, 500);
     }
   }, [selectedAnnotationId]);
-
-  // virtualization
-  const listRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
-  const virtualizer = useVirtualizer({
-    count: numPages,
-    getScrollElement: () => listRef.current,
-    estimateSize: () => 155,
-  });
 
   const basicProcessingInstructions = useCallback(
     (options: HTMLReactParserOptions) => (domNode: Element) => {
@@ -185,32 +159,8 @@ function DocumentRenderer({
   }, [annotationMap, annotationsPerToken, tokenData, basicProcessingInstructions]);
 
   return (
-    <Box ref={listRef} {...props}>
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {virtualizer.getVirtualItems().map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            ref={virtualizer.measureElement}
-            data-index={virtualItem.index}
-            style={{
-              width: "100%",
-              padding: 5,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            <DocumentPage html={htmlPages[virtualItem.index]} processingInstructions={processingInstructions} />
-          </div>
-        ))}
-      </div>
+    <Box {...props}>
+      <DocumentPage html={html} processingInstructions={processingInstructions} />
     </Box>
   );
 }
