@@ -10,7 +10,6 @@ from core.code.code_dto import CodeRead
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import MemoRead
 from core.project.project_crud import crud_project
 from core.tag.tag_dto import TagRead
 from modules.whiteboard.whiteboard_dto import (
@@ -105,7 +104,7 @@ class CRUDWhiteboard(
                         MemoNodeData.model_validate(node.data).memoId for node in nodes
                     ]
                     result.memos = [
-                        MemoRead.model_validate(m)
+                        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=m)
                         for m in crud_memo.read_by_ids(db=db, ids=memo_ids)
                     ]
                 case WhiteboardNodeType.SDOC:
