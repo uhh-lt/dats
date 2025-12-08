@@ -139,6 +139,9 @@ promptembedder:
     max_seq_length: 2048
     batch_size: 8
 
+chunking:
+  characters_per_page: 2000
+
 project_metadata:
   text_language:
     key: "language"
