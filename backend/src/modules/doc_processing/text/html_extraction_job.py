@@ -166,10 +166,20 @@ def extract_html_from_pdf(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]
 
 
 def extract_html_from_text(payload: ExtractHTMLJobInput) -> tuple[str, list[Path]]:
+    """
+    Convert a text file to HTML, preserving line breaks as paragraphs.
+
+    Each non-empty line becomes a <p> element to maintain the original formatting.
+    """
     logger.debug(f"Extracting content as HTML from TEXT {payload.filepath.name} ...")
 
     content = payload.filepath.read_text(encoding="utf-8")
-    html_content = f"<html><body><p>{content}</p></body></html>"
+
+    # Split by line breaks and wrap each non-empty line in <p> tags
+    lines = content.split("\n")
+    paragraphs = [f"<p>{line}</p>" for line in lines if line.strip()]
+
+    html_content = f"<html><body>{''.join(paragraphs)}</body></html>"
     return html_content, []
 
 
