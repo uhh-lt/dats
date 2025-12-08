@@ -1,5 +1,6 @@
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { contrastiveColors } from "../../../utils/colors.ts";
+import "./CodeIndicator.css";
 
 interface CodeIndicatorProps {
   codeId: number;
@@ -8,6 +9,14 @@ interface CodeIndicatorProps {
   groups?: number[];
 }
 
+/**
+ * Renders a stylish tag/badge indicator for a code annotation.
+ * Displays the code name with a colored pill design for better visual recognition.
+ * @param codeId - The ID of the code to display
+ * @param annotationId - The ID of the annotation this indicator belongs to
+ * @param isSelected - Whether this annotation is currently selected
+ * @param groups - Optional group IDs for coreference annotations
+ */
 function CodeIndicator({ codeId, annotationId, isSelected, groups }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
 
@@ -26,19 +35,21 @@ function CodeIndicator({ codeId, annotationId, isSelected, groups }: CodeIndicat
     return (
       <span
         id={"span-annotation-" + annotationId}
-        style={{
-          backgroundColor: color,
-          ...(isSelected && { boxShadow: "0 0 10px 5px " + color, borderRadius: "5px" }),
-        }}
+        className={`code-indicator ${isSelected ? "code-indicator--selected" : ""}`}
+        style={
+          {
+            "--indicator-color": color,
+          } as React.CSSProperties
+        }
       >
-        {text}
+        <span className="code-indicator__color-dot" />
+        <span className="code-indicator__text">{text}</span>
       </span>
     );
   }
   return (
-    <span id={"span-annotation-" + annotationId} style={{ backgroundColor: "lightgray" }}>
-      {" "}
-      ...
+    <span id={"span-annotation-" + annotationId} className="code-indicator code-indicator--loading">
+      <span className="code-indicator__text">...</span>
     </span>
   );
 }

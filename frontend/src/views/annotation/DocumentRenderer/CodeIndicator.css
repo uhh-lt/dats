@@ -1,0 +1,81 @@
+/* CodeIndicator - Modern NER Tag Styling */
+
+.code-indicator {
+  --indicator-color: #888;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--indicator-color) 15%, white);
+  border: 1.5px solid color-mix(in srgb, var(--indicator-color) 60%, transparent);
+  transform: translateY(-1.5px);
+  cursor: default;
+  vertical-align: middle;
+}
+
+.code-indicator--selected {
+  background: color-mix(in srgb, var(--indicator-color) 20%, white);
+  border-color: var(--indicator-color);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--indicator-color) 25%, transparent),
+    0 2px 8px color-mix(in srgb, var(--indicator-color) 30%, transparent);
+}
+
+.code-indicator--loading {
+  background: #eeeeee;
+  border-color: #ddd;
+}
+
+.code-indicator__color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--indicator-color);
+  flex-shrink: 0;
+}
+
+.code-indicator__text {
+  font-size: 11px;
+  font-weight: bold;
+  color: color-mix(in srgb, var(--indicator-color) 50%, #222);
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Adjustments for inline tag style */
+.spangroup.inline .code-indicator {
+  padding: 1px 6px 1px 5px;
+  border-radius: 10px;
+  gap: 3px;
+}
+
+.spangroup.inline .code-indicator__color-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.spangroup.inline .code-indicator__text {
+  font-size: 10px;
+}
+
+/* Adjustments for above tag style */
+.spangroup.above .code-indicator {
+  padding: 1px 4px 1px 4px;
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.spangroup.above:hover {
+  z-index: 100;
+}
+
+.spangroup.above .code-indicator__color-dot {
+  width: 5px;
+  height: 5px;
+}
+
+.spangroup.above .code-indicator__text {
+  font-size: 9px;
+}
