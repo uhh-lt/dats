@@ -1,6 +1,5 @@
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { contrastiveColors } from "../../../utils/colors.ts";
-import "./CodeIndicator.css";
 
 interface CodeIndicatorProps {
   codeId: number;

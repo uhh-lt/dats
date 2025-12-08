@@ -1,3 +1,121 @@
+.hovered .text {
+  font-weight: bold;
+}
+
+rect.hovered {
+  fill: #ffff0088;
+}
+
+.hoversentence:hover {
+  background-color: rgba(0, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.filterhighlight {
+  background-color: yellow;
+}
+
+.jumphighlight {
+  background-color: lightgreen;
+}
+
+/*
+TOKEN: Token.tsx
+A token (.tok) consists of:
+- A group (.spangroup) of CodeIndicator(s) (for NER tags) -> CodeIndicator.tsx
+- Text (.text): the actual token text
+- Mark (.mark): the background marks indicating span boundaries -> Mark.tsx
+*/
+
+.tok {
+  position: relative;
+  white-space: nowrap;
+}
+
+.text {
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.spangroup {
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+
+.spangroup.above {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  line-height: 12px;
+  white-space: nowrap;
+  user-select: auto;
+}
+
+.spangroup.above > span {
+  margin-left: 0;
+  margin-right: 4px;
+}
+
+.spangroup.above:hover {
+  z-index: 100;
+}
+
+/*
+CODE INDICATOR: CodeIndicator.tsx
+This is the styling of the code indicators that show NER tags above or inline with tokens.
+A code indicator (.code-indicator) can be selected (code-indicator--selected) and contains:
+- A color dot (.code-indicator__color-dot)
+- Text (.code-indicator__text)
+*/
+
+.code-indicator {
+  --indicator-color: #888;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--indicator-color) 15%, white);
+  border: 1px solid var(--indicator-color);
+  cursor: default;
+  display: inline-block;
+  line-height: 0.9;
+  margin-left: 4px;
+  padding-left: 14px;
+  padding-right: 4px;
+  position: relative;
+  transform: translateY(0px);
+}
+
+.code-indicator__color-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--indicator-color);
+  position: absolute;
+  left: 4px;
+  top: calc(50% - 3px);
+}
+
+.code-indicator__text {
+  font-size: 0.75rem;
+  font-weight: bold;
+  font-style: normal;
+  color: color-mix(in srgb, var(--indicator-color) 50%, #222);
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.code-indicator--selected {
+  background: color-mix(in srgb, var(--indicator-color) 20%, white);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--indicator-color) 25%, transparent),
+    0 2px 8px color-mix(in srgb, var(--indicator-color) 30%, transparent);
+}
+
+/*
+MARKER: Mark.tsx
+This is the styling of the "background" marks that indicate the span boundaries.
+*/
+
 .mark {
   position: absolute;
   width: 100%;
@@ -13,59 +131,4 @@
 .mark.end {
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
-}
-
-.tok {
-  position: relative;
-}
-
-.text {
-  white-space: nowrap;
-  position: relative;
-  z-index: 1;
-}
-
-.hovered .text {
-  font-weight: bold;
-}
-
-rect.hovered {
-  fill: #ffff0088;
-}
-
-.spangroup {
-  user-select: none;
-  white-space: nowrap;
-  position: relative;
-  z-index: 1;
-}
-
-.spangroup > span {
-  margin-left: 2px;
-}
-
-.spangroup.above {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  line-height: 12px;
-  white-space: nowrap;
-  user-select: auto;
-}
-
-.spangroup.above > span {
-  margin-left: 0;
-}
-
-.hoversentence:hover {
-  background-color: rgba(0, 255, 255, 0.5);
-  cursor: pointer;
-}
-
-.filterhighlight {
-  background-color: yellow;
-}
-
-.jumphighlight {
-  background-color: lightgreen;
 }
