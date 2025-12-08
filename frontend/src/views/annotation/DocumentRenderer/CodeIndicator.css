@@ -9,7 +9,7 @@
   border-radius: 12px;
   background: color-mix(in srgb, var(--indicator-color) 15%, white);
   border: 1.5px solid color-mix(in srgb, var(--indicator-color) 60%, transparent);
-  transform: translateY(-1.5px);
+  transform: translateY(-1px);
   cursor: default;
   vertical-align: middle;
 }
@@ -46,7 +46,7 @@
 
 /* Adjustments for inline tag style */
 .spangroup.inline .code-indicator {
-  padding: 1px 6px 1px 5px;
+  padding: 2px 6px 1px 5px;
   border-radius: 10px;
   gap: 3px;
 }
@@ -65,6 +65,7 @@
   padding: 1px 4px 1px 4px;
   border-radius: 8px;
   gap: 2px;
+  transform: none;
 }
 
 .spangroup.above:hover {

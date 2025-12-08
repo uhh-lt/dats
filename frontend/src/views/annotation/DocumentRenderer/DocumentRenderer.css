@@ -40,6 +40,10 @@ rect.hovered {
   z-index: 1;
 }
 
+.spangroup > span {
+  margin-left: 2px;
+}
+
 .spangroup.above {
   position: absolute;
   bottom: 100%;
@@ -49,12 +53,8 @@ rect.hovered {
   user-select: auto;
 }
 
-.spangroup > span {
-  margin-left: 2px;
-}
-
-.spangroup.inline > span {
-  font-size: calc(75%);
+.spangroup.above > span {
+  margin-left: 0;
 }
 
 .hoversentence:hover {
