@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import queryClient from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
+import { AnnoActions } from "../views/annotation/annoSlice.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { CodeService } from "./openapi/services/CodeService.ts";
@@ -54,8 +55,8 @@ const useGetEnabledCodes = () => {
 };
 
 // CODE MUTATIONS
-const useCreateCode = () =>
-  useMutation({
+const useCreateCode = () => {
+  return useMutation({
     mutationFn: CodeService.createNewCode,
     onSuccess: (data, variables) => {
       queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, variables.requestBody.project_id], (oldData) =>
@@ -66,6 +67,7 @@ const useCreateCode = () =>
       successMessage: (data: CodeRead) => `Created code ${data.name}`,
     },
   });
+};
 
 const useUpdateCode = () =>
   useMutation({
@@ -84,8 +86,9 @@ const useUpdateCode = () =>
     },
   });
 
-const useDeleteCode = () =>
-  useMutation({
+const useDeleteCode = () => {
+  const dispatch = useAppDispatch();
+  return useMutation({
     mutationFn: CodeService.deleteById,
     onSuccess: (data) => {
       queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, data.project_id], (oldData) => {
@@ -94,11 +97,20 @@ const useDeleteCode = () =>
         delete newData[data.id];
         return newData;
       });
+      // reset global server state: invalidate everything that could be affected by a code
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, data.id] });
+      // reset global client state
+      dispatch(AnnoActions.onDeleteCode(data.id));
     },
     meta: {
       successMessage: (data: CodeRead) => `Deleted code ${data.name}`,
     },
   });
+};
 
 const CodeHooks = {
   // codes
