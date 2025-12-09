@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.8.5" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.8.6" },
   "paths": {
     "/analysis/code_frequencies": {
       "post": {
