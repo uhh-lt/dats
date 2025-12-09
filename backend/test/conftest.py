@@ -336,7 +336,7 @@ def api_document(client: TestClient):
             files = []
             settings = {
                 "extract_images": True,
-                "pages_per_chunk": 10,
+                "pages_per_chunk": 100,  # we do not want chunking in tests
                 "keyword_number": 5,
                 "keyword_deduplication_threshold": 0.5,
                 "keyword_max_ngram_size": 2,
