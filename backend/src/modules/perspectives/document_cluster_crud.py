@@ -83,17 +83,10 @@ class CRUDDocumentCluster(
             .all()
         )
 
-    def read_by_aspect_and_cluster_id(
-        self, db: Session, *, aspect_id: int, cluster_id: int
+    def read_by_cluster(
+        self, db: Session, *, cluster_id: int
     ) -> list[DocumentClusterORM]:
-        return (
-            db.query(self.model)
-            .join(ClusterORM, ClusterORM.id == self.model.cluster_id)
-            .filter(
-                ClusterORM.aspect_id == aspect_id, self.model.cluster_id == cluster_id
-            )
-            .all()
-        )
+        return db.query(self.model).filter(self.model.cluster_id == cluster_id).all()
 
     ### UPDATE OPERATIONS ###
 

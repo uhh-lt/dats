@@ -29,18 +29,6 @@ class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]
             )
         return db_obj
 
-    def read_by_aspect_and_level(
-        self, db, *, aspect_id: int, level: int
-    ) -> list[ClusterORM]:
-        return (
-            db.query(self.model)
-            .filter(
-                self.model.aspect_id == aspect_id,
-                self.model.level == level,
-            )
-            .all()
-        )
-
     def read_by_aspect_and_sdoc(
         self, db, *, aspect_id: int, sdoc_id: int
     ) -> list[ClusterORM]:
