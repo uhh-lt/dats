@@ -1,3 +1,6 @@
+from typing import Callable
+
+from loguru import logger
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
@@ -28,35 +31,67 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from repos.filesystem_repo import FilesystemRepo
-from repos.llm_repo import LLMRepo
 from repos.vector.weaviate_models import EmbeddingSearchResult
-from repos.vector.weaviate_repo import WeaviateRepo
 
 
-class PerspectivesDBService:
-    def __init__(self):
-        self.llm: LLMRepo = LLMRepo()
-        self.weaviate: WeaviateRepo = WeaviateRepo()
-        self.fsr: FilesystemRepo = FilesystemRepo()
+class PerspectivesDBTransaction:
+    def __init__(self, db: Session, client: WeaviateClient):
+        self.db = db
+        self.client = client
+        self.undo_stack: list[tuple[Callable, tuple, dict]] = []
+        self._committed = False
+
+    def register_undo(self, func: Callable, *args, **kwargs):
+        """Registers an undo operation to be executed on rollback."""
+        self.undo_stack.append((func, args, kwargs))
+
+    def commit(self):
+        """Commits the SQL transaction and clears the undo stack."""
+        if self._committed:
+            logger.warning("Transaction already committed.")
+            return
+        try:
+            self.db.commit()
+            self._committed = True
+            self.undo_stack.clear()
+        except Exception as e:
+            self.db.rollback()
+            raise e
+
+    def rollback(self):
+        """Rolls back the SQL transaction and executes undo operations for external systems."""
+        if self._committed:
+            logger.warning("Attempted rollback after commit.")
+            return
+
+        # 1. Rollback SQL
+        self.db.rollback()
+        logger.info("Rolled back SQL transaction.")
+
+        # 2. Undo external changes (LIFO)
+        while self.undo_stack:
+            func, args, kwargs = self.undo_stack.pop()
+            try:
+                func(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"Failed to undo action {func.__name__}: {e}")
 
     ### SOURCE DOCUMENT OPERATIONS ###
-    def read_sdoc_by_ids(self, db: Session, ids: list[int]) -> list[SourceDocumentORM]:
+    def read_sdoc_by_ids(self, ids: list[int]) -> list[SourceDocumentORM]:
         sdocs = crud_sdoc.read_by_ids(
-            db=db,
+            db=self.db,
             ids=ids,
         )
         return sdocs
 
     def read_sdoc_data_by_doctype_and_tag(
         self,
-        db: Session,
         project_id: int,
         doctype: DocType,
         tag_id: int | None = None,
     ) -> list[SourceDocumentDataORM]:
         return crud_sdoc_data.read_by_doctype_and_tag(
-            db=db,
+            db=self.db,
             project_id=project_id,
             doctype=doctype,
             tag_id=tag_id,
@@ -66,23 +101,21 @@ class PerspectivesDBService:
 
     def read_aspect(
         self,
-        db: Session,
         id: int,
     ) -> AspectORM:
         aspect = crud_aspect.read(
-            db=db,
+            db=self.db,
             id=id,
         )
         return aspect
 
     def update_aspect(
         self,
-        db: Session,
         id: int,
         update_dto: AspectUpdateIntern,
     ) -> AspectORM:
         updated_aspect = crud_aspect.update(
-            db=db,
+            db=self.db,
             id=id,
             update_dto=update_dto,
         )
@@ -92,20 +125,19 @@ class PerspectivesDBService:
 
     def create_document_aspects(
         self,
-        db: Session,
         create_dtos: list[DocumentAspectCreate],
     ) -> list[DocumentAspectORM]:
         created_doument_aspects = crud_document_aspect.create_multi(
-            db=db,
+            db=self.db,
             create_dtos=create_dtos,
         )
         return created_doument_aspects
 
     def read_document_aspects_by_aspect_and_cluster(
-        self, db: Session, aspect_id: int, cluster_id: int
+        self, aspect_id: int, cluster_id: int
     ) -> list[DocumentAspectORM]:
         document_aspects = crud_document_aspect.read_by_aspect_and_cluster(
-            db=db,
+            db=self.db,
             aspect_id=aspect_id,
             cluster_id=cluster_id,
         )
@@ -113,12 +145,11 @@ class PerspectivesDBService:
 
     def read_document_aspect_embeddings(
         self,
-        client: WeaviateClient,
         project_id: int,
         aspect_object_identifiers: list[AspectObjectIdentifier],
     ) -> list[list[float]]:
         embeddings = crud_aspect_embedding.get_embeddings(
-            client=client,
+            client=self.client,
             project_id=project_id,
             ids=aspect_object_identifiers,
         )
@@ -126,12 +157,11 @@ class PerspectivesDBService:
 
     def update_document_aspects(
         self,
-        db: Session,
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentAspectUpdate],
     ) -> list[DocumentAspectORM]:
         updated_document_aspects = crud_document_aspect.update_multi(
-            db=db,
+            db=self.db,
             ids=ids,
             update_dtos=update_dtos,
         )
@@ -139,13 +169,12 @@ class PerspectivesDBService:
 
     def store_document_aspect_embeddings(
         self,
-        client: WeaviateClient,
         project_id: int,
         aspect_object_identifiers: list[AspectObjectIdentifier],
         embeddings: list[list[float]],
     ) -> None:
         crud_aspect_embedding.add_embedding_batch(
-            client=client,
+            client=self.client,
             project_id=project_id,
             ids=aspect_object_identifiers,
             embeddings=embeddings,
@@ -153,22 +182,20 @@ class PerspectivesDBService:
 
     ### CLUSTER OPERATIONS ###
 
-    def read_cluster(self, db: Session, id: int) -> ClusterORM:
-        cluster = crud_cluster.read(db=db, id=id)
+    def read_cluster(self, id: int) -> ClusterORM:
+        cluster = crud_cluster.read(db=self.db, id=id)
         return cluster
 
-    def read_or_create_outlier_cluster(
-        self, db, *, aspect_id: int, level: int
-    ) -> ClusterORM:
+    def read_or_create_outlier_cluster(self, aspect_id: int, level: int) -> ClusterORM:
         return crud_cluster.read_or_create_outlier_cluster(
-            db=db, aspect_id=aspect_id, level=level
+            db=self.db, aspect_id=aspect_id, level=level
         )
 
     def read_cluster_embeddings_by_aspect(
-        self, client: WeaviateClient, project_id: int, aspect_id: int
+        self, project_id: int, aspect_id: int
     ) -> list[EmbeddingSearchResult[ClusterObjectIdentifier]]:
         cluster_embeddings = crud_cluster_embedding.find_embeddings_by_aspect_id(
-            client=client,
+            client=self.client,
             project_id=project_id,
             aspect_id=aspect_id,
         )
@@ -176,12 +203,11 @@ class PerspectivesDBService:
 
     def create_clusters(
         self,
-        db: Session,
         create_dtos: list[ClusterCreateIntern],
         manual_commit: bool = False,
     ) -> list[ClusterORM]:
         created_clusters = crud_cluster.create_multi(
-            db=db,
+            db=self.db,
             create_dtos=create_dtos,
             manual_commit=manual_commit,
         )
@@ -189,13 +215,12 @@ class PerspectivesDBService:
 
     def update_clusters(
         self,
-        db: Session,
         ids: list[int],
         update_dtos: list[ClusterUpdateIntern],
         manual_commit: bool = False,
     ) -> list[ClusterORM]:
         updated_clusters = crud_cluster.update_multi(
-            db=db,
+            db=self.db,
             ids=ids,
             update_dtos=update_dtos,
             manual_commit=manual_commit,
@@ -204,25 +229,23 @@ class PerspectivesDBService:
 
     def delete_cluster(
         self,
-        db: Session,
-        client: WeaviateClient,
         cluster_id: int,
         manual_commit: bool = False,
     ) -> ClusterORM:
-        cluster = crud_cluster.read(db=db, id=cluster_id)
+        cluster = crud_cluster.read(db=self.db, id=cluster_id)
         project_id = cluster.aspect.project_id
         aspect_id = cluster.aspect_id
 
         # 1. Delete the cluster from the SQL database
         deleted_cluster = crud_cluster.delete(
-            db=db,
+            db=self.db,
             id=cluster_id,
             manual_commit=manual_commit,
         )
 
         # 2. Delete the cluster embedding from Weaviate
         crud_cluster_embedding.remove_embedding(
-            client=client,
+            client=self.client,
             project_id=project_id,
             id=ClusterObjectIdentifier(aspect_id=aspect_id, cluster_id=cluster_id),
         )
@@ -231,13 +254,12 @@ class PerspectivesDBService:
 
     def store_cluster_embeddings(
         self,
-        client: WeaviateClient,
         project_id: int,
         ids: list[ClusterObjectIdentifier],
         embeddings: list[list[float]],
     ) -> None:
         crud_cluster_embedding.add_embedding_batch(
-            client=client,
+            client=self.client,
             project_id=project_id,
             ids=ids,
             embeddings=embeddings,
@@ -247,44 +269,42 @@ class PerspectivesDBService:
 
     def create_document_clusters(
         self,
-        db: Session,
         create_dtos: list[DocumentClusterCreate],
         manual_commit: bool = False,
     ) -> list[DocumentClusterORM]:
         created_document_clusters = crud_document_cluster.create_multi(
-            db=db,
+            db=self.db,
             create_dtos=create_dtos,
             manual_commit=manual_commit,
         )
         return created_document_clusters
 
     def read_document_clusters_by_cluster(
-        self, db: Session, cluster_id: int
+        self, cluster_id: int
     ) -> list[DocumentClusterORM]:
         document_clusters = crud_document_cluster.read_by_cluster(
-            db=db,
+            db=self.db,
             cluster_id=cluster_id,
         )
         return document_clusters
 
     def read_document_clusters_by_aspect(
-        self, db: Session, aspect_id: int
+        self, aspect_id: int
     ) -> list[DocumentClusterORM]:
         document_clusters = crud_document_cluster.read_by_aspect_id(
-            db=db,
+            db=self.db,
             aspect_id=aspect_id,
         )
         return document_clusters
 
     def update_document_clusters(
         self,
-        db: Session,
         *,
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentClusterUpdate],
     ) -> list[DocumentClusterORM]:
         updated_document_clusters = crud_document_cluster.update_multi(
-            db=db,
+            db=self.db,
             ids=ids,
             update_dtos=update_dtos,
         )
