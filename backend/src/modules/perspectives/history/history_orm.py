@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from modules.perspectives.perspectives_history import PerspectiveDBActions
+from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
 from repos.db.orm_base import ORMBase
 
 

@@ -8,10 +8,8 @@ from modules.perspectives.cluster_orm import ClusterORM
 from modules.perspectives.document_aspect_orm import DocumentAspectORM
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
 from modules.perspectives.history.history_crud import crud_perspectives_history
-from modules.perspectives.history.history_dto import (
-    PerspectiveDBActions,
-    PerspectivesHistoryCreate,
-)
+from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
+from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
 from modules.perspectives.perspectives_job_dto import PerspectivesJobType
 

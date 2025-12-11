@@ -29,10 +29,8 @@ from modules.perspectives.document_cluster_dto import (
     DocumentClusterUpdate,
 )
 from modules.perspectives.document_cluster_orm import DocumentClusterORM
-from modules.perspectives.perspectives_history import (
-    PerspectiveDBActions,
-    PerspectivesHistory,
-)
+from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
+from modules.perspectives.perspectives_history import PerspectivesHistory
 from modules.perspectives.perspectives_job_dto import PerspectivesJobType
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_models import EmbeddingSearchResult
