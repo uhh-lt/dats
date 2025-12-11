@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from core.project.project_orm import ProjectORM
     from modules.perspectives.cluster_orm import ClusterORM
     from modules.perspectives.document_aspect_orm import DocumentAspectORM
+    from modules.perspectives.history.history_orm import PerspectiveHistoryORM
 
 
 class AspectORM(ORMBase):
@@ -52,6 +53,10 @@ class AspectORM(ORMBase):
     # one to many
     clusters: Mapped[list["ClusterORM"]] = relationship(
         "ClusterORM", back_populates="aspect", cascade="all, delete-orphan"
+    )
+
+    histories: Mapped[list["PerspectiveHistoryORM"]] = relationship(
+        "PerspectiveHistoryORM", back_populates="aspect", cascade="all, delete-orphan"
     )
 
     # many to many

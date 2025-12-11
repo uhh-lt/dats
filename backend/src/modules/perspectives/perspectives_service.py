@@ -70,6 +70,7 @@ class PerspectivesService:
         self.weaviate: WeaviateRepo = WeaviateRepo()
         self.fsr: FilesystemRepo = FilesystemRepo()
 
+        # TODO: use device from job?
         self.prompt_embedder = PromptEmbedder(device="cuda:0")
 
         self.perspectives_job_steps: dict[PerspectivesJobType, list[str]] = {
@@ -124,7 +125,8 @@ class PerspectivesService:
             ],
         }
         self.method_for_job_type: dict[
-            PerspectivesJobType, Callable[[Session, int, PerspectivesJobParams], None]
+            PerspectivesJobType,
+            Callable[[PerspectivesDBTransaction, PerspectivesJobParams], None],
         ] = {
             PerspectivesJobType.CREATE_ASPECT: self.create_aspect,
             PerspectivesJobType.ADD_MISSING_DOCS_TO_ASPECT: self.add_missing_docs_to_aspect,
@@ -147,10 +149,30 @@ class PerspectivesService:
             steps=self.perspectives_job_steps.get(payload.perspectives_job_type, []),
         )
 
-        # Execute the correct function
-        self.method_for_job_type[payload.perspectives_job_type](
-            db, payload.aspect_id, payload.parameters
-        )
+        with self.weaviate.weaviate_session() as client:
+            transaction = PerspectivesDBTransaction(
+                db=db,
+                client=client,
+                aspect_id=payload.aspect_id,
+                perspective_action=payload.perspectives_job_type,
+                # we do not write history for aspect creation, it cannot be undone or redone!
+                write_history=payload.perspectives_job_type
+                != PerspectivesJobType.CREATE_ASPECT,
+            )
+
+            try:
+                # Execute the correct function
+                self.method_for_job_type[payload.perspectives_job_type](
+                    transaction, payload.parameters
+                )
+
+                transaction.commit()
+            except Exception as e:
+                transaction.rollback()
+                self._log_status_msg(
+                    f"{payload.perspectives_job_type} failed with error: {str(e)}"
+                )
+                raise e
 
     def _log_status_msg(self, status_msg: str):
         self.job.update(status_message=status_msg)
@@ -421,7 +443,7 @@ class PerspectivesService:
             # Store embeddings in the vector DB
             transaction.store_document_aspect_embeddings(
                 project_id=aspect.project_id,
-                aspect_object_identifiers=[
+                ids=[
                     AspectObjectIdentifier(
                         aspect_id=aspect.id,
                         sdoc_id=da.sdoc_id,
@@ -1012,8 +1034,7 @@ class PerspectivesService:
 
     def create_aspect(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1021,51 +1042,40 @@ class PerspectivesService:
             CreateAspectParams,
         ), "CreateAspectParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 1. Modify the documents based on the prompt
+        self._log_status_step(0)
+        self._modify_documents(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+        )
 
-            try:
-                # 1. Modify the documents based on the prompt
-                self._log_status_step(0)
-                self._modify_documents(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                )
+        # 2. Embedd the documents based on the prompt
+        self._log_status_step(1)
+        self._embed_documents(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+        )
 
-                # 2. Embedd the documents based on the prompt
-                self._log_status_step(1)
-                self._embed_documents(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                )
+        # 3. Cluster the documents
+        self._log_status_step(2)
+        self._cluster_documents(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+            sdoc_ids=None,
+        )
 
-                # 3. Cluster the documents
-                self._log_status_step(2)
-                self._cluster_documents(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                    sdoc_ids=None,
-                )
-
-                # 4. Extract the clusters
-                self._log_status_step(3)
-                self._extract_clusters(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                    cluster_ids=None,
-                )
-
-                transaction.commit()
-                self._log_status_msg("Successfully created aspect!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Aspect creation failed with error: {str(e)}")
-                raise e
+        # 4. Extract the clusters
+        self._log_status_step(3)
+        self._extract_clusters(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+            cluster_ids=None,
+        )
+        self._log_status_msg("Successfully created aspect!")
 
     def add_missing_docs_to_aspect(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1077,8 +1087,7 @@ class PerspectivesService:
 
     def create_cluster_with_name(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1086,133 +1095,117 @@ class PerspectivesService:
             CreateClusterWithNameParams,
         ), "CreateClusterWithNameParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # Read the aspect
+        aspect = transaction.read_aspect(id=transaction.aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
 
-            try:
-                # Read the aspect
-                aspect = transaction.read_aspect(id=aspect_id)
-                aspect_dto = AspectRead.model_validate(aspect)
+        # Read the current document <-> cluster assignments
+        document_clusters = transaction.read_document_clusters_by_aspect(
+            aspect_id=aspect.id
+        )
+        doc2cluster: dict[int, DocumentClusterORM] = {
+            dt.sdoc_id: dt for dt in document_clusters
+        }
+        assert len(document_clusters) == len(doc2cluster), (
+            f"There are duplicate document-cluster assignments in the database for aspect {aspect.id}!"
+        )
 
-                # Read the current document <-> cluster assignments
-                document_clusters = transaction.read_document_clusters_by_aspect(
-                    aspect_id=aspect.id
-                )
-                doc2cluster: dict[int, DocumentClusterORM] = {
-                    dt.sdoc_id: dt for dt in document_clusters
-                }
-                assert len(document_clusters) == len(doc2cluster), (
-                    f"There are duplicate document-cluster assignments in the database for aspect {aspect.id}!"
-                )
+        # 1. Cluster creation
+        # - Embedd the new cluster
+        self._log_status_step(0)
+        self._log_status_msg(
+            f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
+        )
+        embedding_output = self.prompt_embedder.embed(
+            input=PromptEmbedderInput(
+                project_id=aspect.project_id,
+                model_name=aspect.embedding_model,
+                prompt=aspect.doc_embedding_prompt,
+                modality=aspect_dto.modality,
+                data=[f"{params.create_dto.name}\n{params.create_dto.description}"],
+            ),
+        )
+        assert len(embedding_output.embeddings) == 1, (
+            "Expected exactly one embedding output for the new cluster."
+        )
 
-                # 1. Cluster creation
-                # - Embedd the new cluster
-                self._log_status_step(0)
-                self._log_status_msg(
-                    f"Computing embeddings for the new cluster with model {aspect.embedding_model}..."
+        # - Create the new cluster in the database
+        new_clusters = transaction.create_clusters(
+            create_dtos=[
+                ClusterCreateIntern(
+                    aspect_id=params.create_dto.aspect_id,
+                    name=params.create_dto.name,
+                    description=params.create_dto.description,
+                    is_outlier=False,
                 )
-                embedding_output = self.prompt_embedder.embed(
-                    input=PromptEmbedderInput(
-                        project_id=aspect.project_id,
-                        model_name=aspect.embedding_model,
-                        prompt=aspect.doc_embedding_prompt,
-                        modality=aspect_dto.modality,
-                        data=[
-                            f"{params.create_dto.name}\n{params.create_dto.description}"
-                        ],
-                    ),
-                )
-                assert len(embedding_output.embeddings) == 1, (
-                    "Expected exactly one embedding output for the new cluster."
-                )
+            ],
+        )
+        new_cluster = new_clusters[0]
 
-                # - Create the new cluster in the database
-                new_clusters = transaction.create_clusters(
-                    create_dtos=[
-                        ClusterCreateIntern(
-                            aspect_id=params.create_dto.aspect_id,
-                            name=params.create_dto.name,
-                            description=params.create_dto.description,
-                            is_outlier=False,
-                        )
-                    ],
-                )
-                new_cluster = new_clusters[0]
+        # 2. Document assignment
+        # - For all source documents in the aspect, decide whether to assign the new cluster or not. Track the changes/affected clusters!
+        # - Do not reassign documents that are accepted
+        self._log_status_step(1)
+        update_dtos: list[DocumentClusterUpdate] = []
+        update_ids: list[tuple[int, int]] = []
+        modified_clusters: set[int] = set()
+        results = crud_aspect_embedding.search_near_vector_in_aspect(
+            client=transaction.client,
+            project_id=aspect.project_id,
+            aspect_id=aspect.id,
+            vector=embedding_output.embeddings[0],
+            k=len(document_clusters),
+        )
+        for result in results:
+            doc_cluster = doc2cluster.get(result.id.sdoc_id, None)
+            assert doc_cluster is not None, (
+                f"Document {result.id.sdoc_id} does not have a cluster assignment in aspect {aspect.id}."
+            )
+            if doc_cluster.is_accepted:
+                # skip documents that are already accepted
+                continue
 
-                # 2. Document assignment
-                # - For all source documents in the aspect, decide whether to assign the new cluster or not. Track the changes/affected clusters!
-                # - Do not reassign documents that are accepted
-                self._log_status_step(1)
-                update_dtos: list[DocumentClusterUpdate] = []
-                update_ids: list[tuple[int, int]] = []
-                modified_clusters: set[int] = set()
-                results = crud_aspect_embedding.search_near_vector_in_aspect(
-                    client=client,
-                    project_id=aspect.project_id,
-                    aspect_id=aspect.id,
-                    vector=embedding_output.embeddings[0],
-                    k=len(document_clusters),
-                )
-                for result in results:
-                    doc_cluster = doc2cluster.get(result.id.sdoc_id, None)
-                    assert doc_cluster is not None, (
-                        f"Document {result.id.sdoc_id} does not have a cluster assignment in aspect {aspect.id}."
+            # assign the new cluster if the similarity is larger than the current cluster's distance
+            if result.score > doc_cluster.similarity:
+                update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
+                update_dtos.append(
+                    DocumentClusterUpdate(
+                        cluster_id=new_cluster.id,
+                        similarity=result.score,
                     )
-                    if doc_cluster.is_accepted:
-                        # skip documents that are already accepted
-                        continue
-
-                    # assign the new cluster if the similarity is larger than the current cluster's distance
-                    if result.score > doc_cluster.similarity:
-                        update_ids.append((doc_cluster.sdoc_id, doc_cluster.cluster_id))
-                        update_dtos.append(
-                            DocumentClusterUpdate(
-                                cluster_id=new_cluster.id,
-                                similarity=result.score,
-                            )
-                        )
-                        # track changes
-                        modified_clusters.add(doc_cluster.cluster_id)
-                        modified_clusters.add(new_cluster.id)
-
-                # - Store the new cluster assignments in the database
-                if len(update_dtos) > 0:
-                    transaction.update_document_clusters(
-                        ids=update_ids, update_dtos=update_dtos
-                    )
-                    self._log_status_msg(
-                        f"Updated {len(update_dtos)} document-cluster assignments with the new cluster {new_cluster.id}."
-                    )
-
-                # 3. Cluster Extraction
-                # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
-                self._log_status_step(2)
-                if len(modified_clusters) > 0:
-                    self._log_status_msg(
-                        f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
-                    )
-                    self._extract_clusters(
-                        transaction=transaction,
-                        aspect_id=aspect.id,
-                        cluster_ids=list(modified_clusters),
-                        skip_name_generation_ids=[new_cluster.id],
-                    )
-
-                transaction.commit()
-                self._log_status_msg(
-                    "Successfully created cluster with name&description!"
                 )
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(
-                    f"Create Cluster With Name failed with error: {str(e)}"
-                )
-                raise e
+                # track changes
+                modified_clusters.add(doc_cluster.cluster_id)
+                modified_clusters.add(new_cluster.id)
+
+        # - Store the new cluster assignments in the database
+        if len(update_dtos) > 0:
+            transaction.update_document_clusters(
+                ids=update_ids, update_dtos=update_dtos
+            )
+            self._log_status_msg(
+                f"Updated {len(update_dtos)} document-cluster assignments with the new cluster {new_cluster.id}."
+            )
+
+        # 3. Cluster Extraction
+        # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
+        if len(modified_clusters) > 0:
+            self._log_status_msg(
+                f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
+            )
+            self._extract_clusters(
+                transaction=transaction,
+                aspect_id=aspect.id,
+                cluster_ids=list(modified_clusters),
+                skip_name_generation_ids=[new_cluster.id],
+            )
+
+        self._log_status_msg("Successfully created cluster with name&description!")
 
     def create_cluster_with_sdocs(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1220,90 +1213,73 @@ class PerspectivesService:
             CreateClusterWithSdocsParams,
         ), "CreateClusterWithSdocsParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # Read the current document <-> cluster assignments
+        document_clusters = transaction.read_document_clusters_by_aspect(
+            aspect_id=transaction.aspect_id
+        )
+        doc2cluster: dict[int, DocumentClusterORM] = {
+            dt.sdoc_id: dt for dt in document_clusters
+        }
+        assert len(document_clusters) == len(doc2cluster), (
+            f"There are duplicate document-cluster assignments in the database for aspect {transaction.aspect_id}!"
+        )
 
-            try:
-                # Read the current document <-> cluster assignments
-                document_clusters = transaction.read_document_clusters_by_aspect(
-                    aspect_id=aspect_id
+        # 1. Cluster creation
+        # - Create the new cluster in the database
+        self._log_status_step(0)
+        self._log_status_msg("Creating new empty cluster...")
+        new_clusters = transaction.create_clusters(
+            create_dtos=[
+                ClusterCreateIntern(
+                    name="New Cluster",
+                    aspect_id=transaction.aspect_id,
+                    is_outlier=False,
                 )
-                doc2cluster: dict[int, DocumentClusterORM] = {
-                    dt.sdoc_id: dt for dt in document_clusters
-                }
-                assert len(document_clusters) == len(doc2cluster), (
-                    f"There are duplicate document-cluster assignments in the database for aspect {aspect_id}!"
-                )
+            ],
+        )
+        new_cluster = new_clusters[0]
 
-                # 1. Cluster creation
-                # - Create the new cluster in the database
-                self._log_status_step(0)
-                self._log_status_msg("Creating new empty cluster...")
-                new_clusters = transaction.create_clusters(
-                    create_dtos=[
-                        ClusterCreateIntern(
-                            name="New Cluster",
-                            aspect_id=aspect_id,
-                            is_outlier=False,
-                        )
-                    ],
-                )
-                new_cluster = new_clusters[0]
+        # 2. Document assignment
+        # - Assign the new cluster to the given source documents
+        self._log_status_step(1)
+        self._log_status_msg(
+            f"Assigning new cluster {new_cluster.id} to {len(params.sdoc_ids)} source documents..."
+        )
+        # track the changes/affected clusters!
+        modified_clusters: set[int] = set(
+            [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
+        )
+        modified_clusters.add(new_cluster.id)
+        # assign the new cluster to the source documents
+        transaction.update_document_clusters(
+            ids=[
+                (sdoc_id, doc2cluster[sdoc_id].cluster_id)
+                for sdoc_id in params.sdoc_ids
+            ],
+            update_dtos=[
+                DocumentClusterUpdate(cluster_id=new_cluster.id, is_accepted=True)
+                for sdoc_id in params.sdoc_ids
+            ],
+        )
 
-                # 2. Document assignment
-                # - Assign the new cluster to the given source documents
-                self._log_status_step(1)
-                self._log_status_msg(
-                    f"Assigning new cluster {new_cluster.id} to {len(params.sdoc_ids)} source documents..."
-                )
-                # track the changes/affected clusters!
-                modified_clusters: set[int] = set(
-                    [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
-                )
-                modified_clusters.add(new_cluster.id)
-                # assign the new cluster to the source documents
-                transaction.update_document_clusters(
-                    ids=[
-                        (sdoc_id, doc2cluster[sdoc_id].cluster_id)
-                        for sdoc_id in params.sdoc_ids
-                    ],
-                    update_dtos=[
-                        DocumentClusterUpdate(
-                            cluster_id=new_cluster.id, is_accepted=True
-                        )
-                        for sdoc_id in params.sdoc_ids
-                    ],
-                )
+        # 3. Cluster Extraction
+        # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
+        if len(modified_clusters) > 0:
+            self._log_status_msg(
+                f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
+            )
+            self._extract_clusters(
+                transaction=transaction,
+                aspect_id=transaction.aspect_id,
+                cluster_ids=list(modified_clusters),
+            )
 
-                # 3. Cluster Extraction
-                # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
-                self._log_status_step(2)
-                if len(modified_clusters) > 0:
-                    with self.weaviate.weaviate_session() as client:
-                        self._log_status_msg(
-                            f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
-                        )
-                        self._extract_clusters(
-                            transaction=transaction,
-                            aspect_id=aspect_id,
-                            cluster_ids=list(modified_clusters),
-                        )
-
-                transaction.commit()
-                self._log_status_msg(
-                    "Successfully created cluster with source documents!"
-                )
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(
-                    f"Create Cluster With Source Documents failed with error: {str(e)}"
-                )
-                raise e
+        self._log_status_msg("Successfully created cluster with source documents!")
 
     def remove_cluster(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1311,127 +1287,121 @@ class PerspectivesService:
             RemoveClusterParams,
         ), "RemoveClusterParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 0. Read all relevant data
+        # - Read the cluster to remove
+        cluster = transaction.read_cluster(id=params.cluster_id)
 
-            try:
-                # 0. Read all relevant data
-                # - Read the cluster to remove
-                cluster = transaction.read_cluster(id=params.cluster_id)
+        # - Read the aspect
+        aspect = cluster.aspect
 
-                # - Read the aspect
-                aspect = cluster.aspect
+        # - Read the document aspect embeddings of all affected documents
+        doc_aspects = transaction.read_document_aspects_by_aspect_and_cluster(
+            aspect_id=cluster.aspect_id, cluster_id=cluster.id
+        )
+        embedding_ids = [
+            AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
+            for da in doc_aspects
+        ]
+        document_embeddings = np.array(
+            transaction.read_document_aspect_embeddings(
+                project_id=aspect.project_id,
+                aspect_object_identifiers=embedding_ids,
+            )
+        )
 
-                # - Read the document aspect embeddings of all affected documents
-                doc_aspects = transaction.read_document_aspects_by_aspect_and_cluster(
-                    aspect_id=cluster.aspect_id, cluster_id=cluster.id
+        # - Read all cluster embeddings, but exclude the cluster to remove
+        te_search_result = transaction.read_cluster_embeddings_by_aspect(
+            project_id=aspect.project_id,
+            aspect_id=cluster.aspect_id,
+        )
+        cluster_embeddings = np.array(
+            [te.embedding for te in te_search_result if te.id.cluster_id != cluster.id]
+        )
+        cluster_ids = [
+            te.id.cluster_id
+            for te in te_search_result
+            if te.id.cluster_id != cluster.id
+        ]
+
+        # - Read the current document-cluster assignments (which will be updated)
+        document_clusters = transaction.read_document_clusters_by_cluster(
+            cluster_id=cluster.id
+        )
+
+        assert len(embedding_ids) == len(document_clusters), (
+            "The number of document aspect embeddings does not match the number of document clusters."
+        )
+
+        # 1. Document Assignment
+        # - Compute the similarities of the document embeddings to the remaining cluster embeddings
+        self._log_status_step(0)
+
+        similarities = document_embeddings @ cluster_embeddings.T
+
+        # - For each document aspect, find the most similar cluster embedding and update the document cluster assignment
+        modified_clusters: set[int] = set()
+        sdoc_id2new_cluster_id: dict[int, int] = {}
+        sdoc_id2new_cluster_distance: dict[int, float] = {}
+        for da, similarity in zip(doc_aspects, similarities):
+            most_similar_cluster_index = np.argmax(similarity)
+            most_similar_cluster_id = cluster_ids[most_similar_cluster_index]
+
+            sdoc_id2new_cluster_id[da.sdoc_id] = most_similar_cluster_id
+            sdoc_id2new_cluster_distance[da.sdoc_id] = similarity[
+                most_similar_cluster_index
+            ].item()
+            modified_clusters.add(most_similar_cluster_id)
+
+        # - Update the document-cluster assignments in the database
+        update_dtos: list[DocumentClusterUpdate] = []
+        update_ids: list[tuple[int, int]] = []
+        for dt in document_clusters:
+            update_dtos.append(
+                DocumentClusterUpdate(
+                    cluster_id=sdoc_id2new_cluster_id[dt.sdoc_id],
+                    similarity=sdoc_id2new_cluster_distance[dt.sdoc_id],
+                    is_accepted=False,  # Reset acceptance status
                 )
-                embedding_ids = [
-                    AspectObjectIdentifier(aspect_id=da.aspect_id, sdoc_id=da.sdoc_id)
-                    for da in doc_aspects
-                ]
-                document_embeddings = np.array(
-                    transaction.read_document_aspect_embeddings(
-                        project_id=aspect.project_id,
-                        aspect_object_identifiers=embedding_ids,
-                    )
+            )
+            update_ids.append((dt.sdoc_id, dt.cluster_id))
+
+        if len(update_dtos) > 0:
+            transaction.update_document_clusters(
+                ids=update_ids, update_dtos=update_dtos
+            )
+            self._log_status_msg(
+                f"Updated {len(update_dtos)} document-cluster assignments to the most similar clusters."
+            )
+
+        # 2. Cluster Removal: Remove the cluster from the database
+        self._log_status_step(1)
+        transaction.delete_clusters(cluster_ids=[params.cluster_id])
+        transaction.remove_cluster_embeddings(
+            project_id=aspect.project_id,
+            ids=[
+                ClusterObjectIdentifier(
+                    aspect_id=aspect.id, cluster_id=params.cluster_id
                 )
+            ],
+        )
 
-                # - Read all cluster embeddings, but exclude the cluster to remove
-                te_search_result = transaction.read_cluster_embeddings_by_aspect(
-                    project_id=aspect.project_id,
-                    aspect_id=cluster.aspect_id,
-                )
-                cluster_embeddings = np.array(
-                    [
-                        te.embedding
-                        for te in te_search_result
-                        if te.id.cluster_id != cluster.id
-                    ]
-                )
-                cluster_ids = [
-                    te.id.cluster_id
-                    for te in te_search_result
-                    if te.id.cluster_id != cluster.id
-                ]
+        # 3. Cluster Extraction: Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
+        if len(modified_clusters) > 0:
+            self._log_status_msg(
+                f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
+            )
+            self._extract_clusters(
+                transaction=transaction,
+                aspect_id=aspect.id,
+                cluster_ids=list(modified_clusters),
+            )
 
-                # - Read the current document-cluster assignments (which will be updated)
-                document_clusters = transaction.read_document_clusters_by_cluster(
-                    cluster_id=cluster.id
-                )
-
-                assert len(embedding_ids) == len(document_clusters), (
-                    "The number of document aspect embeddings does not match the number of document clusters."
-                )
-
-                # 1. Document Assignment
-                # - Compute the similarities of the document embeddings to the remaining cluster embeddings
-                self._log_status_step(0)
-
-                similarities = document_embeddings @ cluster_embeddings.T
-
-                # - For each document aspect, find the most similar cluster embedding and update the document cluster assignment
-                modified_clusters: set[int] = set()
-                sdoc_id2new_cluster_id: dict[int, int] = {}
-                sdoc_id2new_cluster_distance: dict[int, float] = {}
-                for da, similarity in zip(doc_aspects, similarities):
-                    most_similar_cluster_index = np.argmax(similarity)
-                    most_similar_cluster_id = cluster_ids[most_similar_cluster_index]
-
-                    sdoc_id2new_cluster_id[da.sdoc_id] = most_similar_cluster_id
-                    sdoc_id2new_cluster_distance[da.sdoc_id] = similarity[
-                        most_similar_cluster_index
-                    ].item()
-                    modified_clusters.add(most_similar_cluster_id)
-
-                # - Update the document-cluster assignments in the database
-                update_dtos: list[DocumentClusterUpdate] = []
-                update_ids: list[tuple[int, int]] = []
-                for dt in document_clusters:
-                    update_dtos.append(
-                        DocumentClusterUpdate(
-                            cluster_id=sdoc_id2new_cluster_id[dt.sdoc_id],
-                            similarity=sdoc_id2new_cluster_distance[dt.sdoc_id],
-                            is_accepted=False,  # Reset acceptance status
-                        )
-                    )
-                    update_ids.append((dt.sdoc_id, dt.cluster_id))
-
-                if len(update_dtos) > 0:
-                    transaction.update_document_clusters(
-                        ids=update_ids, update_dtos=update_dtos
-                    )
-                    self._log_status_msg(
-                        f"Updated {len(update_dtos)} document-cluster assignments to the most similar clusters."
-                    )
-
-                # 2. Cluster Removal: Remove the cluster from the database
-                self._log_status_step(1)
-                transaction.delete_cluster(cluster_id=params.cluster_id)
-
-                # 3. Cluster Extraction: Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
-                self._log_status_step(2)
-                if len(modified_clusters) > 0:
-                    self._log_status_msg(
-                        f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
-                    )
-                    self._extract_clusters(
-                        transaction=transaction,
-                        aspect_id=aspect.id,
-                        cluster_ids=list(modified_clusters),
-                    )
-
-                transaction.commit()
-                self._log_status_msg("Successfully removed cluster!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Remove Cluster failed with error: {str(e)}")
-                raise e
+        self._log_status_msg("Successfully removed cluster!")
 
     def merge_clusters(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1439,56 +1409,52 @@ class PerspectivesService:
             MergeClustersParams,
         ), "MergeClustersParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 0. Read the clusters to merge
+        cluster1 = transaction.read_cluster(id=params.cluster_to_keep)
+        cluster2 = transaction.read_cluster(id=params.cluster_to_merge)
+        aspect = cluster1.aspect
+        assert cluster1.aspect_id == cluster2.aspect_id, (
+            "Cannot merge clusters from different aspects."
+        )
 
-            try:
-                # 0. Read the clusters to merge
-                cluster1 = transaction.read_cluster(id=params.cluster_to_keep)
-                cluster2 = transaction.read_cluster(id=params.cluster_to_merge)
-                aspect = cluster1.aspect
-                assert cluster1.aspect_id == cluster2.aspect_id, (
-                    "Cannot merge clusters from different aspects."
+        # 1. Merge the clusters (we update all document cluster assignments from cluster2 to cluster1)
+        self._log_status_step(0)
+        transaction.update_document_clusters(
+            ids=[(dt.sdoc_id, dt.cluster_id) for dt in cluster2.document_clusters],
+            update_dtos=[
+                DocumentClusterUpdate(cluster_id=cluster1.id)
+                for _ in cluster2.document_clusters
+            ],
+        )
+
+        # 2. Delete the merged cluster from the database
+        self._log_status_step(1)
+        transaction.delete_clusters(cluster_ids=[params.cluster_to_merge])
+        transaction.remove_cluster_embeddings(
+            project_id=aspect.project_id,
+            ids=[
+                ClusterObjectIdentifier(
+                    aspect_id=aspect.id, cluster_id=params.cluster_to_merge
                 )
+            ],
+        )
+        self._log_status_msg(
+            f"Merged clusters {params.cluster_to_keep} and {params.cluster_to_merge}."
+        )
 
-                # 1. Merge the clusters (we update all document cluster assignments from cluster2 to cluster1)
-                self._log_status_step(0)
-                transaction.update_document_clusters(
-                    ids=[
-                        (dt.sdoc_id, dt.cluster_id) for dt in cluster2.document_clusters
-                    ],
-                    update_dtos=[
-                        DocumentClusterUpdate(cluster_id=cluster1.id)
-                        for _ in cluster2.document_clusters
-                    ],
-                )
+        # 3. Extract the clusters for the remaining cluster (computing top words, top docs, embedding, etc)
+        self._log_status_step(2)
+        self._extract_clusters(
+            transaction=transaction,
+            aspect_id=aspect.id,
+            cluster_ids=[params.cluster_to_keep],
+        )
 
-                # 2. Delete the merged cluster from the database
-                self._log_status_step(1)
-                transaction.delete_cluster(cluster_id=params.cluster_to_merge)
-                self._log_status_msg(
-                    f"Merged clusters {params.cluster_to_keep} and {params.cluster_to_merge}."
-                )
-
-                # 3. Extract the clusters for the remaining cluster (computing top words, top docs, embedding, etc)
-                self._log_status_step(2)
-                self._extract_clusters(
-                    transaction=transaction,
-                    aspect_id=aspect.id,
-                    cluster_ids=[params.cluster_to_keep],
-                )
-
-                transaction.commit()
-                self._log_status_msg("Successfully merged clusters!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Merge clusters failed with error: {str(e)}")
-                raise e
+        self._log_status_msg("Successfully merged clusters!")
 
     def split_cluster(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1496,55 +1462,51 @@ class PerspectivesService:
             SplitClusterParams,
         ), "SplitClusterParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 0. Read the cluster to split
+        cluster = transaction.read_cluster(id=params.cluster_id)
+        aspect = cluster.aspect
 
-            try:
-                # 0. Read the cluster to split
-                cluster = transaction.read_cluster(id=params.cluster_id)
-                aspect = cluster.aspect
+        # 0. Find all sdoc_ids associated with the cluster
+        sdoc_ids = [dc.sdoc_id for dc in cluster.document_clusters]
+        assert len(sdoc_ids) > 0, "Cannot split a cluster without documents."
+        self._log_status_msg(
+            f"Found {len(sdoc_ids)} source documents associated with cluster {params.cluster_id}."
+        )
 
-                # 0. Find all sdoc_ids associated with the cluster
-                sdoc_ids = [dc.sdoc_id for dc in cluster.document_clusters]
-                assert len(sdoc_ids) > 0, "Cannot split a cluster without documents."
-                self._log_status_msg(
-                    f"Found {len(sdoc_ids)} source documents associated with cluster {params.cluster_id}."
+        # 1. Remove the cluster from the database
+        self._log_status_step(0)
+        transaction.delete_clusters(cluster_ids=[params.cluster_id])
+        transaction.remove_cluster_embeddings(
+            project_id=aspect.project_id,
+            ids=[
+                ClusterObjectIdentifier(
+                    aspect_id=aspect.id, cluster_id=params.cluster_id
                 )
+            ],
+        )
+        self._log_status_msg(f"Removed cluster {params.cluster_id} from the database.")
 
-                # 1. Remove the cluster from the database
-                self._log_status_step(0)
-                transaction.delete_cluster(cluster_id=params.cluster_id)
-                self._log_status_msg(
-                    f"Removed cluster {params.cluster_id} from the database."
-                )
+        # 2. Cluster the documents, creating new clusters and assigning them to the documents
+        self._log_status_step(1)
+        created_cluster_ids = self._cluster_documents(
+            transaction=transaction,
+            aspect_id=aspect.id,
+            sdoc_ids=sdoc_ids,  # TODO: could be optimized by providing the document aspects directly
+        )
 
-                # 2. Cluster the documents, creating new clusters and assigning them to the documents
-                self._log_status_step(1)
-                created_cluster_ids = self._cluster_documents(
-                    transaction=transaction,
-                    aspect_id=aspect.id,
-                    sdoc_ids=sdoc_ids,  # TODO: could be optimized by providing the document aspects directly
-                )
+        # 3. Extract the clusters
+        self._log_status_step(2)
+        self._extract_clusters(
+            transaction=transaction,
+            aspect_id=aspect.id,
+            cluster_ids=created_cluster_ids,
+        )
 
-                # 3. Extract the clusters
-                self._log_status_step(2)
-                self._extract_clusters(
-                    transaction=transaction,
-                    aspect_id=aspect.id,
-                    cluster_ids=created_cluster_ids,
-                )
-
-                transaction.commit()
-                self._log_status_msg("Successfully split cluster!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Split Cluster failed with error: {str(e)}")
-                raise e
+        self._log_status_msg("Successfully split cluster!")
 
     def change_cluster(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1552,73 +1514,63 @@ class PerspectivesService:
             ChangeClusterParams,
         ), "ChangeClusterParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 0. Read the cluster to change to
+        if params.cluster_id == -1:
+            cluster = transaction.read_or_create_outlier_cluster(
+                aspect_id=transaction.aspect_id
+            )
+            cluster_id = cluster.id
+            logger.info(f"Changing to outlier cluster {cluster.name}.")
+        else:
+            cluster = transaction.read_cluster(id=params.cluster_id)
+            cluster_id = cluster.id
+            logger.info(f"Changing to normal cluster {cluster.name}.")
 
-            try:
-                # 0. Read the cluster to change to
-                if params.cluster_id == -1:
-                    cluster = transaction.read_or_create_outlier_cluster(
-                        aspect_id=aspect_id
-                    )
-                    cluster_id = cluster.id
-                    logger.info(f"Changing to outlier cluster {cluster.name}.")
-                else:
-                    cluster = transaction.read_cluster(id=params.cluster_id)
-                    cluster_id = cluster.id
-                    logger.info(f"Changing to normal cluster {cluster.name}.")
+        # Read the current document <-> cluster assignments
+        document_clusters = transaction.read_document_clusters_by_aspect(
+            aspect_id=transaction.aspect_id
+        )
+        doc2cluster: dict[int, DocumentClusterORM] = {
+            dt.sdoc_id: dt for dt in document_clusters
+        }
 
-                # Read the current document <-> cluster assignments
-                document_clusters = transaction.read_document_clusters_by_aspect(
-                    aspect_id=aspect_id
-                )
-                doc2cluster: dict[int, DocumentClusterORM] = {
-                    dt.sdoc_id: dt for dt in document_clusters
-                }
+        # 1. Document assignment
+        # - Assign the new cluster to the given source documents
+        self._log_status_step(0)
+        self._log_status_msg(
+            f"Assigning the cluster '{cluster.name}' to {len(params.sdoc_ids)} documents..."
+        )
+        # track the changes/affected clusters!
+        modified_clusters: set[int] = set(
+            [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
+        )
+        modified_clusters.add(cluster_id)
+        # assign the cluster to the source documents
+        transaction.update_document_clusters(
+            ids=[
+                (sdoc_id, doc2cluster[sdoc_id].cluster_id)
+                for sdoc_id in params.sdoc_ids
+            ],
+            update_dtos=[
+                DocumentClusterUpdate(cluster_id=cluster.id, is_accepted=True)
+                for sdoc_id in params.sdoc_ids
+            ],
+        )
 
-                # 1. Document assignment
-                # - Assign the new cluster to the given source documents
-                self._log_status_step(0)
-                self._log_status_msg(
-                    f"Assigning the cluster '{cluster.name}' to {len(params.sdoc_ids)} documents..."
-                )
-                # track the changes/affected clusters!
-                modified_clusters: set[int] = set(
-                    [doc2cluster[sdoc_id].cluster_id for sdoc_id in params.sdoc_ids]
-                )
-                modified_clusters.add(cluster_id)
-                # assign the cluster to the source documents
-                transaction.update_document_clusters(
-                    ids=[
-                        (sdoc_id, doc2cluster[sdoc_id].cluster_id)
-                        for sdoc_id in params.sdoc_ids
-                    ],
-                    update_dtos=[
-                        DocumentClusterUpdate(cluster_id=cluster.id, is_accepted=True)
-                        for sdoc_id in params.sdoc_ids
-                    ],
-                )
+        # 2. Cluster Extraction
+        # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
+        self._log_status_step(1)
+        if len(modified_clusters) > 0:
+            self._log_status_msg(
+                f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
+            )
+            self._extract_clusters(
+                transaction=transaction,
+                aspect_id=transaction.aspect_id,
+                cluster_ids=list(modified_clusters),
+            )
 
-                # 2. Cluster Extraction
-                # - Extract the clusters for all affected ones (computing top words, top docs, embedding, etc)
-                self._log_status_step(1)
-                if len(modified_clusters) > 0:
-                    with self.weaviate.weaviate_session() as client:
-                        self._log_status_msg(
-                            f"Extracting clusters for {len(modified_clusters)} modified clusters: {modified_clusters}."
-                        )
-                        self._extract_clusters(
-                            transaction=transaction,
-                            aspect_id=aspect_id,
-                            cluster_ids=list(modified_clusters),
-                        )
-
-                transaction.commit()
-                self._log_status_msg("Successfully changed cluster!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Change cluster failed with error: {str(e)}")
-                raise e
+        self._log_status_msg("Successfully changed cluster!")
 
     def __build_training_data(
         self,
@@ -1672,8 +1624,7 @@ class PerspectivesService:
 
     def refine_cluster_model(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1681,71 +1632,59 @@ class PerspectivesService:
             RefineModelParams,
         ), "RefineModelParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # Update the model name, so that a new model is trained
+        aspect = transaction.read_aspect(id=transaction.aspect_id)
+        model_name = f"project_{aspect.project_id}_aspect_{aspect.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        transaction.update_aspect(
+            id=transaction.aspect_id,
+            update_dto=AspectUpdateIntern(
+                embedding_model=model_name,
+            ),
+        )
 
-            try:
-                # Update the model name, so that a new model is trained
-                aspect = transaction.read_aspect(id=aspect_id)
-                model_name = f"project_{aspect.project_id}_aspect_{aspect.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                transaction.update_aspect(
-                    id=aspect_id,
-                    update_dto=AspectUpdateIntern(
-                        embedding_model=model_name,
-                    ),
-                )
+        # 1. Build the training data for the embedding model
+        self._log_status_step(0)
+        self._log_status_msg("Building training data for the embedding model...")
+        train_docs, train_labels, train_doc_ids = self.__build_training_data(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+        )
 
-                # 1. Build the training data for the embedding model
-                self._log_status_step(0)
-                self._log_status_msg(
-                    "Building training data for the embedding model..."
-                )
-                train_docs, train_labels, train_doc_ids = self.__build_training_data(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                )
+        # 2. Embed the documents (training the model)
+        self._log_status_step(1)
+        self._log_status_msg(
+            f"Refining cluster model for aspect {transaction.aspect_id} with model {model_name}."
+        )
+        self._embed_documents(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+            train_docs=train_docs,
+            train_labels=train_labels,
+        )
 
-                # 2. Embed the documents (training the model)
-                self._log_status_step(1)
-                self._log_status_msg(
-                    f"Refining cluster model for aspect {aspect_id} with model {model_name}."
-                )
-                self._embed_documents(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                    train_docs=train_docs,
-                    train_labels=train_labels,
-                )
+        # 3. Cluster the documents
+        self._log_status_step(2)
+        self._cluster_documents(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+            sdoc_ids=None,
+            train_doc_ids=train_doc_ids,
+            train_cluster_ids=[int(tl) for tl in train_labels],
+        )
 
-                # 3. Cluster the documents
-                self._log_status_step(2)
-                self._cluster_documents(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                    sdoc_ids=None,
-                    train_doc_ids=train_doc_ids,
-                    train_cluster_ids=[int(tl) for tl in train_labels],
-                )
+        # 4. Extract the clusters
+        self._log_status_step(3)
+        self._extract_clusters(
+            transaction=transaction,
+            aspect_id=transaction.aspect_id,
+            cluster_ids=None,
+        )
 
-                # 4. Extract the clusters
-                self._log_status_step(3)
-                self._extract_clusters(
-                    transaction=transaction,
-                    aspect_id=aspect_id,
-                    cluster_ids=None,
-                )
-
-                transaction.commit()
-                self._log_status_msg("Successfully refined map!")
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(f"Refinement failed with error: {str(e)}")
-                raise e
+        self._log_status_msg("Successfully refined map!")
 
     def reset_cluster_model(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1757,8 +1696,7 @@ class PerspectivesService:
 
     def recompute_cluster_title_and_description(
         self,
-        db: Session,
-        aspect_id: int,
+        transaction: PerspectivesDBTransaction,
         params: PerspectivesJobParams,
     ):
         assert isinstance(
@@ -1766,56 +1704,43 @@ class PerspectivesService:
             RecomputeClusterTitleAndDescriptionParams,
         ), "RecomputeClusterTitleAndDescriptionParams expected"
 
-        with self.weaviate.weaviate_session() as client:
-            transaction = PerspectivesDBTransaction(db=db, client=client)
+        # 1. Read cluster
+        self._log_status_step(0)
+        self._log_status_msg(f"Reading top words of cluster {params.cluster_id}...")
+        cluster = transaction.read_cluster(id=params.cluster_id)
+        top_words = cluster.top_words
+        if top_words is None:
+            raise ValueError(
+                f"Cluster {cluster.id} has no top words, cannot recompute title and description."
+            )
 
-            try:
-                # 1. Read cluster
-                self._log_status_step(0)
-                self._log_status_msg(
-                    f"Reading top words of cluster {params.cluster_id}..."
-                )
-                cluster = transaction.read_cluster(id=params.cluster_id)
-                top_words = cluster.top_words
-                if top_words is None:
-                    raise ValueError(
-                        f"Cluster {cluster.id} has no top words, cannot recompute title and description."
-                    )
+        # 2. Compute new title and description
+        self._log_status_step(1)
+        self._log_status_msg(
+            f"Computing new title and description for cluster {cluster.id}..."
+        )
+        cluster_name, cluster_description = (
+            self.__generate_cluster_title_and_description(
+                top_words={cluster.id: top_words},
+                cluster_ids=[cluster.id],
+            )
+        )
+        self._log_status_msg(
+            f"Successfully computed new title and description for cluster {cluster.id}."
+        )
 
-                # 2. Compute new title and description
-                self._log_status_step(1)
-                self._log_status_msg(
-                    f"Computing new title and description for cluster {cluster.id}..."
+        # Store the new title and description in database
+        transaction.update_clusters(
+            ids=[cluster.id],
+            update_dtos=[
+                ClusterUpdateIntern(
+                    name=cluster_name[cluster.id],
+                    description=cluster_description[cluster.id],
+                    is_user_edited=False,
                 )
-                cluster_name, cluster_description = (
-                    self.__generate_cluster_title_and_description(
-                        top_words={cluster.id: top_words},
-                        cluster_ids=[cluster.id],
-                    )
-                )
-                self._log_status_msg(
-                    f"Successfully computed new title and description for cluster {cluster.id}."
-                )
+            ],
+        )
 
-                # Store the new title and description in database
-                transaction.update_clusters(
-                    ids=[cluster.id],
-                    update_dtos=[
-                        ClusterUpdateIntern(
-                            name=cluster_name[cluster.id],
-                            description=cluster_description[cluster.id],
-                            is_user_edited=False,
-                        )
-                    ],
-                )
-
-                transaction.commit()
-                self._log_status_msg(
-                    "Recompute Cluster Title And Description completed successfully."
-                )
-            except Exception as e:
-                transaction.rollback()
-                self._log_status_msg(
-                    f"Recompute Cluster Title And Description failed with error: {str(e)}"
-                )
-                raise e
+        self._log_status_msg(
+            "Recompute Cluster Title And Description completed successfully."
+        )

@@ -294,5 +294,23 @@ class CRUDDocumentCluster(
 
         return total_updated_count
 
+    def delete_multi(
+        self, db: Session, *, ids: list[tuple[int, int]], manual_commit: bool = False
+    ) -> list[DocumentClusterORM]:
+        """
+        Delete multiple DocumentClusterORMs by a list of (sdoc_id, aspect_id) tuples.
+        """
+        db_objects = self.read_by_ids(db, ids)
+
+        for db_obj in db_objects:
+            db.delete(db_obj)
+
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
+
+        return db_objects
+
 
 crud_document_cluster = CRUDDocumentCluster(DocumentClusterORM)

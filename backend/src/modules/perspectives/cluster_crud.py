@@ -5,10 +5,8 @@ from repos.db.crud_base import CRUDBase
 
 
 class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
-    def read_or_create_outlier_cluster(
-        self, db, *, aspect_id: int, manual_commit: bool = False
-    ) -> ClusterORM:
-        db_obj = (
+    def read_outlier_cluster(self, db, *, aspect_id: int) -> ClusterORM | None:
+        return (
             db.query(self.model)
             .filter(
                 self.model.aspect_id == aspect_id,
@@ -16,17 +14,6 @@ class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]
             )
             .first()
         )
-        if db_obj is None:
-            db_obj = crud_cluster.create(
-                db=db,
-                create_dto=ClusterCreateIntern(
-                    aspect_id=aspect_id,
-                    name="Outlier",
-                    is_outlier=True,
-                ),
-                manual_commit=manual_commit,
-            )
-        return db_obj
 
     def read_by_aspect_and_sdoc(
         self, db, *, aspect_id: int, sdoc_id: int
