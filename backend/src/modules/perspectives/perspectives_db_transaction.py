@@ -50,13 +50,10 @@ class PerspectivesDBTransaction:
         if self._committed:
             logger.warning("Transaction already committed.")
             return
-        try:
-            self.db.commit()
-            self._committed = True
-            self.undo_stack.clear()
-        except Exception as e:
-            self.db.rollback()
-            raise e
+
+        self.db.commit()
+        self._committed = True
+        self.undo_stack.clear()
 
     def rollback(self):
         """Rolls back the SQL transaction and executes undo operations for external systems."""
@@ -115,9 +112,7 @@ class PerspectivesDBTransaction:
         update_dto: AspectUpdateIntern,
     ) -> AspectORM:
         updated_aspect = crud_aspect.update(
-            db=self.db,
-            id=id,
-            update_dto=update_dto,
+            db=self.db, id=id, update_dto=update_dto, manual_commit=True
         )
         return updated_aspect
 
@@ -130,6 +125,7 @@ class PerspectivesDBTransaction:
         created_doument_aspects = crud_document_aspect.create_multi(
             db=self.db,
             create_dtos=create_dtos,
+            manual_commit=True,
         )
         return created_doument_aspects
 
@@ -164,6 +160,7 @@ class PerspectivesDBTransaction:
             db=self.db,
             ids=ids,
             update_dtos=update_dtos,
+            manual_commit=True,
         )
         return updated_document_aspects
 
@@ -188,7 +185,7 @@ class PerspectivesDBTransaction:
 
     def read_or_create_outlier_cluster(self, aspect_id: int, level: int) -> ClusterORM:
         return crud_cluster.read_or_create_outlier_cluster(
-            db=self.db, aspect_id=aspect_id, level=level
+            db=self.db, aspect_id=aspect_id, level=level, manual_commit=True
         )
 
     def read_cluster_embeddings_by_aspect(
@@ -204,12 +201,11 @@ class PerspectivesDBTransaction:
     def create_clusters(
         self,
         create_dtos: list[ClusterCreateIntern],
-        manual_commit: bool = False,
     ) -> list[ClusterORM]:
         created_clusters = crud_cluster.create_multi(
             db=self.db,
             create_dtos=create_dtos,
-            manual_commit=manual_commit,
+            manual_commit=True,
         )
         return created_clusters
 
@@ -217,20 +213,18 @@ class PerspectivesDBTransaction:
         self,
         ids: list[int],
         update_dtos: list[ClusterUpdateIntern],
-        manual_commit: bool = False,
     ) -> list[ClusterORM]:
         updated_clusters = crud_cluster.update_multi(
             db=self.db,
             ids=ids,
             update_dtos=update_dtos,
-            manual_commit=manual_commit,
+            manual_commit=True,
         )
         return updated_clusters
 
     def delete_cluster(
         self,
         cluster_id: int,
-        manual_commit: bool = False,
     ) -> ClusterORM:
         cluster = crud_cluster.read(db=self.db, id=cluster_id)
         project_id = cluster.aspect.project_id
@@ -240,7 +234,7 @@ class PerspectivesDBTransaction:
         deleted_cluster = crud_cluster.delete(
             db=self.db,
             id=cluster_id,
-            manual_commit=manual_commit,
+            manual_commit=True,
         )
 
         # 2. Delete the cluster embedding from Weaviate
@@ -270,12 +264,11 @@ class PerspectivesDBTransaction:
     def create_document_clusters(
         self,
         create_dtos: list[DocumentClusterCreate],
-        manual_commit: bool = False,
     ) -> list[DocumentClusterORM]:
         created_document_clusters = crud_document_cluster.create_multi(
             db=self.db,
             create_dtos=create_dtos,
-            manual_commit=manual_commit,
+            manual_commit=True,
         )
         return created_document_clusters
 
@@ -307,5 +300,6 @@ class PerspectivesDBTransaction:
             db=self.db,
             ids=ids,
             update_dtos=update_dtos,
+            manual_commit=True,
         )
         return updated_document_clusters

@@ -6,7 +6,7 @@ from repos.db.crud_base import CRUDBase
 
 class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
     def read_or_create_outlier_cluster(
-        self, db, *, aspect_id: int, level: int
+        self, db, *, aspect_id: int, level: int, manual_commit: bool = False
     ) -> ClusterORM:
         db_obj = (
             db.query(self.model)
@@ -26,6 +26,7 @@ class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]
                     name="Outlier",
                     is_outlier=True,
                 ),
+                manual_commit=manual_commit,
             )
         return db_obj
 

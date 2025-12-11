@@ -121,6 +121,7 @@ class CRUDDocumentCluster(
         *,
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentClusterUpdate],
+        manual_commit: bool = False,
     ) -> list[DocumentClusterORM]:
         """
         Update multiple DocumentClusterORMs by a list of (sdoc_id, cluster_id) tuples and corresponding update DTOs.
@@ -138,7 +139,10 @@ class CRUDDocumentCluster(
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return db_objects
 
     ### OTHER OPERATIONS ###

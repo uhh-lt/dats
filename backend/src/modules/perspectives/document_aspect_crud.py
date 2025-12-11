@@ -90,6 +90,7 @@ class CRUDDocumentAspect(
         *,
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentAspectUpdate],
+        manual_commit: bool = False,
     ) -> list[DocumentAspectORM]:
         """
         Update multiple DocumentAspectORMs by a list of (sdoc_id, aspect_id) tuples and corresponding update DTOs.
@@ -107,7 +108,10 @@ class CRUDDocumentAspect(
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return db_objects
 
 
