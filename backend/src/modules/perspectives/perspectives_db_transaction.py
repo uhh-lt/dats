@@ -183,9 +183,9 @@ class PerspectivesDBTransaction:
         cluster = crud_cluster.read(db=self.db, id=id)
         return cluster
 
-    def read_or_create_outlier_cluster(self, aspect_id: int, level: int) -> ClusterORM:
+    def read_or_create_outlier_cluster(self, aspect_id: int) -> ClusterORM:
         return crud_cluster.read_or_create_outlier_cluster(
-            db=self.db, aspect_id=aspect_id, level=level, manual_commit=True
+            db=self.db, aspect_id=aspect_id, manual_commit=True
         )
 
     def read_cluster_embeddings_by_aspect(

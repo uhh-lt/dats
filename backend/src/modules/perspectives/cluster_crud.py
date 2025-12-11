@@ -6,13 +6,12 @@ from repos.db.crud_base import CRUDBase
 
 class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]):
     def read_or_create_outlier_cluster(
-        self, db, *, aspect_id: int, level: int, manual_commit: bool = False
+        self, db, *, aspect_id: int, manual_commit: bool = False
     ) -> ClusterORM:
         db_obj = (
             db.query(self.model)
             .filter(
                 self.model.aspect_id == aspect_id,
-                self.model.level == level,
                 self.model.is_outlier.is_(True),
             )
             .first()
@@ -22,7 +21,6 @@ class CRUDCluster(CRUDBase[ClusterORM, ClusterCreateIntern, ClusterUpdateIntern]
                 db=db,
                 create_dto=ClusterCreateIntern(
                     aspect_id=aspect_id,
-                    level=level,
                     name="Outlier",
                     is_outlier=True,
                 ),

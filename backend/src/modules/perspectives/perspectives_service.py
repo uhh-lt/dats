@@ -565,7 +565,7 @@ class PerspectivesService:
 
             # add mapping for outlier cluster
             outlier_cluster = transaction.read_or_create_outlier_cluster(
-                aspect_id=aspect_id, level=0
+                aspect_id=aspect_id
             )
             hdb_cluster_id2db_cluster_id[-1] = (
                 outlier_cluster.id
@@ -622,7 +622,7 @@ class PerspectivesService:
             # Treat outlier cluster separately. We only want 1 outlier cluster per aspect.
             if -1 in hdb_cluster_ids:
                 outlier_cluster = transaction.read_or_create_outlier_cluster(
-                    aspect_id=aspect_id, level=0
+                    aspect_id=aspect_id
                 )
                 hdb_cluster_ids.remove(-1)
                 hdb_cluster_id2db_cluster_id[-1] = outlier_cluster.id
@@ -631,7 +631,6 @@ class PerspectivesService:
                 create_dtos=[
                     ClusterCreateIntern(
                         aspect_id=aspect_id,
-                        level=0,
                         name=None,
                         is_outlier=False,
                     )
@@ -1131,9 +1130,7 @@ class PerspectivesService:
                 new_clusters = transaction.create_clusters(
                     create_dtos=[
                         ClusterCreateIntern(
-                            parent_cluster_id=params.create_dto.parent_cluster_id,
                             aspect_id=params.create_dto.aspect_id,
-                            level=params.create_dto.level,
                             name=params.create_dto.name,
                             description=params.create_dto.description,
                             is_outlier=False,
@@ -1247,7 +1244,6 @@ class PerspectivesService:
                         ClusterCreateIntern(
                             name="New Cluster",
                             aspect_id=aspect_id,
-                            level=0,
                             is_outlier=False,
                         )
                     ],
@@ -1563,7 +1559,7 @@ class PerspectivesService:
                 # 0. Read the cluster to change to
                 if params.cluster_id == -1:
                     cluster = transaction.read_or_create_outlier_cluster(
-                        aspect_id=aspect_id, level=0
+                        aspect_id=aspect_id
                     )
                     cluster_id = cluster.id
                     logger.info(f"Changing to outlier cluster {cluster.name}.")

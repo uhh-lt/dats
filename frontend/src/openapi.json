@@ -8099,22 +8099,16 @@
       },
       "ClusterCreate": {
         "properties": {
-          "parent_cluster_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Cluster Id",
-            "description": "ID of the parent cluster, if any"
-          },
           "aspect_id": {
             "type": "integer",
             "title": "Aspect Id",
             "description": "ID of the aspect this cluster belongs to"
           },
-          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the cluster" },
           "name": { "type": "string", "title": "Name", "description": "Name of the cluster" },
           "description": { "type": "string", "title": "Description", "description": "Description of the cluster" }
         },
         "type": "object",
-        "required": ["aspect_id", "level", "name", "description"],
+        "required": ["aspect_id", "name", "description"],
         "title": "ClusterCreate"
       },
       "ClusterRead": {
@@ -8125,11 +8119,6 @@
             "title": "Aspect Id",
             "description": "ID of the aspect this cluster belongs to"
           },
-          "parent_cluster_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Cluster Id",
-            "description": "ID of the parent cluster, if any"
-          },
           "is_outlier": {
             "type": "boolean",
             "title": "Is Outlier",
@@ -8137,7 +8126,6 @@
           },
           "name": { "type": "string", "title": "Name", "description": "Name of the cluster" },
           "description": { "type": "string", "title": "Description", "description": "Description of the cluster" },
-          "level": { "type": "integer", "title": "Level", "description": "Hierarchical level of the cluster" },
           "x": { "type": "number", "title": "X", "description": "X coordinate for visualization" },
           "y": { "type": "number", "title": "Y", "description": "Y coordinate for visualization" },
           "top_words": {
@@ -8160,11 +8148,9 @@
         "required": [
           "id",
           "aspect_id",
-          "parent_cluster_id",
           "is_outlier",
           "name",
           "description",
-          "level",
           "x",
           "y",
           "top_words",

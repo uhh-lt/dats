@@ -22,26 +22,11 @@ class ClusterORM(ORMBase):
     top_word_scores: Mapped[list[float] | None] = mapped_column(
         ARRAY(Float), nullable=True
     )
-    level: Mapped[int] = mapped_column(Integer)
     top_docs: Mapped[list[int] | None] = mapped_column(ARRAY(Integer), nullable=True)
 
     # 2D coordinates for visualization
     x: Mapped[float] = mapped_column(Float, nullable=True)
     y: Mapped[float] = mapped_column(Float, nullable=True)
-
-    # many to one
-    parent_cluster_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey("cluster.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
-    parent_cluster: Mapped["ClusterORM | None"] = relationship(
-        "ClusterORM", remote_side=[id], back_populates="child_clusters"
-    )
-    child_clusters: Mapped[list["ClusterORM"]] = relationship(
-        "ClusterORM", back_populates="parent_cluster"
-    )
 
     aspect_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("aspect.id", ondelete="CASCADE"), nullable=False, index=True
