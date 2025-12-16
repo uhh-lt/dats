@@ -26,6 +26,26 @@ def test_create_new_project(client):
     # TODO Test more!
 
 
+def test_create_new_project_if_not_exsists(client):
+    payload = {
+        "title": "My First Test Project",
+        "description": "Testing create endpoint",
+    }
+
+    response = client.put("/project", json=payload)
+
+    if response.status_code != 200:
+        print("\n>>> ERROR RESPONSE:")
+        print(f"Status: {response.status_code}")
+        try:
+            print("Body (JSON):", response.json())
+        except Exception:
+            print("Body (Text):", response.text)
+        print("---------------------------\n")
+
+    assert response.status_code == 200
+
+
 def test_delete_existing_project(
     client: TestClient, project_factory: ProjectFactory, test_user: UserRead
 ):
