@@ -24,8 +24,11 @@ from core.user.user_orm import UserORM
 from repos.redis_repo import RedisRepo
 
 
-@pytest.fixture(scope="function", autouse=True)
-def setup_env_variables(monkeypatch) -> None:
+# ---------------------------------------------------------------------------
+# SETUP ENVIRONMENT
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session", autouse=True)
+def setup_env_variables() -> None:
     import os
 
     shared_fs = os.getenv("SHARED_FILESYSTEM_ROOT_TEST", None)
@@ -40,11 +43,62 @@ def setup_env_variables(monkeypatch) -> None:
         "Please set WEAVIATE_COLLECTION_POSTFIX env variable"
     )
 
-    monkeypatch.setenv("SHARED_FILESYSTEM_ROOT", shared_fs)
-    monkeypatch.setenv("POSTGRES_DB", postgres + "test")
-    monkeypatch.setenv("ES_INDEX_PREFIX", es_prefix + "test")
-    monkeypatch.setenv("WEAVIATE_COLLECTION_POSTFIX", weaviate_postfix + "test")
-    monkeypatch.setenv("REDIS_INDEX", 9)
+    # setup databases
+    os.environ["SHARED_FILESYSTEM_ROOT"] = shared_fs
+    os.environ["POSTGRES_DB"] = postgres + "test"
+    os.environ["ES_INDEX_PREFIX"] = es_prefix + "test"
+    os.environ["WEAVIATE_COLLECTION_POSTFIX"] = weaviate_postfix + "test"
+    os.environ["REDIS_INDEX"] = "9"
+
+    # setup worker config
+    os.environ["RQ_WORKERS_CPU"] = "1"
+    os.environ["RQ_WORKERS_API"] = "1"
+    os.environ["RQ_WORKERS_GPU"] = "1"
+
+
+# ---------------------------------------------------------------------------
+# START WORKERS
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session", autouse=True)
+def start_workers(setup_env_variables) -> Generator[None, Any, Any]:
+    import multiprocessing as mp
+    import sys
+    import time
+
+    from worker import do_healthcheck, do_work
+
+    # 1. start worker in a subprocess
+    ctx = mp.get_context("fork")
+    worker = ctx.Process(target=do_work, args=["dev"])
+    worker.start()
+    print("Starting worker! Waiting for it to be healthy...")
+
+    # 2. Give the worker time to start
+    time.sleep(10)
+
+    # 3. Wait until worker is healthy (5 tries)
+    is_healthy = False
+    num_try = 0
+    while not is_healthy and num_try < 5:
+        time.sleep(10)
+        try:
+            num_try += 1
+            do_healthcheck()
+        except SystemExit as e:
+            is_healthy = e.code == 0
+
+    if not is_healthy:
+        print("Worker is not healthy! Exiting test...")
+        worker.terminate()
+        worker.join()
+        sys.exit(1)
+
+    # 4. Run tests
+    yield None
+
+    # 5. Stop workers
+    worker.terminate()
+    worker.join()
 
 
 # ---------------------------------------------------------------------------
