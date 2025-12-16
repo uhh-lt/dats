@@ -87,6 +87,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_filesystem=reset_data,
             reset_elastic=reset_data,
             reset_vector=reset_data,
+            reset_redis=reset_data,
         )
 
         if not startup_in_progress:
@@ -130,6 +131,7 @@ def __init_repos__(
     reset_filesystem: bool = False,
     reset_elastic: bool = False,
     reset_vector: bool = False,
+    reset_redis: bool = False,
 ) -> None:
     # import and init RepoService
     from repos.filesystem_repo import FilesystemRepo
@@ -165,6 +167,11 @@ def __init_repos__(
     from repos.vector.weaviate_repo import WeaviateRepo
 
     WeaviateRepo(remove_if_exists=reset_vector)
+
+    # import and init Redis
+    from repos.redis_repo import RedisRepo
+
+    RedisRepo(remove_if_exists=reset_redis)
 
     # import and init LLMRepo
     from repos.llm_repo import LLMRepo

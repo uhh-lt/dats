@@ -2,30 +2,14 @@ import multiprocessing as mp
 import sys
 from os import environ
 
-import redis
 from loguru import logger
 from rq import SimpleWorker, Worker
 from rq.worker_pool import WorkerPool
 
-from config import conf
+from repos.redis_repo import RedisRepo
 from utils.import_utils import import_by_suffix
 
-r_host = conf.redis.host
-r_port = conf.redis.port
-r_pass = conf.redis.password
-rq_idx = conf.redis.rq_idx
-
-redis_conn = redis.Redis(host=r_host, port=r_port, db=rq_idx, password=r_pass)
-try:
-    assert redis_conn.ping(), (
-        f"Couldn't connect to Redis {str(redis_conn)} DB #{rq_idx} at {r_host}:{r_port}!"
-    )
-except Exception as e:
-    logger.error(f"Redis connection failed: {e}")
-    if len(sys.argv) > 1 and sys.argv[1] == "healthcheck":
-        sys.exit(1)
-    raise
-logger.info(f"Successfully connected to Redis {str(redis_conn)} DB #{rq_idx}")
+redis_conn = RedisRepo().redis_connection()
 
 
 def do_healthcheck():

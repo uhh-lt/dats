@@ -21,6 +21,7 @@ from test.factories.user_factory import UserFactory
 
 from core.user.user_dto import UserRead
 from core.user.user_orm import UserORM
+from repos.redis_repo import RedisRepo
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -43,6 +44,7 @@ def setup_env_variables(monkeypatch) -> None:
     monkeypatch.setenv("POSTGRES_DB", postgres + "test")
     monkeypatch.setenv("ES_INDEX_PREFIX", es_prefix + "test")
     monkeypatch.setenv("WEAVIATE_COLLECTION_POSTFIX", weaviate_postfix + "test")
+    monkeypatch.setenv("REDIS_INDEX", 9)
 
 
 # ---------------------------------------------------------------------------
@@ -66,6 +68,9 @@ def setup_repos(setup_env_variables) -> None:
 
     weaviate = WeaviateRepo(remove_if_exists=True)
     weaviate.drop_indices()
+
+    redis = RedisRepo(remove_if_exists=True)
+    redis.drop_database()
 
 
 # ---------------------------------------------------------------------------

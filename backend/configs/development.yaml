@@ -84,7 +84,7 @@ redis:
   host: localhost
   port: ${oc.env:REDIS_PORT, 13124}
   password: ${oc.env:REDIS_PASSWORD, dats123}
-  rq_idx: 10
+  rq_idx: ${oc.env:REDIS_INDEX, 10}
 
 logging:
   max_file_size: 500 # MB

@@ -2,7 +2,6 @@ import inspect
 from datetime import datetime
 from typing import Callable, Dict, Literal, TypedDict, TypeVar
 
-import redis
 import rq
 from fastapi import APIRouter
 from loguru import logger
@@ -17,7 +16,7 @@ from rq.registry import (
 
 from common.job_type import JobType
 from common.singleton_meta import SingletonMeta
-from config import conf
+from repos.redis_repo import RedisRepo
 from systems.job_system.job_dto import (
     EndpointGeneration,
     Job,
@@ -49,28 +48,7 @@ class RegisteredJob(TypedDict):
 
 class JobService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        try:
-            # setup redis
-            r_host = conf.redis.host
-            r_port = conf.redis.port
-            r_pass = conf.redis.password
-            rq_idx = conf.redis.rq_idx
-
-            cls.redis_conn = redis.Redis(
-                host=r_host, port=r_port, db=rq_idx, password=r_pass
-            )
-            assert cls.redis_conn.ping(), (
-                f"Couldn't connect to Redis {str(cls.redis_conn)} "
-                f"DB #{rq_idx} at {r_host}:{r_port}!"
-            )
-            logger.info(
-                f"Successfully connected to Redis {str(cls.redis_conn)} DB #{rq_idx}"
-            )
-
-        except Exception as e:
-            msg = f"Cannot connect to Redis DB - Error '{e}'"
-            logger.error(msg)
-            raise SystemExit(msg)
+        cls.redis_conn = RedisRepo().redis_connection()
 
         # Define priority queues and their registries (every queue has its own 5 registries)
         cls.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
