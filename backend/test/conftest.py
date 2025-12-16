@@ -142,7 +142,7 @@ def tag_factory(db_session: Session) -> TagFactory:
 
 
 @pytest.fixture(scope="function")
-def span_annotaion_factory(db_session: Session) -> SpanAnnotationFactory:
+def span_annotation_factory(db_session: Session) -> SpanAnnotationFactory:
     return SpanAnnotationFactory(db_session=db_session)
 
 
