@@ -38,6 +38,7 @@ from modules.perspectives.document_cluster.document_cluster_dto import (
 from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
+from modules.perspectives.enum.perspectives_job_type import PerspectivesJobType
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
 from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,
@@ -48,7 +49,6 @@ from modules.perspectives.perspectives_job_dto import (
     MergeClustersParams,
     PerspectivesJobInput,
     PerspectivesJobParams,
-    PerspectivesJobType,
     RecomputeClusterTitleAndDescriptionParams,
     RefineModelParams,
     RemoveClusterParams,

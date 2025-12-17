@@ -1,6 +1,6 @@
 from enum import Enum
 
-from modules.perspectives.perspectives_job_dto import PerspectivesJobType
+from modules.perspectives.enum.perspectives_job_type import PerspectivesJobType
 
 
 class PerspectivesUserAction(str, Enum):

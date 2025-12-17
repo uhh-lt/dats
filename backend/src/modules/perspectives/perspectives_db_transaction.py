@@ -38,9 +38,8 @@ from modules.perspectives.document_cluster.document_cluster_dto import (
 from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
-from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
-from modules.perspectives.perspectives_history import PerspectivesHistory
-from modules.perspectives.perspectives_user_actions import PerspectivesAction
+from modules.perspectives.enum.perspectives_db_action import PerspectiveDBActions
+from modules.perspectives.enum.perspectives_user_action import PerspectivesAction
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_models import EmbeddingSearchResult
 
@@ -58,6 +57,8 @@ class PerspectivesDBTransaction:
         self.client = client
         self.history = None
         if write_history:
+            from modules.perspectives.perspectives_history import PerspectivesHistory
+
             self.history = PerspectivesHistory(
                 db=db, aspect_id=aspect_id, perspective_action=perspective_action
             )

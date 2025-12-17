@@ -33,15 +33,15 @@ from modules.perspectives.document_cluster.document_cluster_dto import (
 from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
+from modules.perspectives.enum.perspectives_user_action import (
+    PerspectivesUserAction,
+)
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
-)
-from modules.perspectives.perspectives_user_actions import (
-    PerspectivesUserAction,
 )
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,

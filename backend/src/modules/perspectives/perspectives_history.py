@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -9,11 +9,16 @@ from modules.perspectives.document_aspect.document_aspect_orm import DocumentAsp
 from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
+from modules.perspectives.enum.perspectives_db_action import PerspectiveDBActions
+from modules.perspectives.enum.perspectives_user_action import PerspectivesAction
 from modules.perspectives.history.history_crud import crud_perspectives_history
 from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
-from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
-from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
-from modules.perspectives.perspectives_user_actions import PerspectivesAction
+
+if TYPE_CHECKING:
+    # there is a circular dependency between perspectives_db_transaction and perspectives_history
+    from modules.perspectives.perspectives_db_transaction import (
+        PerspectivesDBTransaction,
+    )
 
 
 class PerspectivesHistory:
@@ -77,6 +82,9 @@ class PerspectivesHistory:
 
     def redo_history(self, db: Session, client: WeaviateClient):
         """Executes all redo operations in the redo stack."""
+        from modules.perspectives.perspectives_db_transaction import (
+            PerspectivesDBTransaction,
+        )
 
         transaction = PerspectivesDBTransaction(
             db=db,
@@ -104,6 +112,9 @@ class PerspectivesHistory:
 
     def undo_history(self, db: Session, client: WeaviateClient):
         """Executes all undo operations in the undo stack."""
+        from modules.perspectives.perspectives_db_transaction import (
+            PerspectivesDBTransaction,
+        )
 
         transaction = PerspectivesDBTransaction(
             db=db,

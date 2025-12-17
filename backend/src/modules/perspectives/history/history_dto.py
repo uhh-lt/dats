@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
-from modules.perspectives.perspectives_user_actions import PerspectivesAction
+from modules.perspectives.enum.perspectives_db_action import PerspectiveDBActions
+from modules.perspectives.enum.perspectives_user_action import PerspectivesAction
 
 
 class PerspectivesHistoryBase(BaseModel):
