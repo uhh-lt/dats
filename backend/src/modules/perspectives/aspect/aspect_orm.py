@@ -10,8 +10,10 @@ from repos.db.orm_base import ORMBase
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
     from core.project.project_orm import ProjectORM
-    from modules.perspectives.cluster_orm import ClusterORM
-    from modules.perspectives.document_aspect_orm import DocumentAspectORM
+    from modules.perspectives.cluster.cluster_orm import ClusterORM
+    from modules.perspectives.document_aspect.document_aspect_orm import (
+        DocumentAspectORM,
+    )
     from modules.perspectives.history.history_orm import PerspectiveHistoryORM
 
 

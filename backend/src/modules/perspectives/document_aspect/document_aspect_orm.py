@@ -7,7 +7,7 @@ from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
-    from modules.perspectives.aspect_orm import AspectORM
+    from modules.perspectives.aspect.aspect_orm import AspectORM
 
 
 class DocumentAspectORM(ORMBase):

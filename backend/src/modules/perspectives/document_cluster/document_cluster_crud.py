@@ -3,12 +3,14 @@ from sqlalchemy import select, tuple_, update
 from sqlalchemy.orm import Session
 
 from config import conf
-from modules.perspectives.cluster_orm import ClusterORM
-from modules.perspectives.document_cluster_dto import (
+from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_cluster.document_cluster_dto import (
     DocumentClusterCreate,
     DocumentClusterUpdate,
 )
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 
 BATCH_SIZE = conf.postgres.batch_size

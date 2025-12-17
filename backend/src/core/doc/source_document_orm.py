@@ -30,10 +30,14 @@ if TYPE_CHECKING:
     from modules.ml.tag_recommendation.tag_recommendation_orm import (
         TagRecommendationLinkORM,
     )
-    from modules.perspectives.aspect_orm import AspectORM
-    from modules.perspectives.cluster_orm import ClusterORM
-    from modules.perspectives.document_aspect_orm import DocumentAspectORM
-    from modules.perspectives.document_cluster_orm import DocumentClusterORM
+    from modules.perspectives.aspect.aspect_orm import AspectORM
+    from modules.perspectives.cluster.cluster_orm import ClusterORM
+    from modules.perspectives.document_aspect.document_aspect_orm import (
+        DocumentAspectORM,
+    )
+    from modules.perspectives.document_cluster.document_cluster_orm import (
+        DocumentClusterORM,
+    )
     from modules.word_frequency.word_frequency_orm import WordFrequencyORM
 
 

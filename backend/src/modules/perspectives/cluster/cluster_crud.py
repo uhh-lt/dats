@@ -1,6 +1,11 @@
-from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
-from modules.perspectives.cluster_orm import ClusterORM
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.cluster.cluster_dto import (
+    ClusterCreateIntern,
+    ClusterUpdateIntern,
+)
+from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from repos.db.crud_base import CRUDBase
 
 

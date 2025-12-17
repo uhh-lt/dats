@@ -7,28 +7,37 @@ from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_orm import SourceDocumentORM
-from modules.perspectives.aspect_crud import crud_aspect
-from modules.perspectives.aspect_dto import AspectUpdateIntern
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
-from modules.perspectives.aspect_orm import AspectORM
-from modules.perspectives.cluster_crud import crud_cluster
-from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
-from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
-from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
-from modules.perspectives.cluster_orm import ClusterORM
-from modules.perspectives.document_aspect_crud import crud_document_aspect
-from modules.perspectives.document_aspect_dto import (
+from modules.perspectives.aspect.aspect_crud import crud_aspect
+from modules.perspectives.aspect.aspect_dto import AspectUpdateIntern
+from modules.perspectives.aspect.aspect_embedding_crud import crud_aspect_embedding
+from modules.perspectives.aspect.aspect_embedding_dto import AspectObjectIdentifier
+from modules.perspectives.aspect.aspect_orm import AspectORM
+from modules.perspectives.cluster.cluster_crud import crud_cluster
+from modules.perspectives.cluster.cluster_dto import (
+    ClusterCreateIntern,
+    ClusterUpdateIntern,
+)
+from modules.perspectives.cluster.cluster_embedding_crud import crud_cluster_embedding
+from modules.perspectives.cluster.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_aspect.document_aspect_crud import (
+    crud_document_aspect,
+)
+from modules.perspectives.document_aspect.document_aspect_dto import (
     DocumentAspectCreate,
     DocumentAspectUpdate,
 )
-from modules.perspectives.document_aspect_orm import DocumentAspectORM
-from modules.perspectives.document_cluster_crud import crud_document_cluster
-from modules.perspectives.document_cluster_dto import (
+from modules.perspectives.document_aspect.document_aspect_orm import DocumentAspectORM
+from modules.perspectives.document_cluster.document_cluster_crud import (
+    crud_document_cluster,
+)
+from modules.perspectives.document_cluster.document_cluster_dto import (
     DocumentClusterCreate,
     DocumentClusterUpdate,
 )
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
 from modules.perspectives.perspectives_history import PerspectivesHistory
 from modules.perspectives.perspectives_job_dto import PerspectivesJobType

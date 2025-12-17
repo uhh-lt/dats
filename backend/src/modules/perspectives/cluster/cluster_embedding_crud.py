@@ -1,8 +1,8 @@
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from modules.perspectives.cluster_collection import ClusterCollection
-from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.perspectives.cluster.cluster_collection import ClusterCollection
+from modules.perspectives.cluster.cluster_embedding_dto import ClusterObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
 from systems.event_system.events import project_deleted
 

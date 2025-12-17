@@ -8,24 +8,28 @@ from common.dependencies import get_current_user, get_db_session, get_weaviate_s
 from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
-from modules.perspectives.aspect_crud import crud_aspect
-from modules.perspectives.aspect_dto import (
+from modules.perspectives.aspect.aspect_crud import crud_aspect
+from modules.perspectives.aspect.aspect_dto import (
     AspectCreate,
     AspectRead,
     AspectUpdate,
     AspectUpdateIntern,
 )
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.cluster_crud import crud_cluster
-from modules.perspectives.cluster_dto import (
+from modules.perspectives.aspect.aspect_embedding_crud import crud_aspect_embedding
+from modules.perspectives.cluster.cluster_crud import crud_cluster
+from modules.perspectives.cluster.cluster_dto import (
     ClusterRead,
     ClusterUpdate,
     ClusterUpdateIntern,
 )
-from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
-from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
-from modules.perspectives.document_aspect_crud import crud_document_aspect
-from modules.perspectives.document_cluster_crud import crud_document_cluster
+from modules.perspectives.cluster.cluster_embedding_crud import crud_cluster_embedding
+from modules.perspectives.cluster.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.perspectives.document_aspect.document_aspect_crud import (
+    crud_document_aspect,
+)
+from modules.perspectives.document_cluster.document_cluster_crud import (
+    crud_document_cluster,
+)
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,

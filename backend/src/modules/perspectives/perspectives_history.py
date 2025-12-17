@@ -4,9 +4,11 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
-from modules.perspectives.cluster_orm import ClusterORM
-from modules.perspectives.document_aspect_orm import DocumentAspectORM
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_aspect.document_aspect_orm import DocumentAspectORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from modules.perspectives.history.history_crud import crud_perspectives_history
 from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions

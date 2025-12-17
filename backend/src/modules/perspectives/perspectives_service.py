@@ -17,22 +17,27 @@ from umap import UMAP
 
 from common.doc_type import DocType
 from core.doc.source_document_dto import SourceDocumentRead
-from modules.perspectives.aspect_dto import AspectRead, AspectUpdateIntern
-from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
-from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
-from modules.perspectives.cluster_dto import ClusterCreateIntern, ClusterUpdateIntern
-from modules.perspectives.cluster_embedding_dto import ClusterObjectIdentifier
+from modules.perspectives.aspect.aspect_dto import AspectRead, AspectUpdateIntern
+from modules.perspectives.aspect.aspect_embedding_crud import crud_aspect_embedding
+from modules.perspectives.aspect.aspect_embedding_dto import AspectObjectIdentifier
+from modules.perspectives.cluster.cluster_dto import (
+    ClusterCreateIntern,
+    ClusterUpdateIntern,
+)
+from modules.perspectives.cluster.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.ctfidf import ClassTfidfTransformer
-from modules.perspectives.document_aspect_dto import (
+from modules.perspectives.document_aspect.document_aspect_dto import (
     DocumentAspectCreate,
     DocumentAspectUpdate,
 )
-from modules.perspectives.document_aspect_orm import DocumentAspectORM
-from modules.perspectives.document_cluster_dto import (
+from modules.perspectives.document_aspect.document_aspect_orm import DocumentAspectORM
+from modules.perspectives.document_cluster.document_cluster_dto import (
     DocumentClusterCreate,
     DocumentClusterUpdate,
 )
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
 from modules.perspectives.perspectives_job_dto import (
     AddMissingDocsToAspectParams,

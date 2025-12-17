@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from modules.perspectives.cluster_dto import ClusterCreate
+from modules.perspectives.cluster.cluster_dto import ClusterCreate
 from systems.job_system.job_dto import JobInputBase, JobRead
 
 
