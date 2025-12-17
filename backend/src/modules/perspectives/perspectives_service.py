@@ -89,12 +89,13 @@ class PerspectivesService(metaclass=SingletonMeta):
             ),
         )
 
-        # Return the created Aspect with the most recent job ID set
-        # The most recent job ID is set by the PerspectivesJobHandler when the job starts!
-        aspect_read = AspectRead.model_validate(db_aspect)
-        aspect_read.most_recent_job_id = job.get_id()
+        db_aspect = crud_aspect.update(
+            db=db,
+            id=db_aspect.id,
+            update_dto=AspectUpdateIntern(most_recent_job_id=job.get_id()),
+        )
 
-        return aspect_read
+        return AspectRead.model_validate(db_aspect)
 
     #######################
     ### READ OPERATIONS ###
@@ -333,6 +334,12 @@ class PerspectivesService(metaclass=SingletonMeta):
                 perspectives_job_type=job_params.perspectives_job_type,
                 parameters=job_params,
             ),
+        )
+
+        crud_aspect.update(
+            db=db,
+            id=aspect_id,
+            update_dto=AspectUpdateIntern(most_recent_job_id=job.get_id()),
         )
 
         return PerspectivesJobRead.from_rq_job(job)

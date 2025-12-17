@@ -166,14 +166,6 @@ class PerspectivesJobHandler:
             )
 
             try:
-                # Set this job as the most recent job
-                transaction.update_aspect(
-                    id=payload.aspect_id,
-                    update_dto=AspectUpdateIntern(
-                        most_recent_job_id=self.job.get_id(),
-                    ),
-                )
-
                 # Execute the correct function
                 self.method_for_job_type[payload.perspectives_job_type](
                     transaction, payload.parameters

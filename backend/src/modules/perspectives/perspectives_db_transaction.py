@@ -147,7 +147,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_ASPECT,
                 params={
                     "id": id,
-                    "update_dto": AspectUpdateIntern(**undo_update_dto_fields),
+                    "update_dto": AspectUpdateIntern(
+                        **undo_update_dto_fields
+                    ).model_dump(exclude_unset=True),
                 },
             )
 
@@ -162,7 +164,7 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_ASPECT,
                 params={
                     "id": id,
-                    "update_dto": update_dto,
+                    "update_dto": update_dto.model_dump(exclude_unset=True),
                 },
             )
 
@@ -252,7 +254,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_DOCUMENT_ASPECTS,
                 params={
                     "ids": ids,
-                    "update_dtos": undo_update_dtos,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in undo_update_dtos
+                    ],
                 },
             )
 
@@ -270,7 +274,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_DOCUMENT_ASPECTS,
                 params={
                     "ids": ids,
-                    "update_dtos": update_dtos,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in update_dtos
+                    ],
                 },
             )
 
@@ -505,7 +511,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_CLUSTERS,
                 params={
                     "ids": ids,
-                    "update_dtos": undo_update_dtos,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in undo_update_dtos
+                    ],
                 },
             )
 
@@ -523,7 +531,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_CLUSTERS,
                 params={
                     "ids": ids,
-                    "update_dtos": update_dtos,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in update_dtos
+                    ],
                 },
             )
 
@@ -743,8 +753,9 @@ class PerspectivesDBTransaction:
                 ids=ids,
             )
             undo_update_dtos: list[DocumentClusterUpdate] = []
-            for update_dto, previous_document_cluster in zip(
-                update_dtos, previous_document_clusters
+            undo_ids: list[tuple[int, int]] = []
+            for update_dto, previous_document_cluster, (sdoc_id, cluster_id) in zip(
+                update_dtos, previous_document_clusters, ids
             ):
                 undo_update_dto_fields = {}
                 for updated_field in update_dto.model_dump(exclude_unset=True).keys():
@@ -752,11 +763,19 @@ class PerspectivesDBTransaction:
                         previous_document_cluster, updated_field
                     )
                 undo_update_dtos.append(DocumentClusterUpdate(**undo_update_dto_fields))
+
+                if update_dto.cluster_id is not None:
+                    undo_ids.append((sdoc_id, update_dto.cluster_id))
+                else:
+                    undo_ids.append((sdoc_id, cluster_id))
+
             self.history.register_undo(
                 action=PerspectiveDBActions.UPDATE_DOCUMENT_CLUSTERS,
                 params={
-                    "ids": ids,
-                    "update_dtos": undo_update_dtos,
+                    "ids": undo_ids,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in undo_update_dtos
+                    ],
                 },
             )
 
@@ -774,7 +793,9 @@ class PerspectivesDBTransaction:
                 action=PerspectiveDBActions.UPDATE_DOCUMENT_CLUSTERS,
                 params={
                     "ids": ids,
-                    "update_dtos": update_dtos,
+                    "update_dtos": [
+                        dto.model_dump(exclude_unset=True) for dto in update_dtos
+                    ],
                 },
             )
 

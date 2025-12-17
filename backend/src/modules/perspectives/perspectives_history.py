@@ -1,11 +1,23 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Callable
 
 from loguru import logger
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
+from modules.perspectives.aspect.aspect_dto import AspectUpdateIntern
+from modules.perspectives.aspect.aspect_embedding_dto import AspectObjectIdentifier
+from modules.perspectives.cluster.cluster_dto import ClusterUpdateIntern
+from modules.perspectives.cluster.cluster_embedding_dto import ClusterObjectIdentifier
 from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_aspect.document_aspect_dto import (
+    DocumentAspectUpdate,
+)
 from modules.perspectives.document_aspect.document_aspect_orm import DocumentAspectORM
+from modules.perspectives.document_cluster.document_cluster_dto import (
+    DocumentClusterUpdate,
+)
 from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
@@ -71,14 +83,15 @@ class PerspectivesHistory:
         cls, db: Session, history_orm: PerspectiveHistoryORM
     ) -> "PerspectivesHistory":
         """Creates a PerspectivesHistory instance from a PerspectiveHistoryORM."""
-        if history_orm.perspectives_action in PerspectivesJobType:
-            action = PerspectivesJobType[history_orm.perspectives_action]
-        else:
-            action = PerspectivesUserAction[history_orm.perspectives_action]
+        try:
+            action = PerspectivesJobType(history_orm.perspectives_action)
+        except ValueError:
+            action = PerspectivesUserAction(history_orm.perspectives_action)
         instance = cls(
             db=db,
             aspect_id=history_orm.aspect_id,
             perspective_action=action,
+            history_id=history_orm.id,
         )
         instance.undo_stack = history_orm.undo_data
         instance.redo_stack = history_orm.redo_data
@@ -102,7 +115,7 @@ class PerspectivesHistory:
         crud_perspectives_history.create(
             db=self.db,
             create_dto=PerspectivesHistoryCreate(
-                perspective_action=self.perspective_action,
+                perspectives_action=self.perspective_action,
                 history_number=len(current_history) + 1,
                 is_undone=False,
                 undo_data=self.undo_stack,
@@ -204,7 +217,10 @@ class PerspectivesHistory:
         assert "id" in params, "Aspect ID must be provided in params"
         assert "update_dto" in params, "Aspect update DTO must be provided in params"
 
-        transaction.update_aspect(**params)
+        transaction.update_aspect(
+            id=params["id"],
+            update_dto=AspectUpdateIntern.model_validate(params["update_dto"]),
+        )
 
     ### DOCUMENT ASPECT OPERATIONS ###
 
@@ -224,14 +240,20 @@ class PerspectivesHistory:
             "DocumentAspectUpdates must be provided in params"
         )
 
-        transaction.update_document_aspects(**params)
+        transaction.update_document_aspects(
+            ids=[tuple(id) for id in params["ids"]],
+            update_dtos=[
+                DocumentAspectUpdate.model_validate(dto)
+                for dto in params["update_dtos"]
+            ],
+        )
 
     def __delete_document_aspects(
         self, transaction: PerspectivesDBTransaction, params: dict
     ):
         assert "ids" in params, "IDs must be provided in params"
 
-        transaction.delete_document_aspects(**params)
+        transaction.delete_document_aspects(ids=[tuple(id) for id in params["ids"]])
 
     def __store_document_aspect_embeddings(
         self, transaction: PerspectivesDBTransaction, params: dict
@@ -240,7 +262,11 @@ class PerspectivesHistory:
         assert "ids" in params, "IDs must be provided in params"
         assert "embeddings" in params, "Embeddings must be provided in params"
 
-        transaction.store_document_aspect_embeddings(**params)
+        transaction.store_document_aspect_embeddings(
+            project_id=params["project_id"],
+            ids=[AspectObjectIdentifier.model_validate(id) for id in params["ids"]],
+            embeddings=params["embeddings"],
+        )
 
     def __remove_document_aspect_embeddings(
         self, transaction: PerspectivesDBTransaction, params: dict
@@ -248,7 +274,10 @@ class PerspectivesHistory:
         assert "project_id" in params, "Project ID must be provided in params"
         assert "ids" in params, "IDs must be provided in params"
 
-        transaction.remove_document_aspect_embeddings(**params)
+        transaction.remove_document_aspect_embeddings(
+            project_id=params["project_id"],
+            ids=[AspectObjectIdentifier.model_validate(id) for id in params["ids"]],
+        )
 
     ### CLUSTER OPERATIONS ###
 
@@ -262,12 +291,17 @@ class PerspectivesHistory:
         assert "ids" in params, "Cluster IDs must be provided in params"
         assert "update_dtos" in params, "Cluster update DTOs must be provided in params"
 
-        transaction.update_clusters(**params)
+        transaction.update_clusters(
+            ids=params["ids"],
+            update_dtos=[
+                ClusterUpdateIntern.model_validate(dto) for dto in params["update_dtos"]
+            ],
+        )
 
     def __delete_clusters(self, transaction: PerspectivesDBTransaction, params: dict):
         assert "ids" in params, "Cluster IDs must be provided in params"
 
-        transaction.delete_clusters(**params)
+        transaction.delete_clusters(cluster_ids=params["ids"])
 
     def __store_cluster_embeddings(
         self, transaction: PerspectivesDBTransaction, params: dict
@@ -276,7 +310,11 @@ class PerspectivesHistory:
         assert "ids" in params, "IDs must be provided in params"
         assert "embeddings" in params, "Embeddings must be provided in params"
 
-        transaction.store_cluster_embeddings(**params)
+        transaction.store_cluster_embeddings(
+            project_id=params["project_id"],
+            ids=[ClusterObjectIdentifier.model_validate(id) for id in params["ids"]],
+            embeddings=params["embeddings"],
+        )
 
     def __remove_cluster_embeddings(
         self, transaction: PerspectivesDBTransaction, params: dict
@@ -284,7 +322,10 @@ class PerspectivesHistory:
         assert "project_id" in params, "Project ID must be provided in params"
         assert "ids" in params, "IDs must be provided in params"
 
-        transaction.remove_cluster_embeddings(**params)
+        transaction.remove_cluster_embeddings(
+            project_id=params["project_id"],
+            ids=[ClusterObjectIdentifier.model_validate(id) for id in params["ids"]],
+        )
 
     ### DOCUMENT CLUSTER OPERATIONS ###
 
@@ -304,11 +345,17 @@ class PerspectivesHistory:
             "DocumentClusterUpdate DTOs must be provided in params"
         )
 
-        transaction.update_document_clusters(**params)
+        transaction.update_document_clusters(
+            ids=[tuple(id) for id in params["ids"]],
+            update_dtos=[
+                DocumentClusterUpdate.model_validate(dto)
+                for dto in params["update_dtos"]
+            ],
+        )
 
     def __delete_document_clusters(
         self, transaction: PerspectivesDBTransaction, params: dict
     ):
         assert "ids" in params, "IDs must be provided in params"
 
-        transaction.delete_document_clusters(**params)
+        transaction.delete_document_clusters(ids=[tuple(id) for id in params["ids"]])

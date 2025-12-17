@@ -6,7 +6,7 @@ from repos.db.dto_base import UpdateDTOBase
 
 
 class PerspectivesHistoryBase(BaseModel):
-    perspective_action: PerspectivesAction = Field(
+    perspectives_action: PerspectivesAction = Field(
         description="Type of perspective action that generated this history entry"
     )
     history_number: int = Field(
