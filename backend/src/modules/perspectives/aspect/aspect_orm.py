@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy import ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,9 +23,6 @@ class AspectORM(ORMBase):
     name: Mapped[str] = mapped_column(String, nullable=False)
     doc_embedding_prompt: Mapped[str] = mapped_column(Text, nullable=False)
     doc_modification_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_hierarchical: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
     most_recent_job_id: Mapped[str | None] = mapped_column(String, nullable=True)
     embedding_model: Mapped[str] = mapped_column(
         String, server_default="default", nullable=False
