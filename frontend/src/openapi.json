@@ -2934,27 +2934,6 @@
         }
       }
     },
-    "/perspectives/visualize_clusters/{aspect_id}": {
-      "get": {
-        "tags": ["perspectives"],
-        "summary": "Returns data for visualizing the clusters of the given aspect.",
-        "operationId": "visualize_clusters",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AspectRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/perspectives/clusters/{aspect_id}/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["perspectives"],
@@ -3012,6 +2991,71 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClusterRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/history/redo/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Redoes the last undone operation for the given Aspect.",
+        "operationId": "redo_perspectives_history",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/history/undo/{aspect_id}": {
+      "post": {
+        "tags": ["perspectives"],
+        "summary": "Undoes the last operation for the given Aspect.",
+        "operationId": "undo_perspectives_history",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/perspectives/history/list/{aspect_id}": {
+      "get": {
+        "tags": ["perspectives"],
+        "summary": "Returns the list of history entries for the given Aspect.",
+        "operationId": "list_perspectives_history",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "aspect_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Aspect Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PerspectivesHistoryRead" },
+                  "title": "Response Perspectives-List Perspectives History"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6671,11 +6715,6 @@
             "title": "Doc Modification Prompt",
             "description": "Prompt for document modification"
           },
-          "is_hierarchical": {
-            "type": "boolean",
-            "title": "Is Hierarchical",
-            "description": "Whether the aspect is hierarchical"
-          },
           "modality": {
             "$ref": "#/components/schemas/DocType",
             "description": "Modality of the documents of this aspect"
@@ -6696,7 +6735,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "doc_embedding_prompt", "is_hierarchical", "modality", "pipeline_settings", "project_id"],
+        "required": ["name", "doc_embedding_prompt", "modality", "pipeline_settings", "project_id"],
         "title": "AspectCreate"
       },
       "AspectRead": {
@@ -6711,11 +6750,6 @@
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Doc Modification Prompt",
             "description": "Prompt for document modification"
-          },
-          "is_hierarchical": {
-            "type": "boolean",
-            "title": "Is Hierarchical",
-            "description": "Whether the aspect is hierarchical"
           },
           "modality": {
             "$ref": "#/components/schemas/DocType",
@@ -6743,15 +6777,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "doc_embedding_prompt",
-          "is_hierarchical",
-          "modality",
-          "pipeline_settings",
-          "id",
-          "project_id"
-        ],
+        "required": ["name", "doc_embedding_prompt", "modality", "pipeline_settings", "id", "project_id"],
         "title": "AspectRead"
       },
       "AspectUpdate": {
@@ -10332,6 +10358,26 @@
         "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "total_results"],
         "title": "PaginatedSDocHits"
       },
+      "PerspectiveDBActions": {
+        "type": "string",
+        "enum": [
+          "update_aspect",
+          "create_clusters",
+          "delete_clusters",
+          "update_clusters",
+          "store_cluster_embeddings",
+          "remove_cluster_embeddings",
+          "create_document_aspects",
+          "update_document_aspects",
+          "delete_document_aspects",
+          "store_document_aspect_embeddings",
+          "remove_document_aspect_embeddings",
+          "create_document_clusters",
+          "delete_document_clusters",
+          "update_document_clusters"
+        ],
+        "title": "PerspectiveDBActions"
+      },
       "PerspectivesClusterSimilarities": {
         "properties": {
           "aspect_id": {
@@ -10385,6 +10431,58 @@
         "type": "object",
         "required": ["sdoc_id", "cluster_id", "x", "y", "is_accepted", "in_searchresult", "is_outlier"],
         "title": "PerspectivesDoc"
+      },
+      "PerspectivesHistoryRead": {
+        "properties": {
+          "perspectives_action": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/PerspectivesUserAction" },
+              { "$ref": "#/components/schemas/PerspectivesJobType" }
+            ],
+            "title": "Perspectives Action",
+            "description": "Type of perspective action that generated this history entry"
+          },
+          "history_number": {
+            "type": "integer",
+            "title": "History Number",
+            "description": "The sequential number of the history entry"
+          },
+          "is_undone": {
+            "type": "boolean",
+            "title": "Is Undone",
+            "description": "Whether this history entry has been undone",
+            "default": false
+          },
+          "undo_data": {
+            "items": {
+              "additionalProperties": { "type": "object" },
+              "propertyNames": { "$ref": "#/components/schemas/PerspectiveDBActions" },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Undo Data",
+            "description": "List of DB operations and their parameters required to undo the action"
+          },
+          "redo_data": {
+            "items": {
+              "additionalProperties": { "type": "object" },
+              "propertyNames": { "$ref": "#/components/schemas/PerspectiveDBActions" },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Redo Data",
+            "description": "List of DB operations and their parameters required to redo the action"
+          },
+          "aspect_id": {
+            "type": "integer",
+            "title": "Aspect Id",
+            "description": "ID of the aspect this history entry belongs to"
+          },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the history entry" }
+        },
+        "type": "object",
+        "required": ["perspectives_action", "history_number", "undo_data", "redo_data", "aspect_id", "id"],
+        "title": "PerspectivesHistoryRead"
       },
       "PerspectivesJobInput": {
         "properties": {
@@ -10500,6 +10598,11 @@
           "recompute_cluster_title_and_description"
         ],
         "title": "PerspectivesJobType"
+      },
+      "PerspectivesUserAction": {
+        "type": "string",
+        "enum": ["update_aspect", "update_cluster", "accept_labels", "revert_labels"],
+        "title": "PerspectivesUserAction"
       },
       "PerspectivesVisualization": {
         "properties": {
