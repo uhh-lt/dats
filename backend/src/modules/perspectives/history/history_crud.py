@@ -1,12 +1,17 @@
 from sqlalchemy.orm import Session
 
-from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
+from modules.perspectives.history.history_dto import (
+    PerspectivesHistoryCreate,
+    PerspectivesHistoryUpdate,
+)
 from modules.perspectives.history.history_orm import PerspectiveHistoryORM
-from repos.db.crud_base import CRUDBase, UpdateNotAllowed
+from repos.db.crud_base import CRUDBase
 
 
 class CRUDPerspectivesHistory(
-    CRUDBase[PerspectiveHistoryORM, PerspectivesHistoryCreate, UpdateNotAllowed]
+    CRUDBase[
+        PerspectiveHistoryORM, PerspectivesHistoryCreate, PerspectivesHistoryUpdate
+    ]
 ):
     def read_by_aspect(
         self, db: Session, *, aspect_id: int

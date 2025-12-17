@@ -36,7 +36,10 @@ from modules.perspectives.document_cluster.document_cluster_orm import (
 from modules.perspectives.enum.perspectives_user_action import (
     PerspectivesUserAction,
 )
+from modules.perspectives.history.history_crud import crud_perspectives_history
+from modules.perspectives.history.history_dto import PerspectivesHistoryRead
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
+from modules.perspectives.perspectives_history import PerspectivesHistory
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
@@ -458,3 +461,62 @@ class PerspectivesService(metaclass=SingletonMeta):
         )
         db_obj = crud_aspect.delete(db=db, id=aspect_id)
         return AspectRead.model_validate(db_obj)
+
+    ############################
+    ### UNDO/REDO OPERATIONS ###
+    ############################
+
+    def redo_history(self, db: Session, client: WeaviateClient, aspect_id: int):
+        """Executes all redo operations in the redo stack."""
+
+        # 1. get all history entries for the aspect
+        history_entries = crud_perspectives_history.read_by_aspect(
+            db=db, aspect_id=aspect_id
+        )
+
+        # 2. find the last undone history entry
+        last_history_entry = None
+        for entry in reversed(history_entries):
+            if entry.is_undone:
+                last_history_entry = entry
+                break
+
+        # 3. redo
+        if last_history_entry is None:
+            return  # nothing to redo
+
+        history_entry = PerspectivesHistory.from_history_orm(db, last_history_entry)
+        history_entry.redo(db=db, client=client)
+
+    def undo_history(self, db: Session, client: WeaviateClient, aspect_id: int):
+        """Executes all undo operations in the undo stack."""
+
+        # 1. get all history entries for the aspect
+        history_entries = crud_perspectives_history.read_by_aspect(
+            db=db, aspect_id=aspect_id
+        )
+
+        # 2. find the last not undone history entry
+        last_history_entry = None
+        for entry in reversed(history_entries):
+            if not entry.is_undone:
+                last_history_entry = entry
+                break
+
+        # 3. undo
+        if last_history_entry is None:
+            return  # nothing to undo
+
+        history_entry = PerspectivesHistory.from_history_orm(db, last_history_entry)
+        history_entry.undo(db=db, client=client)
+
+    def read_history(
+        self, db: Session, aspect_id: int
+    ) -> list[PerspectivesHistoryRead]:
+        """Reads all history entries for the given aspect."""
+        history_entries = crud_perspectives_history.read_by_aspect(
+            db=db, aspect_id=aspect_id
+        )
+        return [
+            PerspectivesHistoryRead.model_validate(entry) for entry in history_entries
+        ]

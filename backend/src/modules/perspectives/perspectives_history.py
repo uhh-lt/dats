@@ -10,9 +10,17 @@ from modules.perspectives.document_cluster.document_cluster_orm import (
     DocumentClusterORM,
 )
 from modules.perspectives.enum.perspectives_db_action import PerspectiveDBActions
-from modules.perspectives.enum.perspectives_user_action import PerspectivesAction
+from modules.perspectives.enum.perspectives_job_type import PerspectivesJobType
+from modules.perspectives.enum.perspectives_user_action import (
+    PerspectivesAction,
+    PerspectivesUserAction,
+)
 from modules.perspectives.history.history_crud import crud_perspectives_history
-from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
+from modules.perspectives.history.history_dto import (
+    PerspectivesHistoryCreate,
+    PerspectivesHistoryUpdate,
+)
+from modules.perspectives.history.history_orm import PerspectiveHistoryORM
 
 if TYPE_CHECKING:
     # there is a circular dependency between perspectives_db_transaction and perspectives_history
@@ -23,13 +31,18 @@ if TYPE_CHECKING:
 
 class PerspectivesHistory:
     def __init__(
-        self, db: Session, aspect_id: int, perspective_action: PerspectivesAction
+        self,
+        db: Session,
+        aspect_id: int,
+        perspective_action: PerspectivesAction,
+        history_id: int | None = None,
     ):
         self.db = db
         self.aspect_id = aspect_id
         self.perspective_action = perspective_action
         self.undo_stack: list[dict[PerspectiveDBActions, dict]] = []
         self.redo_stack: list[dict[PerspectiveDBActions, dict]] = []
+        self.history_id = history_id
 
         # function mapping
         self.function_mapping: dict[PerspectiveDBActions, Callable] = {
@@ -53,6 +66,24 @@ class PerspectivesHistory:
             PerspectiveDBActions.UPDATE_DOCUMENT_CLUSTERS: self.__update_document_clusters,
         }
 
+    @classmethod
+    def from_history_orm(
+        cls, db: Session, history_orm: PerspectiveHistoryORM
+    ) -> "PerspectivesHistory":
+        """Creates a PerspectivesHistory instance from a PerspectiveHistoryORM."""
+        if history_orm.perspectives_action in PerspectivesJobType:
+            action = PerspectivesJobType[history_orm.perspectives_action]
+        else:
+            action = PerspectivesUserAction[history_orm.perspectives_action]
+        instance = cls(
+            db=db,
+            aspect_id=history_orm.aspect_id,
+            perspective_action=action,
+        )
+        instance.undo_stack = history_orm.undo_data
+        instance.redo_stack = history_orm.redo_data
+        return instance
+
     def register_undo(self, action: PerspectiveDBActions, params: dict):
         """Registers an undo operation to be executed on rollback."""
         self.undo_stack.append({action: params})
@@ -61,7 +92,7 @@ class PerspectivesHistory:
         """Registers a redo operation to be executed on commit."""
         self.redo_stack.append({action: params})
 
-    def store_history(self):
+    def store_history(self, manual_commit: bool):
         """Commits the SQL transaction and clears the undo stack."""
 
         current_history = crud_perspectives_history.read_by_aspect(
@@ -78,13 +109,19 @@ class PerspectivesHistory:
                 redo_data=self.redo_stack,
                 aspect_id=self.aspect_id,
             ),
+            manual_commit=manual_commit,
         )
 
-    def redo_history(self, db: Session, client: WeaviateClient):
+    def redo(self, db: Session, client: WeaviateClient):
         """Executes all redo operations in the redo stack."""
         from modules.perspectives.perspectives_db_transaction import (
             PerspectivesDBTransaction,
         )
+
+        if self.history_id is None:
+            raise ValueError(
+                "History ID must be set to redo history. For redo, use from_history_orm()."
+            )
 
         transaction = PerspectivesDBTransaction(
             db=db,
@@ -103,6 +140,14 @@ class PerspectivesHistory:
                     else:
                         raise ValueError(f"Unknown redo action: {action}")
 
+            # set undone to False
+            crud_perspectives_history.update(
+                db=db,
+                id=self.history_id,
+                update_dto=PerspectivesHistoryUpdate(is_undone=False),
+                manual_commit=True,  # this is now part of the transaction
+            )
+
             transaction.commit()
             logger.info("Successfully redone history operations.")
 
@@ -110,11 +155,16 @@ class PerspectivesHistory:
             transaction.rollback()
             raise e
 
-    def undo_history(self, db: Session, client: WeaviateClient):
+    def undo(self, db: Session, client: WeaviateClient):
         """Executes all undo operations in the undo stack."""
         from modules.perspectives.perspectives_db_transaction import (
             PerspectivesDBTransaction,
         )
+
+        if self.history_id is None:
+            raise ValueError(
+                "History ID must be set to undo history. For undo, use from_history_orm()."
+            )
 
         transaction = PerspectivesDBTransaction(
             db=db,
@@ -132,6 +182,14 @@ class PerspectivesHistory:
                         func(transaction, params)
                     else:
                         raise ValueError(f"Unknown undo action: {action}")
+
+            # set undone to True
+            crud_perspectives_history.update(
+                db=db,
+                id=self.history_id,
+                update_dto=PerspectivesHistoryUpdate(is_undone=True),
+                manual_commit=True,  # this is now part of the transaction
+            )
 
             transaction.commit()
             logger.info("Successfully undone history operations.")

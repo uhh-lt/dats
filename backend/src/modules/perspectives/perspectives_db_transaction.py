@@ -73,7 +73,9 @@ class PerspectivesDBTransaction:
             return
 
         if self.history:
-            self.history.store_history()
+            self.history.store_history(
+                manual_commit=True
+            )  # this is now part of the transaction
         self.db.commit()
         self._committed = True
 

@@ -14,6 +14,7 @@ from modules.perspectives.cluster.cluster_dto import (
     ClusterRead,
     ClusterUpdate,
 )
+from modules.perspectives.history.history_dto import PerspectivesHistoryRead
 from modules.perspectives.perspectives_job_dto import (
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
@@ -305,4 +306,65 @@ def update_cluster_details(
         cluster_id=cluster_id,
         update_dto=cluster_update,
         is_user_edited=True,
+    )
+
+
+# --- START UNDO / REDO --- #
+
+
+@router.post(
+    "/history/redo/{aspect_id}",
+    response_model=None,
+    summary="Redoes the last undone operation for the given Aspect.",
+)
+def redo_perspectives_history(
+    *,
+    db: Session = Depends(get_db_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> None:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+    ps.redo_history(
+        db=db,
+        client=weaviate,
+        aspect_id=aspect_id,
+    )
+
+
+@router.post(
+    "/history/undo/{aspect_id}",
+    response_model=None,
+    summary="Undoes the last operation for the given Aspect.",
+)
+def undo_perspectives_history(
+    *,
+    db: Session = Depends(get_db_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> None:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+    ps.undo_history(
+        db=db,
+        client=weaviate,
+        aspect_id=aspect_id,
+    )
+
+
+@router.get(
+    "/history/list/{aspect_id}",
+    response_model=list[PerspectivesHistoryRead],
+    summary="Returns the list of history entries for the given Aspect.",
+)
+def list_perspectives_history(
+    *,
+    db: Session = Depends(get_db_session),
+    aspect_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[PerspectivesHistoryRead]:
+    authz_user.assert_in_same_project_as(Crud.ASPECT, aspect_id)
+    return ps.read_history(
+        db=db,
+        aspect_id=aspect_id,
     )
