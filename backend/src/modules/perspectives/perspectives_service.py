@@ -27,11 +27,21 @@ from modules.perspectives.document_aspect.document_aspect_crud import (
 from modules.perspectives.document_cluster.document_cluster_crud import (
     crud_document_cluster,
 )
+from modules.perspectives.document_cluster.document_cluster_dto import (
+    DocumentClusterUpdate,
+)
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
+from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
 from modules.perspectives.perspectives_job_dto import (
     CreateAspectParams,
     PerspectivesJobInput,
     PerspectivesJobParamsNoCreate,
     PerspectivesJobRead,
+)
+from modules.perspectives.perspectives_user_actions import (
+    PerspectivesUserAction,
 )
 from modules.perspectives.perspectives_vis_dto import (
     PerspectivesClusterSimilarities,
@@ -54,49 +64,15 @@ class PerspectivesService(metaclass=SingletonMeta):
         cls.js = JobService()
         return super(PerspectivesService, cls).__new__(cls)
 
-    def start_perspectives_job(
-        self, db: Session, aspect_id: int, job_params: PerspectivesJobParamsNoCreate
-    ) -> PerspectivesJobRead:
-        aspect = crud_aspect.read(db=db, id=aspect_id)
-
-        # Check if there is a job running already for this aspect
-        if aspect.most_recent_job_id:
-            most_recent_job = self.js.get_job(aspect.most_recent_job_id)
-            if (
-                most_recent_job
-                and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
-            ):
-                raise Exception(
-                    f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
-                )
-
-        # No job running, so we can start a new one
-        job = self.js.start_job(
-            JobType.PERSPECTIVES,
-            payload=PerspectivesJobInput(
-                project_id=aspect.project_id,
-                aspect_id=aspect_id,
-                perspectives_job_type=job_params.perspectives_job_type,
-                parameters=job_params,
-            ),
-        )
-
-        # Update the aspect with the new job ID
-        crud_aspect.update(
-            db=db,
-            id=aspect.id,
-            update_dto=AspectUpdateIntern(
-                most_recent_job_id=job.get_id(),
-            ),
-        )
-
-        return PerspectivesJobRead.from_rq_job(job)
-
-    def read_perspectives_job(self, job_id: str) -> PerspectivesJobRead:
-        job = self.js.get_job(job_id)
-        return PerspectivesJobRead.from_rq_job(job)
+    #########################
+    ### CREATE OPERATIONS ###
+    #########################
 
     def create_aspect(self, db: Session, create_dto: AspectCreate) -> AspectRead:
+        """
+        Creates a new Aspect and starts the initial Perspectives job for it.
+        This operation is not undo/redoable, as it creates a new entity.
+        """
         db_aspect = crud_aspect.create(db=db, create_dto=create_dto)
 
         params = CreateAspectParams()
@@ -110,15 +86,20 @@ class PerspectivesService(metaclass=SingletonMeta):
             ),
         )
 
-        db_aspect = crud_aspect.update(
-            db=db,
-            id=db_aspect.id,
-            update_dto=AspectUpdateIntern(
-                most_recent_job_id=job.get_id(),
-            ),
-        )
+        # Return the created Aspect with the most recent job ID set
+        # The most recent job ID is set by the PerspectivesJobHandler when the job starts!
+        aspect_read = AspectRead.model_validate(db_aspect)
+        aspect_read.most_recent_job_id = job.get_id()
 
-        return AspectRead.model_validate(db_aspect)
+        return aspect_read
+
+    #######################
+    ### READ OPERATIONS ###
+    #######################
+
+    def read_perspectives_job(self, job_id: str) -> PerspectivesJobRead:
+        job = self.js.get_job(job_id)
+        return PerspectivesJobRead.from_rq_job(job)
 
     def read_project_aspects(
         self,
@@ -316,36 +297,100 @@ class PerspectivesService(metaclass=SingletonMeta):
             similarities=similarities,
         )
 
+    #########################
+    ### UPDATE OPERATIONS ###
+    #########################
+
+    def start_perspectives_job(
+        self, db: Session, aspect_id: int, job_params: PerspectivesJobParamsNoCreate
+    ) -> PerspectivesJobRead:
+        """
+        Starts a new Perspectives job for the given Aspect.
+        This user action is undo/redoable!
+        """
+        aspect = crud_aspect.read(db=db, id=aspect_id)
+
+        # Check if there is a job running already for this aspect
+        if aspect.most_recent_job_id:
+            most_recent_job = self.js.get_job(aspect.most_recent_job_id)
+            if (
+                most_recent_job
+                and JobStatus(most_recent_job.get_status()) in RUNNING_JOB_STATUS
+            ):
+                raise Exception(
+                    f"PerspectivesJob {most_recent_job.get_id()} is still running. Please wait until it is finished."
+                )
+
+        # No job running, so we can start a new one
+        job = self.js.start_job(
+            JobType.PERSPECTIVES,
+            payload=PerspectivesJobInput(
+                project_id=aspect.project_id,
+                aspect_id=aspect_id,
+                perspectives_job_type=job_params.perspectives_job_type,
+                parameters=job_params,
+            ),
+        )
+
+        return PerspectivesJobRead.from_rq_job(job)
+
     def update_aspect(
         self,
         db: Session,
         aspect_id: int,
         update_dto: AspectUpdate,
     ) -> AspectRead:
-        db_obj = crud_aspect.update(
+        """
+        Updates the Aspect with the given ID.
+        This user action is undo/redoable!
+        """
+        transaction = PerspectivesDBTransaction(
             db=db,
-            id=aspect_id,
-            update_dto=AspectUpdateIntern(**update_dto.model_dump()),
+            aspect_id=aspect_id,
+            perspective_action=PerspectivesUserAction.UPDATE_ASPECT,
         )
-        return AspectRead.model_validate(db_obj)
+        try:
+            db_obj = transaction.update_aspect(
+                id=aspect_id, update_dto=AspectUpdateIntern(**update_dto.model_dump())
+            )
+            transaction.commit()
+            return AspectRead.model_validate(db_obj)
+        except Exception as e:
+            transaction.rollback()
+            raise e
 
     def update_cluster(
         self,
         db: Session,
+        aspect_id: int,
         cluster_id: int,
         update_dto: ClusterUpdate,
         is_user_edited: bool,
     ) -> ClusterRead:
-        # Perform update
-        update_dto = ClusterUpdateIntern(
-            **update_dto.model_dump(exclude_unset=True), is_user_edited=is_user_edited
-        )
-        updated_cluster = crud_cluster.update(
+        """
+        Updates the Cluster with the given ID.
+        This user action is undo/redoable!
+        """
+        transaction = PerspectivesDBTransaction(
             db=db,
-            id=cluster_id,
-            update_dto=update_dto,
+            aspect_id=aspect_id,
+            perspective_action=PerspectivesUserAction.UPDATE_CLUSTER,
         )
-        return ClusterRead.model_validate(updated_cluster)
+        try:
+            updated_clusters = transaction.update_clusters(
+                ids=[cluster_id],
+                update_dtos=[
+                    ClusterUpdateIntern(
+                        **update_dto.model_dump(exclude_unset=True),
+                        is_user_edited=is_user_edited,
+                    )
+                ],
+            )
+            transaction.commit()
+            return ClusterRead.model_validate(updated_clusters[0])
+        except Exception as e:
+            transaction.rollback()
+            raise e
 
     def set_labels(
         self,
@@ -354,16 +399,55 @@ class PerspectivesService(metaclass=SingletonMeta):
         sdoc_ids: list[int],
         is_accepted: bool,
     ) -> int:
-        return crud_document_cluster.set_labels(
+        """
+        Sets the is_accepted label for the given SourceDocument IDs in the given Aspect.
+        This user action is undo/redoable!
+        """
+        transaction = PerspectivesDBTransaction(
             db=db,
             aspect_id=aspect_id,
-            sdoc_ids=sdoc_ids,
-            is_accepted=is_accepted,
+            perspective_action=PerspectivesUserAction.ACCEPT_LABELS
+            if is_accepted
+            else PerspectivesUserAction.REVERT_LABELS,
         )
+        try:
+            document_clusters = transaction.read_document_clusters_by_aspect(
+                aspect_id=aspect_id
+            )
+            dc_map: dict[int, DocumentClusterORM] = {
+                dc.sdoc_id: dc for dc in document_clusters
+            }
+            update_ids: list[tuple[int, int]] = []
+            udpate_dtos: list[DocumentClusterUpdate] = []
+            for sdoc_id in sdoc_ids:
+                dc = dc_map.get(sdoc_id)
+                if dc and dc.is_accepted != is_accepted:
+                    update_ids.append((sdoc_id, dc.cluster_id))
+                    udpate_dtos.append(
+                        DocumentClusterUpdate(
+                            is_accepted=is_accepted,
+                        )
+                    )
+            updated_db_objs = transaction.update_document_clusters(
+                ids=update_ids, update_dtos=udpate_dtos
+            )
+            transaction.commit()
+            return len(updated_db_objs)
+        except Exception as e:
+            transaction.rollback()
+            raise e
+
+    #########################
+    ### DELETE OPERATIONS ###
+    #########################
 
     def delete_aspect(
         self, db: Session, weaviate: WeaviateClient, aspect_id: int
     ) -> AspectRead:
+        """
+        Deletes the Aspect with the given ID.
+        This operation is not undo/redoable, as it deletes an entity.
+        """
         aspect = crud_aspect.read(db=db, id=aspect_id)
 
         crud_cluster_embedding.delete_embeddings_by_aspect(

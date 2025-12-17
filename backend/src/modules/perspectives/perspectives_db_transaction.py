@@ -40,7 +40,7 @@ from modules.perspectives.document_cluster.document_cluster_orm import (
 )
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
 from modules.perspectives.perspectives_history import PerspectivesHistory
-from modules.perspectives.perspectives_job_dto import PerspectivesJobType
+from modules.perspectives.perspectives_user_actions import PerspectivesAction
 from repos.vector.weaviate_exceptions import WeaviateObjectIDNotFoundException
 from repos.vector.weaviate_models import EmbeddingSearchResult
 
@@ -49,9 +49,9 @@ class PerspectivesDBTransaction:
     def __init__(
         self,
         db: Session,
-        client: WeaviateClient,
         aspect_id: int,
-        perspective_action: PerspectivesJobType,
+        perspective_action: PerspectivesAction,
+        client: WeaviateClient | None = None,
         write_history: bool = True,
     ):
         self.db = db
@@ -214,6 +214,9 @@ class PerspectivesDBTransaction:
         project_id: int,
         aspect_object_identifiers: list[AspectObjectIdentifier],
     ) -> list[list[float]]:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         embeddings = crud_aspect_embedding.get_embeddings(
             client=self.client,
             project_id=project_id,
@@ -306,6 +309,9 @@ class PerspectivesDBTransaction:
         ids: list[AspectObjectIdentifier],
         embeddings: list[list[float]],
     ) -> None:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         # 1. register undo
         if self.history:
             try:
@@ -358,6 +364,9 @@ class PerspectivesDBTransaction:
         project_id: int,
         ids: list[AspectObjectIdentifier],
     ) -> None:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         # 1. register undo
         if self.history:
             try:
@@ -430,6 +439,9 @@ class PerspectivesDBTransaction:
     def read_cluster_embeddings_by_aspect(
         self, project_id: int, aspect_id: int
     ) -> list[EmbeddingSearchResult[ClusterObjectIdentifier]]:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         cluster_embeddings = crud_cluster_embedding.find_embeddings_by_aspect_id(
             client=self.client,
             project_id=project_id,
@@ -554,6 +566,9 @@ class PerspectivesDBTransaction:
         ids: list[ClusterObjectIdentifier],
         embeddings: list[list[float]],
     ) -> None:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         # 1. register undo
         if self.history:
             try:
@@ -606,6 +621,9 @@ class PerspectivesDBTransaction:
         project_id: int,
         ids: list[ClusterObjectIdentifier],
     ) -> None:
+        if self.client is None:
+            raise ValueError("Weaviate client is not set for this transaction.")
+
         # 1. register undo
         if self.history:
             try:
@@ -709,6 +727,12 @@ class PerspectivesDBTransaction:
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentClusterUpdate],
     ) -> list[DocumentClusterORM]:
+        """
+        Update multiple document clusters.
+        Args:
+            ids: List of tuples containing (sdoc_id, cluster_id) of the document clusters
+            update_dtos: List of DocumentClusterUpdate DTOs with the updates to apply
+        """
         # 1. store previous state for undo
         if self.history:
             previous_document_clusters = crud_document_cluster.read_by_ids(

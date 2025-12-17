@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Boolean, ForeignKey, Integer
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
@@ -7,6 +7,7 @@ from repos.db.orm_base import ORMBase
 
 class PerspectiveHistoryORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    perspectives_action: Mapped[str] = mapped_column(String, nullable=False)
     history_number: Mapped[int] = mapped_column(Integer, nullable=False)
     is_undone: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

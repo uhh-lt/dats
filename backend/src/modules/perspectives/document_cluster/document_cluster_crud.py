@@ -188,59 +188,6 @@ class CRUDDocumentCluster(
             db.rollback()
             raise  # Re-raise the database exception (e.g., IntegrityError)
 
-    def set_labels(
-        self,
-        db: Session,
-        *,
-        aspect_id: int,
-        sdoc_ids: list[int],
-        is_accepted: bool,
-    ) -> int:
-        """
-        Accepts the labels for the provided SourceDocuments (by ID) of the aspect.
-        Args:
-            db: The database session
-            aspect_id: The ID of the aspect to which the cluster belongs
-            sdoc_ids: List of SourceDocument IDs to accept labels for
-            is_accepted: Whether to set the labels as accepted
-        Returns:
-            The number of DocumentClusterORM objects that were updated
-        """
-        total_updated_count = 0
-
-        if not sdoc_ids:
-            return total_updated_count
-
-        # 1. Process sdoc_ids in Batches
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
-
-            # 2. Build the UPDATE Statement for the current batch
-            stmt = (
-                update(self.model)
-                .where(
-                    self.model.sdoc_id.in_(batch_sdoc_ids),
-                )
-                .where(
-                    self.model.cluster_id == ClusterORM.id,
-                    ClusterORM.aspect_id == aspect_id,
-                )
-                .values(is_accepted=is_accepted)
-                .execution_options(synchronize_session=False)
-            )
-
-            # 3. Execute the statement
-            results = db.execute(stmt)
-
-            # Accumulate the count of updated rows from this batch
-            count = results.rowcount if results.rowcount is not None else 0
-            total_updated_count += count
-
-        # 4. Commit all batched updates
-        db.commit()
-
-        return total_updated_count
-
     def delete_multi(
         self, db: Session, *, ids: list[tuple[int, int]], manual_commit: bool = False
     ) -> list[DocumentClusterORM]:

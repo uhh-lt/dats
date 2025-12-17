@@ -1,11 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
-from modules.perspectives.perspectives_job_dto import PerspectivesJobType
+from modules.perspectives.perspectives_user_actions import PerspectivesAction
 
 
 class PerspectivesHistoryBase(BaseModel):
-    perspective_action: PerspectivesJobType = Field(
+    perspective_action: PerspectivesAction = Field(
         description="Type of perspective action that generated this history entry"
     )
     history_number: int = Field(

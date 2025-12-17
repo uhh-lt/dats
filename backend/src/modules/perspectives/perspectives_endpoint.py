@@ -301,6 +301,7 @@ def update_cluster_details(
 
     return ps.update_cluster(
         db=db,
+        aspect_id=cluster.aspect_id,
         cluster_id=cluster_id,
         update_dto=cluster_update,
         is_user_edited=True,

@@ -13,12 +13,12 @@ from modules.perspectives.history.history_crud import crud_perspectives_history
 from modules.perspectives.history.history_dto import PerspectivesHistoryCreate
 from modules.perspectives.perspectives_db_actions import PerspectiveDBActions
 from modules.perspectives.perspectives_db_transaction import PerspectivesDBTransaction
-from modules.perspectives.perspectives_job_dto import PerspectivesJobType
+from modules.perspectives.perspectives_user_actions import PerspectivesAction
 
 
 class PerspectivesHistory:
     def __init__(
-        self, db: Session, aspect_id: int, perspective_action: PerspectivesJobType
+        self, db: Session, aspect_id: int, perspective_action: PerspectivesAction
     ):
         self.db = db
         self.aspect_id = aspect_id
