@@ -52,7 +52,7 @@ from modules.llm_assistant.llm_job_dto import (
 )
 from modules.llm_assistant.prompts.annotation_prompt_builder import (
     AnnotationPromptBuilder,
-    LLMAnnotationResults,
+    LLMHighlightedAnnotationResult,
 )
 from modules.llm_assistant.prompts.metadata_prompt_builder import (
     LLMMetadataExtractionResults,
@@ -618,7 +618,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 db=db,
                 sdoc_ids=sids,
                 sdoc_datas=sdata,
-                response_model=LLMAnnotationResults,
+                response_model=LLMHighlightedAnnotationResult,
             )
 
             # parse the responses, preparing the suggested annotation creation
@@ -641,13 +641,13 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     case _:
                         raise ValueError("Unknown DataTag!")  # type: ignore
 
-                # parse the response
-                parsed_response = prompt_builder.parse_result(result=response)
+                # parse highlighted response
+                clean_text, parsed_spans = prompt_builder.parse_result(response)
 
                 # validate the response and create the suggested annotation
-                for x in parsed_response:
-                    code_id = x.code_id
-                    span_text = x.text
+                for span in parsed_spans:
+                    code_id = span["code_id"]
+                    span_text = span["text"]
 
                     # filter out empty suggestions
                     if len(span_text.strip()) == 0:

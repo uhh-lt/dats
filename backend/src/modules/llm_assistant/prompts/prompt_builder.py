@@ -32,7 +32,7 @@ class PromptBuilder:
     """
     Base class for building LLM prompts.
     A system prompt template may contain the placeholders "<project_title>" and "<project_description>".
-    A user prompt template must contain the placeholder "<document>".
+    A user prompt template must contain the placeholder "<document>" or "<sentence>".
 
     A user prompt template always consists of the same building blocks
     1. The task description, e.g. Please classify the documents ...
