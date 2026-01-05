@@ -51,7 +51,7 @@ from modules.llm_assistant.llm_job_dto import (
 )
 from modules.llm_assistant.prompts.annotation_prompt_builder import (
     AnnotationPromptBuilder,
-    LLMAnnotationResults,
+    LLMHighlightedAnnotationResult,
 )
 from modules.llm_assistant.prompts.metadata_prompt_builder import (
     LLMMetadataExtractionResults,
@@ -622,7 +622,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 db=db,
                 sdoc_ids=sids,
                 sdoc_datas=sdata,
-                response_model=LLMAnnotationResults,
+                response_model=LLMHighlightedAnnotationResult,
             )
 
             # parse the responses, preparing the suggested annotation creation
@@ -645,20 +645,16 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     case _:
                         raise ValueError("Unknown DataTag!")  # type: ignore
 
-                # parse the response
-                parsed_response = prompt_builder.parse_result(result=response)
+                # parse highlighted response
+                clean_text, parsed_spans = prompt_builder.parse_result(response)
 
-                # validate the response and create the suggested annotation
-                for x in parsed_response:
-                    code_id = x.code_id
-                    span_text = x.text
-
-                    # check if the code_id is valid
+                for span in parsed_spans:
+                    code_id = span["code_id"]
                     if code_id not in project_codes:
                         continue
 
                     document_text = content.lower()
-                    annotation_text = span_text.lower()
+                    annotation_text = span["text"].lower()
 
                     # find start and end character of the annotation_text in the document_text
                     start = document_text.find(annotation_text)
@@ -692,7 +688,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                             end=end,
                             begin_token=begin_token,
                             end_token=end_token,
-                            text=span_text,
+                            text=span["text"],
                             code_id=code_id,
                             created=datetime.now(),
                             updated=datetime.now(),
