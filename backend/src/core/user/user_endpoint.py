@@ -108,7 +108,9 @@ def associate_user_to_project(
     authz_user.assert_in_project(proj_id)
 
     user_db_obj = crud_user.read_by_email(db=db, email=user.email)
-    ProjectService().associate_user(db=db, proj_id=proj_id, user_id=user_db_obj.id)
+    user_db_obj = ProjectService().associate_user(
+        db=db, proj_id=proj_id, user_id=user_db_obj.id
+    )
     return UserRead.model_validate(user_db_obj)
 
 
