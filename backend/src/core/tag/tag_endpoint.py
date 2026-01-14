@@ -282,9 +282,12 @@ def get_sdoc_ids_by_tag_id(
     summary="Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
 )
 async def get_sdoc_counts(
-    *, db: Session = Depends(get_db_session), sdoc_ids: list[int]
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_ids: list[int],
+    authz_user: AuthzUser = Depends(),
 ) -> dict[int, int]:
-    # TODO only if the user has access
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
     return crud_tag.read_tag_sdoc_counts(db, sdoc_ids)
 
 

@@ -24,6 +24,7 @@ from core.user.user_crud import (
     ASSISTANT_TRAINED_ID,
     ASSISTANT_ZEROSHOT_ID,
     SYSTEM_USER_ID,
+    crud_user,
 )
 from core.user.user_orm import UserORM
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
@@ -45,9 +46,7 @@ class ProjectService(metaclass=SingletonMeta):
 
     def associate_user(self, *, db: Session, proj_id: int, user_id: int) -> UserORM:
         # 1) add user to project
-        user_db_obj = crud_project.associate_user(
-            db=db, proj_id=proj_id, user_id=user_id
-        )
+        crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
 
         # 2) create memo for this user–project association
         crud_memo.create_for_attached_object(
@@ -65,7 +64,7 @@ class ProjectService(metaclass=SingletonMeta):
             ),
         )
 
-        return user_db_obj
+        return crud_user.read(db=db, id=user_id)
 
     def create_project(
         self, db: Session, create_dto: ProjectCreate, creating_user_id: int

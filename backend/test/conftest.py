@@ -252,7 +252,6 @@ def setup_users(user_factory: UserFactory) -> None:
         ASSISTANT_FEWSHOT_ID,
         ASSISTANT_TRAINED_ID,
         ASSISTANT_ZEROSHOT_ID,
-        SYSTEM_USER_ID,
     )
     from core.user.user_dto import UserCreate
 
@@ -263,7 +262,6 @@ def setup_users(user_factory: UserFactory) -> None:
             last_name=conf.system_user.last_name,
             password=conf.system_user.password,
         ),
-        user_id=SYSTEM_USER_ID,
     )
 
     domain = conf.assistant_user.email.split("@")[1]
@@ -300,7 +298,6 @@ def test_user(user_factory: UserFactory) -> UserRead:
             email="testuser@dats.org",
             password="MyTestPassword123",
         ),
-        user_id=3,
     )
     return UserRead.model_validate(user_db_obj)
 
