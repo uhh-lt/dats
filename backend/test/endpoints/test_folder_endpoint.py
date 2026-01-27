@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from core.doc.folder_dto import (
@@ -85,6 +86,42 @@ def test_get_folder_by_id_if_not_exists(
 
     response = client.get(f"/folder/{non_existing_folder_id}")
     assert response.status_code == 403
+
+
+testdata = [
+    pytest.param({"name": "New Folder Name"}, id="change_name"),
+    pytest.param({"parent_id": None}, id="move_to_root"),
+]
+
+
+@pytest.mark.parametrize("payload", testdata)
+def test_update_folder_parametrized(
+    client: TestClient,
+    project_factory,
+    folder_factory,
+    test_user: UserRead,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    folder = folder_factory.create(
+        FolderCreate(
+            name="Old",
+            folder_type=FolderType.NORMAL,
+            parent_id=None,
+            project_id=project.id,
+        )
+    )
+
+    response = client.put(f"/folder/{folder.id}", json=payload)
+    assert response.status_code == 200
+
+    updated = FolderRead.model_validate(response.json())
+
+    assert updated.name == payload.get("name", folder.name)
+    assert updated.parent_id == payload.get("parent_id", folder.parent_id)
+
+    assert updated.id == folder.id
+    assert updated.project_id == project.id
 
 
 def test_update_folder(

@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from test.factories.project_factory import ProjectFactory
 from test.factories.user_factory import UserFactory
@@ -65,22 +66,29 @@ def test_get_all_users(client: TestClient, test_user: UserRead) -> None:
     assert test_user.id in ids
 
 
+testdata = [
+    pytest.param({"first_name": "NewFirst", "last_name": "NewLast"}, id="both_names"),
+    pytest.param({"first_name": "OnlyFirst"}, id="only_first_name"),
+    pytest.param({"last_name": "OnlyLast"}, id="only_last_name"),
+    pytest.param({"email": "new@dats.org"}, id="only_email"),
+    pytest.param({"password": "newpassword123"}, id="only_password"),
+]
+
+
+@pytest.mark.parametrize("payload", testdata)
 def test_update_me(
     client: TestClient,
     test_user: UserRead,
+    payload: dict,
 ) -> None:
-    payload = {
-        "first_name": "NewFirst",
-        "last_name": "NewLast",
-    }
-
     resp = client.patch("/user/", json=payload)
     assert resp.status_code == 200, resp.json()
 
     user = model_validate_user_read(resp.json())
+    assert user.first_name == payload.get("first_name", test_user.first_name)
+    assert user.last_name == payload.get("last_name", test_user.last_name)
+    assert user.email == payload.get("email", test_user.email)
     assert user.id == test_user.id
-    assert user.first_name == "NewFirst"
-    assert user.last_name == "NewLast"
 
 
 def test_delete_me(

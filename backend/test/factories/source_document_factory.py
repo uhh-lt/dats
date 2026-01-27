@@ -22,6 +22,7 @@ class SourceDocumentFactory:
                 project_id=1,
                 folder_id=1,
             )
+        # TODO 2026: Use the correct preprocessing pipeline (workers) to 'upload' and create documents!
         return crud_sdoc.create(
             db=self.db_session,
             create_dto=create_dto,
