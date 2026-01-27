@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from test.factories.code_factory import CodeFactory
@@ -56,7 +57,7 @@ def test_add_sentence_annotation(
         code_id=code.id,
         sdoc_id=sdoc.id,
     )
-    response = client.put("sentence", json=payload.model_dump())
+    response = client.put("/sentence", json=payload.model_dump())
 
     assert response.status_code == 200
     sentence = SentenceAnnotationRead.model_validate(response.json())
@@ -200,7 +201,7 @@ def test_get_sentence_annotation_by_id_if_not_exsist(client: TestClient) -> None
         code_id=9999,
         sdoc_id=9999,
     )
-    response = client.get(f"/sentence/ {payload.code_id}")
+    response = client.get(f"/sentence/{payload.code_id}")
     assert response.status_code == 403
 
 
@@ -285,6 +286,88 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
     assert resp.status_code == 403
 
 
+testdata_sentence_annotation_update = [
+    pytest.param({"code_id": 137}, id="update_code_only"),
+    pytest.param({"sentence_id_start": 1, "code_id": 136}, id="update_start"),
+    pytest.param({"sentence_id_end": 2, "code_id": 136}, id="update_end"),
+    pytest.param(
+        {"sentence_id_start": 1, "sentence_id_end": 2, "code_id": 136},
+        id="both_start_end",
+    ),
+]
+
+
+@pytest.mark.parametrize("payload", testdata_sentence_annotation_update)
+def test_update_sentence_annotation_parametrized(
+    client: TestClient,
+    project_factory,
+    source_document_factory,
+    code_factory,
+    sentence_annotation_factory,
+    test_user,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="doc.txt",
+            name="Doc",
+            doctype=DocType.text,
+            project_id=project.id,
+            folder_id=None,
+        )
+    )
+
+    code1 = code_factory.create(
+        create_dto=CodeCreate(
+            name="code-1",
+            color="red",
+            description="desc",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+    code_factory.create(
+        create_dto=CodeCreate(
+            name="code-2",
+            color="blue",
+            description="desc",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+
+    sent_anno = sentence_annotation_factory.create(
+        create_dto=SentenceAnnotationCreate(
+            sentence_id_start=1,
+            sentence_id_end=2,
+            code_id=code1.id,
+            sdoc_id=sdoc.id,
+        ),
+        user_id=test_user.id,
+    )
+
+    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+    assert resp.status_code == 200, f"Error: {resp.json()}"
+
+    updated = SentenceAnnotationRead.model_validate(resp.json())
+
+    assert updated.id == sent_anno.id
+    assert updated.sdoc_id == sdoc.id
+    assert updated.code_id == payload.get("code_id", sent_anno.code_id)
+    assert updated.sentence_id_start == payload.get(
+        "sentence_id_start", sent_anno.sentence_id_start
+    )
+    assert updated.sentence_id_end == payload.get(
+        "sentence_id_end", sent_anno.sentence_id_end
+    )
+
+
 def test_update_by_id(
     client: TestClient,
     project_factory: ProjectFactory,
@@ -364,6 +447,94 @@ def test_update_sentence_annotation_by_id_if_not_exsist(client: TestClient) -> N
     )
 
     assert resp.status_code == 403
+
+
+testdata_bulk = [
+    pytest.param({"target": "sa1", "code_mode": "new"}, id="update_sa1_new_code"),
+    pytest.param({"target": "sa2", "code_mode": "old"}, id="update_sa2_old_code"),
+]
+
+
+@pytest.mark.parametrize("params", testdata_bulk)
+def test_update_sent_anno_annotations_bulk_parametrized(
+    client: TestClient,
+    project_factory,
+    source_document_factory,
+    code_factory,
+    sentence_annotation_factory,
+    test_user,
+    params: dict,
+):
+    project = project_factory.create(creating_user_id=test_user.id)
+
+    old_code = code_factory.create(
+        create_dto=CodeCreate(
+            name="old",
+            color="c",
+            description="d",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+    new_code = code_factory.create(
+        create_dto=CodeCreate(
+            name="new",
+            color="c",
+            description="d",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="doc.txt", name="Doc", doctype=DocType.text, project_id=project.id
+        )
+    )
+
+    sa1 = sentence_annotation_factory.create(
+        create_dto=SentenceAnnotationCreate(
+            sentence_id_start=0, sentence_id_end=0, code_id=old_code.id, sdoc_id=sdoc.id
+        ),
+        user_id=test_user.id,
+    )
+
+    sa2 = sentence_annotation_factory.create(
+        create_dto=SentenceAnnotationCreate(
+            sentence_id_start=1, sentence_id_end=5, code_id=old_code.id, sdoc_id=sdoc.id
+        ),
+        user_id=test_user.id,
+    )
+
+    if params["target"] == "sa1":
+        original_anno = sa1
+    else:
+        original_anno = sa2
+
+    target_code_id = new_code.id if params["code_mode"] == "new" else old_code.id
+
+    payload = {"sent_annotation_id": original_anno.id, "code_id": target_code_id}
+
+    resp = client.patch("/sentence/bulk/update", json=[payload])
+    assert resp.status_code == 200, f"Error: {resp.text}"
+
+    updated = SentenceAnnotationRead.model_validate(resp.json()[0])
+
+    assert updated.id == original_anno.id
+    assert updated.sdoc_id == sdoc.id
+
+    assert updated.code_id == payload.get("code_id", original_anno.code_id)
+
+    assert updated.sentence_id_start == payload.get(
+        "sentence_id_start", original_anno.sentence_id_start
+    )
+    assert updated.sentence_id_end == payload.get(
+        "sentence_id_end", original_anno.sentence_id_end
+    )
 
 
 def test_update_sent_anno_annotations_bulk(

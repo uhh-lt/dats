@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from test.factories.project_factory import ProjectFactory
@@ -250,6 +251,50 @@ def test_set_tags_batch_not_exist(client: TestClient) -> None:
     assert resp.status_code == 403, resp.json()
 
 
+testdata = [
+    pytest.param([1], [2], 2, id="swap_t1_t2"),
+    pytest.param([], [2], 1, id="link_only_t2"),
+    pytest.param([1], [], 1, id="unlink_only_t1"),
+]
+
+
+@pytest.mark.parametrize("payload", testdata)
+def test_update_tags_batch_parametrize(
+    db_session,
+    client,
+    project_factory,
+    source_document_factory,
+    tag_factory,
+    test_user,
+    payload,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="tag.txt", name="Doc", doctype=DocType.text, project_id=project.id
+        )
+    )
+
+    t1 = tag_factory.create(
+        create_dto=TagCreate(name="T1", color="red", project_id=project.id)
+    )
+    t2 = tag_factory.create(
+        create_dto=TagCreate(name="T2", color="green", project_id=project.id)
+    )
+
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=[t1.id])
+
+    payload = {
+        "sdoc_ids": [sdoc.id],
+        "unlink_tag_ids": [t1.id for i in payload[0] if i == 1],
+        "link_tag_ids": [t2.id for i in payload[1] if i == 2],
+    }
+
+    resp = client.patch("/tag/bulk/update", json=payload)
+    assert resp.status_code == 200
+    assert resp.json() == 2
+
+
 def test_update_tags_batch(
     db_session: Session,
     client: TestClient,
@@ -441,6 +486,46 @@ def test_get_by_sdoc_if_not_exsist(
 
     resp = client.get(f"/tag/sdoc/{not_exsist_id}")
     assert resp.status_code == 403, resp.json()
+
+
+testdata_tags = [
+    pytest.param({"name": "New Tag Name"}, id="update_name_only"),
+    pytest.param({"color": "red"}, id="update_color_only"),
+    pytest.param({"description": "Updated Description"}, id="update_description_only"),
+    pytest.param({"name": "Combined", "color": "yellow"}, id="update_multiple_fields"),
+]
+
+
+@pytest.mark.parametrize("payload", testdata_tags)
+def test_update_tag_parametrized(
+    client: TestClient,
+    project_factory: ProjectFactory,
+    tag_factory: TagFactory,
+    test_user: UserRead,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    tag = tag_factory.create(
+        create_dto=TagCreate(
+            name="old name",
+            color="green",
+            description="data1",
+            parent_id=None,
+            project_id=project.id,
+        )
+    )
+
+    resp = client.patch(f"/tag/{tag.id}", json=payload)
+    assert resp.status_code == 200
+
+    updated = TagRead.model_validate(resp.json())
+
+    assert updated.name == payload.get("name", tag.name)
+    assert updated.color == payload.get("color", tag.color)
+    assert updated.description == payload.get("description", tag.description)
+
+    assert updated.id == tag.id
+    assert updated.project_id == project.id
 
 
 def test_update_by_id(

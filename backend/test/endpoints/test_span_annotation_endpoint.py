@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from test.factories.code_factory import CodeFactory
@@ -175,7 +176,7 @@ def test_get_by_id(
     project_factory: ProjectFactory,
     source_document_factory: SourceDocumentFactory,
     code_factory: CodeFactory,
-    span_annotaion_factory: SpanAnnotationFactory,
+    span_annotation_factory: SpanAnnotationFactory,
     test_user: UserRead,
 ) -> None:
     project = project_factory.create(creating_user_id=test_user.id)
@@ -201,7 +202,7 @@ def test_get_by_id(
         )
     )
 
-    sa = span_annotaion_factory.create(
+    sa = span_annotation_factory.create(
         create_dto=SpanAnnotationCreate(
             sdoc_id=sdoc.id,
             code_id=code.id,
@@ -326,6 +327,89 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
     assert resp.status_code == 403
 
 
+test_data_span_update = [
+    pytest.param({"code_id": 0}, id="update_code_only"),
+    pytest.param({"begin": 10, "end": 15}, id="update_positions"),
+    pytest.param({"code_id": 0, "begin": 20}, id="update_both"),
+]
+
+
+@pytest.mark.parametrize("payload", test_data_span_update)
+def test_update_span_annotation_parametrized_by_id(
+    client: TestClient,
+    project_factory,
+    source_document_factory,
+    code_factory,
+    span_annotation_factory,
+    test_user,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="doc.txt",
+            name="Document",
+            doctype=DocType.text,
+            project_id=project.id,
+        )
+    )
+
+    code1 = code_factory.create(
+        create_dto=CodeCreate(
+            name="code-1",
+            color="red",
+            description="desc",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+    code2 = code_factory.create(
+        create_dto=CodeCreate(
+            name="code-2",
+            color="blue",
+            description="desc",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+    if "code_id" in payload and payload["code_id"] == 0:
+        payload["code_id"] = code2.id
+
+    span_anno = span_annotation_factory.create(
+        create_dto=SpanAnnotationCreate(
+            sdoc_id=sdoc.id,
+            code_id=code1.id,
+            begin=0,
+            end=5,
+            begin_token=0,
+            end_token=1,
+            span_text="Text",
+        ),
+        user_id=test_user.id,
+    )
+
+    resp = client.patch(f"/span/{span_anno.id}", json=payload)
+    assert resp.status_code == 200, f"Error: {resp.text}"
+
+    updated = SpanAnnotationRead.model_validate(resp.json())
+
+    assert updated.id == span_anno.id
+    assert updated.sdoc_id == sdoc.id
+
+    assert updated.code_id == payload.get("code_id", span_anno.code_id)
+    assert updated.begin == payload.get("begin", span_anno.begin)
+    assert updated.end == payload.get("end", span_anno.end)
+    assert updated.begin_token == payload.get("begin_token", span_anno.begin_token)
+    assert updated.end_token == payload.get("end_token", span_anno.end_token)
+
+    assert updated.text == span_anno.span_text.text
+
+
 def test_update_by_id(
     client: TestClient,
     project_factory: ProjectFactory,
@@ -409,6 +493,103 @@ def test_update_sentence_annotation_by_id_if_not_exsist(client: TestClient) -> N
     )
 
     assert resp.status_code == 403
+
+
+test_data_bulk = [
+    pytest.param({"code_id_link": "new"}, id="update_code"),
+    pytest.param({"begin": 10}, id="update_begin"),
+    pytest.param({"end": 15}, id="update_end"),
+    pytest.param({"begin_token": 1}, id="update_begin_token"),
+    pytest.param({"end_token": 6}, id="update_end_token"),
+    pytest.param({"span_text": "Original"}, id="update_span_text"),
+]
+
+
+@pytest.mark.parametrize("patch_data", test_data_bulk)
+def test_update_span_annotation_parametrize_bulk(
+    client: TestClient,
+    project_factory: ProjectFactory,
+    source_document_factory: SourceDocumentFactory,
+    code_factory: CodeFactory,
+    span_annotation_factory: SpanAnnotationFactory,
+    test_user: UserRead,
+    patch_data: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="doc.txt", name="Doc", doctype=DocType.text, project_id=project.id
+        )
+    )
+    sdoc_id = sdoc.id
+
+    code1 = code_factory.create(
+        create_dto=CodeCreate(
+            name="c1",
+            color="r",
+            description="d",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+    code2 = code_factory.create(
+        create_dto=CodeCreate(
+            name="c2",
+            color="b",
+            description="d",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        )
+    )
+
+    span_anno = span_annotation_factory.create(
+        create_dto=SpanAnnotationCreate(
+            sdoc_id=sdoc_id,
+            code_id=code1.id,
+            begin=0,
+            end=5,
+            begin_token=0,
+            end_token=1,
+            span_text="Original",
+        ),
+        user_id=test_user.id,
+    )
+
+    span_anno_id = span_anno.id
+    original_code_id = span_anno.code_id
+    original_begin = span_anno.begin
+    original_end = span_anno.end
+    original_begin_token = span_anno.begin_token
+    original_end_token = span_anno.end_token
+    original_text = span_anno.span_text.text
+
+    payload = {
+        "code_id": code2.id if "code_id_link" in patch_data else original_code_id,
+        "begin": patch_data.get("begin", original_begin),
+        "end": patch_data.get("end", original_end),
+        "begin_token": patch_data.get("begin_token", original_begin_token),
+        "end_token": patch_data.get("end_token", original_end_token),
+        "span_text": patch_data.get("span_text", original_text),
+    }
+
+    resp = client.patch(f"/span/{span_anno_id}", json=payload)
+
+    assert resp.status_code == 200, f"Error: {resp.text}"
+    updated = SpanAnnotationRead.model_validate(resp.json())
+
+    assert updated.id == span_anno_id
+    assert updated.sdoc_id == sdoc_id
+
+    assert updated.code_id == payload.get("code_id")
+    assert updated.begin == payload.get("begin")
+    assert updated.end == payload.get("end")
+    assert updated.begin_token == payload.get("begin_token")
+    assert updated.end_token == payload.get("end_token")
+    assert updated.text == payload.get("span_text")
 
 
 def test_update_span_annotations_bulk(

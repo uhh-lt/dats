@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from test.factories.code_factory import CodeFactory
@@ -105,26 +106,23 @@ def test_get_by_id_with_data_if_not_exsisit(
 
 
 # TODO muss Fixen ..
-def test_delete_source_document_by_id_short(
+def test_delete_source_document_by_id(
     client: TestClient,
     project_factory: ProjectFactory,
     source_document_factory: SourceDocumentFactory,
     test_user: UserRead,
-):
+) -> None:
     project = project_factory.create(creating_user_id=test_user.id)
-
     sdoc = source_document_factory.create(
         create_dto=SourceDocumentCreate(
-            filename="doc.txt",
-            name="Document",
-            doctype=DocType.text,
-            project_id=project.id,
-            folder_id=None,
+            filename="sdoc.txt", name="A", doctype=DocType.text, project_id=project.id
         )
     )
-    resp = client.delete(f"/sdoc/{sdoc.id}")
-    assert resp.status_code == 200
-    deleted = SourceDocumentRead.model_validate(resp.json())
+    sdoc_id = sdoc.id
+
+    response = client.delete(f"/sdoc/{sdoc_id}")
+    assert response.status_code == 200
+    deleted = SourceDocumentRead.model_validate(response.json())
     assert deleted.id == sdoc.id
     assert deleted.project_id == project.id
 
@@ -136,6 +134,50 @@ def test_delete_source_document_by_id_short_if_not_exsist(
 
     response = client.delete(f"/sdoc/{fake_id}")
     assert response.status_code == 403
+
+
+testdata_sdoc_update = [
+    pytest.param({"name": "New Title"}, id="update_name"),
+    pytest.param({"filename": "updated_file.txt"}, id="update_filename"),
+    pytest.param({"name": "Both Changed", "filename": "both.txt"}, id="update_both"),
+]
+
+
+@pytest.mark.parametrize("payload", testdata_sdoc_update)
+def test_update_sdoc_parametrized(
+    client: TestClient,
+    project_factory: ProjectFactory,
+    source_document_factory: SourceDocumentFactory,
+    test_user: UserRead,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+
+    sdoc = source_document_factory.create(
+        create_dto=SourceDocumentCreate(
+            filename="original.txt",
+            name="Original Document",
+            doctype=DocType.text,
+            project_id=project.id,
+            folder_id=None,
+        )
+    )
+
+    resp = client.patch(
+        f"/sdoc/{sdoc.id}",
+        json=payload,
+    )
+
+    assert resp.status_code == 200, f"Response: {resp.text}"
+    updated = SourceDocumentRead.model_validate(resp.json())
+
+    assert updated.id == sdoc.id
+    assert updated.project_id == project.id
+
+    assert updated.name == payload.get("name", sdoc.name)
+    assert updated.filename == sdoc.filename
+
+    assert updated.doctype == sdoc.doctype
 
 
 def test_update_sdoc(
