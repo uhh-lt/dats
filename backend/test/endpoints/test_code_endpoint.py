@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from test.factories.code_factory import CodeFactory
 from test.factories.project_factory import ProjectFactory
@@ -32,9 +33,6 @@ def test_create_new_code(
     assert payload.enabled == code.enabled
     assert payload.project_id == code.project_id
     assert payload.is_system == code.is_system
-
-
-# Test create code in a project that does not exist!
 
 
 def test_create_code_project_not_existing(
@@ -88,9 +86,6 @@ def test_get_code(
     assert code.is_system == code_read.is_system
 
 
-# Test get code that does not exist
-
-
 def test_get_code_does_not_exist(
     client: TestClient,
     project_factory: ProjectFactory,
@@ -103,10 +98,50 @@ def test_get_code_does_not_exist(
     assert response.status_code == 403
 
 
-# TEST update code
+testdata = [
+    pytest.param({"name": "New Name", "color": "blue"}, id="name_and_color"),
+    pytest.param({"description": "New Description"}, id="only_description"),
+    pytest.param({"enabled": False}, id="toggle_enabled"),
+    pytest.param({"parent_id": None}, id="clear_parent"),
+]
 
 
-def test_update_by_id(
+@pytest.mark.parametrize("payload", testdata)
+def test_update_code_parametrize(
+    client: TestClient,
+    project_factory: ProjectFactory,
+    code_factory: CodeFactory,
+    test_user: UserRead,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    code = code_factory.create(
+        CodeCreate(
+            name="current Code",
+            color="red",
+            description="initial desc",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=True,
+        )
+    )
+
+    response = client.patch(f"/code/{code.id}", json=payload)
+    assert response.status_code == 200
+
+    updated = CodeRead.model_validate(response.json())
+
+    assert updated.name == payload.get("name", code.name)
+    assert updated.color == payload.get("color", code.color)
+    assert updated.description == payload.get("description", code.description)
+    assert updated.enabled == payload.get("enabled", code.enabled)
+
+    assert updated.id == code.id
+    assert updated.project_id == project.id
+
+
+def test_update_by_id_alt(
     client: TestClient,
     project_factory: ProjectFactory,
     code_factory: CodeFactory,

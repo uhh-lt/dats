@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 from test.factories.code_factory import CodeFactory
 from test.factories.memo_factory import MemoFactory
@@ -245,6 +246,106 @@ def test_get_by_id_not_existing(client: TestClient):
 
 # recherchieren: wie kann ich mehrere falle mit einem test abdecken?
 # @pytest.fixture()
+
+
+testdata_memo = [
+    pytest.param({"title": "New Title Only"}, id="title_only"),
+    pytest.param({"starred": True}, id="toggle_starred"),
+    pytest.param({"content": "New content text"}, id="content_only"),
+    pytest.param(
+        {"title": "All fields", "content": "Updated!", "starred": True}, id="all_fields"
+    ),
+]
+
+
+@pytest.mark.parametrize("payload", testdata_memo)
+def test_update_memo_parametrized(
+    client: TestClient,
+    memo_factory: MemoFactory,
+    project_factory: ProjectFactory,
+    test_user: UserRead,
+    payload: dict,
+):
+    project = project_factory.create(creating_user_id=test_user.id)
+    memo = memo_factory.create(
+        create_dto=MemoCreateIntern(
+            project_id=project.id,
+            user_id=test_user.id,
+            title="Initial Title",
+            content="Initial Content",
+            content_json='{"blocks": []}',
+            starred=False,
+            uuid=str(uuid4()),
+        ),
+        attached_object_id=project.id,
+        attached_object_type=AttachedObjectType.project,
+    )
+
+    response = client.patch(f"/memo/{memo.id}", json=payload)
+    assert response.status_code == 200
+
+    final_memo_state = MemoRead.model_validate(response.json())
+
+    assert final_memo_state.title == payload.get("title", memo.title)
+    assert final_memo_state.content == payload.get("content", memo.content)
+    assert final_memo_state.starred == payload.get("starred", memo.starred)
+
+
+test_data_memo_update = [
+    pytest.param({"title": "Updated Title"}, id="update_title"),
+    pytest.param({"content": "Updated Content"}, id="update_content"),
+    pytest.param({"starred": True}, id="update_starred"),
+    pytest.param(
+        {"title": "All New", "content": "New C", "starred": True},
+        id="update_all_fields",
+    ),
+]
+
+
+@pytest.mark.parametrize("payload", test_data_memo_update)
+def test_update_memo_parametrized_all_fields_by_id(
+    client: TestClient,
+    memo_factory: MemoFactory,
+    project_factory: ProjectFactory,
+    test_user: UserRead,
+    payload: dict,
+) -> None:
+    project = project_factory.create(creating_user_id=test_user.id)
+    project_id = project.id
+
+    initial_title = "Original Title"
+    initial_content = "Original Content"
+    initial_starred = False
+
+    memo = memo_factory.create(
+        create_dto=MemoCreateIntern(
+            project_id=project_id,
+            user_id=test_user.id,
+            title=initial_title,
+            content=initial_content,
+            content_json='{"blocks": []}',
+            starred=initial_starred,
+            uuid=str(uuid4()),
+        ),
+        attached_object_id=project_id,
+        attached_object_type=AttachedObjectType.project,
+    )
+    memo_id = memo.id
+
+    resp = client.patch(
+        f"/memo/{memo_id}",
+        json=payload,
+    )
+
+    assert resp.status_code == 200, f"Error: {resp.text}"
+    updated = MemoRead.model_validate(resp.json())
+
+    assert updated.id == memo_id
+    assert updated.project_id == project_id
+
+    assert updated.title == payload.get("title", initial_title)
+    assert updated.content == payload.get("content", initial_content)
+    assert updated.starred == payload.get("starred", initial_starred)
 
 
 def test_update_all_fields_by_id(
