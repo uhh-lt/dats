@@ -44,6 +44,8 @@ function CodeExplorer({ projectId, ...props }: CodeExplorerProps & BoxProps) {
   const dataProjectId = allCodes.data?.[0]?.project_id;
 
   // Use project ID from props or derive from data (fallback)
+  // Note: In practice, all codes belong to the same project (enforced by backend)
+  // Ideally, projectId should be passed as a prop from parent components
   const effectiveProjectId = useMemo(() => {
     return projectId ?? dataProjectId;
   }, [projectId, dataProjectId]);

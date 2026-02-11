@@ -60,6 +60,7 @@ export function useTreeSortOrder(
   }, [storageKey, projectId]);
 
   // Reload sort order when projectId or allItemIds change
+  // Note: We directly use dependencies instead of loadSortOrder to avoid effect loops
   useEffect(() => {
     const newOrder = loadSortOrder();
     setSortOrder(newOrder);

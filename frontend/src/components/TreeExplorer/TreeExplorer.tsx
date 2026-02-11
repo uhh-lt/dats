@@ -137,7 +137,7 @@ function TreeExplorer<T extends NamedObjWithParent>({
   );
 
   // rendering
-  const wrapppedRenderActions = useCallback(
+  const wrappedRenderActions = useCallback(
     (node: ITree<T>) => (
       <>
         {showCheckboxes && (
@@ -257,7 +257,7 @@ function TreeExplorer<T extends NamedObjWithParent>({
       // actions
       onItemClick={onItemClick}
       // renderers
-      renderActions={wrapppedRenderActions}
+      renderActions={wrappedRenderActions}
       renderNode={renderNode}
       // root node rendering
       renderRoot={renderRoot}

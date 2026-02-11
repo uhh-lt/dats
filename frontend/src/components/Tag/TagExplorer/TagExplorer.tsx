@@ -58,6 +58,8 @@ function TagExplorer({ onTagClick, projectId, ...props }: TagExplorerProps & Box
   const dataProjectId = allTags.data?.[0]?.project_id;
 
   // Use project ID from props or derive from data (fallback)
+  // Note: In practice, all tags belong to the same project (enforced by backend)
+  // Ideally, projectId should be passed as a prop from parent components
   const effectiveProjectId = useMemo(() => {
     return projectId ?? dataProjectId;
   }, [projectId, dataProjectId]);
