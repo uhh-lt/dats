@@ -54,10 +54,13 @@ function TagExplorer({ onTagClick, projectId, ...props }: TagExplorerProps & Box
     return flatTree(tagTree.model).map((tag) => tag.id);
   }, [tagTree]);
 
+  // Extract projectId from data for dependency tracking
+  const dataProjectId = allTags.data?.[0]?.project_id;
+
   // Use project ID from props or derive from data (fallback)
   const effectiveProjectId = useMemo(() => {
-    return projectId ?? allTags.data?.[0]?.project_id;
-  }, [projectId, allTags.data]);
+    return projectId ?? dataProjectId;
+  }, [projectId, dataProjectId]);
 
   // Use custom sort order hook
   const { sortOrder, updateSortOrder } = useTreeSortOrder(

@@ -40,10 +40,13 @@ function CodeExplorer({ projectId, ...props }: CodeExplorerProps & BoxProps) {
     return flatTree(codeTree.model).map((code) => code.id);
   }, [codeTree]);
 
+  // Extract projectId from data for dependency tracking
+  const dataProjectId = allCodes.data?.[0]?.project_id;
+
   // Use project ID from props or derive from data (fallback)
   const effectiveProjectId = useMemo(() => {
-    return projectId ?? allCodes.data?.[0]?.project_id;
-  }, [projectId, allCodes.data]);
+    return projectId ?? dataProjectId;
+  }, [projectId, dataProjectId]);
 
   // Use custom sort order hook
   const { sortOrder, updateSortOrder } = useTreeSortOrder(

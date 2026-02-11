@@ -63,7 +63,7 @@ export function useTreeSortOrder(
   useEffect(() => {
     const newOrder = loadSortOrder();
     setSortOrder(newOrder);
-  }, [loadSortOrder]);
+  }, [storageKey, projectId, allItemIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update sort order and persist to localStorage
   const updateSortOrder = useCallback((newOrder: number[]) => {

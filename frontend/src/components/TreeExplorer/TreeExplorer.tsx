@@ -163,6 +163,11 @@ function TreeExplorer<T extends NamedObjWithParent>({
     })
   );
 
+  // Memoize flat data to avoid recalculating on every drag
+  const flatData = useMemo(() => {
+    return flatTree(sortedDataTree.model);
+  }, [sortedDataTree]);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -192,7 +197,6 @@ function TreeExplorer<T extends NamedObjWithParent>({
       if (draggedParentId !== targetParentId) return;
       
       // Get all items with the same parent
-      const flatData = flatTree(sortedDataTree.model);
       const siblingIds = flatData
         .filter((item) => item.parent_id === draggedParentId)
         .map((item) => item.id);
@@ -231,7 +235,7 @@ function TreeExplorer<T extends NamedObjWithParent>({
       
       onSortOrderChange(finalOrder);
     },
-    [sortedDataTree, sortOrder, onSortOrderChange]
+    [flatData, sortOrder, onSortOrderChange]
   );
 
   const treeViewContent = (
