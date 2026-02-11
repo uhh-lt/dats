@@ -17,9 +17,10 @@ const renderActions = (node: ITree<TagRead>) => <TagExplorerActionMenu node={nod
 
 interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;
+  projectId?: number;
 }
 
-function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
+function TagExplorer({ onTagClick, projectId, ...props }: TagExplorerProps & BoxProps) {
   // custom hooks
   const { tagTree, allTags } = useComputeTagTree();
 
@@ -53,15 +54,15 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
     return flatTree(tagTree.model).map((tag) => tag.id);
   }, [tagTree]);
 
-  // Get current project ID
-  const projectId = useMemo(() => {
-    return allTags.data?.[0]?.project_id;
-  }, [allTags.data]);
+  // Use project ID from props or derive from data (fallback)
+  const effectiveProjectId = useMemo(() => {
+    return projectId ?? allTags.data?.[0]?.project_id;
+  }, [projectId, allTags.data]);
 
   // Use custom sort order hook
   const { sortOrder, updateSortOrder } = useTreeSortOrder(
     "tag-sort-order",
-    projectId,
+    effectiveProjectId,
     allTagIds
   );
 

@@ -18,7 +18,11 @@ import useComputeCodeTree from "./useComputeCodeTree.ts";
 const renderNode = (node: ITree<CodeRead>) => <CodeExplorerNodeRenderer node={node} />;
 const renderActions = (node: ITree<CodeRead>) => <CodeExplorerActionMenu node={node} />;
 
-function CodeExplorer(props: BoxProps) {
+interface CodeExplorerProps {
+  projectId?: number;
+}
+
+function CodeExplorer({ projectId, ...props }: CodeExplorerProps & BoxProps) {
   // custom hooks
   const { codeTree, allCodes } = useComputeCodeTree();
 
@@ -36,15 +40,15 @@ function CodeExplorer(props: BoxProps) {
     return flatTree(codeTree.model).map((code) => code.id);
   }, [codeTree]);
 
-  // Get current project ID
-  const projectId = useMemo(() => {
-    return allCodes.data?.[0]?.project_id;
-  }, [allCodes.data]);
+  // Use project ID from props or derive from data (fallback)
+  const effectiveProjectId = useMemo(() => {
+    return projectId ?? allCodes.data?.[0]?.project_id;
+  }, [projectId, allCodes.data]);
 
   // Use custom sort order hook
   const { sortOrder, updateSortOrder } = useTreeSortOrder(
     "code-sort-order",
-    projectId,
+    effectiveProjectId,
     allCodeIds
   );
 

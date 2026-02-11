@@ -169,30 +169,47 @@ function TreeExplorer<T extends NamedObjWithParent>({
       
       if (!active || !over || !onSortOrderChange) return;
       
-      const activeData = active.data.current as { type: string; id: number; parentId?: number | null };
-      const overData = over.data.current as { type: string; id: number; parentId?: number | null };
+      // Validate drag data structure
+      const activeData = active.data.current;
+      const overData = over.data.current;
+      
+      if (!activeData || !overData) return;
+      if (typeof activeData !== "object" || typeof overData !== "object") return;
+      if (!("type" in activeData) || !("id" in activeData)) return;
+      if (!("type" in overData) || !("id" in overData)) return;
       
       // Only handle tree-item reordering
-      if (activeData?.type !== "tree-item" || overData?.type !== "tree-item") return;
+      if (activeData.type !== "tree-item" || overData.type !== "tree-item") return;
       
-      const draggedId = activeData.id;
-      const targetId = overData.id;
+      const draggedId = activeData.id as number;
+      const targetId = overData.id as number;
+      const draggedParentId = ("parentId" in activeData ? activeData.parentId : undefined) as number | null | undefined;
+      const targetParentId = ("parentId" in overData ? overData.parentId : undefined) as number | null | undefined;
       
       if (draggedId === targetId) return;
       
       // Only allow reordering items with the same parent
-      if (activeData.parentId !== overData.parentId) return;
+      if (draggedParentId !== targetParentId) return;
       
       // Get all items with the same parent
       const flatData = flatTree(sortedDataTree.model);
       const siblingIds = flatData
-        .filter((item) => item.parent_id === activeData.parentId)
+        .filter((item) => item.parent_id === draggedParentId)
         .map((item) => item.id);
       
-      // Get current order (either from sortOrder or default by ID)
-      const currentOrder = sortOrder && sortOrder.length > 0 
-        ? sortOrder.filter(id => siblingIds.includes(id))
-        : siblingIds.sort((a, b) => a - b);
+      // Get current order: use sortOrder if available, otherwise sort by ID
+      // Include all siblings even if they're not in sortOrder yet
+      let currentOrder: number[];
+      if (sortOrder && sortOrder.length > 0) {
+        // Start with items from sortOrder that are siblings
+        const orderedSiblings = sortOrder.filter(id => siblingIds.includes(id));
+        // Add any siblings not in sortOrder (newly added items)
+        const newSiblings = siblingIds.filter(id => !sortOrder.includes(id));
+        newSiblings.sort((a, b) => a - b);
+        currentOrder = [...orderedSiblings, ...newSiblings];
+      } else {
+        currentOrder = [...siblingIds].sort((a, b) => a - b);
+      }
       
       // Remove dragged item and insert at new position
       const draggedIndex = currentOrder.indexOf(draggedId);
@@ -206,7 +223,7 @@ function TreeExplorer<T extends NamedObjWithParent>({
       
       // Merge with other items not in the same parent
       const otherIds = flatData
-        .filter((item) => item.parent_id !== activeData.parentId)
+        .filter((item) => item.parent_id !== draggedParentId)
         .map((item) => item.id);
       
       // Combine the reordered siblings with other items
