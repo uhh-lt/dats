@@ -3,7 +3,7 @@ import { AppBar, Box, BoxProps, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Node } from "ts-tree-structure";
+import Tree, { Node } from "ts-tree-structure";
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import DataTreeView, { DataTreeViewProps } from "./DataTreeView.tsx";
 import { ITree, NamedObjWithParent } from "./ITree.ts";
@@ -77,8 +77,8 @@ function TreeExplorer<T extends NamedObjWithParent>({
     const sortedModel = sortTreeByCustomOrder(dataTree.model, sortOrder);
     
     // Create a new tree with the sorted model
-    const newTree = dataTree.clone();
-    newTree.model = sortedModel;
+    const tree = new Tree();
+    const newTree = tree.parse<ITree<T>>(sortedModel);
     return newTree;
   }, [dataTree, sortOrder]);
 
