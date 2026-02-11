@@ -1,13 +1,15 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import ExportCodesButton from "../../Export/ExportCodesButton.tsx";
 import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
+import { flatTree } from "../../TreeExplorer/TreeUtils.ts";
+import { useTreeSortOrder } from "../../../hooks/useTreeSortOrder.ts";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeExplorerActionMenu from "./CodeExplorerActionMenu.tsx";
 import CodeExplorerNodeRenderer from "./CodeExplorerNodeRenderer.tsx";
@@ -18,7 +20,7 @@ const renderActions = (node: ITree<CodeRead>) => <CodeExplorerActionMenu node={n
 
 function CodeExplorer(props: BoxProps) {
   // custom hooks
-  const { codeTree } = useComputeCodeTree();
+  const { codeTree, allCodes } = useComputeCodeTree();
 
   // global client state (redux)
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
@@ -27,6 +29,24 @@ function CodeExplorer(props: BoxProps) {
 
   // local client state
   const [codeFilter, setCodeFilter] = useState<string>("");
+
+  // Get all code IDs from the tree
+  const allCodeIds = useMemo(() => {
+    if (!codeTree) return [];
+    return flatTree(codeTree.model).map((code) => code.id);
+  }, [codeTree]);
+
+  // Get current project ID
+  const projectId = useMemo(() => {
+    return allCodes.data?.[0]?.project_id;
+  }, [allCodes.data]);
+
+  // Use custom sort order hook
+  const { sortOrder, updateSortOrder } = useTreeSortOrder(
+    "code-sort-order",
+    projectId,
+    allCodeIds
+  );
 
   // handle ui events
   const handleExpandedCodeIdsChange = useCallback(
@@ -72,6 +92,10 @@ function CodeExplorer(props: BoxProps) {
           renderActions={renderActions}
           // components
           listActions={<ListActions />}
+          // drag and drop for reordering
+          draggableItems={true}
+          sortOrder={sortOrder}
+          onSortOrderChange={updateSortOrder}
         />
       )}
     </Box>
