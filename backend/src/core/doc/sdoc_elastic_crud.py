@@ -64,6 +64,24 @@ class CRUDElasticSdoc(
             highlight=highlight_query,
         )
 
+    def search_highlights(self, *, client: Elasticsearch, project_id: int, term: str):
+        index = self.index.get_index_name(proj_id=project_id)
+        query = {
+            "_source": ["content"],
+            "query": {
+                "simple_query_string": {
+                    "query": f'"{term}"',  # quotation marks enforce phrase search
+                    "fields": ["content"],
+                }
+            },
+            "highlight": {
+                "fields": {"content": {"fragment_size": 0, "number_of_fragments": 0}}
+            },
+        }
+        response = client.search(index=index, body=query)
+
+        return response
+
 
 crud_elastic_sdoc = CRUDElasticSdoc(index=SdocIndex, model=ElasticSearchDocument)
 
