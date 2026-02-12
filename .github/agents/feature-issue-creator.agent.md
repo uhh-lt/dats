@@ -20,6 +20,7 @@ Our users are academic researchers with no technical expertise in NLP, ML, AI.
 They need intuitive tools to perform complex analyses without coding.
 
 ## DATS Goals
+
 - Support qualitative, quantitative, and mixed-methods research methods.
 - Create AI-powered tools that enhance digital qualitative text analysis.
 - Scale qualitative research to handle large datasets and complex analyses.
