@@ -12,12 +12,34 @@ It follows a component-based architecture, organizing UI elements into reusable 
 
 Dependencies are listed in package.json and managed with npm.
 
-- React for building user interfaces
-- React Router for client-side routing
-- Tanstack Query for data fetching and server state management
-- Redux Toolkit for global state management
-- React Hook Form for form state management
-- React MUI for UI components, styling, theming, and icons
+React for building user interfaces
+- (react) v18.3.1
+- context7: /reactjs/react.dev
+
+React Router for client-side routing
+- (react-router-dom) v6.26.2
+
+Tanstack Query for data fetching and server state management
+- (@tanstack/react-query) v5.67.2
+- context7: /tanstack/query
+
+Redux Toolkit for global state management
+- (@reduxjs/toolkit) v2.2.8
+- context7: /reduxjs/redux-toolkit
+
+React Hook Form for form state management
+- (react-hook-form) v7.53.0
+- context7: /react-hook-form/documentation
+
+MUI for UI components, styling, theming, and icons
+- (@mui/material v6.4.6, @mui/icons-material v6.4.6, @mui/lab v6.0.0-beta.30)
+- docs: https://mui.com/material-ui/getting-started/
+- llms.txt: https://mui.com/material-ui/llms.txt
+- context7: /mui/material-ui
+
+Vite as the build tool and development server
+- (vite) v6.2.1
+- context7: /vitejs/vite
 
 ## Folder Structure
 
@@ -71,58 +93,44 @@ Dependencies are listed in package.json and managed with npm.
 
 ## State Management
 
-**Clear Separation of Concerns**:
-- **Tanstack Query**: Use for ALL server state (data from API, loading, errors)
-- **Redux Toolkit**: Use ONLY for UI state (dialogs, filters, selections, navigation state)
-- Never duplicate server state in Redux; let Tanstack Query be the source of truth
+### Tanstack Query: Use for ALL SERVER state (data from API, loading, errors)
 
-**Redux Usage**:
-- Store UI-related state like dialog open/close states, table filters, selected items
-- See [annoSlice.ts](../../frontend/src/views/annotation/annoSlice.ts) for typical Redux patterns
-- Use typed selector/dispatch hooks: `useAppDispatch()` and `useAppSelector()` from [ReduxHooks.ts](../../frontend/src/plugins/ReduxHooks.ts)
-
-**Dialog State Management**:
-- Open/close state in Redux (e.g., `isCodeCreateDialogOpen`)
-- Dialog content metadata in Redux (e.g., `codeName`, `parentCodeId`)
-- Success callbacks stored in Redux for access from deeply nested components
-
-## Data Fetching & API Integration
-
-**All API Calls via Hooks**:
 - Never call API service methods directly; wrap them in custom hooks
 - Group related queries in hook files (see [CodeHooks.ts](../../frontend/src/api/CodeHooks.ts), [SdocHooks.ts](../../frontend/src/api/SdocHooks.ts))
-- Return multiple hooks as a named export object:
-  ```tsx
-  const CodeHooks = {
-    useGetEnabledCodes,
-    useCreateCode,
-    useUpdateCode,
-    useDeleteCode,
-  };
-  export default CodeHooks;
-  ```
-
-**Query Key Management**:
 - Centralize all query keys in [QueryKey.ts](../../frontend/src/api/QueryKey.ts) enum
-- Use consistent naming: `RESOURCE_ID`, `RESOURCE_LIST`, `RESOURCE_DETAIL`
-- Enables consistent cache invalidation across the application
+- Data Normalization with Record maps (Record<id, data>) for O(1) access
 
-**Tanstack Query Configuration**:
-- Set `staleTime` appropriately (e.g., `Infinity` for static data, specific durations for dynamic)
-- Use `select` parameter to transform data and prevent unnecessary re-renders:
+### Redux Toolkit: Use for GLOBAL CLIENT state (dialogs, filters, selections)
+
+- Use typed selector/dispatch hooks: `useAppDispatch()` and `useAppSelector()` from [ReduxHooks.ts](../../frontend/src/plugins/ReduxHooks.ts)
+- Create slices for each feature (e.g., annotation, project, search, see [annoSlice.ts](../../frontend/src/views/annotation/annoSlice.ts))
+
+### React Hook Form: Use for FORM STATE (input values, validation state, form submission)
+
+**React Hook Form Integration**:
+- Use `useForm()` hook to manage form state and validation
+- Wrap form inputs with `Controller` from React Hook Form
+- See [FormText.tsx](../../frontend/src/components/FormInputs/FormText.tsx) for input wrapper pattern
+- Use [FormInputs components](../../frontend/src/components/FormInputs) for consistent form controls:
+  - `FormText`, `FormTextMultiline`, `FormNumber`, `FormPassword`
+  - `FormEmail`, `FormDate`, `FormSwitch`, `FormColorPicker`
+  - `FormMenu`, `FormFreeSolo`, `FormChipList`
+
+**Validation**:
+- Define validation rules in `useForm()` hook via `rules` property in `Controller`
+- Display errors with `<ErrorMessage>` component from @hookform/error-message
+- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L1-L2):
   ```tsx
-  useQuery({
-    queryKey: [QueryKey.CODES],
-    queryFn: () => CodeService.list(),
-    select: (data) => data.reduce((map, code) => ({ ...map, [code.id]: code }), {}),
-  })
+  import { ErrorMessage } from "@hookform/error-message";
+  // In JSX: <ErrorMessage errors={errors} name="fieldName" />
   ```
-- Use `refetchOnWindowFocus`, `refetchOnRemount` strategically based on data freshness needs
 
-**Handling Loading and Error States**:
-- Tanstack Query automatically provides `isLoading`, `isError`, `data`, `error` states
-- Use `isPending` for mutations to control button loading states
-- Check [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L84-L85) for mutation error handling
+**Form Reset**:
+- Use `useEffect()` to reset form when dialog opens with initial values
+- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L63-L74)
+
+### React Hooks: `useState()` for LOCAL CLIENT state
+- Use for truly local state that doesn't need to be shared (e.g., hover states, temporary UI states)
 
 ## Custom Hooks
 
@@ -182,30 +190,6 @@ Dependencies are listed in package.json and managed with npm.
 - Use [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts) hook for paginated table data
 - Implements smart fetching trigger at 400px from table bottom
 
-## Form Handling
-
-**React Hook Form Integration**:
-- Use `useForm()` hook to manage form state and validation
-- Wrap form inputs with `Controller` from React Hook Form
-- See [FormText.tsx](../../frontend/src/components/FormInputs/FormText.tsx) for input wrapper pattern
-- Use [FormInputs components](../../frontend/src/components/FormInputs) for consistent form controls:
-  - `FormText`, `FormTextMultiline`, `FormNumber`, `FormPassword`
-  - `FormEmail`, `FormDate`, `FormSwitch`, `FormColorPicker`
-  - `FormMenu`, `FormFreeSolo`, `FormChipList`
-
-**Validation**:
-- Define validation rules in `useForm()` hook via `rules` property in `Controller`
-- Display errors with `<ErrorMessage>` component from @hookform/error-message
-- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L1-L2):
-  ```tsx
-  import { ErrorMessage } from "@hookform/error-message";
-  // In JSX: <ErrorMessage errors={errors} name="fieldName" />
-  ```
-
-**Form Reset**:
-- Use `useEffect()` to reset form when dialog opens with initial values
-- Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L63-L74)
-
 ## Error Handling
 
 **Mutation Error Handling**:
@@ -222,70 +206,28 @@ Dependencies are listed in package.json and managed with npm.
 - Use [RequireAuth.tsx](../../frontend/src/auth/RequireAuth.tsx) wrapper component for authentication
 - Redirects to login page and preserves redirect location for post-login navigation
 
-## Code Organization
-
-**Component Organization**:
-- Components grouped by feature in `/components` (Code, Memo, SourceDocument, etc.)
-- Each feature folder contains all related sub-components and styles
-- See `/components/Code` directory structure with `CodeCreateDialog.tsx`, `CodeTable.tsx`, etc.
-
-**View Organization**:
-- Page-level components in `/views` organized by feature (annotation, search, analysis, etc.)
-- Each view folder is a self-contained feature with its Redux slice, sub-views, and sub-components
-
-**Imports**:
+## Imports
 - Use absolute imports from `/` root (configured in vite.config.ts)
 - Group imports: React/external libraries → local components → utilities
 - Keep imports organized and remove unused imports before committing
 
 ## Documentation
 
-**Component Documentation**:
 - Write JSDoc comments for all public components
 - Document props, usage examples, and special behaviors
-- Example:
-  ```tsx
-  /**
-   * Editable typography component that toggles between display and edit mode.
-   * @param value Current text value
-   * @param onChange Callback when text is edited and confirmed
-   * @param whiteColor Whether to apply white styling
-   */
-  function EditableTypography({ value, onChange, whiteColor }: Props) { ... }
-  ```
 
-**Hook Documentation**:
-- Document hook parameters and return value structure
-- Example from [useDialog.ts](../../frontend/src/hooks/useDialog.ts) return object shows clear naming
-
-## Key Differences from Standard React/TypeScript
-
-| Aspect | This Project |
-|--------|---|---|
-| Global State | Redux |
-| Server State | Tanstack Query exclusively |
-| Form State | React Hook Form only |
-| Error Handling | Per-component try/catch, Global mutation cache handler |
-| Component Props | Strict typing with interfaces |
-| Component Memoization | Common with memo() |
-| Data Normalization | Record maps (Record<id, data>) |
-| Query Keys | Centralized QueryKey enum |
-| Success Messages | Manual snackbars | Mutation meta property |
-
-## Notable Architectural Decisions
-
-1. **Separation of Concerns**: Server state (Tanstack Query) strictly separated from client state (Redux)
-2. **Declarative Quality State**: No manual loading/error state management
-3. **Centralized Error Handling**: Single mutation cache error handler for all mutations
-4. **Query Caching Strategy**: Aggressive caching with smart stale times
-5. **Type Safety**: Full TypeScript with generated API types
-6. **Component Composition**: Small, focused components with clear responsibilities
-7. **Redux for UI Only**: Redux not used for data, only for UI state
-8. **Custom Hook Abstraction**: All API calls wrapped in hooks (no direct Service usage in components)
-
-## Creating a Feature with All Patterns
+## Workflow: Creating a Feature with All Patterns
 
 1. **Step 1: Define Query Keys** (QueryKey.ts)
 2. **Step 2: Create API Hooks** (e.g., CodeHooks.ts)
 3. **Step 3: Create Components** (e.g., CodeTable.tsx, CodeCreateDialog.tsx)
 4. **Step 4: Use in Views**
+
+## Tools
+
+### Use the mui-mcp server to answer any MUI questions --
+
+- 1. call the "useMuiDocs" tool to fetch the docs of the package relevant in the question
+- 2. call the "fetchDocs" tool to fetch any additional docs if needed using ONLY the URLs present in the returned content.
+- 3. repeat steps 1-2 until you have fetched all relevant docs for the given question
+- 4. use the fetched content to answer the question
