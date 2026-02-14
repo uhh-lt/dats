@@ -3,12 +3,14 @@ from sqlalchemy import select, tuple_, update
 from sqlalchemy.orm import Session
 
 from config import conf
-from modules.perspectives.cluster_orm import ClusterORM
-from modules.perspectives.document_cluster_dto import (
+from modules.perspectives.cluster.cluster_orm import ClusterORM
+from modules.perspectives.document_cluster.document_cluster_dto import (
     DocumentClusterCreate,
     DocumentClusterUpdate,
 )
-from modules.perspectives.document_cluster_orm import DocumentClusterORM
+from modules.perspectives.document_cluster.document_cluster_orm import (
+    DocumentClusterORM,
+)
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 
 BATCH_SIZE = conf.postgres.batch_size
@@ -83,17 +85,10 @@ class CRUDDocumentCluster(
             .all()
         )
 
-    def read_by_aspect_and_cluster_id(
-        self, db: Session, *, aspect_id: int, cluster_id: int
+    def read_by_cluster(
+        self, db: Session, *, cluster_id: int
     ) -> list[DocumentClusterORM]:
-        return (
-            db.query(self.model)
-            .join(ClusterORM, ClusterORM.id == self.model.cluster_id)
-            .filter(
-                ClusterORM.aspect_id == aspect_id, self.model.cluster_id == cluster_id
-            )
-            .all()
-        )
+        return db.query(self.model).filter(self.model.cluster_id == cluster_id).all()
 
     ### UPDATE OPERATIONS ###
 
@@ -128,6 +123,7 @@ class CRUDDocumentCluster(
         *,
         ids: list[tuple[int, int]],
         update_dtos: list[DocumentClusterUpdate],
+        manual_commit: bool = False,
     ) -> list[DocumentClusterORM]:
         """
         Update multiple DocumentClusterORMs by a list of (sdoc_id, cluster_id) tuples and corresponding update DTOs.
@@ -145,7 +141,10 @@ class CRUDDocumentCluster(
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
         return db_objects
 
     ### OTHER OPERATIONS ###
@@ -189,113 +188,23 @@ class CRUDDocumentCluster(
             db.rollback()
             raise  # Re-raise the database exception (e.g., IntegrityError)
 
-    def set_labels(
-        self,
-        db: Session,
-        *,
-        aspect_id: int,
-        sdoc_ids: list[int],
-        is_accepted: bool,
-    ) -> int:
+    def delete_multi(
+        self, db: Session, *, ids: list[tuple[int, int]], manual_commit: bool = False
+    ) -> list[DocumentClusterORM]:
         """
-        Accepts the labels for the provided SourceDocuments (by ID) of the aspect.
-        Args:
-            db: The database session
-            aspect_id: The ID of the aspect to which the cluster belongs
-            sdoc_ids: List of SourceDocument IDs to accept labels for
-            is_accepted: Whether to set the labels as accepted
-        Returns:
-            The number of DocumentClusterORM objects that were updated
+        Delete multiple DocumentClusterORMs by a list of (sdoc_id, aspect_id) tuples.
         """
-        total_updated_count = 0
+        db_objects = self.read_by_ids(db, ids)
 
-        if not sdoc_ids:
-            return total_updated_count
+        for db_obj in db_objects:
+            db.delete(db_obj)
 
-        # 1. Process sdoc_ids in Batches
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
+        if manual_commit:
+            db.flush()
+        else:
+            db.commit()
 
-            # 2. Build the UPDATE Statement for the current batch
-            stmt = (
-                update(self.model)
-                .where(
-                    self.model.sdoc_id.in_(batch_sdoc_ids),
-                )
-                .where(
-                    self.model.cluster_id == ClusterORM.id,
-                    ClusterORM.aspect_id == aspect_id,
-                )
-                .values(is_accepted=is_accepted)
-                .execution_options(synchronize_session=False)
-            )
-
-            # 3. Execute the statement
-            results = db.execute(stmt)
-
-            # Accumulate the count of updated rows from this batch
-            count = results.rowcount if results.rowcount is not None else 0
-            total_updated_count += count
-
-        # 4. Commit all batched updates
-        db.commit()
-
-        return total_updated_count
-
-    def set_labels2(
-        self,
-        db: Session,
-        *,
-        aspect_id: int,
-        cluster_id: int,
-        sdoc_ids: list[int],
-        is_accepted: bool,
-    ) -> int:
-        """
-        Sets the Cluster <-> SourceDocument assignments to the provided Cluster.
-        Args:
-            db: The database session
-            aspect_id: The ID of the aspect to which the cluster belongs
-            cluster_id: The ID of the cluster to which the SourceDocuments should be assigned
-            sdoc_ids: List of SourceDocument IDs to set cluster for
-            is_accepted: Whether to set the labels as accepted
-        Returns:
-            The number of DocumentClusterORM objects that were updated
-        """
-        total_updated_count = 0
-
-        if not sdoc_ids:
-            return total_updated_count
-
-        # 1. Process sdoc_ids in Batches
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            batch_sdoc_ids = sdoc_ids[i : i + BATCH_SIZE]
-
-            # 2. Build the UPDATE Statement for the current batch
-            stmt = (
-                update(self.model)
-                .where(
-                    self.model.sdoc_id.in_(batch_sdoc_ids),
-                )
-                .where(
-                    self.model.cluster_id == ClusterORM.id,
-                    ClusterORM.aspect_id == aspect_id,
-                )
-                .values(cluster_id=cluster_id, is_accepted=is_accepted)
-                .execution_options(synchronize_session=False)
-            )
-
-            # 3. Execute the statement
-            results = db.execute(stmt)
-
-            # Accumulate the count of updated rows from this batch
-            count = results.rowcount if results.rowcount is not None else 0
-            total_updated_count += count
-
-        # 4. Commit all batched updates
-        db.commit()
-
-        return total_updated_count
+        return db_objects
 
 
 crud_document_cluster = CRUDDocumentCluster(DocumentClusterORM)

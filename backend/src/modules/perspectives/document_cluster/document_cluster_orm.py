@@ -7,7 +7,7 @@ from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from core.doc.source_document_orm import SourceDocumentORM
-    from modules.perspectives.cluster_orm import ClusterORM
+    from modules.perspectives.cluster.cluster_orm import ClusterORM
 
 
 class DocumentClusterORM(ORMBase):
