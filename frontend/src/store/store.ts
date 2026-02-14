@@ -7,6 +7,7 @@ import projectReducer from "../components/Project/projectSlice.ts";
 import seatFilterReducer from "../components/SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
 import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
+import treeSortOrderReducer from "../components/TreeExplorer/treeSortOrderSlice.ts";
 import layoutReducer from "../layouts/layoutSlice.ts";
 import tabReducer from "../layouts/TabBar/tabSlice.ts";
 import bboxAnnotationAnalysisReducer from "../views/analysis/BBoxAnnotationAnalysis/bboxAnnotationAnalysisSlice.ts";
@@ -33,6 +34,7 @@ export const store = configureStore({
     sentenceSearch: sentenceSearchReducer,
     layout: layoutReducer,
     project: projectReducer,
+    treeSortOrder: treeSortOrderReducer, // global slice, not reset on project change
     // non-persisted reducers
     tabs: tabReducer,
     logbook: logbookReducer,
