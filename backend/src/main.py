@@ -118,12 +118,16 @@ for em in endpoint_modules:
 
 
 exception_handler(
-    http_status_code=lambda exc: 409
-    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-    else 500,
-    extract_message=lambda exc: str(exc.orig.pgerror).split("\n")[1]
-    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-    else str(exc),
+    http_status_code=lambda exc: (
+        409
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else 500
+    ),
+    extract_message=lambda exc: (
+        str(exc.orig.pgerror).split("\n")[1]
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else str(exc)
+    ),
 )(IntegrityError)
 
 exception_handler(404)(NoSuchJobError)
