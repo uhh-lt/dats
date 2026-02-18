@@ -22,7 +22,14 @@ __doc_type_to_mime_type_map = frozendict(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
             "application/zip",  # TODO: THIS IS A TEMPORARY FIX docx
         ],
-        DocType.image: ["image/jpeg", "image/png"],
+        DocType.image: [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/bmp",
+            "image/tiff",
+        ],
         DocType.audio: [
             "audio/mpeg",
             "audio/ogg",

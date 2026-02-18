@@ -3,11 +3,23 @@ import { Box, Paper, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
+// TODO: This list is aligned with doc_type.py but should be consolidated in a shared config file
 const allowedMimeTypes: Array<string> = [
+  // text
   "text/plain",
   "text/html",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/zip",
+  // images
   "image/jpeg",
   "image/png",
+  "image/gif",
+  "image/webp",
+  "image/bmp",
+  "image/tiff",
+  // audio
   "audio/mpeg",
   "audio/ogg",
   "audio/wave",
@@ -15,15 +27,13 @@ const allowedMimeTypes: Array<string> = [
   "audio/x-wav",
   "audio/x-pn-wav",
   "audio/wav",
+  "audio/x-hx-aac-adts",
+  // video
   "video/mp4",
   "video/webm",
   "video/x-m4v",
   "video/x-msvideo",
   "video/quicktime",
-  "application/zip",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 interface UploadDropzoneProps {
