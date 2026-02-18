@@ -70,6 +70,53 @@ export function flatTree<T extends NamedObjWithParent>(tree: ITree<T> | null): T
   return result;
 }
 
+/**
+ * Sorts tree children based on a custom sort order array.
+ * Items in sortOrder come first (in that order), followed by remaining items by ID.
+ */
+export function sortTreeByCustomOrder<T extends NamedObjWithParent>(
+  tree: ITree<T>,
+  sortOrder: number[]
+): ITree<T> {
+  const sortChildren = (children: ITree<T>[] | undefined): ITree<T>[] | undefined => {
+    if (!children || children.length === 0) return children;
+
+    // Create a map for O(1) lookup of sort position
+    const orderMap = new Map<number, number>();
+    sortOrder.forEach((id, index) => {
+      orderMap.set(id, index);
+    });
+
+    // Sort children: items in sortOrder come first, then by ID
+    const sorted = [...children].sort((a, b) => {
+      const orderA = orderMap.get(a.data.id);
+      const orderB = orderMap.get(b.data.id);
+
+      // Both in sort order - use sort order position
+      if (orderA !== undefined && orderB !== undefined) {
+        return orderA - orderB;
+      }
+      // Only A in sort order - A comes first
+      if (orderA !== undefined) return -1;
+      // Only B in sort order - B comes first
+      if (orderB !== undefined) return 1;
+      // Neither in sort order - sort by ID
+      return a.data.id - b.data.id;
+    });
+
+    // Recursively sort children
+    return sorted.map((child) => ({
+      ...child,
+      children: sortChildren(child.children),
+    }));
+  };
+
+  return {
+    ...tree,
+    children: sortChildren(tree.children),
+  };
+}
+
 export function filterTree<T extends NamedObjWithParent>({ dataTree, dataFilter }: FilterProps<T>) {
   const nodesToExpand = new Set<number>();
 
