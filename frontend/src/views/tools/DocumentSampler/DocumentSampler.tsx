@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
 import TagHooks from "../../../api/TagHooks.ts";
 import { SampledSdocsResults } from "../../../api/openapi/models/SampledSdocsResults.ts";
 import { TagRead } from "../../../api/openapi/models/TagRead.ts";
@@ -16,9 +16,11 @@ import SamplingStrategySelector from "./SamplingStrategySelector.tsx";
 import TagGroupCreator from "./TagGroupCreator.tsx";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/tools/document-sampler");
+
 function DocumentSampler() {
   // global client state (react router)
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global client state (redux)
   const aggregationGroups = useAppSelector((state) => state.documentSampler.aggregationGroups);

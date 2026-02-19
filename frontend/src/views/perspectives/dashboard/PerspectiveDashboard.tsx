@@ -1,9 +1,9 @@
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import ReplyIcon from "@mui/icons-material/Reply";
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
 import JobStatusBadge from "../../../components/BackgroundTasks/JobStatusBadge.tsx";
 import ExportChartButton from "../../../components/ExportChartButton.tsx";
@@ -22,11 +22,12 @@ import ClusterList from "./ClusterList.tsx";
 import ClusterSimilarityPlot from "./ClusterSimilarityPlot.tsx";
 import ColorScalePicker from "./ColorScalePicker.tsx";
 import DocumentClusterScatterPlot from "./DocumentClusterScatterPlot.tsx";
+import { LinkButton } from "../../../components/MUI/LinkButton.tsx";
+
+const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/");
 
 function PerspectiveDashboard() {
-  const urlParams = useParams() as { projectId: string; aspectId: string };
-  const projectId = parseInt(urlParams.projectId);
-  const aspectId = parseInt(urlParams.aspectId);
+  const { projectId, aspectId } = routeApi.useParams();
 
   // initialize the filtering
   useInitPerspectivesFilterSlice({ projectId });
@@ -116,16 +117,16 @@ function PerspectiveDashboard() {
                 </Tooltip>
               </Typography>
             </Box>
-            <Button
+            <LinkButton
               variant="contained"
               color="primary"
               endIcon={<ReplyIcon sx={{ transform: "rotate(90deg)" }} />}
-              component={RouterLink}
-              to={`../perspectives/map/${aspectId}`}
+              to="/project/$projectId/perspectives/$aspectId/map"
+              params={{ projectId, aspectId }}
               sx={{ flexShrink: 0 }}
             >
               Open Map
-            </Button>
+            </LinkButton>
           </Stack>
 
           <Stack spacing={4} direction={"row"}>

@@ -3,24 +3,24 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
 import { memo, useRef } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
-import { useParams } from "react-router-dom";
-
-import { useTabManagement } from "./hooks/useTabManagement";
-import { useTabScroll } from "./hooks/useTabScroll";
-
 import DragCloneRenderer from "./components/DragCloneRenderer.tsx";
 import DraggableTab from "./components/DraggableTab.tsx";
 import StrictModeDroppable from "./components/StrictModeDroppable.tsx";
 import TabMenuButton from "./components/TabMenuButton.tsx";
+import { useTabManagement } from "./hooks/useTabManagement";
+import { useTabScroll } from "./hooks/useTabScroll";
 import { TabIconButton } from "./styles/styledComponents.tsx";
 
-function TabBar() {
+interface TabBarProps {
+  projectId: number;
+}
+
+function TabBar({ projectId }: TabBarProps) {
   // Container ref for scrolling
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const { projectId } = useParams<{ projectId: string }>();
 
   // Use custom hooks
-  const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement();
+  const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement(projectId);
   const { canScrollLeft, canScrollRight, handleScrollLeft, handleScrollRight, updateScrollButtonVisibility } =
     useTabScroll(tabsContainerRef, activeTabIndex, tabs);
 
@@ -102,7 +102,7 @@ function TabBar() {
       <TabIconButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
         <KeyboardArrowRightIcon />
       </TabIconButton>
-      <TabMenuButton projectId={parseInt(projectId || "0")} activeTabIndex={activeTabIndex} totalTabs={tabs.length} />
+      <TabMenuButton projectId={projectId} activeTabIndex={activeTabIndex} totalTabs={tabs.length} />
     </Box>
   );
 }

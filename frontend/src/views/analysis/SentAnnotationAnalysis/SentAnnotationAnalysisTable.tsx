@@ -1,5 +1,3 @@
-import { useParams } from "react-router-dom";
-
 import SentenceAnnotationTable from "../../../components/SentenceAnnotation/SentenceAnnotationTable/SentenceAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { SentAnnotationsActions } from "./sentAnnotationAnalysisSlice.ts";
@@ -8,9 +6,11 @@ import SentAnnotationAnalysisTableToolbarRight from "./Toolbars/SentAnnotationAn
 
 const filterName = "sentAnnotationAnalysisTable";
 
-function SentAnnotationAnalysisTable() {
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+interface SentAnnotationAnalysisTableProps {
+  projectId: number;
+}
 
+function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysisTableProps) {
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.sentAnnotationAnalysis.rowSelectionModel,

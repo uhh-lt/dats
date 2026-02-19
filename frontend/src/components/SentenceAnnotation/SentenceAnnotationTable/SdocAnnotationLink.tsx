@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { Link } from "react-router-dom";
 import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
@@ -19,7 +19,11 @@ function SdocAnnotationLink({ sdoc, annotation }: SdocAnnotationLinkProps) {
   }, [dispatch, annotation.id, annotation.user_id]);
 
   return (
-    <Link to={`/project/${sdoc.project_id}/annotation/${sdoc.id}`} onClick={handleClick}>
+    <Link
+      to="/project/$projectId/annotation/$sdocId"
+      params={{ projectId: sdoc.project_id, sdocId: sdoc.id }}
+      onClick={handleClick}
+    >
       {sdoc.name}
     </Link>
   );

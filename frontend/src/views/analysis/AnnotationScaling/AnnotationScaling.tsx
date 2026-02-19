@@ -11,17 +11,19 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import AnnoscalingHooks from "../../../api/AnnoscalingHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { AnnoscalingResult } from "../../../api/openapi/models/AnnoscalingResult.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import AnnotationScalingList from "./AnnotationScalingList.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/annotation-scaling");
+
 function AnnotationScaling() {
   // global client state (react router)
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
   const codes = CodeHooks.useGetEnabledCodes();
 
   const [code, setCode] = useState<CodeRead | null>(null);

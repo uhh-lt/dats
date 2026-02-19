@@ -10,7 +10,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { useParams } from "react-router-dom";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
@@ -35,9 +34,11 @@ const filterName = "root";
 const fetchSize = 20;
 const flatMapData = (page: WordFrequencyResult) => page.word_frequencies;
 
-function WordFrequencyTable() {
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+interface WordFrequencyTableProps {
+  projectId: number;
+}
 
+function WordFrequencyTable({ projectId }: WordFrequencyTableProps) {
   // global client state (react router)
   const { user } = useAuth();
 

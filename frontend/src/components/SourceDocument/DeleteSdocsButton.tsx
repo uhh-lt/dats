@@ -2,8 +2,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { useNavigate } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
@@ -38,7 +38,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
           {
             onSuccess: (sdocs) => {
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
-              if (navigateTo) navigate(navigateTo);
+              if (navigateTo) navigate({ to: navigateTo });
             },
           },
         );

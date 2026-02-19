@@ -1,7 +1,7 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { TabActions } from "../../layouts/TabBar/tabSlice";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { CRUDDialogActions } from "../dialogSlice";
 
 export interface Shortcut {
@@ -36,14 +36,14 @@ export function createShortcut(
 }
 
 export function useShortcuts() {
-  // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
+  const projectId = useAppSelector((state) => state.project.projectId);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   // Memoize the sorted shortcuts
   const sortedShortcuts = useMemo(() => {
+    if (!projectId) return [];
+
     const shortcuts: Shortcut[] = [
       // Existing quick command menu shortcut
       createShortcut(
@@ -55,32 +55,80 @@ export function useShortcuts() {
       ),
 
       // Navigation shortcuts
-      createShortcut("goToSearch", "s", "Go to Search", () => navigate("search"), { ctrlmeta: true, shift: true }),
-      createShortcut("goToPerspectives", "m", "Go to Perspectives", () => navigate("perspectives"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToAnnotation", "a", "Go to Annotation", () => navigate("annotation"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToAnalysis", "y", "Go to Analysis", () => navigate("analysis"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToClassifier", "c", "Go to Classifier", () => navigate("classifier"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToWhiteboard", "b", "Go to Whiteboard", () => navigate("whiteboard"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
-      createShortcut("goToLogbook", "l", "Go to Logbook", () => navigate("logbook"), { ctrlmeta: true, shift: true }),
-      createShortcut("goToHealth", "h", "Go to Health", () => navigate("tools/health"), {
-        ctrlmeta: true,
-        shift: true,
-      }),
+      createShortcut(
+        "goToSearch",
+        "s",
+        "Go to Search",
+        () => navigate({ to: "/project/$projectId/search", params: { projectId } }),
+        { ctrlmeta: true, shift: true },
+      ),
+      createShortcut(
+        "goToPerspectives",
+        "m",
+        "Go to Perspectives",
+        () => navigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToAnnotation",
+        "a",
+        "Go to Annotation",
+        () => navigate({ to: "/project/$projectId/annotation", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToAnalysis",
+        "y",
+        "Go to Analysis",
+        () => navigate({ to: "/project/$projectId/analysis", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToClassifier",
+        "c",
+        "Go to Classifier",
+        () => navigate({ to: "/project/$projectId/classifier", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToWhiteboard",
+        "b",
+        "Go to Whiteboard",
+        () => navigate({ to: "/project/$projectId/whiteboard", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
+      createShortcut(
+        "goToLogbook",
+        "l",
+        "Go to Logbook",
+        () => navigate({ to: "/project/$projectId/logbook", params: { projectId } }),
+        { ctrlmeta: true, shift: true },
+      ),
+      createShortcut(
+        "goToHealth",
+        "h",
+        "Go to Health",
+        () => navigate({ to: "/project/$projectId/tools/health", params: { projectId } }),
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
+      ),
       createShortcut("goToSettings", ",", "Go to Settings", () => dispatch(CRUDDialogActions.openProjectSettings()), {
         ctrlmeta: true,
         shift: true,

@@ -1,7 +1,7 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
@@ -36,7 +36,7 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
           {
             onSuccess: (sdocs) => {
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
-              if (navigateTo) navigate(navigateTo);
+              if (navigateTo) navigate({ to: navigateTo });
             },
             onSettled: () => {
               if (onClick) onClick();

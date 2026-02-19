@@ -1,6 +1,6 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
+import { Link } from "@tanstack/react-router";
 import { memo } from "react";
-import { Link } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { docTypeToIcon } from "../../../../utils/icons/docTypeToIcon.tsx";
 
@@ -13,7 +13,7 @@ function SdocListItem({ sdocId, ...props }: SdocListItemProps & Omit<ListItemBut
   const sdoc = SdocHooks.useGetDocument(sdocId);
 
   return (
-    <ListItemButton component={Link} to={`../annotation/${sdocId}`} {...props}>
+    <ListItemButton component={Link} to="../annotation/$sdocId" params={{ sdocId }} {...props}>
       {sdoc.isSuccess ? (
         <>
           <ListItemIcon>{docTypeToIcon[sdoc.data.doctype]}</ListItemIcon>

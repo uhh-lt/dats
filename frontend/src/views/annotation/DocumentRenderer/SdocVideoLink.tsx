@@ -1,23 +1,22 @@
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
-import { Box, Link } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Box } from "@mui/material";
 import SdocHooks from "../../../api/SdocHooks.ts";
+import { LinkLink } from "../../../components/MUI/LinkLink.tsx";
 
 interface SdocVideoLinkProps {
   projectId: number;
   filename: string;
-  toPrefix: string;
 }
 
-function SdocVideoLink({ projectId, filename, toPrefix }: SdocVideoLinkProps) {
+function SdocVideoLink({ projectId, filename }: SdocVideoLinkProps) {
   const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId.data);
 
   return (
     <>
-      {thumbnailUrl.isSuccess ? (
+      {thumbnailUrl.isSuccess && sdocId.isSuccess ? (
         <div>
-          <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
+          <LinkLink to="/project/$projectId/annotation/$sdocId" params={{ sdocId: sdocId.data, projectId }}>
             <Box sx={{ position: "relative", height: 200, textAlign: "center" }}>
               <PlayCircleFilledWhiteIcon
                 sx={{
@@ -30,7 +29,7 @@ function SdocVideoLink({ projectId, filename, toPrefix }: SdocVideoLinkProps) {
               />
               <img style={{ marginBottom: 1.5 }} height="200" src={thumbnailUrl.data} alt="Tofu meatballs" />
             </Box>
-          </Link>
+          </LinkLink>
         </div>
       ) : thumbnailUrl.isError ? (
         <div>Error: {thumbnailUrl.error.message}</div>

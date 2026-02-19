@@ -50,7 +50,7 @@ const usePollLLMJob = (llmJobId: string | undefined, initialData: LlmAssistantJo
   });
 };
 
-const useGetAllLLMJobs = (projectId: number) => {
+const useGetAllLLMJobs = (projectId: number | undefined) => {
   return useQuery<LlmAssistantJobRead[], Error>({
     queryKey: [QueryKey.PROJECT_LLM_JOBS, projectId],
     queryFn: () =>

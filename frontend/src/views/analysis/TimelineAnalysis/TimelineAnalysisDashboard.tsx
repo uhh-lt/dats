@@ -1,6 +1,6 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { useParams } from "react-router";
 import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
@@ -13,6 +13,8 @@ import {
   useAnalysisDashboardTable,
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
+
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
 
 interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
   type: TimelineAnalysisType;
@@ -29,7 +31,7 @@ const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
 
 function TimelineAnalysisDashboard() {
   // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
   const {
@@ -124,6 +126,18 @@ function TimelineAnalysisDashboard() {
     );
   };
 
+  const navigate = routeApi.useNavigate();
+  const handleOpenAnalysis = (row: TimelineAnaylsisDashboardRow) => {
+    dispatch(
+      TimelineAnalysisActions.onOpenTimelineAnalysis({
+        analysisId: row.id,
+        analysisType: row.type,
+        projectId,
+      }),
+    );
+    navigate({ to: "./$analysisId", params: { analysisId: row.id } });
+  };
+
   // table
   const table = useAnalysisDashboardTable({
     analysisName: "Timeline Analysis",
@@ -137,14 +151,7 @@ function TimelineAnalysisDashboard() {
     isDeletingAnalysis: isDeletingTimelineAnalysis,
     deletingAnalysisId: deletingVariables?.timelineAnalysisId,
     duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
-    onOpenAnalysis: (analysis) =>
-      dispatch(
-        TimelineAnalysisActions.onOpenTimelineAnalysis({
-          analysisId: analysis.id,
-          analysisType: analysis.type,
-          projectId,
-        }),
-      ),
+    onOpenAnalysis: handleOpenAnalysis,
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

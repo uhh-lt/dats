@@ -1,5 +1,5 @@
 import { Stack } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
 import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
@@ -47,9 +47,23 @@ function BBoxAnnotationRendererWithoutData({
   }
 }
 
-function LinkWrapper({ children, to, link }: { children: React.ReactNode; to: string; link: boolean }) {
+function LinkWrapper({
+  children,
+  to,
+  link,
+  sdocId,
+}: {
+  children: React.ReactNode;
+  to: string;
+  sdocId: number;
+  link: boolean;
+}) {
   if (link) {
-    return <Link to={to}>{children}</Link>;
+    return (
+      <Link to={to} params={{ sdocId }}>
+        {children}
+      </Link>
+    );
   }
   return children;
 }
@@ -65,7 +79,7 @@ function BBoxAnnotationRendererWithData({
   link,
 }: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) {
   return (
-    <LinkWrapper to={`/annotation/${bboxAnnotation.sdoc_id}`} link={!!link}>
+    <LinkWrapper to="/annotation/$sdocId" sdocId={bboxAnnotation.sdoc_id} link={!!link}>
       <Stack direction="row" alignItems="center">
         {showSdoc && <SdocRenderer sdoc={bboxAnnotation.sdoc_id} {...sdocRendererProps} />}
         {showSdocTags && <SdocTagsRenderer sdocId={bboxAnnotation.sdoc_id} />}

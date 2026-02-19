@@ -4,8 +4,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import React from "react";
-import { useParams } from "react-router-dom";
+import { ChangeEvent, FocusEvent } from "react";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
@@ -19,8 +18,6 @@ interface CotaSettingsProps {
 }
 
 function CotaSettings({ cota }: CotaSettingsProps) {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
@@ -29,7 +26,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
 
   // actions
   const updateCota = CotaHooks.useUpdateCota();
-  const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeMetadataId = (event: ChangeEvent<HTMLInputElement>) => {
     updateCota.mutate({
       cotaId: cota.id,
       requestBody: {
@@ -42,7 +39,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
     });
   };
 
-  const handleChangeGroupBy = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeGroupBy = (event: ChangeEvent<HTMLInputElement>) => {
     updateCota.mutate({
       cotaId: cota.id,
       requestBody: {
@@ -55,7 +52,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
     });
   };
 
-  const handleChangeThreshold = (event: React.FocusEvent<HTMLInputElement>) => {
+  const handleChangeThreshold = (event: FocusEvent<HTMLInputElement>) => {
     if (event.target.value.trim() === "") return;
     updateCota.mutate({
       cotaId: cota.id,
@@ -108,7 +105,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
             onChange={handleChangeMetadataId}
             helperText={
               <SdocsWithDateCounter
-                projectId={projectId}
+                projectId={cota.project_id}
                 dateMetadataId={cota.timeline_settings.date_metadata_id || -1}
               />
             }

@@ -1,6 +1,6 @@
 import { Card, CardHeader, Stack } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import CardContainer from "../../../components/MUI/CardContainer.tsx";
@@ -10,9 +10,11 @@ import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";
 import DocTypeSelector from "./DocTypeSelector.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/code-frequency");
+
 function CodeFrequencyAnalysis() {
   // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // custom hook
   const { codeTree } = useComputeCodeTree();

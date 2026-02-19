@@ -1,6 +1,7 @@
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -10,7 +11,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import JobHooks from "../../../api/JobHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { jobStatusToSimple } from "../../../components/BackgroundTasks/StatusToSimple.ts";
@@ -19,6 +19,8 @@ import TagSelector from "../../../components/Tag/TagSelector.tsx";
 import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { DuplicateFinderActions } from "./duplicateFinderSlice.ts";
+
+const routeApi = getRouteApi("/_auth/project/$projectId/tools/duplicate-finder");
 
 interface DuplicateDocumentData {
   sdocId: number;
@@ -37,8 +39,8 @@ const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
   },
 ];
 
-function ProjectDuplicateDocuments() {
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+function DuplicateFinder() {
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // local state
   const [maxDifferentWords, setMaxDifferentWords] = useState<number>(10);
@@ -265,4 +267,4 @@ function ProjectDuplicateDocuments() {
   );
 }
 
-export default ProjectDuplicateDocuments;
+export default DuplicateFinder;

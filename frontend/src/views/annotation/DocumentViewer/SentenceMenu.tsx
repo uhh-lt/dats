@@ -10,8 +10,8 @@ import {
   Popover,
   PopoverPosition,
 } from "@mui/material";
-import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
+import { Fragment, forwardRef, useImperativeHandle, useState } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
@@ -30,7 +30,11 @@ export interface SentenceMenuHandle {
   close: () => void;
 }
 
-const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
+interface SentenceMenuProps {
+  projectId: number;
+}
+
+const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({ projectId }, ref) => {
   const navigate = useNavigate();
 
   // global server state
@@ -73,14 +77,14 @@ const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
     dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
     dispatch(SentenceSearchActions.onClearRowSelection());
     closeMenu();
-    navigate("../sentencesearch");
+    navigate({ to: "/project/$projectId/sentencesearch", params: { projectId } });
   };
 
   const handleImageSimilaritySearch = () => {
     dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
     dispatch(ImageSearchActions.clearSelectedDocuments());
     closeMenu();
-    navigate("../imagesearch");
+    navigate({ to: "/project/$projectId/imagesearch", params: { projectId } });
   };
 
   const handleAddFilter = (anno: SpanAnnotationRead) => {
@@ -92,7 +96,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
       }),
     );
     closeMenu();
-    navigate("../search");
+    navigate({ to: "/project/$projectId/search", params: { projectId } });
   };
 
   return (
@@ -132,7 +136,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
           annotations.map((anno) => {
             const code = codeId2CodeMap.data[anno.code_id];
             return (
-              <React.Fragment key={anno.id}>
+              <Fragment key={anno.id}>
                 <ListItem disablePadding>
                   <ListItemButton onClick={() => handleAddFilter(anno)}>
                     <ListItemIcon>
@@ -171,7 +175,7 @@ const SentenceMenu = forwardRef<SentenceMenuHandle>((_, ref) => {
                     </>
                   }
                 />
-              </React.Fragment>
+              </Fragment>
             );
           })}
       </List>

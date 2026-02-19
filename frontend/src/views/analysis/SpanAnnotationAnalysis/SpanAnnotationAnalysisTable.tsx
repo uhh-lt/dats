@@ -1,4 +1,3 @@
-import { useParams } from "react-router-dom";
 import SpanAnnotationTable from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { SpanAnnotationsActions } from "./spanAnnotationAnalysisSlice.ts";
@@ -7,9 +6,11 @@ import SpanAnnotationAnalysisTableToolbarRight from "./Toolbars/SpanAnnotationAn
 
 const filterName = "spanAnnotationAnalysisTable";
 
-function SpanAnnotationAnalysisTable() {
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+interface SpanAnnotationAnalysisProps {
+  projectId: number;
+}
 
+function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysisProps) {
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.rowSelectionModel,

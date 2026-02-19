@@ -10,15 +10,14 @@ import {
   alpha,
 } from "@mui/material";
 import { SyntheticEvent, useCallback, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem";
 import { useDefaultCommands } from "./useDefaultCommands.tsx";
+import { useNavigate } from "@tanstack/react-router";
 
-function QuickCommandMenu() {
+function QuickCommandMenu({ projectId }: { projectId: number }) {
   // generate commands
-  const { projectId } = useParams() as { projectId: string };
   const commands = useDefaultCommands(projectId);
 
   // open close the menu
@@ -35,7 +34,7 @@ function QuickCommandMenu() {
         if (command.action) {
           command.action();
         } else if (command.route) {
-          navigate(command.route);
+          navigate({ to: command.route });
         }
         closeMenu();
       }

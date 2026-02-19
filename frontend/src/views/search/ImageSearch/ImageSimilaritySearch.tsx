@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
@@ -23,10 +23,11 @@ import ImageSimilaritySearchToolbar from "./ImageSimilaritySearchToolbar.tsx";
 import ImageSimilarityView from "./ImageSimilarityView.tsx";
 
 const filterName = "imageSimilaritySearch";
+const routeApi = getRouteApi("/_auth/project/$projectId/imagesearch");
 
 function ImageSimilaritySearch() {
   // router
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
@@ -102,6 +103,7 @@ function ImageSimilaritySearch() {
           secondContent={
             <SearchStatistics
               sx={{ height: "100%" }}
+              projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
               handleTagClick={handleAddTagFilter}

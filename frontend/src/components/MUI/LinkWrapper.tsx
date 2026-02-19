@@ -1,17 +1,29 @@
-import { Link, LinkProps } from "react-router-dom";
+import type { LinkProps } from "@mui/material";
+import { Link } from "@mui/material";
+import type { LinkComponent } from "@tanstack/react-router";
+import { createLink } from "@tanstack/react-router";
+import { forwardRef } from "react";
 
-function LinkWrapper({
-  children,
-  link,
-  ...props
-}: {
+interface LinkWrapperProps extends LinkProps {
   children: React.ReactNode;
   link: boolean;
-} & LinkProps) {
+}
+
+const LinkWrapperComponent = forwardRef<HTMLAnchorElement, LinkWrapperProps>(({ children, link, ...props }, ref) => {
   if (link) {
-    return <Link {...props}>{children}</Link>;
+    return (
+      <Link ref={ref} {...props}>
+        {children}
+      </Link>
+    );
   }
   return children;
-}
+});
+
+const CreatedLinkWrapperComponent = createLink(LinkWrapperComponent);
+
+const LinkWrapper: LinkComponent<typeof LinkWrapperComponent> = (props) => {
+  return <CreatedLinkWrapperComponent preload={"intent"} {...props} />;
+};
 
 export default LinkWrapper;

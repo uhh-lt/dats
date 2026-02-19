@@ -3,7 +3,6 @@ import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import { LoadingButton } from "@mui/lab";
 import {
   Box,
-  Button,
   Card,
   CardActions,
   CardContent,
@@ -14,14 +13,15 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import React, { useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { ChangeEvent, useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
 import UserHooks from "../../api/UserHooks.ts";
 import { UserCreate } from "../../api/openapi/models/UserCreate.ts";
 import FormEmail from "../../components/FormInputs/FormEmail.tsx";
 import FormPassword from "../../components/FormInputs/FormPassword.tsx";
 import FormText from "../../components/FormInputs/FormText.tsx";
+import { LinkButton } from "../../components/MUI/LinkButton.tsx";
 import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
 import DATSLogo from "./DATSLogo.tsx";
 
@@ -52,7 +52,7 @@ function Register() {
   const password = useRef<string>();
   password.current = watch("password", "");
   const [showPassword, setShowPassword] = useState(false);
-  const handleShowPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleShowPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
     setShowPassword(event.target.checked);
   };
 
@@ -77,7 +77,7 @@ function Register() {
       {
         onSuccess: () => {
           setTimeout(() => {
-            navigate("/login");
+            navigate({ to: "/login", search: { redirect: "/projects" } });
           }, 1000);
         },
       },
@@ -225,9 +225,9 @@ function Register() {
             </FormGroup>
           </CardContent>
           <CardActions>
-            <Button color="primary" component={Link} to="/login">
+            <LinkButton to="/login" search={{ redirect: "/projects" }} color="primary">
               Back
-            </Button>
+            </LinkButton>
             <Box sx={{ flexGrow: 1 }} />
             <LoadingButton
               variant="contained"

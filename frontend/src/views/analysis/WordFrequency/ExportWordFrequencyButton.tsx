@@ -1,10 +1,10 @@
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
 import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
 import { WordFrequencyService } from "../../../api/openapi/services/WordFrequencyService.ts";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
 import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { downloadFile } from "../../../utils/ExportUtils.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 
@@ -13,8 +13,7 @@ interface ExportWordFrequencyButtonProps {
 }
 
 export default function ExportWordFrequencyButton({ filter }: ExportWordFrequencyButtonProps) {
-  // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   const exportWordFrequencies = useMutation({
     mutationFn: WordFrequencyService.wordFrequencyAnalysisExport,
@@ -24,6 +23,7 @@ export default function ExportWordFrequencyButton({ filter }: ExportWordFrequenc
   const openSnackbar = useOpenSnackbar();
 
   const handleClick = () => {
+    if (!projectId) return;
     exportWordFrequencies.mutate(
       {
         projectId,

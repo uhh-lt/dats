@@ -1,16 +1,15 @@
 import { useCallback, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import JobHooks from "../../api/JobHooks.ts";
 import { ExportJobInput } from "../../api/openapi/models/ExportJobInput.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { downloadFile } from "../../utils/ExportUtils.ts";
 import { useOpenSnackbar } from "../SnackbarDialog/useOpenSnackbar.ts";
 
 export const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 
 export const useExport = ({ export_job_type, specific_export_job_parameters }: Omit<ExportJobInput, "project_id">) => {
-  // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // mutations
   const { mutate: startExportMutation, reset: resetExport, data, isPending } = JobHooks.useStartExportJob();
@@ -20,6 +19,7 @@ export const useExport = ({ export_job_type, specific_export_job_parameters }: O
   const openSnackbar = useOpenSnackbar();
 
   const onClick = useCallback(() => {
+    if (!projectId) return;
     startExportMutation({
       requestBody: {
         export_job_type: export_job_type,

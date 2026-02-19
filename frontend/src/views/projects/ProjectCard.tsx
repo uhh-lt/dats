@@ -8,7 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
 import { SDocStatus } from "../../api/openapi/models/SDocStatus.ts";
@@ -27,9 +27,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
   const openProject = () => {
     if (!projectTabs[project.id] || projectTabs[project.id].activeTabIndex === null) {
-      navigate(`/project/${project.id}/search`);
+      navigate({ to: `/project/$projectId/search`, params: { projectId: project.id } });
     } else {
-      navigate(projectTabs[project.id].tabs[projectTabs[project.id].activeTabIndex!].path);
+      console.log("Navigating to last active tab for project", project.id, projectTabs[project.id]);
+      navigate({ to: projectTabs[project.id].tabs[projectTabs[project.id].activeTabIndex!].path });
     }
   };
 

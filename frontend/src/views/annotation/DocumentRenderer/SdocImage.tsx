@@ -39,7 +39,7 @@ function SdocImage({ projectId, filename }: SdocImageLinkProps) {
       ) : (
         <div>Loading img...</div>
       )}
-      <ImageMenu ref={imageMenuRef} />
+      <ImageMenu ref={imageMenuRef} projectId={projectId} />
     </>
   );
 }

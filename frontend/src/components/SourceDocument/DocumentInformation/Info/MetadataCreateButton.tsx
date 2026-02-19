@@ -1,10 +1,10 @@
 import { Button, PopoverPosition } from "@mui/material";
-import React, { memo, useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { MouseEvent, memo, useCallback, useState } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks.ts";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { DocType } from "../../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils.tsx";
 import MetadataTypeSelectorMenu from "./MetadataTypeSelectorMenu.tsx";
 
@@ -28,7 +28,7 @@ function MetadataCreateButton({ sdocId, docType }: MetadataCreateButtonProps) {
 function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined }) {
   const [position, setPosition] = useState<PopoverPosition | undefined>();
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     const boundingBox = event.currentTarget.getBoundingClientRect();
     setPosition({
       left: boundingBox.left,
@@ -41,12 +41,12 @@ function MetadataCreateButtonContent({ docType }: { docType: DocType | undefined
   }, []);
 
   // create
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
   const { mutate: createMetadataMutation } = MetadataHooks.useCreateProjectMetadata();
 
   const handleCreateMetadata = useCallback(
     (metaType: string) => {
-      if (!docType) return;
+      if (!docType || !projectId) return;
 
       createMetadataMutation({
         requestBody: {

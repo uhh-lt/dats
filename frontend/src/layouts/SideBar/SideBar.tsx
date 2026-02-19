@@ -15,33 +15,31 @@ import {
   ListItemIcon,
   ListItemText,
   Menu,
-  MenuItem,
   Popover,
   Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { memo, useCallback, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useLocation } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
-import { UserRead } from "../../api/openapi/models/UserRead.ts";
 import { LoginStatus } from "../../auth/LoginStatus.ts";
+import { useAuth } from "../../auth/useAuth.ts";
 import { CRUDDialogActions } from "../../components/dialogSlice.ts";
+import { LinkListItemButton } from "../../components/MUI/LinkListItemButton.tsx";
+import { LinkMenuItem } from "../../components/MUI/LinkMenuItem.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 
 interface SideBarProps {
-  loginStatus: LoginStatus;
-  user: UserRead | undefined;
-  handleLogout: () => void;
-  isInProject: boolean;
+  projectId?: number;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
-function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInProject }: SideBarProps) {
+function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
+  const { loginStatus, logout, user } = useAuth();
   const location = useLocation();
-  const { projectId } = useParams();
   const dispatch = useAppDispatch();
 
   // Memoize isActive function
@@ -151,7 +149,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
         <Divider sx={{ borderColor: "primary.dark" }} />
 
         {/* Main navigation section */}
-        {isInProject && (
+        {projectId && (
           <List sx={{ py: 0 }}>
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Search (⌘⇧S)" placement="right" arrow disableHoverListener={isExpanded}>
@@ -189,26 +187,26 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <MenuItem component={Link} to={`/project/${projectId}/search`}>
+                <LinkMenuItem to="/project/$projectId/search" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
                   <ListItemText>Document Search</ListItemText>
-                </MenuItem>
-                <MenuItem component={Link} to={`/project/${projectId}/imagesearch`}>
+                </LinkMenuItem>
+                <LinkMenuItem to="/project/$projectId/imagesearch" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.IMAGE_SEARCH)}</ListItemIcon>
                   <ListItemText>Image Search</ListItemText>
-                </MenuItem>
-                <MenuItem component={Link} to={`/project/${projectId}/sentencesearch`}>
+                </LinkMenuItem>
+                <LinkMenuItem to="/project/$projectId/sentencesearch" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.SENTENCE_SEARCH)}</ListItemIcon>
                   <ListItemText>Sentence Search</ListItemText>
-                </MenuItem>
+                </LinkMenuItem>
               </Menu>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Perspectives (⌘M)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/perspectives`}
+                <LinkListItemButton
+                  to="/project/$projectId/perspectives"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -227,15 +225,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     {getIconComponent(Icon.PERSPECTIVES)}
                   </ListItemIcon>
                   {isExpanded && <ListItemText>Perspectives</ListItemText>}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/annotation`}
+                <LinkListItemButton
+                  to="/project/$projectId/annotation"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -258,15 +256,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       <span style={{ textDecoration: "underline" }}>A</span>nnotation
                     </ListItemText>
                   )}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Analysis (⌘⇧Y)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/analysis`}
+                <LinkListItemButton
+                  to="/project/$projectId/analysis"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -289,15 +287,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       Anal<span style={{ textDecoration: "underline" }}>y</span>sis
                     </ListItemText>
                   )}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Classifier (⌘⇧C)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/classifier`}
+                <LinkListItemButton
+                  to="/project/$projectId/classifier"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -320,15 +318,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       <span style={{ textDecoration: "underline" }}>C</span>lassifier
                     </ListItemText>
                   )}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Whiteboard (⌘⇧B)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/whiteboard`}
+                <LinkListItemButton
+                  to="/project/$projectId/whiteboard"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -351,15 +349,15 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       White<span style={{ textDecoration: "underline" }}>b</span>oard
                     </ListItemText>
                   )}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Logbook (⌘⇧L)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/logbook`}
+                <LinkListItemButton
+                  to="/project/$projectId/logbook"
+                  params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -382,7 +380,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                       <span style={{ textDecoration: "underline" }}>L</span>ogbook
                     </ListItemText>
                   )}
-                </ListItemButton>
+                </LinkListItemButton>
               </Tooltip>
             </ListItem>
 
@@ -418,22 +416,22 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <MenuItem component={Link} to={`/project/${projectId}/tools/ml-automation`}>
+                <LinkMenuItem to="/project/$projectId/tools/ml-automation" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.ML_AUTOMATION)}</ListItemIcon>
                   <ListItemText primary="ML Automation" />
-                </MenuItem>
-                <MenuItem component={Link} to={`/project/${projectId}/tools/duplicate-finder`}>
+                </LinkMenuItem>
+                <LinkMenuItem to="/project/$projectId/tools/duplicate-finder" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.DUPLICATE_FINDER)}</ListItemIcon>
                   <ListItemText primary="Duplicate Finder" />
-                </MenuItem>
-                <MenuItem component={Link} to={`/project/${projectId}/tools/document-sampler`}>
+                </LinkMenuItem>
+                <LinkMenuItem to="/project/$projectId/tools/document-sampler" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SAMPLER)}</ListItemIcon>
                   <ListItemText primary="Document Sampler" />
-                </MenuItem>
-                <MenuItem component={Link} to={`/project/${projectId}/tools/health`}>
+                </LinkMenuItem>
+                <LinkMenuItem to="/project/$projectId/tools/health" params={{ projectId }}>
                   <ListItemIcon>{getIconComponent(Icon.HEALTH)}</ListItemIcon>
                   <ListItemText primary="Document Health (⌘⇧H)" />
-                </MenuItem>
+                </LinkMenuItem>
               </Menu>
             </ListItem>
           </List>
@@ -444,8 +442,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
         <List sx={{ py: 1 }}>
           <ListItem disablePadding sx={{ display: "block" }}>
             <Tooltip title="Projects" placement="right" arrow disableHoverListener={isExpanded}>
-              <ListItemButton
-                component={Link}
+              <LinkListItemButton
                 to="/projects"
                 sx={{
                   minHeight: 48,
@@ -465,7 +462,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   <HomeIcon />
                 </ListItemIcon>
                 {isExpanded && <ListItemText primary="Projects" />}
-              </ListItemButton>
+              </LinkListItemButton>
             </Tooltip>
           </ListItem>
 
@@ -501,7 +498,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
             </Tooltip>
           </ListItem>
 
-          {isInProject && (
+          {!!projectId && (
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Settings (⌘⇧,)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
@@ -589,16 +586,16 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                   </CardContent>
                   <List disablePadding>
                     <ListItem disablePadding>
-                      <ListItemButton component={Link} to={"/me"}>
+                      <LinkListItemButton to={"/me"}>
                         <ListItemIcon>
                           <AccountBoxIcon />
                         </ListItemIcon>
                         <ListItemText primary="View Profile" />
-                      </ListItemButton>
+                      </LinkListItemButton>
                     </ListItem>
                     <Divider />
                     <ListItem disablePadding color="red">
-                      <ListItemButton onClick={() => handleLogout()} color="error">
+                      <ListItemButton onClick={() => logout()} color="error">
                         <ListItemIcon>
                           <LogoutIcon />
                         </ListItemIcon>
@@ -628,4 +625,4 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
   );
 }
 
-export default memo(SideBar);
+export default SideBar;

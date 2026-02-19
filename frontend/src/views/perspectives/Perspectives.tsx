@@ -1,6 +1,5 @@
 import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
-
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
 import { useDialog } from "../../hooks/useDialog.ts";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";

@@ -2,7 +2,7 @@ import { Stack } from "@mui/material";
 import { useCallback } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead.ts";
-import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import LinkWrapper from "../MUI/LinkWrapper.tsx";
@@ -60,14 +60,23 @@ function SpanAnnotationRendererWithData({
   sdocRendererProps,
   link,
 }: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) {
+  const projectId = useAppSelector((state) => state.project.projectId);
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {
     dispatch(AnnoActions.setSelectedAnnotationId(spanAnnotation.id));
     dispatch(AnnoActions.setVisibleUserId(spanAnnotation.user_id));
   }, [dispatch, spanAnnotation.id, spanAnnotation.user_id]);
 
+  if (!projectId) {
+    return <div>Error: This component requires a project ID.</div>;
+  }
   return (
-    <LinkWrapper to={`../annotation/${spanAnnotation.sdoc_id}`} onClick={handleClick} link={!!link}>
+    <LinkWrapper
+      to="/project/$projectId/annotation/$sdocId"
+      params={{ projectId, sdocId: spanAnnotation.sdoc_id }}
+      onClick={handleClick}
+      link={!!link}
+    >
       <Stack direction="row" alignItems="center">
         {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
         {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}

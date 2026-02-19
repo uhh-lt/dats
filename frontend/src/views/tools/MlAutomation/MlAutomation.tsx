@@ -15,7 +15,7 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import JobHooks from "../../../api/JobHooks.ts";
 import { MLJobType } from "../../../api/openapi/models/MLJobType.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
@@ -23,9 +23,11 @@ import ContentContainerLayout from "../../../layouts/ContentLayouts/ContentConta
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import MLJobsView from "./MLJobsView.tsx";
 
+const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");
+
 function MlAutomation() {
   // global client state (react router)
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+  const projectId = routeAPI.useParams({ select: (params) => params.projectId });
 
   // actions
   const startMlJob = JobHooks.useStartMLJob();
@@ -287,7 +289,7 @@ function MlAutomation() {
           </List>
         </CardContent>
       </Card>
-      <MLJobsView />
+      <MLJobsView projectId={projectId} />
     </ContentContainerLayout>
   );
 }

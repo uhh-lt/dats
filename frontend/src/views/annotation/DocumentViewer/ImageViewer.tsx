@@ -1,8 +1,8 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
@@ -81,13 +81,13 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const navigate = useNavigate();
   const handleImageSimilaritySearch = () => {
     dispatch(ImageSearchActions.onChangeSearchQuery(`${sdocData.id}`));
-    navigate("../imagesearch");
+    navigate({ to: "/project/$projectId/imagesearch", params: { projectId: sdocData.project_id } });
   };
 
   // find similar sentences
   const handleSentenceSimilaritySearch = () => {
     dispatch(SentenceSearchActions.onSearchQueryChange(`${sdocData.id}`));
-    navigate("../sentencesearch");
+    navigate({ to: "/project/$projectId/sentencesearch", params: { projectId: sdocData.project_id } });
   };
 
   return (

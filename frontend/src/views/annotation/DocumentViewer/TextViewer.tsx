@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import { MouseEvent, useRef } from "react";
 import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { TagStyle } from "../annoSlice.ts";
@@ -29,7 +29,7 @@ function TextViewer({ sdocData: sdocData }: TextViewerProps) {
   });
 
   // ui events
-  const handleClick = (event: React.MouseEvent) => {
+  const handleClick = (event: MouseEvent) => {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
     if (!sentences) return;
@@ -103,7 +103,7 @@ function TextViewer({ sdocData: sdocData }: TextViewerProps) {
         }}
         className="h100"
       />
-      <SentenceMenu ref={sentenceMenuRef} />
+      <SentenceMenu ref={sentenceMenuRef} projectId={sdocData.project_id} />
     </>
   );
 }

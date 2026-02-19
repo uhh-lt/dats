@@ -1,5 +1,6 @@
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -16,7 +17,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { FolderMap } from "../../../api/FolderHooks.ts";
 import { QueryKey } from "../../../api/QueryKey.ts";
 import { FolderType } from "../../../api/openapi/models/FolderType.ts";
@@ -428,7 +428,10 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         : {
             onClick: (event) => {
               if (event.detail >= 2) {
-                navigate(`/project/${projectId}/annotation/${row.original.id}`);
+                navigate({
+                  to: "/project/$projectId/annotation/$sdocId",
+                  params: { projectId, sdocId: row.original.id },
+                });
               } else {
                 dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
               }

@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
@@ -21,10 +21,11 @@ import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import SentenceSimilaritySearchTable from "./SentenceSimilaritySearchTable.tsx";
 
 const filterName = "sentenceSimilaritySearch";
+const routeApi = getRouteApi("/_auth/project/$projectId/sentencesearch");
 
 function SentenceSimilaritySearch() {
   // router
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
@@ -98,6 +99,7 @@ function SentenceSimilaritySearch() {
           secondContent={
             <SearchStatistics
               sx={{ height: "100%" }}
+              projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
               handleTagClick={handleAddTagFilter}

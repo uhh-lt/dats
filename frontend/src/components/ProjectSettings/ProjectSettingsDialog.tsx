@@ -3,8 +3,8 @@ import { LoadingButton, TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
 import { AppBar, Box, Dialog, DialogActions, DialogContent, Divider, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
-import React, { memo, useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
+import { SyntheticEvent, memo, useCallback, useState } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -17,10 +17,7 @@ import ProjectImport from "./tabs/ProjectImport.tsx";
 import ProjectTags from "./tabs/ProjectTags.tsx";
 import ProjectUsers from "./tabs/ProjectUsers.tsx";
 
-function ProjectSettingsDialog() {
-  const { projectId } = useParams() as { projectId: string };
-  const projId = parseInt(projectId);
-
+function ProjectSettingsDialog({ projectId }: { projectId: number }) {
   // dialog state
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.dialog.isProjectSettingsOpen);
@@ -29,11 +26,11 @@ function ProjectSettingsDialog() {
   }, [dispatch]);
 
   // queries
-  const project = ProjectHooks.useGetProject(projId);
+  const project = ProjectHooks.useGetProject(projectId);
 
   // state
   const [tab, setTab] = useState("1");
-  const handleChangeTab = useCallback((_event: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = useCallback((_event: SyntheticEvent, newValue: string) => {
     setTab(newValue);
   }, []);
 
@@ -47,7 +44,7 @@ function ProjectSettingsDialog() {
           deleteProject(
             { projId: project.data.id },
             {
-              onSuccess: () => navigate(`/projects`),
+              onSuccess: () => navigate({ to: "/projects" }),
             },
           );
         },
@@ -91,7 +88,7 @@ function ProjectSettingsDialog() {
         {project.isLoading && <DialogContent>Loading project...</DialogContent>}
         {project.isError && <DialogContent>An error occurred while loading project {projectId}...</DialogContent>}
         {project.isSuccess && (
-          <React.Fragment>
+          <>
             <TabPanel value="1" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectDetails project={project.data} />
             </TabPanel>
@@ -107,7 +104,7 @@ function ProjectSettingsDialog() {
             <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectImport project={project.data} />
             </TabPanel>
-          </React.Fragment>
+          </>
         )}
         <Divider />
         <DialogActions>

@@ -12,7 +12,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ExportAnalysisButtonProps } from "../../../components/Export/ExportTimelineAnalysisButton.tsx";
 import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
@@ -55,8 +54,6 @@ export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> 
 }
 
 export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {
-  const navigate = useNavigate();
-
   const columns = useMemo(() => {
     const columns: MRT_ColumnDef<T>[] = [
       { accessorKey: "id", header: "ID", enableEditing: false },
@@ -132,7 +129,6 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
             ? undefined
             : () => {
                 props.onOpenAnalysis(row.original);
-                navigate(`./${row.original.id}`);
               },
       };
     },

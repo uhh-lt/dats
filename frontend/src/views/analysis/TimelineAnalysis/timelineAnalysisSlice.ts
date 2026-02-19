@@ -88,7 +88,7 @@ const initialState: FilterState & TimelineAnalysisState = {
 
 const resetTimelineAnalysisState = (
   state: Draft<FilterState & TimelineAnalysisState>,
-  projectId: number,
+  projectId: number | undefined,
   timelineAnalysisType: TimelineAnalysisType,
 ) => {
   resetProjectFilterState({

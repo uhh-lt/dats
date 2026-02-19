@@ -4,7 +4,6 @@ import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
 import TagHooks from "../../api/TagHooks.ts";
 import { TagCreate } from "../../api/openapi/models/TagCreate.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
@@ -20,9 +19,8 @@ import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import TagRenderer from "./TagRenderer.tsx";
 
-function TagCreateDialog() {
+function TagCreateDialog({ projectId }: { projectId: number }) {
   const dispatch = useAppDispatch();
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();

@@ -1,14 +1,14 @@
 import { CircularProgress } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import { ReactFlowProvider } from "reactflow";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import WhiteboardFlow from "./WhiteboardFlow.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/$whiteboardId");
+
 function Whiteboard() {
   // global client state
-  const urlParams = useParams() as { projectId: string; whiteboardId: string };
-  const projectId = parseInt(urlParams.projectId);
-  const whiteboardId = parseInt(urlParams.whiteboardId);
+  const { projectId, whiteboardId } = routeApi.useParams();
 
   // global server state
   const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);

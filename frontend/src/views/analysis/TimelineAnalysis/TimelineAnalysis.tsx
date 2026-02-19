@@ -1,5 +1,5 @@
 import { CircularProgress } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
 import SidebarContentLayout from "../../../layouts/ContentLayouts/SidebarContentLayout.tsx";
@@ -11,11 +11,11 @@ import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
 import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
 import TimelineAnalysisSettings from "./TimelineAnalysisSettings.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/timeline/$analysisId");
+
 function TimelineAnalysis() {
   // global client state
-  const urlParams = useParams() as { projectId: string; analysisId: string };
-  const projectId = parseInt(urlParams.projectId);
-  const analysisId = parseInt(urlParams.analysisId);
+  const { projectId, analysisId } = routeApi.useParams();
 
   // global server state (react-query)
   const timelineAnalysis = TimelineAnalysisHooks.useGetTimelineAnalysis(analysisId);

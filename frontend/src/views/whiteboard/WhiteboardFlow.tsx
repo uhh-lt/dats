@@ -1,9 +1,9 @@
 import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "@mui/material";
+import { useBlocker } from "@tanstack/react-router";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useBlocker, useParams } from "react-router-dom";
 import {
   addEdge,
   Background,
@@ -166,9 +166,6 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const reactFlowService = useReactFlowService(reactFlowInstance);
   const resetSelection = useStore(resetSelectedElementsSelector);
   const connectionHandleId = useStore(connectionHandleIdSelector);
-
-  // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // mutations
   const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();
@@ -368,12 +365,14 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   useEffect(() => {
     setOldData(JSON.stringify(whiteboard.content));
   }, [whiteboard.content]);
-  useBlocker(() => {
-    const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
-    if (oldData !== JSON.stringify(newData)) {
-      handleSaveWhiteboard();
-    }
-    return false;
+  useBlocker({
+    shouldBlockFn: () => {
+      const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
+      if (oldData !== JSON.stringify(newData)) {
+        handleSaveWhiteboard();
+      }
+      return false;
+    },
   });
 
   // CHANGE TITLE Feature
@@ -508,37 +507,37 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               <Paper elevation={1} sx={{ width: "fit-content" }}>
                 <Stack>
                   <AddDocumentNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddTagNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddCodeNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddSpanAnnotationNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddSentenceAnnotationNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddBBoxAnnotationNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
                   <AddMemoNodeDialog
-                    projectId={projectId}
+                    projectId={whiteboard.project_id}
                     onClick={handleChangePendingAction}
                     buttonProps={{ sx: { minWidth: 0, p: 1, color: "black" }, variant: "text" }}
                   />
@@ -626,9 +625,9 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           </ReactFlow>
         </Box>
       </Box>
-      <SpanAnnotationEditDialog projectId={projectId} />
-      <SentenceAnnotationEditDialog projectId={projectId} />
-      <BBoxAnnotationEditDialog projectId={projectId} />
+      <SpanAnnotationEditDialog projectId={whiteboard.project_id} />
+      <SentenceAnnotationEditDialog projectId={whiteboard.project_id} />
+      <BBoxAnnotationEditDialog projectId={whiteboard.project_id} />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import MemoTable from "../../components/Memo/MemoTable/MemoTable.tsx";
 import ContentContentLayout from "../../layouts/ContentLayouts/ContentContentLayout.tsx";
 import { useReduxConnector } from "../../utils/useReduxConnector.ts";
@@ -6,9 +6,10 @@ import LogbookEditor from "./LogbookEditor.tsx";
 import { LogbookActions } from "./logbookSlice.ts";
 
 const filterName = "logbook";
+const routeApi = getRouteApi("/_auth/project/$projectId/logbook");
 
 function Logbook() {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(

@@ -1,7 +1,7 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
+import { ReactElement, useEffect, useRef, useState } from "react";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { SourceDocumentDataRead } from "../../api/openapi/models/SourceDocumentDataRead.ts";
@@ -22,6 +22,8 @@ import SentenceAnnotator from "./SentenceAnnotator/Annotator/SentenceAnnotator.t
 import SentenceAnnotationComparison from "./SentenceAnnotator/Comparator/SentenceAnnotationComparison.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import AnnotationToolbar from "./Toolbar/AnnotationToolbar.tsx";
+
+const routeApi = getRouteApi("/_auth/project/$projectId/annotation/$sdocId");
 
 const annotatorComponent = (
   sdocData: SourceDocumentDataRead,
@@ -119,7 +121,7 @@ const comparatorComponent = (
   },
 });
 
-const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
+const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMode, ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <SpanAnnotationExplorer sdocId={sdocId} />,
     [AnnotationMode.SentenceAnnotation]: <SentenceAnnotationExplorer sdocId={sdocId} />,
@@ -144,8 +146,7 @@ const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMod
 
 function Annotation() {
   // global client state (URL)
-  const params = useParams() as { projectId: string; sdocId: string };
-  const sdocId = parseInt(params.sdocId);
+  const sdocId = routeApi.useParams({ select: (params) => params.sdocId });
 
   // global client state (redux)
   // components are selected based on these states

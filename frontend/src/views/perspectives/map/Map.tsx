@@ -1,4 +1,4 @@
-import { useParams } from "react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import SidebarContentSidebarLayout from "../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import ClusterJobProgressDialog from "../components/ClusterJobProgressDialog.tsx";
@@ -9,10 +9,10 @@ import MapContent from "./MapContent.tsx";
 import InfoPanel from "./PanelInfo/InfoPanel.tsx";
 import SettingsPanel from "./PanelSettings/SettingsPanel.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
+
 function Map() {
-  const urlParams = useParams() as { projectId: string; aspectId: string };
-  const projectId = parseInt(urlParams.projectId);
-  const aspectId = parseInt(urlParams.aspectId);
+  const { projectId, aspectId } = routeApi.useParams();
 
   // initialize the filtering
   useInitPerspectivesFilterSlice({ projectId });

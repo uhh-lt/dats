@@ -1,6 +1,6 @@
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 import { DropResult } from "react-beautiful-dnd";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { getTabInfoFromPath } from "../tabInfo";
 import { selectProjectTabs, TabActions } from "../tabSlice";
@@ -14,10 +14,7 @@ interface TabManagementHook {
   handleDragEnd: (result: DropResult) => void;
 }
 
-export const useTabManagement = (): TabManagementHook => {
-  // global client state (react-router)
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
+export const useTabManagement = (projectId: number): TabManagementHook => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -75,7 +72,7 @@ export const useTabManagement = (): TabManagementHook => {
       const targetPath = tabs[activeTabIndex].path;
       if (targetPath !== location.pathname) {
         navigationSourceRef.current = "tab_change";
-        navigate(targetPath);
+        navigate({ to: targetPath });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

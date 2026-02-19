@@ -1,14 +1,15 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
 import JobHooks from "../../../api/JobHooks.ts";
 import MLJobListItem from "../../../components/BackgroundTasks/MLJobListItem.tsx";
 import { DialogSection } from "../../../components/MUI/DialogSection.tsx";
 
-function MLJobsView() {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+interface MLJobsViewProps {
+  projectId: number;
+}
 
+function MLJobsView({ projectId }: MLJobsViewProps) {
   const { data: mlJobs, refetch: refetchMLJobs, isFetching: isMLFetching } = JobHooks.useGetAllMLJobs(projectId);
   const allMLJobs = useMemo(() => mlJobs || [], [mlJobs]);
 
