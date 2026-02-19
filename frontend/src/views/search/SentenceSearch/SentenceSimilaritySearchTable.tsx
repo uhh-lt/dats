@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -8,7 +9,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
 import { SimSearchSentenceHit } from "../../../api/openapi/models/SimSearchSentenceHit.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
@@ -216,7 +216,10 @@ function SentenceSimilaritySearchTable({
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
         if (event.detail >= 2) {
-          navigate(`/project/${projectId}/annotation/${row.original.sdoc_id}`);
+          navigate({
+            to: "/project/$projectId/annotation/$sdocId",
+            params: { projectId, sdocId: row.original.sdoc_id },
+          });
         } else {
           dispatch(SentenceSearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));
         }

@@ -1,8 +1,7 @@
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, List, ListItemButton, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
+import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useCallback, useRef, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
 import LLMHooks from "../../api/LLMHooks.ts";
 import { ApproachType } from "../../api/openapi/models/ApproachType.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -15,6 +14,7 @@ import { ZeroShotParams } from "../../api/openapi/models/ZeroShotParams.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
+import { LinkListItemButton } from "../MUI/LinkListItemButton.tsx";
 import JobListItem from "./JobListItem.tsx";
 import { jobStatusToTypographyColor } from "./StatusToTypographyColor.ts";
 
@@ -70,7 +70,11 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
               <InputViewer llmJob={llmJob.data} />
             </TabPanel>
             <TabPanel key={"Status"} value={"Status"} sx={{ p: 0 }}>
-              {llmJob.data.output ? <StatusViewer llmJobResult={llmJob.data.output} /> : "No results available"}
+              {llmJob.data.output ? (
+                <StatusViewer llmJobResult={llmJob.data.output} projectId={llmJob.data.project_id} />
+              ) : (
+                "No results available"
+              )}
             </TabPanel>
           </TabContext>
         </Stack>
@@ -134,7 +138,7 @@ function PromptViewer({ prompts }: { prompts: LLMPromptTemplates[] }) {
   );
 }
 
-function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobOutput }) {
+function StatusViewer({ llmJobResult, projectId }: { llmJobResult: LLMJobOutput; projectId: number }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: llmJobResult.specific_task_result.results.length,
@@ -163,7 +167,10 @@ function StatusViewer({ llmJobResult }: { llmJobResult: LLMJobOutput }) {
         >
           {items.map((item) => (
             <div key={item.key} data-index={item.index} ref={virtualizer.measureElement}>
-              <LLMResultStatusItem result={llmJobResult.specific_task_result.results[item.index]} />
+              <LLMResultStatusItem
+                result={llmJobResult.specific_task_result.results[item.index]}
+                projectId={projectId}
+              />
             </div>
           ))}
         </List>
@@ -178,9 +185,9 @@ interface ResultStatusItem {
   sdoc_id: number;
 }
 
-function LLMResultStatusItem({ result }: { result: ResultStatusItem }) {
+function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; projectId: number }) {
   return (
-    <ListItemButton component={RouterLink} to={`./annotation/${result.sdoc_id}`}>
+    <LinkListItemButton to="/project/$projectId/annotation/$sdocId" params={{ projectId, sdocId: result.sdoc_id }}>
       <ListItemIcon
         sx={{
           color: `${
@@ -193,7 +200,7 @@ function LLMResultStatusItem({ result }: { result: ResultStatusItem }) {
         {docTypeToIcon[DocType.TEXT]}
       </ListItemIcon>
       <ListItemText primary={`Document with ID ${result.sdoc_id} - ${result.status_message}`} />
-    </ListItemButton>
+    </LinkListItemButton>
   );
 }
 

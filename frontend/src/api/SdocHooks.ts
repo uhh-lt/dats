@@ -26,7 +26,7 @@ const useGetDocumentData = (sdocId: number | null | undefined) =>
   });
 
 const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
-  useQuery<number | null | undefined, Error>({
+  useQuery<number, Error>({
     queryKey: [QueryKey.SDOC_ID, projectId, filename],
     queryFn: () =>
       ProjectService.resolveFilename({

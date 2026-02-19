@@ -1,13 +1,13 @@
 import { CircularProgress } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { getRouteApi } from "@tanstack/react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import CotaViewContent from "./CotaViewContent.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId");
+
 function CotaView() {
   // global client state
-  const urlParams = useParams() as { projectId: string; cotaId: string };
-  const projectId = parseInt(urlParams.projectId);
-  const cotaId = parseInt(urlParams.cotaId);
+  const { projectId, cotaId } = routeApi.useParams();
 
   // global server state
   const cota = CotaHooks.useGetCota(cotaId);

@@ -12,8 +12,8 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import React, { memo, useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
+import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
 import ClassifierHooks from "../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
@@ -34,7 +34,7 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
   // menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
@@ -79,7 +79,7 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
   // go to classifiers
   const navigate = useNavigate();
   const handleCreateClassifier = useCallback(() => {
-    navigate(`/project/${projectId}/classifier`);
+    navigate({ to: "/project/$projectId/classifier", params: { projectId } });
   }, [navigate, projectId]);
 
   return (
@@ -91,7 +91,7 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
       </Tooltip>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
         {Object.entries(groupedClassifiers).map(([modelType, classifiers]) => (
-          <React.Fragment key={modelType}>
+          <Fragment key={modelType}>
             <ListSubheader sx={{ lineHeight: 1.5 }}>{modelType} classifiers</ListSubheader>
             {classifiers.map((classifier) => (
               <Tooltip
@@ -117,7 +117,7 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
                 </MenuItem>
               </Tooltip>
             ))}
-          </React.Fragment>
+          </Fragment>
         ))}
         {Object.keys(groupedClassifiers).length === 0 && (
           <MenuItem disabled>No classifiers available. Please train one first.</MenuItem>

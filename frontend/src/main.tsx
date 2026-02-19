@@ -6,18 +6,18 @@ import ThemeProvider from "@mui/material/styles/ThemeProvider";
 import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import React from "react";
+import { RouterProvider } from "@tanstack/react-router";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { RouterProvider } from "react-router-dom";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 import { AuthProvider } from "./auth/AuthProvider.tsx";
+import { useAuth } from "./auth/useAuth.ts";
 import "./index.css";
 import { theme } from "./plugins/ReactMUI.ts";
 import queryClient from "./plugins/ReactQueryClient.ts";
 import { SentryProvider } from "./plugins/Sentry.tsx";
-import router from "./router/routes.tsx";
+import { router } from "./plugins/router.ts";
 import { store } from "./store/store.ts";
 
 const persistor = persistStore(store);
@@ -25,7 +25,7 @@ const container = document.getElementById("root");
 const root = createRoot(container!);
 
 root.render(
-  <React.StrictMode>
+  <>
     <Sentry.ErrorBoundary fallback={<p>An unexpected error has occurred. Please try again later.</p>}>
       <QueryClientProvider client={queryClient}>
         <SentryProvider>
@@ -33,7 +33,7 @@ root.render(
             <PersistGate persistor={persistor}>
               <AuthProvider>
                 <ThemeProvider theme={theme}>
-                  <RouterProvider router={router} />
+                  <App />
                 </ThemeProvider>
               </AuthProvider>
             </PersistGate>
@@ -42,5 +42,12 @@ root.render(
         </SentryProvider>
       </QueryClientProvider>
     </Sentry.ErrorBoundary>
-  </React.StrictMode>,
+  </>,
 );
+
+function App() {
+  const auth = useAuth();
+  return <RouterProvider router={router} context={{ auth }} />;
+}
+
+export default App;

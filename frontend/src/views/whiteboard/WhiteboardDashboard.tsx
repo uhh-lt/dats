@@ -1,5 +1,5 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
-import { useParams } from "react-router";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ExportWhiteboardsButton from "../../components/Export/ExportWhiteboardsButton.tsx";
@@ -10,9 +10,11 @@ import {
   useAnalysisDashboardTable,
 } from "../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");
+
 function WhiteboardDashboard() {
   // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
   const {
@@ -95,6 +97,12 @@ function WhiteboardDashboard() {
     );
   };
 
+  const navigate = routeApi.useNavigate();
+  const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
+    console.log("Opening Whiteboard " + row.id);
+    navigate({ to: "./$whiteboardId", params: { whiteboardId: row.id } });
+  };
+
   // table
   const table = useAnalysisDashboardTable({
     analysisName: "Whiteboard",
@@ -108,7 +116,7 @@ function WhiteboardDashboard() {
     isUpdatingAnalysis: isUpdatingWhiteboard,
     deletingAnalysisId: deletingVariables?.whiteboardId,
     duplicatingAnalysisId: duplicatingVariables?.whiteboardId,
-    onOpenAnalysis: (analysisId) => console.log("Opening Whiteboard " + analysisId),
+    onOpenAnalysis: handleOpenAnalysis,
     handleCreateAnalysis: handleCreateWhiteboard,
     handleEditAnalysis: handleUpdateWhiteboard,
     handleDeleteAnalysis: handleDeleteClick,

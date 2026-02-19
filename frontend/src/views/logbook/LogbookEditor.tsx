@@ -1,6 +1,4 @@
-// eslint-disable-next-line import/no-unresolved
 import "@blocknote/core/fonts/inter.css";
-// eslint-disable-next-line import/no-unresolved
 import "@blocknote/mantine/style.css";
 import { CardHeader, CircularProgress } from "@mui/material";
 import { useCallback } from "react";

@@ -2,10 +2,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
+import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import SdocListItem from "./SdocListItem.tsx";
 
 interface RelatedPanelProps {
@@ -33,13 +34,12 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
   });
 
   // check if we are in annotation view
-  const params = useParams() as { projectId: string; sdocId: string | undefined };
-  const openedSdocId = params.sdocId ? parseInt(params.sdocId) : undefined;
+  const projectId = useAppSelector((state) => state.project.projectId);
   const navigate = useNavigate();
 
   // Navigation handler for prev, next, and open
   const handleNavigate = (direction: "prev" | "next" | "open") => {
-    if (!relatedSdocIds.data || !params.projectId) return;
+    if (!relatedSdocIds.data || !projectId) return;
     const relatedIds = relatedSdocIds.data;
     const currentIndex = relatedIds.findIndex((id) => id === sdocId);
     let targetId: number | undefined;
@@ -51,7 +51,7 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
       targetId = sdocId;
     }
     if (targetId !== undefined) {
-      navigate(`/project/${params.projectId}/annotation/${targetId}`);
+      navigate({ to: "/project/$projectId/annotation/$sdocId", params: { projectId, sdocId: targetId } });
     }
   };
 
@@ -66,13 +66,11 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
         className="myFlexFitContentContainer"
         pb={1}
       >
-        <Button startIcon={<ArrowBackIcon />} disabled={!openedSdocId} onClick={() => handleNavigate("prev")}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => handleNavigate("prev")}>
           Prev
         </Button>
-        <Button disabled={!!openedSdocId} onClick={() => handleNavigate("open")}>
-          Open this document
-        </Button>
-        <Button endIcon={<ArrowForwardIcon />} disabled={!openedSdocId} onClick={() => handleNavigate("next")}>
+        <Button onClick={() => handleNavigate("open")}>Open this document</Button>
+        <Button endIcon={<ArrowForwardIcon />} onClick={() => handleNavigate("next")}>
           Next
         </Button>
       </Stack>

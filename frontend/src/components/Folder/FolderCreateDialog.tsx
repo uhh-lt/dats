@@ -4,7 +4,6 @@ import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
 import FolderHooks from "../../api/FolderHooks.ts";
 import { FolderCreate } from "../../api/openapi/models/FolderCreate.ts";
 import { FolderType } from "../../api/openapi/models/FolderType.ts";
@@ -18,9 +17,8 @@ import { useWithLevel } from "../TreeExplorer/useWithLevel.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import FolderRenderer from "./FolderRenderer.tsx";
 
-function FolderCreateDialog() {
+function FolderCreateDialog({ projectId }: { projectId: number }) {
   const dispatch = useAppDispatch();
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();

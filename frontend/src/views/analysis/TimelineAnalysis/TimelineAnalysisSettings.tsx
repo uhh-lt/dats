@@ -3,8 +3,7 @@ import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import React from "react";
-import { useParams } from "react-router-dom";
+import { ChangeEvent } from "react";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
@@ -45,8 +44,6 @@ interface TimelineAnalysisSettingsProps {
 }
 
 function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettingsProps) {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
   // global server state (react-query)
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
   const filteredProjectMetadata = projectMetadata.data?.filter(
@@ -69,7 +66,6 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
         {filteredProjectMetadata ? (
           <TimelineAnalysisSettingsContent
             timelineAnalysis={timelineAnalysis}
-            projectId={projectId}
             projectMetadata={filteredProjectMetadata}
           />
         ) : projectMetadata.isLoading ? (
@@ -85,11 +81,10 @@ function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettings
 function TimelineAnalysisSettingsContent({
   timelineAnalysis,
   projectMetadata,
-  projectId,
-}: TimelineAnalysisSettingsProps & { projectId: number; projectMetadata: ProjectMetadataRead[] }) {
+}: TimelineAnalysisSettingsProps & { projectMetadata: ProjectMetadataRead[] }) {
   // handlers (for ui)
   const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
-  const handleGroupByChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGroupByChange = (event: ChangeEvent<HTMLInputElement>) => {
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
@@ -100,7 +95,7 @@ function TimelineAnalysisSettingsContent({
       },
     });
   };
-  const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeMetadataId = (event: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
@@ -112,7 +107,7 @@ function TimelineAnalysisSettingsContent({
       },
     });
   };
-  const handleAnnotationAggregationTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAnnotationAggregationTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (timelineAnalysis.timeline_analysis_type === TimelineAnalysisType.DOCUMENT) return;
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
@@ -152,7 +147,7 @@ function TimelineAnalysisSettingsContent({
         onChange={handleChangeMetadataId}
         helperText={
           <SdocsWithDateCounter
-            projectId={projectId}
+            projectId={timelineAnalysis.project_id}
             dateMetadataId={timelineAnalysis.settings.date_metadata_id || -1}
           />
         }

@@ -1,6 +1,6 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import MemoHooks from "../../../api/MemoHooks.ts";
@@ -130,11 +130,14 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // context menu actions
   const navigate = useNavigate();
   const handleContextMenuGoToDocument = () => {
-    if (!annotation.data) return;
+    if (!annotation.data || !code.data) return;
 
     dispatch(AnnoActions.setSelectedAnnotationId(annotation.data.id));
     dispatch(AnnoActions.setVisibleUserId(annotation.data.user_id));
-    navigate(`../annotation/${annotation.data.sdoc_id}`);
+    navigate({
+      to: "/project/$projectId/annotation/$sdocId",
+      params: { sdocId: annotation.data.sdoc_id, projectId: code.data.project_id },
+    });
 
     contextMenuRef.current?.close();
   };

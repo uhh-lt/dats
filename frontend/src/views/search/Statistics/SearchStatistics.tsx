@@ -4,8 +4,7 @@ import PublicOffIcon from "@mui/icons-material/PublicOff";
 import SearchIcon from "@mui/icons-material/Search";
 import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
-import React, { useCallback, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { ChangeEvent, SyntheticEvent, useCallback, useRef, useState } from "react";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
@@ -16,6 +15,7 @@ import KeywordStats from "./KeywordStats.tsx";
 import SearchStatisticsMenu from "./SearchStatisticsMenu.tsx";
 
 interface SearchStatisticsProps {
+  projectId: number;
   sdocIds?: number[];
   handleKeywordClick: (keyword: string) => void;
   handleTagClick: (tagId: number) => void;
@@ -23,6 +23,7 @@ interface SearchStatisticsProps {
 }
 
 function SearchStatistics({
+  projectId,
   sdocIds,
   handleCodeClick,
   handleKeywordClick,
@@ -31,12 +32,9 @@ function SearchStatistics({
 }: SearchStatisticsProps & BoxProps) {
   // tabs
   const [tab, setTab] = useState("keywords");
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
+  const handleTabChange = (_event: SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
-
-  // get the current project id
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // query all codes of the current project
   const projectCodes = CodeHooks.useGetEnabledCodes();
@@ -48,7 +46,7 @@ function SearchStatistics({
 
   // stats search bar value state initialisation
   const [filterStatsBy, setFilterStatsBy] = useState("");
-  const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchTextChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFilterStatsBy(event.target.value);
   };
 
@@ -83,9 +81,7 @@ function SearchStatistics({
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
-            {projectCodes.data?.map((code) => (
-              <Tab key={code.id} label={code.name} value={`${code.id}`} />
-            ))}
+            {projectCodes.data?.map((code) => <Tab key={code.id} label={code.name} value={`${code.id}`} />)}
           </Tabs>
         </Stack>
 

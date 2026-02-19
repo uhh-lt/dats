@@ -1,6 +1,6 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { useParams } from "react-router";
 import CotaHooks from "../../../api/CotaHooks.ts";
 import ConfirmationAPI from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import ExportCotaButton from "../../../components/Export/ExportCotaButton.tsx";
@@ -13,9 +13,11 @@ import {
 } from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import { CotaActions } from "./cotaSlice.ts";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
+
 function CotaDashboard() {
   // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // global server state
   const {
@@ -98,6 +100,12 @@ function CotaDashboard() {
     );
   };
 
+  const navigate = routeApi.useNavigate();
+  const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
+    dispatch(CotaActions.onOpenCota({ analysisId: row.id }));
+    navigate({ to: "./$cotaId", params: { cotaId: row.id } });
+  };
+
   // table
   const table = useAnalysisDashboardTable({
     analysisName: "COTA",
@@ -111,7 +119,7 @@ function CotaDashboard() {
     isDeletingAnalysis: isDeletingCota,
     deletingAnalysisId: deletingVariables?.cotaId,
     duplicatingAnalysisId: duplicatingVariables?.cotaId,
-    onOpenAnalysis: (analysis) => dispatch(CotaActions.onOpenCota({ analysisId: analysis.id })),
+    onOpenAnalysis: handleOpenAnalysis,
     handleCreateAnalysis,
     handleEditAnalysis,
     handleDeleteAnalysis,

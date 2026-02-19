@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
@@ -17,7 +17,11 @@ function SdocAnnotationLink({ sdoc, annotation }: SdocAnnotationLinkProps) {
   };
 
   return (
-    <Link to={`/project/${sdoc.project_id}/annotation/${sdoc.id}`} onClick={handleClick}>
+    <Link
+      to="/project/$projectId/annotation/$sdocId"
+      params={{ projectId: sdoc.project_id, sdocId: sdoc.id }}
+      onClick={handleClick}
+    >
       {sdoc.name}
     </Link>
   );

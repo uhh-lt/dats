@@ -1,8 +1,8 @@
 import { Box, BoxProps, CircularProgress, Stack } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { useNavigate } from "react-router-dom";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ImageSimilaritySearchResultCard from "./ImageSimilaritySearchResultCard.tsx";
@@ -41,7 +41,10 @@ function ImageSimilarityView({ projectId, data, isLoading, isFetching, isError, 
   const handleClick = useCallback(
     (event: React.MouseEvent<unknown>, sdocId: number) => {
       if (event.detail >= 2) {
-        navigate(`/project/${projectId}/annotation/${sdocId}`);
+        navigate({
+          to: "/project/$projectId/annotation/$sdocId",
+          params: { projectId, sdocId },
+        });
       } else {
         dispatch(ImageSearchActions.onToggleSelectedDocumentId(sdocId));
       }

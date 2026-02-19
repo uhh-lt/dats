@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
 import queryClient from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
@@ -74,7 +73,7 @@ const useUpdateWhiteboard = () =>
   });
 
 const useDuplicateWhiteboard = () => {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useMutation({
     mutationFn: WhiteboardService.duplicateById,
     onSuccess(data) {
@@ -90,7 +89,7 @@ const useDuplicateWhiteboard = () => {
 };
 
 const useDeleteWhiteboard = () => {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state: RootState) => state.project.projectId);
   return useMutation({
     mutationFn: WhiteboardService.deleteById,
     onSuccess(data) {

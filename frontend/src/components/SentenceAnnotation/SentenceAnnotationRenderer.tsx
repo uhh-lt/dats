@@ -2,7 +2,7 @@ import { Stack } from "@mui/material";
 import { useCallback } from "react";
 import SentenceAnnotationHooks from "../../api/SentenceAnnotationHooks.ts";
 import { SentenceAnnotationRead } from "../../api/openapi/models/SentenceAnnotationRead.ts";
-import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../views/annotation/annoSlice.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
 import LinkWrapper from "../MUI/LinkWrapper.tsx";
@@ -60,14 +60,23 @@ function SentenceAnnotationRendererWithData({
   sdocRendererProps,
   link,
 }: { sentenceAnnotation: SentenceAnnotationRead } & SentenceAnnotationRendererSharedProps) {
+  const projectId = useAppSelector((state) => state.project.projectId);
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {
     dispatch(AnnoActions.setSelectedAnnotationId(sentenceAnnotation.id));
     dispatch(AnnoActions.setVisibleUserId(sentenceAnnotation.user_id));
   }, [dispatch, sentenceAnnotation.id, sentenceAnnotation.user_id]);
 
+  if (!projectId) {
+    return <div>Error: This component requires a project ID.</div>;
+  }
   return (
-    <LinkWrapper to={`../annotation/${sentenceAnnotation.sdoc_id}`} onClick={handleClick} link={!!link}>
+    <LinkWrapper
+      to="/project/$projectId/annotation/$sdocId"
+      params={{ projectId, sdocId: sentenceAnnotation.sdoc_id }}
+      onClick={handleClick}
+      link={!!link}
+    >
       <Stack direction="row" alignItems="center">
         {showSdoc && <SdocRenderer sdoc={sentenceAnnotation.sdoc_id} {...sdocRendererProps} />}
         {showSdocTags && <SdocTagsRenderer sdocId={sentenceAnnotation.sdoc_id} />}

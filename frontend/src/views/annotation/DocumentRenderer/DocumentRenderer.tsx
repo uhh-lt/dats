@@ -65,26 +65,12 @@ function DocumentRenderer({
       //  videos
       else if (domNode.name === "video" && domNode.attribs.src) {
         const filename = domNode.attribs.src;
-        return (
-          <SdocVideoLink
-            key={`video-link-${filename}`}
-            filename={filename}
-            toPrefix={"../annotation/"}
-            projectId={projectId}
-          />
-        );
+        return <SdocVideoLink key={`video-link-${filename}`} filename={filename} projectId={projectId} />;
       }
       // audios
       else if (domNode.name === "audio" && domNode.attribs.src) {
         const filename = domNode.attribs.src;
-        return (
-          <SdocAudioLink
-            key={`audio-link-${filename}`}
-            filename={filename}
-            toPrefix={"../annotation/"}
-            projectId={projectId}
-          />
-        );
+        return <SdocAudioLink key={`audio-link-${filename}`} filename={filename} projectId={projectId} />;
       }
       // sentences
       else if (domNode.name === "sent" && domNode.attribs.id) {

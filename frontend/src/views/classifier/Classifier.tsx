@@ -1,11 +1,13 @@
 import { Stack } from "@mui/material";
-import { useParams } from "react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import ContentContainerLayout from "../../layouts/ContentLayouts/ContentContainerLayout.tsx";
 import ClassifierJobs from "./ClassifierJobs.tsx";
 import ClassifierTable from "./ClassifierTable.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/classifier");
+
 function Classifier() {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   return (
     <>

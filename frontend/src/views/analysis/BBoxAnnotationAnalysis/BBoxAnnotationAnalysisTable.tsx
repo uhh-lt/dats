@@ -1,4 +1,3 @@
-import { useParams } from "react-router-dom";
 import BBoxAnnotationTable from "../../../components/BBoxAnnotation/BBoxAnnotationTable/BBoxAnnotationTable.tsx";
 import { useReduxConnector } from "../../../utils/useReduxConnector.ts";
 import { BBoxAnnotationsActions } from "./bboxAnnotationAnalysisSlice.ts";
@@ -7,9 +6,11 @@ import BBoxAnnotationAnalysisTableToolbarRight from "./Toolbars/BBoxAnnotationAn
 
 const filterName = "bboxAnnotationAnalysisTable";
 
-function BBoxAnnotationAnalysisTable() {
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
+interface BBoxAnnotationAnalysisTableProps {
+  projectId: number;
+}
 
+function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysisTableProps) {
   // global client state (redux) connected to table state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.rowSelectionModel,

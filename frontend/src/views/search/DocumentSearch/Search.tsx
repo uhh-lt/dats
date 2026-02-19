@@ -1,7 +1,6 @@
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { Stack } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import FolderHooks from "../../../api/FolderHooks.ts";
 import MetadataHooks from "../../../api/MetadataHooks.ts";
 import { FolderType } from "../../../api/openapi/models/FolderType.ts";
@@ -21,12 +20,14 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SearchStatistics from "../Statistics/SearchStatistics.tsx";
 import SearchDocumentTable from "./SearchDocumentTable.tsx";
 import { SearchActions } from "./searchSlice.ts";
+import { getRouteApi } from "@tanstack/react-router";
 
 const filterName = "root";
+const routeApi = getRouteApi("/_auth/project/$projectId/search");
 
 function Search() {
   // router
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -167,6 +168,7 @@ function Search() {
           ) : (
             <SearchStatistics
               className="h100"
+              projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
               handleTagClick={handleAddTagFilter}

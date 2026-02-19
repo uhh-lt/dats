@@ -3,8 +3,8 @@ import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
+import { ReactElement } from "react";
 import { AspectRead } from "../../api/openapi/models/AspectRead.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
@@ -12,7 +12,7 @@ import JobStatusBadge from "../../components/BackgroundTasks/JobStatusBadge.tsx"
 import ConfirmationAPI from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 
-const statusToIcon: Record<JobStatus, React.ReactElement> = {
+const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting
   [JobStatus.QUEUED]: <HourglassTopIcon style={{ fontSize: 48 }} />,
   [JobStatus.DEFERRED]: <HourglassTopIcon style={{ fontSize: 48 }} />,

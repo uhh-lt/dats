@@ -61,7 +61,7 @@ export const resetProjectFilterState = ({
 }: {
   state: Draft<FilterState>;
   defaultFilterExpression: MyFilterExpression;
-  projectId: number;
+  projectId: number | undefined;
   sliceName: string;
 }) => {
   const initialState = createInitialFilterState(defaultFilterExpression);
@@ -70,7 +70,9 @@ export const resetProjectFilterState = ({
   state.defaultFilterExpression = initialState.defaultFilterExpression;
   // reset column info
   state.column2Info = initialState.column2Info;
-  queryClient.removeQueries({ queryKey: tableInfoQueryKey(sliceName, projectId) });
+  if (projectId) {
+    queryClient.removeQueries({ queryKey: tableInfoQueryKey(sliceName, projectId) });
+  }
 };
 
 export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {

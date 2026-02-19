@@ -1,5 +1,5 @@
-import { Box, Button, Container, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Container, Typography } from "@mui/material";
+import { LinkButton } from "../components/MUI/LinkButton.tsx";
 
 function NotFound() {
   return (
@@ -14,9 +14,9 @@ function NotFound() {
         We can't find the page you're looking for. Go back to projects?
       </Typography>
       <Box display="flex" mt={5}>
-        <Button component={RouterLink} to={"/projects"} variant="contained" color="primary" sx={{ mx: "auto" }}>
+        <LinkButton to="/projects" variant="contained" color="primary" sx={{ mx: "auto" }}>
           Return to projects
-        </Button>
+        </LinkButton>
       </Box>
     </Container>
   );

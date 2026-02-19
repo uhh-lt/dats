@@ -1,6 +1,5 @@
 import { Box, Dialog, Stack } from "@mui/material";
 import { useCallback } from "react";
-import { useParams } from "react-router-dom";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
@@ -9,9 +8,7 @@ import DocumentUploadJobsView from "./DocumentUploadJobsView.tsx";
 import { FileUploadSection } from "./FileUploadSection.tsx";
 import { UrlCrawlerSection } from "./UrlCrawlerSection.tsx";
 
-export default function DocumentUploadDialog() {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
+function DocumentUploadDialog({ projectId }: { projectId: number }) {
   // open/close dialog
   const dispatch = useAppDispatch();
   const open = useAppSelector((state) => state.dialog.isDocumentUploadOpen);
@@ -42,3 +39,5 @@ export default function DocumentUploadDialog() {
     </Dialog>
   );
 }
+
+export default DocumentUploadDialog;

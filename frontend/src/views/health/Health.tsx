@@ -1,13 +1,15 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
+import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { useParams } from "react-router";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import ContentLayout from "../../layouts/ContentLayouts/ContentLayout.tsx";
 import SdocStatusTable from "./SdocStatusTable.tsx";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/tools/health");
+
 function Health() {
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
 
   // tabs
   const [tab, setTab] = useState(DocType.TEXT);

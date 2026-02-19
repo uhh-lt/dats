@@ -1,5 +1,5 @@
 import { Stack } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
@@ -48,7 +48,11 @@ function SdocRendererWithData({
   );
 
   if (link) {
-    return <Link to={`/project/${sdoc.project_id}/annotation/${sdoc.id}`}>{content}</Link>;
+    return (
+      <Link to="/project/$projectId/annotation/$sdocId" params={{ projectId: sdoc.project_id, sdocId: sdoc.id }}>
+        {content}
+      </Link>
+    );
   }
   return content;
 }

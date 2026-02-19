@@ -129,7 +129,9 @@ export const tabSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'tab' state.");
-      resetTabState(state, action.payload);
+      if (action.payload) {
+        resetTabState(state, action.payload);
+      }
     });
   },
 });

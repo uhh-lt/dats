@@ -4,7 +4,6 @@ import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
 import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
@@ -29,9 +28,8 @@ type CodeCreateValues = {
   description: string;
 };
 
-function CodeCreateDialog() {
+function CodeCreateDialog({ projectId }: { projectId: number }) {
   const dispatch = useAppDispatch();
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();

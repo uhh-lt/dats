@@ -16,7 +16,7 @@ export const projectSlice = createSlice({
   name: "project",
   initialState,
   reducers: {
-    changeProject: (state, action: PayloadAction<number>) => {
+    changeProject: (state, action: PayloadAction<number | undefined>) => {
       console.log("Project changed!", action.payload);
       state.projectId = action.payload;
     },

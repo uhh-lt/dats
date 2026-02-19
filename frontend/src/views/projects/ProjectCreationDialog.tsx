@@ -2,8 +2,8 @@ import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { ProjectCreate } from "../../api/openapi/models/ProjectCreate.ts";
 import FormText from "../../components/FormInputs/FormText.tsx";
@@ -39,7 +39,7 @@ function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogProps) {
         },
       },
       {
-        onSuccess: (project) => navigate(`/project/${project.id}/search`),
+        onSuccess: (project) => navigate({ to: "/project/$projectId/search", params: { projectId: project.id } }),
       },
     );
   };

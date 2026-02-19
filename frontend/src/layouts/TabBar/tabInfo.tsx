@@ -1,57 +1,34 @@
 import { Icon } from "../../utils/icons/iconUtils";
 import { TabData } from "./types/TabData";
 
+const baseToIconMap: Record<string, Icon> = {
+  search: Icon.SEARCH,
+  sentencesearch: Icon.SENTENCE_SEARCH,
+  imagesearch: Icon.IMAGE_SEARCH,
+  annotation: Icon.ANNOTATION,
+  whiteboard: Icon.WHITEBOARD,
+  logbook: Icon.LOGBOOK,
+  settings: Icon.SETTINGS,
+  analysis: Icon.ANALYSIS,
+  "concepts-over-time-analysis": Icon.COTA,
+  timeline: Icon.TIMELINE_ANALYSIS,
+  "word-frequency": Icon.WORD_FREQUENCY,
+  "span-annotations": Icon.SPAN_ANNOTATION_TABLE,
+  "sentence-annotations": Icon.SENTENCE_ANNOTATION_TABLE,
+  "bbox-annotations": Icon.BBOX_ANNOTATION_TABLE,
+  "code-frequency": Icon.CODE_FREQUENCY,
+  "duplicate-finder": Icon.DUPLICATE_FINDER,
+  "document-sampler": Icon.DOCUMENT_SAMPLER,
+  "ml-automation": Icon.ML_AUTOMATION,
+  perspectives: Icon.PERSPECTIVES,
+  dashboard: Icon.MAP,
+  map: Icon.MAP,
+  health: Icon.HEALTH,
+  classifier: Icon.CLASSIFIER,
+};
+
 function getIconForBase(base: string): Icon {
-  switch (base) {
-    case "search":
-      return Icon.SEARCH;
-    case "sentencesearch":
-      return Icon.SENTENCE_SEARCH;
-    case "imagesearch":
-      return Icon.IMAGE_SEARCH;
-    case "annotation":
-      return Icon.ANNOTATION;
-    case "whiteboard":
-      return Icon.WHITEBOARD;
-    case "logbook":
-      return Icon.LOGBOOK;
-    case "settings":
-      return Icon.SETTINGS;
-    case "analysis":
-      return Icon.ANALYSIS;
-    case "concepts-over-time-analysis":
-      return Icon.COTA;
-    case "timeline":
-      return Icon.TIMELINE_ANALYSIS;
-    case "word-frequency":
-      return Icon.WORD_FREQUENCY;
-    case "span-annotations":
-      return Icon.SPAN_ANNOTATION_TABLE;
-    case "sentence-annotations":
-      return Icon.SENTENCE_ANNOTATION_TABLE;
-    case "bbox-annotations":
-      return Icon.BBOX_ANNOTATION_TABLE;
-    case "code-frequency":
-      return Icon.CODE_FREQUENCY;
-    case "duplicate-finder":
-      return Icon.DUPLICATE_FINDER;
-    case "document-sampler":
-      return Icon.DOCUMENT_SAMPLER;
-    case "ml-automation":
-      return Icon.ML_AUTOMATION;
-    case "perspectives":
-      return Icon.PERSPECTIVES;
-    case "dashboard":
-      return Icon.MAP;
-    case "map":
-      return Icon.MAP;
-    case "health":
-      return Icon.HEALTH;
-    case "classifier":
-      return Icon.CLASSIFIER;
-    default:
-      return Icon.PROJECT;
-  }
+  return baseToIconMap[base] ?? Icon.PROJECT;
 }
 
 export const getTabInfoFromPath = (path: string): Omit<TabData, "id"> => {

@@ -18,9 +18,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import GeneralHooks from "../../api/GeneralHooks.ts";
 import { AspectCreate } from "../../api/openapi/models/AspectCreate.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
@@ -156,7 +156,11 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
         },
       },
       {
-        onSuccess: (aspect) => navigate(`/project/${aspect.project_id}/perspectives/dashboard/${aspect.id}`),
+        onSuccess: (aspect) =>
+          navigate({
+            to: "/project/$projectId/perspectives/$aspectId",
+            params: { projectId: aspect.project_id, aspectId: aspect.id },
+          }),
       },
     );
   };

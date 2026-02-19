@@ -1,6 +1,6 @@
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import LLMHooks from "../../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { SentenceAnnotationLLMJobResult } from "../../../../api/openapi/models/SentenceAnnotationLLMJobResult.ts";
@@ -55,14 +55,16 @@ function SentenceAnnotationResultStepContent({
     dispatch(CRUDDialogActions.closeLLMDialog());
   }, [dispatch]);
 
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
   const navigate = useNavigate();
   const handleOpenFirstDocument = () => {
+    if (!projectId) return;
+
     const firstSdocId = jobResult.results[0].sdoc_id;
 
     dispatch(CRUDDialogActions.closeLLMDialog());
     dispatch(AnnoActions.compareWithUser(approach2AssistantID[approachType]));
-    navigate(`/project/${projectId}/annotation/${firstSdocId}`);
+    navigate({ params: { projectId, sdocId: firstSdocId }, to: "/project/$projectId/annotation/$sdocId" });
 
     // reload annotations
     queryClient.invalidateQueries({

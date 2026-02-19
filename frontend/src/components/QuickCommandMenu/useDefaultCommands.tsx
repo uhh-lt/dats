@@ -5,7 +5,7 @@ import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem.ts";
 
-export const useDefaultCommands = (projectId: string | undefined): CommandItem[] => {
+export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const dispatch = useAppDispatch();
 
   return useMemo(

@@ -1,8 +1,9 @@
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { LinkListItemButton } from "../../../components/MUI/LinkListItemButton.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
@@ -11,7 +12,11 @@ export interface ImageMenuHandle {
   close: () => void;
 }
 
-const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
+interface ImageMenuProps {
+  projectId: number;
+}
+
+const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, ref) => {
   const navigate = useNavigate();
 
   // local state
@@ -47,12 +52,12 @@ const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
     }
     dispatch(ImageSearchActions.onChangeSearchQuery(`${image}`));
     closeMenu();
-    navigate("../imagesearch");
+    navigate({ to: "/project/$projectId/imagesearch", params: { projectId: params.projectId } });
   };
 
   return (
     <Popover
-      open={isPopoverOpen}
+      open={isPopoverOpen && !!image}
       onClose={() => closeMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
@@ -67,12 +72,15 @@ const ImageMenu = forwardRef<ImageMenuHandle>((_, ref) => {
     >
       <List dense>
         <ListItem disablePadding>
-          <ListItemButton component={Link} to={`../annotation/${image}`}>
+          <LinkListItemButton
+            to="/project/$projectId/annotation/$sdocId"
+            params={{ sdocId: image!, projectId: params.projectId }}
+          >
             <ListItemIcon>
               <ImageIcon />
             </ListItemIcon>
             <ListItemText primary="Open image" />
-          </ListItemButton>
+          </LinkListItemButton>
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={handleImageSimilaritySearch} disabled={!image}>
