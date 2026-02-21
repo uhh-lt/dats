@@ -4,21 +4,21 @@ import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemplates.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import FormTextMultiline from "../../../FormInputs/FormTextMultiline.tsx";
-import LLMUtterance from "../LLMUtterance.tsx";
-import ExampleSelection from "./ExampleSelection.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { FormTextMultiline } from "../../../FormInputs/FormTextMultiline.tsx";
+import { LLMUtterance } from "../LLMUtterance.tsx";
+import { ExampleSelection } from "./ExampleSelection.tsx";
 
 type PromptEditorValues = {
   systemPrompt: string;
   userPrompt: string;
 };
 
-function PromptEditorStep() {
+export function PromptEditorStep() {
   // global state
   const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const method = useAppSelector((state) => state.dialog.llmMethod);
@@ -280,5 +280,3 @@ function PromptEditorStepForm({
     </Stack>
   );
 }
-
-export default PromptEditorStep;

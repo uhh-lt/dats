@@ -1,11 +1,11 @@
 import { Box } from "@mui/material";
 import { createFileRoute, Outlet, redirect, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LoginStatus } from "../auth/LoginStatus.ts";
+import { LoginStatus } from "../features/auth/LoginStatus.ts";
 import SideBar from "../layouts/SideBar/SideBar.tsx";
 import TabBar from "../layouts/TabBar/TabBar.tsx";
 
-import { ProjectActions } from "../components/Project/projectSlice.ts";
+import { ProjectActions } from "../core/project/projectSlice.ts";
 import "../layouts/Layout.css";
 import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 export const Route = createFileRoute("/_auth")({

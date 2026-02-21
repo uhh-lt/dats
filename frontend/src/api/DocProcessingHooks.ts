@@ -1,6 +1,6 @@
 import { Query, useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { Body_docprocessing_recompute_processing_step } from "./openapi/models/Body_docprocessing_recompute_processing_step.ts";
 import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
@@ -143,7 +143,7 @@ const useRecomputeDocProcessingJobs = () =>
     },
   });
 
-const DocProcessingHooks = {
+export const DocProcessingHooks = {
   // crawler
   useStartCrawlerJob,
   usePollCrawlerJob,
@@ -154,5 +154,3 @@ const DocProcessingHooks = {
   useRetryDocProcessingJobs,
   useRecomputeDocProcessingJobs,
 };
-
-export default DocProcessingHooks;

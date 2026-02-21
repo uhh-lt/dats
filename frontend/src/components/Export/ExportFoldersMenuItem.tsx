@@ -1,7 +1,7 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportMenuItem from "./ExportMenuItem.tsx";
+import { ExportMenuItem } from "./ExportMenuItem.tsx";
 
-function ExportFoldersMenuItem() {
+export function ExportFoldersMenuItem() {
   return (
     <ExportMenuItem
       title="Export all folders"
@@ -10,5 +10,3 @@ function ExportFoldersMenuItem() {
     />
   );
 }
-
-export default ExportFoldersMenuItem;

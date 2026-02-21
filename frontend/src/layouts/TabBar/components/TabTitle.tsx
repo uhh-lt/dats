@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
 import { memo, useMemo } from "react";
-import CotaHooks from "../../../api/CotaHooks.ts";
-import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
-import SdocHooks from "../../../api/SdocHooks";
-import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
-import WhiteboardHooks from "../../../api/WhiteboardHooks";
+import { CotaHooks } from "../../../api/CotaHooks.ts";
+import { PerspectivesHooks } from "../../../api/PerspectivesHooks.ts";
+import { SdocHooks } from "../../../api/SdocHooks";
+import { TimelineAnalysisHooks } from "../../../api/TimelineAnalysisHooks.ts";
+import { WhiteboardHooks } from "../../../api/WhiteboardHooks";
 import { getIconComponent } from "../../../utils/icons/iconUtils";
 import { LabelText, TabLabel } from "../styles/styledComponents.tsx";
 import { TabData } from "../types/TabData.ts";
@@ -20,7 +20,7 @@ function getDefaultLabel(base: string): string {
     .join(" ");
 }
 
-function TabTitle({ tab }: TabTitleProps) {
+export const TabTitle = memo(({ tab }: TabTitleProps) => {
   const sdoc = SdocHooks.useGetDocument(tab.base === "annotation" ? parseInt(tab.data_id!) : undefined);
   const whiteboard = WhiteboardHooks.useGetWhiteboard(tab.base === "whiteboard" ? parseInt(tab.data_id!) : undefined);
   const cota = CotaHooks.useGetCota(tab.base === "concepts-over-time-analysis" ? parseInt(tab.data_id!) : undefined);
@@ -70,6 +70,4 @@ function TabTitle({ tab }: TabTitleProps) {
       </TabLabel>
     </Box>
   );
-}
-
-export default memo(TabTitle);
+});

@@ -1,8 +1,8 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 import { ExportAnalysisButtonProps } from "./ExportTimelineAnalysisButton.tsx";
 
-function ExportWhiteboardsButton({ analysisIds }: ExportAnalysisButtonProps) {
+export function ExportWhiteboardsButton({ analysisIds }: ExportAnalysisButtonProps) {
   const exportAll = analysisIds.length === 0;
   return (
     <ExportButton
@@ -19,5 +19,3 @@ function ExportWhiteboardsButton({ analysisIds }: ExportAnalysisButtonProps) {
     />
   );
 }
-
-export default ExportWhiteboardsButton;

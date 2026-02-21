@@ -10,11 +10,11 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
-import { AuthProvider } from "./auth/AuthProvider.tsx";
-import { useAuth } from "./auth/useAuth.ts";
+import { AuthProvider } from "./features/auth/AuthProvider.tsx";
+import { useAuth } from "./features/auth/useAuth.ts";
 import "./index.css";
 import { theme } from "./plugins/ReactMUI.ts";
-import queryClient from "./plugins/ReactQueryClient.ts";
+import { queryClient } from "./plugins/ReactQueryClient.ts";
 import { router } from "./plugins/router.ts";
 import { store } from "./store/store.ts";
 
@@ -38,9 +38,7 @@ root.render(
   </>,
 );
 
-function App() {
+export function App() {
   const auth = useAuth();
   return <RouterProvider router={router} context={{ auth }} />;
 }
-
-export default App;

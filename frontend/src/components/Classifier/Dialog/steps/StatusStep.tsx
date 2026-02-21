@@ -1,12 +1,12 @@
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
-import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../../../api/ClassifierHooks.ts";
 import { JobStatus } from "../../../../api/openapi/models/JobStatus.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import ClassifierJobProgressBar from "../../ClassifierJobProgressBar.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { ClassifierJobProgressBar } from "../../ClassifierJobProgressBar.tsx";
 
-function StatusStep() {
+export const StatusStep = memo(() => {
   // global state
   const classifierJobId = useAppSelector((state) => state.dialog.classifierJobId);
   const dispatch = useAppDispatch();
@@ -67,6 +67,4 @@ function StatusStep() {
       </DialogActions>
     </>
   );
-}
-
-export default memo(StatusStep);
+});

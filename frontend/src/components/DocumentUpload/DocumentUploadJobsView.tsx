@@ -1,16 +1,16 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
-import CrawlerJobListItem from "../BackgroundTasks/CrawlerJobListItem";
+import { DocProcessingHooks } from "../../api/DocProcessingHooks.ts";
+import { CrawlerJobListItem } from "../BackgroundTasks/CrawlerJobListItem";
 import { DialogSection } from "../MUI/DialogSection";
-import SdocStatusSimpleListItem from "./SdocStatusListItem.tsx";
+import { SdocStatusSimpleListItem } from "./SdocStatusListItem.tsx";
 
 interface DocumentImportJobsViewProps {
   projectId: number;
 }
 
-function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
+export const DocumentUploadJobsView = memo(({ projectId }: DocumentImportJobsViewProps) => {
   // global server state (react-query)
   const {
     data: crawlerJobs,
@@ -77,6 +77,4 @@ function DocumentUploadJobsView({ projectId }: DocumentImportJobsViewProps) {
       </List>
     </DialogSection>
   );
-}
-
-export default memo(DocumentUploadJobsView);
+});

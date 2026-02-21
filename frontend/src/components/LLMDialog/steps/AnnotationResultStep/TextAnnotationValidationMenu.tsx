@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import CodeHooks from "../../../../api/CodeHooks.ts";
+import { CodeHooks } from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead.ts";
 
@@ -244,5 +244,3 @@ function AnnotationMenuListItem({ annotation, handleEdit, handleDelete }: Annota
   }
   return null;
 }
-
-export default memo(TextAnnotationValidationMenu);

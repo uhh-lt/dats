@@ -11,8 +11,8 @@ import {
 } from "material-react-table";
 import { useMemo, useState } from "react";
 import { TagRead } from "../../../../api/openapi/models/TagRead.ts";
-import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
-import TagRenderer from "../../../Tag/TagRenderer.tsx";
+import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer.tsx";
+import { TagRenderer } from "../../../../core/tag/renderer/TagRenderer.tsx";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
 
 function CustomTagsRenderer({ tags }: { tags: TagRead[] }) {
@@ -28,7 +28,7 @@ function CustomTagsRenderer({ tags }: { tags: TagRead[] }) {
   );
 }
 
-function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
+export function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
   rows,
   onUpdateRows,
 }: {
@@ -197,5 +197,3 @@ function DocumentTagResultStepTable<T extends DocumentTaggingResultRow>({
 
   return <MaterialReactTable table={table} />;
 }
-
-export default DocumentTagResultStepTable;

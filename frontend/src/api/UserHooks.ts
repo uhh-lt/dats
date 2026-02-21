@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -88,7 +88,7 @@ const useRegister = () =>
     },
   });
 
-const UserHooks = {
+export const UserHooks = {
   useGetAllUsers,
   useGetUser,
   useUpdate,
@@ -96,5 +96,3 @@ const UserHooks = {
   useRemoveUserFromProject,
   useRegister,
 };
-
-export default UserHooks;

@@ -45,11 +45,9 @@ function colorStringToRGBA(colorString: string, alpha: number) {
   return `rgba(255, 0, 0, ${alpha})`;
 }
 
-const ColorUtils = {
+export const ColorUtils = {
   rgbStringToHex,
   rgbToHex,
   hexToRgb,
   colorStringToRGBA,
 };
-
-export default ColorUtils;

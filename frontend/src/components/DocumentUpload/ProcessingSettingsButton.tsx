@@ -13,21 +13,21 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Language } from "../../api/openapi/models/Language.ts";
 import type { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
-import FormMenu from "../FormInputs/FormMenu.tsx";
-import FormNumber from "../FormInputs/FormNumber";
-import FormSwitch from "../FormInputs/FormSwitch";
+import { FormMenu } from "../FormInputs/FormMenu.tsx";
+import { FormNumber } from "../FormInputs/FormNumber";
+import { FormSwitch } from "../FormInputs/FormSwitch";
 
 interface ProcessingSettingsButtonProps {
   settings: ProcessingSettings;
   onChangeSettings: (settings: ProcessingSettings) => void;
 }
 
-const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ settings, onChangeSettings }) => {
+export const ProcessingSettingsButton = ({ settings, onChangeSettings }: ProcessingSettingsButtonProps) => {
   const [open, setOpen] = useState(false);
   const {
     control,
@@ -226,5 +226,3 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
     </>
   );
 };
-
-export default ProcessingSettingsButton;

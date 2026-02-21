@@ -1,16 +1,16 @@
 import { Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import JobHooks from "../../api/JobHooks.ts";
+import { JobHooks } from "../../api/JobHooks.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { MlJobRead } from "../../api/openapi/models/MlJobRead.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import JobListItem from "./JobListItem.tsx";
+import { JobListItem } from "./JobListItem.tsx";
 
 interface MLJobListItemProps {
   initialMLJob: MlJobRead;
 }
 
-function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
+export const MLJobListItem = memo(({ initialMLJob }: MLJobListItemProps) => {
   // global server state (react-query)
   const mlJob = JobHooks.usePollMLJob(initialMLJob.job_id, initialMLJob);
 
@@ -42,6 +42,4 @@ function MLJobListItem({ initialMLJob }: MLJobListItemProps) {
   } else {
     return null;
   }
-}
-
-export default memo(MLJobListItem);
+});

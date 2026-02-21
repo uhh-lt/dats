@@ -36,5 +36,3 @@ const CreatedCardLinkComponent = createLink(CardLinkComponent);
 const LinkCard: LinkComponent<typeof CardLinkComponent> = (props) => {
   return <CreatedCardLinkComponent preload={"intent"} {...props} />;
 };
-
-export default LinkCard;

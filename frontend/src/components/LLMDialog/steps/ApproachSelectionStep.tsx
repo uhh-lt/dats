@@ -14,14 +14,14 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import React, { memo, useCallback, useMemo, useState } from "react";
-import LLMHooks from "../../../api/LLMHooks.ts";
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
+import { LLMHooks } from "../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../api/openapi/models/ApproachType.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
+import { CodeRenderer } from "../../../core/code/renderer/CodeRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import CodeRenderer from "../../Code/CodeRenderer.tsx";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import LLMUtterance from "./LLMUtterance.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { LLMUtterance } from "./LLMUtterance.tsx";
 
 enum DeletionStrategy {
   DELETE_EXISTING = "DELETE_EXISTING",
@@ -35,7 +35,7 @@ const explanations: Record<ApproachType, string> = {
     "Few-shot learning is a type of machine learning that is used to compute results based on a prompt with a few examples. Hence, labeled examples are needed.",
 };
 
-function ApproachSelectionStep() {
+export const ApproachSelectionStep = memo(() => {
   // global state
   const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const approachRecommendation = useAppSelector((state) => state.dialog.llmApproachRecommendation);
@@ -147,10 +147,10 @@ function ApproachSelectionStep() {
         <LLMUtterance>
           <Typography>
             {approachRecommendation.reasoning.split("\n").map((utterance, idx) => (
-              <React.Fragment key={idx}>
+              <Fragment key={idx}>
                 {utterance}
                 <br />
-              </React.Fragment>
+              </Fragment>
             ))}
             {numAvailableApproaches > 1 ? " You can change the approach if you want." : ""}
           </Typography>
@@ -226,6 +226,4 @@ function ApproachSelectionStep() {
       </DialogActions>
     </>
   );
-}
-
-export default memo(ApproachSelectionStep);
+});

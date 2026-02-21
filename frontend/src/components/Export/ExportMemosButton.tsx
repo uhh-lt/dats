@@ -1,11 +1,11 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 
 interface ExportMemosButtonProps {
   memoIds: number[];
 }
 
-function ExportMemosButton({ memoIds }: ExportMemosButtonProps) {
+export function ExportMemosButton({ memoIds }: ExportMemosButtonProps) {
   const exportAll = memoIds.length === 0;
   return (
     <ExportButton
@@ -17,5 +17,3 @@ function ExportMemosButton({ memoIds }: ExportMemosButtonProps) {
     />
   );
 }
-
-export default ExportMemosButton;

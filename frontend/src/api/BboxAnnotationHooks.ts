@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../auth/useAuth.ts";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { useAuth } from "../features/auth/useAuth.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
 import { BBoxAnnotationCreate } from "./openapi/models/BBoxAnnotationCreate.ts";
@@ -206,7 +206,7 @@ const useDeleteBulkBBoxAnnotation = () =>
     },
   });
 
-const BboxAnnotationHooks = {
+export const BboxAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useGetBBoxAnnotationsBatch,
@@ -216,5 +216,3 @@ const BboxAnnotationHooks = {
   useDeleteBBoxAnnotation,
   useDeleteBulkBBoxAnnotation,
 };
-
-export default BboxAnnotationHooks;

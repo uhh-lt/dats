@@ -7,7 +7,7 @@ import {
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps.ts";
 import { TableRowWithId } from "./types/TableRowWithId.ts";
 
-function FilterTableToolbarRight<T extends TableRowWithId>({ table }: FilterTableToolbarProps<T>) {
+export function FilterTableToolbarRight<T extends TableRowWithId>({ table }: FilterTableToolbarProps<T>) {
   return (
     <Stack direction="row" spacing={1}>
       <MRT_ToggleGlobalFilterButton table={table} />
@@ -16,5 +16,3 @@ function FilterTableToolbarRight<T extends TableRowWithId>({ table }: FilterTabl
     </Stack>
   );
 }
-
-export default FilterTableToolbarRight;

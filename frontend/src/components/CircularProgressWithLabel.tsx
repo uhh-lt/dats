@@ -1,13 +1,13 @@
 import { Box, CircularProgress, CircularProgressProps, Tooltip, Typography } from "@mui/material";
-import React from "react";
+import { ReactNode } from "react";
 
 interface CircularProgressWithLabelProps extends Omit<CircularProgressProps, "value" | "variant"> {
   current: number;
   max: number;
-  tooltip: React.ReactNode;
+  tooltip: ReactNode;
 }
 
-function CircularProgressWithLabel({ current, max, tooltip, ...props }: CircularProgressWithLabelProps) {
+export function CircularProgressWithLabel({ current, max, tooltip, ...props }: CircularProgressWithLabelProps) {
   const value = max > 0 ? Math.round((current / max) * 100) : 100;
 
   return (
@@ -34,5 +34,3 @@ function CircularProgressWithLabel({ current, max, tooltip, ...props }: Circular
     </Box>
   );
 }
-
-export default CircularProgressWithLabel;

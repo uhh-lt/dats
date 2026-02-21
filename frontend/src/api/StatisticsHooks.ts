@@ -57,10 +57,8 @@ const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
   });
 };
 
-const StatisticsHooks = {
+export const StatisticsHooks = {
   useFilterCodeStats,
   useFilterKeywordStats,
   useFilterTagStats,
 };
-
-export default StatisticsHooks;

@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { SearchActions } from "../features/search/DocumentSearch/searchSlice.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
-import { SearchActions } from "../views/search/DocumentSearch/searchSlice.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { FolderRead } from "./openapi/models/FolderRead.ts";
 import { FolderType } from "./openapi/models/FolderType.ts";
@@ -146,7 +146,7 @@ const useDeleteFolder = () =>
     },
   });
 
-const FolderHooks = {
+export const FolderHooks = {
   useGetFolder,
   useGetAllFolders,
   useGetAllFoldersMap,
@@ -159,5 +159,3 @@ const FolderHooks = {
   useMoveFolders,
   useDeleteFolder,
 };
-
-export default FolderHooks;

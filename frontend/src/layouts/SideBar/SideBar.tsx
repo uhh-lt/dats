@@ -23,12 +23,12 @@ import {
 import { useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
-import { LoginStatus } from "../../auth/LoginStatus.ts";
-import { useAuth } from "../../auth/useAuth.ts";
-import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import { LinkListItemButton } from "../../components/MUI/LinkListItemButton.tsx";
 import { LinkMenuItem } from "../../components/MUI/LinkMenuItem.tsx";
+import { LoginStatus } from "../../features/auth/LoginStatus.ts";
+import { useAuth } from "../../features/auth/useAuth.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 
 interface SideBarProps {
@@ -37,7 +37,7 @@ interface SideBarProps {
   onToggle: () => void;
 }
 
-function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
+export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const { loginStatus, logout, user } = useAuth();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -624,5 +624,3 @@ function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
     </Drawer>
   );
 }
-
-export default SideBar;

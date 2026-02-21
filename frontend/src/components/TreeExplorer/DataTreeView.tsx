@@ -10,7 +10,7 @@ import AbcIcon from "@mui/icons-material/Abc";
 import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { useCallback } from "react";
-import Droppable from "../DnD/Droppable.tsx";
+import { Droppable } from "../DnD/Droppable.tsx";
 import { ITree, NamedObjWithParent } from "./ITree.ts";
 
 export interface DataTreeViewProps<T extends NamedObjWithParent> {
@@ -32,7 +32,7 @@ const defaultNodeRenderer = <T extends NamedObjWithParent>(node: ITree<T>) => (
   </Typography>
 );
 
-function DataTreeView<T extends NamedObjWithParent>({
+export function DataTreeView<T extends NamedObjWithParent>({
   renderNode = defaultNodeRenderer,
   renderActions,
   data,
@@ -98,5 +98,3 @@ function DataTreeView<T extends NamedObjWithParent>({
     </SimpleTreeView>
   );
 }
-
-export default DataTreeView;

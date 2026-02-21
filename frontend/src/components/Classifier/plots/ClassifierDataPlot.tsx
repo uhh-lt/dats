@@ -1,11 +1,11 @@
 import { Typography } from "@mui/material";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import CodeHooks from "../../../api/CodeHooks.ts";
+import { CodeHooks } from "../../../api/CodeHooks.ts";
 import { ClassifierData } from "../../../api/openapi/models/ClassifierData.ts";
 import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts";
 import { TagRead } from "../../../api/openapi/models/TagRead.ts";
-import TagHooks from "../../../api/TagHooks.ts";
+import { TagHooks } from "../../../api/TagHooks.ts";
 
 interface ClassifierDatum extends ClassifierData {
   name: string;
@@ -18,7 +18,7 @@ interface ClassifierDataPlotProps {
   minHeight?: string | number | undefined;
 }
 
-function ClassifierDataPlot({ data, classifierModel, minHeight }: ClassifierDataPlotProps) {
+export function ClassifierDataPlot({ data, classifierModel, minHeight }: ClassifierDataPlotProps) {
   if (data.length === 0) {
     return (
       <Typography color="textSecondary" style={{ fontStyle: "italic" }}>
@@ -104,5 +104,3 @@ function ClassifierDataPlotContent({
     </ResponsiveContainer>
   );
 }
-
-export default ClassifierDataPlot;

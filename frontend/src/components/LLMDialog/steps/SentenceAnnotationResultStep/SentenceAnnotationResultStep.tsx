@@ -1,23 +1,23 @@
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
-import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { SentenceAnnotationLLMJobResult } from "../../../../api/openapi/models/SentenceAnnotationLLMJobResult.ts";
 import { QueryKey } from "../../../../api/QueryKey.ts";
-import queryClient from "../../../../plugins/ReactQueryClient.ts";
+import { AnnoActions } from "../../../../features/annotation/annoSlice.ts";
+import { queryClient } from "../../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "../../../../utils/GlobalConstants.ts";
-import { AnnoActions } from "../../../../views/annotation/annoSlice.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import LLMUtterance from "../LLMUtterance.tsx";
+import { LLMUtterance } from "../LLMUtterance.tsx";
 
 const approach2AssistantID: Record<ApproachType, number> = {
   [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
   [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
 };
 
-function SentenceAnnotationResultStep() {
+export function SentenceAnnotationResultStep() {
   // get the job
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -96,5 +96,3 @@ function SentenceAnnotationResultStepContent({
     </>
   );
 }
-
-export default SentenceAnnotationResultStep;

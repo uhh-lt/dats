@@ -2,12 +2,12 @@ import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider, Stack } f
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
+import { CodeTable } from "../../../../core/code/table/CodeTable.tsx";
+import { TagTable } from "../../../../core/tag/table/TagTable.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import CodeTable from "../../../Code/CodeTable.tsx";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import TagTable from "../../../Tag/TagTable.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 
-function ClassSelectionStep() {
+export function ClassSelectionStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
@@ -72,5 +72,3 @@ function ClassSelectionStep() {
     </>
   );
 }
-
-export default ClassSelectionStep;

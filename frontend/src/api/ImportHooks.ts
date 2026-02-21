@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { ImportJobRead } from "./openapi/models/ImportJobRead.ts";
@@ -137,10 +137,8 @@ const useGetAllImportJobs = (projectId: number | null | undefined) => {
   });
 };
 
-const ImportHooks = {
+export const ImportHooks = {
   useStartImportJob,
   usePollImportJob,
   useGetAllImportJobs,
 };
-
-export default ImportHooks;

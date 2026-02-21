@@ -2,18 +2,18 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
 import { memo, useCallback, useMemo, useState } from "react";
-import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { AnnotationLLMJobResult } from "../../../../api/openapi/models/AnnotationLLMJobResult.ts";
 import { SpanAnnotationCreate } from "../../../../api/openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead.ts";
-import SpanAnnotationHooks from "../../../../api/SpanAnnotationHooks.ts";
+import { SpanAnnotationHooks } from "../../../../api/SpanAnnotationHooks.ts";
+import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
-import LLMUtterance from "../LLMUtterance.tsx";
-import TextAnnotationValidator from "./TextAnnotationValidator.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { LLMUtterance } from "../LLMUtterance.tsx";
+import { TextAnnotationValidator } from "./TextAnnotationValidator.tsx";
 
-function AnnotationResultStep() {
+export const AnnotationResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -33,7 +33,7 @@ function AnnotationResultStep() {
   } else {
     return <></>;
   }
-}
+});
 
 function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJobResult }) {
   // we extract the codes from the job
@@ -169,5 +169,3 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
     </>
   );
 }
-
-export default memo(AnnotationResultStep);

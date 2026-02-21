@@ -1,11 +1,11 @@
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
-import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { DocProcessingHooks } from "../../api/DocProcessingHooks.ts";
 import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
-import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
+import { ProcessingSettingsButton } from "./ProcessingSettingsButton.tsx";
 import { UploadDropzone } from "./UploadDropzone.tsx";
 
 interface FileUploadSectionProps {

@@ -7,7 +7,7 @@ interface DroppableProps {
   Element?: React.ElementType;
 }
 
-export default function Droppable({ id, children, Element = "div" }: DroppableProps) {
+export function Droppable({ id, children, Element = "div" }: DroppableProps) {
   const theme = useTheme();
   const { isOver, setNodeRef } = useDroppable({ id });
   return (

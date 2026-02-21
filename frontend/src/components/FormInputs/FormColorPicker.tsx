@@ -7,7 +7,7 @@ interface FormTextProps<T extends FieldValues> extends Omit<ControllerProps<T>, 
   control: Control<T>;
 }
 
-function FormColorPicker<T extends FieldValues>({
+export function FormColorPicker<T extends FieldValues>({
   name,
   control,
   textFieldProps,
@@ -30,5 +30,3 @@ function FormColorPicker<T extends FieldValues>({
     />
   );
 }
-
-export default FormColorPicker;

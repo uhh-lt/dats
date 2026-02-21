@@ -4,9 +4,9 @@ import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Node } from "ts-tree-structure";
-import DataTreeView, { DataTreeViewProps } from "./DataTreeView.tsx";
+import { DataTreeView, DataTreeViewProps } from "./DataTreeView.tsx";
 import { ITree, NamedObjWithParent } from "./ITree.ts";
-import TreeDataFilter from "./TreeDataFilter.tsx";
+import { TreeDataFilter } from "./TreeDataFilter.tsx";
 import { filterTree, flatTree } from "./TreeUtils.ts";
 
 export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<DataTreeViewProps<T>, "data"> {
@@ -34,7 +34,7 @@ export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<Da
   droppableId?: (node: ITree<T>) => string;
 }
 
-function TreeExplorer<T extends NamedObjWithParent>({
+export function TreeExplorer<T extends NamedObjWithParent>({
   toolbarTitle,
   showCheckboxes,
   showFilter,
@@ -194,5 +194,3 @@ function TreeExplorer<T extends NamedObjWithParent>({
     </Box>
   );
 }
-
-export default TreeExplorer;

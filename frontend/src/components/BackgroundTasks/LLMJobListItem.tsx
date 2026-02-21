@@ -2,7 +2,7 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useCallback, useRef, useState } from "react";
-import LLMHooks from "../../api/LLMHooks.ts";
+import { LLMHooks } from "../../api/LLMHooks.ts";
 import { ApproachType } from "../../api/openapi/models/ApproachType.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { FewShotParams } from "../../api/openapi/models/FewShotParams.ts";
@@ -12,17 +12,17 @@ import { LLMJobOutput } from "../../api/openapi/models/LLMJobOutput.ts";
 import { LLMPromptTemplates } from "../../api/openapi/models/LLMPromptTemplates.ts";
 import { ZeroShotParams } from "../../api/openapi/models/ZeroShotParams.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { docTypeToIcon } from "../../utils/icons/docTypeToIcon.tsx";
-import { CRUDDialogActions } from "../dialogSlice.ts";
 import { LinkListItemButton } from "../MUI/LinkListItemButton.tsx";
-import JobListItem from "./JobListItem.tsx";
+import { JobListItem } from "./JobListItem.tsx";
 import { jobStatusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface LLMJobListItemProps {
   initialLLMJob: LlmAssistantJobRead;
 }
 
-function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
+export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   // global server state (react-query)
   const llmJob = LLMHooks.usePollLLMJob(initialLLMJob.job_id, initialLLMJob);
 
@@ -83,7 +83,7 @@ function LLMJobListItem({ initialLLMJob }: LLMJobListItemProps) {
   } else {
     return null;
   }
-}
+});
 
 function InputViewer({ llmJob }: { llmJob: LlmAssistantJobRead }) {
   switch (llmJob.input.llm_approach_type) {
@@ -203,5 +203,3 @@ function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; 
     </LinkListItemButton>
   );
 }
-
-export default memo(LLMJobListItem);

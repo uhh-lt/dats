@@ -6,7 +6,7 @@ interface FormSwitchProps<T extends FieldValues> extends Omit<ControllerProps<T>
   switchProps?: Omit<SwitchProps, "checked" | "onChange">;
 }
 
-function FormSwitch<T extends FieldValues>({
+export function FormSwitch<T extends FieldValues>({
   name,
   control,
   boxProps,
@@ -31,5 +31,3 @@ function FormSwitch<T extends FieldValues>({
     />
   );
 }
-
-export default FormSwitch;

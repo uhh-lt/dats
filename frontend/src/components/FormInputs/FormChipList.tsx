@@ -9,7 +9,7 @@ interface FormChipListProps<T extends FieldValues> extends Omit<ControllerProps<
   >;
 }
 
-function FormChipList<T extends FieldValues>({
+export function FormChipList<T extends FieldValues>({
   name,
   control,
   textFieldProps,
@@ -51,5 +51,3 @@ function FormChipList<T extends FieldValues>({
     />
   );
 }
-
-export default FormChipList;

@@ -1,5 +1,5 @@
 import { memo, ReactNode, useCallback, useRef, useState } from "react";
-import DragHandler from "./DragHandler.tsx";
+import { DragHandler } from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers";
 import { Container, Panel } from "./styles/styledComponents.ts";
 
@@ -13,15 +13,17 @@ interface PercentageResizablePanelProps {
   isHorizontal?: boolean;
 }
 
-function PercentageResizablePanel({
-  firstContent,
-  secondContent,
-  contentPercentage,
-  minPercentage = 20,
-  maxPercentage = 80,
-  onResize,
-  isHorizontal = false,
-}: PercentageResizablePanelProps) {
+export const PercentageResizablePanel = memo((
+  {
+    firstContent,
+    secondContent,
+    contentPercentage,
+    minPercentage = 20,
+    maxPercentage = 80,
+    onResize,
+    isHorizontal = false,
+  }: PercentageResizablePanelProps
+) => {
   const dragHandleRef = useRef<HTMLDivElement>(null);
   const isFirstCollapsed = contentPercentage <= minPercentage / 2;
   const isSecondCollapsed = contentPercentage >= 100 - minPercentage / 2;
@@ -105,6 +107,4 @@ function PercentageResizablePanel({
       )}
     </Container>
   );
-}
-
-export default memo(PercentageResizablePanel);
+});

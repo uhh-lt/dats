@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import CodeHooks from "../../../api/CodeHooks.ts";
+import { CodeHooks } from "../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { ITree } from "../../TreeExplorer/ITree.ts";
 import { dataToTree } from "../../TreeExplorer/TreeUtils.ts";
@@ -35,5 +35,3 @@ const useComputeProjectCodeTree = () => {
 
   return { codeTree, allCodes };
 };
-
-export default useComputeProjectCodeTree;

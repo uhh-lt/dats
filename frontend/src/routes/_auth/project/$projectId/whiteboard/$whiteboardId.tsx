@@ -8,8 +8,8 @@ import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnota
 import { TagRead } from "../../../../../api/openapi/models/TagRead.ts";
 import { WhiteboardService } from "../../../../../api/openapi/services/WhiteboardService.ts";
 import { QueryKey } from "../../../../../api/QueryKey.ts";
+import Whiteboard from "../../../../../features/whiteboard/Whiteboard.tsx";
 import queryClient from "../../../../../plugins/ReactQueryClient.ts";
-import Whiteboard from "../../../../../views/whiteboard/Whiteboard.tsx";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   params: {

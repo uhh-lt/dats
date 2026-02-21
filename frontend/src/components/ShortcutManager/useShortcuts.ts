@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { TabActions } from "../../layouts/TabBar/tabSlice";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { CRUDDialogActions } from "../dialogSlice";
+import { CRUDDialogActions } from "../../store/dialogSlice";
 
 export interface Shortcut {
   id: string;

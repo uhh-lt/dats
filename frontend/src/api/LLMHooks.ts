@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { ApproachType } from "./openapi/models/ApproachType.ts";
 import { JobStatus } from "./openapi/models/JobStatus.ts";
@@ -103,7 +103,7 @@ const useCountExistingAssistantAnnotations = ({
   });
 };
 
-const LLMHooks = {
+export const LLMHooks = {
   usePollLLMJob,
   useStartLLMJob,
   useGetAllLLMJobs,
@@ -111,5 +111,3 @@ const LLMHooks = {
   useCreatePromptTemplates,
   useCountExistingAssistantAnnotations,
 };
-
-export default LLMHooks;

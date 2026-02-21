@@ -11,8 +11,6 @@ const useGetInstanceInfo = () =>
     staleTime: Infinity,
   });
 
-const GeneralHooks = {
+export const GeneralHooks = {
   useGetInstanceInfo,
 };
-
-export default GeneralHooks;

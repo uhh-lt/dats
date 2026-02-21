@@ -12,7 +12,7 @@ interface FormFreeSoloProps<T extends FieldValues> extends Omit<ControllerProps<
   options: FreeSoloOptions[];
 }
 
-function FormFreeSolo<T extends FieldValues>({
+export function FormFreeSolo<T extends FieldValues>({
   name,
   control,
   options,
@@ -50,5 +50,3 @@ function FormFreeSolo<T extends FieldValues>({
     />
   );
 }
-
-export default FormFreeSolo;

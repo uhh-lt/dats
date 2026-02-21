@@ -11,7 +11,7 @@ interface SdocStatusSimpleListItemProps {
   sdocStatus: SourceDocumentStatusSimple;
 }
 
-function SdocStatusSimpleListItem({ sdocStatus }: SdocStatusSimpleListItemProps) {
+export const SdocStatusSimpleListItem = memo(({ sdocStatus }: SdocStatusSimpleListItemProps) => {
   return (
     <ListItem>
       <Box width="50%" display="flex" alignItems="center">
@@ -51,6 +51,4 @@ function SdocStatusSimpleListItem({ sdocStatus }: SdocStatusSimpleListItemProps)
       </Box>
     </ListItem>
   );
-}
-
-export default memo(SdocStatusSimpleListItem);
+});

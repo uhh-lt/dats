@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { LLMAssistanceEvent } from "./LLMEvent.ts";
 
 export const useOpenLLMDialog = () => {

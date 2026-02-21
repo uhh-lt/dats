@@ -3,10 +3,10 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
 import { memo, useRef } from "react";
 import { DragDropContext } from "react-beautiful-dnd";
-import DragCloneRenderer from "./components/DragCloneRenderer.tsx";
-import DraggableTab from "./components/DraggableTab.tsx";
-import StrictModeDroppable from "./components/StrictModeDroppable.tsx";
-import TabMenuButton from "./components/TabMenuButton.tsx";
+import { DragCloneRenderer } from "./components/DragCloneRenderer.tsx";
+import { DraggableTab } from "./components/DraggableTab.tsx";
+import { StrictModeDroppable } from "./components/StrictModeDroppable.tsx";
+import { TabMenuButton } from "./components/TabMenuButton.tsx";
 import { useTabManagement } from "./hooks/useTabManagement";
 import { useTabScroll } from "./hooks/useTabScroll";
 import { TabIconButton } from "./styles/styledComponents.tsx";
@@ -15,7 +15,7 @@ interface TabBarProps {
   projectId: number;
 }
 
-function TabBar({ projectId }: TabBarProps) {
+export const TabBar = memo(({ projectId }: TabBarProps) => {
   // Container ref for scrolling
   const tabsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -105,6 +105,4 @@ function TabBar({ projectId }: TabBarProps) {
       <TabMenuButton projectId={projectId} activeTabIndex={activeTabIndex} totalTabs={tabs.length} />
     </Box>
   );
-}
-
-export default memo(TabBar);
+});

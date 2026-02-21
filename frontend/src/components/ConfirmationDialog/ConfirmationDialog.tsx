@@ -1,10 +1,10 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { memo, useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus.ts";
+import { eventBus } from "../../EventBus.ts";
 import { useDialog } from "../../hooks/useDialog.ts";
 import { ConfirmationEvent } from "./ConfirmationAPI.ts";
 
-function ConfirmationDialog() {
+export const ConfirmationDialog = memo(() => {
   // state
   const dialog = useDialog();
   const [confirmationEventData, setConfirmationEventData] = useState<ConfirmationEvent>();
@@ -59,6 +59,4 @@ function ConfirmationDialog() {
       )}
     </Dialog>
   );
-}
-
-export default memo(ConfirmationDialog);
+});

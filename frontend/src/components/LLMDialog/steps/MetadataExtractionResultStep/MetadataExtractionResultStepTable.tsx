@@ -12,15 +12,15 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import MetadataHooks from "../../../../api/MetadataHooks.ts";
+import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
 import { MetadataExtractionResult } from "../../../../api/openapi/models/MetadataExtractionResult.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SourceDocumentMetadataBulkUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { SdocMetadataRendererWithData } from "../../../../core/sdoc-metadata/renderer/SdocMetadataRenderer.tsx";
+import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer.tsx";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import { SdocMetadataRendererWithData } from "../../../Metadata/SdocMetadataRenderer.tsx";
-import SdocRenderer from "../../../SourceDocument/SdocRenderer.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 
 interface MetadataExtractionResultRow {
   sdocId: number;
@@ -34,7 +34,7 @@ interface MetadataExtractionResultRow {
   >;
 }
 
-function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionResult[] }) {
+export const MetadataExtractionResultStepTable = memo(({ data }: { data: MetadataExtractionResult[] }) => {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const buttonsDisabled = Object.keys(rowSelectionModel).length === 0;
@@ -361,6 +361,4 @@ function MetadataExtractionResultStepTable({ data }: { data: MetadataExtractionR
   });
 
   return <MaterialReactTable table={table} />;
-}
-
-export default memo(MetadataExtractionResultStepTable);
+});

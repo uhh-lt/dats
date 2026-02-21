@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../auth/useAuth.ts";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { useAuth } from "../features/auth/useAuth.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SpanAnnotationCreate } from "./openapi/models/SpanAnnotationCreate.ts";
 import { SpanAnnotationDeleted } from "./openapi/models/SpanAnnotationDeleted.ts";
@@ -269,7 +269,7 @@ const useCountBySdocsAndUser = () =>
     mutationFn: SpanAnnotationService.countAnnotations,
   });
 
-const SpanAnnotationHooks = {
+export const SpanAnnotationHooks = {
   useCreateSpanAnnotation,
   useCreateBulkAnnotations,
   useGetSpanAnnotationsBatch,
@@ -281,5 +281,3 @@ const SpanAnnotationHooks = {
   useDeleteBulkSpanAnnotation,
   useCountBySdocsAndUser,
 };
-
-export default SpanAnnotationHooks;

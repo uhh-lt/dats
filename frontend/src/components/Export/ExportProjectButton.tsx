@@ -1,7 +1,7 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 
-function ExportProjectButton() {
+export function ExportProjectButton() {
   return (
     <ExportButton
       title="Export everything! Warning: this may take a long time!"
@@ -10,5 +10,3 @@ function ExportProjectButton() {
     />
   );
 }
-
-export default ExportProjectButton;

@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
 import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
@@ -114,7 +114,7 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const SdocHooks = {
+export const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentData,
@@ -130,5 +130,3 @@ const SdocHooks = {
   // thumbnail
   useGetThumbnailURL,
 };
-
-export default SdocHooks;

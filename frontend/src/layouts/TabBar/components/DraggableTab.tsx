@@ -1,9 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
-import React, { memo, useCallback } from "react";
+import { memo, MouseEventHandler, useCallback } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { CloseButton, StyledTab, TabContent, TabWrapper } from "../styles/styledComponents.tsx";
 import { TabData } from "../types/TabData.ts";
-import TabTitle from "./TabTitle.tsx";
+import { TabTitle } from "./TabTitle.tsx";
 
 interface DraggableTabProps {
   tab: TabData;
@@ -13,9 +13,9 @@ interface DraggableTabProps {
   onCloseClick: () => void;
 }
 
-function DraggableTab({ tab, index, isActive, onTabClick, onCloseClick }: DraggableTabProps) {
-  const handleCloseClick = useCallback(
-    (e: React.MouseEvent) => {
+export const DraggableTab = memo(({ tab, index, isActive, onTabClick, onCloseClick }: DraggableTabProps) => {
+  const handleCloseClick: MouseEventHandler = useCallback(
+    (e) => {
       e.stopPropagation();
       onCloseClick();
     },
@@ -56,6 +56,4 @@ function DraggableTab({ tab, index, isActive, onTabClick, onCloseClick }: Dragga
       }}
     </Draggable>
   );
-}
-
-export default memo(DraggableTab);
+});

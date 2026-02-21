@@ -1,13 +1,13 @@
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useCallback } from "react";
-import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationParams } from "../../../../api/openapi/models/ClassifierEvaluationParams.ts";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import DataSelection from "./DataSelection.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { DataSelection } from "./DataSelection.tsx";
 
-function EvalDataSelectionStep() {
+export function EvalDataSelectionStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const task = useAppSelector((state) => state.dialog.classifierTask);
@@ -70,5 +70,3 @@ function EvalDataSelectionStep() {
     </>
   );
 }
-
-export default EvalDataSelectionStep;

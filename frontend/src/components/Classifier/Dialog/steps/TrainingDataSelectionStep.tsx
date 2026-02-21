@@ -2,10 +2,10 @@ import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useCallback } from "react";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import DataSelection from "./DataSelection.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { DataSelection } from "./DataSelection.tsx";
 
-function TrainingDataSelectionStep() {
+export function TrainingDataSelectionStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
@@ -40,5 +40,3 @@ function TrainingDataSelectionStep() {
     </>
   );
 }
-
-export default TrainingDataSelectionStep;

@@ -5,7 +5,7 @@ interface FormNumberProps<T extends FieldValues> extends Omit<ControllerProps<T>
   textFieldProps?: Omit<TextFieldProps, "value" | "onChange" | "type">;
 }
 
-function FormNumber<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormNumberProps<T>) {
+export function FormNumber<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormNumberProps<T>) {
   return (
     <Controller
       {...controllerProps}
@@ -15,5 +15,3 @@ function FormNumber<T extends FieldValues>({ name, control, textFieldProps, ...c
     />
   );
 }
-
-export default FormNumber;

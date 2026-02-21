@@ -1,10 +1,10 @@
 import { AlertTitle, Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import { useCallback } from "react";
-import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 
-export default function SnackbarDialog() {
+export function SnackbarDialog() {
   const isSnackbarOpen = useAppSelector((state) => state.dialog.isSnackbarOpen);
   const event = useAppSelector((state) => state.dialog.snackbarData);
   const dispatch = useAppDispatch();

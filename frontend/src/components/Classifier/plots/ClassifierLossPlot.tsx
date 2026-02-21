@@ -6,7 +6,7 @@ interface ClassifierLossPlotProps {
   loss: ClassifierLoss[];
 }
 
-function ClassifierLossPlot({ loss, minHeight }: ClassifierLossPlotProps) {
+export function ClassifierLossPlot({ loss, minHeight }: ClassifierLossPlotProps) {
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={minHeight}>
       <LineChart data={loss}>
@@ -19,5 +19,3 @@ function ClassifierLossPlot({ loss, minHeight }: ClassifierLossPlotProps) {
     </ResponsiveContainer>
   );
 }
-
-export default ClassifierLossPlot;

@@ -1,0 +1,40 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { MouseEventHandler } from "react";
+import { SpanAnnotationHooks } from "../../../../../api/SpanAnnotationHooks.ts";
+import { ConfirmationAPI } from "../../../../../components/ConfirmationDialog/ConfirmationAPI.ts";
+
+interface SpanAnnotationDeleteMenuItemProps {
+  annotationId: number;
+  onClick?: () => void;
+}
+
+export function SpanAnnotationDeleteMenuItem({
+  annotationId,
+  onClick,
+  ...props
+}: SpanAnnotationDeleteMenuItemProps & MenuItemProps) {
+  const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
+
+  const handleClick: MouseEventHandler = (event) => {
+    event.stopPropagation();
+
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to remove the SpanAnnotation ${annotationId}? You can reassign it later!`,
+      onAccept: () => {
+        deleteMutation.mutate({ spanAnnotationToDelete: annotationId });
+      },
+    });
+
+    if (onClick) onClick();
+  };
+
+  return (
+    <MenuItem onClick={handleClick} {...props}>
+      <ListItemIcon>
+        <DeleteIcon fontSize="small" />
+      </ListItemIcon>
+      <ListItemText>Delete span annotation</ListItemText>
+    </MenuItem>
+  );
+}

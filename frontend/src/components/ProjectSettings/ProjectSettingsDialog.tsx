@@ -5,19 +5,19 @@ import { AppBar, Box, Dialog, DialogActions, DialogContent, Divider, Tabs } from
 import Tab from "@mui/material/Tab";
 import { useNavigate } from "@tanstack/react-router";
 import { SyntheticEvent, memo, useCallback, useState } from "react";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import { ProjectHooks } from "../../api/ProjectHooks.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
-import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
-import ProjectCodes from "./tabs/ProjectCodes.tsx";
-import ProjectDetails from "./tabs/ProjectDetails.tsx";
-import ProjectImport from "./tabs/ProjectImport.tsx";
-import ProjectTags from "./tabs/ProjectTags.tsx";
-import ProjectUsers from "./tabs/ProjectUsers.tsx";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
+import { ConfirmationAPI } from "../ConfirmationDialog/ConfirmationAPI.ts";
+import { DATSDialogHeader } from "../MUI/DATSDialogHeader.tsx";
+import { ProjectCodes } from "./tabs/ProjectCodes.tsx";
+import { ProjectDetails } from "./tabs/ProjectDetails.tsx";
+import { ProjectImport } from "./tabs/ProjectImport.tsx";
+import { ProjectTags } from "./tabs/ProjectTags.tsx";
+import { ProjectUsers } from "./tabs/ProjectUsers.tsx";
 
-function ProjectSettingsDialog({ projectId }: { projectId: number }) {
+export const ProjectSettingsDialog = memo(({ projectId }: { projectId: number }) => {
   // dialog state
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.dialog.isProjectSettingsOpen);
@@ -125,6 +125,4 @@ function ProjectSettingsDialog({ projectId }: { projectId: number }) {
       </TabContext>
     </Dialog>
   );
-}
-
-export default memo(ProjectSettingsDialog);
+});

@@ -3,7 +3,7 @@ import { memo, useCallback } from "react";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
 import { useOpenLLMDialog } from "./useOpenLLMDialog.ts";
 
-function LLMAssistanceButton({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) {
+export const LLMAssistanceButton = memo(({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) => {
   const openLLmDialog = useOpenLLMDialog();
 
   const handleClick = useCallback(() => {
@@ -15,6 +15,4 @@ function LLMAssistanceButton({ sdocIds, projectId }: { sdocIds: number[]; projec
       <IconButton onClick={handleClick}>{getIconComponent(Icon.LLM_ASSISTANT)}</IconButton>
     </Tooltip>
   );
-}
-
-export default memo(LLMAssistanceButton);
+});

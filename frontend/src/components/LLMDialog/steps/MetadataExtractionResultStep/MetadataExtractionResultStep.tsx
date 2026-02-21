@@ -1,12 +1,12 @@
 import { Typography } from "@mui/material";
 import { memo } from "react";
-import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { MetadataExtractionLLMJobResult } from "../../../../api/openapi/models/MetadataExtractionLLMJobResult.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import LLMUtterance from "../LLMUtterance.tsx";
-import MetadataExtractionResultStepTable from "./MetadataExtractionResultStepTable.tsx";
+import { LLMUtterance } from "../LLMUtterance.tsx";
+import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultStepTable.tsx";
 
-function MetadataExtractionResultStep() {
+export const MetadataExtractionResultStep = memo(() => {
   // get the job
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -33,6 +33,4 @@ function MetadataExtractionResultStep() {
       )}
     </>
   );
-}
-
-export default memo(MetadataExtractionResultStep);
+});

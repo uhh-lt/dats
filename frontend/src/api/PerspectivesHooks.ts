@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MyFilter } from "../components/FilterDialog/filterUtils.ts";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
@@ -248,7 +248,7 @@ const useRAGChat = () =>
     },
   });
 
-const PerspectivesHooks = {
+export const PerspectivesHooks = {
   // aspects
   useGetAllAspectsList,
   useGetAspect,
@@ -271,5 +271,3 @@ const PerspectivesHooks = {
   // chat
   useRAGChat,
 };
-
-export default PerspectivesHooks;

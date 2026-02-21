@@ -9,12 +9,14 @@ interface ExportInstantButtonProps extends Omit<ExportJobInput, "project_id"> {
   isDisabled?: boolean;
 }
 
-function ExportButton({
-  title,
-  isDisabled = false,
-  export_job_type,
-  specific_export_job_parameters,
-}: ExportInstantButtonProps) {
+export const ExportButton = memo((
+  {
+    title,
+    isDisabled = false,
+    export_job_type,
+    specific_export_job_parameters,
+  }: ExportInstantButtonProps
+) => {
   const { onClick, isPending, exportJobData } = useExport({
     export_job_type,
     specific_export_job_parameters,
@@ -33,6 +35,4 @@ function ExportButton({
       </span>
     </Tooltip>
   );
-}
-
-export default memo(ExportButton);
+});

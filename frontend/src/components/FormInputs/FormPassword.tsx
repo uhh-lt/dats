@@ -7,7 +7,7 @@ interface FormPasswordProps<T extends FieldValues> extends Omit<ControllerProps<
   showPassword?: boolean;
 }
 
-function FormPassword<T extends FieldValues>({
+export function FormPassword<T extends FieldValues>({
   name,
   control,
   textFieldProps,
@@ -23,5 +23,3 @@ function FormPassword<T extends FieldValues>({
     />
   );
 }
-
-export default FormPassword;

@@ -2,10 +2,12 @@ import { Box, Stack, StackProps } from "@mui/material";
 import { memo } from "react";
 import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
 
-function LLMUtterance({
-  children,
-  ...props
-}: { children?: React.ReactNode } & Omit<StackProps, "direction" | "alignItems">) {
+export const LLMUtterance = memo((
+  {
+    children,
+    ...props
+  }: { children?: React.ReactNode } & Omit<StackProps, "direction" | "alignItems">
+) => {
   return (
     <Stack direction="row" alignItems="center" {...props}>
       {getIconComponent(Icon.LLM_ASSISTANT, { fontSize: "large", color: "primary" })}
@@ -14,6 +16,4 @@ function LLMUtterance({
       </Box>
     </Stack>
   );
-}
-
-export default memo(LLMUtterance);
+});

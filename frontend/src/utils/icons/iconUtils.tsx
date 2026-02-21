@@ -53,7 +53,8 @@ import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { SvgIconProps } from "@mui/material";
-import React from "react";
+import { ReactElement } from "react";
+
 export enum Icon {
   HOME = "home",
 
@@ -166,7 +167,7 @@ export enum Icon {
 }
 
 // Define a type for icon component factory functions
-type IconFactory = (iconProps: SvgIconProps) => React.ReactElement;
+type IconFactory = (iconProps: SvgIconProps) => ReactElement;
 
 // Map from enum to icon component factory functions
 const iconMap: Record<Icon, IconFactory> = {

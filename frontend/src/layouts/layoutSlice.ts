@@ -71,8 +71,7 @@ export const layoutSlice = createSlice({
 });
 
 export const LayoutActions = layoutSlice.actions;
-
-export default persistReducer(
+export const layoutReducer = persistReducer(
   {
     key: "layout",
     storage,

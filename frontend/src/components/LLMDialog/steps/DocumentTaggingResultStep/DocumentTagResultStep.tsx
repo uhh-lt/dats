@@ -1,18 +1,18 @@
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import LLMHooks from "../../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { TaggingLLMJobResult } from "../../../../api/openapi/models/TaggingLLMJobResult.ts";
 import { TagRead } from "../../../../api/openapi/models/TagRead.ts";
-import TagHooks from "../../../../api/TagHooks.ts";
+import { TagHooks } from "../../../../api/TagHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import LLMUtterance from "../LLMUtterance.tsx";
+import { LLMUtterance } from "../LLMUtterance.tsx";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow.ts";
-import DocumentTagResultStepTable from "./DocumentTagResultStepTable.tsx";
+import { DocumentTagResultStepTable } from "./DocumentTagResultStepTable.tsx";
 
-function DocumentTagResultStep() {
+export const DocumentTagResultStep = memo(() => {
   // global client state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   // global server state
@@ -39,7 +39,7 @@ function DocumentTagResultStep() {
   } else {
     return <></>;
   }
-}
+});
 
 function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingLLMJobResult; tags: TagRead[] }) {
   // local client state
@@ -117,5 +117,3 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
     </>
   );
 }
-
-export default memo(DocumentTagResultStep);

@@ -7,7 +7,7 @@ interface ExportChartButtonProps {
   chartIdentifier: string;
 }
 
-function ExportChartButton({
+export function ExportChartButton({
   chartName,
   chartIdentifier,
   ...props
@@ -22,5 +22,3 @@ function ExportChartButton({
     </Tooltip>
   );
 }
-
-export default ExportChartButton;

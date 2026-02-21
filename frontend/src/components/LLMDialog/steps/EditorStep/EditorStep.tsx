@@ -1,9 +1,9 @@
 import { memo } from "react";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import PromptEditorStep from "./PromptEditorStep.tsx";
+import { PromptEditorStep } from "./PromptEditorStep.tsx";
 
-function EditorStep() {
+export const EditorStep = memo(() => {
   // global state
   const approach = useAppSelector((state) => state.dialog.llmApproach);
 
@@ -15,6 +15,4 @@ function EditorStep() {
     default:
       return <>Approach not supported</>;
   }
-}
-
-export default memo(EditorStep);
+});

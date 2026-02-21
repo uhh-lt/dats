@@ -1,9 +1,9 @@
 import { Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { ClassifierJobRead } from "../../api/openapi/models/ClassifierJobRead.ts";
-import LinearProgressWithLabel from "../LinearProgressWithLabel.tsx";
+import { LinearProgressWithLabel } from "../LinearProgressWithLabel.tsx";
 
-function ClassifierJobProgressBar({ classifierJob }: { classifierJob: ClassifierJobRead | undefined | null }) {
+export function ClassifierJobProgressBar({ classifierJob }: { classifierJob: ClassifierJobRead | undefined | null }) {
   const progressTooltip = useMemo(() => {
     if (!classifierJob) return "";
     return classifierJob.current_step === classifierJob.steps.length
@@ -33,5 +33,3 @@ function ClassifierJobProgressBar({ classifierJob }: { classifierJob: Classifier
     </Stack>
   );
 }
-
-export default ClassifierJobProgressBar;

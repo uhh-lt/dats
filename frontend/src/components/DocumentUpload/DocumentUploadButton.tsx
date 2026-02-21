@@ -2,9 +2,9 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { IconButton, Tooltip } from "@mui/material";
 import { useCallback } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { CRUDDialogActions } from "../dialogSlice";
+import { CRUDDialogActions } from "../../store/dialogSlice";
 
-export default function DocumentUploadButton() {
+export function DocumentUploadButton() {
   const dispatch = useAppDispatch();
 
   const handleClick = useCallback(() => {

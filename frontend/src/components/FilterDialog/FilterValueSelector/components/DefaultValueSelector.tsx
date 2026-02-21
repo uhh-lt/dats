@@ -134,5 +134,3 @@ const DefaultValueSelector = memo(({ filterExpression, onChangeValue, operator }
       return <>Operator not supported</>;
   }
 });
-
-export default DefaultValueSelector;

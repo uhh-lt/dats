@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { AnnoscalingResult } from "./openapi/models/AnnoscalingResult.ts";
 import { AnnoscalingService } from "./openapi/services/AnnoscalingService.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -23,9 +23,7 @@ const useConfirmSuggestions = () =>
     },
   });
 
-const AnnoscalingHooks = {
+export const AnnoscalingHooks = {
   useAnnotationSuggestions,
   useConfirmSuggestions,
 };
-
-export default AnnoscalingHooks;

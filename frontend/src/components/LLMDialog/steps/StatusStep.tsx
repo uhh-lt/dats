@@ -1,13 +1,13 @@
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
-import LLMHooks from "../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../api/LLMHooks.ts";
 import { JobStatus } from "../../../api/openapi/models/JobStatus.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import LinearProgressWithLabel from "../../LinearProgressWithLabel.tsx";
-import LLMUtterance from "./LLMUtterance.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { LinearProgressWithLabel } from "../../LinearProgressWithLabel.tsx";
+import { LLMUtterance } from "./LLMUtterance.tsx";
 
-function StatusStep() {
+export const StatusStep = memo(() => {
   // global state
   const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
   const dispatch = useAppDispatch();
@@ -85,6 +85,4 @@ function StatusStep() {
       </DialogActions>
     </>
   );
-}
-
-export default memo(StatusStep);
+});

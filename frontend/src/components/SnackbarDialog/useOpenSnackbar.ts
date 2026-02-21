@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { CRUDDialogActions } from "../../components/dialogSlice.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { SnackbarEvent } from "./SnackbarEvent.ts";
 
 export const useOpenSnackbar = () => {

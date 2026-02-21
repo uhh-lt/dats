@@ -4,11 +4,11 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
-import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { DocProcessingHooks } from "../../api/DocProcessingHooks.ts";
 import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection";
-import ProcessingSettingsButton from "./ProcessingSettingsButton.tsx";
+import { ProcessingSettingsButton } from "./ProcessingSettingsButton.tsx";
 
 interface UrlCrawlerSectionProps {
   projectId: number;

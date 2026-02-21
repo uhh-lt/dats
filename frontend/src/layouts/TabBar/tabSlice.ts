@@ -1,5 +1,5 @@
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { ProjectActions } from "../../components/Project/projectSlice.ts";
+import { ProjectActions } from "../../core/project/projectSlice.ts";
 import { RootState } from "../../store/store.ts";
 import { TabData } from "./types/TabData.ts";
 
@@ -147,4 +147,4 @@ export const selectProjectTabs = (projectId: number) => (state: RootState) => {
 };
 
 export const TabActions = tabSlice.actions;
-export default tabSlice.reducer;
+export const tabReducer = tabSlice.reducer;

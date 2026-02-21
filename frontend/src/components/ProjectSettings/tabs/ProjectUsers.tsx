@@ -17,17 +17,17 @@ import {
 } from "@mui/material";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import UserHooks from "../../../api/UserHooks.ts";
+import { UserHooks } from "../../../api/UserHooks.ts";
 import { EMAIL_REGEX } from "../../../utils/GlobalConstants.ts";
-import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
-import FormEmail from "../../FormInputs/FormEmail.tsx";
+import { ConfirmationAPI } from "../../ConfirmationDialog/ConfirmationAPI.ts";
+import { FormEmail } from "../../FormInputs/FormEmail.tsx";
 import { ProjectProps } from "../ProjectProps.ts";
 
 interface UserAddFormValues {
   email: string;
 }
 
-function ProjectUsers({ project }: ProjectProps) {
+export const ProjectUsers = memo(({ project }: ProjectProps) => {
   // query all users that belong to the project
   const allUsers = UserHooks.useGetAllUsers();
 
@@ -144,6 +144,4 @@ function ProjectUsers({ project }: ProjectProps) {
       )}
     </Box>
   );
-}
-
-export default memo(ProjectUsers);
+});

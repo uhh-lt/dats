@@ -13,14 +13,16 @@ interface FilterGroupHeaderProps {
   isSimpleFilter?: boolean;
 }
 
-function FilterGroupHeader({
-  filterId,
-  logicOperator,
-  disableDeleteButton,
-  onLogicalOperatorChange,
-  onDeleteFilter,
-  isSimpleFilter = false,
-}: FilterGroupHeaderProps) {
+export const FilterGroupHeader = memo((
+  {
+    filterId,
+    logicOperator,
+    disableDeleteButton,
+    onLogicalOperatorChange,
+    onDeleteFilter,
+    isSimpleFilter = false,
+  }: FilterGroupHeaderProps
+) => {
   const handleStopPropagation = useCallback((event: MouseEvent<HTMLDivElement | HTMLInputElement>) => {
     event.stopPropagation();
   }, []);
@@ -74,6 +76,4 @@ function FilterGroupHeader({
       </TextField>
     </Stack>
   );
-}
-
-export default memo(FilterGroupHeader);
+});

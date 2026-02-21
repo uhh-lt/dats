@@ -22,8 +22,6 @@ const LinkWrapperComponent = forwardRef<HTMLAnchorElement, LinkWrapperProps>(({ 
 
 const CreatedLinkWrapperComponent = createLink(LinkWrapperComponent);
 
-const LinkWrapper: LinkComponent<typeof LinkWrapperComponent> = (props) => {
+export const LinkWrapper: LinkComponent<typeof LinkWrapperComponent> = (props) => {
   return <CreatedLinkWrapperComponent preload={"intent"} {...props} />;
 };
-
-export default LinkWrapper;

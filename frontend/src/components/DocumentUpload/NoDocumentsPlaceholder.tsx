@@ -2,9 +2,9 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Box, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 
-function NoDocumentsPlaceholder() {
+export function NoDocumentsPlaceholder() {
   const dispatch = useAppDispatch();
 
   const handleClick = useCallback(() => {
@@ -48,5 +48,3 @@ function NoDocumentsPlaceholder() {
     </Box>
   );
 }
-
-export default NoDocumentsPlaceholder;

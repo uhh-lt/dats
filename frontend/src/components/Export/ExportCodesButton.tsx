@@ -1,7 +1,7 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 
-function ExportCodesButton() {
+export function ExportCodesButton() {
   return (
     <ExportButton
       title="Export all codes"
@@ -10,5 +10,3 @@ function ExportCodesButton() {
     />
   );
 }
-
-export default ExportCodesButton;
