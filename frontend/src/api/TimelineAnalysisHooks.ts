@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -109,7 +109,7 @@ const useDeleteTimelineAnalysis = () =>
     },
   });
 
-const TimelineAnalysisHooks = {
+export const TimelineAnalysisHooks = {
   useGetProjectTimelineAnalysisList,
   useGetTimelineAnalysis,
   useCreateTimelineAnalysis,
@@ -118,5 +118,3 @@ const TimelineAnalysisHooks = {
   useDuplicateTimelineAnalysis,
   useDeleteTimelineAnalysis,
 };
-
-export default TimelineAnalysisHooks;

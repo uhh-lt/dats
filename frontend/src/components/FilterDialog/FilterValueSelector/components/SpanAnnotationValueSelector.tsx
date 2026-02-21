@@ -1,7 +1,7 @@
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, memo, useCallback, useState } from "react";
-import CodeHooks from "../../../../api/CodeHooks.ts";
-import CodeRenderer from "../../../Code/CodeRenderer.tsx";
+import { CodeHooks } from "../../../../api/CodeHooks.ts";
+import { CodeRenderer } from "../../../../core/code/renderer/CodeRenderer.tsx";
 import { useWithLevel } from "../../../TreeExplorer/useWithLevel.ts";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
@@ -93,5 +93,3 @@ const SpanAnnotationValueSelector = memo(({ filterExpression, onChangeValue }: S
     </>
   );
 });
-
-export default SpanAnnotationValueSelector;

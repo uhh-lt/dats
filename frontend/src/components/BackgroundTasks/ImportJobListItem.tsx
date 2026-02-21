@@ -1,16 +1,16 @@
 import { Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import ImportHooks from "../../api/ImportHooks";
+import { ImportHooks } from "../../api/ImportHooks";
 import { ImportJobRead } from "../../api/openapi/models/ImportJobRead";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import JobListItem from "./JobListItem.tsx";
+import { JobListItem } from "./JobListItem.tsx";
 
 interface ImportJobListItemProps {
   initialImportJob: ImportJobRead;
 }
 
-function ImportJobListItem({ initialImportJob }: ImportJobListItemProps) {
+export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemProps) => {
   // global server state (react-query)
   const importJob = ImportHooks.usePollImportJob(initialImportJob.job_id, initialImportJob);
 
@@ -42,6 +42,4 @@ function ImportJobListItem({ initialImportJob }: ImportJobListItemProps) {
   } else {
     return null;
   }
-}
-
-export default memo(ImportJobListItem);
+});

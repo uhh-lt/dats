@@ -5,7 +5,7 @@ import { useLocation } from "@tanstack/react-router";
 import { memo, useCallback, useMemo } from "react";
 import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants.ts";
 
-function DialMenu() {
+export const DialMenu = memo(() => {
   const location = useLocation();
 
   const wikiTargetRoute = useMemo(() => {
@@ -47,6 +47,4 @@ function DialMenu() {
       </SpeedDial>
     </>
   );
-}
-
-export default memo(DialMenu);
+});

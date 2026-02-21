@@ -1,15 +1,16 @@
 import { memo, MouseEventHandler, useCallback, useMemo, useRef } from "react";
-import CodeHooks from "../../../../api/CodeHooks.ts";
+import { CodeHooks } from "../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead.ts";
-import SdocHooks from "../../../../api/SdocHooks.ts";
-import DocumentRenderer from "../../../../views/annotation/DocumentRenderer/DocumentRenderer.tsx";
-import useComputeTokenDataWithAnnotations from "../../../../views/annotation/DocumentRenderer/useComputeTokenDataWithAnnotations.ts";
-import TextAnnotationValidationMenu, {
+import { SdocHooks } from "../../../../api/SdocHooks.ts";
+import { DocumentRenderer } from "../../../../features/annotation/components/document-renderer/DocumentRenderer.tsx";
+import {
+  TextAnnotationValidationMenu,
   TextAnnotationValidationMenuHandle,
   TextAnnotationValidationMenuProps,
 } from "./TextAnnotationValidationMenu.tsx";
+import { useComputeTokenDataWithAnnotations } from "./useComputeTokenDataWithAnnotations.ts";
 import "./validatorStyles.css";
 
 interface TextAnnotatorValidatorSharedProps {
@@ -22,32 +23,29 @@ interface TextAnnotatorValidatorProps extends TextAnnotatorValidatorSharedProps 
   sdocId: number;
 }
 
-function TextAnnotationValidator({
-  sdocId,
-  codeIdsForSelection,
-  annotations,
-  handleChangeAnnotations,
-}: TextAnnotatorValidatorProps) {
-  const sdocData = SdocHooks.useGetDocumentData(sdocId);
-  const projectCodes = CodeHooks.useGetAllCodesList();
+export const TextAnnotationValidator = memo(
+  ({ sdocId, codeIdsForSelection, annotations, handleChangeAnnotations }: TextAnnotatorValidatorProps) => {
+    const sdocData = SdocHooks.useGetDocumentData(sdocId);
+    const projectCodes = CodeHooks.useGetAllCodesList();
 
-  const codesForSelection = useMemo(() => {
-    if (!projectCodes.data) return undefined;
-    return projectCodes.data.filter((code) => codeIdsForSelection.includes(code.id));
-  }, [projectCodes.data, codeIdsForSelection]);
+    const codesForSelection = useMemo(() => {
+      if (!projectCodes.data) return undefined;
+      return projectCodes.data.filter((code) => codeIdsForSelection.includes(code.id));
+    }, [projectCodes.data, codeIdsForSelection]);
 
-  if (sdocData.isSuccess && codesForSelection) {
-    return (
-      <TextAnnotationValidatorWithSdoc
-        sdocData={sdocData.data}
-        codesForSelection={codesForSelection}
-        annotations={annotations}
-        handleChangeAnnotations={handleChangeAnnotations}
-      />
-    );
-  }
-  return null;
-}
+    if (sdocData.isSuccess && codesForSelection) {
+      return (
+        <TextAnnotationValidatorWithSdoc
+          sdocData={sdocData.data}
+          codesForSelection={codesForSelection}
+          annotations={annotations}
+          handleChangeAnnotations={handleChangeAnnotations}
+        />
+      );
+    }
+    return null;
+  },
+);
 
 interface TextAnnotatorValidatorWithSdocProps extends TextAnnotatorValidatorSharedProps {
   codesForSelection: CodeRead[];
@@ -160,5 +158,3 @@ function TextAnnotationValidatorWithSdoc({
     </>
   );
 }
-
-export default memo(TextAnnotationValidator);

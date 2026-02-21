@@ -37,9 +37,7 @@ const useCodeOccurrences = (
     enabled: userIds.length > 0 && !!codeId,
   });
 
-const AnalysisHooks = {
+export const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
 };
-
-export default AnalysisHooks;

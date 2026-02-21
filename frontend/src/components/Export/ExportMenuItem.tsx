@@ -9,13 +9,15 @@ interface ExportMenuItemProps extends Omit<ExportJobInput, "project_id">, Omit<M
   isDisabled?: boolean;
 }
 
-function ExportMenuItem({
-  title,
-  isDisabled = false,
-  export_job_type,
-  specific_export_job_parameters,
-  ...props
-}: ExportMenuItemProps) {
+export const ExportMenuItem = memo((
+  {
+    title,
+    isDisabled = false,
+    export_job_type,
+    specific_export_job_parameters,
+    ...props
+  }: ExportMenuItemProps
+) => {
   const { onClick, isPending, exportJobData } = useExport({
     export_job_type,
     specific_export_job_parameters,
@@ -28,6 +30,4 @@ function ExportMenuItem({
       <ListItemText>{title}</ListItemText>
     </MenuItem>
   );
-}
-
-export default memo(ExportMenuItem);
+});

@@ -1,6 +1,6 @@
 import { styled, Toolbar } from "@mui/material";
 
-const DATSToolbar = styled(Toolbar)(({ theme }) => ({
+export const DATSToolbar = styled(Toolbar)(({ theme }) => ({
   zIndex: theme.zIndex.appBar + 1,
   backgroundColor: theme.palette.background.paper,
   borderBottom: "1px solid",
@@ -9,5 +9,3 @@ const DATSToolbar = styled(Toolbar)(({ theme }) => ({
   gap: 8,
   minHeight: 49,
 })) as typeof Toolbar;
-
-export default DATSToolbar;

@@ -1,8 +1,7 @@
-import React, { memo, useEffect, useState } from "react";
+import { ComponentProps, memo, useEffect, useState } from "react";
 import { Droppable } from "react-beautiful-dnd";
 
-// Wrapper component for react-beautiful-dnd to work with React 18 StrictMode
-function StrictModeDroppable({ children, ...props }: React.ComponentProps<typeof Droppable>) {
+export const StrictModeDroppable = memo(({ children, ...props }: ComponentProps<typeof Droppable>) => {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -18,6 +17,4 @@ function StrictModeDroppable({ children, ...props }: React.ComponentProps<typeof
   }
 
   return <Droppable {...props}>{children}</Droppable>;
-}
-
-export default memo(StrictModeDroppable);
+});

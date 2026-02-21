@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { AttachedObjectType } from "./openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";
@@ -128,7 +128,7 @@ const useDeleteMemos = () =>
     },
   });
 
-const MemoHooks = {
+export const MemoHooks = {
   useGetMemo,
   useGetObjectMemos,
   useGetUserMemo,
@@ -138,5 +138,3 @@ const MemoHooks = {
   useDeleteMemo,
   useDeleteMemos,
 };
-
-export default MemoHooks;

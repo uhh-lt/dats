@@ -3,15 +3,15 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TreeItem2 } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { memo, useCallback, useMemo } from "react";
-import FilterExpressionRenderer from "../FilterExpressionRenderer/FilterExpressionRenderer.tsx";
+import { FilterExpressionRenderer } from "../FilterExpressionRenderer/FilterExpressionRenderer.tsx";
 import { MyFilter, isFilter, isFilterExpression } from "../filterUtils.ts";
-import FilterActions from "./components/FilterActions.tsx";
-import FilterGroupHeader from "./components/FilterGroupHeader.tsx";
+import { FilterActions } from "./components/FilterActions.tsx";
+import { FilterGroupHeader } from "./components/FilterGroupHeader.tsx";
 import { useFilterManagementActions } from "./hooks/useFilterManagementActions.ts";
 import "./styles/filter.css";
 import { FilterRendererProps } from "./types/FilterRendererProps.ts";
 
-function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRendererProps) {
+export const FilterRenderer = memo(({ editableFilter, filterActions, column2Info }: FilterRendererProps) => {
   const {
     handleAddFilter,
     handleAddFilterExpression,
@@ -102,6 +102,4 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
     ),
     [editableFilter, renderFilter],
   );
-}
-
-export default memo(FilterRenderer);
+});

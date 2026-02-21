@@ -1,12 +1,12 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
-import LLMHooks from "../../api/LLMHooks.ts";
+import { LLMHooks } from "../../api/LLMHooks.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
-import LLMJobListItem from "../BackgroundTasks/LLMJobListItem.tsx";
+import { LLMJobListItem } from "../BackgroundTasks/LLMJobListItem.tsx";
 import { DialogSection } from "../MUI/DialogSection";
 
-function LLMJobsView() {
+export function LLMJobsView() {
   const projectId = useAppSelector((state) => state.project.projectId);
 
   const { data: llmJobs, refetch: refetchLLMJobs, isFetching: isLLMFetching } = LLMHooks.useGetAllLLMJobs(projectId);
@@ -48,5 +48,3 @@ function LLMJobsView() {
     </DialogSection>
   );
 }
-
-export default LLMJobsView;

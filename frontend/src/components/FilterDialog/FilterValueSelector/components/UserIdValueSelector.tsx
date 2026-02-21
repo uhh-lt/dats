@@ -1,7 +1,7 @@
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
-import UserHooks from "../../../../api/UserHooks.ts";
-import UserRenderer from "../../../User/UserRenderer.tsx";
+import { UserHooks } from "../../../../api/UserHooks.ts";
+import { UserRenderer } from "../../../../core/user/renderer/UserRenderer.tsx";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
 const UserIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {
@@ -41,5 +41,3 @@ const UserIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFil
     </TextField>
   );
 });
-
-export default UserIdValueSelector;

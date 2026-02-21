@@ -3,7 +3,7 @@ import { memo } from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { StyledTab, TabContent } from "../styles/styledComponents.tsx";
 import { TabData } from "../types/TabData.ts";
-import TabTitle from "./TabTitle.tsx";
+import { TabTitle } from "./TabTitle.tsx";
 
 interface DragCloneRendererProps {
   provided: DraggableProvided;
@@ -13,7 +13,7 @@ interface DragCloneRendererProps {
   activeTabIndex: number | null;
 }
 
-function DragCloneRenderer({ provided, rubric, tabs, activeTabIndex }: DragCloneRendererProps) {
+export const DragCloneRenderer = memo(({ provided, rubric, tabs, activeTabIndex }: DragCloneRendererProps) => {
   const tab = tabs[rubric.source.index];
   const isActiveTab = activeTabIndex === rubric.source.index;
 
@@ -46,6 +46,4 @@ function DragCloneRenderer({ provided, rubric, tabs, activeTabIndex }: DragClone
       />
     </div>
   );
-}
-
-export default memo(DragCloneRenderer);
+});

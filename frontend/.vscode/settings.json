@@ -1,7 +1,6 @@
 {
-  // frontend
-  "javascript.preferences.importModuleSpecifierEnding": "js",
-  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "js/ts.preferences.importModuleSpecifier": "shortest",
+  "js/ts.preferences.importModuleSpecifierEnding": "minimal",
 
   // prettier
   "prettier.prettierPath": "node_modules/prettier",

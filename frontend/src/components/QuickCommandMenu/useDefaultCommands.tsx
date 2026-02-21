@@ -1,8 +1,8 @@
 import { Settings } from "@mui/icons-material";
 import { useMemo } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
-import { CRUDDialogActions } from "../dialogSlice.ts";
 import { CommandItem } from "./CommandItem.ts";
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {

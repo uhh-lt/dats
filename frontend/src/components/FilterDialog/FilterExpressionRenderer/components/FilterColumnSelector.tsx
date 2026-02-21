@@ -8,7 +8,9 @@ interface FilterColumnSelectorProps {
   onChangeColumn(id: string, columnValue: string): void;
 }
 
-function FilterColumnSelector({ filterExpression, column2Info, onChangeColumn }: FilterColumnSelectorProps) {
+export const FilterColumnSelector = memo((
+  { filterExpression, column2Info, onChangeColumn }: FilterColumnSelectorProps
+) => {
   const handleChangeColumn = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const column: string = event.target.value;
@@ -33,6 +35,4 @@ function FilterColumnSelector({ filterExpression, column2Info, onChangeColumn }:
       ))}
     </TextField>
   );
-}
-
-export default memo(FilterColumnSelector);
+});

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { DuplicateFinderJobRead } from "./openapi/models/DuplicateFinderJobRead.ts";
 import { ExportJobRead } from "./openapi/models/ExportJobRead.ts";
@@ -151,7 +151,7 @@ const useGetAllMLJobs = (projectId: number) => {
   });
 };
 
-const JobHooks = {
+export const JobHooks = {
   useStartDuplicateFinderJob,
   usePollDuplicateFinderJob,
   useStartExportJob,
@@ -160,5 +160,3 @@ const JobHooks = {
   usePollMLJob,
   useGetAllMLJobs,
 };
-
-export default JobHooks;

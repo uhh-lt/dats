@@ -6,7 +6,7 @@ interface FormEmailProps<T extends FieldValues> extends Omit<ControllerProps<T>,
   control: Control<T>;
 }
 
-function FormEmail<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormEmailProps<T>) {
+export function FormEmail<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormEmailProps<T>) {
   return (
     <Controller
       {...controllerProps}
@@ -16,5 +16,3 @@ function FormEmail<T extends FieldValues>({ name, control, textFieldProps, ...co
     />
   );
 }
-
-export default FormEmail;

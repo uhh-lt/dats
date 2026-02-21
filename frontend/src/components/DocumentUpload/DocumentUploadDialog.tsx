@@ -2,13 +2,13 @@ import { Box, Dialog, Stack } from "@mui/material";
 import { useCallback } from "react";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
-import { CRUDDialogActions } from "../dialogSlice.ts";
-import DocumentUploadJobsView from "./DocumentUploadJobsView.tsx";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
+import { DATSDialogHeader } from "../MUI/DATSDialogHeader.tsx";
+import { DocumentUploadJobsView } from "./DocumentUploadJobsView.tsx";
 import { FileUploadSection } from "./FileUploadSection.tsx";
 import { UrlCrawlerSection } from "./UrlCrawlerSection.tsx";
 
-function DocumentUploadDialog({ projectId }: { projectId: number }) {
+export function DocumentUploadDialog({ projectId }: { projectId: number }) {
   // open/close dialog
   const dispatch = useAppDispatch();
   const open = useAppSelector((state) => state.dialog.isDocumentUploadOpen);
@@ -39,5 +39,3 @@ function DocumentUploadDialog({ projectId }: { projectId: number }) {
     </Dialog>
   );
 }
-
-export default DocumentUploadDialog;

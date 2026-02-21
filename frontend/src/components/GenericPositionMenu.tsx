@@ -44,5 +44,3 @@ const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, GenericPositio
     );
   },
 );
-
-export default GenericPositionMenu;

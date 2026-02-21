@@ -5,7 +5,7 @@ interface FormDateProps<T extends FieldValues> extends Omit<ControllerProps<T>, 
   textFieldProps?: Omit<TextFieldProps, "value" | "onChange" | "type">;
 }
 
-function FormDate<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormDateProps<T>) {
+export function FormDate<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormDateProps<T>) {
   return (
     <Controller
       {...controllerProps}
@@ -15,5 +15,3 @@ function FormDate<T extends FieldValues>({ name, control, textFieldProps, ...con
     />
   );
 }
-
-export default FormDate;

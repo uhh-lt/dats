@@ -3,15 +3,15 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import LLMHooks from "../../../api/LLMHooks.ts";
+import { LLMHooks } from "../../../api/LLMHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
+import { CodeTable } from "../../../core/code/table/CodeTable.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import CodeTable from "../../Code/CodeTable.tsx";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import LLMUtterance from "./LLMUtterance.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { LLMUtterance } from "./LLMUtterance.tsx";
 
-function CodeSelectionStep() {
+export const CodeSelectionStep = memo(() => {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
@@ -111,6 +111,4 @@ function CodeSelectionStep() {
       />
     </>
   );
-}
-
-export default memo(CodeSelectionStep);
+});

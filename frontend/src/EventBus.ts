@@ -1,4 +1,4 @@
-const eventBus = {
+export const eventBus = {
   on(event: string, listener: (e: CustomEventInit) => void) {
     document.addEventListener(event, listener);
   },
@@ -9,5 +9,3 @@ const eventBus = {
     document.removeEventListener(event, listener);
   },
 };
-
-export default eventBus;

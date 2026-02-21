@@ -1,11 +1,11 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 
 interface ExportSentenceAnnotationsButtonProps {
   sentenceAnnotationIds: number[];
 }
 
-function ExportSentenceAnnotationsButton({ sentenceAnnotationIds }: ExportSentenceAnnotationsButtonProps) {
+export function ExportSentenceAnnotationsButton({ sentenceAnnotationIds }: ExportSentenceAnnotationsButtonProps) {
   const exportAll = sentenceAnnotationIds.length === 0;
   return (
     <ExportButton
@@ -22,5 +22,3 @@ function ExportSentenceAnnotationsButton({ sentenceAnnotationIds }: ExportSenten
     />
   );
 }
-
-export default ExportSentenceAnnotationsButton;

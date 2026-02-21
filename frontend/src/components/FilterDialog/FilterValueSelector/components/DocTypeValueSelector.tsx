@@ -39,5 +39,3 @@ const DocTypeValueSelector = memo(({ filterExpression, onChangeValue }: SharedFi
     </TextField>
   );
 });
-
-export default DocTypeValueSelector;

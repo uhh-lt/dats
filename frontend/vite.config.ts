@@ -1,6 +1,7 @@
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
+import path from "path";
 import { defineConfig, loadEnv } from "vite";
 
 // https://vitejs.dev/config/
@@ -16,6 +17,15 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       strictPort: true,
+    },
+    resolve: {
+      alias: {
+        "@api": path.resolve(__dirname, "./src/api"),
+        "@core": path.resolve(__dirname, "./src/core"),
+        "@features": path.resolve(__dirname, "./src/features"),
+        "@components": path.resolve(__dirname, "./src/components"),
+        "@routes": path.resolve(__dirname, "./src/routes"),
+      },
     },
   };
 

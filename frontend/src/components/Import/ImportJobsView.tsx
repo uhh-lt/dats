@@ -1,15 +1,15 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import ImportHooks from "../../api/ImportHooks.ts";
-import ImportJobListItem from "../BackgroundTasks/ImportJobListItem.tsx";
+import { ImportHooks } from "../../api/ImportHooks.ts";
+import { ImportJobListItem } from "../BackgroundTasks/ImportJobListItem.tsx";
 import { DialogSection } from "../MUI/DialogSection.tsx";
 
 interface ImportJobsViewProps {
   projectId: number;
 }
 
-function ImportJobsView({ projectId }: ImportJobsViewProps) {
+export const ImportJobsView = memo(({ projectId }: ImportJobsViewProps) => {
   // global server state (react-query)
   const {
     data: importJobs,
@@ -56,6 +56,4 @@ function ImportJobsView({ projectId }: ImportJobsViewProps) {
       </List>
     </DialogSection>
   );
-}
-
-export default memo(ImportJobsView);
+});

@@ -13,18 +13,18 @@ import {
 } from "@mui/material";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../../../api/ClassifierHooks.ts";
 import { ClassifierInferenceParams } from "../../../../api/openapi/models/ClassifierInferenceParams.ts";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
-import SentenceAnnotationHooks from "../../../../api/SentenceAnnotationHooks.ts";
-import SpanAnnotationHooks from "../../../../api/SpanAnnotationHooks.ts";
-import TagHooks from "../../../../api/TagHooks.ts";
+import { SentenceAnnotationHooks } from "../../../../api/SentenceAnnotationHooks.ts";
+import { SpanAnnotationHooks } from "../../../../api/SpanAnnotationHooks.ts";
+import { TagHooks } from "../../../../api/TagHooks.ts";
+import { CodeRenderer } from "../../../../core/code/renderer/CodeRenderer.tsx";
+import { TagRenderer } from "../../../../core/tag/renderer/TagRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 import { ASSISTANT_TRAINED_ID } from "../../../../utils/GlobalConstants.ts";
-import CodeRenderer from "../../../Code/CodeRenderer.tsx";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import FormSwitch from "../../../FormInputs/FormSwitch.tsx";
-import TagRenderer from "../../../Tag/TagRenderer.tsx";
+import { FormSwitch } from "../../../FormInputs/FormSwitch.tsx";
 
 interface InferenceSettings {
   keepExisting: boolean;
@@ -41,7 +41,7 @@ const useCountBySdocsAndUser = (model: ClassifierModel) => {
   }
 };
 
-function InferenceSettingsStep() {
+export function InferenceSettingsStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const classifierId = useAppSelector((state) => state.dialog.classifierId);
@@ -167,8 +167,6 @@ function InferenceSettingsStep() {
     </form>
   );
 }
-
-export default InferenceSettingsStep;
 
 function FormBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (

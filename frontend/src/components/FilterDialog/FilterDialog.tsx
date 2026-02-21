@@ -5,8 +5,8 @@ import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Swit
 import { ChangeEvent, memo, useCallback } from "react";
 import { useDialog } from "../../hooks/useDialog.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import FilterRenderer from "./FilterRenderer/FilterRenderer.tsx";
-import FilterRendererSimple from "./FilterRenderer/FilterRendererSimple.tsx";
+import { FilterRenderer } from "./FilterRenderer/FilterRenderer.tsx";
+import { FilterRendererSimple } from "./FilterRenderer/FilterRendererSimple.tsx";
 import { FilterRendererProps } from "./FilterRenderer/types/FilterRendererProps.ts";
 import { MyFilter, countFilterExpressions } from "./filterUtils.ts";
 
@@ -21,23 +21,25 @@ export interface FilterDialogProps {
   transformOrigin?: PopoverProps["transformOrigin"];
 }
 
-function FilterDialog({
-  anchorEl,
-  filter,
-  expertMode,
-  onChangeExpertMode,
-  buttonProps,
-  filterName = "root",
-  anchorOrigin = {
-    vertical: "top",
-    horizontal: "left",
-  },
-  transformOrigin = {
-    vertical: "top",
-    horizontal: "left",
-  },
-  ...props
-}: FilterDialogProps & FilterRendererProps) {
+export const FilterDialog = memo((
+  {
+    anchorEl,
+    filter,
+    expertMode,
+    onChangeExpertMode,
+    buttonProps,
+    filterName = "root",
+    anchorOrigin = {
+      vertical: "top",
+      horizontal: "left",
+    },
+    transformOrigin = {
+      vertical: "top",
+      horizontal: "left",
+    },
+    ...props
+  }: FilterDialogProps & FilterRendererProps
+) => {
   // local client state
   const dialog = useDialog();
   // global client state (redux)
@@ -108,6 +110,4 @@ function FilterDialog({
       </Popover>
     </>
   );
-}
-
-export default memo(FilterDialog);
+});

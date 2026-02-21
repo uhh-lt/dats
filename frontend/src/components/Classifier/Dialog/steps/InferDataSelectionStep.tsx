@@ -2,13 +2,13 @@ import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@m
 import Stack from "@mui/material/Stack/Stack";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useMemo, useState } from "react";
-import MetadataHooks from "../../../../api/MetadataHooks.ts";
+import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
+import { SdocTable } from "../../../../core/source-document/table/SdocTable.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import SdocTable from "../../../SourceDocument/SdocTable/SdocTable.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 
-function InferDataSelectionStep() {
+export function InferDataSelectionStep() {
   // dialog state
   const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
   const sdocIds = useAppSelector((state) => state.dialog.classifierSdocIds);
@@ -119,5 +119,3 @@ function DocumentSelector({ projectId, metadata, rowSelectionModel, onRowSelecti
     />
   );
 }
-
-export default InferDataSelectionStep;

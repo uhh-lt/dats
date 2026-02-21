@@ -14,8 +14,8 @@ import { ImportJobType } from "../../api/openapi/models/ImportJobType.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
 
 import { useCallback, useState } from "react";
-import ImportHooks from "../../api/ImportHooks.ts";
-import ImportDropzone from "./ImportDropzone.tsx";
+import { ImportHooks } from "../../api/ImportHooks.ts";
+import { ImportDropzone } from "./ImportDropzone.tsx";
 
 const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.PROJECT]: "Import a complete project from a project export file",
@@ -34,7 +34,7 @@ const importTypeHelperText: Record<ImportJobType, string> = {
   [ImportJobType.DOCUMENTS]: "Import documents from a documents export file",
 };
 
-function ImportSection({ projectId }: { projectId: number }) {
+export function ImportSection({ projectId }: { projectId: number }) {
   // State for import type and files
   const [importType, setImportType] = useState<ImportJobType>(ImportJobType.CODES);
   const [file, setFile] = useState<File>();
@@ -116,5 +116,3 @@ function ImportSection({ projectId }: { projectId: number }) {
     </DialogSection>
   );
 }
-
-export default ImportSection;

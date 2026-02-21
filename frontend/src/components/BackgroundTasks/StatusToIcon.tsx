@@ -3,11 +3,11 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { CircularProgress } from "@mui/material";
-import React from "react";
+import { ReactElement } from "react";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { jobStatusToTypographyColor } from "./StatusToTypographyColor.ts";
 
-export const jobStatusToIcon: Record<JobStatus, React.ReactElement> = {
+export const jobStatusToIcon: Record<JobStatus, ReactElement> = {
   // waiting
   [JobStatus.QUEUED]: <HourglassTopOutlinedIcon sx={{ color: jobStatusToTypographyColor.queued }} />,
   [JobStatus.DEFERRED]: <HourglassTopOutlinedIcon sx={{ color: jobStatusToTypographyColor.deferred }} />,

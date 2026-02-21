@@ -6,7 +6,7 @@ interface FormTextMultilineProps<T extends FieldValues> extends Omit<ControllerP
   control: Control<T>;
 }
 
-function FormTextMultiline<T extends FieldValues>({
+export function FormTextMultiline<T extends FieldValues>({
   name,
   control,
   textFieldProps,
@@ -29,5 +29,3 @@ function FormTextMultiline<T extends FieldValues>({
     />
   );
 }
-
-export default FormTextMultiline;

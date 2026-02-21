@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../auth/useAuth.ts";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { useAuth } from "../features/auth/useAuth.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
 import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead.ts";
@@ -361,7 +361,7 @@ const useCountBySdocsAndUser = () =>
     mutationFn: SentenceAnnotationService.countAnnotations,
   });
 
-const SentenceAnnotationHooks = {
+export const SentenceAnnotationHooks = {
   useGetSentenceAnnotator,
   useGetAnnotation,
   useCreateSentenceAnnotation,
@@ -373,5 +373,3 @@ const SentenceAnnotationHooks = {
   useDeleteBulkSentenceAnnotationSingleSdoc,
   useCountBySdocsAndUser,
 };
-
-export default SentenceAnnotationHooks;

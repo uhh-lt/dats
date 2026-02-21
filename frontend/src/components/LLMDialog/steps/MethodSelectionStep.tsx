@@ -2,11 +2,11 @@ import { Box, Card, CardActionArea, CardContent, DialogContent, Stack, Typograph
 import { useCallback } from "react";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import LLMJobsView from "../LLMJobsView.tsx";
-import LLMUtterance from "./LLMUtterance.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { LLMJobsView } from "../LLMJobsView.tsx";
+import { LLMUtterance } from "./LLMUtterance.tsx";
 
-function MethodSelectionStep() {
+export function MethodSelectionStep() {
   return (
     <>
       <DialogContent sx={{ flexShrink: 0, backgroundColor: "grey.100" }}>
@@ -66,5 +66,3 @@ function MethodButton({ method, headline, description }: MethodButtonProps) {
     </Card>
   );
 }
-
-export default MethodSelectionStep;

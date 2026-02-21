@@ -17,7 +17,9 @@ interface JobListItemProps {
   children: React.ReactNode;
 }
 
-function JobListItem({ jobStatus, jobId, abortable = false, title, subTitle, children }: JobListItemProps) {
+export const JobListItem = memo((
+  { jobStatus, jobId, abortable = false, title, subTitle, children }: JobListItemProps
+) => {
   // local state
   const [expanded, setExpanded] = useState(false);
 
@@ -69,6 +71,4 @@ function JobListItem({ jobStatus, jobId, abortable = false, title, subTitle, chi
       </Collapse>
     </>
   );
-}
-
-export default memo(JobListItem);
+});

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { memo, ReactNode, useCallback, useRef, useState } from "react";
-import DragHandler from "./DragHandler.tsx";
+import { DragHandler } from "./DragHandler.tsx";
 import { useMouseEventHandlers } from "./hooks/useMouseEventHandlers.ts";
 
 interface PixelResizablePanelProps {
@@ -15,15 +15,17 @@ interface PixelResizablePanelProps {
 
 const COLLAPSED_SIZE = 4; // Size when fully collapsed
 
-function PixelResizablePanel({
-  children,
-  size,
-  minSize = 200,
-  maxSize = 800,
-  onResize,
-  position,
-  isHorizontal = false,
-}: PixelResizablePanelProps) {
+export const PixelResizablePanel = memo((
+  {
+    children,
+    size,
+    minSize = 200,
+    maxSize = 800,
+    onResize,
+    position,
+    isHorizontal = false,
+  }: PixelResizablePanelProps
+) => {
   const dragHandleRef = useRef<HTMLDivElement>(null);
 
   const isCollapsed = size <= COLLAPSED_SIZE;
@@ -123,6 +125,4 @@ function PixelResizablePanel({
       />
     </Box>
   );
-}
-
-export default memo(PixelResizablePanel);
+});

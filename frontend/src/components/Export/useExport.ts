@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import JobHooks from "../../api/JobHooks.ts";
+import { JobHooks } from "../../api/JobHooks.ts";
 import { ExportJobInput } from "../../api/openapi/models/ExportJobInput.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";

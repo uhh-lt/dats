@@ -2,13 +2,13 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import CodeCreateListItemButton from "../../Code/CodeCreateListItemButton.tsx";
-import CodeEditButton from "../../Code/CodeEditButton.tsx";
-import CodeToggleEnabledButton from "../../Code/CodeToggleEnabledButton.tsx";
-import CodeToggleVisibilityButton from "../../Code/CodeToggleVisibilityButton.tsx";
+import { CodeToggleEnabledButton } from "../../../core/code/CodeToggleEnabledButton.tsx";
+import { CodeToggleVisibilityButton } from "../../../core/code/CodeToggleVisibilityButton.tsx";
+import { CodeCreateListItemButton } from "../../../core/code/dialog/CodeCreateListItemButton.tsx";
+import { CodeEditButton } from "../../../core/code/dialog/CodeEditButton.tsx";
 import { ITree } from "../../TreeExplorer/ITree.ts";
-import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
-import useComputeProjectCodeTree from "./useComputeProjectCodeTree.ts";
+import { TreeExplorer } from "../../TreeExplorer/TreeExplorer.tsx";
+import { useComputeProjectCodeTree } from "./useComputeProjectCodeTree.ts";
 
 const renderCodeActions = (node: ITree<CodeRead>) => (
   <>
@@ -18,7 +18,7 @@ const renderCodeActions = (node: ITree<CodeRead>) => (
   </>
 );
 
-function ProjectCodes() {
+export const ProjectCodes = memo(() => {
   // custom hooks
   const { codeTree } = useComputeProjectCodeTree();
 
@@ -58,6 +58,4 @@ function ProjectCodes() {
       )}
     </Box>
   );
-}
-
-export default memo(ProjectCodes);
+});

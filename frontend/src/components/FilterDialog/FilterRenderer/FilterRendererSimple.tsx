@@ -5,14 +5,14 @@ import { Box, Button } from "@mui/material";
 import { TreeItem } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { memo, useCallback } from "react";
-import FilterExpressionRenderer from "../FilterExpressionRenderer/FilterExpressionRenderer.tsx";
+import { FilterExpressionRenderer } from "../FilterExpressionRenderer/FilterExpressionRenderer.tsx";
 import { MyFilter, MyFilterExpression, isFilter, isFilterExpression } from "../filterUtils.ts";
-import FilterGroupHeader from "./components/FilterGroupHeader.tsx";
+import { FilterGroupHeader } from "./components/FilterGroupHeader.tsx";
 import { useFilterManagementActions } from "./hooks/useFilterManagementActions.ts";
 import "./styles/filter.css";
 import { FilterRendererProps } from "./types/FilterRendererProps.ts";
 
-function FilterRendererSimple({ editableFilter, filterActions, column2Info }: FilterRendererProps) {
+export const FilterRendererSimple = memo(({ editableFilter, filterActions, column2Info }: FilterRendererProps) => {
   const {
     handleAddFilterExpression,
     handleDeleteFilter,
@@ -106,6 +106,4 @@ function FilterRendererSimple({ editableFilter, filterActions, column2Info }: Fi
       />
     </SimpleTreeView>
   );
-}
-
-export default memo(FilterRendererSimple);
+});

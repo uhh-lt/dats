@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -106,7 +106,7 @@ const useDeleteWhiteboard = () => {
   });
 };
 
-const WhiteboardHooks = {
+export const WhiteboardHooks = {
   useGetProjectWhiteboardsList,
   useGetWhiteboard,
   useCreateWhiteboard,
@@ -114,5 +114,3 @@ const WhiteboardHooks = {
   useUpdateWhiteboard,
   useDeleteWhiteboard,
 };
-
-export default WhiteboardHooks;

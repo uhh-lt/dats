@@ -47,7 +47,9 @@ interface FilterOperatorSelectorProps {
   column2Info: Record<string, ColumnInfo>;
 }
 
-function FilterOperatorSelector({ filterExpression, onChangeOperator, column2Info }: FilterOperatorSelectorProps) {
+export const FilterOperatorSelector = memo((
+  { filterExpression, onChangeOperator, column2Info }: FilterOperatorSelectorProps
+) => {
   const filterOperator = useMemo(
     () => column2Info[filterExpression.column].operator,
     [column2Info, filterExpression.column],
@@ -77,6 +79,4 @@ function FilterOperatorSelector({ filterExpression, onChangeOperator, column2Inf
       ))}
     </TextField>
   );
-}
-
-export default memo(FilterOperatorSelector);
+});

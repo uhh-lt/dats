@@ -1,9 +1,9 @@
 import { CssBaseline } from "@mui/material";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { AuthState } from "../auth/AuthState.ts";
 import SnackbarDialog from "../components/SnackbarDialog/SnackbarDialog.tsx";
-import NotFound from "../views/NotFound.tsx";
+import { AuthState } from "../features/auth/AuthState.ts";
+import NotFound from "../features/NotFound.tsx";
 
 interface DATSRouterContext {
   auth: AuthState;

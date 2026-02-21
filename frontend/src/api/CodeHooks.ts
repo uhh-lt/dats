@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { AnnoActions } from "../features/annotation/annoSlice.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
-import { AnnoActions } from "../views/annotation/annoSlice.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { CodeRead } from "./openapi/models/CodeRead.ts";
 import { CodeService } from "./openapi/services/CodeService.ts";
@@ -112,7 +112,7 @@ const useDeleteCode = () => {
   });
 };
 
-const CodeHooks = {
+export const CodeHooks = {
   // codes
   useGetAllCodesList,
   useGetAllCodesMap,
@@ -122,5 +122,3 @@ const CodeHooks = {
   useUpdateCode,
   useDeleteCode,
 };
-
-export default CodeHooks;

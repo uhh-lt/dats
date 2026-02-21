@@ -11,29 +11,29 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React from "react";
+import { Fragment } from "react";
 import { ClassifierData } from "../../api/openapi/models/ClassifierData.ts";
 import { ClassifierEvaluationRead } from "../../api/openapi/models/ClassifierEvaluationRead.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
 import { dateToLocaleDate } from "../../utils/DateUtils.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
-import ClassifierDataPlot from "./plots/ClassifierDataPlot.tsx";
-import ClassifierLossPlot from "./plots/ClassifierLossPlot.tsx";
+import { ClassifierDataPlot } from "./plots/ClassifierDataPlot.tsx";
+import { ClassifierLossPlot } from "./plots/ClassifierLossPlot.tsx";
 
 interface ClassifierDetailPanelProps {
   classifier: ClassifierRead;
 }
 
-function ClassifierDetails({ classifier }: ClassifierDetailPanelProps) {
+export function ClassifierDetails({ classifier }: ClassifierDetailPanelProps) {
   return (
     <Stack width="100%" spacing={2}>
       <TrainingDetails classifier={classifier} />
       {classifier.evaluations.map((evaluation) => (
-        <React.Fragment key={evaluation.id}>
+        <Fragment key={evaluation.id}>
           <Divider />
           <EvaluationDetails classifierModel={classifier.type} evaluation={evaluation} />
-        </React.Fragment>
+        </Fragment>
       ))}
     </Stack>
   );
@@ -44,10 +44,10 @@ function TrainingDetails({ classifier }: { classifier: ClassifierRead }) {
     <Typography variant="body2" component="div">
       <b>Training Parameters</b>
       {Object.entries(classifier.train_params).map(([key, value]) => (
-        <React.Fragment key={key}>
+        <Fragment key={key}>
           <br />
           <em>{key}:</em> {String(value)}
-        </React.Fragment>
+        </Fragment>
       ))}
     </Typography>
   );
@@ -160,5 +160,3 @@ function InferenceDetails({
 ClassifierDetails.Training = TrainingDetails;
 ClassifierDetails.Evaluation = EvaluationDetails;
 ClassifierDetails.Inference = InferenceDetails;
-
-export default ClassifierDetails;

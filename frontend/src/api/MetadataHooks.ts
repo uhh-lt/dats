@@ -1,5 +1,5 @@
 import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { QueryKey } from "./QueryKey.ts";
@@ -238,7 +238,7 @@ const useUpdateBulkSdocMetadata = () =>
     },
   });
 
-const MetadataHooks = {
+export const MetadataHooks = {
   // sdoc metadata
   useGetSdocMetadata,
   useGetSdocMetadataByKey,
@@ -252,5 +252,3 @@ const MetadataHooks = {
   useUpdateProjectMetadata,
   useDeleteProjectMetadata,
 };
-
-export default MetadataHooks;

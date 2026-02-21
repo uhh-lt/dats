@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { QueryKey } from "./QueryKey.ts";
 
 import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
@@ -79,7 +79,7 @@ const useCountSdocsWithStatus = (projectId: number, status: SDocStatus) =>
     queryFn: () => ProjectService.countSdocsWithStatus({ projectId, status }),
   });
 
-const ProjectHooks = {
+export const ProjectHooks = {
   // project
   useGetAllProjects,
   useGetProject,
@@ -88,5 +88,3 @@ const ProjectHooks = {
   useDeleteProject,
   useCountSdocsWithStatus,
 };
-
-export default ProjectHooks;

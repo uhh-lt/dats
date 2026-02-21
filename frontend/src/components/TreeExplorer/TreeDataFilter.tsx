@@ -7,7 +7,7 @@ interface TreeDataFilterProps {
   children?: React.ReactNode;
 }
 
-function TreeDataFilter({ dataFilter, onDataFilterChange, children }: TreeDataFilterProps) {
+export function TreeDataFilter({ dataFilter, onDataFilterChange, children }: TreeDataFilterProps) {
   return (
     <>
       <Stack direction="row" alignItems="center" spacing={2} pl={2} pr={1}>
@@ -28,5 +28,3 @@ function TreeDataFilter({ dataFilter, onDataFilterChange, children }: TreeDataFi
     </>
   );
 }
-
-export default TreeDataFilter;

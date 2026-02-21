@@ -2,10 +2,10 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 import { TreeItem2 } from "@mui/x-tree-view";
 import { forwardRef, memo, useCallback } from "react";
-import FilterValueSelector from "../FilterValueSelector/FilterValueSelector.tsx";
+import { FilterValueSelector } from "../FilterValueSelector/FilterValueSelector.tsx";
 import { ColumnInfo, FilterOperators, MyFilterExpression } from "../filterUtils.ts";
-import FilterColumnSelector from "./components/FilterColumnSelector.tsx";
-import FilterOperatorSelector from "./components/FilterOperatorSelector.tsx";
+import { FilterColumnSelector } from "./components/FilterColumnSelector.tsx";
+import { FilterOperatorSelector } from "./components/FilterOperatorSelector.tsx";
 
 interface FilterExpressionRendererProps {
   filterExpression: MyFilterExpression;
@@ -51,7 +51,7 @@ const CustomContent = forwardRef<HTMLDivElement, FilterExpressionRendererProps>(
   },
 );
 
-function FilterExpressionRenderer(props: FilterExpressionRendererProps) {
+export const FilterExpressionRenderer = memo((props: FilterExpressionRendererProps) => {
   const handleClick = useCallback((event: React.MouseEvent<HTMLLIElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -72,6 +72,4 @@ function FilterExpressionRenderer(props: FilterExpressionRendererProps) {
       }}
     />
   );
-}
-
-export default memo(FilterExpressionRenderer);
+});

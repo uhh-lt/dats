@@ -15,7 +15,9 @@ interface DragHandlerProps {
   };
 }
 
-function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps) {
+export const DragHandler = memo((
+  { dragHandleRef, isDragging, isCollapsed, isHorizontal, style }: DragHandlerProps
+) => {
   return (
     <StyledDragHandler
       ref={dragHandleRef}
@@ -25,6 +27,4 @@ function DragHandler({ dragHandleRef, isDragging, isCollapsed, isHorizontal, sty
       sx={style}
     />
   );
-}
-
-export default memo(DragHandler);
+});

@@ -3,17 +3,17 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import LLMHooks from "../../../api/LLMHooks.ts";
-import MetadataHooks from "../../../api/MetadataHooks.ts";
+import { LLMHooks } from "../../../api/LLMHooks.ts";
+import { MetadataHooks } from "../../../api/MetadataHooks.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
+import { ProjectMetadataTable } from "../../../core/project-metadata/table/ProjectMetadataTable.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ProjectMetadataTable from "../../Metadata/ProjectMetadataTable.tsx";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import LLMUtterance from "./LLMUtterance.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { LLMUtterance } from "./LLMUtterance.tsx";
 
-function ProjectMetadataSelectionStep() {
+export const ProjectMetadataSelectionStep = memo(() => {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
@@ -105,6 +105,4 @@ function ProjectMetadataSelectionStep() {
       />
     </>
   );
-}
-
-export default memo(ProjectMetadataSelectionStep);
+});

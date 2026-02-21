@@ -22,16 +22,13 @@ export const isStringWithValue = (value: any): value is string => {
 };
 
 export const isBlob = (value: any): value is Blob => {
-  return (
-    typeof value === "object" &&
-    typeof value.type === "string" &&
-    typeof value.stream === "function" &&
-    typeof value.arrayBuffer === "function" &&
-    typeof value.constructor === "function" &&
-    typeof value.constructor.name === "string" &&
-    /^(Blob|File)$/.test(value.constructor.name) &&
-    /^(Blob|File)$/.test(value[Symbol.toStringTag])
-  );
+  return (typeof value === "object" &&
+  typeof value.type === "string" &&
+  typeof value.stream === "function" &&
+  typeof value.arrayBuffer === "function" &&
+  typeof value.constructor === "function" &&
+  typeof value.constructor.name === "string" &&
+  /^(Blob|File)$/.test(value.constructor.name) && /^(Blob|File)$/.test(value[Symbol.toStringTag]));
 };
 
 export const isFormData = (value: any): value is FormData => {

@@ -3,7 +3,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import MetadataHooks from "../../../../api/MetadataHooks.ts";
+import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { IDOperator } from "../../../../api/openapi/models/IDOperator.ts";
 import { LogicalOperator } from "../../../../api/openapi/models/LogicalOperator.ts";
@@ -13,14 +13,14 @@ import { SentenceAnnotationRow } from "../../../../api/openapi/models/SentenceAn
 import { SpanAnnotationRow } from "../../../../api/openapi/models/SpanAnnotationRow.ts";
 import { SpanColumns } from "../../../../api/openapi/models/SpanColumns.ts";
 import { TaskType } from "../../../../api/openapi/models/TaskType.ts";
+import { SentenceAnnotationTable } from "../../../../core/sentence-annotation/table/SentenceAnnotationTable.tsx";
+import { SEATFilterActions } from "../../../../core/sentence-annotation/table/seatFilterSlice.ts";
 import { useDialog } from "../../../../hooks/useDialog.ts";
 import { useDialogMaximize } from "../../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
 import { FilterTableToolbarProps } from "../../../FilterTable/FilterTableToolbarProps.ts";
-import DATSDialogHeader from "../../../MUI/DATSDialogHeader.tsx";
-import SentenceAnnotationTable from "../../../SentenceAnnotation/SentenceAnnotationTable/SentenceAnnotationTable.tsx";
-import { SEATFilterActions } from "../../../SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
+import { DATSDialogHeader } from "../../../MUI/DATSDialogHeader.tsx";
 import SpanAnnotationTable from "../../../SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { SATFilterActions } from "../../../SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 
@@ -34,7 +34,7 @@ interface ExampleSelectionProps {
   method: TaskType;
 }
 
-function ExampleSelection({ projectId, codes, onConfirmSelection, method }: ExampleSelectionProps) {
+export function ExampleSelection({ projectId, codes, onConfirmSelection, method }: ExampleSelectionProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -319,5 +319,3 @@ function SelectSentenceAnnotationsDialogContent({
     />
   );
 }
-
-export default ExampleSelection;

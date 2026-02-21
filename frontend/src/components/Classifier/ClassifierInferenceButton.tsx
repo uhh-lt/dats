@@ -14,15 +14,15 @@ import {
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
-import ClassifierHooks from "../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierRead } from "../../api/openapi/models/ClassifierRead.ts";
 import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
+import { CodeRenderer } from "../../core/code/renderer/CodeRenderer.tsx";
+import { TagRenderer } from "../../core/tag/renderer/TagRenderer.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { Icon, getIconComponent } from "../../utils/icons/iconUtils.tsx";
-import CodeRenderer from "../Code/CodeRenderer.tsx";
-import { CRUDDialogActions } from "../dialogSlice.ts";
-import TagRenderer from "../Tag/TagRenderer.tsx";
 
 const classifierType2Icon: Record<ClassifierModel, Icon> = {
   [ClassifierModel.DOCUMENT]: Icon.DOCUMENT,
@@ -30,7 +30,7 @@ const classifierType2Icon: Record<ClassifierModel, Icon> = {
   [ClassifierModel.SPAN]: Icon.SPAN_ANNOTATION,
 };
 
-function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) {
+export const ClassifierInferenceButton = memo(({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) => {
   // menu state
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -132,6 +132,4 @@ function ClassifierInferenceButton({ sdocIds, projectId }: { sdocIds: number[]; 
       </Menu>
     </>
   );
-}
-
-export default memo(ClassifierInferenceButton);
+});

@@ -18,9 +18,7 @@ const useGetAvailableLLMs = () =>
     queryFn: () => RagService.getAvailableModels(),
   });
 
-const GeneralHooks = {
+export const GeneralHooks = {
   useGetInstanceInfo,
   useGetAvailableLLMs,
 };
-
-export default GeneralHooks;

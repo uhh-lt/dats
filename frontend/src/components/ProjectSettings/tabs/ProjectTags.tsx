@@ -2,15 +2,15 @@ import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { TagRead } from "../../../api/openapi/models/TagRead.ts";
-import TagEditButton from "../../Tag/TagExplorer/TagEditButton.tsx";
-import useComputeTagTree from "../../Tag/TagExplorer/useComputeTagTree.ts";
-import TagMenuCreateButton from "../../Tag/TagMenu/TagMenuCreateButton.tsx";
+import { TagCreateListItemButton } from "../../../core/tag/dialog/TagCreateListItemButton.tsx";
+import { TagEditButton } from "../../../core/tag/dialog/TagEditButton.tsx";
+import { useComputeTagTree } from "../../../core/tag/explorer/hooks/useComputeTagTree.ts";
 import { ITree } from "../../TreeExplorer/ITree.ts";
-import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
+import { TreeExplorer } from "../../TreeExplorer/TreeExplorer.tsx";
 
 const renderTagActions = (node: ITree<TagRead>) => <TagEditButton tag={node.data} />;
 
-function ProjectTags() {
+export const ProjectTags = memo(() => {
   // custom hooks
   const { tagTree } = useComputeTagTree();
 
@@ -44,11 +44,9 @@ function ProjectTags() {
           // renderer
           renderActions={renderTagActions}
           // components
-          listActions={<TagMenuCreateButton tagName="" />}
+          listActions={<TagCreateListItemButton tagName="" />}
         />
       )}
     </Box>
   );
-}
-
-export default memo(ProjectTags);
+});

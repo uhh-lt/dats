@@ -1,11 +1,11 @@
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import ExportButton from "./ExportButton.tsx";
+import { ExportButton } from "./ExportButton.tsx";
 
 interface ExportBBoxAnnotationsButtonProps {
   bboxAnnotationIds: number[];
 }
 
-function ExportSpanAnnotationsButton({ bboxAnnotationIds: bboxAnnotationIds }: ExportBBoxAnnotationsButtonProps) {
+export function ExportBBoxAnnotationsButton({ bboxAnnotationIds: bboxAnnotationIds }: ExportBBoxAnnotationsButtonProps) {
   const exportAll = bboxAnnotationIds.length === 0;
   return (
     <ExportButton
@@ -19,5 +19,3 @@ function ExportSpanAnnotationsButton({ bboxAnnotationIds: bboxAnnotationIds }: E
     />
   );
 }
-
-export default ExportSpanAnnotationsButton;

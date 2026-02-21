@@ -3,20 +3,20 @@ import TabPanel from "@mui/lab/TabPanel";
 import { AppBar, Dialog, DialogContent, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import React, { memo, useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks.ts";
+import { ProjectHooks } from "../../api/ProjectHooks.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
-import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
-import ProjectCodes from "./tabs/ProjectCodes.tsx";
-import ProjectDangerZone from "./tabs/ProjectDangerZone.tsx";
-import ProjectDetails from "./tabs/ProjectDetails.tsx";
-import ProjectImport from "./tabs/ProjectImport.tsx";
-import ProjectTags from "./tabs/ProjectTags.tsx";
-import ProjectUsers from "./tabs/ProjectUsers.tsx";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
+import { ConfirmationAPI } from "../ConfirmationDialog/ConfirmationAPI.ts";
+import { DATSDialogHeader } from "../MUI/DATSDialogHeader.tsx";
+import { ProjectCodes } from "./tabs/ProjectCodes.tsx";
+import { ProjectDetails } from "./tabs/ProjectDetails.tsx";
+import { ProjectImport } from "./tabs/ProjectImport.tsx";
+import { ProjectTags } from "./tabs/ProjectTags.tsx";
+import { ProjectUsers } from "./tabs/ProjectUsers.tsx";
+import { ProjectDangerZone } from "./tabs/ProjectDangerZone.tsx";
 
-function ProjectSettingsDialog({ projectId }: { projectId: number }) {
+export const ProjectSettingsDialog = memo(({ projectId }: { projectId: number }) => {
   // dialog state
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.dialog.isProjectSettingsOpen);
@@ -94,6 +94,4 @@ function ProjectSettingsDialog({ projectId }: { projectId: number }) {
       </TabContext>
     </Dialog>
   );
-}
-
-export default memo(ProjectSettingsDialog);
+});

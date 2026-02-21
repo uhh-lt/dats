@@ -1,5 +1,5 @@
 import { Box, LinearProgress, LinearProgressProps, Tooltip } from "@mui/material";
-import CircularProgressWithLabel from "./CircularProgressWithLabel.tsx";
+import { CircularProgressWithLabel } from "./CircularProgressWithLabel.tsx";
 
 interface LinearProgressWithLabelProps extends Omit<LinearProgressProps, "value"> {
   current: number;
@@ -7,7 +7,7 @@ interface LinearProgressWithLabelProps extends Omit<LinearProgressProps, "value"
   tooltip: React.ReactNode;
 }
 
-function LinearProgressWithLabel({ current, max, tooltip, ...props }: LinearProgressWithLabelProps) {
+export function LinearProgressWithLabel({ current, max, tooltip, ...props }: LinearProgressWithLabelProps) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", px: 3 }}>
       <Box sx={{ width: "100%", mr: 1 }}>
@@ -23,5 +23,3 @@ function LinearProgressWithLabel({ current, max, tooltip, ...props }: LinearProg
     </Box>
   );
 }
-
-export default LinearProgressWithLabel;

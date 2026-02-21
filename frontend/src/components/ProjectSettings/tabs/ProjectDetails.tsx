@@ -4,14 +4,14 @@ import { LoadingButton } from "@mui/lab";
 import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { ProjectHooks } from "../../../api/ProjectHooks.ts";
 import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
-import ExportProjectButton from "../../Export/ExportProjectButton.tsx";
-import FormText from "../../FormInputs/FormText.tsx";
-import FormTextMultiline from "../../FormInputs/FormTextMultiline.tsx";
+import { ExportProjectButton } from "../../Export/ExportProjectButton.tsx";
+import { FormText } from "../../FormInputs/FormText.tsx";
+import { FormTextMultiline } from "../../FormInputs/FormTextMultiline.tsx";
 import { ProjectProps } from "../ProjectProps.ts";
 
-function ProjectDetails({ project }: ProjectProps) {
+export const ProjectDetails = memo(({ project }: ProjectProps) => {
   const {
     handleSubmit,
     formState: { errors },
@@ -93,6 +93,4 @@ function ProjectDetails({ project }: ProjectProps) {
       </CardActions>
     </form>
   );
-}
-
-export default memo(ProjectDetails);
+});

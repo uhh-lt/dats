@@ -1,7 +1,7 @@
 import { ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import { CRUDDialogActions } from "../../../components/dialogSlice";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { TabIconButton } from "../styles/styledComponents.tsx";
 import { TabActions } from "../tabSlice";
@@ -12,7 +12,7 @@ interface TabMenuButtonProps {
   totalTabs: number;
 }
 
-function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuButtonProps) {
+export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: TabMenuButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const dispatch = useAppDispatch();
@@ -85,6 +85,4 @@ function TabMenuButton({ projectId, activeTabIndex, totalTabs }: TabMenuButtonPr
       </Menu>
     </>
   );
-}
-
-export default memo(TabMenuButton);
+});

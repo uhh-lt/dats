@@ -7,7 +7,7 @@ interface FilterActionsProps {
   onAddFilterExpression: (filterId: string) => void;
 }
 
-function FilterActions({ filterId, onAddFilter, onAddFilterExpression }: FilterActionsProps) {
+export function FilterActions({ filterId, onAddFilter, onAddFilterExpression }: FilterActionsProps) {
   const handleAddFilterClick = () => {
     onAddFilter(filterId);
   };
@@ -27,5 +27,3 @@ function FilterActions({ filterId, onAddFilter, onAddFilterExpression }: FilterA
     </Box>
   );
 }
-
-export default FilterActions;

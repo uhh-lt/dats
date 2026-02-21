@@ -1,6 +1,6 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/openapi/core/ApiError.ts";
-import { CRUDDialogActions } from "../components/dialogSlice.ts";
+import { CRUDDialogActions } from "../store/dialogSlice.ts";
 import { store } from "../store/store.ts";
 
 function messageFromStringOrFunction(input: unknown, data: unknown, variables: unknown): string | undefined {
@@ -13,7 +13,7 @@ function messageFromStringOrFunction(input: unknown, data: unknown, variables: u
   }
 }
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, variables, _context, mutation) => {
       console.log("--- An unexpected error occured ---");
@@ -49,5 +49,3 @@ const queryClient = new QueryClient({
     },
   }),
 });
-
-export default queryClient;

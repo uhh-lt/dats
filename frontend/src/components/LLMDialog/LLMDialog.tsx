@@ -3,19 +3,19 @@ import { memo, useCallback, useMemo } from "react";
 import { TaskType } from "../../api/openapi/models/TaskType.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
-import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
-import AnnotationResultStep from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
-import ApproachSelectionStep from "./steps/ApproachSelectionStep.tsx";
-import CodeSelectionStep from "./steps/CodeSelectionStep.tsx";
-import DocumentTagResultStep from "./steps/DocumentTaggingResultStep/DocumentTagResultStep.tsx";
-import DocumentTagSelectionStep from "./steps/DocumentTagSelectionStep.tsx";
-import EditorStep from "./steps/EditorStep/EditorStep.tsx";
-import MetadataExtractionResultStep from "./steps/MetadataExtractionResultStep/MetadataExtractionResultStep.tsx";
-import MethodSelectionStep from "./steps/MethodSelectionStep.tsx";
-import ProjectMetadataSelectionStep from "./steps/ProjectMetadataSelectionStep.tsx";
-import SentenceAnnotationResultStep from "./steps/SentenceAnnotationResultStep/SentenceAnnotationResultStep.tsx";
-import StatusStep from "./steps/StatusStep.tsx";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
+import { DATSDialogHeader } from "../MUI/DATSDialogHeader.tsx";
+import { AnnotationResultStep } from "./steps/AnnotationResultStep/AnnotationResultStep.tsx";
+import { ApproachSelectionStep } from "./steps/ApproachSelectionStep.tsx";
+import { CodeSelectionStep } from "./steps/CodeSelectionStep.tsx";
+import { DocumentTagResultStep } from "./steps/DocumentTaggingResultStep/DocumentTagResultStep.tsx";
+import { DocumentTagSelectionStep } from "./steps/DocumentTagSelectionStep.tsx";
+import { EditorStep } from "./steps/EditorStep/EditorStep.tsx";
+import { MetadataExtractionResultStep } from "./steps/MetadataExtractionResultStep/MetadataExtractionResultStep.tsx";
+import { MethodSelectionStep } from "./steps/MethodSelectionStep.tsx";
+import { ProjectMetadataSelectionStep } from "./steps/ProjectMetadataSelectionStep.tsx";
+import { SentenceAnnotationResultStep } from "./steps/SentenceAnnotationResultStep/SentenceAnnotationResultStep.tsx";
+import { StatusStep } from "./steps/StatusStep.tsx";
 
 const title: Record<TaskType, string> = {
   [TaskType.TAGGING]: "Document Tagging",
@@ -84,7 +84,7 @@ const contentDict: Record<number, Record<TaskType, JSX.Element>> = {
   },
 };
 
-function LLMDialog() {
+export const LLMDialog = memo(() => {
   // global client state (redux)
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const step = useAppSelector((state) => state.dialog.llmStep);
@@ -126,6 +126,4 @@ function LLMDialog() {
       {contentDict[step][method || TaskType.TAGGING]}
     </Dialog>
   );
-}
-
-export default memo(LLMDialog);
+});

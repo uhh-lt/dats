@@ -13,16 +13,16 @@ import {
   Typography,
 } from "@mui/material";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../../../api/ClassifierHooks.ts";
 import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel.ts";
 import { ClassifierTrainingParams } from "../../../../api/openapi/models/ClassifierTrainingParams.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import FormFreeSolo, { FreeSoloOptions } from "../../../FormInputs/FormFreeSolo.tsx";
-import FormMenu from "../../../FormInputs/FormMenu.tsx";
-import FormNumber from "../../../FormInputs/FormNumber.tsx";
-import FormSwitch from "../../../FormInputs/FormSwitch.tsx";
-import FormText from "../../../FormInputs/FormText.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { FormFreeSolo, FreeSoloOptions } from "../../../FormInputs/FormFreeSolo.tsx";
+import { FormMenu } from "../../../FormInputs/FormMenu.tsx";
+import { FormNumber } from "../../../FormInputs/FormNumber.tsx";
+import { FormSwitch } from "../../../FormInputs/FormSwitch.tsx";
+import { FormText } from "../../../FormInputs/FormText.tsx";
 
 interface TrainingSettings {
   // required
@@ -67,7 +67,7 @@ const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
 
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
 
-function TrainingSettingsStep() {
+export function TrainingSettingsStep() {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const task = useAppSelector((state) => state.dialog.classifierTask);
@@ -384,8 +384,6 @@ function TrainingSettingsStep() {
     </form>
   );
 }
-
-export default TrainingSettingsStep;
 
 function FormBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (

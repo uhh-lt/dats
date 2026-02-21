@@ -1,15 +1,15 @@
 import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useCallback } from "react";
-import ClassifierHooks from "../../../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationOutput } from "../../../../api/openapi/models/ClassifierEvaluationOutput.ts";
 import { ClassifierInferenceOutput } from "../../../../api/openapi/models/ClassifierInferenceOutput.ts";
 import { ClassifierTask } from "../../../../api/openapi/models/ClassifierTask.ts";
 import { ClassifierTrainingOutput } from "../../../../api/openapi/models/ClassifierTrainingOutput.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../dialogSlice.ts";
-import ClassifierDetails from "../../ClassifierDetails.tsx";
+import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
+import { ClassifierDetails } from "../../ClassifierDetails.tsx";
 
-function ResultStep() {
+export function ResultStep() {
   // global client state
   const classifierJobId = useAppSelector((state) => state.dialog.classifierJobId);
   const dispatch = useAppDispatch();
@@ -48,5 +48,3 @@ function ResultStep() {
     </>
   );
 }
-
-export default ResultStep;

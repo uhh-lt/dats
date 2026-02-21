@@ -4,16 +4,16 @@ import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel.ts"
 import { ClassifierTask } from "../../../api/openapi/models/ClassifierTask.ts";
 import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../dialogSlice.ts";
-import DATSDialogHeader from "../../MUI/DATSDialogHeader.tsx";
-import ClassSelectionStep from "./steps/ClassSelectionStep.tsx";
-import EvalDataSelectionStep from "./steps/EvalDataSelectionStep.tsx";
-import InferDataSelectionStep from "./steps/InferDataSelectionStep.tsx";
-import InferenceSettingsStep from "./steps/InferSettingsStep.tsx";
-import ResultStep from "./steps/ResultStep.tsx";
-import StatusStep from "./steps/StatusStep.tsx";
-import TrainingDataSelectionStep from "./steps/TrainingDataSelectionStep.tsx";
-import TrainingSettingsStep from "./steps/TrainingSettingsStep.tsx";
+import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
+import { DATSDialogHeader } from "../../MUI/DATSDialogHeader.tsx";
+import { ClassSelectionStep } from "./steps/ClassSelectionStep.tsx";
+import { EvalDataSelectionStep } from "./steps/EvalDataSelectionStep.tsx";
+import { InferDataSelectionStep } from "./steps/InferDataSelectionStep.tsx";
+import { InferenceSettingsStep } from "./steps/InferSettingsStep.tsx";
+import { ResultStep } from "./steps/ResultStep.tsx";
+import { StatusStep } from "./steps/StatusStep.tsx";
+import { TrainingDataSelectionStep } from "./steps/TrainingDataSelectionStep.tsx";
+import { TrainingSettingsStep } from "./steps/TrainingSettingsStep.tsx";
 
 const taskTitle: Record<ClassifierTask, string> = {
   [ClassifierTask.TRAINING]: "Training",
@@ -60,7 +60,7 @@ const content: Record<ClassifierTask, JSX.Element[]> = {
   [ClassifierTask.INFERENCE]: [<InferDataSelectionStep />, <InferenceSettingsStep />, <StatusStep />, <ResultStep />],
 };
 
-function ClassifierDialog() {
+export const ClassifierDialog = memo(() => {
   // dialog state
   const model = useAppSelector((state) => state.dialog.classifierModel);
   const task = useAppSelector((state) => state.dialog.classifierTask);
@@ -101,6 +101,4 @@ function ClassifierDialog() {
       {content[task || ClassifierTask.TRAINING][step]}
     </Dialog>
   );
-}
-
-export default memo(ClassifierDialog);
+});

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient.ts";
+import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";
 import { dateToLocaleDate } from "../utils/DateUtils.ts";
@@ -159,7 +159,7 @@ const useComputeDatasetStatistics2 = () =>
     mutationFn: ClassifierService.computeDatasetStatistics2,
   });
 
-const ClassifierHooks = {
+export const ClassifierHooks = {
   usePollClassifierJob,
   useStartClassifierJob,
   useGetAllClassifierJobs,
@@ -170,5 +170,3 @@ const ClassifierHooks = {
   useComputeDatasetStatistics,
   useComputeDatasetStatistics2,
 };
-
-export default ClassifierHooks;

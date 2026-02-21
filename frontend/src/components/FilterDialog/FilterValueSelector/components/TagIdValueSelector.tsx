@@ -1,7 +1,7 @@
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
-import TagHooks from "../../../../api/TagHooks.ts";
-import TagRenderer from "../../../Tag/TagRenderer.tsx";
+import { TagHooks } from "../../../../api/TagHooks.ts";
+import { TagRenderer } from "../../../../core/tag/renderer/TagRenderer.tsx";
 import { useWithLevel } from "../../../TreeExplorer/useWithLevel.ts";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps.ts";
 
@@ -48,5 +48,3 @@ const TagIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilt
     </TextField>
   );
 });
-
-export default TagIdValueSelector;

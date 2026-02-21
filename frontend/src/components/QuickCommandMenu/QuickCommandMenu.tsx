@@ -9,14 +9,14 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { SyntheticEvent, useCallback, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../dialogSlice.ts";
+import { CRUDDialogActions } from "../../store/dialogSlice.ts";
 import { CommandItem } from "./CommandItem";
 import { useDefaultCommands } from "./useDefaultCommands.tsx";
-import { useNavigate } from "@tanstack/react-router";
 
-function QuickCommandMenu({ projectId }: { projectId: number }) {
+export function QuickCommandMenu({ projectId }: { projectId: number }) {
   // generate commands
   const commands = useDefaultCommands(projectId);
 
@@ -151,5 +151,3 @@ function QuickCommandMenu({ projectId }: { projectId: number }) {
     </Popover>
   );
 }
-
-export default QuickCommandMenu;

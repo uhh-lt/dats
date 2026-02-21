@@ -33,7 +33,7 @@ interface EditableTypographyProps {
   stackProps?: Omit<StackProps, "direction" | "alignItems">;
 }
 
-function EditableTypography({
+export function EditableTypography({
   value,
   onChange,
   whiteColor,
@@ -110,5 +110,3 @@ function EditableTypography({
     </Stack>
   );
 }
-
-export default EditableTypography;

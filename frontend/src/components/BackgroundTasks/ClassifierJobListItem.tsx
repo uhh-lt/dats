@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import ClassifierHooks from "../../api/ClassifierHooks.ts";
+import { ClassifierHooks } from "../../api/ClassifierHooks.ts";
 import { ClassifierEvaluationOutput } from "../../api/openapi/models/ClassifierEvaluationOutput.ts";
 import { ClassifierInferenceOutput } from "../../api/openapi/models/ClassifierInferenceOutput.ts";
 import { ClassifierJobRead } from "../../api/openapi/models/ClassifierJobRead.ts";
@@ -8,16 +8,16 @@ import { ClassifierTask } from "../../api/openapi/models/ClassifierTask.ts";
 import { ClassifierTrainingOutput } from "../../api/openapi/models/ClassifierTrainingOutput.ts";
 import { JobStatus } from "../../api/openapi/models/JobStatus.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import ClassifierDetails from "../Classifier/ClassifierDetails.tsx";
-import ClassifierJobProgressBar from "../Classifier/ClassifierJobProgressBar.tsx";
-import JobListItem from "./JobListItem.tsx";
+import { ClassifierDetails } from "../Classifier/ClassifierDetails.tsx";
+import { ClassifierJobProgressBar } from "../Classifier/ClassifierJobProgressBar.tsx";
+import { JobListItem } from "./JobListItem.tsx";
 import { jobStatusToSimple } from "./StatusToSimple.ts";
 
 interface ClassifierJobListItemProps {
   initialClassifierJob: ClassifierJobRead;
 }
 
-function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemProps) {
+export const ClassifierJobListItem = memo(({ initialClassifierJob }: ClassifierJobListItemProps) => {
   // global server state (react-query)
   const cj = ClassifierHooks.usePollClassifierJob(initialClassifierJob.job_id, initialClassifierJob);
 
@@ -71,6 +71,4 @@ function ClassifierJobListItem({ initialClassifierJob }: ClassifierJobListItemPr
   } else {
     return null;
   }
-}
-
-export default memo(ClassifierJobListItem);
+});

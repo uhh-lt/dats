@@ -24,7 +24,7 @@ interface ImportDropzoneProps {
   file?: File;
 }
 
-function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
+export function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       // Only take the first file if multiple are dropped
@@ -86,5 +86,3 @@ function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
     </Paper>
   );
 }
-
-export default ImportDropzone;

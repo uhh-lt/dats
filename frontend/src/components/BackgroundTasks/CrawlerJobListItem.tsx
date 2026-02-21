@@ -1,16 +1,16 @@
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import { DocProcessingHooks } from "../../api/DocProcessingHooks.ts";
 import { CrawlerJobRead } from "../../api/openapi/models/CrawlerJobRead.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
-import JobListItem from "./JobListItem.tsx";
+import { JobListItem } from "./JobListItem.tsx";
 
 interface CrawlerJobListItemProps {
   initialCrawlerJob: CrawlerJobRead;
 }
 
-function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
+export const CrawlerJobListItem = memo(({ initialCrawlerJob }: CrawlerJobListItemProps) => {
   // global server state (react-query)
   const crawlerJob = DocProcessingHooks.usePollCrawlerJob(initialCrawlerJob.job_id, initialCrawlerJob);
 
@@ -51,6 +51,4 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
   } else {
     return null;
   }
-}
-
-export default memo(CrawlerJobListItem);
+});
