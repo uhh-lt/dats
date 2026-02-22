@@ -11,7 +11,7 @@ interface GenericPositionContextMenuProps extends Omit<MenuProps, "anchorEl" | "
   onClose?: () => void;
 }
 
-const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, GenericPositionContextMenuProps>(
+export const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, GenericPositionContextMenuProps>(
   ({ children, onClose, ...props }, ref) => {
     const [anchorPosition, setAnchorPosition] = useState<PopoverPosition | undefined>(undefined);
     const isOpen = Boolean(anchorPosition);

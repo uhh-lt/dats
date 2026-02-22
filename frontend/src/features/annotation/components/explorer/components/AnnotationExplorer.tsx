@@ -7,7 +7,7 @@ import { CodeHooks } from "../../../../../api/CodeHooks.ts";
 import { CodeRead } from "../../../../../api/openapi/models/CodeRead.ts";
 import { useDebounce } from "../../../../../hooks/useDebounce.ts";
 import { useAppDispatch, useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../../annoSlice.ts";
+import { AnnoActions } from "../../../store/annoSlice.ts";
 import { AnnotationCardProps } from "../types/AnnotationCardProps.ts";
 import { AnnotationRead } from "../types/AnnotationRead.ts";
 

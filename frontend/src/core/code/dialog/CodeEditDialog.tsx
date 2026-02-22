@@ -15,7 +15,7 @@ import { FormText } from "../../../components/FormInputs/FormText.tsx";
 import { FormTextMultiline } from "../../../components/FormInputs/FormTextMultiline.tsx";
 import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
 import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { AnnoActions } from "../../../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../features/annotation/store/annoSlice.ts";
 import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../store/dialogSlice.ts";

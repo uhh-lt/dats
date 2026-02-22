@@ -5,7 +5,7 @@ import { CodeHooks } from "../../../../../api/CodeHooks.ts";
 import { SentenceAnnotationRead } from "../../../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SourceDocumentDataRead } from "../../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../../annoSlice.ts";
+import { AnnoActions } from "../../../store/annoSlice.ts";
 import { AnnotationMenu, CodeSelectorHandle } from "../../annotation-menu/AnnotationMenu.tsx";
 
 import { SentenceAnnotationHooks } from "../../../../../api/SentenceAnnotationHooks.ts";

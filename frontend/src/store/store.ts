@@ -12,9 +12,9 @@ import { sentAnnotationAnalysisReducer } from "../features/analysis/SentAnnotati
 import { spanAnnotationAnalysisReducer } from "../features/analysis/SpanAnnotationAnalysis/spanAnnotationAnalysisSlice.ts";
 import { timelineAnalysisReducer } from "../features/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import { wordFrequencyReducer } from "../features/analysis/WordFrequency/wordFrequencySlice.ts";
-import { annoReducer } from "../features/annotation/annoSlice.ts";
+import { annoReducer } from "../features/annotation/store/annoSlice.ts";
 import { logbookReducer } from "../features/logbook/logbookSlice.ts";
-import { perspectivesReducer } from "../features/perspectives/perspectivesSlice.ts";
+import { perspectivesReducer } from "../features/perspectives/store/perspectivesSlice.ts";
 import { searchReducer } from "../features/search/DocumentSearch/searchSlice.ts";
 import { imageSearchReducer } from "../features/search/ImageSearch/imageSearchSlice.ts";
 import { sentenceSearchReducer } from "../features/search/SentenceSearch/sentenceSearchSlice.ts";

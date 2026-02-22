@@ -11,8 +11,8 @@ import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnack
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { AnnoActions, TagStyle } from "../annoSlice.ts";
 import { useComputeTokenData } from "../hooks/useComputeTokenData.ts";
+import { AnnoActions, TagStyle } from "../store/annoSlice.ts";
 import { AnnotationMenu, CodeSelectorHandle } from "./annotation-menu/AnnotationMenu.tsx";
 import { DocumentRenderer } from "./document-renderer/DocumentRenderer.tsx";
 const selectionIsEmpty = (selection: Selection): boolean => {

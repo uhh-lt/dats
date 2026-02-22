@@ -5,7 +5,7 @@ import * as React from "react";
 import { SdocHooks } from "../../../../../api/SdocHooks.ts";
 import { UserRenderer } from "../../../../../core/user/renderer/UserRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../../../annoSlice.ts";
+import { AnnoActions } from "../../../store/annoSlice.ts";
 
 interface CompareWithButtonProps {
   sdocId: number;

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnotationRead.ts";
 import { useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
 import { IToken } from "../../../../../types/IToken.ts";
-import { TagStyle } from "../../../annoSlice.ts";
+import { TagStyle } from "../../../store/annoSlice.ts";
 import { CodeIndicator } from "./CodeIndicator.tsx";
 import { Mark } from "./Mark.tsx";
 

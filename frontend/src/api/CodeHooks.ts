@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { AnnoActions } from "../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../features/annotation/store/annoSlice.ts";
 import { queryClient } from "../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
 import { RootState } from "../store/store.ts";

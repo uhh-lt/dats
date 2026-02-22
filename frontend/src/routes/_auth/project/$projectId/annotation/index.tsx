@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Annotation from "../../../../../features/annotation/AnnotationView.tsx";
+import Annotation from "../../../../../features/annotation/views/AnnotationView.tsx";
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/")({
   component: Annotation,
