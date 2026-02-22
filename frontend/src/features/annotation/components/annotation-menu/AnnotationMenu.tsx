@@ -24,7 +24,7 @@ import { MemoButton } from "../../../../core/memo/dialog/MemoButton.tsx";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
-import { Annotations } from "../../AnnotationView.tsx";
+import { Annotations } from "../../views/AnnotationView.tsx";
 import { useComputeCodesForSelection } from "./useComputeCodesForSelection.ts";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();

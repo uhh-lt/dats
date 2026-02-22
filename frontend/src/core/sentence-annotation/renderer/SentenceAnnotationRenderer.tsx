@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
 import { SentenceAnnotationHooks } from "../../../api/SentenceAnnotationHooks.ts";
 import { LinkWrapper } from "../../../components/MUI/LinkWrapper.tsx";
-import { AnnoActions } from "../../../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../features/annotation/store/annoSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CodeRenderer } from "../../code/renderer/CodeRenderer.tsx";
 import { SdocMetadataRenderer } from "../../sdoc-metadata/renderer/SdocMetadataRenderer.tsx";

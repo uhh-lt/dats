@@ -5,7 +5,7 @@ import { LLMHooks } from "../../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../../api/openapi/models/ApproachType.ts";
 import { SentenceAnnotationLLMJobResult } from "../../../../api/openapi/models/SentenceAnnotationLLMJobResult.ts";
 import { QueryKey } from "../../../../api/QueryKey.ts";
-import { AnnoActions } from "../../../../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../../features/annotation/store/annoSlice.ts";
 import { queryClient } from "../../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../../../../store/dialogSlice.ts";

@@ -6,7 +6,7 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { ExportCodesButton } from "../../../components/Export/ExportCodesButton.tsx";
 import { ITree } from "../../../components/TreeExplorer/ITree.ts";
 import { TreeExplorer } from "../../../components/TreeExplorer/TreeExplorer.tsx";
-import { AnnoActions } from "../../../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../features/annotation/store/annoSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { CodeCreateListItemButton } from "../dialog/CodeCreateListItemButton.tsx";
 import { CodeExplorerActionMenu } from "./components/CodeExplorerActionMenu.tsx";

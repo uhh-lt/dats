@@ -10,7 +10,7 @@ import { DATSToolbar } from "../../../../components/MUI/DATSToolbar.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { docTypeToIcon } from "../../../../utils/icons/docTypeToIcon.tsx";
 import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
-import { AnnoActions, TagStyle } from "../../annoSlice.ts";
+import { AnnoActions, TagStyle } from "../../store/annoSlice.ts";
 import { AnnotationMode } from "../../types/AnnotationMode.ts";
 import { AnnotatorSelector } from "./components/AnnotatorSelector.tsx";
 import { CompareWithButton } from "./components/CompareWithButton.tsx";

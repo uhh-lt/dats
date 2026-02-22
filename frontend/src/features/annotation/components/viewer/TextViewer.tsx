@@ -1,8 +1,8 @@
 import { MouseEvent, useRef } from "react";
 import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead.ts";
 import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { TagStyle } from "../../annoSlice.ts";
 import { useComputeTokenData } from "../../hooks/useComputeTokenData.ts";
+import { TagStyle } from "../../store/annoSlice.ts";
 import { DocumentRenderer } from "../document-renderer/DocumentRenderer.tsx";
 import { SentenceMenu, SentenceMenuHandle } from "./SentenceMenu.tsx";
 

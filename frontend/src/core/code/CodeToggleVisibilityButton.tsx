@@ -4,7 +4,7 @@ import { memo, MouseEventHandler, useCallback } from "react";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { ITree } from "../../components/TreeExplorer/ITree.ts";
 import { flatTree } from "../../components/TreeExplorer/TreeUtils.ts";
-import { AnnoActions, isHiddenCodeId } from "../../features/annotation/annoSlice.ts";
+import { AnnoActions, isHiddenCodeId } from "../../features/annotation/store/annoSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
 

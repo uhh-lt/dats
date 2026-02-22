@@ -2,7 +2,7 @@ import { Typography } from "@mui/material";
 import { useCallback } from "react";
 import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
 import { ITree } from "../../../../components/TreeExplorer/ITree.ts";
-import { AnnoActions, isHiddenCodeId } from "../../../../features/annotation/annoSlice.ts";
+import { AnnoActions, isHiddenCodeId } from "../../../../features/annotation/store/annoSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 
 interface CodeExplorerNodeRendererProps {

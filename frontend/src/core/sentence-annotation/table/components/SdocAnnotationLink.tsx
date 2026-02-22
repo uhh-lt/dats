@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { SentenceAnnotationRow } from "../../../../api/openapi/models/SentenceAnnotationRow.ts";
 import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead.ts";
-import { AnnoActions } from "../../../../features/annotation/annoSlice.ts";
+import { AnnoActions } from "../../../../features/annotation/store/annoSlice.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 
 interface SdocAnnotationLinkProps {

@@ -8,14 +8,14 @@ import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnota
 import { TagRead } from "../../../../../api/openapi/models/TagRead.ts";
 import { WhiteboardService } from "../../../../../api/openapi/services/WhiteboardService.ts";
 import { QueryKey } from "../../../../../api/QueryKey.ts";
-import Whiteboard from "../../../../../features/whiteboard/Whiteboard.tsx";
-import queryClient from "../../../../../plugins/ReactQueryClient.ts";
+import { WhiteboardView } from "../../../../../features/whiteboard/views/board/WhiteboardView.tsx";
+import { queryClient } from "../../../../../plugins/ReactQueryClient.ts";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   params: {
     parse: ({ whiteboardId }) => ({ whiteboardId: parseInt(whiteboardId) }),
   },
-  component: Whiteboard,
+  component: WhiteboardView,
   loader: async ({ params }) => {
     const whiteboardData = await WhiteboardService.getDataById({ whiteboardId: params.whiteboardId });
     whiteboardData.span_annotations.forEach((sa) => {
