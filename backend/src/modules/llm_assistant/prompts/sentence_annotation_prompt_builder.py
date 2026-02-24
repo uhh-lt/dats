@@ -47,6 +47,8 @@ This is the document, sentence by sentence:
 <document>
 
 Remember you do not have to provide a category for each sentence. Only assign a category if you are sure that the category fits well to the sentence. Use only the provided categories!
+
+Lets think step by step.
 """
 
 en_example_template = """
@@ -72,6 +74,8 @@ Dies ist das Dokument, Satz für Satz:
 <document>
 
 Denke daran, dass du nicht für jeden Satz eine Kategorie angeben musst. Vergebe nur eine Kategorie, wenn du dir sicher bist, dass die Kategorie gut zu dem Satz passt. Verwende ausschließlich die bereitgestellten Kategorien!
+
+Lass uns Schritt für Schritt denken.
 """
 
 de_example_template = """
