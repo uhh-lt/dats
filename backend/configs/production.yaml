@@ -119,6 +119,9 @@ llm_assistant:
   sentence_annotation:
     few_shot_threshold: 4
     model_training_threshold: 100
+  span_annotation:
+    few_shot_threshold: 4
+    model_training_threshold: 100
 
 cota:
   model: "paraphrase-multilingual-mpnet-base-v2"
