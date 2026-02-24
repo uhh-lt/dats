@@ -10,6 +10,9 @@ import { LogicalOperator } from "../../../../api/openapi/models/LogicalOperator.
 import { ProjectMetadataRead } from "../../../../api/openapi/models/ProjectMetadataRead.ts";
 import { SentAnnoColumns } from "../../../../api/openapi/models/SentAnnoColumns.ts";
 import { SentenceAnnotationRow } from "../../../../api/openapi/models/SentenceAnnotationRow.ts";
+import { SpanAnnotationRow } from "../../../../api/openapi/models/SpanAnnotationRow.ts";
+import { SpanColumns } from "../../../../api/openapi/models/SpanColumns.ts";
+import { TaskType } from "../../../../api/openapi/models/TaskType.ts";
 import { useDialog } from "../../../../hooks/useDialog.ts";
 import { useDialogMaximize } from "../../../../hooks/useDialogMaximize.ts";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
@@ -18,16 +21,20 @@ import { FilterTableToolbarProps } from "../../../FilterTable/FilterTableToolbar
 import DATSDialogHeader from "../../../MUI/DATSDialogHeader.tsx";
 import SentenceAnnotationTable from "../../../SentenceAnnotation/SentenceAnnotationTable/SentenceAnnotationTable.tsx";
 import { SEATFilterActions } from "../../../SentenceAnnotation/SentenceAnnotationTable/seatFilterSlice.ts";
+import SpanAnnotationTable from "../../../SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import { SATFilterActions } from "../../../SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 
-const filterName = "selectExampleSentenceAnnotationDialog";
+const filterNameSentAnno = "selectExampleSentenceAnnotationDialog";
+const filterNameSpanAnno = "selectExampleSpanAnnotationDialog";
 
 interface ExampleSelectionProps {
   projectId: number;
   codes: CodeRead[];
   onConfirmSelection: (codeId: number, annotationIds: number[]) => void;
+  method: TaskType;
 }
 
-function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelectionProps) {
+function ExampleSelection({ projectId, codes, onConfirmSelection, method }: ExampleSelectionProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -51,25 +58,45 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
       setAnchorEl(null);
       dialog.open();
       setSelectedCodeId(codeId);
-      dispatch(
-        SEATFilterActions.setFilter({
-          filterName,
-          filter: {
-            id: uuidv4(),
-            logic_operator: LogicalOperator.AND,
-            items: [
-              {
-                id: uuidv4(),
-                column: SentAnnoColumns.SENT_ANNO_CODE_ID,
-                operator: IDOperator.ID_EQUALS,
-                value: codeId,
-              },
-            ],
-          },
-        }),
-      );
+      if (method === TaskType.SENTENCE_ANNOTATION) {
+        dispatch(
+          SEATFilterActions.setFilter({
+            filterName: filterNameSentAnno,
+            filter: {
+              id: uuidv4(),
+              logic_operator: LogicalOperator.AND,
+              items: [
+                {
+                  id: uuidv4(),
+                  column: SentAnnoColumns.SENT_ANNO_CODE_ID,
+                  operator: IDOperator.ID_EQUALS,
+                  value: codeId,
+                },
+              ],
+            },
+          }),
+        );
+      } else if (method === TaskType.ANNOTATION) {
+        dispatch(
+          SATFilterActions.setFilter({
+            filterName: filterNameSpanAnno,
+            filter: {
+              id: uuidv4(),
+              logic_operator: LogicalOperator.AND,
+              items: [
+                {
+                  id: uuidv4(),
+                  column: SpanColumns.SP_CODE_ID,
+                  operator: IDOperator.ID_EQUALS,
+                  value: codeId,
+                },
+              ],
+            },
+          }),
+        );
+      }
     },
-    [dispatch, dialog],
+    [dispatch, method, dialog],
   );
 
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -110,17 +137,34 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
         {metadata.isSuccess ? (
           <>
             <DATSDialogHeader
-              title="Select sentence annotation examples"
+              title={
+                method === TaskType.SENTENCE_ANNOTATION
+                  ? "Select sentence annotation examples"
+                  : method === TaskType.ANNOTATION
+                    ? "Select span annotation examples"
+                    : "Select examples"
+              }
               onClose={dialog.close}
               isMaximized={isMaximized}
               onToggleMaximize={toggleMaximize}
             />
-            <SelectSentenceAnnotationsDialogContent
-              onClose={dialog.close}
-              projectId={projectId}
-              metadata={metadata.data}
-              onConfirmSelection={handleConfirmExampleSelection}
-            />
+            {method === TaskType.SENTENCE_ANNOTATION ? (
+              <SelectSentenceAnnotationsDialogContent
+                onClose={dialog.close}
+                projectId={projectId}
+                metadata={metadata.data}
+                onConfirmSelection={handleConfirmExampleSelection}
+              />
+            ) : method === TaskType.ANNOTATION ? (
+              <SelectSpanAnnotationsDialogContent
+                onClose={dialog.close}
+                projectId={projectId}
+                metadata={metadata.data}
+                onConfirmSelection={handleConfirmExampleSelection}
+              />
+            ) : (
+              <div>Unsupported task type for example selection.</div>
+            )}
           </>
         ) : metadata.isLoading ? (
           <CircularProgress />
@@ -129,6 +173,78 @@ function ExampleSelection({ projectId, codes, onConfirmSelection }: ExampleSelec
         )}
       </Dialog>
     </>
+  );
+}
+
+interface SelectSpanAnnotationsDialogContentProps {
+  onClose: () => void;
+  projectId: number;
+  onConfirmSelection: (annotationIds: number[]) => void;
+  metadata: ProjectMetadataRead[];
+}
+
+function SelectSpanAnnotationsDialogContent({
+  metadata,
+  projectId,
+  onConfirmSelection,
+  onClose,
+}: SelectSpanAnnotationsDialogContentProps) {
+  const [fetchSize, setFetchSize] = useState(20);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
+    // init visibility (disable metadata)
+    metadata.reduce(
+      (acc, curr) => {
+        return {
+          ...acc,
+          [curr.id]: false,
+        };
+      },
+      {
+        [SpanColumns.SP_MEMO_CONTENT]: false,
+        [SpanColumns.SP_TAG_ID_LIST]: false,
+      },
+    ),
+  );
+
+  // actions
+  const handleClose = useCallback(() => {
+    onClose();
+    setRowSelectionModel({});
+  }, [onClose]);
+
+  const handleConfirmSelection = useCallback(() => {
+    const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
+    onConfirmSelection(selectedAnnotationIds);
+    handleClose();
+  }, [handleClose, onConfirmSelection, rowSelectionModel]);
+
+  // rendering
+  const renderBottomToolbar = useCallback(
+    (props: FilterTableToolbarProps<SpanAnnotationRow>) => (
+      <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
+        Select {props.selectedData.length > 0 ? props.selectedData.length : null} Annotation
+        {props.selectedData.length > 1 ? "s" : ""}
+      </Button>
+    ),
+    [handleConfirmSelection],
+  );
+
+  return (
+    <SpanAnnotationTable
+      projectId={projectId}
+      filterName={filterNameSpanAnno}
+      rowSelectionModel={rowSelectionModel}
+      onRowSelectionChange={setRowSelectionModel}
+      sortingModel={sortingModel}
+      onSortingChange={setSortingModel}
+      columnVisibilityModel={visibilityModel}
+      onColumnVisibilityChange={setVisibilityModel}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
+      renderBottomToolbar={renderBottomToolbar}
+    />
   );
 }
 
@@ -190,7 +306,7 @@ function SelectSentenceAnnotationsDialogContent({
   return (
     <SentenceAnnotationTable
       projectId={projectId}
-      filterName={filterName}
+      filterName={filterNameSentAnno}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
