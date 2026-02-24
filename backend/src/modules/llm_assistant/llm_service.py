@@ -12,6 +12,7 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
 )
+from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationRead
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
@@ -54,7 +55,6 @@ from modules.llm_assistant.prompts.annotation_prompt_builder import (
     LLMHighlightedAnnotationResult,
 )
 from modules.llm_assistant.prompts.metadata_prompt_builder import (
-    LLMMetadataExtractionResults,
     MetadataPromptBuilder,
 )
 from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
@@ -183,13 +183,73 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     reasoning="Only zero-shot approach is available for metadata extraction (yet).",
                 )
             case TaskType.ANNOTATION:
+                assert isinstance(
+                    llm_job_params.specific_task_parameters,
+                    AnnotationParams,
+                )
+
+                selected_code_ids = llm_job_params.specific_task_parameters.code_ids
+
+                # 1. Find the number of labeled spans for each code
+                span_annotations = [
+                    sa
+                    for sa in crud_span_anno.read_by_codes(
+                        db=db, code_ids=selected_code_ids
+                    )
+                    if sa.user_id
+                    not in SYSTEM_USER_IDS  # exclude system / assistant users
+                ]
+
+                # 2. Find the code names
+                codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
+                code_id2name = {code.id: code.name for code in codes}
+
+                # 3. Count annotations by code_id
+                code_id2num_span_annos = {code.id: 0 for code in codes}
+                for span_anno in span_annotations:
+                    code_id2num_span_annos[span_anno.code_id] += 1
+
+                # 4. Determine the minimum number of labeled spans
+                code_with_min_labeled_spans = min(
+                    code_id2num_span_annos.keys(),
+                    key=lambda k: code_id2num_span_annos[k],
+                )
+                min_labeled_spans = code_id2num_span_annos[code_with_min_labeled_spans]
+
+                # 5. Create reasoning
+                reasoning = (
+                    f"You selected {len(selected_code_ids)} codes. "
+                    "I checked the number of labeled spans for each code and found:\n"
+                )
+
+                code_counts = []
+                for code_id, num_labeled_spans in code_id2num_span_annos.items():
+                    code_counts.append(f"{code_id2name[code_id]}: {num_labeled_spans}")
+                reasoning += "\n".join(code_counts)
+
+                reasoning += (
+                    f"\nThe code with the least labeled spans ({min_labeled_spans}) "
+                    f"is {code_id2name[code_with_min_labeled_spans]}. "
+                    "Based on this, I recommend the following approach:"
+                )
+
+                # 6. Determine available approaches
+                available_approaches: dict[ApproachType, bool] = {
+                    ApproachType.LLM_ZERO_SHOT: True,
+                    ApproachType.LLM_FEW_SHOT: min_labeled_spans
+                    >= lac.span_annotation.few_shot_threshold,
+                }
+
+                # 7. Determine recommended approach
+                if min_labeled_spans < lac.span_annotation.few_shot_threshold:
+                    recommended_approach = ApproachType.LLM_ZERO_SHOT
+                else:
+                    recommended_approach = ApproachType.LLM_FEW_SHOT
+
                 return ApproachRecommendation(
-                    recommended_approach=ApproachType.LLM_ZERO_SHOT,
-                    available_approaches={
-                        ApproachType.LLM_ZERO_SHOT: True,
-                        ApproachType.LLM_FEW_SHOT: False,
-                    },
-                    reasoning="Only zero-shot approach is available for annotation (yet).",
+                    recommended_approach=recommended_approach,
+                    available_approaches=available_approaches,
+                    reasoning=reasoning,
                 )
             case TaskType.SENTENCE_ANNOTATION:
                 assert isinstance(
@@ -472,6 +532,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             project_id=project_id,
             is_fewshot=isinstance(approach_parameters, FewShotParams),
             prompt_templates=approach_parameters.prompts,
+            params=task_parameters,
         )
 
         # read sdocs
@@ -502,7 +563,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 db=db,
                 sdoc_ids=sids,
                 sdoc_datas=sdata,
-                response_model=LLMMetadataExtractionResults,
+                response_model=prompt_builder.output_model,
             )
 
             # transform the response
@@ -570,15 +631,21 @@ class LLMAssistantService(metaclass=SingletonMeta):
         db: Session,
         job: Job,
         project_id: int,
-        approach_parameters: ZeroShotParams,
+        approach_parameters: ZeroShotParams | FewShotParams,
         task_parameters: AnnotationParams,
     ) -> LLMJobOutput:
         assert isinstance(task_parameters, AnnotationParams), "Wrong task parameters!"
-        assert isinstance(approach_parameters, ZeroShotParams), (
+        assert isinstance(approach_parameters, (ZeroShotParams, FewShotParams)), (
             "Wrong approach parameters!"
         )
 
-        msg = f"Started LLMJob - Annotation, num docs: {len(task_parameters.sdoc_ids)}"
+        is_fewshot = isinstance(approach_parameters, FewShotParams)
+
+        msg = (
+            f"Started LLMJob - Annotation ({'Few-Shot' if is_fewshot else 'Zero-Shot'}), "
+            f"num docs: {len(task_parameters.sdoc_ids)}"
+        )
+
         self._update_llm_job_description(
             job=job,
             description=msg,
@@ -588,13 +655,30 @@ class LLMAssistantService(metaclass=SingletonMeta):
         prompt_builder = AnnotationPromptBuilder(
             db=db,
             project_id=project_id,
-            is_fewshot=isinstance(approach_parameters, FewShotParams),
+            is_fewshot=is_fewshot,
             prompt_templates=approach_parameters.prompts,
         )
+
         project_codes = prompt_builder.codeids2code_dict
 
         # read sdocs
         sdoc_datas = crud_sdoc.read_data_batch(db=db, ids=task_parameters.sdoc_ids)
+
+        # Delete all existing span annotations for the sdocs
+        if task_parameters.delete_existing_annotations:
+            previous_annotations = crud_span_anno.read_by_user_sdocs_codes(
+                db=db,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+                sdoc_ids=task_parameters.sdoc_ids,
+                code_ids=task_parameters.code_ids,
+            )
+
+            msg = f"Deleting {len(previous_annotations)} previous span annotations."
+            logger.info(msg)
+
+            crud_span_anno.remove_bulk(
+                db=db, ids=[anno.id for anno in previous_annotations]
+            )
 
         # automatic annotation
         annotation_id = 0
@@ -640,7 +724,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         start_offset = sdoc_data.sentence_starts[sentence_id]
                     case DataTag.DOCUMENT:
                         # the prompt was constructed on the entire document, so we can annotate anywhere in the document
-                        content = sdoc_data.content
+                        content = sdoc_data.content  # noqa: F841
                         start_offset = 0
                     case _:
                         raise ValueError("Unknown DataTag!")  # type: ignore
@@ -648,34 +732,25 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 # parse highlighted response
                 clean_text, parsed_spans = prompt_builder.parse_result(response)
 
+                document_token_map = {}
+                last_character_offset = 0
+                for token_id, token_end in enumerate(sdoc_data.token_ends):
+                    for i in range(last_character_offset, token_end):
+                        document_token_map[i] = token_id
+                    last_character_offset = token_end
+
                 for span in parsed_spans:
                     code_id = span["code_id"]
                     if code_id not in project_codes:
                         continue
 
-                    document_text = content.lower()
-                    annotation_text = span["text"].lower()
+                    # use the offsets provided by parse_result instead of .find() (to fix duplication)
+                    start = span["begin"] + start_offset
+                    end = span["end"] + start_offset
 
-                    # find start and end character of the annotation_text in the document_text
-                    start = document_text.find(annotation_text)
-                    if start == -1:
-                        continue
-
-                    start += start_offset  # adjust to document/sentence offset
-                    end = start + len(annotation_text)
-
-                    # find start and end token of the annotation_text in the document_tokens
-                    # create a map of character offsets to token ids
-                    document_token_map = {}  # character offset -> token id
-                    last_character_offset = 0
-                    for token_id, token_end in enumerate(sdoc_data.token_ends):
-                        for i in range(last_character_offset, token_end):
-                            document_token_map[i] = token_id
-                        last_character_offset = token_end
-
-                    begin_token = document_token_map.get(start, -1)
-                    end_token = document_token_map.get(end, -1)
-                    if begin_token == -1 or end_token == -1:
+                    begin_token = document_token_map.get(start)
+                    end_token = document_token_map.get(end - 1)
+                    if begin_token is None or end_token is None:
                         continue
 
                     # create the suggested annotation
@@ -683,11 +758,13 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         SpanAnnotationRead(
                             id=annotation_id,
                             sdoc_id=sdoc_data.id,
-                            user_id=ASSISTANT_ZEROSHOT_ID,
+                            user_id=ASSISTANT_FEWSHOT_ID
+                            if is_fewshot
+                            else ASSISTANT_ZEROSHOT_ID,
                             begin=start,
                             end=end,
                             begin_token=begin_token,
-                            end_token=end_token,
+                            end_token=end_token + 1,
                             text=span["text"],
                             code_id=code_id,
                             created=datetime.now(),
@@ -697,9 +774,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         )
                     )
                     annotation_id += 1
-            logger.info(
-                f"Parsed the response! suggested annotations={suggested_annotations}"
-            )
 
             # create results for this batch
             sdoc_id2created_annos: dict[int, list[SpanAnnotationRead]] = {}
