@@ -206,9 +206,14 @@ function PromptEditorStep() {
         </TabContext>
       </DialogContent>
       <DialogActions>
-        {approach === ApproachType.LLM_FEW_SHOT && (
+        {approach === ApproachType.LLM_FEW_SHOT && method && (
           <>
-            <ExampleSelection projectId={projectId} codes={codes} onConfirmSelection={handleSelectExamples} />
+            <ExampleSelection
+              projectId={projectId}
+              codes={codes}
+              onConfirmSelection={handleSelectExamples}
+              method={method}
+            />
             <Button onClick={handleResetExamples}>Reset examples</Button>
           </>
         )}
