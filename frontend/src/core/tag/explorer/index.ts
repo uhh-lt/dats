@@ -1,2 +1,2 @@
-export * from "./hooks/useComputeTagTree";
 export * from "./TagExplorer";
+export * from "./useComputeTagTree";

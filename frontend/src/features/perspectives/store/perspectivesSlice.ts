@@ -1,28 +1,26 @@
+import {
+  createInitialFilterState,
+  filterOperator2FilterOperatorType,
+  filterReducer,
+  FilterState,
+  getDefaultOperator,
+  getOrCreateFilter,
+  MyFilterExpression,
+  resetProjectFilterState,
+} from "@components/filter/redux-filter-dialog/index";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
-import { ChatSessionResponse } from "../../../api/openapi/models/ChatSessionResponse.ts";
-import { IDListOperator } from "../../../api/openapi/models/IDListOperator.ts";
-import { ListOperator } from "../../../api/openapi/models/ListOperator.ts";
-import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
-import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
-import { SourceDocumentMetadataUpdate } from "../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
-import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
-import {
-  createInitialFilterState,
-  filterReducer,
-  FilterState,
-  getOrCreateFilter,
-  resetProjectFilterState,
-} from "../../../components/FilterDialog/filterSlice.ts";
-import {
-  filterOperator2FilterOperatorType,
-  getDefaultOperator,
-  MyFilterExpression,
-} from "../../../components/FilterDialog/filterUtils.ts";
-import { ProjectActions } from "../../../core/project/projectSlice.ts";
-import { getValue } from "../../../utils/metadataUtils.ts";
+import { ChatSessionResponse } from "../../../api/openapi/models/ChatSessionResponse";
+import { IDListOperator } from "../../../api/openapi/models/IDListOperator";
+import { ListOperator } from "../../../api/openapi/models/ListOperator";
+import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator";
+import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
+import { SourceDocumentMetadataUpdate } from "../../../api/openapi/models/SourceDocumentMetadataUpdate";
+import { StringOperator } from "../../../api/openapi/models/StringOperator";
+import { ProjectActions } from "../../../store/global/projectSlice";
+import { getValue } from "../../../utils/MetadataUtils";
 
 interface ChatMessage {
   id: string;
@@ -108,7 +106,7 @@ const resetPerspectivesState = (state: Draft<PerspectivesState>) => {
   state.selectedSdocIds = initialState.selectedSdocIds;
 };
 
-export const perspectivesSlice = createSlice({
+const perspectivesSlice = createSlice({
   name: "perspectives",
   initialState,
   reducers: {

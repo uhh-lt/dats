@@ -1,16 +1,16 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FilterTableToolbarProps } from "@components/filter/index";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { MetadataHooks } from "../../../api/MetadataHooks.ts";
-import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
-import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
-import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
-import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useDialog } from "../../../hooks/useDialog.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
-import { SentenceAnnotationTable } from "../table/SentenceAnnotationTable.tsx";
+import { MetadataHooks } from "../../../api/MetadataHooks";
+import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead";
+import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns";
+import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow";
+import { useDialog } from "../../../hooks/useDialog";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
+import { SentenceAnnotationTable } from "../table/SentenceAnnotationTable";
 const filterName = "selectSentenceAnnotationDialog";
 
 interface SelectSentenceAnnotationsDialogProps {

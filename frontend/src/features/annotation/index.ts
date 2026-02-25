@@ -1,2 +1,2 @@
 export { annoReducer } from "./store/annoSlice";
-export * from "./views/AnnotationView";
+export * from "./views/main/AnnotationView";

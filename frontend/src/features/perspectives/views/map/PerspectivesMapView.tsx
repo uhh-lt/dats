@@ -1,13 +1,13 @@
+import { useAppDispatch } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
-import { SidebarContentSidebarLayout } from "../../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
-import { ClusterJobProgressDialog } from "../../components/ClusterJobProgressDialog.tsx";
-import { ClusterDetailDialog } from "../../components/dialog/ClusterDetailDialog.tsx";
-import { useInitPerspectivesFilterSlice } from "../../hooks/useInitPerspectivesFilterSlice.ts";
-import { PerspectivesActions } from "../../store/perspectivesSlice.ts";
-import { MapContent } from "./components/MapContent.tsx";
-import { InfoPanel } from "./components/panel-info/InfoPanel.tsx";
-import { SettingsPanel } from "./components/panel-settings/SettingsPanel.tsx";
+import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
+import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
+import { ClusterJobProgressDialog } from "../../components/ClusterJobProgressDialog";
+import { ClusterDetailDialog } from "../../components/dialog/ClusterDetailDialog";
+import { PerspectivesActions } from "../../store/perspectivesSlice";
+import { MapContent } from "./_components/MapContent";
+import { InfoPanel } from "./_components/panel-info/InfoPanel";
+import { SettingsPanel } from "./_components/panel-settings/SettingsPanel";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/$aspectId/map");
 

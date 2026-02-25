@@ -1,11 +1,11 @@
 import { Button, PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { useAppSelector } from "@plugins/redux";
 import { memo, MouseEventHandler, useCallback, useState } from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
-import { TagMenu } from "./components/TagMenu.tsx";
+import { RootState } from "../../../store/store";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
+import { TagMenu } from "./_components/TagMenu";
 
 interface TagMenuButtonProps {
   popoverOrigin?: PopoverOrigin;

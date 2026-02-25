@@ -1,16 +1,16 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { dateToLocaleDate } from "../utils/DateUtils.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { ClassifierInferenceParams } from "./openapi/models/ClassifierInferenceParams.ts";
-import { ClassifierJobRead } from "./openapi/models/ClassifierJobRead.ts";
-import { ClassifierModel } from "./openapi/models/ClassifierModel.ts";
-import { ClassifierRead } from "./openapi/models/ClassifierRead.ts";
-import { ClassifierTask } from "./openapi/models/ClassifierTask.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { ClassifierService } from "./openapi/services/ClassifierService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { dateToLocaleDate } from "../utils/DateUtils";
+import { ClassifierInferenceParams } from "./openapi/models/ClassifierInferenceParams";
+import { ClassifierJobRead } from "./openapi/models/ClassifierJobRead";
+import { ClassifierModel } from "./openapi/models/ClassifierModel";
+import { ClassifierRead } from "./openapi/models/ClassifierRead";
+import { ClassifierTask } from "./openapi/models/ClassifierTask";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { ClassifierService } from "./openapi/services/ClassifierService";
+import { QueryKey } from "./QueryKey";
 
 const useStartClassifierJob = () =>
   useMutation({

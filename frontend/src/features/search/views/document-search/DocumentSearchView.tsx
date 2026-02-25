@@ -1,26 +1,25 @@
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { Stack } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
-import { FolderHooks } from "../../../../api/FolderHooks.ts";
-import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
-import { FolderType } from "../../../../api/openapi/models/FolderType.ts";
-import { HierarchicalElasticSearchHit } from "../../../../api/openapi/models/HierarchicalElasticSearchHit.ts";
-import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat.ts";
-import { FolderExplorer } from "../../../../core/folder/explorer/FolderExplorer.tsx";
-import { FolderInformation } from "../../../../core/folder/info-panel/FolderInfoPanel.tsx";
-import { FolderRenderer } from "../../../../core/folder/renderer/FolderRenderer.tsx";
-import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel.tsx";
-import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer.tsx";
-import { SidebarContentSidebarLayout } from "../../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { LayoutPercentageKeys } from "../../../../layouts/layoutSlice.ts";
-import { useLayoutPercentage } from "../../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { selectSelectedRows } from "../../../../store/tableSlice.ts";
-import { SearchStatistics } from "../../components/statistics/SearchStatistics.tsx";
-import { SearchDocumentTable } from "./components/SearchDocumentTable.tsx";
-import { SearchActions } from "./documentSearchSlice.ts";
+import { FolderHooks } from "../../../../api/FolderHooks";
+import { MetadataHooks } from "../../../../api/MetadataHooks";
+import { FolderType } from "../../../../api/openapi/models/FolderType";
+import { HierarchicalElasticSearchHit } from "../../../../api/openapi/models/HierarchicalElasticSearchHit";
+import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat";
+import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
+import { PercentageResizablePanel } from "../../../../components/resizable-panels/PercentageResizablePanel";
+import { useLayoutPercentage } from "../../../../components/resizable-panels/useLayoutPercentage";
+import { FolderExplorer } from "../../../../core/folder/explorer/FolderExplorer";
+import { FolderRenderer } from "../../../../core/folder/FolderRenderer";
+import { FolderInformation } from "../../../../core/folder/info-panel/FolderInfoPanel";
+import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel";
+import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer";
+import { selectSelectedRows } from "../../../../store/generic/tableSlice";
+import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
+import { SearchActions } from "../../store/documentSearchSlice";
+import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 
 const filterName = "root";
 const routeApi = getRouteApi("/_auth/project/$projectId/search");
@@ -72,7 +71,7 @@ export function DocumentSearchView() {
   }, []);
 
   // vertical sidebar percentage
-  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
+  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
 
   // folder handler
   const { mutate: moveFoldersMutation } = FolderHooks.useMoveFolders();

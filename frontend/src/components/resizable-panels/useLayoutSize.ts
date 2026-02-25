@@ -1,0 +1,19 @@
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useCallback } from "react";
+import { LayoutActions } from "../../store/global/layoutSlice";
+
+const DEFAULT_LAYOUT_SIZE = 300;
+
+export const useLayoutSize = (componentName: string) => {
+  const dispatch = useAppDispatch();
+  const size = useAppSelector((state) => state.layout.sizes[componentName] ?? DEFAULT_LAYOUT_SIZE);
+
+  const handleResize = useCallback(
+    (newSize: number) => {
+      dispatch(LayoutActions.setSize({ componentName, size: newSize }));
+    },
+    [dispatch, componentName],
+  );
+
+  return { size, handleResize };
+};

@@ -1,0 +1,363 @@
+import LabelIcon from "@mui/icons-material/Label";
+import { LoadingButton } from "@mui/lab";
+import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
+import {
+  MaterialReactTable,
+  MRT_ColumnDef,
+  MRT_RowModel,
+  MRT_RowSelectionState,
+  MRT_ShowHideColumnsButton,
+  MRT_TableInstance,
+  MRT_ToggleDensePaddingButton,
+  useMaterialReactTable,
+} from "material-react-table";
+import { memo, useCallback, useMemo, useState } from "react";
+import { MetadataHooks } from "../../../../../../api/MetadataHooks";
+import { MetadataExtractionResult } from "../../../../../../api/openapi/models/MetadataExtractionResult";
+import { ProjectMetadataRead } from "../../../../../../api/openapi/models/ProjectMetadataRead";
+import { SourceDocumentMetadataBulkUpdate } from "../../../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate";
+import { SourceDocumentMetadataReadResolved } from "../../../../../../api/openapi/models/SourceDocumentMetadataReadResolved";
+import { SdocMetadataRendererWithData } from "../../../../../../core/sdoc-metadata/SdocMetadataRenderer";
+import { SdocRenderer } from "../../../../../../core/source-document/renderer/SdocRenderer";
+
+interface MetadataExtractionResultRow {
+  sdocId: number;
+  metadataDict: Record<
+    number,
+    {
+      currentValue: SourceDocumentMetadataReadResolved;
+      suggestedValue?: SourceDocumentMetadataReadResolved;
+      useSuggested: boolean;
+    }
+  >;
+}
+
+export const MetadataExtractionResultStepTable = memo(({ data }: { data: MetadataExtractionResult[] }) => {
+  // local state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const buttonsDisabled = Object.keys(rowSelectionModel).length === 0;
+
+  // map the data to project metadata result rows
+  const { rows2, projectMetadataDict } = useMemo(() => {
+    const projectMetadataDict: Record<number, ProjectMetadataRead> = {};
+    const rows: MetadataExtractionResultRow[] = [];
+
+    for (const result of data) {
+      const currentMetadataDict = result.current_metadata.reduce(
+        (acc, metadata) => {
+          acc[metadata.project_metadata.id] = metadata;
+          return acc;
+        },
+        {} as Record<number, SourceDocumentMetadataReadResolved>,
+      );
+
+      const suggestedMetadataDict = result.suggested_metadata.reduce(
+        (acc, metadata) => {
+          acc[metadata.project_metadata.id] = metadata;
+          return acc;
+        },
+        {} as Record<number, SourceDocumentMetadataReadResolved>,
+      );
+
+      const row: MetadataExtractionResultRow = {
+        sdocId: result.sdoc_id,
+        metadataDict: {},
+      };
+
+      for (const projectMetadataId of Object.keys(currentMetadataDict)) {
+        const pmId = parseInt(projectMetadataId);
+        row.metadataDict[pmId] = {
+          currentValue: currentMetadataDict[pmId],
+          suggestedValue: suggestedMetadataDict[pmId],
+          useSuggested: true,
+        };
+        projectMetadataDict[pmId] = currentMetadataDict[pmId].project_metadata;
+      }
+      rows.push(row);
+    }
+    return { rows2: rows, projectMetadataDict };
+  }, [data]);
+
+  // init the rows
+  const [theRows, setTheRows] = useState<MetadataExtractionResultRow[]>(rows2);
+
+  // actions
+  const handleSelectCell = useCallback((sdocId: number, projectMetadataId: number) => {
+    setTheRows((rows) => {
+      // flip the useSuggested flag
+      return rows.map((row) => {
+        if (row.sdocId === sdocId) {
+          return {
+            ...row,
+            metadataDict: {
+              ...row.metadataDict,
+              [projectMetadataId]: {
+                ...row.metadataDict[projectMetadataId],
+                useSuggested: !row.metadataDict[projectMetadataId].useSuggested,
+              },
+            },
+          };
+        }
+        return row;
+      });
+    });
+  }, []);
+
+  const applyCurrentMetadata = useCallback((selectedRows: MRT_RowModel<MetadataExtractionResultRow>) => {
+    // for all the selectedRows, set the useSuggested flag to false
+    setTheRows((rows) => {
+      return rows.map((row) => {
+        if (selectedRows.rowsById[`${row.sdocId}`]) {
+          return {
+            ...row,
+            metadataDict: Object.keys(row.metadataDict).reduce(
+              (acc, key) => {
+                const pmId = parseInt(key);
+                acc[pmId] = {
+                  ...row.metadataDict[pmId],
+                  useSuggested: false,
+                };
+                return acc;
+              },
+              {} as MetadataExtractionResultRow["metadataDict"],
+            ),
+          };
+        }
+        return row;
+      });
+    });
+  }, []);
+
+  const applySuggestedMetadata = useCallback((selectedRows: MRT_RowModel<MetadataExtractionResultRow>) => {
+    // for all the selectedRows, set the useSuggested flag to false
+    setTheRows((rows) => {
+      return rows.map((row) => {
+        if (selectedRows.rowsById[`${row.sdocId}`]) {
+          return {
+            ...row,
+            metadataDict: Object.keys(row.metadataDict).reduce(
+              (acc, key) => {
+                const pmId = parseInt(key);
+                acc[pmId] = {
+                  ...row.metadataDict[pmId],
+                  useSuggested: true,
+                };
+                return acc;
+              },
+              {} as MetadataExtractionResultRow["metadataDict"],
+            ),
+          };
+        }
+        return row;
+      });
+    });
+  }, []);
+
+  // dialog actions
+  const dispatch = useAppDispatch();
+
+  const handleClose = useCallback(() => {
+    dispatch(UIDialogActions.closeLLMDialog());
+  }, [dispatch]);
+
+  const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } = MetadataHooks.useUpdateBulkSdocMetadata();
+
+  const handleUpdateBulkMetadata = useCallback(() => {
+    const metadataToUpdate: SourceDocumentMetadataBulkUpdate[] = theRows.reduce((acc, row) => {
+      for (const metadata of Object.values(row.metadataDict)) {
+        if (metadata.useSuggested && metadata.suggestedValue) {
+          acc.push({
+            id: metadata.suggestedValue.id,
+            boolean_value: metadata.suggestedValue.boolean_value,
+            date_value: metadata.suggestedValue.date_value,
+            int_value: metadata.suggestedValue.int_value,
+            list_value: metadata.suggestedValue.list_value,
+            str_value: metadata.suggestedValue.str_value,
+          });
+        }
+      }
+      return acc;
+    }, [] as SourceDocumentMetadataBulkUpdate[]);
+
+    updateBulkMetadataMutation(
+      { requestBody: metadataToUpdate },
+      {
+        onSuccess() {
+          dispatch(UIDialogActions.closeLLMDialog());
+        },
+      },
+    );
+  }, [theRows, updateBulkMetadataMutation, dispatch]);
+
+  // columns
+  const columns = useMemo<MRT_ColumnDef<MetadataExtractionResultRow>[]>(() => {
+    const result: MRT_ColumnDef<MetadataExtractionResultRow>[] = [
+      {
+        id: "Name",
+        header: "Document",
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderName />,
+      },
+    ];
+
+    for (const projectMetadata of Object.values(projectMetadataDict)) {
+      result.push({
+        id: `${projectMetadata.id.toString()}-current`,
+        header: `${projectMetadata.key} (current)`,
+        muiTableBodyCellProps: ({ row }) => {
+          const isSelected = !row.original.metadataDict[projectMetadata.id].useSuggested;
+          return {
+            sx: {
+              bgcolor: isSelected ? "success.light" : null,
+              color: isSelected ? "success.contrastText" : null,
+              "&:hover": {
+                bgcolor: isSelected ? "success.light" : "#9e9e9e",
+              },
+              cursor: "pointer",
+            },
+            onClick: () => handleSelectCell(row.original.sdocId, projectMetadata.id),
+          };
+        },
+        Cell: ({ row }) => {
+          const metadata = row.original.metadataDict[projectMetadata.id];
+          return (
+            <SdocMetadataRendererWithData
+              sdocMetadata={{
+                ...metadata.currentValue,
+                project_metadata_id: metadata.currentValue.project_metadata.id,
+              }}
+              projectMetadata={projectMetadata}
+            />
+          );
+        },
+      });
+
+      result.push({
+        id: `${projectMetadata.id.toString()}-suggestion`,
+        header: `${projectMetadata.key} (suggested)`,
+        muiTableBodyCellProps: ({ row }) => {
+          const isSelected = row.original.metadataDict[projectMetadata.id].useSuggested;
+          return {
+            sx: {
+              bgcolor: isSelected ? "success.light" : null,
+              color: isSelected ? "success.contrastText" : null,
+              "&:hover": {
+                bgcolor: isSelected ? "success.light" : "#9e9e9e",
+              },
+              cursor: "pointer",
+            },
+            onClick: () => handleSelectCell(row.original.sdocId, projectMetadata.id),
+          };
+        },
+        Cell: ({ row }) => {
+          const metadata = row.original.metadataDict[projectMetadata.id];
+          return metadata.suggestedValue ? (
+            <SdocMetadataRendererWithData
+              sdocMetadata={{
+                ...metadata.suggestedValue,
+                project_metadata_id: metadata.suggestedValue.project_metadata.id,
+              }}
+              projectMetadata={projectMetadata}
+            />
+          ) : (
+            <>empty</>
+          );
+        },
+      });
+    }
+    return result;
+  }, [projectMetadataDict, handleSelectCell]);
+
+  const renderTopToolbarCustomActions = useCallback(
+    ({ table }: { table: MRT_TableInstance<MetadataExtractionResultRow> }) => (
+      <Stack direction="row" alignItems="center" gap={0.5} mx={1}>
+        <Typography variant="body1" mr={1}>
+          Strategy:
+        </Typography>
+        <Button
+          disabled={buttonsDisabled}
+          variant="contained"
+          onClick={() => applyCurrentMetadata(table.getSelectedRowModel())}
+        >
+          Use Current
+        </Button>
+        <Button
+          disabled={buttonsDisabled}
+          variant="contained"
+          onClick={() => applySuggestedMetadata(table.getSelectedRowModel())}
+        >
+          Use Suggested
+        </Button>
+      </Stack>
+    ),
+    [buttonsDisabled, applyCurrentMetadata, applySuggestedMetadata],
+  );
+
+  const renderToolbarInternalActions = useCallback(
+    ({ table }: { table: MRT_TableInstance<MetadataExtractionResultRow> }) => (
+      <Stack direction="row" spacing={1}>
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+      </Stack>
+    ),
+    [],
+  );
+
+  const renderBottomToolbarCustomActions = useCallback(
+    () => (
+      <DialogActions sx={{ width: "100%", p: 0 }}>
+        <Box flexGrow={1} />
+        <Button onClick={handleClose}>Discard results & close</Button>
+        <LoadingButton
+          variant="contained"
+          startIcon={<LabelIcon />}
+          onClick={handleUpdateBulkMetadata}
+          loading={isUpdatePending}
+          loadingPosition="start"
+        >
+          Update metadata
+        </LoadingButton>
+      </DialogActions>
+    ),
+    [handleClose, handleUpdateBulkMetadata, isUpdatePending],
+  );
+
+  // table configuration
+  const table = useMaterialReactTable({
+    data: theRows,
+    columns,
+    getRowId: (row) => `${row.sdocId}`,
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+    },
+    // selection
+    enableRowSelection: true,
+    positionToolbarAlertBanner: "bottom",
+    onRowSelectionChange: setRowSelectionModel,
+    // style
+    muiTablePaperProps: {
+      elevation: 0,
+      style: { height: "100%", display: "flex", flexDirection: "column" },
+    },
+    muiTableContainerProps: {
+      style: { flexGrow: 1 },
+    },
+    // virtualization (scrolling instead of pagination)
+    enablePagination: false,
+    enableRowVirtualization: true,
+    // hide columns per default
+    initialState: {
+      columnVisibility: {
+        id: false,
+      },
+    },
+    // toolbars
+    enableBottomToolbar: true,
+    renderTopToolbarCustomActions,
+    renderToolbarInternalActions,
+    renderBottomToolbarCustomActions,
+  });
+
+  return <MaterialReactTable table={table} />;
+});

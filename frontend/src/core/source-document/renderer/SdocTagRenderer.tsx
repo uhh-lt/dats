@@ -1,6 +1,6 @@
 import { Stack, StackProps } from "@mui/material";
-import { TagHooks } from "../../../api/TagHooks.ts";
-import { TagRenderer } from "../../tag/renderer/TagRenderer.tsx";
+import { TagHooks } from "../../../api/TagHooks";
+import { TagRenderer } from "../../tag/TagRenderer";
 
 interface SharedProps {
   stackProps?: Omit<StackProps, "direction" | "alignItems">;

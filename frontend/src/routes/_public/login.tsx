@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { LoginStatus } from "../../features/auth/LoginStatus.ts";
-import Login from "../../features/login/Login.tsx";
+import { LoginStatus } from "../../core/auth/types/LoginStatus";
+import Login from "../../features/auth/views/login/LoginView";
 
 export const Route = createFileRoute("/_public/login")({
   validateSearch: (search) => ({

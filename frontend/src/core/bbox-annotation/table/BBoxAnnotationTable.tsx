@@ -1,3 +1,13 @@
+import {
+  FilterTableProps,
+  FilterTableToolbarLeft,
+  FilterTableToolbarProps,
+  FilterTableToolbarRight,
+  useRenderFilterToolbars,
+} from "@components/filter/index";
+import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
+import { ImageCropper } from "@components/ImageCropper";
+import { useAppSelector } from "@plugins/redux";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -10,30 +20,22 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow.ts";
-import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult.ts";
-import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns.ts";
-import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { QueryKey } from "../../../api/QueryKey.ts";
-import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import { FilterTableToolbarLeft } from "../../../components/FilterTable/FilterTableToolbarLeft.tsx";
-import { FilterTableToolbarProps } from "../../../components/FilterTable/FilterTableToolbarProps.ts";
-import { FilterTableToolbarRight } from "../../../components/FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../../components/FilterTable/hooks/useRenderToolbars.tsx";
-import { FilterTableProps } from "../../../components/FilterTable/types/FilterTableProps.ts";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { ImageCropper } from "../../../features/whiteboard/nodes/ImageCropper.tsx";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { CodeRenderer } from "../../code/renderer/CodeRenderer.tsx";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2.tsx";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/renderer/SdocMetadataRenderer.tsx";
-import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer.tsx";
-import { BBoxFilterActions } from "./bboxFilterSlice.ts";
-import { useInitBBoxFilterSlice } from "./useInitBBoxFilterSlice.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow";
+import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult";
+import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns";
+import { SortDirection } from "../../../api/openapi/models/SortDirection";
+import { SearchService } from "../../../api/openapi/services/SearchService";
+import { QueryKey } from "../../../api/QueryKey";
+import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
+import { RootState } from "../../../store/store";
+import { useAuth } from "../../auth/provider/useAuth";
+import { CodeRenderer } from "../../code/CodeRenderer";
+import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
+import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer";
+import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
+import { BBoxFilterActions } from "./bboxFilterSlice";
 
 const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
 
@@ -229,8 +231,8 @@ export const BBoxAnnotationTable = memo(
     }, [onFetchSizeChange, totalResults]);
 
     // rendering
-    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars(
-      {
+    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } =
+      useRenderFilterToolbars({
         name: "bbox annotations",
         flatData,
         totalFetched,
@@ -244,8 +246,7 @@ export const BBoxAnnotationTable = memo(
         filterName,
         rowSelectionModel,
         tableContainerRef,
-      },
-    );
+      });
 
     // table
     const table = useMaterialReactTable<BBoxAnnotationRow>({

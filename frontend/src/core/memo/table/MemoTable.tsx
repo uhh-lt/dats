@@ -1,4 +1,7 @@
+import { FilterTableProps } from "@components/filter/index";
+import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
 import { Box, Button, Stack, Typography } from "@mui/material";
+import { useAppSelector } from "@plugins/redux";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -8,23 +11,20 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
-import { MemoColumns } from "../../../api/openapi/models/MemoColumns.ts";
-import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
-import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { QueryKey } from "../../../api/QueryKey.ts";
-import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import { FilterTableProps } from "../../../components/FilterTable/types/FilterTableProps.ts";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { MemoRenderer } from "../renderer/MemoRenderer.tsx";
-import { MemoTableOptionsMenu } from "./components/MemoTableOptionsMenu.tsx";
-import { MemoToolbarLeft } from "./components/MemoToolbarLeft.tsx";
-import { MemoToolbarRight } from "./components/MemoToolbarRight.tsx";
-import { MemoFilterActions } from "./memoFilterSlice.ts";
-import { useInitMemoFilterSlice } from "./useInitMemoFilterSlice.ts";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit";
+import { MemoColumns } from "../../../api/openapi/models/MemoColumns";
+import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits";
+import { SortDirection } from "../../../api/openapi/models/SortDirection";
+import { SearchService } from "../../../api/openapi/services/SearchService";
+import { QueryKey } from "../../../api/QueryKey";
+import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
+import { RootState } from "../../../store/store";
+import { MemoRenderer } from "../renderer/MemoRenderer";
+import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
+import { MemoToolbarLeft } from "./_components/MemoToolbarLeft";
+import { MemoToolbarRight } from "./_components/MemoToolbarRight";
+import { useInitMemoFilterSlice } from "./_hooks/useInitMemoFilterSlice";
+import { MemoFilterActions } from "./memoFilterSlice";
 
 const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 

@@ -1,4 +1,4 @@
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
 
 export const attachedObjectTypeToText: Record<AttachedObjectType, string> = {
   [AttachedObjectType.PROJECT]: "Project",

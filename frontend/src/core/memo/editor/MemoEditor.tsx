@@ -1,14 +1,14 @@
+import { EditableTypography } from "@components/EditableTypography";
 import { Box, CircularProgress, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks.ts";
-import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import { EditableTypography } from "../../../components/EditableTypography.tsx";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { dateToLocaleString } from "../../../utils/DateUtils.ts";
-import { UserRenderer } from "../../user/renderer/UserRenderer.tsx";
+import { MemoHooks } from "../../../api/MemoHooks";
+import { MemoRead } from "../../../api/openapi/models/MemoRead";
+import { dateToLocaleString } from "../../../utils/DateUtils";
+import { useAuth } from "../../auth/provider/useAuth";
+import { UserRenderer } from "../../user/UserRenderer";
 import { AttachedObjectRenderer } from "../renderer";
-import { useGetMemosAttachedObject } from "../utils/useGetMemosAttachedObject.ts";
-import { MemoEditorView } from "./MemoEditorView.tsx";
+import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
+import { MemoEditorView } from "./MemoEditorView";
 
 interface MemoBlockEditorProps {
   memoId: number;

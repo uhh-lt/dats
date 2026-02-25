@@ -1,7 +1,7 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import { FolderMetadataPanel } from "./components/metadata-panel/FolderMetadataPanel.tsx";
+import { FolderMetadataPanel } from "./_components/metadata-panel/FolderMetadataPanel";
 
 interface FolderInformationProps {
   sdocFolderId: number;

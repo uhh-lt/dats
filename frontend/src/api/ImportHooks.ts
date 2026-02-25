@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { dateToLocaleDate } from "../utils/DateUtils.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { ImportJobRead } from "./openapi/models/ImportJobRead.ts";
-import { ImportJobType } from "./openapi/models/ImportJobType.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { ImportService } from "./openapi/services/ImportService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { dateToLocaleDate } from "../utils/DateUtils";
+import { QueryKey } from "./QueryKey";
+import { ImportJobRead } from "./openapi/models/ImportJobRead";
+import { ImportJobType } from "./openapi/models/ImportJobType";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { ImportService } from "./openapi/services/ImportService";
 
 const useStartImportJob = () =>
   useMutation({

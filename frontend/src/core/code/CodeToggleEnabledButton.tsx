@@ -1,11 +1,11 @@
+import { ITree } from "@components/tree-explorer";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { CodeHooks } from "../../api/CodeHooks.ts";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { ITree } from "../../components/TreeExplorer/ITree.ts";
+import { CodeHooks } from "../../api/CodeHooks";
+import { CodeRead } from "../../api/openapi/models/CodeRead";
 
 export const CodeToggleEnabledButton = memo(
   ({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> | null | undefined }) => {

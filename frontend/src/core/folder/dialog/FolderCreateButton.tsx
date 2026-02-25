@@ -1,8 +1,8 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 
 interface FolderActionButtonCreateProps {
   folderName: string;
@@ -13,7 +13,7 @@ export const FolderCreateButton = memo(
     const dispatch = useAppDispatch();
 
     const handleClick = useCallback(() => {
-      dispatch(CRUDDialogActions.openFolderCreateDialog({ folderName }));
+      dispatch(UIDialogActions.openFolderCreateDialog({ folderName }));
     }, [dispatch, folderName]);
 
     const buttonText = folderName.length > 0 ? `"${folderName}" (Create new)` : "Create new folder";

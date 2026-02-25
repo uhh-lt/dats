@@ -1,5 +1,5 @@
-import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead.ts";
-import { SdocHooks } from "../../../api/SdocHooks.ts";
+import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead";
+import { SdocHooks } from "../../../api/SdocHooks";
 
 interface SdocSentenceRendererProps {
   sdoc: number | SourceDocumentDataRead;

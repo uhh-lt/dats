@@ -1,22 +1,20 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormMenu, FormText } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
+import { useOpenConfirmationDialog } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { FolderHooks } from "../../../api/FolderHooks.ts";
-import { FolderType } from "../../../api/openapi/models/FolderType.ts";
-import { FolderUpdate } from "../../../api/openapi/models/FolderUpdate.ts";
-import { ConfirmationAPI } from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { FolderRenderer } from "../renderer/FolderRenderer.tsx";
+import { FolderHooks } from "../../../api/FolderHooks";
+import { FolderType } from "../../../api/openapi/models/FolderType";
+import { FolderUpdate } from "../../../api/openapi/models/FolderUpdate";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { FolderRenderer } from "../FolderRenderer";
 
 export function FolderEditDialog() {
   const dispatch = useAppDispatch();
@@ -31,7 +29,7 @@ export function FolderEditDialog() {
   // open/close dialog
   const isOpen = useAppSelector((state) => state.dialog.isFolderEditDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeFolderEditDialog());
+    dispatch(UIDialogActions.closeFolderEditDialog());
   }, [dispatch]);
 
   // maximize
@@ -81,9 +79,10 @@ export function FolderEditDialog() {
     [handleClose, folder, updateFolderMutation],
   );
   const { mutate: deleteFolderMutation, isPending: isDeleteLoading } = FolderHooks.useDeleteFolder();
+  const openConfirmationDialog = useOpenConfirmationDialog();
   const handleFolderDelete = useCallback(() => {
     if (folder) {
-      ConfirmationAPI.openConfirmationDialog({
+      openConfirmationDialog({
         text: `Do you really want to delete the folder "${folder.name}"? This will delete ALL contained documents, their annotations, memos, etc. This action cannot be undone!`,
         type: "DELETE",
         onAccept: () => {

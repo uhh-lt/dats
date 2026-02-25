@@ -1,19 +1,19 @@
 import { memo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
-import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead.ts";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead.ts";
-import { TagRead } from "../../../api/openapi/models/TagRead.ts";
-import { BBoxAnnotationRenderer } from "../../bbox-annotation/renderer/BBoxAnnotationRenderer.tsx";
-import { CodeRenderer } from "../../code/renderer/CodeRenderer.tsx";
-import { ProjectRenderer } from "../../project/ProjectRenderer.tsx";
-import { SentenceAnnotationRenderer } from "../../sentence-annotation/renderer/SentenceAnnotationRenderer.tsx";
-import { SdocRenderer } from "../../source-document/renderer/SdocRenderer.tsx";
-import { SpanAnnotationRenderer } from "../../span-annotation/renderer/SpanAnnotationRenderer.tsx";
-import { TagRenderer } from "../../tag/renderer/TagRenderer.tsx";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead";
+import { CodeRead } from "../../../api/openapi/models/CodeRead";
+import { ProjectRead } from "../../../api/openapi/models/ProjectRead";
+import { SentenceAnnotationRead } from "../../../api/openapi/models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead";
+import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead";
+import { TagRead } from "../../../api/openapi/models/TagRead";
+import { BBoxAnnotationRenderer } from "../../bbox-annotation/BBoxAnnotationRenderer";
+import { CodeRenderer } from "../../code/CodeRenderer";
+import { ProjectRenderer } from "../../project/ProjectRenderer";
+import { SentenceAnnotationRenderer } from "../../sentence-annotation/SentenceAnnotationRenderer";
+import { SdocRenderer } from "../../source-document/renderer/SdocRenderer";
+import { SpanAnnotationRenderer } from "../../span-annotation/SpanAnnotationRenderer";
+import { TagRenderer } from "../../tag/TagRenderer";
 
 interface AttachedObjectRendererProps {
   attachedObject:

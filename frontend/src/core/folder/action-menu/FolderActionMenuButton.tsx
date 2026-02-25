@@ -2,8 +2,8 @@ import { Button, PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { memo, MouseEventHandler, useCallback, useState } from "react";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
-import { FolderActionMenu } from "./components/FolderActionMenu.tsx";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
+import { FolderActionMenu } from "./_components/FolderActionMenu";
 
 interface FolderActionMenuButtonProps {
   popoverOrigin?: PopoverOrigin;

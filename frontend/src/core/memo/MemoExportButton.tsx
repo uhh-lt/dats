@@ -1,0 +1,19 @@
+import { ExportButton } from "@components/export-buttons/index";
+import { ExportJobType } from "../../api/openapi/models/ExportJobType";
+
+interface MemosExportButtonProps {
+  memoIds: number[];
+}
+
+export function MemosExportButton({ memoIds }: MemosExportButtonProps) {
+  const exportAll = memoIds.length === 0;
+  return (
+    <ExportButton
+      title={exportAll ? "Export all memos" : "Export selected memos"}
+      export_job_type={exportAll ? ExportJobType.ALL_MEMOS : ExportJobType.SELECTED_MEMOS}
+      specific_export_job_parameters={
+        exportAll ? null : { export_job_type: ExportJobType.SELECTED_MEMOS, memo_ids: memoIds }
+      }
+    />
+  );
+}

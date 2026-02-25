@@ -1,9 +1,9 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
 import { MouseEventHandler, memo, useCallback } from "react";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
+import { CodeRead } from "../../../api/openapi/models/CodeRead";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 
 export const CodeEditButton = memo(({ code, ...props }: IconButtonProps & { code: CodeRead }) => {
   const dispatch = useAppDispatch();
@@ -11,7 +11,7 @@ export const CodeEditButton = memo(({ code, ...props }: IconButtonProps & { code
   const handleClickOpen: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
       event.stopPropagation();
-      dispatch(CRUDDialogActions.openCodeEditDialog({ code }));
+      dispatch(UIDialogActions.openCodeEditDialog({ code }));
     },
     [dispatch, code],
   );

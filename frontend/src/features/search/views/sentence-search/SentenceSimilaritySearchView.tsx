@@ -1,24 +1,23 @@
+import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
 import { Typography } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
-import { SdocColumns } from "../../../../api/openapi/models/SdocColumns.ts";
-import { SimSearchSentenceHit } from "../../../../api/openapi/models/SimSearchSentenceHit.ts";
-import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat.ts";
-import { SimsearchService } from "../../../../api/openapi/services/SimsearchService.ts";
-import { QueryKey } from "../../../../api/QueryKey.ts";
-import { MyFilter, createEmptyFilter } from "../../../../components/FilterDialog/filterUtils.ts";
-import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel.tsx";
-import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer.tsx";
-import { SidebarContentSidebarLayout } from "../../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { LayoutPercentageKeys } from "../../../../layouts/layoutSlice.ts";
-import { useLayoutPercentage } from "../../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { SearchStatistics } from "../../components/statistics/SearchStatistics.tsx";
-import { SearchActions } from "../document-search/documentSearchSlice.ts";
-import { SentenceSimilaritySearchTable } from "./components/SentenceSimilaritySearchTable.tsx";
+import { MetadataHooks } from "../../../../api/MetadataHooks";
+import { SdocColumns } from "../../../../api/openapi/models/SdocColumns";
+import { SimSearchSentenceHit } from "../../../../api/openapi/models/SimSearchSentenceHit";
+import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat";
+import { SimsearchService } from "../../../../api/openapi/services/SimsearchService";
+import { QueryKey } from "../../../../api/QueryKey";
+import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
+import { PercentageResizablePanel } from "../../../../components/resizable-panels/PercentageResizablePanel";
+import { useLayoutPercentage } from "../../../../components/resizable-panels/useLayoutPercentage";
+import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel";
+import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer";
+import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
+import { SearchActions } from "../../store/documentSearchSlice";
+import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 
 const filterName = "sentenceSimilaritySearch";
 const routeApi = getRouteApi("/_auth/project/$projectId/sentencesearch");
@@ -88,7 +87,7 @@ export function SentenceSimilaritySearchView() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // vertical sidebar percentage
-  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
+  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
 
   // render
   return (

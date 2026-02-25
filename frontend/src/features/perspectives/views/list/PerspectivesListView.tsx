@@ -1,12 +1,12 @@
 import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
-import { PerspectivesHooks } from "../../../../api/PerspectivesHooks.ts";
-import { useDebounce } from "../../../../hooks/useDebounce.ts";
-import { useDialog } from "../../../../hooks/useDialog.ts";
-import { ContentContainerLayout } from "../../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils.tsx";
-import { PerspectiveCard } from "./components/PerspectiveCard.tsx";
-import { PerspectiveCreationDialog } from "./components/PerspectiveCreationDialog.tsx";
+import { PerspectivesHooks } from "../../../../api/PerspectivesHooks";
+import { ContentContainerLayout } from "../../../../components/content-layouts/ContentContainerLayout";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import { useDialog } from "../../../../hooks/useDialog";
+import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
+import { PerspectiveCard } from "./_components/PerspectiveCard";
+import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDialog";
 
 export function PerspectivesListView() {
   const aspects = PerspectivesHooks.useGetAllAspectsList();

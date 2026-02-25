@@ -1,12 +1,12 @@
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { AnnoActions } from "../features/annotation/store/annoSlice.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { CodeRead } from "./openapi/models/CodeRead.ts";
-import { CodeService } from "./openapi/services/CodeService.ts";
+import { AnnoActions } from "../features/annotation/store/annoSlice";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { CodeRead } from "./openapi/models/CodeRead";
+import { CodeService } from "./openapi/services/CodeService";
+import { QueryKey } from "./QueryKey";
 
 // CODE QUERIES
 

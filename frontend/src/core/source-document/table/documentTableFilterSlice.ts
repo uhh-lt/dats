@@ -1,14 +1,14 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { v4 as uuidv4 } from "uuid";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
-import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
 import {
   createInitialFilterState,
   filterReducer,
+  MyFilterExpression,
   resetProjectFilterState,
-} from "../../../components/FilterDialog/filterSlice.ts";
-import { MyFilterExpression } from "../../../components/FilterDialog/filterUtils.ts";
-import { ProjectActions } from "../../project/projectSlice.ts";
+} from "@components/filter/redux-filter-dialog/index";
+import { createSlice } from "@reduxjs/toolkit";
+import { v4 as uuidv4 } from "uuid";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
+import { StringOperator } from "../../../api/openapi/models/StringOperator";
+import { ProjectActions } from "../../../store/global/projectSlice";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),

@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { ProjectActions } from "../../../core/project/projectSlice.ts";
-import { RootState } from "../../../store/store.ts";
-import { AnnotationMode } from "../types/AnnotationMode.ts";
+import { ProjectActions } from "../../../store/global/projectSlice";
+import { RootState } from "../../../store/store";
+import { AnnotationMode } from "../_types/AnnotationMode";
 
 export enum TagStyle {
   Inline = "inline",
@@ -42,7 +42,7 @@ const initialState: AnnoState = {
   tagStyle: TagStyle.Inline,
 };
 
-export const annoSlice = createSlice({
+const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {

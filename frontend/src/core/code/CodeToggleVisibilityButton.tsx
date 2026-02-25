@@ -1,12 +1,11 @@
+import { flatTree, ITree } from "@components/tree-explorer";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { ITree } from "../../components/TreeExplorer/ITree.ts";
-import { flatTree } from "../../components/TreeExplorer/TreeUtils.ts";
-import { AnnoActions, isHiddenCodeId } from "../../features/annotation/store/annoSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { getIconComponent, Icon } from "../../utils/icons/iconUtils.tsx";
+import { CodeRead } from "../../api/openapi/models/CodeRead";
+import { AnnoActions, isHiddenCodeId } from "../../features/annotation/store/annoSlice";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils";
 
 export const CodeToggleVisibilityButton = memo(({ code, ...props }: IconButtonProps & { code: ITree<CodeRead> }) => {
   // redux (global client state)

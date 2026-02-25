@@ -1,47 +1,29 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CircularProgress, Dialog } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import { eventBus } from "../../../EventBus.ts";
-import { MemoHooks } from "../../../api/MemoHooks.ts";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useDialog } from "../../../hooks/useDialog.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useGetMemosAttachedObject } from "../utils/useGetMemosAttachedObject.ts";
-import { MemoEvent } from "./MemoEvent.ts";
-import { MemoDialogContent } from "./components/MemoDialogContent.tsx";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useCallback } from "react";
+import { MemoHooks } from "../../../api/MemoHooks";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { MemoRead } from "../../../api/openapi/models/MemoRead";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
+import { MemoDialogContent } from "./_components/MemoDialogContent";
 
 export function MemoDialog() {
-  // state
-  const dialog = useDialog();
-  const [memoEventData, setMemoEventData] = useState<MemoEvent>();
-
-  // listen to open-memo event and open the dialog
-  const openModal = useCallback(
-    (event: CustomEventInit<MemoEvent>) => {
-      dialog.open();
-      setMemoEventData(event.detail);
-    },
-    [dialog],
-  );
-
-  useEffect(() => {
-    eventBus.on("open-memo", openModal);
-    return () => {
-      eventBus.remove("open-memo", openModal);
-    };
-  }, [openModal]);
+  const isMemoDialogOpen = useAppSelector((state) => state.dialog.isMemoDialogOpen);
+  const memoEventData = useAppSelector((state) => state.dialog.memoEventData);
+  const dispatch = useAppDispatch();
 
   const handleClose = useCallback(() => {
-    dialog.close();
-    setMemoEventData(undefined);
-  }, [dialog]);
+    dispatch(UIDialogActions.closeMemoDialog());
+  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
-    <Dialog open={dialog.isOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
+    <Dialog open={isMemoDialogOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
       <DATSDialogHeader
         title="Memo"
         onClose={handleClose}

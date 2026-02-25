@@ -1,30 +1,33 @@
+import {
+  FilterTableProps,
+  FilterTableToolbarLeft,
+  FilterTableToolbarRight,
+  MyFilter,
+  createEmptyFilter,
+  useRenderFilterToolbars,
+} from "@components/filter";
+import { useAppSelector } from "@plugins/redux";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { QueryKey } from "../../../api/QueryKey.ts";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns.ts";
-import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow.ts";
-import { SentenceAnnotationSearchResult } from "../../../api/openapi/models/SentenceAnnotationSearchResult.ts";
-import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import { FilterTableToolbarLeft } from "../../../components/FilterTable/FilterTableToolbarLeft.tsx";
-import { FilterTableToolbarRight } from "../../../components/FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../../components/FilterTable/hooks/useRenderToolbars.tsx";
-import { FilterTableProps } from "../../../components/FilterTable/types/FilterTableProps.ts";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { CodeRenderer } from "../../code/renderer/CodeRenderer.tsx";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2.tsx";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/renderer/SdocMetadataRenderer.tsx";
-import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer.tsx";
-import { UserRenderer } from "../../user/renderer/UserRenderer.tsx";
-import { SdocAnnotationLink } from "./components/SdocAnnotationLink.tsx";
-import { useInitSEATFilterSlice } from "./hooks/useInitSEATFilterSlice.ts";
-import { SEATFilterActions } from "./seatFilterSlice.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns";
+import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow";
+import { SentenceAnnotationSearchResult } from "../../../api/openapi/models/SentenceAnnotationSearchResult";
+import { SortDirection } from "../../../api/openapi/models/SortDirection";
+import { SearchService } from "../../../api/openapi/services/SearchService";
+import { QueryKey } from "../../../api/QueryKey";
+import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
+import { RootState } from "../../../store/store";
+import { useAuth } from "../../auth/provider/useAuth";
+import { CodeRenderer } from "../../code/CodeRenderer";
+import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
+import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer";
+import { UserRenderer } from "../../user/UserRenderer";
+import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
+import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
+import { SEATFilterActions } from "./seatFilterSlice";
 
 const flatMapData = (page: SentenceAnnotationSearchResult) => page.data;
 
@@ -209,8 +212,8 @@ export const SentenceAnnotationTable = memo(
     }, [onFetchSizeChange, totalResults]);
 
     // rendering
-    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars(
-      {
+    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } =
+      useRenderFilterToolbars({
         name: "sentence annotations",
         flatData,
         totalFetched,
@@ -224,8 +227,7 @@ export const SentenceAnnotationTable = memo(
         filterName,
         rowSelectionModel,
         tableContainerRef,
-      },
-    );
+      });
 
     // table
     const table = useMaterialReactTable<SentenceAnnotationRow>({

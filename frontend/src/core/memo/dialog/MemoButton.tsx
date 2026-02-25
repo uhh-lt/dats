@@ -1,8 +1,8 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import { MemoDialogAPI } from "./MemoDialogAPI.ts";
-import { MemoEvent } from "./MemoEvent.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
+import { MemoEvent } from "./_types/MemoEvent";
+import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoButtonProps {
   onClick?: () => void;
@@ -16,11 +16,12 @@ export const MemoButton = memo(
     onClick,
     ...props
   }: MemoButtonProps & MemoEvent & IconButtonProps) => {
+    const openMemoDialog = useOpenMemoDialog();
     const handleClickOpen = useCallback(
       (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         event.stopPropagation();
         if (onClick) onClick();
-        MemoDialogAPI.openMemo({ memoId, attachedObjectType, attachedObjectId });
+        openMemoDialog({ memoId, attachedObjectType, attachedObjectId });
       },
       [memoId, attachedObjectType, attachedObjectId, onClick],
     );

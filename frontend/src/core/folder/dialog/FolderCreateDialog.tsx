@@ -1,21 +1,19 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormMenu, FormText } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { FolderHooks } from "../../../api/FolderHooks.ts";
-import { FolderCreate } from "../../../api/openapi/models/FolderCreate.ts";
-import { FolderType } from "../../../api/openapi/models/FolderType.ts";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { FolderRenderer } from "../renderer/FolderRenderer.tsx";
+import { FolderHooks } from "../../../api/FolderHooks";
+import { FolderCreate } from "../../../api/openapi/models/FolderCreate";
+import { FolderType } from "../../../api/openapi/models/FolderType";
+import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { FolderRenderer } from "../FolderRenderer";
 
 export function FolderCreateDialog({ projectId }: { projectId: number }) {
   const dispatch = useAppDispatch();
@@ -27,7 +25,7 @@ export function FolderCreateDialog({ projectId }: { projectId: number }) {
   // open/close dialog
   const isFolderCreateDialogOpen = useAppSelector((state) => state.dialog.isFolderCreateDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeFolderCreateDialog());
+    dispatch(UIDialogActions.closeFolderCreateDialog());
   }, [dispatch]);
 
   // maximize

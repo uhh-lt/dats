@@ -1,7 +1,7 @@
+import LinkCard from "@components/links";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import LinkCard from "../../../../../components/MUI/LinkCard.tsx";
-import ContentContainerLayout from "../../../../../layouts/ContentLayouts/ContentContainerLayout.tsx";
+import ContentContainerLayout from "../../../../../components/content-layouts/ContentContainerLayout";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/")({
   component: Analysis,

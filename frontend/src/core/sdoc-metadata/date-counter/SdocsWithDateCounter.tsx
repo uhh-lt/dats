@@ -1,4 +1,4 @@
-import { useCountSdocsWithDateMetadataQuery } from "./useCountSdocsWithDateMetadataQuery.ts";
+import { useCountSdocsWithDateMetadataQuery } from "./_api/useCountSdocsWithDateMetadataQuery";
 
 interface SdocsWithDateCounterProps {
   projectId: number;

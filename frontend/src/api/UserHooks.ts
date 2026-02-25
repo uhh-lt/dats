@@ -1,11 +1,11 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { UserRead } from "./openapi/models/UserRead.ts";
-import { AuthenticationService } from "./openapi/services/AuthenticationService.ts";
-import { UserService } from "./openapi/services/UserService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { UserRead } from "./openapi/models/UserRead";
+import { AuthenticationService } from "./openapi/services/AuthenticationService";
+import { UserService } from "./openapi/services/UserService";
+import { QueryKey } from "./QueryKey";
 
 // USER QUERIES
 interface UseProjectUsersQueryParams<T> {

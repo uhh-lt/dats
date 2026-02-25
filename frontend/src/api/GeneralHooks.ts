@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { QueryKey } from "./QueryKey.ts";
-import { InstanceInfo } from "./openapi/models/InstanceInfo.ts";
-import { GeneralService } from "./openapi/services/GeneralService.ts";
-import { RagService } from "./openapi/services/RagService.ts";
+import { QueryKey } from "./QueryKey";
+import { InstanceInfo } from "./openapi/models/InstanceInfo";
+import { GeneralService } from "./openapi/services/GeneralService";
+import { RagService } from "./openapi/services/RagService";
 
 const useGetInstanceInfo = () =>
   useQuery<InstanceInfo, Error>({

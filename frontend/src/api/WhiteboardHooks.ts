@@ -1,10 +1,10 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { WhiteboardRead } from "./openapi/models/WhiteboardRead.ts";
-import { WhiteboardService } from "./openapi/services/WhiteboardService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { WhiteboardRead } from "./openapi/models/WhiteboardRead";
+import { WhiteboardService } from "./openapi/services/WhiteboardService";
+import { QueryKey } from "./QueryKey";
 
 // WHITEBOARD QUERIES
 

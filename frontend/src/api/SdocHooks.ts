@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead.ts";
-import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
-import { SourceDocumentService } from "./openapi/services/SourceDocumentService.ts";
-import { TagService } from "./openapi/services/TagService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { SourceDocumentDataRead } from "./openapi/models/SourceDocumentDataRead";
+import { SourceDocumentRead } from "./openapi/models/SourceDocumentRead";
+import { ProjectService } from "./openapi/services/ProjectService";
+import { SourceDocumentService } from "./openapi/services/SourceDocumentService";
+import { TagService } from "./openapi/services/TagService";
 
 // SDOC QUERIES
 const useGetDocument = (sdocId: number | null | undefined) =>

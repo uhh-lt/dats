@@ -1,0 +1,90 @@
+import { GeneralHooks } from "@api/GeneralHooks";
+import { DialogSection } from "@components/DialogSection";
+import PlayCircle from "@mui/icons-material/PlayCircle";
+import { LoadingButton } from "@mui/lab";
+import { useCallback, useState } from "react";
+import { DocProcessingHooks } from "../../../../../api/DocProcessingHooks";
+import { Language } from "../../../../../api/openapi/models/Language";
+import { ProcessingSettings } from "../../../../../api/openapi/models/ProcessingSettings";
+import { ProcessingSettingsButton } from "./ProcessingSettingsButton";
+import { UploadDropzone } from "./UploadDropzone";
+
+interface FileUploadSectionProps {
+  projectId: number;
+}
+
+export function FileUploadSection({ projectId }: FileUploadSectionProps) {
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
+  return (
+    <>
+      {availableLLMs.isError ? (
+        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
+      ) : availableLLMs.isLoading ? (
+        <p>Loading available LLMs...</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
+        <p>No available LLMs found. Please contact the administrator.</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
+        <FileUploadSectionContent projectId={projectId} availableLLMs={availableLLMs.data} />
+      ) : null}
+    </>
+  );
+}
+
+function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectionProps & { availableLLMs: string[] }) {
+  // Upload mutation
+  const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
+
+  // Local state
+  const [files, setFiles] = useState<File[]>([]);
+  const [settings, setSettings] = useState<ProcessingSettings>({
+    model: availableLLMs[0],
+    extract_images: true,
+    pages_per_chunk: 10,
+    keyword_deduplication_threshold: 0.5,
+    keyword_max_ngram_size: 2,
+    keyword_number: 5,
+    language: Language.AUTO,
+  });
+
+  const handleFilesChange = useCallback((files: File[]) => {
+    setFiles(files);
+  }, []);
+
+  const handleUpload = useCallback(async () => {
+    if (files.length > 0) {
+      await uploadDocumentMutation.mutateAsync({
+        projId: projectId,
+        formData: {
+          settings: JSON.stringify(settings),
+          uploaded_files: Array.from(files),
+        },
+      });
+      setFiles([]);
+    }
+  }, [files, projectId, settings, uploadDocumentMutation]);
+
+  return (
+    <DialogSection
+      title="Upload Files"
+      action={
+        <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} availableLLMs={availableLLMs} />
+      }
+    >
+      <UploadDropzone onFilesChanged={handleFilesChange} files={files} />
+      <LoadingButton
+        variant="contained"
+        color="primary"
+        onClick={handleUpload}
+        loading={uploadDocumentMutation.isPending}
+        loadingPosition="start"
+        startIcon={<PlayCircle />}
+        disabled={files.length === 0}
+        fullWidth
+        sx={{ mt: 2 }}
+      >
+        Upload {files.length} File{files.length !== 1 ? "s" : ""}
+      </LoadingButton>
+    </DialogSection>
+  );
+}

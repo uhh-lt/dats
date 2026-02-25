@@ -1,5 +1,5 @@
-import { DocType } from "../../api/openapi/models/DocType.ts";
-import { Icon, getIconComponent } from "./iconUtils.tsx";
+import { DocType } from "../../api/openapi/models/DocType";
+import { Icon, getIconComponent } from "./iconUtils";
 
 export const docTypeToIcon: Record<DocType, React.ReactElement> = {
   [DocType.TEXT]: getIconComponent(Icon.TEXT_DOCUMENT),

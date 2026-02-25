@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../features/auth/useAuth.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { SpanAnnotationCreate } from "./openapi/models/SpanAnnotationCreate.ts";
-import { SpanAnnotationDeleted } from "./openapi/models/SpanAnnotationDeleted.ts";
-import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
-import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate.ts";
-import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
+import { useAuth } from "../core/auth/provider/useAuth";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { SpanAnnotationCreate } from "./openapi/models/SpanAnnotationCreate";
+import { SpanAnnotationDeleted } from "./openapi/models/SpanAnnotationDeleted";
+import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead";
+import { SpanAnnotationUpdate } from "./openapi/models/SpanAnnotationUpdate";
+import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService";
 
 export const FAKE_ANNOTATION_ID = -1;
 

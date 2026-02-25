@@ -1,5 +1,5 @@
-import { ProjectHooks } from "../../api/ProjectHooks.ts";
-import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { ProjectHooks } from "../../api/ProjectHooks";
+import { ProjectRead } from "../../api/openapi/models/ProjectRead";
 
 interface ProjectRendererProps {
   project: number | ProjectRead;

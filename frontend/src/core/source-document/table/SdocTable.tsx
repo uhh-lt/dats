@@ -1,28 +1,30 @@
+import {
+  FilterTableProps,
+  FilterTableToolbarLeft,
+  FilterTableToolbarRight,
+  useRenderFilterToolbars,
+} from "@components/filter/index";
+import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
 import { Box, Typography } from "@mui/material";
+import { useAppSelector } from "@plugins/redux";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { QueryKey } from "../../../api/QueryKey.ts";
-import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit.ts";
-import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits.ts";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns.ts";
-import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
-import { SearchService } from "../../../api/openapi/services/SearchService.ts";
-import { MyFilter, createEmptyFilter } from "../../../components/FilterDialog/filterUtils.ts";
-import { FilterTableToolbarLeft } from "../../../components/FilterTable/FilterTableToolbarLeft.tsx";
-import { FilterTableToolbarRight } from "../../../components/FilterTable/FilterTableToolbarRight.tsx";
-import { useRenderToolbars } from "../../../components/FilterTable/hooks/useRenderToolbars.tsx";
-import { FilterTableProps } from "../../../components/FilterTable/types/FilterTableProps.ts";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll.ts";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/renderer/SdocMetadataRenderer.tsx";
-import { SdocAnnotatorsRenderer } from "../SdocAnnotatorsRenderer.tsx";
-import { SdocRenderer } from "../renderer/SdocRenderer.tsx";
-import { SdocTagsRenderer } from "../renderer/SdocTagRenderer.tsx";
-import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
-import { useInitDocumentTableFilterSlice } from "./hooks/useInitDocumentTableFilterSlice.ts";
+import { QueryKey } from "../../../api/QueryKey";
+import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit";
+import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits";
+import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
+import { SortDirection } from "../../../api/openapi/models/SortDirection";
+import { SearchService } from "../../../api/openapi/services/SearchService";
+import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
+import { RootState } from "../../../store/store";
+import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
+import { SdocAnnotatorsRenderer } from "../SdocAnnotatorsRenderer";
+import { SdocRenderer } from "../renderer/SdocRenderer";
+import { SdocTagsRenderer } from "../renderer/SdocTagRenderer";
+import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
+import { DocumentTableFilterActions } from "./documentTableFilterSlice";
 
 const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
@@ -183,8 +185,8 @@ export const SdocTable = memo(
     }, [onFetchSizeChange, totalResults]);
 
     // rendering
-    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } = useRenderToolbars(
-      {
+    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } =
+      useRenderFilterToolbars({
         name: "documents",
         flatData,
         totalFetched,
@@ -198,8 +200,7 @@ export const SdocTable = memo(
         filterName,
         rowSelectionModel,
         tableContainerRef,
-      },
-    );
+      });
 
     const renderDetailPanel = useMemo(() => {
       if (!searchQuery || searchQuery.trim().length === 0) return undefined;

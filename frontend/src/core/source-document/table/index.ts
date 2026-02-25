@@ -1,3 +1,3 @@
-export * from "./SdocTable"
-export * from "./SdocTableSimple"
-export * from "./documentTableFilterSlice"
+export { documentTableFilterReducer } from "./documentTableFilterSlice";
+export * from "./SdocTable";
+export * from "./SdocTableSimple";

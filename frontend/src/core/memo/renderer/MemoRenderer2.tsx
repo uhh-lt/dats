@@ -1,8 +1,8 @@
 import { StackProps } from "@mui/material";
 import { memo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks.ts";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer.tsx";
+import { MemoHooks } from "../../../api/MemoHooks";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer";
 
 interface MemoRenderer2Props {
   attachedObjectType: AttachedObjectType;

@@ -1,23 +1,19 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { CodeHooks } from "../../../api/CodeHooks.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { FormColorPicker } from "../../../components/FormInputs/FormColorPicker.tsx";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { FormTextMultiline } from "../../../components/FormInputs/FormTextMultiline.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { AnnoActions } from "../../../features/annotation/store/annoSlice.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { contrastiveColors } from "../../../utils/colors.ts";
-import { CodeRenderer } from "../renderer/CodeRenderer.tsx";
+import { CodeHooks } from "../../../api/CodeHooks";
+import { CodeRead } from "../../../api/openapi/models/CodeRead";
+import { AnnoActions } from "../../../features/annotation/store/annoSlice";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { contrastiveColors } from "../../../utils/colors/colors";
+import { CodeRenderer } from "../CodeRenderer";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -39,7 +35,7 @@ export function CodeCreateDialog({ projectId }: { projectId: number }) {
   // open/close dialog
   const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);
   const handleCloseCodeCreateDialog = useCallback(() => {
-    dispatch(CRUDDialogActions.closeCodeCreateDialog());
+    dispatch(UIDialogActions.closeCodeCreateDialog());
   }, [dispatch]);
 
   // maximize

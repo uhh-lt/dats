@@ -1,26 +1,22 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
+import { useOpenConfirmationDialog } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { CodeHooks } from "../../../api/CodeHooks.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { CodeUpdate } from "../../../api/openapi/models/CodeUpdate.ts";
-import { ConfirmationAPI } from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { FormColorPicker } from "../../../components/FormInputs/FormColorPicker.tsx";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { FormTextMultiline } from "../../../components/FormInputs/FormTextMultiline.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { AnnoActions } from "../../../features/annotation/store/annoSlice.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { ColorUtils } from "../../../utils/ColorUtils.ts";
-import { CodeRenderer } from "../renderer/CodeRenderer.tsx";
+import { CodeHooks } from "../../../api/CodeHooks";
+import { CodeRead } from "../../../api/openapi/models/CodeRead";
+import { CodeUpdate } from "../../../api/openapi/models/CodeUpdate";
+import { AnnoActions } from "../../../features/annotation/store/annoSlice";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { ColorUtils } from "../../../utils/colors/ColorUtils";
+import { CodeRenderer } from "../CodeRenderer";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -31,6 +27,9 @@ type CodeEditValues = {
 
 export function CodeEditDialog() {
   const dispatch = useAppDispatch();
+
+  // confirmation dialog
+  const openConfirmationDialog = useOpenConfirmationDialog();
 
   // the code to edit
   const code = useAppSelector((state) => state.dialog.code);
@@ -51,7 +50,7 @@ export function CodeEditDialog() {
   // open/close dialog
   const isOpen = useAppSelector((state) => state.dialog.isCodeEditDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeCodeEditDialog());
+    dispatch(UIDialogActions.closeCodeEditDialog());
   }, [dispatch]);
 
   // maximize
@@ -126,7 +125,7 @@ export function CodeEditDialog() {
   const handleCodeDelete = useCallback(() => {
     // disallow deleting of SYSTEM CODES
     if (code && !code.is_system) {
-      ConfirmationAPI.openConfirmationDialog({
+      openConfirmationDialog({
         text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
         type: "DELETE",
         onAccept: () => {

@@ -1,8 +1,8 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { memo, useCallback } from "react";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import { MemoDialogAPI } from "./MemoDialogAPI.ts";
-import { MemoEvent } from "./MemoEvent.ts";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
+import { MemoEvent } from "./_types/MemoEvent";
+import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoMenuItemProps {
   onClick: (() => void) | undefined;
@@ -11,13 +11,14 @@ interface MemoMenuItemProps {
 
 export const MemoListItemButton = memo(
   ({ memoId, attachedObjectId, attachedObjectType, onClick, content }: MemoEvent & MemoMenuItemProps) => {
+    const openMemoDialog = useOpenMemoDialog();
     const handleClick = useCallback(
       (event: React.MouseEvent) => {
         event.stopPropagation();
         if (onClick) {
           onClick();
         }
-        MemoDialogAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
+        openMemoDialog({ memoId, attachedObjectId, attachedObjectType });
       },
       [memoId, attachedObjectId, attachedObjectType, onClick],
     );

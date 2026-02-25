@@ -1,14 +1,14 @@
 import { Query, useMutation, useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { Body_docprocessing_recompute_processing_step } from "./openapi/models/Body_docprocessing_recompute_processing_step.ts";
-import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { SDocStatus } from "./openapi/models/SDocStatus.ts";
-import { SourceDocumentStatusSimple } from "./openapi/models/SourceDocumentStatusSimple.ts";
-import { DocprocessingService } from "./openapi/services/DocprocessingService.ts";
-import { JobService } from "./openapi/services/JobService.ts";
-import { QueryKey } from "./QueryKey.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { Body_docprocessing_recompute_processing_step } from "./openapi/models/Body_docprocessing_recompute_processing_step";
+import { CrawlerJobRead } from "./openapi/models/CrawlerJobRead";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { SDocStatus } from "./openapi/models/SDocStatus";
+import { SourceDocumentStatusSimple } from "./openapi/models/SourceDocumentStatusSimple";
+import { DocprocessingService } from "./openapi/services/DocprocessingService";
+import { JobService } from "./openapi/services/JobService";
+import { QueryKey } from "./QueryKey";
 
 const useStartCrawlerJob = () =>
   useMutation({

@@ -1,12 +1,12 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { COTARead } from "./openapi/models/COTARead.ts";
-import { COTARefinementJobRead } from "./openapi/models/COTARefinementJobRead.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { ConceptOverTimeAnalysisService } from "./openapi/services/ConceptOverTimeAnalysisService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { COTARead } from "./openapi/models/COTARead";
+import { COTARefinementJobRead } from "./openapi/models/COTARefinementJobRead";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { ConceptOverTimeAnalysisService } from "./openapi/services/ConceptOverTimeAnalysisService";
+import { QueryKey } from "./QueryKey";
 
 // COTA QUERIES
 

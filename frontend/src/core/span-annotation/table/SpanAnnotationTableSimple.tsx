@@ -8,10 +8,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2.tsx";
-import { SpanAnnotationRenderer } from "../renderer/SpanAnnotationRenderer.tsx";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { useAuth } from "../../auth/provider/useAuth";
+import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { SpanAnnotationRenderer } from "../SpanAnnotationRenderer";
 
 interface SpanAnnotationTableRow {
   spanAnnoId: number;

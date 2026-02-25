@@ -9,13 +9,13 @@ import {
   Typography,
 } from "@mui/material";
 import { memo, useCallback, useMemo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks.ts";
-import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import { dateToLocaleString } from "../../../utils/DateUtils.ts";
-import { UserRenderer } from "../../user/renderer/UserRenderer.tsx";
-import { MemoActionMenu } from "../action/MemoActionMenu.tsx";
-import { useGetMemosAttachedObject } from "../utils/useGetMemosAttachedObject.ts";
-import { AttachedObjectRenderer } from "./AttachedObjectRenderer.tsx";
+import { MemoHooks } from "../../../api/MemoHooks";
+import { MemoRead } from "../../../api/openapi/models/MemoRead";
+import { dateToLocaleString } from "../../../utils/DateUtils";
+import { UserRenderer } from "../../user/UserRenderer";
+import { MemoActionMenu } from "../MemoActionMenu";
+import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
+import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 interface MemoCardSharedProps {
   onClick?: (memo: MemoRead) => void;

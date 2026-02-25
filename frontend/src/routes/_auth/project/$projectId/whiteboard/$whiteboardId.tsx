@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CodeMap } from "../../../../../api/CodeHooks.ts";
-import { BBoxAnnotationRead } from "../../../../../api/openapi/models/BBoxAnnotationRead.ts";
-import { MemoRead } from "../../../../../api/openapi/models/MemoRead.ts";
-import { SentenceAnnotationRead } from "../../../../../api/openapi/models/SentenceAnnotationRead.ts";
-import { SourceDocumentRead } from "../../../../../api/openapi/models/SourceDocumentRead.ts";
-import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnotationRead.ts";
-import { TagRead } from "../../../../../api/openapi/models/TagRead.ts";
-import { WhiteboardService } from "../../../../../api/openapi/services/WhiteboardService.ts";
-import { QueryKey } from "../../../../../api/QueryKey.ts";
-import { WhiteboardView } from "../../../../../features/whiteboard/views/board/WhiteboardView.tsx";
-import { queryClient } from "../../../../../plugins/ReactQueryClient.ts";
+import { CodeMap } from "../../../../../api/CodeHooks";
+import { BBoxAnnotationRead } from "../../../../../api/openapi/models/BBoxAnnotationRead";
+import { MemoRead } from "../../../../../api/openapi/models/MemoRead";
+import { SentenceAnnotationRead } from "../../../../../api/openapi/models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "../../../../../api/openapi/models/SourceDocumentRead";
+import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnotationRead";
+import { TagRead } from "../../../../../api/openapi/models/TagRead";
+import { WhiteboardService } from "../../../../../api/openapi/services/WhiteboardService";
+import { QueryKey } from "../../../../../api/QueryKey";
+import { WhiteboardView } from "../../../../../features/whiteboard/views/board/WhiteboardView";
+import { queryClient } from "../../../../../plugins/tanstack/queryClient";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   params: {

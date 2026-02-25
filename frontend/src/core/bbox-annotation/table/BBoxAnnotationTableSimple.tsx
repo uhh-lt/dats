@@ -8,10 +8,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2.tsx";
-import { BBoxAnnotationRenderer } from "../renderer/BBoxAnnotationRenderer.tsx";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { useAuth } from "../../auth/provider/useAuth";
+import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { BBoxAnnotationRenderer } from "../BBoxAnnotationRenderer";
 
 interface BBoxAnnotationTableRow {
   bboxAnnoId: number;

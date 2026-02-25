@@ -1,11 +1,11 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { MlJobRead } from "./openapi/models/MlJobRead.ts";
-import { TagRecommendationResult } from "./openapi/models/TagRecommendationResult.ts";
-import { TagRecommendationService } from "./openapi/services/TagRecommendationService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { MlJobRead } from "./openapi/models/MlJobRead";
+import { TagRecommendationResult } from "./openapi/models/TagRecommendationResult";
+import { TagRecommendationService } from "./openapi/services/TagRecommendationService";
+import { QueryKey } from "./QueryKey";
 
 // TAG RECOMMENDATION QUERIES
 const useGetAllTagRecommendationJobs = () => {

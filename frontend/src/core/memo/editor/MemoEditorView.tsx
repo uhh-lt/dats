@@ -7,7 +7,7 @@ import {
   useCreateBlockNote,
 } from "@blocknote/react";
 import { memo, useCallback, useEffect, useState } from "react";
-import { useDebounce } from "../../../hooks/useDebounce.ts";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 interface MemoEditorViewProps {
   editable: boolean;

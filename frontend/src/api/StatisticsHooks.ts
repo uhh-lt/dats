@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey.ts";
+import { QueryKey } from "./QueryKey";
 
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { KeywordStat } from "./openapi/models/KeywordStat.ts";
-import { SpanEntityStat } from "./openapi/models/SpanEntityStat.ts";
-import { TagStat } from "./openapi/models/TagStat.ts";
-import { StatisticsService } from "./openapi/services/StatisticsService.ts";
+import { useAppSelector } from "@plugins/redux";
+import { KeywordStat } from "./openapi/models/KeywordStat";
+import { SpanEntityStat } from "./openapi/models/SpanEntityStat";
+import { TagStat } from "./openapi/models/TagStat";
+import { StatisticsService } from "./openapi/services/StatisticsService";
 
 const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined) => {
   // global client state (redux)

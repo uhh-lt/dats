@@ -1,23 +1,19 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagHooks } from "../../../api/TagHooks.ts";
-import { TagCreate } from "../../../api/openapi/models/TagCreate.ts";
-import { FormColorPicker } from "../../../components/FormInputs/FormColorPicker.tsx";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { FormTextMultiline } from "../../../components/FormInputs/FormTextMultiline.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { contrastiveColors } from "../../../utils/colors.ts";
-import { TagRenderer } from "../renderer/TagRenderer.tsx";
+import { TagCreate } from "../../../api/openapi/models/TagCreate";
+import { TagHooks } from "../../../api/TagHooks";
+import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { contrastiveColors } from "../../../utils/colors/colors";
+import { TagRenderer } from "../TagRenderer";
 
 export function TagCreateDialog({ projectId }: { projectId: number }) {
   const dispatch = useAppDispatch();
@@ -29,7 +25,7 @@ export function TagCreateDialog({ projectId }: { projectId: number }) {
   // open/close dialog
   const isTagCreateDialogOpen = useAppSelector((state) => state.dialog.isTagCreateDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeTagCreateDialog());
+    dispatch(UIDialogActions.closeTagCreateDialog());
   }, [dispatch]);
 
   // maximize

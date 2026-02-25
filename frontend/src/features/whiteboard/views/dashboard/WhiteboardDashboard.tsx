@@ -1,14 +1,14 @@
-import { getRouteApi } from "@tanstack/react-router";
-import { MRT_Row, MRT_TableOptions } from "material-react-table";
-import { WhiteboardHooks } from "../../../../api/WhiteboardHooks.ts";
-import { ConfirmationAPI } from "../../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { ExportWhiteboardsButton } from "../../../../components/Export/ExportWhiteboardsButton.tsx";
-import { AnalysisDashboard } from "../../../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
+  AnalysisDashboard,
   AnalysisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
-} from "../../../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
+} from "@components/analysis-dashboard";
+import { useOpenConfirmationDialog } from "@core/notification";
+import { getRouteApi } from "@tanstack/react-router";
+import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import { WhiteboardHooks } from "../../../../api/WhiteboardHooks";
+import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");
 
@@ -45,8 +45,9 @@ export function WhiteboardDashboardView() {
     });
   };
 
+  const openConfirmationDialog = useOpenConfirmationDialog();
   const handleDeleteClick = (row: MRT_Row<AnalysisDashboardRow>) => {
-    ConfirmationAPI.openConfirmationDialog({
+    openConfirmationDialog({
       text: `Do you really want to remove the whiteboard ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard({
@@ -121,7 +122,7 @@ export function WhiteboardDashboardView() {
     handleEditAnalysis: handleUpdateWhiteboard,
     handleDeleteAnalysis: handleDeleteClick,
     handleDuplicateAnalysis: handleDuplicateClick,
-    renderExportButton: (props) => <ExportWhiteboardsButton {...props} />,
+    renderExportButton: (props) => <WhiteboardsExportButton {...props} />,
   });
 
   return (

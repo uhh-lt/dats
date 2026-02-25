@@ -1,6 +1,6 @@
-export { searchReducer } from "./views/document-search/documentSearchSlice";
+export { searchReducer } from "./store/documentSearchSlice";
+export { imageSearchReducer } from "./store/imageSearchSlice";
+export { sentenceSearchReducer } from "./store/sentenceSearchSlice";
 export * from "./views/document-search/DocumentSearchView";
-export { imageSearchReducer } from "./views/image-search/imageSearchSlice";
 export * from "./views/image-search/ImageSimilaritySearchView";
-export { sentenceSearchReducer } from "./views/sentence-search/sentenceSearchSlice";
 export * from "./views/sentence-search/SentenceSimilaritySearchView";

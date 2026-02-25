@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { AttachedObjectType } from "./openapi/models/AttachedObjectType.ts";
-import { MemoRead } from "./openapi/models/MemoRead.ts";
-import { MemoService } from "./openapi/services/MemoService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { AttachedObjectType } from "./openapi/models/AttachedObjectType";
+import { MemoRead } from "./openapi/models/MemoRead";
+import { MemoService } from "./openapi/services/MemoService";
 
 // MEMO QUERIES
 const useGetMemo = (memoId: number | null | undefined) =>

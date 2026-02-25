@@ -1,10 +1,10 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import { DocumentMemos } from "./components/memo-panel/DocumentMemos.tsx";
-import { MetadataPanel } from "./components/metadata-panel/MetadataPanel.tsx";
-import { RelatedPanel } from "./components/related-panel/RelatedPanel.tsx";
-import { TagPanel } from "./components/tags-panel/TagPanel.tsx";
+import { DocumentMemos } from "./_components/memo-panel/DocumentMemos";
+import { MetadataPanel } from "./_components/metadata-panel/MetadataPanel";
+import { RelatedPanel } from "./_components/related-panel/RelatedPanel";
+import { TagPanel } from "./_components/tags-panel/TagPanel";
 
 interface DocumentInformationProps {
   sdocId: number | undefined;

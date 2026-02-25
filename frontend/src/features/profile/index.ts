@@ -1,1 +1,1 @@
-export * from "./views/ProfileView";
+export * from "./views/main/ProfileView";

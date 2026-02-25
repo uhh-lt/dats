@@ -1,22 +1,20 @@
+import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { useAppDispatch } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
-import { SdocHooks } from "../../api/SdocHooks.ts";
-import { ConfirmationAPI } from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { SearchActions } from "../../features/search/DocumentSearch/searchSlice.ts";
-import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { SdocHooks } from "../../api/SdocHooks";
+import { SearchActions } from "../../features/search/DocumentSearch/searchSlice";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];
   navigateTo?: string;
 }
 
-export const DeleteSdocsButton = memo((
-  { sdocIds, navigateTo, ...props }: DeleteSdocsButtonProps & IconButtonProps
-) => {
+export const DeleteSdocsButton = memo(({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonProps & IconButtonProps) => {
   // react router
   const navigate = useNavigate();
 
@@ -27,8 +25,9 @@ export const DeleteSdocsButton = memo((
   const dispatch = useAppDispatch();
 
   // ui events
+  const openConfirmationDialog = useOpenConfirmationDialog();
   const onClick = useCallback(() => {
-    ConfirmationAPI.openConfirmationDialog({
+    openConfirmationDialog({
       text: `Do you really want to delete document(s) ${sdocIds.join(
         ", ",
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,

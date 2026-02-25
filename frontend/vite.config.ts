@@ -21,10 +21,16 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@api": path.resolve(__dirname, "./src/api"),
+        "@components": path.resolve(__dirname, "./src/components"),
         "@core": path.resolve(__dirname, "./src/core"),
         "@features": path.resolve(__dirname, "./src/features"),
-        "@components": path.resolve(__dirname, "./src/components"),
+        "@hooks": path.resolve(__dirname, "./src/hooks"),
+        "@plugins": path.resolve(__dirname, "./src/plugins"),
         "@routes": path.resolve(__dirname, "./src/routes"),
+        "@store": path.resolve(__dirname, "./src/store"),
+        "@styles": path.resolve(__dirname, "./src/styles"),
+        "@types": path.resolve(__dirname, "./src/types"),
+        "@utils": path.resolve(__dirname, "./src/utils"),
       },
     },
   };

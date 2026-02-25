@@ -1,12 +1,12 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
-import { SourceDocumentMetadataRead } from "./openapi/models/SourceDocumentMetadataRead.ts";
-import { ProjectMetadataService } from "./openapi/services/ProjectMetadataService.ts";
-import { SdocMetadataService } from "./openapi/services/SdocMetadataService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "./openapi/models/SourceDocumentMetadataRead";
+import { ProjectMetadataService } from "./openapi/services/ProjectMetadataService";
+import { SdocMetadataService } from "./openapi/services/SdocMetadataService";
+import { QueryKey } from "./QueryKey";
 
 // PROJECT METADATA QUERIES
 

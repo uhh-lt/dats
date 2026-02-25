@@ -3,11 +3,11 @@ import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Box, Stack, StackProps } from "@mui/material";
 import { memo } from "react";
 import Markdown from "react-markdown";
-import { MemoHooks } from "../../../api/MemoHooks.ts";
-import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
-import { UserRenderer } from "../../user/renderer/UserRenderer.tsx";
-import { AttachedObjectRenderer } from "./AttachedObjectRenderer.tsx";
+import { MemoHooks } from "../../../api/MemoHooks";
+import { MemoRead } from "../../../api/openapi/models/MemoRead";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
+import { UserRenderer } from "../../user/UserRenderer";
+import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 export interface MemoRendererSharedProps {
   showIcon?: boolean;

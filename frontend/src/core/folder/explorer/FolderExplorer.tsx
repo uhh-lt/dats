@@ -1,17 +1,16 @@
+import { ITree, TreeExplorer } from "@components/tree-explorer";
 import FolderIcon from "@mui/icons-material/Folder";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useState } from "react";
-import { FolderRead } from "../../../api/openapi/models/FolderRead.ts";
-import { FolderType } from "../../../api/openapi/models/FolderType.ts";
-import { ITree } from "../../../components/TreeExplorer/ITree.ts";
-import { TreeExplorer } from "../../../components/TreeExplorer/TreeExplorer.tsx";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { FolderCreateButton } from "../dialog/FolderCreateButton.tsx";
-import { FolderExplorerActionMenu } from "./components/FolderExplorerActionMenu.tsx";
-import { FolderExplorerMenu } from "./components/FolderExplorerMenu.tsx";
-import { useComputeFolderTree } from "./useComputeFolderTree.ts";
+import { FolderRead } from "../../../api/openapi/models/FolderRead";
+import { FolderType } from "../../../api/openapi/models/FolderType";
+import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
+import { FolderCreateButton } from "../dialog/FolderCreateButton";
+import { FolderExplorerActionMenu } from "./_components/FolderExplorerActionMenu";
+import { FolderExplorerMenu } from "./_components/FolderExplorerMenu";
+import { useComputeFolderTree } from "./_hooks/useComputeFolderTree";
 
 const renderActions = (node: ITree<FolderRead>) => <FolderExplorerActionMenu node={node} />;
 const isDroppable = (node: ITree<FolderRead>) => node.data.folder_type === FolderType.NORMAL;

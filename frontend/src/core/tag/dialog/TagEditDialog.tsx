@@ -1,24 +1,20 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { useWithLevel } from "@components/tree-explorer";
+import { useOpenConfirmationDialog } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagHooks } from "../../../api/TagHooks.ts";
-import { TagUpdate } from "../../../api/openapi/models/TagUpdate.ts";
-import { ConfirmationAPI } from "../../../components/ConfirmationDialog/ConfirmationAPI.ts";
-import { FormColorPicker } from "../../../components/FormInputs/FormColorPicker.tsx";
-import { FormMenu } from "../../../components/FormInputs/FormMenu.tsx";
-import { FormText } from "../../../components/FormInputs/FormText.tsx";
-import { FormTextMultiline } from "../../../components/FormInputs/FormTextMultiline.tsx";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useWithLevel } from "../../../components/TreeExplorer/useWithLevel.ts";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { ColorUtils } from "../../../utils/ColorUtils.ts";
-import { TagRenderer } from "../renderer/TagRenderer.tsx";
+import { TagUpdate } from "../../../api/openapi/models/TagUpdate";
+import { TagHooks } from "../../../api/TagHooks";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { ColorUtils } from "../../../utils/colors/ColorUtils";
+import { TagRenderer } from "../TagRenderer";
 
 export function TagEditDialog() {
   const dispatch = useAppDispatch();
@@ -33,7 +29,7 @@ export function TagEditDialog() {
   // open/close dialog
   const isOpen = useAppSelector((state) => state.dialog.isTagEditDialogOpen);
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeTagEditDialog());
+    dispatch(UIDialogActions.closeTagEditDialog());
   }, [dispatch]);
 
   // maximize
@@ -86,10 +82,11 @@ export function TagEditDialog() {
     },
     [handleClose, tag, updateTagMutation],
   );
+  const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: deleteTagMutation, isPending: isDeleteLoading } = TagHooks.useDeleteTag();
   const handleTagDelete = useCallback(() => {
     if (tag) {
-      ConfirmationAPI.openConfirmationDialog({
+      openConfirmationDialog({
         text: `Do you really want to delete the tag "${tag.name}"? This action cannot be undone!`,
         type: "DELETE",
         onAccept: () => {

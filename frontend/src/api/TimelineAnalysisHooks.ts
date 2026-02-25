@@ -1,10 +1,10 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { TimelineAnalysisRead } from "./openapi/models/TimelineAnalysisRead.ts";
-import { TimelineAnalysisService } from "./openapi/services/TimelineAnalysisService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { TimelineAnalysisRead } from "./openapi/models/TimelineAnalysisRead";
+import { TimelineAnalysisService } from "./openapi/services/TimelineAnalysisService";
+import { QueryKey } from "./QueryKey";
 
 // TIMELINE QUERIES
 

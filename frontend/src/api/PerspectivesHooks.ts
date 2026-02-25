@@ -1,18 +1,18 @@
+import { MyFilter } from "@components/filter/redux-filter-dialog/index";
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { MyFilter } from "../components/FilterDialog/filterUtils.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { dateToLocaleDate } from "../utils/DateUtils.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { AspectRead } from "./openapi/models/AspectRead.ts";
-import { ClusterRead } from "./openapi/models/ClusterRead.ts";
-import { CodeRead } from "./openapi/models/CodeRead.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead.ts";
-import { SdocColumns } from "./openapi/models/SdocColumns.ts";
-import { PerspectivesService } from "./openapi/services/PerspectivesService.ts";
-import { RagService } from "./openapi/services/RagService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { dateToLocaleDate } from "../utils/DateUtils";
+import { AspectRead } from "./openapi/models/AspectRead";
+import { ClusterRead } from "./openapi/models/ClusterRead";
+import { CodeRead } from "./openapi/models/CodeRead";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { PerspectivesJobRead } from "./openapi/models/PerspectivesJobRead";
+import { SdocColumns } from "./openapi/models/SdocColumns";
+import { PerspectivesService } from "./openapi/services/PerspectivesService";
+import { RagService } from "./openapi/services/RagService";
+import { QueryKey } from "./QueryKey";
 
 // ASPECTS
 

@@ -1,7 +1,7 @@
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { memo, useCallback } from "react";
-import { UserHooks } from "../../../api/UserHooks.ts";
-import { UserRenderer } from "../renderer/UserRenderer.tsx";
+import { UserHooks } from "../../../api/UserHooks";
+import { UserRenderer } from "../UserRenderer";
 
 interface UserSelectorProps {
   userId: number;

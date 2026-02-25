@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../features/auth/useAuth.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
-import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead.ts";
-import { SentenceAnnotationUpdate } from "./openapi/models/SentenceAnnotationUpdate.ts";
-import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult.ts";
-import { SentenceAnnotationService } from "./openapi/services/SentenceAnnotationService.ts";
+import { useAuth } from "../core/auth/provider/useAuth";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { CancelablePromise } from "./openapi/core/CancelablePromise";
+import { SentenceAnnotationRead } from "./openapi/models/SentenceAnnotationRead";
+import { SentenceAnnotationUpdate } from "./openapi/models/SentenceAnnotationUpdate";
+import { SentenceAnnotatorResult } from "./openapi/models/SentenceAnnotatorResult";
+import { SentenceAnnotationService } from "./openapi/services/SentenceAnnotationService";
 
 export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 

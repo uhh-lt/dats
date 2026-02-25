@@ -8,10 +8,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../features/auth/useAuth.ts";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2.tsx";
-import { SentenceAnnotationRenderer } from "../renderer/SentenceAnnotationRenderer.tsx";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
+import { useAuth } from "../../auth/provider/useAuth";
+import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 interface SentenceAnnotationTableRow {
   sentAnnoId: number;

@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
 
-import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
-import { ProjectRead } from "./openapi/models/ProjectRead.ts";
-import { SDocStatus } from "./openapi/models/SDocStatus.ts";
-import { ProjectService } from "./openapi/services/ProjectService.ts";
+import { ProjectCreate } from "./openapi/models/ProjectCreate";
+import { ProjectRead } from "./openapi/models/ProjectRead";
+import { SDocStatus } from "./openapi/models/SDocStatus";
+import { ProjectService } from "./openapi/services/ProjectService";
 
 // PROJECT QUERIES
 interface UseProjectsQueryParams<T> {

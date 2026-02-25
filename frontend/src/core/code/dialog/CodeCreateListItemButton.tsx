@@ -1,8 +1,8 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 
 interface CodeCreateListItemButtonProps {
   parentCodeId: number | undefined;
@@ -14,7 +14,7 @@ export const CodeCreateListItemButton = memo(
     const dispatch = useAppDispatch();
 
     const handleClick = useCallback(() => {
-      dispatch(CRUDDialogActions.openCodeCreateDialog({ parentCodeId }));
+      dispatch(UIDialogActions.openCodeCreateDialog({ parentCodeId }));
     }, [dispatch, parentCodeId]);
 
     return (

@@ -1,19 +1,18 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import ClassifierDialog from "../../../../components/Classifier/Dialog/ClassifierDialog.tsx";
-import ConfirmationDialog from "../../../../components/ConfirmationDialog/ConfirmationDialog.tsx";
-import DocumentUploadDialog from "../../../../components/DocumentUpload/DocumentUploadDialog.tsx";
-import LLMDialog from "../../../../components/LLMDialog/LLMDialog.tsx";
-import ProjectSettingsDialog from "../../../../components/ProjectSettings/ProjectSettingsDialog.tsx";
-import QuickCommandMenu from "../../../../components/QuickCommandMenu/QuickCommandMenu.tsx";
-import { ShortcutManager } from "../../../../components/ShortcutManager/ShortcutManager.tsx";
-import CodeCreateDialog from "../../../../core/code/dialog/CodeCreateDialog.tsx";
-import CodeEditDialog from "../../../../core/code/dialog/CodeEditDialog.tsx";
-import FolderCreateDialog from "../../../../core/folder/dialog/FolderCreateDialog.tsx";
-import FolderEditDialog from "../../../../core/folder/dialog/FolderEditDialog.tsx";
-import MemoDialog from "../../../../core/memo/dialog/MemoDialog.tsx";
-import TagCreateDialog from "../../../../core/tag/dialog/TagCreateDialog.tsx";
-import TagEditDialog from "../../../../core/tag/dialog/TagEditDialog.tsx";
-import DialMenu from "../../../../layouts/DialMenu/DialMenu.tsx";
+import CodeCreateDialog from "../../../../core/code/dialog/CodeCreateDialog";
+import CodeEditDialog from "../../../../core/code/dialog/CodeEditDialog";
+import FolderCreateDialog from "../../../../core/folder/dialog/FolderCreateDialog";
+import FolderEditDialog from "../../../../core/folder/dialog/FolderEditDialog";
+import MemoDialog from "../../../../core/memo/dialog/MemoDialog";
+import QuickCommandMenu from "../../../../core/navigation/quick-command/QuickCommandMenu";
+import { ShortcutManager } from "../../../../core/navigation/shortcut/ShortcutManager";
+import ConfirmationDialog from "../../../../core/notification/confirmation/ConfirmationDialog";
+import TagCreateDialog from "../../../../core/tag/dialog/TagCreateDialog";
+import TagEditDialog from "../../../../core/tag/dialog/TagEditDialog";
+import ClassifierDialog from "../../../../features/classifier/views/dialog/ClassifierDialog";
+import DocumentUploadDialog from "../../../../features/document-upload/views/dialog/DocumentUploadDialog";
+import LLMDialog from "../../../../features/llm-assistant/views/dialog/LLMAssistantDialog";
+import ProjectSettingsDialog from "../../../../features/project-settings/views/dialog/ProjectSettingsDialog";
 
 export const Route = createFileRoute("/_auth/project/$projectId")({
   params: {
@@ -29,7 +28,6 @@ function ProjectRouteLayout() {
     <>
       <Outlet />
       {/* Global Dialogs */}
-      <DialMenu />
       <MemoDialog />
       <TagCreateDialog projectId={projectId} />
       <TagEditDialog />

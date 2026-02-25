@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { DuplicateFinderJobRead } from "./openapi/models/DuplicateFinderJobRead.ts";
-import { ExportJobRead } from "./openapi/models/ExportJobRead.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { MlJobRead } from "./openapi/models/MlJobRead.ts";
-import { JobService } from "./openapi/services/JobService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { DuplicateFinderJobRead } from "./openapi/models/DuplicateFinderJobRead";
+import { ExportJobRead } from "./openapi/models/ExportJobRead";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { MlJobRead } from "./openapi/models/MlJobRead";
+import { JobService } from "./openapi/services/JobService";
 
 const useStartDuplicateFinderJob = () =>
   useMutation({

@@ -1,12 +1,12 @@
+import { useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { Body_tag_update_tags_batch } from "./openapi/models/Body_tag_update_tags_batch.ts";
-import { SourceDocumentTagMultiLink } from "./openapi/models/SourceDocumentTagMultiLink.ts";
-import { TagRead } from "./openapi/models/TagRead.ts";
-import { TagService } from "./openapi/services/TagService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { Body_tag_update_tags_batch } from "./openapi/models/Body_tag_update_tags_batch";
+import { SourceDocumentTagMultiLink } from "./openapi/models/SourceDocumentTagMultiLink";
+import { TagRead } from "./openapi/models/TagRead";
+import { TagService } from "./openapi/services/TagService";
+import { QueryKey } from "./QueryKey";
 
 // TAG QUERIES
 interface UseProjectTagsQueryParams<T> {

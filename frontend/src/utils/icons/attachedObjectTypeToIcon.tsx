@@ -1,5 +1,5 @@
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { Icon, getIconComponent } from "./iconUtils.tsx";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType";
+import { Icon, getIconComponent } from "./iconUtils";
 
 export const attachedObjectTypeToIcon: Record<AttachedObjectType, React.ReactElement> = {
   [AttachedObjectType.PROJECT]: getIconComponent(Icon.PROJECT),

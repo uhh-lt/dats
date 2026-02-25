@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Map from "../../../../../../features/perspectives/views/map/PerspectivesMapView.tsx";
+import Map from "../../../../../../features/perspectives/views/map/PerspectivesMapView";
 
 export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$aspectId/map")({
   component: Map,

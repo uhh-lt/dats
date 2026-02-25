@@ -1,3 +1,3 @@
-export * from "./SpanAnnotationTable"
-export * from "./satFilterSlice"
-export * from "./SpanAnnotationTableSimple"
+export { satFilterReducer } from "./satFilterSlice";
+export * from "./SpanAnnotationTable";
+export * from "./SpanAnnotationTableSimple";

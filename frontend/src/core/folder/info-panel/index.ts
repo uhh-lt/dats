@@ -1,1 +1,1 @@
-export * from "./FolderInfoPanel.tsx";
+export * from "./FolderInfoPanel";

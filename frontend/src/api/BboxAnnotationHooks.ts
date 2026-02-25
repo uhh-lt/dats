@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useAuth } from "../features/auth/useAuth.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { CancelablePromise } from "./openapi/core/CancelablePromise.ts";
-import { BBoxAnnotationCreate } from "./openapi/models/BBoxAnnotationCreate.ts";
-import { BBoxAnnotationRead } from "./openapi/models/BBoxAnnotationRead.ts";
-import { BBoxAnnotationUpdate } from "./openapi/models/BBoxAnnotationUpdate.ts";
-import { BboxAnnotationService } from "./openapi/services/BboxAnnotationService.ts";
+import { useAuth } from "../core/auth/provider/useAuth";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { CancelablePromise } from "./openapi/core/CancelablePromise";
+import { BBoxAnnotationCreate } from "./openapi/models/BBoxAnnotationCreate";
+import { BBoxAnnotationRead } from "./openapi/models/BBoxAnnotationRead";
+import { BBoxAnnotationUpdate } from "./openapi/models/BBoxAnnotationUpdate";
+import { BboxAnnotationService } from "./openapi/services/BboxAnnotationService";
 
 export const FAKE_BBOX_ID = -1;
 

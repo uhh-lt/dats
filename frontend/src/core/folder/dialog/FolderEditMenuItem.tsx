@@ -1,9 +1,9 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { FolderRead } from "../../../api/openapi/models/FolderRead.ts";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils.tsx";
+import { FolderRead } from "../../../api/openapi/models/FolderRead";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 
 interface FolderEditMenuItemProps {
   folder: FolderRead;
@@ -16,7 +16,7 @@ export const FolderEditMenuItem = memo(({ folder, onClick, ...props }: FolderEdi
     (event: React.MouseEvent<HTMLLIElement>) => {
       event.stopPropagation();
       if (onClick) onClick(event);
-      dispatch(CRUDDialogActions.openFolderEditDialog({ folder }));
+      dispatch(UIDialogActions.openFolderEditDialog({ folder }));
     },
     [dispatch, onClick, folder],
   );

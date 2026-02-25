@@ -1,9 +1,9 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { TagRead } from "../../../api/openapi/models/TagRead.ts";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
+import { TagRead } from "../../../api/openapi/models/TagRead";
+import { UIDialogActions } from "../../../store/global/dialogSlice";
+import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 
 export const TagEditButton = memo(({ tag, ...props }: IconButtonProps & { tag: TagRead }) => {
   const dispatch = useAppDispatch();
@@ -11,7 +11,7 @@ export const TagEditButton = memo(({ tag, ...props }: IconButtonProps & { tag: T
   const handleClickOpen: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
       event.stopPropagation();
-      dispatch(CRUDDialogActions.openTagEditDialog({ tag }));
+      dispatch(UIDialogActions.openTagEditDialog({ tag }));
     },
     [dispatch, tag],
   );

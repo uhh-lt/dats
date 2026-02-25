@@ -1,17 +1,16 @@
+import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
-import { SentenceAnnotationHooks } from "../../../api/SentenceAnnotationHooks.ts";
-import { DATSDialogHeader } from "../../../components/MUI/DATSDialogHeader.tsx";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { CRUDDialogActions } from "../../../store/dialogSlice.ts";
-import { CodeRenderer } from "../../code/renderer/CodeRenderer.tsx";
-import { CodeTable } from "../../code/table/CodeTable.tsx";
-import { SentenceAnnotationRenderer } from "../renderer/SentenceAnnotationRenderer.tsx";
+import { SentenceAnnotationHooks } from "../../../api/SentenceAnnotationHooks";
+import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
+import { CodeRenderer } from "../../code/CodeRenderer";
+import { CodeTable } from "../../code/CodeTable";
+import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 export interface SentenceAnnotationEditDialogProps extends ButtonProps {
   projectId: number;
@@ -34,7 +33,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeSentenceAnnotationEditDialog());
+    dispatch(UIDialogActions.closeSentenceAnnotationEditDialog());
     setRowSelectionModel({});
   }, [dispatch]);
 

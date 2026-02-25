@@ -1,11 +1,11 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { ApproachType } from "./openapi/models/ApproachType.ts";
-import { JobStatus } from "./openapi/models/JobStatus.ts";
-import { LlmAssistantJobRead } from "./openapi/models/LlmAssistantJobRead.ts";
-import { TaskType } from "./openapi/models/TaskType.ts";
-import { LlmService } from "./openapi/services/LlmService.ts";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { QueryKey } from "./QueryKey";
+import { ApproachType } from "./openapi/models/ApproachType";
+import { JobStatus } from "./openapi/models/JobStatus";
+import { LlmAssistantJobRead } from "./openapi/models/LlmAssistantJobRead";
+import { TaskType } from "./openapi/models/TaskType";
+import { LlmService } from "./openapi/services/LlmService";
 
 const useStartLLMJob = () =>
   useMutation({

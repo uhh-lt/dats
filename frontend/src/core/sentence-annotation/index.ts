@@ -1,3 +1,4 @@
 export * from "./dialog";
-export * from "./renderer";
+export * from "./SentenceAnnotationExportButton";
+export * from "./SentenceAnnotationRenderer";
 export * from "./table";

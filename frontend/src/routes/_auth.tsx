@@ -1,13 +1,13 @@
 import { Box } from "@mui/material";
 import { createFileRoute, Outlet, redirect, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LoginStatus } from "../features/auth/LoginStatus.ts";
-import SideBar from "../layouts/SideBar/SideBar.tsx";
-import TabBar from "../layouts/TabBar/TabBar.tsx";
+import { LoginStatus } from "../core/auth/types/LoginStatus";
+import SideBar from "../core/navigation/SideBar";
+import TabBar from "../core/navigation/tabs/tab-bar/TabBar";
 
-import { ProjectActions } from "../core/project/projectSlice.ts";
-import "../layouts/Layout.css";
-import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { ProjectActions } from "../store/global/projectSlice";
+import "../styles/layout.css";
 export const Route = createFileRoute("/_auth")({
   beforeLoad: async ({ context, location }) => {
     if (context.auth.loginStatus === LoginStatus.LOGGED_OUT) {

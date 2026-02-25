@@ -1,12 +1,12 @@
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { SearchActions } from "../features/search/DocumentSearch/searchSlice.ts";
-import { queryClient } from "../plugins/ReactQueryClient.ts";
-import { useAppDispatch, useAppSelector } from "../plugins/ReduxHooks.ts";
-import { RootState } from "../store/store.ts";
-import { QueryKey } from "./QueryKey.ts";
-import { FolderRead } from "./openapi/models/FolderRead.ts";
-import { FolderType } from "./openapi/models/FolderType.ts";
-import { FolderService } from "./openapi/services/FolderService.ts";
+import { SearchActions } from "../features/search/DocumentSearch/searchSlice";
+import { queryClient } from "../plugins/tanstack/queryClient";
+import { RootState } from "../store/store";
+import { FolderRead } from "./openapi/models/FolderRead";
+import { FolderType } from "./openapi/models/FolderType";
+import { FolderService } from "./openapi/services/FolderService";
+import { QueryKey } from "./QueryKey";
 
 // Folder QUERIES
 

@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey.ts";
-import { CodeFrequency } from "./openapi/models/CodeFrequency.ts";
-import { CodeOccurrence } from "./openapi/models/CodeOccurrence.ts";
-import { DocType } from "./openapi/models/DocType.ts";
-import { AnalysisService } from "./openapi/services/AnalysisService.ts";
+import { QueryKey } from "./QueryKey";
+import { CodeFrequency } from "./openapi/models/CodeFrequency";
+import { CodeOccurrence } from "./openapi/models/CodeOccurrence";
+import { DocType } from "./openapi/models/DocType";
+import { AnalysisService } from "./openapi/services/AnalysisService";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>
   useQuery<CodeFrequency[], Error>({

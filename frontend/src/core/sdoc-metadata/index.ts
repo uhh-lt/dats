@@ -1,2 +1,2 @@
 export * from "./date-counter";
-export * from "./renderer";
+export * from "./SdocMetadataRenderer";

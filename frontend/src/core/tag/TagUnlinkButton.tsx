@@ -1,17 +1,18 @@
+import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { TagHooks } from "../../api/TagHooks.ts";
-import { TagRead } from "../../api/openapi/models/TagRead.ts";
-import { ConfirmationAPI } from "../../components/ConfirmationDialog/ConfirmationAPI.ts";
+import { TagHooks } from "../../api/TagHooks";
+import { TagRead } from "../../api/openapi/models/TagRead";
 
 export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: TagRead }) => {
   // mutations
   const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkTags();
 
   // actions
+  const openConfirmationDialog = useOpenConfirmationDialog();
   const handleDeleteDocumentTag = useCallback(() => {
-    ConfirmationAPI.openConfirmationDialog({
+    openConfirmationDialog({
       text: `Do you really want to remove the DocumentTag "${tag.name}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
       onAccept: () => {
         removeTagMutation({

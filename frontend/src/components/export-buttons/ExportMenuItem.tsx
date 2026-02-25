@@ -1,0 +1,27 @@
+import { CircularProgress, ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { memo } from "react";
+import { ExportJobInput } from "../../api/openapi/models/ExportJobInput";
+import { getIconComponent, Icon } from "../../utils/icons/iconUtils";
+import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";
+
+interface ExportMenuItemProps extends Omit<ExportJobInput, "project_id">, Omit<MenuItemProps, "onClick" | "disabled"> {
+  title: string;
+  isDisabled?: boolean;
+}
+
+export const ExportMenuItem = memo(
+  ({ title, isDisabled = false, export_job_type, specific_export_job_parameters, ...props }: ExportMenuItemProps) => {
+    const { onClick, isPending, exportJobData } = useExport({
+      export_job_type,
+      specific_export_job_parameters,
+    });
+
+    const isLoading = isPending || (exportJobData && RUNNING_OR_WAITING.includes(exportJobData.status));
+    return (
+      <MenuItem onClick={onClick} disabled={isDisabled || isLoading} {...props}>
+        <ListItemIcon>{isLoading ? <CircularProgress size={24} /> : getIconComponent(Icon.EXPORT)}</ListItemIcon>
+        <ListItemText>{title}</ListItemText>
+      </MenuItem>
+    );
+  },
+);

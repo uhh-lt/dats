@@ -1,26 +1,25 @@
+import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
 import { Box, Typography } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { MetadataHooks } from "../../../../api/MetadataHooks.ts";
-import { SdocColumns } from "../../../../api/openapi/models/SdocColumns.ts";
-import { SimSearchImageHit } from "../../../../api/openapi/models/SimSearchImageHit.ts";
-import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat.ts";
-import { SimsearchService } from "../../../../api/openapi/services/SimsearchService.ts";
-import { QueryKey } from "../../../../api/QueryKey.ts";
-import { MyFilter, createEmptyFilter } from "../../../../components/FilterDialog/filterUtils.ts";
-import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel.tsx";
-import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer.tsx";
-import { SidebarContentSidebarLayout } from "../../../../layouts/ContentLayouts/SidebarContentSidebarLayout.tsx";
-import { LayoutPercentageKeys } from "../../../../layouts/layoutSlice.ts";
-import { useLayoutPercentage } from "../../../../layouts/ResizePanel/hooks/useLayoutPercentage.ts";
-import { PercentageResizablePanel } from "../../../../layouts/ResizePanel/PercentageResizablePanel.tsx";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { SearchStatistics } from "../../components/statistics/SearchStatistics.tsx";
-import { useInitSearchFilterSlice } from "../../hooks/useInitSearchFilterSlice.ts";
-import { SearchActions } from "../document-search/documentSearchSlice.ts";
-import { ImageSimilaritySearchToolbar } from "./components/ImageSimilaritySearchToolbar.tsx";
-import { ImageSimilarityView } from "./components/ImageSimilarityView.tsx";
+import { MetadataHooks } from "../../../../api/MetadataHooks";
+import { SdocColumns } from "../../../../api/openapi/models/SdocColumns";
+import { SimSearchImageHit } from "../../../../api/openapi/models/SimSearchImageHit";
+import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat";
+import { SimsearchService } from "../../../../api/openapi/services/SimsearchService";
+import { QueryKey } from "../../../../api/QueryKey";
+import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
+import { PercentageResizablePanel } from "../../../../components/resizable-panels/PercentageResizablePanel";
+import { useLayoutPercentage } from "../../../../components/resizable-panels/useLayoutPercentage";
+import { DocumentInfoPanel } from "../../../../core/source-document/info-panel/DocumentInfoPanel";
+import { TagExplorer } from "../../../../core/tag/explorer/TagExplorer";
+import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
+import { useInitSearchFilterSlice } from "../../_hooks/useInitSearchFilterSlice";
+import { SearchActions } from "../../store/documentSearchSlice";
+import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
+import { ImageSimilarityView } from "./_components/ImageSimilarityView";
 
 const filterName = "imageSimilaritySearch";
 const routeApi = getRouteApi("/_auth/project/$projectId/imagesearch");
@@ -92,7 +91,7 @@ export function ImageSimilaritySearchView() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // vertical sidebar percentage
-  const { percentage, handleResize } = useLayoutPercentage(LayoutPercentageKeys.SearchVerticalSidebar);
+  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
 
   // render
   return (
