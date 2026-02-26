@@ -162,6 +162,23 @@ class CRUDBase(Generic[ID, COLLECTION]):
         collection = self._get_collection(client=client, project_id=project_id)
         return collection.data.delete_by_id(id.uuidv5())
 
+    def remove_embeddings(
+        self, client: WeaviateClient, project_id: int, ids: list[ID]
+    ) -> int:
+        """
+        Remove multiple embeddings from Weaviate
+        Args:
+            ids: List of object identifiers
+        Returns:
+            Number of objects deleted
+        """
+        collection = self._get_collection(client=client, project_id=project_id)
+        delete_count = 0
+        for id in ids:
+            if collection.data.delete_by_id(id.uuidv5()):
+                delete_count += 1
+        return delete_count
+
     def remove_embeddings_by_project(
         self, client: WeaviateClient, project_id: int
     ) -> None:

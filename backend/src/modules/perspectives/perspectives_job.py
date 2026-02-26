@@ -15,8 +15,8 @@ sqlr = SQLRepo()
     timeout=JobTiming.ONE_DAY,
 )
 def perspectives_job(payload: PerspectivesJobInput, job: Job) -> None:
-    from modules.perspectives.perspectives_service import PerspectivesService
+    from modules.perspectives.perspectives_job_handler import PerspectivesJobHandler
 
     with sqlr.db_session() as db:
-        ps = PerspectivesService(job=job)
+        ps = PerspectivesJobHandler(job=job)
         ps.handle_perspectives_job(db=db, payload=payload)

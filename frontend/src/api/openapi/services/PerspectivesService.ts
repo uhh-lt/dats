@@ -14,6 +14,7 @@ import type { CreateClusterWithNameParams } from "../models/CreateClusterWithNam
 import type { CreateClusterWithSdocsParams } from "../models/CreateClusterWithSdocsParams";
 import type { MergeClustersParams } from "../models/MergeClustersParams";
 import type { PerspectivesClusterSimilarities } from "../models/PerspectivesClusterSimilarities";
+import type { PerspectivesHistoryRead } from "../models/PerspectivesHistoryRead";
 import type { PerspectivesJobRead } from "../models/PerspectivesJobRead";
 import type { PerspectivesVisualization } from "../models/PerspectivesVisualization";
 import type { RecomputeClusterTitleAndDescriptionParams } from "../models/RecomputeClusterTitleAndDescriptionParams";
@@ -299,23 +300,6 @@ export class PerspectivesService {
     });
   }
   /**
-   * Returns data for visualizing the clusters of the given aspect.
-   * @returns AspectRead Successful Response
-   * @throws ApiError
-   */
-  public static visualizeClusters({ aspectId }: { aspectId: number }): CancelablePromise<AspectRead> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/perspectives/visualize_clusters/{aspect_id}",
-      path: {
-        aspect_id: aspectId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Returns the clusters for the given SourceDocument (sdoc_id) in the specified Aspect (aspect_id).
    * @returns ClusterRead Successful Response
    * @throws ApiError
@@ -359,6 +343,61 @@ export class PerspectivesService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Redoes the last undone operation for the given Aspect.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static redoPerspectivesHistory({ aspectId }: { aspectId: number }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/history/redo/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Undoes the last operation for the given Aspect.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static undoPerspectivesHistory({ aspectId }: { aspectId: number }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/perspectives/history/undo/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the list of history entries for the given Aspect.
+   * @returns PerspectivesHistoryRead Successful Response
+   * @throws ApiError
+   */
+  public static listPerspectivesHistory({
+    aspectId,
+  }: {
+    aspectId: number;
+  }): CancelablePromise<Array<PerspectivesHistoryRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/perspectives/history/list/{aspect_id}",
+      path: {
+        aspect_id: aspectId,
+      },
       errors: {
         422: `Validation Error`,
       },

@@ -1,8 +1,8 @@
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
 
-from modules.perspectives.aspect_collection import AspectCollection
-from modules.perspectives.aspect_embedding_dto import AspectObjectIdentifier
+from modules.perspectives.aspect.aspect_collection import AspectCollection
+from modules.perspectives.aspect.aspect_embedding_dto import AspectObjectIdentifier
 from repos.vector.embedding_crud_base import CRUDBase
 from systems.event_system.events import project_deleted, source_document_deleted
 

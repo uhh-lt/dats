@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from core.tag.tag_orm import TagORM
     from core.user.user_orm import UserORM
     from modules.classifier.classifier_orm import ClassifierORM
-    from modules.perspectives.aspect_orm import AspectORM
+    from modules.perspectives.aspect.aspect_orm import AspectORM
     from modules.whiteboard.whiteboard_orm import WhiteboardORM
 
 

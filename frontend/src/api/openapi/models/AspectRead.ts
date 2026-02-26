@@ -18,10 +18,6 @@ export type AspectRead = {
    */
   doc_modification_prompt?: string | null;
   /**
-   * Whether the aspect is hierarchical
-   */
-  is_hierarchical: boolean;
-  /**
    * Modality of the documents of this aspect
    */
   modality: DocType;

@@ -12,10 +12,6 @@ export type ClusterRead = {
    */
   aspect_id: number;
   /**
-   * ID of the parent cluster, if any
-   */
-  parent_cluster_id: number | null;
-  /**
    * Whether the cluster is an outlier
    */
   is_outlier: boolean;
@@ -27,10 +23,6 @@ export type ClusterRead = {
    * Description of the cluster
    */
   description: string;
-  /**
-   * Hierarchical level of the cluster
-   */
-  level: number;
   /**
    * X coordinate for visualization
    */

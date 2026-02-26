@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import PerspectivesHooks from "../../../api/PerspectivesHooks.ts";
+import PerspectivesHistory from "../components/PerspectivesHistory.tsx";
 import MapPlot from "./MapPlot.tsx";
 import MapToolbar from "./toolbar/MapToolbar.tsx";
 
@@ -15,6 +16,7 @@ function MapContent({ aspectId }: MapContentProps) {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <MapToolbar aspectId={aspectId} />
       {vis.isSuccess && <MapPlot vis={vis.data} />}
+      <PerspectivesHistory aspectId={aspectId} />
     </Box>
   );
 }

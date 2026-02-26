@@ -52,8 +52,6 @@ function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
             aspect_id: aspectId,
             name: data.name,
             description: data.description,
-            parent_cluster_id: null, // no parent cluster for new clusters
-            level: 0, // default level for new clusters
           },
         },
       },
