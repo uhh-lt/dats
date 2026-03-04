@@ -1,16 +1,17 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierEvaluationOutput } from "@api/models/ClassifierEvaluationOutput";
+import { ClassifierInferenceOutput } from "@api/models/ClassifierInferenceOutput";
+import { ClassifierTask } from "@api/models/ClassifierTask";
+import { ClassifierTrainingOutput } from "@api/models/ClassifierTrainingOutput";
 import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierEvaluationOutput } from "../../../../../api/openapi/models/ClassifierEvaluationOutput";
-import { ClassifierInferenceOutput } from "../../../../../api/openapi/models/ClassifierInferenceOutput";
-import { ClassifierTask } from "../../../../../api/openapi/models/ClassifierTask";
-import { ClassifierTrainingOutput } from "../../../../../api/openapi/models/ClassifierTrainingOutput";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {
   // global client state
-  const classifierJobId = useAppSelector((state) => state.dialog.classifierJobId);
+  const classifierJobId = useAppSelector((state) => state.classifier.classifierJobId);
   const dispatch = useAppDispatch();
 
   // get the job
@@ -18,7 +19,7 @@ export function ResultStep() {
 
   // dialog actions
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeClassifierDialog());
+    dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
 
   if (!cj.data || !cj.data.output) return null;

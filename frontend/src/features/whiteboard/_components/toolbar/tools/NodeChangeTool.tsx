@@ -1,3 +1,4 @@
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
@@ -6,7 +7,6 @@ import TitleIcon from "@mui/icons-material/Title";
 import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { useMemo, useState } from "react";
 import { Node } from "reactflow";
-import { WhiteboardNodeType } from "../../../../../api/openapi/models/WhiteboardNodeType";
 import { BorderData } from "../../../_types/base/BorderData";
 
 enum NodeType {

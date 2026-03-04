@@ -1,20 +1,21 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, MouseEventHandler, useRef, useState } from "react";
-import { QueryKey } from "../../../api/QueryKey";
-import { FAKE_ANNOTATION_ID, SpanAnnotationHooks } from "../../../api/SpanAnnotationHooks";
-
-import { useOpenConfirmationDialog } from "@core/notification";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { FAKE_ANNOTATION_ID, SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { useAuth } from "@core/auth";
+import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead";
-import { SpanAnnotationCreate } from "../../../api/openapi/models/SpanAnnotationCreate";
-import { SpanAnnotationRead } from "../../../api/openapi/models/SpanAnnotationRead";
-import { useAuth } from "../../../core/auth/provider/useAuth";
-import { useOpenSnackbar } from "../../../core/notification/snackbar/useOpenSnackbar";
-import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
+import { useQueryClient } from "@tanstack/react-query";
+import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
+import { MouseEvent, MouseEventHandler, useRef, useState } from "react";
 import { useComputeTokenData } from "../_hooks/useComputeTokenData";
-import { AnnoActions, TagStyle } from "../store/annoSlice";
-import { AnnotationMenu, CodeSelectorHandle } from "./annotation-menu/AnnotationMenu";
+import { Annotation } from "../_types/Annotation";
+import { TagStyle } from "../_types/TagStyle";
+import { AnnoActions } from "../store/annoSlice";
+import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { DocumentRenderer } from "./document-renderer/DocumentRenderer";
+
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
 };
@@ -27,7 +28,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const { user } = useAuth();
 
   // local state
-  const spanMenuRef = useRef<CodeSelectorHandle>(null);
+  const spanMenuRef = useRef<AnnotationMenuHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
   // global client state (redux)

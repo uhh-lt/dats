@@ -1,3 +1,5 @@
+import { UserHooks } from "@api/hooks/UserHooks";
+import { UserCreate } from "@api/models/UserCreate";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormEmail, FormPassword, FormText } from "@components/form-inputs";
 import { LinkButton } from "@components/links";
@@ -17,11 +19,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
+import { EMAIL_REGEX } from "@utils/GlobalConstants";
 import { ChangeEvent, useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { UserHooks } from "../../../../api/UserHooks";
-import { UserCreate } from "../../../../api/openapi/models/UserCreate";
-import { EMAIL_REGEX } from "../../../../utils/GlobalConstants";
 
 interface RegisterFormValues extends UserCreate {
   confirmPassword: string;

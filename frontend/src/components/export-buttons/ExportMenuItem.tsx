@@ -1,7 +1,7 @@
+import { ExportJobInput } from "@api/models/ExportJobInput";
 import { CircularProgress, ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo } from "react";
-import { ExportJobInput } from "../../api/openapi/models/ExportJobInput";
-import { getIconComponent, Icon } from "../../utils/icons/iconUtils";
 import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";
 
 interface ExportMenuItemProps extends Omit<ExportJobInput, "project_id">, Omit<MenuItemProps, "onClick" | "disabled"> {

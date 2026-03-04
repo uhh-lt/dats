@@ -2,13 +2,13 @@ import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { useAppSelector } from "@plugins/redux";
-import { BboxAnnotationHooks } from "../../../api/BboxAnnotationHooks";
-import { MetadataHooks } from "../../../api/MetadataHooks";
-import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead";
-import { SourceDocumentDataRead } from "../../../api/openapi/models/SourceDocumentDataRead";
-import { AnnotationMenu, CodeSelectorHandle } from "./annotation-menu/AnnotationMenu";
+import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { SVGBBox } from "./SVGBBox";
 import { SVGBBoxText } from "./SVGBBoxText";
 
@@ -37,7 +37,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const gDragRef = useRef<SVGGElement>(null);
   const rectRef = useRef<SVGRectElement>(null);
   const imgRef = useRef<SVGImageElement>(null);
-  const codeSelectorRef = useRef<CodeSelectorHandle>(null);
+  const codeSelectorRef = useRef<AnnotationMenuHandle>(null);
 
   // global client state (redux)
   const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);

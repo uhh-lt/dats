@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { LayoutActions } from "@store/global/layoutSlice";
 import { useCallback } from "react";
-import { LayoutActions } from "../../store/global/layoutSlice";
 
 const DEFAULT_LAYOUT_PERCENTAGE = 30;
 

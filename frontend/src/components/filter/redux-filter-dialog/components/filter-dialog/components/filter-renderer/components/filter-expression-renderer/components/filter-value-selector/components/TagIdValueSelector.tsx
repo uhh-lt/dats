@@ -1,7 +1,7 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRenderer } from "@core/tag/TagRenderer";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
-import { TagHooks } from "../../../../../../../../../../../../api/TagHooks";
-import { TagRenderer } from "../../../../../../../../../../../../core/tag/TagRenderer";
 import { useWithLevel } from "../../../../../../../../../../../tree-explorer/useWithLevel";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 

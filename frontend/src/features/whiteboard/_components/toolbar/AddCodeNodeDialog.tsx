@@ -1,13 +1,13 @@
+import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { CodeTable } from "@core/code/CodeTable";
+import { useDialog } from "@hooks/useDialog";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { CodeTable } from "../../../../core/code/CodeTable";
-import { useDialog } from "../../../../hooks/useDialog";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";

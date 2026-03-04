@@ -1,5 +1,5 @@
+import { BorderNodeData } from "@api/models/BorderNodeData";
 import { NodeProps } from "reactflow";
-import { BorderNodeData } from "../../../../api/openapi/models/BorderNodeData";
 import { BaseNode } from "./BaseNode";
 import { TextNodeComponent } from "./TextNodeComponent";
 

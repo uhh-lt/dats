@@ -1,8 +1,8 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRead } from "@api/models/TagRead";
 import { dataToTree, ITree } from "@components/tree-explorer";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import { TagRead } from "../../../api/openapi/models/TagRead";
-import { TagHooks } from "../../../api/TagHooks";
 
 // create a dummy root node that will hold the results
 const dummyRootNode: TagRead = {

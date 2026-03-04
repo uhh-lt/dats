@@ -1,14 +1,14 @@
-import { ProjectRead } from "@api/openapi/models/ProjectRead";
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
+import { ProjectRead } from "@api/models/ProjectRead";
+import { ProjectUpdate } from "@api/models/ProjectUpdate";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
+import { ProjectExportButton } from "@core/project/ProjectExportButton";
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { ProjectHooks } from "../../../../../api/ProjectHooks";
-import { ProjectUpdate } from "../../../../../api/openapi/models/ProjectUpdate";
-import { ProjectExportButton } from "../../../../../core/project/ProjectExportButton";
 
 interface ProjectDetailsProps {
   project: ProjectRead;

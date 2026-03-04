@@ -1,8 +1,8 @@
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { AnnoActions } from "@features/annotation/store/annoSlice";
 import { useAppDispatch } from "@plugins/redux";
 import { Link } from "@tanstack/react-router";
-import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead";
-import { SpanAnnotationRow } from "../../../../api/openapi/models/SpanAnnotationRow";
-import { AnnoActions } from "../../../../features/annotation/store/annoSlice";
 
 interface SdocAnnotationLinkProps {
   sdoc: SourceDocumentRead;

@@ -1,11 +1,11 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { SearchActions } from "@features/search";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../../../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { SearchActions } from "../../../../../features/search/DocumentSearch/searchSlice";
 import { DocumentMetadataRow } from "./components/DocumentMetadataRow";
 import { MetadataCreateButton } from "./components/MetadataCreateButton";
 

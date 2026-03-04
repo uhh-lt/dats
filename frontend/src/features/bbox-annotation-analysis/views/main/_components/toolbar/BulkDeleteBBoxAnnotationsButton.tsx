@@ -1,9 +1,9 @@
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
-import { BboxAnnotationHooks } from "../../../../../../api/BboxAnnotationHooks";
-import { BBoxAnnotationRow } from "../../../../../../api/openapi/models/BBoxAnnotationRow";
 import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
 
 interface BulkDeleteBBoxAnnotationsButtonProps {

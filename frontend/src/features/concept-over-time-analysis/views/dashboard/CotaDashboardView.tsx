@@ -1,3 +1,4 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -9,7 +10,6 @@ import { useAppDispatch } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { CotaHooks } from "../../../../api/CotaHooks";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 

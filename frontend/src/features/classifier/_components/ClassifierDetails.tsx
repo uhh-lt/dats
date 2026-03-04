@@ -1,3 +1,7 @@
+import { ClassifierData } from "@api/models/ClassifierData";
+import { ClassifierEvaluationRead } from "@api/models/ClassifierEvaluationRead";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierRead } from "@api/models/ClassifierRead";
 import {
   Box,
   Divider,
@@ -11,13 +15,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { dateToLocaleDate } from "@utils/DateUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { Fragment } from "react";
-import { ClassifierData } from "../../../api/openapi/models/ClassifierData";
-import { ClassifierEvaluationRead } from "../../../api/openapi/models/ClassifierEvaluationRead";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel";
-import { ClassifierRead } from "../../../api/openapi/models/ClassifierRead";
-import { dateToLocaleDate } from "../../../utils/DateUtils";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 import { ClassifierDataPlot } from "./ClassifierDataPlot";
 import { ClassifierLossPlot } from "./ClassifierLossPlot";
 

@@ -1,4 +1,4 @@
-import { DocType } from "../../api/openapi/models/DocType";
+import { DocType } from "@api/models/DocType";
 import { Icon, getIconComponent } from "./iconUtils";
 
 export const docTypeToIcon: Record<DocType, React.ReactElement> = {

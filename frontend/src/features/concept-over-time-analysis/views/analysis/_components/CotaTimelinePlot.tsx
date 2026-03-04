@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ExportChartButton } from "@components/export-buttons/index";
+import { COTARead } from "@api/models/COTARead";
+import { DateGroupBy } from "@api/models/DateGroupBy";
+import { ExportChartButton } from "@components/export-buttons";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { dateToLocaleDate } from "@utils/DateUtils";
 import { padStart } from "lodash";
 import { ReactNode, useMemo } from "react";
 import {
@@ -15,9 +18,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
-import { DateGroupBy } from "../../../../../api/openapi/models/DateGroupBy";
-import { dateToLocaleDate } from "../../../../../utils/DateUtils";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
 

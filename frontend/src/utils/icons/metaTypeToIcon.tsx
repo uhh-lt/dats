@@ -1,4 +1,4 @@
-import { MetaType } from "../../api/openapi/models/MetaType";
+import { MetaType } from "@api/models/MetaType";
 import { getIconComponent, Icon } from "./iconUtils";
 
 export const metaTypeToIcon: Record<MetaType, React.ReactElement> = {

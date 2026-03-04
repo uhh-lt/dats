@@ -1,5 +1,5 @@
-import { HorizontalAlign } from "../../../../api/openapi/models/HorizontalAlign";
-import { VerticalAlign } from "../../../../api/openapi/models/VerticalAlign";
+import { HorizontalAlign } from "@api/models/HorizontalAlign";
+import { VerticalAlign } from "@api/models/VerticalAlign";
 
 export interface TextData {
   text: string;

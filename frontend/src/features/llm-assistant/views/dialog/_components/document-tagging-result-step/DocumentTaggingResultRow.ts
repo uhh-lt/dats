@@ -1,4 +1,4 @@
-import { TagRead } from "../../../../api/openapi/models/TagRead";
+import { TagRead } from "@api/models/TagRead";
 
 export interface DocumentTaggingResultRow {
   sdocId: number;

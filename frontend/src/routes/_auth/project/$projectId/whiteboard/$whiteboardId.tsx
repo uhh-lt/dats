@@ -1,15 +1,15 @@
+import { CodeMap } from "@api/hooks/CodeHooks";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { MemoRead } from "@api/models/MemoRead";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { TagRead } from "@api/models/TagRead";
+import { WhiteboardService } from "@api/services/WhiteboardService";
+import { WhiteboardView } from "@features/whiteboard";
+import { queryClient } from "@plugins/tanstack";
 import { createFileRoute } from "@tanstack/react-router";
-import { CodeMap } from "../../../../../api/CodeHooks";
-import { BBoxAnnotationRead } from "../../../../../api/openapi/models/BBoxAnnotationRead";
-import { MemoRead } from "../../../../../api/openapi/models/MemoRead";
-import { SentenceAnnotationRead } from "../../../../../api/openapi/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "../../../../../api/openapi/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "../../../../../api/openapi/models/SpanAnnotationRead";
-import { TagRead } from "../../../../../api/openapi/models/TagRead";
-import { WhiteboardService } from "../../../../../api/openapi/services/WhiteboardService";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { WhiteboardView } from "../../../../../features/whiteboard/views/board/WhiteboardView";
-import { queryClient } from "../../../../../plugins/tanstack/queryClient";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   params: {

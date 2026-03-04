@@ -1,4 +1,4 @@
-import { JobStatus } from "../../api/openapi/models/JobStatus";
+import { JobStatus } from "@api/models/JobStatus";
 
 export const jobStatusToSimple: Record<JobStatus, "running" | "finished" | "error"> = {
   // waiting

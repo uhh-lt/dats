@@ -1,3 +1,5 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRead } from "@api/models/TagRead";
 import {
   Box,
   Checkbox,
@@ -13,12 +15,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { CheckboxState } from "@utils/CheckboxState";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { TagHooks } from "../../../../api/TagHooks";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { CheckboxState } from "../../../../utils/CheckboxState";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 import { TagCreateListItemButton } from "../../dialog/TagCreateListItemButton";
 
 interface TagMenuProps {

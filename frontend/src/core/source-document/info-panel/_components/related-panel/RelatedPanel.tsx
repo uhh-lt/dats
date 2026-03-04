@@ -1,3 +1,4 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { TabPanel } from "@mui/lab";
@@ -6,7 +7,6 @@ import { useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
-import { SdocHooks } from "../../../../../api/SdocHooks";
 import { SdocListItem } from "./SdocListItem";
 
 interface RelatedPanelProps {

@@ -1,4 +1,4 @@
-import { RootState } from "../../../store/store";
+import { RootState } from "@store/store";
 import { FilterActions, FilterState } from "../filterSlice";
 
 export interface ReduxFilterDialogProps {

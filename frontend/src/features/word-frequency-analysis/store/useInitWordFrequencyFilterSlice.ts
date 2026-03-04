@@ -1,8 +1,8 @@
-import { ColumnInfo, tableInfoQueryKey } from "@components/filter/redux-filter-dialog/index";
+import { WordFrequencyService } from "@api/services/WordFrequencyService";
+import { ColumnInfo, tableInfoQueryKey } from "@components/filter";
 import { useAppDispatch } from "@plugins/redux";
+import { AppDispatch } from "@store/store";
 import { useQuery } from "@tanstack/react-query";
-import { WordFrequencyService } from "../../../api/openapi/services/WordFrequencyService";
-import { AppDispatch } from "../../../store/store";
 import { WordFrequencyActions } from "./wordFrequencySlice";
 
 const useGetWordFrequencyTableInfo = (projectId: number, dispatch: AppDispatch) =>

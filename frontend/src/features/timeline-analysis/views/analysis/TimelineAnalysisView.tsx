@@ -1,10 +1,9 @@
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
+import { SidebarContentLayout } from "@components/content-layouts";
+import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { CircularProgress } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { TimelineAnalysisHooks } from "../../../../api/TimelineAnalysisHooks";
-import { TimelineAnalysisRead } from "../../../../api/openapi/models/TimelineAnalysisRead";
-import { SidebarContentLayout } from "../../../../components/content-layouts/SidebarContentLayout";
-import { PercentageResizablePanel } from "../../../../components/resizable-panels/PercentageResizablePanel";
-import { useLayoutPercentage } from "../../../../components/resizable-panels/useLayoutPercentage";
 import { ConceptList } from "./_components/ConceptList";
 import { TimeAnalysisProvenance } from "./_components/TimeAnalysisProvenance";
 import { TimelineAnalysisViz } from "./_components/TimeAnalysisViz";

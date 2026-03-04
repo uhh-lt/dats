@@ -1,4 +1,8 @@
-import { ExportChartButton } from "@components/export-buttons/index";
+import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
+import { CodeFrequency } from "@api/models/CodeFrequency";
+import { CodeRead } from "@api/models/CodeRead";
+import { DocType } from "@api/models/DocType";
+import { ExportChartButton } from "@components/export-buttons";
 import { ITree } from "@components/tree-explorer";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
@@ -18,10 +22,6 @@ import {
   YAxis,
 } from "recharts";
 import { Node } from "ts-tree-structure";
-import { AnalysisHooks } from "../../../../../api/CodeFrequencyHooks";
-import { CodeFrequency } from "../../../../../api/openapi/models/CodeFrequency";
-import { CodeRead } from "../../../../../api/openapi/models/CodeRead";
-import { DocType } from "../../../../../api/openapi/models/DocType";
 
 const renderCustomizedLabel = (data: { value: string; percent: number }) => {
   return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;

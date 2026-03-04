@@ -1,3 +1,10 @@
+import { QueryKey } from "@api/hooks/QueryKey";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
+import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
+import { SentenceAnnotationSearchResult } from "@api/models/SentenceAnnotationSearchResult";
+import { SortDirection } from "@api/models/SortDirection";
+import { SearchService } from "@api/services/SearchService";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
@@ -6,25 +13,18 @@ import {
   createEmptyFilter,
   useRenderFilterToolbars,
 } from "@components/filter";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
+import { MemoRenderer2 } from "@core/memo";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocTagsRenderer } from "@core/source-document";
+import { UserRenderer } from "@core/user";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
-import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns";
-import { SentenceAnnotationRow } from "../../../api/openapi/models/SentenceAnnotationRow";
-import { SentenceAnnotationSearchResult } from "../../../api/openapi/models/SentenceAnnotationSearchResult";
-import { SortDirection } from "../../../api/openapi/models/SortDirection";
-import { SearchService } from "../../../api/openapi/services/SearchService";
-import { QueryKey } from "../../../api/QueryKey";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../store/store";
-import { useAuth } from "../../auth/provider/useAuth";
-import { CodeRenderer } from "../../code/CodeRenderer";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
-import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer";
-import { UserRenderer } from "../../user/UserRenderer";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions } from "./seatFilterSlice";

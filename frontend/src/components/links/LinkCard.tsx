@@ -33,6 +33,6 @@ const CardLinkComponent = forwardRef<HTMLAnchorElement, LinkCardProps>(
 
 const CreatedCardLinkComponent = createLink(CardLinkComponent);
 
-const LinkCard: LinkComponent<typeof CardLinkComponent> = (props) => {
+export const LinkCard: LinkComponent<typeof CardLinkComponent> = (props) => {
   return <CreatedCardLinkComponent preload={"intent"} {...props} />;
 };

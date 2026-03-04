@@ -1,15 +1,15 @@
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { CodeRenderer, CodeTable } from "@core/code";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { SpanAnnotationHooks } from "../../api/SpanAnnotationHooks";
-import { useDialogMaximize } from "../../hooks/useDialogMaximize";
-import { CodeRenderer } from "../code/CodeRenderer";
-import { CodeTable } from "../code/CodeTable";
 import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {

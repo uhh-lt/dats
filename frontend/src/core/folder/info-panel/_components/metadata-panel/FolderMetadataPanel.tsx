@@ -1,14 +1,14 @@
+import { FolderHooks } from "@api/hooks/FolderHooks";
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { DocType } from "@api/models/DocType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { MetadataCreateButton } from "@core/source-document";
+import { SearchActions } from "@features/search";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack, Tab, Tabs } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback, useState } from "react";
-import { FolderHooks } from "../../../../../api/FolderHooks";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../../../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { SearchActions } from "../../../../../features/search/DocumentSearch/searchSlice";
-import { MetadataCreateButton } from "../../../../source-document/info-panel/_components/metadata-panel/components/MetadataCreateButton";
 import { FolderMetadataRow } from "./FolderMetadataRow";
 
 interface FolderMetadataPanelProps {

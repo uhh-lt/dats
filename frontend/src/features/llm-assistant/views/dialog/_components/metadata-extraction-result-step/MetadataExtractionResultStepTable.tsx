@@ -1,3 +1,10 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetadataExtractionResult } from "@api/models/MetadataExtractionResult";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataBulkUpdate } from "@api/models/SourceDocumentMetadataBulkUpdate";
+import { SourceDocumentMetadataReadResolved } from "@api/models/SourceDocumentMetadataReadResolved";
+import { SdocMetadataRendererWithData } from "@core/sdoc-metadata";
+import { SdocRenderer } from "@core/source-document";
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
@@ -13,13 +20,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import { MetadataHooks } from "../../../../../../api/MetadataHooks";
-import { MetadataExtractionResult } from "../../../../../../api/openapi/models/MetadataExtractionResult";
-import { ProjectMetadataRead } from "../../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataBulkUpdate } from "../../../../../../api/openapi/models/SourceDocumentMetadataBulkUpdate";
-import { SourceDocumentMetadataReadResolved } from "../../../../../../api/openapi/models/SourceDocumentMetadataReadResolved";
-import { SdocMetadataRendererWithData } from "../../../../../../core/sdoc-metadata/SdocMetadataRenderer";
-import { SdocRenderer } from "../../../../../../core/source-document/renderer/SdocRenderer";
+import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 
 interface MetadataExtractionResultRow {
   sdocId: number;
@@ -158,7 +159,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
   const dispatch = useAppDispatch();
 
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
   const { mutate: updateBulkMetadataMutation, isPending: isUpdatePending } = MetadataHooks.useUpdateBulkSdocMetadata();
@@ -184,7 +185,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
       { requestBody: metadataToUpdate },
       {
         onSuccess() {
-          dispatch(UIDialogActions.closeLLMDialog());
+          dispatch(LLMAssistantActions.closeLLMDialog());
         },
       },
     );

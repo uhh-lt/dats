@@ -1,16 +1,17 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { DocType } from "@api/models/DocType";
+import { SdocNodeData } from "@api/models/SdocNodeData";
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
+import { useOpenMemoDialog } from "@core/memo";
+import { SdocRenderer } from "@core/source-document";
 import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { MemoHooks } from "../../../../api/MemoHooks";
-import { SdocHooks } from "../../../../api/SdocHooks";
-import { TagHooks } from "../../../../api/TagHooks";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType";
-import { DocType } from "../../../../api/openapi/models/DocType";
-import { SdocNodeData } from "../../../../api/openapi/models/SdocNodeData";
-import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead";
-import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import { isMemoNode, isTagNode } from "../../_types/typeGuards";
@@ -101,6 +102,7 @@ export function SdocNode(props: NodeProps<SdocNodeData>) {
     contextMenuRef.current?.close();
   };
 
+  const openMemoDialog = useOpenMemoDialog();
   const handleContextMenuCreateMemo = () => {
     if (memo.data) return;
 

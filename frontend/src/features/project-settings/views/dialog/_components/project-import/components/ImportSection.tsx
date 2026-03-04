@@ -1,3 +1,4 @@
+import { ImportJobType } from "@api/models/ImportJobType";
 import { DialogSection } from "@components/DialogSection";
 import { PlayCircle } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
@@ -11,10 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ImportJobType } from "../../../../../../../api/openapi/models/ImportJobType";
 
+import { ImportHooks } from "@api/hooks/ImportHooks";
 import { useCallback, useState } from "react";
-import { ImportHooks } from "../../../../../../../api/ImportHooks";
 import { ImportDropzone } from "./ImportDropzone";
 
 const importTypeHelperText: Record<ImportJobType, string> = {

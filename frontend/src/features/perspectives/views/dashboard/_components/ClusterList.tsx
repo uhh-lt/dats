@@ -1,9 +1,9 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { CardContainer } from "@components/CardContainer";
 import { Box, Card, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { PerspectivesHooks } from "../../../api/PerspectivesHooks";
-import { CardContainer } from "../../../components/MUI/CardContainer";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
-import { PerspectivesActions } from "../perspectivesSlice";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
+import { PerspectivesActions } from "../../../store/perspectivesSlice";
 
 interface ClusterListProps {
   aspectId: number;

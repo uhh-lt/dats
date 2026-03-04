@@ -1,9 +1,9 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useMemo } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
 import { LLMJobListItem } from "./LLMJobListItem";
 
 export function LLMJobsView() {

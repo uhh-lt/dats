@@ -1,4 +1,4 @@
-import { BorderStyle } from "../../../../api/openapi/models/BorderStyle";
+import { BorderStyle } from "@api/models/BorderStyle";
 
 export interface BorderData {
   borderColor: string;

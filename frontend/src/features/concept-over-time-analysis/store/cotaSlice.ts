@@ -1,10 +1,10 @@
+import { COTAConcept } from "@api/models/COTAConcept";
+import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
+import { DimensionalityReductionAlgorithm } from "@api/models/DimensionalityReductionAlgorithm";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
+import { ColorUtils } from "@utils/colors/ColorUtils";
 import { MRT_RowSelectionState } from "material-react-table";
-import { COTAConcept } from "../../../api/openapi/models/COTAConcept";
-import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings";
-import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { ColorUtils } from "../../../utils/colors/ColorUtils";
 
 export interface CotaState {
   // project state:

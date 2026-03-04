@@ -1,12 +1,12 @@
-import { MyFilter } from "@components/filter/redux-filter-dialog/index";
+import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
+import { WordFrequencyService } from "@api/services/WordFrequencyService";
+import { MyFilter } from "@components/filter";
+import { useOpenSnackbar } from "@core/notification/snackbar/useOpenSnackbar";
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useMutation } from "@tanstack/react-query";
-import { WordFrequencyColumns } from "../../../../../api/openapi/models/WordFrequencyColumns";
-import { WordFrequencyService } from "../../../../../api/openapi/services/WordFrequencyService";
-import { useOpenSnackbar } from "../../../../../core/notification/snackbar/useOpenSnackbar";
-import { downloadFile } from "../../../../../utils/ExportUtils";
-import { getIconComponent, Icon } from "../../../../../utils/icons/iconUtils";
+import { downloadFile } from "@utils/ExportUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 
 interface WordFrequencyExportButtonProps {
   filter: MyFilter<WordFrequencyColumns>;

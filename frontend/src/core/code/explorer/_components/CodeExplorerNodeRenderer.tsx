@@ -1,9 +1,9 @@
+import { CodeRead } from "@api/models/CodeRead";
 import { ITree } from "@components/tree-explorer";
+import { AnnoActions, isHiddenCodeId } from "@features/annotation/store/annoSlice";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { AnnoActions, isHiddenCodeId } from "../../../../features/annotation/store/annoSlice";
 
 interface CodeExplorerNodeRendererProps {
   node: ITree<CodeRead>;

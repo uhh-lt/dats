@@ -1,20 +1,20 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { DateGroupBy } from "@api/models/DateGroupBy";
+import { DocType } from "@api/models/DocType";
+import { MetaType } from "@api/models/MetaType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { TAAnnotationAggregationType } from "@api/models/TAAnnotationAggregationType";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
+import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import { CardContainer } from "@components/CardContainer";
+import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import InfoIcon from "@mui/icons-material/Info";
 import { CircularProgress, MenuItem, Stack, TextField } from "@mui/material";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent } from "react";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { TimelineAnalysisHooks } from "../../../../../api/TimelineAnalysisHooks";
-import { DateGroupBy } from "../../../../../api/openapi/models/DateGroupBy";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { MetaType } from "../../../../../api/openapi/models/MetaType";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { TAAnnotationAggregationType } from "../../../../../api/openapi/models/TAAnnotationAggregationType";
-import { TimelineAnalysisRead } from "../../../../../api/openapi/models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "../../../../../api/openapi/models/TimelineAnalysisType";
-import { SdocsWithDateCounter } from "../../../../../core/sdoc-metadata/date-counter/SdocsWithDateCounter";
 
 const aggregationType2HumanReadable: Record<TimelineAnalysisType, Record<TAAnnotationAggregationType, string>> = {
   [TimelineAnalysisType.DOCUMENT]: {

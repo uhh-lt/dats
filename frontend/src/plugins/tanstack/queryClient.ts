@@ -1,7 +1,7 @@
+import { ApiError } from "@api/core/ApiError";
+import { SnackbarActions } from "@core/notification";
+import { store } from "@store/store";
 import { MutationCache, QueryClient } from "@tanstack/react-query";
-import { ApiError } from "../../api/openapi/core/ApiError";
-import { UIDialogActions } from "../../store/global/dialogSlice";
-import { store } from "../../store/store";
 
 function messageFromStringOrFunction(input: unknown, data: unknown, variables: unknown): string | undefined {
   if (typeof input === "string") {
@@ -28,7 +28,7 @@ export const queryClient = new QueryClient({
         text = error.message + (error.body ? ": " + error.body : "");
       }
       store.dispatch(
-        UIDialogActions.openSnackbar({
+        SnackbarActions.openSnackbar({
           text,
           title,
           severity: "error",
@@ -41,7 +41,7 @@ export const queryClient = new QueryClient({
         return;
       }
       store.dispatch(
-        UIDialogActions.openSnackbar({
+        SnackbarActions.openSnackbar({
           text,
           severity: "success",
         }),

@@ -1,10 +1,10 @@
+import { JobStatus } from "@api/models/JobStatus";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { CircularProgress } from "@mui/material";
 import { ReactElement } from "react";
-import { JobStatus } from "../../api/openapi/models/JobStatus";
 import { jobStatusToTypographyColor } from "./JobStatusToTypographyColor";
 
 export const jobStatusToIcon: Record<JobStatus, ReactElement> = {

@@ -1,4 +1,12 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { ClassifierInferenceParams } from "@api/models/ClassifierInferenceParams";
+import { ClassifierModel } from "@api/models/ClassifierModel";
 import { FormSwitch } from "@components/form-inputs";
+import { CodeRenderer } from "@core/code";
+import { TagRenderer } from "@core/tag";
 import {
   Alert,
   Box,
@@ -13,17 +21,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { ASSISTANT_TRAINED_ID } from "@utils/GlobalConstants";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierInferenceParams } from "../../../../../api/openapi/models/ClassifierInferenceParams";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
-import { SentenceAnnotationHooks } from "../../../../../api/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "../../../../../api/SpanAnnotationHooks";
-import { TagHooks } from "../../../../../api/TagHooks";
-import { CodeRenderer } from "../../../../../core/code/CodeRenderer";
-import { TagRenderer } from "../../../../../core/tag/TagRenderer";
-import { ASSISTANT_TRAINED_ID } from "../../../../../utils/GlobalConstants";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface InferenceSettings {
   keepExisting: boolean;
@@ -42,12 +43,12 @@ const useCountBySdocsAndUser = (model: ClassifierModel) => {
 
 export function InferenceSettingsStep() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const classifierId = useAppSelector((state) => state.dialog.classifierId);
-  const task = useAppSelector((state) => state.dialog.classifierTask);
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
-  const sdocIds = useAppSelector((state) => state.dialog.classifierSdocIds);
-  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const classifierId = useAppSelector((state) => state.classifier.classifierId);
+  const task = useAppSelector((state) => state.classifier.classifierTask);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const sdocIds = useAppSelector((state) => state.classifier.classifierSdocIds);
+  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
   const dispatch = useAppDispatch();
 
   // count existing classes by that user
@@ -73,7 +74,7 @@ export function InferenceSettingsStep() {
 
   // dialog actions
   const handlePrev = () => {
-    dispatch(UIDialogActions.previousClassifierDialogStep());
+    dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: InferenceSettings) => {
@@ -99,7 +100,7 @@ export function InferenceSettingsStep() {
       },
       {
         onSuccess: (data) => {
-          dispatch(UIDialogActions.onClassifierDialogStartJob(data.job_id));
+          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
         },
       },
     );

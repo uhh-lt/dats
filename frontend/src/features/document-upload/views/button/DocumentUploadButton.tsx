@@ -1,8 +1,8 @@
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useCallback } from "react";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
 
 export function DocumentUploadButton() {
   const dispatch = useAppDispatch();

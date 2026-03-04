@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import {
   Box,
   Card,
@@ -10,11 +11,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";
 import { memo } from "react";
-import { PerspectivesHooks } from "../../../api/PerspectivesHooks";
-import { D3ColorScale, d3ColorSchemes } from "../../../utils/D3ColorScale";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 
 interface ClusterSimilarityPlotProps {
   aspectId: number;

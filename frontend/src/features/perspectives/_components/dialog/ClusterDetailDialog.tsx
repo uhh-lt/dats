@@ -1,14 +1,15 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { ClusterUpdate } from "@api/models/ClusterUpdate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Close, Edit, Save } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
-import { ClusterUpdate } from "../../../../api/openapi/models/ClusterUpdate";
-import { PerspectivesHooks } from "../../../../api/PerspectivesHooks";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
-import { DocAspectTable } from "../../components/DocAspectTable";
+import { PerspectivesActions } from "../../store/perspectivesSlice";
+import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";
 import { RecomputeClusterDescriptionButton } from "./RecomputeClusterDescriptionButton";
 
@@ -18,8 +19,8 @@ interface ClusterDetailDialogProps {
 
 export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   // dialog feature
-  const open = useAppSelector((state: RootState) => state.perspectives.isClusterDialogOpen);
-  const clusterId = useAppSelector((state: RootState) => state.perspectives.clusterDialogClusterId);
+  const open = useAppSelector((state) => state.perspectives.isClusterDialogOpen);
+  const clusterId = useAppSelector((state) => state.perspectives.clusterDialogClusterId);
   const dispatch = useAppDispatch();
   const handleClose = () => {
     dispatch(PerspectivesActions.onCloseClusterDialog());

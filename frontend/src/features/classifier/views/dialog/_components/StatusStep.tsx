@@ -1,25 +1,26 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { JobStatus } from "@api/models/JobStatus";
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useMemo } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 export const StatusStep = memo(() => {
   // global state
-  const classifierJobId = useAppSelector((state) => state.dialog.classifierJobId);
+  const classifierJobId = useAppSelector((state) => state.classifier.classifierJobId);
   const dispatch = useAppDispatch();
 
   // poll the job
   const classifierJob = ClassifierHooks.usePollClassifierJob(classifierJobId, undefined);
 
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeClassifierDialog());
+    dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
 
   const handleNext = useCallback(() => {
     if (classifierJob.data && classifierJob.data.status === JobStatus.FINISHED && classifierJob.data.output) {
-      dispatch(UIDialogActions.nextClassifierDialogStep());
+      dispatch(ClassifierActions.nextClassifierDialogStep());
     } else {
       console.error("Job is not finished yet.");
     }

@@ -1,8 +1,8 @@
 import { ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
-import { getIconComponent, Icon } from "../../../../../utils/icons/iconUtils";
 import { TabActions } from "../../tabSlice";
 import { TabIconButton } from "./styledComponents";
 

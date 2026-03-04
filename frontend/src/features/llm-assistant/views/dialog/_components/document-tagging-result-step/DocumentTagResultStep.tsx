@@ -1,20 +1,20 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TaggingLLMJobResult } from "@api/models/TaggingLLMJobResult";
+import { TagRead } from "@api/models/TagRead";
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { LLMHooks } from "../../../../api/LLMHooks";
-import { TaggingLLMJobResult } from "../../../../api/openapi/models/TaggingLLMJobResult";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { TagHooks } from "../../../../api/TagHooks";
-import { CRUDDialogActions } from "../../../../store/dialogSlice";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
-import { LLMUtterance } from "../../views/dialog/components/LLMUtterance";
+import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
+import { LLMUtterance } from "../LLMUtterance";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow";
 import { DocumentTagResultStepTable } from "./DocumentTagResultStepTable";
 
 export const DocumentTagResultStep = memo(() => {
   // global client state
-  const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   // global server state
   const documentTags = TagHooks.useGetAllTags();
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
@@ -68,7 +68,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
 
   // actions
   const handleClose = useCallback(() => {
-    dispatch(CRUDDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
   const { mutate: applyTagsMutation, isPending } = TagHooks.useBulkSetTags();
@@ -82,7 +82,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
       },
       {
         onSuccess() {
-          dispatch(CRUDDialogActions.closeLLMDialog());
+          dispatch(LLMAssistantActions.closeLLMDialog());
         },
       },
     );

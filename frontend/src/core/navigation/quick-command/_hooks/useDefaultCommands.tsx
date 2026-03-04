@@ -1,8 +1,8 @@
 import { Settings } from "@mui/icons-material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo } from "react";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 import { CommandItem } from "../_types/CommandItem";
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {

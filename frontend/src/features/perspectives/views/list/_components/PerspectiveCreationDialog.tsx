@@ -1,7 +1,14 @@
-import { GeneralHooks } from "@api/GeneralHooks";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { AspectCreate } from "@api/models/AspectCreate";
+import { DocType } from "@api/models/DocType";
+import { PipelineSettings } from "@api/models/PipelineSettings";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { DocTypeSelector } from "@core/source-document/DocTypeSelector";
+import { TagSelector } from "@core/tag/TagSelector";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SaveIcon from "@mui/icons-material/Save";
 import TuneIcon from "@mui/icons-material/Tune";
@@ -25,14 +32,6 @@ import { useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { AspectCreate } from "../../../../../api/openapi/models/AspectCreate";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { PipelineSettings } from "../../../../../api/openapi/models/PipelineSettings";
-import { PerspectivesHooks } from "../../../../../api/PerspectivesHooks";
-import { DocTypeSelector } from "../../../../../core/source-document/DocTypeSelector";
-import { TagSelector } from "../../../../../core/tag/TagSelector";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
-import { RootState } from "../../../../../store/store";
 
 interface AspectTemplate {
   name: string;
@@ -94,7 +93,7 @@ interface PerspectiveCreationDialogProps {
 }
 
 export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogProps) {
-  const projectId = useAppSelector((state: RootState) => state.project.projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // available LLMs for the model selection
   const availableLLMs = GeneralHooks.useGetAvailableLLMs();

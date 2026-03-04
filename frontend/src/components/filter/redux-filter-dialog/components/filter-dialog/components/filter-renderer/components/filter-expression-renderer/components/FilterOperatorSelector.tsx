@@ -1,12 +1,12 @@
+import { BooleanOperator } from "@api/models/BooleanOperator";
+import { DateOperator } from "@api/models/DateOperator";
+import { IDListOperator } from "@api/models/IDListOperator";
+import { IDOperator } from "@api/models/IDOperator";
+import { ListOperator } from "@api/models/ListOperator";
+import { NumberOperator } from "@api/models/NumberOperator";
+import { StringOperator } from "@api/models/StringOperator";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback, useMemo } from "react";
-import { BooleanOperator } from "../../../../../../../../../../api/openapi/models/BooleanOperator";
-import { DateOperator } from "../../../../../../../../../../api/openapi/models/DateOperator";
-import { IDListOperator } from "../../../../../../../../../../api/openapi/models/IDListOperator";
-import { IDOperator } from "../../../../../../../../../../api/openapi/models/IDOperator";
-import { ListOperator } from "../../../../../../../../../../api/openapi/models/ListOperator";
-import { NumberOperator } from "../../../../../../../../../../api/openapi/models/NumberOperator";
-import { StringOperator } from "../../../../../../../../../../api/openapi/models/StringOperator";
 import {
   ColumnInfo,
   FilterOperators,

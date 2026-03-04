@@ -1,6 +1,6 @@
+import { PerspectiveDashboardView } from "@features/perspectives";
 import { createFileRoute } from "@tanstack/react-router";
-import PerspectiveDashboard from "../../../../../../features/perspectives/views/dashboard/PerspectiveDashboardView";
 
 export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$aspectId/")({
-  component: PerspectiveDashboard,
+  component: PerspectiveDashboardView,
 });

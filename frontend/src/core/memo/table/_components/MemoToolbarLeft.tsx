@@ -1,8 +1,7 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
+import { FilterTableToolbarProps, ReduxFilterDialog } from "@components/filter";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
-import { ElasticSearchHit } from "../../../../api/openapi/models/ElasticSearchHit";
 import { MemoDeleteButton } from "../../MemoDeleteButton";
 import { MemoStarButton } from "../../MemoStarButton";
 

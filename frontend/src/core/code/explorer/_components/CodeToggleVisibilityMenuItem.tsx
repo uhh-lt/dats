@@ -1,10 +1,10 @@
+import { CodeRead } from "@api/models/CodeRead";
 import { flatTree, ITree } from "@components/tree-explorer";
+import { AnnoActions, isHiddenCodeId } from "@features/annotation/store/annoSlice";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { AnnoActions, isHiddenCodeId } from "../../../../features/annotation/store/annoSlice";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 
 interface CodeToggleVisibilityMenuItemProps {
   code: ITree<CodeRead>;

@@ -1,22 +1,22 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { MemoRead } from "@api/models/MemoRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { CircularProgress, Dialog } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { MemoHooks } from "../../../api/MemoHooks";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
-import { MemoRead } from "../../../api/openapi/models/MemoRead";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
-import { UIDialogActions } from "../../../store/global/dialogSlice";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoDialogContent } from "./_components/MemoDialogContent";
+import { MemoDialogActions } from "./memoDialogSlice";
 
 export function MemoDialog() {
-  const isMemoDialogOpen = useAppSelector((state) => state.dialog.isMemoDialogOpen);
-  const memoEventData = useAppSelector((state) => state.dialog.memoEventData);
+  const isMemoDialogOpen = useAppSelector((state) => state.memo.isMemoDialogOpen);
+  const memoEventData = useAppSelector((state) => state.memo.memoEventData);
   const dispatch = useAppDispatch();
 
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeMemoDialog());
+    dispatch(MemoDialogActions.closeMemoDialog());
   }, [dispatch]);
 
   // maximize

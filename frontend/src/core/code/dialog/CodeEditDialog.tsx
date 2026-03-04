@@ -1,22 +1,23 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeRead } from "@api/models/CodeRead";
+import { CodeUpdate } from "@api/models/CodeUpdate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { AnnoActions } from "@features/annotation";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { CodeHooks } from "../../../api/CodeHooks";
-import { CodeRead } from "../../../api/openapi/models/CodeRead";
-import { CodeUpdate } from "../../../api/openapi/models/CodeUpdate";
-import { AnnoActions } from "../../../features/annotation/store/annoSlice";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
-import { ColorUtils } from "../../../utils/colors/ColorUtils";
 import { CodeRenderer } from "../CodeRenderer";
+import { UIDialogActions } from "@store/global/dialogSlice";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -142,7 +143,7 @@ export function CodeEditDialog() {
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
     }
-  }, [code, deleteCodeMutation, handleClose]);
+  }, [code, deleteCodeMutation, handleClose, openConfirmationDialog]);
   const handleError: SubmitErrorHandler<CodeEditValues> = (data) => console.error(data);
 
   return (

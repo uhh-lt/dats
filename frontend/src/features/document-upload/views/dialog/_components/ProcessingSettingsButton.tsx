@@ -1,3 +1,5 @@
+import { Language } from "@api/models/Language";
+import type { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { FormMenu, FormNumber, FormSwitch } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import {
@@ -14,11 +16,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Language } from "../../../../../api/openapi/models/Language";
-import type { ProcessingSettings } from "../../../../../api/openapi/models/ProcessingSettings";
-import { getIconComponent, Icon } from "../../../../../utils/icons/iconUtils";
 
 interface ProcessingSettingsButtonProps {
   settings: ProcessingSettings;

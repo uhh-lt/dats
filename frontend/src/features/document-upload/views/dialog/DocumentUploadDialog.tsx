@@ -1,9 +1,9 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Dialog, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useCallback } from "react";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
 import { DocumentUploadJobsView } from "./_components/DocumentUploadJobsView";
 import { FileUploadSection } from "./_components/FileUploadSection";
 import { UrlCrawlerSection } from "./_components/UrlCrawlerSection";

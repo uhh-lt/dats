@@ -1,4 +1,5 @@
-import { ProjectRead } from "@api/openapi/models/ProjectRead";
+import { UserHooks } from "@api/hooks/UserHooks";
+import { ProjectRead } from "@api/models/ProjectRead";
 import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
 import AddIcon from "@mui/icons-material/Add";
@@ -18,10 +19,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { EMAIL_REGEX } from "@utils/GlobalConstants";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { UserHooks } from "../../../../../api/UserHooks";
-import { EMAIL_REGEX } from "../../../../../utils/GlobalConstants";
 
 interface UserAddFormValues {
   email: string;

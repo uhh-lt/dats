@@ -1,7 +1,7 @@
+import { ExportJobInput } from "@api/models/ExportJobInput";
 import { IconButton, Tooltip } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo } from "react";
-import { ExportJobInput } from "../../api/openapi/models/ExportJobInput";
-import { getIconComponent, Icon } from "../../utils/icons/iconUtils";
 import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";
 
 interface ExportInstantButtonProps extends Omit<ExportJobInput, "project_id"> {

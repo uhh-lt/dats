@@ -1,6 +1,6 @@
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 import { MemoEvent } from "./_types/MemoEvent";
 import { useOpenMemoDialog } from "./useOpenMemoDialog";
 

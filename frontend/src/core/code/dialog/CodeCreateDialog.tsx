@@ -1,18 +1,19 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
+import { AnnoActions } from "@features/annotation";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { CodeHooks } from "../../../api/CodeHooks";
-import { CodeRead } from "../../../api/openapi/models/CodeRead";
-import { AnnoActions } from "../../../features/annotation/store/annoSlice";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
-import { contrastiveColors } from "../../../utils/colors/colors";
 import { CodeRenderer } from "../CodeRenderer";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;

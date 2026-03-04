@@ -1,4 +1,4 @@
-import { JobStatus } from "../../api/openapi/models/JobStatus";
+import { JobStatus } from "@api/models/JobStatus";
 
 export const jobStatusToTypographyColor: Record<
   JobStatus,

@@ -1,8 +1,16 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierRead } from "@api/models/ClassifierRead";
+import { ClassifierTask } from "@api/models/ClassifierTask";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { CodeRenderer } from "@core/code";
+import { TagRenderer } from "@core/tag";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { dateToLocaleDate } from "@utils/DateUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import {
   MRT_ColumnDef,
   MRT_LinearProgressBar,
@@ -15,16 +23,8 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useRef, useState } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
-import { ClassifierRead } from "../../../../../api/openapi/models/ClassifierRead";
-import { ClassifierTask } from "../../../../../api/openapi/models/ClassifierTask";
-import { CodeRenderer } from "../../../../../core/code/CodeRenderer";
-import { TagRenderer } from "../../../../../core/tag/TagRenderer";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
-import { dateToLocaleDate } from "../../../../../utils/DateUtils";
-import { getIconComponent, Icon } from "../../../../../utils/icons/iconUtils";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface ClassifierTableProps {
   projectId: number;
@@ -120,7 +120,7 @@ export function ClassifierTable({ projectId }: ClassifierTableProps) {
   const handleTrainClassifier = (modelType: ClassifierModel) => {
     setAnchorEl(null);
     dispatch(
-      UIDialogActions.openClassifierDialog({
+      ClassifierActions.openClassifierDialog({
         projectId: projectId,
         classifierModel: modelType,
         classifierTask: ClassifierTask.TRAINING,
@@ -131,7 +131,7 @@ export function ClassifierTable({ projectId }: ClassifierTableProps) {
 
   const handleEvaluateModel = (classifierId: number, modelType: ClassifierModel, classIds: number[]) => {
     dispatch(
-      UIDialogActions.openClassifierDialog({
+      ClassifierActions.openClassifierDialog({
         projectId: projectId,
         classifierModel: modelType,
         classifierId: classifierId,
@@ -144,7 +144,7 @@ export function ClassifierTable({ projectId }: ClassifierTableProps) {
 
   const handleInferenceModel = (classifierId: number, modelType: ClassifierModel, classIds: number[]) => {
     dispatch(
-      UIDialogActions.openClassifierDialog({
+      ClassifierActions.openClassifierDialog({
         projectId: projectId,
         classifierModel: modelType,
         classifierId: classifierId,

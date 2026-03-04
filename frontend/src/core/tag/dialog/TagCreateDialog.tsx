@@ -1,18 +1,19 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagCreate } from "@api/models/TagCreate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
+import { SearchActions } from "@features/search";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagCreate } from "../../../api/openapi/models/TagCreate";
-import { TagHooks } from "../../../api/TagHooks";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
-import { contrastiveColors } from "../../../utils/colors/colors";
 import { TagRenderer } from "../TagRenderer";
 
 export function TagCreateDialog({ projectId }: { projectId: number }) {

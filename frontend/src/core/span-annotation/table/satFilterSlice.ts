@@ -1,14 +1,14 @@
+import { SpanColumns } from "@api/models/SpanColumns";
+import { StringOperator } from "@api/models/StringOperator";
 import {
   createInitialFilterState,
   filterReducer,
   MyFilterExpression,
   resetProjectFilterState,
-} from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { createSlice } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
-import { SpanColumns } from "../../../api/openapi/models/SpanColumns";
-import { StringOperator } from "../../../api/openapi/models/StringOperator";
-import { ProjectActions } from "../../../store/global/projectSlice";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),

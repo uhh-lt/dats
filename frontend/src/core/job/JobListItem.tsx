@@ -1,9 +1,9 @@
+import { JobStatus } from "@api/models/JobStatus";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import { JobStatus } from "../../api/openapi/models/JobStatus";
 import { jobStatusToIcon } from "./JobStatusToIcon";
 
 const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];

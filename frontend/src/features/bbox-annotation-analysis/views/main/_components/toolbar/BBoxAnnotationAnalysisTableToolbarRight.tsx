@@ -1,4 +1,6 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
+import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
+import { FilterTableToolbarProps } from "@components/filter";
+import { BBoxAnnotationExportButton } from "@core/bbox-annotation/BBoxAnnotationExportButton";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,
@@ -6,8 +8,6 @@ import {
   MRT_ToggleGlobalFilterButton,
 } from "material-react-table";
 import { useMemo } from "react";
-import { BBoxAnnotationRow } from "../../../../../../api/openapi/models/BBoxAnnotationRow";
-import { BBoxAnnotationExportButton } from "../../../../../../core/bbox-annotation/BBoxAnnotationExportButton";
 
 export function BBoxAnnotationAnalysisTableToolbarRight({
   table,

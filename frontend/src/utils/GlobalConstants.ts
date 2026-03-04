@@ -1,4 +1,4 @@
-import { AttachedObjectType } from "../api/openapi/models/AttachedObjectType";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
 
 export const SYSTEM_USER_ID = 1;
 export const ASSISTANT_ZEROSHOT_ID = 9990;

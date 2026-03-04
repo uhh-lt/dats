@@ -1,8 +1,8 @@
+import { SearchActions } from "@features/search";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { SearchActions } from "../../../../features/search/DocumentSearch/searchSlice";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 
 export const FolderToggleVisibilityMenuItem = memo(({ onClick, ...props }: MenuItemProps) => {
   // redux (global client state)

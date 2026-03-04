@@ -1,8 +1,8 @@
+import { SpanColumns } from "@api/models/SpanColumns";
+import { SATFilterActions } from "@core/span-annotation/table/satFilterSlice";
 import { createSlice } from "@reduxjs/toolkit";
-import { SpanColumns } from "../../../api/openapi/models/SpanColumns";
-import { SATFilterActions } from "../../../core/span-annotation/table/satFilterSlice";
-import { initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
+import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 
 const SpanAnnotationsSlice = createSlice({
   name: "spanAnnotationAnalysis",

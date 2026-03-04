@@ -1,11 +1,11 @@
+import { TagRead } from "@api/models/TagRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { TagCreateListItemButton } from "@core/tag/dialog/TagCreateListItemButton";
+import { TagEditButton } from "@core/tag/dialog/TagEditButton";
+import { useComputeTagTree } from "@core/tag/explorer/useComputeTagTree";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import { TagRead } from "../../../../../api/openapi/models/TagRead";
-import { TagCreateListItemButton } from "../../../../../core/tag/dialog/TagCreateListItemButton";
-import { TagEditButton } from "../../../../../core/tag/dialog/TagEditButton";
-import { useComputeTagTree } from "../../../../../core/tag/explorer/useComputeTagTree";
 
 const renderTagActions = (node: ITree<TagRead>) => <TagEditButton tag={node.data} />;
 

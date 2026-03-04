@@ -1,11 +1,11 @@
-import { BboxAnnotationHooks } from "../../api/BboxAnnotationHooks";
-import { CodeHooks } from "../../api/CodeHooks";
-import { SdocHooks } from "../../api/SdocHooks";
-import { SentenceAnnotationHooks } from "../../api/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "../../api/SpanAnnotationHooks";
-import { TagHooks } from "../../api/TagHooks";
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType";
-import { CodeRead } from "../../api/openapi/models/CodeRead";
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { CodeRead } from "@api/models/CodeRead";
 
 /**
  * Hook to fetch the attached object of a memo based on its type.

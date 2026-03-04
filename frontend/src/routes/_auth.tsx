@@ -1,13 +1,14 @@
+import { LoginStatus } from "@core/auth";
+import { SideBar, TabBar } from "@core/navigation";
 import { Box } from "@mui/material";
+// eslint-disable-next-line boundaries/element-types
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
+// eslint-disable-next-line boundaries/element-types
+import { ProjectActions } from "@store/global/projectSlice";
+import "@styles/layout.css";
 import { createFileRoute, Outlet, redirect, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LoginStatus } from "../core/auth/types/LoginStatus";
-import SideBar from "../core/navigation/SideBar";
-import TabBar from "../core/navigation/tabs/tab-bar/TabBar";
 
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { ProjectActions } from "../store/global/projectSlice";
-import "../styles/layout.css";
 export const Route = createFileRoute("/_auth")({
   beforeLoad: async ({ context, location }) => {
     if (context.auth.loginStatus === LoginStatus.LOGGED_OUT) {

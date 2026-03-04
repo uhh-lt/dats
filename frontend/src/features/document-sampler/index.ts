@@ -1,2 +1,2 @@
-export * from "./views/main/DocumentSamplerView"
-export {documentSamplerReducer} from "./store/documentSamplerSlice"
+export { documentSamplerReducer } from "./store/documentSamplerSlice";
+export * from "./views/main/DocumentSamplerView";

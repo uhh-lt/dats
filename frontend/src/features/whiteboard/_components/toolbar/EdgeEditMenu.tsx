@@ -1,9 +1,9 @@
+import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
+import { WhiteboardEdgeType } from "@api/models/WhiteboardEdgeType";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, ButtonGroup, Divider, Paper, SelectChangeEvent, Stack } from "@mui/material";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
-import { WhiteboardEdgeData_Input } from "../../../../api/openapi/models/WhiteboardEdgeData_Input";
-import { WhiteboardEdgeType } from "../../../../api/openapi/models/WhiteboardEdgeType";
 import { StrokeStyle } from "../../_types/base/StrokeStyle";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import { isDashed, isDotted } from "../edges/edgeUtils";

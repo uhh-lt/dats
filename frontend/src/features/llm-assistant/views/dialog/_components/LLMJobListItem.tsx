@@ -1,21 +1,21 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { ApproachType } from "@api/models/ApproachType";
+import { DocType } from "@api/models/DocType";
+import { FewShotParams } from "@api/models/FewShotParams";
+import { JobStatus } from "@api/models/JobStatus";
+import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
+import { LLMJobOutput } from "@api/models/LLMJobOutput";
+import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
+import { ZeroShotParams } from "@api/models/ZeroShotParams";
 import { LinkListItemButton } from "@components/links";
-import { JobListItem, jobStatusToTypographyColor } from "@core/job/index";
+import { JobListItem, jobStatusToTypographyColor } from "@core/job";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { memo, useCallback, useRef, useState } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { ApproachType } from "../../../../../api/openapi/models/ApproachType";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { FewShotParams } from "../../../../../api/openapi/models/FewShotParams";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
-import { LlmAssistantJobRead } from "../../../../../api/openapi/models/LlmAssistantJobRead";
-import { LLMJobOutput } from "../../../../../api/openapi/models/LLMJobOutput";
-import { LLMPromptTemplates } from "../../../../../api/openapi/models/LLMPromptTemplates";
-import { ZeroShotParams } from "../../../../../api/openapi/models/ZeroShotParams";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
-import { docTypeToIcon } from "../../../../../utils/icons/docTypeToIcon";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMJobListItemProps {
   initialLLMJob: LlmAssistantJobRead;
@@ -29,8 +29,7 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
   const dispatch = useAppDispatch();
   const handleViewResults = useCallback(() => {
     if (!llmJob.data) return;
-    dispatch(UIDialogActions.closeProjectSettings());
-    dispatch(UIDialogActions.llmDialogOpenFromBackgroundTask(llmJob.data));
+    dispatch(LLMAssistantActions.llmDialogOpenFromBackgroundTask(llmJob.data));
   }, [dispatch, llmJob.data]);
 
   // tab state

@@ -1,7 +1,7 @@
+import { TagHooks } from "@api/hooks/TagHooks";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { memo } from "react";
-import { TagHooks } from "../../../../../api/TagHooks";
 import { TagMenuButton } from "../../../../tag/menu/TagMenuButton";
 import { DocumentTagRow } from "./DocumentTagRow";
 

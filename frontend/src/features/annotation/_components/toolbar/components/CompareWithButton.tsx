@@ -1,10 +1,10 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { UserRenderer } from "@core/user";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import * as React from "react";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { UserRenderer } from "../../../../../core/user/UserRenderer";
 import { AnnoActions } from "../../../store/annoSlice";
 
 interface CompareWithButtonProps {

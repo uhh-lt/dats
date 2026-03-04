@@ -1,7 +1,7 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { StackProps } from "@mui/material";
 import { memo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
 import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer";
 
 interface MemoRenderer2Props {

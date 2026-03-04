@@ -1,3 +1,5 @@
+import { StringOperator } from "@api/models/StringOperator";
+import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import {
   ColumnInfo,
   FilterState,
@@ -5,13 +7,11 @@ import {
   createInitialFilterState,
   filterReducer,
   resetProjectFilterState,
-} from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
-import { StringOperator } from "../../../api/openapi/models/StringOperator";
-import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns";
-import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
 
 const defaultFilterExpression: MyFilterExpression = {
   id: uuidv4(),

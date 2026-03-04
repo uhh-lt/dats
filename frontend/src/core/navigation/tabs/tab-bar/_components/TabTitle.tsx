@@ -1,11 +1,11 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import { Box } from "@mui/material";
+import { getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useMemo } from "react";
-import { CotaHooks } from "../../../../../api/CotaHooks";
-import { PerspectivesHooks } from "../../../../../api/PerspectivesHooks";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { TimelineAnalysisHooks } from "../../../../../api/TimelineAnalysisHooks";
-import { WhiteboardHooks } from "../../../../../api/WhiteboardHooks";
-import { getIconComponent } from "../../../../../utils/icons/iconUtils";
 import { TabData } from "../../_types/TabData";
 import { LabelText, TabLabel } from "./styledComponents";
 

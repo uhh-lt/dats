@@ -1,3 +1,5 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
 import PublicOffIcon from "@mui/icons-material/PublicOff";
@@ -6,13 +8,11 @@ import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { ChangeEvent, SyntheticEvent, useCallback, useRef, useState } from "react";
-import { CodeHooks } from "../../../../api/CodeHooks";
-import { SpanEntityStat } from "../../../../api/openapi/models/SpanEntityStat";
-import { SearchActions } from "../../DocumentSearch/searchSlice";
-import { CodeStats } from "./components/CodeStats";
-import { DocumentTagStats } from "./components/DocumentTagStats";
-import { KeywordStats } from "./components/KeywordStats";
-import { SearchStatisticsMenu } from "./components/SearchStatisticsMenu";
+import { SearchActions } from "../../store/documentSearchSlice";
+import { CodeStats } from "./_components/CodeStats";
+import { DocumentTagStats } from "./_components/DocumentTagStats";
+import { KeywordStats } from "./_components/KeywordStats";
+import { SearchStatisticsMenu } from "./_components/SearchStatisticsMenu";
 
 interface SearchStatisticsProps {
   projectId: number;

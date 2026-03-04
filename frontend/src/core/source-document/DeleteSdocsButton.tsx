@@ -1,4 +1,6 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { SearchActions } from "@features/search";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -6,8 +8,6 @@ import Tooltip from "@mui/material/Tooltip";
 import { useAppDispatch } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
-import { SdocHooks } from "../../api/SdocHooks";
-import { SearchActions } from "../../features/search/DocumentSearch/searchSlice";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];
@@ -46,7 +46,7 @@ export const DeleteSdocsButton = memo(({ sdocIds, navigateTo, ...props }: Delete
         );
       },
     });
-  }, [deleteDocuments, dispatch, navigate, navigateTo, sdocIds]);
+  }, [deleteDocuments, dispatch, navigate, navigateTo, openConfirmationDialog, sdocIds]);
 
   return (
     <Tooltip title="Delete">

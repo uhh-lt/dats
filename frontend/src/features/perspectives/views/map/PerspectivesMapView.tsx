@@ -1,9 +1,9 @@
+import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { useAppDispatch } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
-import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
+import { ClusterJobProgressDialog } from "../../_components/ClusterJobProgressDialog";
+import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { useInitPerspectivesFilterSlice } from "../../_hooks/useInitPerspectivesFilterSlice";
-import { ClusterJobProgressDialog } from "../../components/ClusterJobProgressDialog";
-import { ClusterDetailDialog } from "../../components/dialog/ClusterDetailDialog";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { MapContent } from "./_components/MapContent";
 import { InfoPanel } from "./_components/panel-info/InfoPanel";

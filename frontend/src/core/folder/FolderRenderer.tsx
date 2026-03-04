@@ -1,8 +1,8 @@
+import { FolderHooks } from "@api/hooks/FolderHooks";
+import { FolderRead } from "@api/models/FolderRead";
+import { FolderType } from "@api/models/FolderType";
 import { Stack, Typography } from "@mui/material";
-import { FolderHooks } from "../../api/FolderHooks";
-import { FolderRead } from "../../api/openapi/models/FolderRead";
-import { FolderType } from "../../api/openapi/models/FolderType";
-import { Icon, getIconComponent } from "../../utils/icons/iconUtils";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 
 interface FolderRendererSharedProps {
   renderName?: boolean;

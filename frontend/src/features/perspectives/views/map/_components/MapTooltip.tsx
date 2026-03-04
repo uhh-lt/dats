@@ -1,6 +1,6 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { DocType } from "@api/models/DocType";
 import { Box, Card, CardContent, PopoverPosition, Typography } from "@mui/material";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { DocType } from "../../../../../api/openapi/models/DocType";
 
 export interface MapTooltipData {
   id?: string;

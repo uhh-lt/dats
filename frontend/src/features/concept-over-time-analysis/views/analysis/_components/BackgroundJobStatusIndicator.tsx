@@ -1,6 +1,6 @@
+import { JobStatus } from "@api/models/JobStatus";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { Box } from "@mui/material";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
 
 interface JobStatusIndicatorProps {
   status: JobStatus | undefined | null;

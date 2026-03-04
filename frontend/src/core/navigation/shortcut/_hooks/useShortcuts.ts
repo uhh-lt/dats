@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
 import { TabActions } from "../../tabs/tabSlice";
 
 export interface Shortcut {

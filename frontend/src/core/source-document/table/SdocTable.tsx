@@ -1,32 +1,30 @@
+import { QueryKey } from "@api/hooks/QueryKey";
+import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
+import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
+import { SdocColumns } from "@api/models/SdocColumns";
+import { SortDirection } from "@api/models/SortDirection";
+import { SearchService } from "@api/services/SearchService";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
   FilterTableToolbarRight,
+  MyFilter,
+  createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter/index";
-import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { QueryKey } from "../../../api/QueryKey";
-import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit";
-import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
-import { SortDirection } from "../../../api/openapi/models/SortDirection";
-import { SearchService } from "../../../api/openapi/services/SearchService";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../store/store";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
-import { SdocAnnotatorsRenderer } from "../SdocAnnotatorsRenderer";
-import { SdocRenderer } from "../renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../renderer/SdocTagRenderer";
+
+import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { DocumentTableFilterActions } from "./documentTableFilterSlice";
-
-const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.documentTableFilter;

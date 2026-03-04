@@ -1,10 +1,10 @@
+import { useAuth } from "@core/auth/provider/useAuth";
 import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
 import { Container, Grid2, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { ReactNode, SyntheticEvent, useState } from "react";
-import { useAuth } from "../../../../core/auth/provider/useAuth";
 import { DataPrivacy } from "./_components/DataPrivacy";
 import { PasswordReset } from "./_components/PasswordReset";
 import { ProfileHome } from "./_components/ProfileHome";

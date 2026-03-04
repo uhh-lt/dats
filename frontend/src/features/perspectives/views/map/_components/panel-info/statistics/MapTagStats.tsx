@@ -1,13 +1,13 @@
+import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagStat } from "@api/models/TagStat";
 import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
-import { TagStat } from "../../../../../../../api/openapi/models/TagStat";
-import { StatisticsHooks } from "../../../../../../../api/StatisticsHooks";
-import { TagHooks } from "../../../../../../../api/TagHooks";
 import {
   StatsDisplayButton,
   StatsDisplayButtonProps,
-} from "../../../../../../search/_components/statistics/components/StatsDisplayButton";
+} from "../../../../../../search/_components/statistics/_components/StatsDisplayButton";
 
 interface MapTagStatsProps {
   projectId: number;

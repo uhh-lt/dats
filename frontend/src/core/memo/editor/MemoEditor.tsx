@@ -1,11 +1,12 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { MemoRead } from "@api/models/MemoRead";
 import { EditableTypography } from "@components/EditableTypography";
+import { useAuth } from "@core/auth";
+import { UserRenderer } from "@core/user";
 import { Box, CircularProgress, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useCallback, useMemo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks";
-import { MemoRead } from "../../../api/openapi/models/MemoRead";
-import { dateToLocaleString } from "../../../utils/DateUtils";
-import { useAuth } from "../../auth/provider/useAuth";
-import { UserRenderer } from "../../user/UserRenderer";
+import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoEditorView } from "./MemoEditorView";

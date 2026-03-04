@@ -1,7 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { ProjectActions } from "../../../store/global/projectSlice";
 
 interface ImageSearchState {
   // project state:

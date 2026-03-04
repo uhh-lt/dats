@@ -1,30 +1,30 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
 import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
-import { MemoHooks } from "../../../../api/MemoHooks";
 
-import { useGetMemosAttachedObject } from "../../../../core/memo/useGetMemosAttachedObject";
+import { useGetMemosAttachedObject } from "@core/memo/useGetMemosAttachedObject";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { CodeNodeData } from "@api/models/CodeNodeData";
+import { CodeRead } from "@api/models/CodeRead";
+import { MemoNodeData } from "@api/models/MemoNodeData";
+import { SdocNodeData } from "@api/models/SdocNodeData";
+import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { TagNodeData } from "@api/models/TagNodeData";
+import { TagRead } from "@api/models/TagRead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { useOpenMemoDialog } from "@core/memo";
+import { attachedObjectTypeToText } from "@core/memo/renderer/attachedObjectTypeToText";
+import { MemoRenderer } from "@core/memo/renderer/MemoRenderer";
 import Markdown from "react-markdown";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType";
-import { BBoxAnnotationNodeData } from "../../../../api/openapi/models/BBoxAnnotationNodeData";
-import { BBoxAnnotationRead } from "../../../../api/openapi/models/BBoxAnnotationRead";
-import { CodeNodeData } from "../../../../api/openapi/models/CodeNodeData";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { MemoNodeData } from "../../../../api/openapi/models/MemoNodeData";
-import { SdocNodeData } from "../../../../api/openapi/models/SdocNodeData";
-import { SentenceAnnotationNodeData } from "../../../../api/openapi/models/SentenceAnnotationNodeData";
-import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead";
-import { SpanAnnotationNodeData } from "../../../../api/openapi/models/SpanAnnotationNodeData";
-import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead";
-import { TagNodeData } from "../../../../api/openapi/models/TagNodeData";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { attachedObjectTypeToText } from "../../../../core/memo/renderer/attachedObjectTypeToText";
-import { MemoRenderer } from "../../../../core/memo/renderer/MemoRenderer";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import {
   isBBoxAnnotationNode,

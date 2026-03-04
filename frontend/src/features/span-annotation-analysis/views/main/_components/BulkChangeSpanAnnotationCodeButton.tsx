@@ -1,9 +1,9 @@
+import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useCallback } from "react";
-import { SpanAnnotationRow } from "../../../../../api/openapi/models/SpanAnnotationRow";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 
 interface BulkChangeSpanAnnotationCodeButtonProps {

@@ -1,5 +1,5 @@
-import { BBoxAnnotationTable } from "../../../../../core/bbox-annotation/table/BBoxAnnotationTable";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
+import { BBoxAnnotationTable } from "@core/bbox-annotation";
+import { useReduxConnector } from "@hooks/useReduxConnector";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
 import { BBoxAnnotationAnalysisTableToolbarRight } from "./toolbar/BBoxAnnotationAnalysisTableToolbarRight";

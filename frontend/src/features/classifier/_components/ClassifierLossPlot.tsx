@@ -1,5 +1,5 @@
+import { ClassifierLoss } from "@api/models/ClassifierLoss";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ClassifierLoss } from "../../../api/openapi/models/ClassifierLoss";
 
 interface ClassifierLossPlotProps {
   minHeight?: string | number | undefined;

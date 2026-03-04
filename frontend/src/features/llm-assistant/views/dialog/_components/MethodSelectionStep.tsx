@@ -1,8 +1,8 @@
+import { TaskType } from "@api/models/TaskType";
 import { Box, Card, CardActionArea, CardContent, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { useCallback } from "react";
-import { TaskType } from "../../../../../api/openapi/models/TaskType";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMJobsView } from "./LLMJobsView";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -52,7 +52,7 @@ interface MethodButtonProps {
 function MethodButton({ method, headline, description }: MethodButtonProps) {
   const dispatch = useAppDispatch();
   const handleClick = useCallback(() => {
-    dispatch(UIDialogActions.llmDialogGoToDataSelection({ method }));
+    dispatch(LLMAssistantActions.llmDialogGoToDataSelection({ method }));
   }, [dispatch, method]);
 
   return (

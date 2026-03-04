@@ -1,24 +1,24 @@
+import { ClassifierModel } from "@api/models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel";
-import { CRUDDialogActions } from "../../../../store/dialogSlice";
+import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 
 export function TrainingDataSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
-  const userIds = useAppSelector((state) => state.dialog.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.dialog.classifierTagIds);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
+  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
+  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
   const dispatch = useAppDispatch();
 
   // dialog actions
   const handlePrev = useCallback(() => {
-    dispatch(CRUDDialogActions.previousClassifierDialogStep());
+    dispatch(ClassifierActions.previousClassifierDialogStep());
   }, [dispatch]);
   const handleNext = useCallback(() => {
-    dispatch(CRUDDialogActions.nextClassifierDialogStep());
+    dispatch(ClassifierActions.nextClassifierDialogStep());
   }, [dispatch]);
 
   const isNextDisabled =

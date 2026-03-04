@@ -1,7 +1,7 @@
+import { UserHooks } from "@api/hooks/UserHooks";
+import { UserRenderer } from "@core/user/UserRenderer";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback } from "react";
-import { UserHooks } from "../../../../../../../../../../../../api/UserHooks";
-import { UserRenderer } from "../../../../../../../../../../../../core/user/UserRenderer";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const UserIdValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {

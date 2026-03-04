@@ -1,6 +1,6 @@
 import { Box, Stack, StackProps } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
-import { Icon, getIconComponent } from "../../../../../utils/icons/iconUtils";
 
 export const LLMUtterance = memo(
   ({ children, ...props }: { children?: React.ReactNode } & Omit<StackProps, "direction" | "alignItems">) => {

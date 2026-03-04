@@ -1,11 +1,11 @@
+import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
+import { CodeNodeData } from "@api/models/CodeNodeData";
+import { MemoNodeData } from "@api/models/MemoNodeData";
+import { SdocNodeData } from "@api/models/SdocNodeData";
+import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
+import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
+import { TagNodeData } from "@api/models/TagNodeData";
 import { type Node } from "reactflow";
-import { BBoxAnnotationNodeData } from "../../../api/openapi/models/BBoxAnnotationNodeData";
-import { CodeNodeData } from "../../../api/openapi/models/CodeNodeData";
-import { MemoNodeData } from "../../../api/openapi/models/MemoNodeData";
-import { SdocNodeData } from "../../../api/openapi/models/SdocNodeData";
-import { SentenceAnnotationNodeData } from "../../../api/openapi/models/SentenceAnnotationNodeData";
-import { SpanAnnotationNodeData } from "../../../api/openapi/models/SpanAnnotationNodeData";
-import { TagNodeData } from "../../../api/openapi/models/TagNodeData";
 import { DATSNodeData } from "./DATSNodeData";
 import { BackgroundColorData } from "./base/BackgroundColorData";
 import { BorderData } from "./base/BorderData";

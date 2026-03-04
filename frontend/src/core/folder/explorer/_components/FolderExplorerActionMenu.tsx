@@ -1,9 +1,9 @@
+import { FolderRead } from "@api/models/FolderRead";
 import { ITree } from "@components/tree-explorer";
 import { IconButton, Menu } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { FolderRead } from "../../../../api/openapi/models/FolderRead";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
-import { FolderEditMenuItem } from "../../dialog/FolderEditMenuItem";
+import { FolderEditMenuItem } from "../../FolderEditMenuItem";
 
 interface FolderExplorerActionMenuProps {
   node: ITree<FolderRead>;

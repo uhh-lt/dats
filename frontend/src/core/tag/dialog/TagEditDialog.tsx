@@ -1,19 +1,20 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagUpdate } from "@api/models/TagUpdate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TagUpdate } from "../../../api/openapi/models/TagUpdate";
-import { TagHooks } from "../../../api/TagHooks";
-import { useDialogMaximize } from "../../../hooks/useDialogMaximize";
-import { ColorUtils } from "../../../utils/colors/ColorUtils";
 import { TagRenderer } from "../TagRenderer";
 
 export function TagEditDialog() {
@@ -103,7 +104,7 @@ export function TagEditDialog() {
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag is available!");
     }
-  }, [deleteTagMutation, handleClose, tag]);
+  }, [deleteTagMutation, handleClose, openConfirmationDialog, tag]);
   const handleError: SubmitErrorHandler<TagUpdate> = (data) => console.error(data);
 
   return (

@@ -1,6 +1,6 @@
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { RootState } from "../../../store/store";
+import { ProjectActions } from "@store/global/projectSlice";
+import { RootState } from "@store/store";
 import { TabData } from "./_types/TabData";
 
 export interface TabState {

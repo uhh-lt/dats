@@ -1,3 +1,10 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
+import { COTAConcept } from "@api/models/COTAConcept";
+import { COTARead } from "@api/models/COTARead";
+import { COTASentenceID } from "@api/models/COTASentenceID";
+import { DateGroupBy } from "@api/models/DateGroupBy";
+import { SdocRenderer } from "@core/source-document";
+import { useReduxConnector } from "@hooks/useReduxConnector";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -9,6 +16,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useAppSelector } from "@plugins/redux";
+import { dateToLocaleDate } from "@utils/DateUtils";
 import { padStart } from "lodash";
 import {
   MRT_ColumnDef,
@@ -20,14 +28,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { MouseEventHandler, useMemo, useRef, useState } from "react";
-import { CotaHooks } from "../../../../../api/CotaHooks";
-import { COTAConcept } from "../../../../../api/openapi/models/COTAConcept";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
-import { COTASentenceID } from "../../../../../api/openapi/models/COTASentenceID";
-import { DateGroupBy } from "../../../../../api/openapi/models/DateGroupBy";
-import { SdocRenderer } from "../../../../../core/source-document/renderer/SdocRenderer";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
-import { dateToLocaleDate } from "../../../../../utils/DateUtils";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {

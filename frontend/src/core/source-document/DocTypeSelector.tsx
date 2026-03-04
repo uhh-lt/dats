@@ -1,3 +1,4 @@
+import { DocType } from "@api/models/DocType";
 import {
   Checkbox,
   FormControl,
@@ -9,9 +10,8 @@ import {
   SelectChangeEvent,
   Stack,
 } from "@mui/material";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { Fragment } from "react";
-import { DocType } from "../../api/openapi/models/DocType";
-import { docTypeToIcon } from "../../utils/icons/docTypeToIcon";
 
 interface DocTypeSelectorMultipleProps {
   multiple: true;

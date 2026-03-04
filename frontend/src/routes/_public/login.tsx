@@ -1,6 +1,6 @@
+import { LoginStatus } from "@core/auth";
+import { LoginView } from "@features/auth";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { LoginStatus } from "../../core/auth/types/LoginStatus";
-import Login from "../../features/auth/views/login/LoginView";
 
 export const Route = createFileRoute("/_public/login")({
   validateSearch: (search) => ({
@@ -11,5 +11,5 @@ export const Route = createFileRoute("/_public/login")({
       throw redirect({ to: search.redirect });
     }
   },
-  component: Login,
+  component: LoginView,
 });

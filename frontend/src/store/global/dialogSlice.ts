@@ -1,14 +1,10 @@
+import { CodeRead } from "@api/models/CodeRead";
+import { FolderRead } from "@api/models/FolderRead";
+import { TagRead } from "@api/models/TagRead";
+import { CodeCreateSuccessHandler } from "@core/code";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
-import { CodeRead } from "../../api/openapi/models/CodeRead";
-import { FolderRead } from "../../api/openapi/models/FolderRead";
-import { TagRead } from "../../api/openapi/models/TagRead";
-import { CodeCreateSuccessHandler } from "../../core/code/dialog/CodeCreateDialog";
-import { MemoEvent } from "../../core/memo/dialog/_types/MemoEvent";
 
 interface DialogState {
-  // memo
-  isMemoDialogOpen: boolean;
-  memoEventData: MemoEvent | undefined;
   // tags
   isTagCreateDialogOpen: boolean;
   isTagEditDialogOpen: boolean;
@@ -47,9 +43,6 @@ interface DialogState {
 }
 
 const initialState: DialogState = {
-  // memo
-  isMemoDialogOpen: false,
-  memoEventData: undefined,
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
@@ -90,18 +83,6 @@ const dialogSlice = createSlice({
   name: "dialog",
   initialState,
   reducers: {
-    // memo
-    openMemoDialog: (state, action: PayloadAction<MemoEvent>) => {
-      if (action.payload.memoId === undefined && action.payload.attachedObjectId === undefined) {
-        throw new Error("You have to provide a memoId or an attachedObjectId!");
-      }
-      state.isMemoDialogOpen = true;
-      state.memoEventData = action.payload;
-    },
-    closeMemoDialog: (state) => {
-      state.isMemoDialogOpen = false;
-      state.memoEventData = undefined;
-    },
     // span anno
     openSpanAnnotationEditDialog: (
       state,

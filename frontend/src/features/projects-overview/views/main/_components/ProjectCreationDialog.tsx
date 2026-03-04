@@ -1,14 +1,14 @@
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
+import { ProjectCreate } from "@api/models/ProjectCreate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { ProjectCreate } from "../../../../../api/openapi/models/ProjectCreate";
-import { ProjectHooks } from "../../../../../api/ProjectHooks";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
 
 interface ProjectCreationDialogProps {
   open: boolean;

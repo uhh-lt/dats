@@ -1,13 +1,13 @@
+import { FolderRead } from "@api/models/FolderRead";
+import { FolderType } from "@api/models/FolderType";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { SearchActions } from "@features/search";
 import FolderIcon from "@mui/icons-material/Folder";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useState } from "react";
-import { FolderRead } from "../../../api/openapi/models/FolderRead";
-import { FolderType } from "../../../api/openapi/models/FolderType";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
-import { FolderCreateButton } from "../dialog/FolderCreateButton";
+import { FolderCreateButton } from "../FolderCreateButton";
 import { FolderExplorerActionMenu } from "./_components/FolderExplorerActionMenu";
 import { FolderExplorerMenu } from "./_components/FolderExplorerMenu";
 import { useComputeFolderTree } from "./_hooks/useComputeFolderTree";

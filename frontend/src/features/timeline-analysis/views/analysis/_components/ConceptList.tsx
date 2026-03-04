@@ -1,3 +1,4 @@
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItem, ListItemButton, ListItemIcon } from "@mui/material";
@@ -7,15 +8,14 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { v4 as uuidv4 } from "uuid";
-import { TimelineAnalysisHooks } from "../../../../../api/TimelineAnalysisHooks";
 
+import { BBoxColumns } from "@api/models/BBoxColumns";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
-import { MyFilter } from "@components/filter/redux-filter-dialog/index";
+import { MyFilter } from "@components/filter";
 import { useAppDispatch, useAppStore } from "@plugins/redux";
-import { BBoxColumns } from "../../../../../api/openapi/models/BBoxColumns";
-import { LogicalOperator } from "../../../../../api/openapi/models/LogicalOperator";
-import { TimelineAnalysisConcept } from "../../../../../api/openapi/models/TimelineAnalysisConcept";
-import { TimelineAnalysisRead } from "../../../../../api/openapi/models/TimelineAnalysisRead";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";

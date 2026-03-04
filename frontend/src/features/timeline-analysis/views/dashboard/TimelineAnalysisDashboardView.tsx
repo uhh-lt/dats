@@ -1,3 +1,5 @@
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -9,8 +11,6 @@ import { useAppDispatch } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
-import { TimelineAnalysisType } from "../../../../api/openapi/models/TimelineAnalysisType";
-import { TimelineAnalysisHooks } from "../../../../api/TimelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 

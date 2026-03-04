@@ -1,6 +1,6 @@
 import { IconButton, Menu } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 import { FolderExportMenuItem } from "../../FolderExportMenuItem";
 import { FolderToggleVisibilityMenuItem } from "./FolderToggleVisibilityMenuItem";
 

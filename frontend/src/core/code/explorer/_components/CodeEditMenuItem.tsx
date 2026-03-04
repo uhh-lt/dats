@@ -1,9 +1,9 @@
+import { CodeRead } from "@api/models/CodeRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { MouseEvent, memo, useCallback } from "react";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 
 interface CodeEditMenuItemProps {
   code: CodeRead;

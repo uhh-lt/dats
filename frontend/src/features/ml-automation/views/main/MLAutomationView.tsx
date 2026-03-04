@@ -1,3 +1,6 @@
+import { JobHooks } from "@api/hooks/JobHooks";
+import { MLJobType } from "@api/models/MLJobType";
+import { ContentContainerLayout } from "@components/content-layouts";
 import { useOpenConfirmationDialog } from "@core/notification";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
@@ -17,15 +20,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { JobHooks } from "../../../../api/JobHooks";
-import { MLJobType } from "../../../../api/openapi/models/MLJobType";
-import { ContentContainerLayout } from "../../../../components/content-layouts/ContentContainerLayout";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MLJobsView } from "./_components/MLJobsView";
 
 const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");
 
-export function MlAutomation() {
+export function MlAutomationView() {
   // global client state (react router)
   const projectId = routeAPI.useParams({ select: (params) => params.projectId });
 

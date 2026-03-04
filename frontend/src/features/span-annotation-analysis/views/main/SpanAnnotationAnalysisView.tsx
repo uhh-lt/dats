@@ -1,7 +1,7 @@
+import { ContentLayout } from "@components/content-layouts";
+import { SpanAnnotationEditDialog } from "@core/span-annotation/SpanAnnotationEditDialog";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { ContentLayout } from "../../../../components/content-layouts/ContentLayout";
-import { SpanAnnotationEditDialog } from "../../../../core/span-annotation/SpanAnnotationEditDialog";
 import { SpanAnnotationAnalysisTable } from "./_components/SpanAnnotationAnalysisTable";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/span-annotations");

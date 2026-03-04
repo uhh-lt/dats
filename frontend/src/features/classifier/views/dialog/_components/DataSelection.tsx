@@ -1,19 +1,19 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { TagSelector } from "@core/tag";
+import { UserSelectorMulti } from "@core/user";
 import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
-import { TagSelector } from "../../../../../core/tag/TagSelector";
-import { UserSelectorMulti } from "../../../../../core/user/selector/UserSelectorMulti";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
 import { ClassifierDataPlot } from "../../../_components/ClassifierDataPlot";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function DataSelection() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
-  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
-  const userIds = useAppSelector((state) => state.dialog.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.dialog.classifierTagIds);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
+  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
+  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
 
   // global server state
   const datasetStats = ClassifierHooks.useComputeDatasetStatistics2();
@@ -21,7 +21,7 @@ export function DataSelection() {
   // selection actions
   const dispatch = useAppDispatch();
   const handleUserSelection = (userIds: number[]) => {
-    dispatch(UIDialogActions.onClassifierDialogSelectAnnotators(userIds));
+    dispatch(ClassifierActions.onClassifierDialogSelectAnnotators(userIds));
     datasetStats.mutate({
       projId: projectId,
       model: model!,
@@ -33,7 +33,7 @@ export function DataSelection() {
     });
   };
   const handleTagSelection = (tagIds: number[]) => {
-    dispatch(UIDialogActions.onClassifierDialogSelectTags(tagIds));
+    dispatch(ClassifierActions.onClassifierDialogSelectTags(tagIds));
     datasetStats.mutate({
       projId: projectId,
       model: model!,

@@ -1,11 +1,11 @@
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierTask } from "@api/models/ClassifierTask";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { ClassifierActions } from "@features/classifier/store/classifierSlice";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useMemo } from "react";
-import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel";
-import { ClassifierTask } from "../../../../api/openapi/models/ClassifierTask";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
+import { ClassifierActions } from "../../store/classifierSlice";
 import { ClassSelectionStep } from "./_components/ClassSelectionStep";
 import { EvalDataSelectionStep } from "./_components/EvalDataSelectionStep";
 import { InferDataSelectionStep } from "./_components/InferDataSelectionStep";
@@ -62,13 +62,13 @@ const content: Record<ClassifierTask, JSX.Element[]> = {
 
 export const ClassifierDialog = memo(() => {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const task = useAppSelector((state) => state.dialog.classifierTask);
-  const step = useAppSelector((state) => state.dialog.classifierStep);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const task = useAppSelector((state) => state.classifier.classifierTask);
+  const step = useAppSelector((state) => state.classifier.classifierStep);
 
   // open/close dialog
   const dispatch = useAppDispatch();
-  const open = useAppSelector((state) => state.dialog.isClassifierDialogOpen);
+  const open = useAppSelector((state) => state.classifier.isClassifierDialogOpen);
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);

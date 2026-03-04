@@ -1,8 +1,8 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeRead } from "@api/models/CodeRead";
 import { Stack } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
-import { CodeHooks } from "../../api/CodeHooks";
-import { CodeRead } from "../../api/openapi/models/CodeRead";
-import { Icon, getIconComponent } from "../../utils/icons/iconUtils";
 
 interface CodeRendererProps {
   code: number | CodeRead;

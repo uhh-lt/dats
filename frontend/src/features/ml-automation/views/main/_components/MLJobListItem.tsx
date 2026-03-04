@@ -1,10 +1,10 @@
-import { JobListItem } from "@core/job/index";
+import { JobHooks } from "@api/hooks/JobHooks";
+import { JobStatus } from "@api/models/JobStatus";
+import { MlJobRead } from "@api/models/MlJobRead";
+import { JobListItem } from "@core/job";
 import { Typography } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { JobHooks } from "../../../../../api/JobHooks";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
-import { MlJobRead } from "../../../../../api/openapi/models/MlJobRead";
-import { dateToLocaleString } from "../../../../../utils/DateUtils";
 
 interface MLJobListItemProps {
   initialMLJob: MlJobRead;

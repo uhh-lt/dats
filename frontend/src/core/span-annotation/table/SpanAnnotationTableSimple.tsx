@@ -1,3 +1,6 @@
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { useAuth } from "@core/auth";
+import { MemoRenderer2 } from "@core/memo";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -8,9 +11,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
-import { useAuth } from "../../auth/provider/useAuth";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
 import { SpanAnnotationRenderer } from "../SpanAnnotationRenderer";
 
 interface SpanAnnotationTableRow {

@@ -1,3 +1,7 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { DocType } from "@api/models/DocType";
+import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
+import { SdocTagsRenderer } from "@core/source-document/renderer/SdocTagRenderer";
 import {
   Card,
   CardActionArea,
@@ -11,10 +15,6 @@ import {
   styled,
 } from "@mui/material";
 import * as d3 from "d3";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { SimSearchImageHit } from "../../../../../api/openapi/models/SimSearchImageHit";
-import { SdocTagsRenderer } from "../../../../../core/source-document/renderer/SdocTagRenderer";
 
 const simSearchColorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "yellowgreen"]);
 

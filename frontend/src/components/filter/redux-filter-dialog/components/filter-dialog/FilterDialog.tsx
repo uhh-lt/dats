@@ -1,10 +1,10 @@
+import { useDialog } from "@hooks/useDialog";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Switch } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { ChangeEvent, memo, useCallback } from "react";
-import { useDialog } from "../../../../../hooks/useDialog";
 import { MyFilter, countFilterExpressions } from "../../../filterUtils";
 import { FilterRenderer } from "./components/filter-renderer/FilterRenderer";
 import { FilterRendererSimple } from "./components/filter-renderer/FilterRendererSimple";

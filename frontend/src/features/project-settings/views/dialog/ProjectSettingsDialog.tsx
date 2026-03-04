@@ -1,14 +1,13 @@
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { useOpenConfirmationDialog } from "@core/notification";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
 import { AppBar, Dialog, DialogContent, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import React, { memo, useCallback, useState } from "react";
+import { memo, SyntheticEvent, useCallback, useState } from "react";
 import { UIDialogActions } from "src/store/global/dialogSlice";
-import { ProjectHooks } from "../../../../api/ProjectHooks";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
 import { ProjectImport } from "./_components/project-import/ProjectImport";
 import { ProjectCodes } from "./_components/ProjectCodes";
 import { ProjectDetails } from "./_components/ProjectDetails";
@@ -89,7 +88,7 @@ export const ProjectSettingsDialog = memo(({ projectId }: { projectId: number })
             <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectDangerZone project={project.data} />
             </TabPanel>
-          </React.Fragment>
+          </>
         )}
       </TabContext>
     </Dialog>

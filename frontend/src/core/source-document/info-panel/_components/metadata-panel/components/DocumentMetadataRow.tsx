@@ -1,8 +1,8 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { memo, useCallback } from "react";
-import { MetadataHooks } from "../../../../../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataRead } from "../../../../../../api/openapi/models/SourceDocumentMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../../../../../../api/openapi/models/SourceDocumentMetadataUpdate";
 import { DocumentMetadataRowContent } from "./DocumentMetadataRowContent";
 
 interface DocumentMetadataRowProps {

@@ -1,3 +1,6 @@
+import { TagRead } from "@api/models/TagRead";
+import { SdocRenderer } from "@core/source-document";
+import { TagRenderer } from "@core/tag";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import {
   getMRT_RowSelectionHandler,
@@ -10,9 +13,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer";
-import { TagRenderer } from "../../../../core/tag/renderer/TagRenderer";
 import { DocumentTaggingResultRow } from "./DocumentTaggingResultRow";
 
 function CustomTagsRenderer({ tags }: { tags: TagRead[] }) {

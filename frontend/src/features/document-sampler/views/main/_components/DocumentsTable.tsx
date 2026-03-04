@@ -1,9 +1,9 @@
+import { SdocTableSimple } from "@core/source-document";
 import { CardProps } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { SdocTableSimple } from "../../../../../core/source-document/table/SdocTableSimple";
+import { ChartDataPoint } from "../../../_types/ChartDataPoint";
 import { BulkDocTagger } from "./BulkDocTagger";
-import { ChartDataPoint } from "./ChartDataPoint";
 import { DataCard } from "./DataCard";
 
 interface DocumentsTableProps {

@@ -1,5 +1,5 @@
+import { JobStatus } from "@api/models/JobStatus";
 import { Chip } from "@mui/material";
-import { JobStatus } from "../../api/openapi/models/JobStatus";
 import { jobStatusToColor } from "./JobStatusToColor";
 import { jobStatusToIcon } from "./JobStatusToIcon";
 

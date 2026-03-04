@@ -1,10 +1,10 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { CardContainer } from "@components/CardContainer";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { memo, useMemo } from "react";
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from "recharts";
-import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc";
-import { PerspectivesHooks } from "../../../api/PerspectivesHooks";
-import { CardContainer } from "../../../components/MUI/CardContainer";
 
 interface DocumentClusterScatterPlotProps {
   aspectId: number;

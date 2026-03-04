@@ -1,3 +1,4 @@
+import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -7,7 +8,6 @@ import {
 import { useOpenConfirmationDialog } from "@core/notification";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
-import { WhiteboardHooks } from "../../../../api/WhiteboardHooks";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");

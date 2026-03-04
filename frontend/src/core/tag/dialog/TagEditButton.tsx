@@ -1,9 +1,9 @@
+import { TagRead } from "@api/models/TagRead";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback } from "react";
-import { TagRead } from "../../../api/openapi/models/TagRead";
-import { UIDialogActions } from "../../../store/global/dialogSlice";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 
 export const TagEditButton = memo(({ tag, ...props }: IconButtonProps & { tag: TagRead }) => {
   const dispatch = useAppDispatch();

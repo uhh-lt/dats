@@ -1,3 +1,11 @@
+import { ChatSessionResponse } from "@api/models/ChatSessionResponse";
+import { IDListOperator } from "@api/models/IDListOperator";
+import { ListOperator } from "@api/models/ListOperator";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SdocColumns } from "@api/models/SdocColumns";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { StringOperator } from "@api/models/StringOperator";
 import {
   createInitialFilterState,
   filterOperator2FilterOperatorType,
@@ -7,20 +15,12 @@ import {
   getOrCreateFilter,
   MyFilterExpression,
   resetProjectFilterState,
-} from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
+import { getValue } from "@utils/MetadataUtils";
 import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
-import { ChatSessionResponse } from "../../../api/openapi/models/ChatSessionResponse";
-import { IDListOperator } from "../../../api/openapi/models/IDListOperator";
-import { ListOperator } from "../../../api/openapi/models/ListOperator";
-import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator";
-import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
-import { SourceDocumentMetadataUpdate } from "../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { StringOperator } from "../../../api/openapi/models/StringOperator";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { getValue } from "../../../utils/MetadataUtils";
 
 interface ChatMessage {
   id: string;

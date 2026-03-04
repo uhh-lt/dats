@@ -1,4 +1,9 @@
-import { jobStatusToSimple } from "@core/job/index";
+import { JobHooks } from "@api/hooks/JobHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { ContentContainerLayout } from "@components/content-layouts";
+import { jobStatusToSimple } from "@core/job";
+import { SdocRenderer } from "@core/source-document";
+import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
@@ -13,11 +18,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import { JobHooks } from "../../../../api/JobHooks";
-import { SdocHooks } from "../../../../api/SdocHooks";
-import { ContentContainerLayout } from "../../../../components/content-layouts/ContentContainerLayout";
-import { SdocRenderer } from "../../../../core/source-document/renderer/SdocRenderer";
-import { TagSelector } from "../../../../core/tag/TagSelector";
 import { DuplicateFinderActions } from "../../store/duplicateFinderSlice";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/tools/duplicate-finder");

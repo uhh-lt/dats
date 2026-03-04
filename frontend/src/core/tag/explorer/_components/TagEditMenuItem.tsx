@@ -1,9 +1,9 @@
+import { TagRead } from "@api/models/TagRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 
 interface TagEditMenuItemProps {
   tag: TagRead;

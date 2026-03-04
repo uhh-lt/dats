@@ -1,9 +1,9 @@
+import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useCallback } from "react";
-import { SentenceAnnotationRow } from "../../../../../api/openapi/models/SentenceAnnotationRow";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 
 interface BulkChangeSentAnnotationCodeButtonProps {

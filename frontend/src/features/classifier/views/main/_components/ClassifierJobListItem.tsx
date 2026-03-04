@@ -1,14 +1,14 @@
-import { JobListItem, jobStatusToSimple } from "@core/job/index";
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierEvaluationOutput } from "@api/models/ClassifierEvaluationOutput";
+import { ClassifierInferenceOutput } from "@api/models/ClassifierInferenceOutput";
+import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
+import { ClassifierTask } from "@api/models/ClassifierTask";
+import { ClassifierTrainingOutput } from "@api/models/ClassifierTrainingOutput";
+import { JobStatus } from "@api/models/JobStatus";
+import { JobListItem, jobStatusToSimple } from "@core/job";
 import { Typography } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierEvaluationOutput } from "../../../../../api/openapi/models/ClassifierEvaluationOutput";
-import { ClassifierInferenceOutput } from "../../../../../api/openapi/models/ClassifierInferenceOutput";
-import { ClassifierJobRead } from "../../../../../api/openapi/models/ClassifierJobRead";
-import { ClassifierTask } from "../../../../../api/openapi/models/ClassifierTask";
-import { ClassifierTrainingOutput } from "../../../../../api/openapi/models/ClassifierTrainingOutput";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
-import { dateToLocaleString } from "../../../../../utils/DateUtils";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
 

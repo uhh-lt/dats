@@ -1,14 +1,14 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { MetadataExtractionLLMJobResult } from "@api/models/MetadataExtractionLLMJobResult";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { memo } from "react";
-import { LLMHooks } from "../../../../../../api/LLMHooks";
-import { MetadataExtractionLLMJobResult } from "../../../../../../api/openapi/models/MetadataExtractionLLMJobResult";
 import { LLMUtterance } from "../LLMUtterance";
 import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultStepTable";
 
 export const MetadataExtractionResultStep = memo(() => {
   // get the job
-  const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
   return (

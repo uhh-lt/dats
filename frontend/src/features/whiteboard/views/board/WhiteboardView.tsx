@@ -1,7 +1,7 @@
+import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import { CircularProgress } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { ReactFlowProvider } from "reactflow";
-import { WhiteboardHooks } from "../../../../api/WhiteboardHooks";
 import { WhiteboardFlow } from "../../_components/WhiteboardFlow";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/$whiteboardId");

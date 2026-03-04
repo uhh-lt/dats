@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { COTAConcept } from "@api/models/COTAConcept";
+import { COTARead } from "@api/models/COTARead";
+import { COTASentence } from "@api/models/COTASentence";
 import CircleIcon from "@mui/icons-material/Circle";
 import {
   Box,
@@ -19,9 +22,6 @@ import { MRT_RowSelectionState } from "material-react-table";
 import { Datum, ScatterData } from "plotly.js";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import Plot, { Figure } from "react-plotly.js";
-import { COTAConcept } from "../../../../../api/openapi/models/COTAConcept";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
-import { COTASentence } from "../../../../../api/openapi/models/COTASentence";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
 

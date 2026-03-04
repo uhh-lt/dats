@@ -1,11 +1,11 @@
+import { FolderHooks } from "@api/hooks/FolderHooks";
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
+import { FolderRead } from "@api/models/FolderRead";
+import { FolderType } from "@api/models/FolderType";
 import { dataToTree, ITree } from "@components/tree-explorer";
 import { useAppSelector } from "@plugins/redux";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import { FolderHooks } from "../../../../api/FolderHooks";
-import { FolderRead } from "../../../../api/openapi/models/FolderRead";
-import { FolderType } from "../../../../api/openapi/models/FolderType";
-import { ProjectHooks } from "../../../../api/ProjectHooks";
 
 export const useComputeFolderTree = () => {
   // global server state

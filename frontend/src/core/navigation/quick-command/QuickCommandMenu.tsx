@@ -10,9 +10,9 @@ import {
   alpha,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useNavigate } from "@tanstack/react-router";
 import { SyntheticEvent, useCallback, useRef } from "react";
-import { UIDialogActions } from "../../../store/global/dialogSlice";
 import { useDefaultCommands } from "./_hooks/useDefaultCommands";
 import { CommandItem } from "./_types/CommandItem";
 

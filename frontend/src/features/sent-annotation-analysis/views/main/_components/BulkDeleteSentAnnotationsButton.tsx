@@ -1,9 +1,9 @@
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
-import { SentenceAnnotationRow } from "../../../../../api/openapi/models/SentenceAnnotationRow";
-import { SentenceAnnotationHooks } from "../../../../../api/SentenceAnnotationHooks";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 
 interface BulkDeleteSentAnnotationsButtonProps {

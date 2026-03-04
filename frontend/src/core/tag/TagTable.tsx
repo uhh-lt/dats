@@ -1,3 +1,5 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRead } from "@api/models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
 import {
   MRT_ColumnDef,
@@ -8,8 +10,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { TagRead } from "../../api/openapi/models/TagRead";
-import { TagHooks } from "../../api/TagHooks";
 
 const createDataTree = (dataset: TagRead[]): TagTableRow[] => {
   const hashTable: Record<number, TagTableRow> = Object.create(null);

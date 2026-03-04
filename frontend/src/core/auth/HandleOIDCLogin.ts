@@ -1,4 +1,4 @@
-import { UserAuthorizationHeaderData } from "../../api/openapi/models/UserAuthorizationHeaderData";
+import { UserAuthorizationHeaderData } from "@api/models/UserAuthorizationHeaderData";
 
 export function handleOIDCLogin(updateAuthData: (authData: UserAuthorizationHeaderData) => void): void {
   const width = 600;

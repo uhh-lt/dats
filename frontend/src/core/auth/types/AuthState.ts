@@ -1,5 +1,5 @@
-import { UserAuthorizationHeaderData } from "../../../api/openapi/models/UserAuthorizationHeaderData";
-import { UserRead } from "../../../api/openapi/models/UserRead";
+import { UserAuthorizationHeaderData } from "@api/models/UserAuthorizationHeaderData";
+import { UserRead } from "@api/models/UserRead";
 import { LoginStatus } from "./LoginStatus";
 
 export interface AuthState {

@@ -1,5 +1,5 @@
+import { ProjectRead } from "@api/models/ProjectRead";
 import { Box, Stack } from "@mui/material";
-import { ProjectRead } from "../../../../../../api/openapi/models/ProjectRead";
 import { ImportJobsView } from "./components/ImportJobsView";
 import { ImportSection } from "./components/ImportSection";
 

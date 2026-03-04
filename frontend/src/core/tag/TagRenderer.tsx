@@ -1,7 +1,7 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRead } from "@api/models/TagRead";
 import { Stack, StackProps, Typography } from "@mui/material";
-import { TagHooks } from "../../api/TagHooks";
-import { TagRead } from "../../api/openapi/models/TagRead";
-import { Icon, getIconComponent } from "../../utils/icons/iconUtils";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 
 interface TagRendererProps {
   tag: number | TagRead;

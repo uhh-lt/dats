@@ -1,6 +1,6 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { SVGTextElementAttributes, memo } from "react";
-import { CodeHooks } from "../../../api/CodeHooks";
-import { BBoxAnnotationRead } from "../../../api/openapi/models/BBoxAnnotationRead";
 
 type CustomTextProps = Omit<
   SVGTextElementAttributes<SVGTextElement>,

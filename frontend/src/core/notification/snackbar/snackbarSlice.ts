@@ -1,15 +1,12 @@
-import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { SnackbarEvent } from "./_types/SnackbarEvent";
 
 interface SnackbarState {
-  // snackbar
   isSnackbarOpen: boolean;
   snackbarData: SnackbarEvent;
 }
 
 const initialState: SnackbarState = {
-  // snackbar
   isSnackbarOpen: false,
   snackbarData: {
     severity: "info",
@@ -22,10 +19,7 @@ const snackbarSlice = createSlice({
   name: "snackbar",
   initialState,
   reducers: {
-    openSnackbar: (
-      state,
-      action: PayloadAction<{ severity: AlertProps["severity"]; text: string; title?: string }>,
-    ) => {
+    openSnackbar: (state, action: PayloadAction<SnackbarEvent>) => {
       state.isSnackbarOpen = true;
       state.snackbarData = action.payload;
     },

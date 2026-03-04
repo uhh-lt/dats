@@ -1,7 +1,7 @@
+import { ContentLayout } from "@components/content-layouts";
+import { BBoxAnnotationEditDialog } from "@core/bbox-annotation/BBoxAnnotationEditDialog";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { ContentLayout } from "../../../../components/content-layouts/ContentLayout";
-import { BBoxAnnotationEditDialog } from "../../../../core/bbox-annotation/BBoxAnnotationEditDialog";
 import { BBoxAnnotationAnalysisTable } from "./_components/BBoxAnnotationAnalysisTable";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/bbox-annotations");

@@ -2,15 +2,15 @@ import { Box, BoxProps } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import "./DocumentRenderer.css";
 
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { useAppSelector } from "@plugins/redux";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
-import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead";
 import { IToken } from "../../../../types/IToken";
-import { DocumentPage } from "./components/DocumentPage";
-import { SdocAudioLink } from "./components/SdocAudioLink";
-import { SdocImage } from "./components/SdocImage";
-import { SdocVideoLink } from "./components/SdocVideoLink";
-import { Token } from "./components/Token";
+import { DocumentPage } from "./_components/DocumentPage";
+import { SdocAudioLink } from "./_components/SdocAudioLink";
+import { SdocImage } from "./_components/SdocImage";
+import { SdocVideoLink } from "./_components/SdocVideoLink";
+import { Token } from "./_components/Token";
 
 interface DocumentRendererProps {
   html: string;

@@ -1,3 +1,6 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierTrainingParams } from "@api/models/ClassifierTrainingParams";
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText, FreeSoloOptions } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import {
@@ -15,9 +18,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
-import { ClassifierTrainingParams } from "../../../../../api/openapi/models/ClassifierTrainingParams";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface TrainingSettings {
   // required
@@ -64,12 +65,12 @@ const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-m
 
 export function TrainingSettingsStep() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const task = useAppSelector((state) => state.dialog.classifierTask);
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
-  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
-  const userIds = useAppSelector((state) => state.dialog.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.dialog.classifierTagIds);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const task = useAppSelector((state) => state.classifier.classifierTask);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
+  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
+  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
   const dispatch = useAppDispatch();
 
   // form state
@@ -96,7 +97,7 @@ export function TrainingSettingsStep() {
 
   // dialog actions
   const handlePrev = () => {
-    dispatch(UIDialogActions.previousClassifierDialogStep());
+    dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: TrainingSettings) => {
@@ -136,7 +137,7 @@ export function TrainingSettingsStep() {
       },
       {
         onSuccess: (data) => {
-          dispatch(UIDialogActions.onClassifierDialogStartJob(data.job_id));
+          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
         },
       },
     );

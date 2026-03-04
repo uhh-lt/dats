@@ -1,10 +1,10 @@
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { TagRead } from "@api/models/TagRead";
 import { ITree } from "@components/tree-explorer";
-import { MemoMenuItem } from "@core/memo/dialog";
+import { MemoMenuItem } from "@core/memo";
 import { IconButton, Menu } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 import { TagEditMenuItem } from "./TagEditMenuItem";
 
 interface TagExplorerActionMenuProps {

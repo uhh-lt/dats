@@ -1,13 +1,28 @@
+import { QueryKey } from "@api/hooks/QueryKey";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
+import { BBoxAnnotationSearchResult } from "@api/models/BBoxAnnotationSearchResult";
+import { BBoxColumns } from "@api/models/BBoxColumns";
+import { SortDirection } from "@api/models/SortDirection";
+import { SearchService } from "@api/services/SearchService";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
   FilterTableToolbarProps,
   FilterTableToolbarRight,
+  MyFilter,
+  createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter/index";
-import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { ImageCropper } from "@components/ImageCropper";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
+import { MemoRenderer2 } from "@core/memo";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocTagsRenderer } from "@core/source-document";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -20,20 +35,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
-import { BBoxAnnotationRow } from "../../../api/openapi/models/BBoxAnnotationRow";
-import { BBoxAnnotationSearchResult } from "../../../api/openapi/models/BBoxAnnotationSearchResult";
-import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns";
-import { SortDirection } from "../../../api/openapi/models/SortDirection";
-import { SearchService } from "../../../api/openapi/services/SearchService";
-import { QueryKey } from "../../../api/QueryKey";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../store/store";
-import { useAuth } from "../../auth/provider/useAuth";
-import { CodeRenderer } from "../../code/CodeRenderer";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
-import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions } from "./bboxFilterSlice";
 

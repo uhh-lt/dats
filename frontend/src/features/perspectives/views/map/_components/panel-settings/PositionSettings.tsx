@@ -1,3 +1,6 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { DocType } from "@api/models/DocType";
+import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import RuleIcon from "@mui/icons-material/Rule";
@@ -17,11 +20,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo } from "react";
-import { DocType } from "../../../../../../api/openapi/models/DocType";
-import { PerspectivesJobType } from "../../../../../../api/openapi/models/PerspectivesJobType";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
-import { getIconComponent, Icon } from "../../../../../../utils/icons/iconUtils";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 interface PositionSettingsProps {
   aspectId: number;

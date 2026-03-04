@@ -1,11 +1,11 @@
-import { ColumnInfo } from "@components/filter/redux-filter-dialog/index";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
+import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
+import { SearchService } from "@api/services/SearchService";
+import { ColumnInfo } from "@components/filter";
 import { useAppDispatch } from "@plugins/redux";
+import { AppDispatch } from "@store/store";
 import { useQuery } from "@tanstack/react-query";
-import { TimelineAnalysisRead } from "../../../../../api/openapi/models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "../../../../../api/openapi/models/TimelineAnalysisType";
-import { SearchService } from "../../../../../api/openapi/services/SearchService";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { AppDispatch } from "../../../../../store/store";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 
 const useGetTimelineAnalysisInfo = (timelineAnalysis: TimelineAnalysisRead, dispatch: AppDispatch) =>

@@ -1,3 +1,5 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -7,8 +9,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { MetadataHooks } from "../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead";
 
 const columns: MRT_ColumnDef<ProjectMetadataRead>[] = [
   {

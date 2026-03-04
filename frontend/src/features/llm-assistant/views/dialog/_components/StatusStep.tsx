@@ -1,26 +1,27 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { JobStatus } from "@api/models/JobStatus";
 import { LinearProgressWithLabel } from "@components/progress-bars";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useMemo } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 export const StatusStep = memo(() => {
   // global state
-  const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   const dispatch = useAppDispatch();
 
   // poll the job
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
   const handleNext = useCallback(() => {
     if (llmJob.data && llmJob.data.status === JobStatus.FINISHED && llmJob.data.output) {
-      dispatch(UIDialogActions.llmDialogGoToResult({ result: llmJob.data.output }));
+      dispatch(LLMAssistantActions.llmDialogGoToResult({ result: llmJob.data.output }));
     } else {
       console.error("Job is not finished yet.");
     }

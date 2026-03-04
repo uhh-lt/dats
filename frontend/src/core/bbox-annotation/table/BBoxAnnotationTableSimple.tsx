@@ -1,3 +1,4 @@
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MaterialReactTable,
@@ -8,7 +9,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
 import { useAuth } from "../../auth/provider/useAuth";
 import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
 import { BBoxAnnotationRenderer } from "../BBoxAnnotationRenderer";

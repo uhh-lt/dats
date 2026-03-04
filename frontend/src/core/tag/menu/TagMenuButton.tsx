@@ -2,9 +2,8 @@ import { Button, PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback, useState } from "react";
-import { RootState } from "../../../store/store";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 import { TagMenu } from "./_components/TagMenu";
 
 interface TagMenuButtonProps {
@@ -14,7 +13,7 @@ interface TagMenuButtonProps {
 }
 
 export const TagMenuButton = memo(({ popoverOrigin, type, selectedSdocIds }: TagMenuButtonProps) => {
-  const projectId = useAppSelector((state: RootState) => state.project.projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback((event) => {

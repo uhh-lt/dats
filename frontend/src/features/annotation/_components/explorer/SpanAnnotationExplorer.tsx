@@ -1,8 +1,8 @@
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { useAppSelector } from "@plugins/redux";
-import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead";
-import { SpanAnnotationHooks } from "../../../../api/SpanAnnotationHooks";
-import { AnnotationExplorer } from "./components/AnnotationExplorer";
-import { SpanAnnotationCard } from "./components/SpanAnnotationCard";
+import { AnnotationExplorer } from "./_components/AnnotationExplorer";
+import { SpanAnnotationCard } from "./_components/SpanAnnotationCard";
 
 const filterByText = (text: string) => (annotation: SpanAnnotationRead) => annotation.text.includes(text);
 

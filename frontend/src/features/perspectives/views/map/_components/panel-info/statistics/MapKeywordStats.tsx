@@ -1,9 +1,9 @@
+import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
+import { KeywordStat } from "@api/models/KeywordStat";
 import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
-import { KeywordStat } from "../../../../../../../api/openapi/models/KeywordStat";
-import { StatisticsHooks } from "../../../../../../../api/StatisticsHooks";
-import { StatsDisplayButton } from "../../../../../../search/_components/statistics/components/StatsDisplayButton";
+import { StatsDisplayButton } from "../../../../../../search/_components/statistics/_components/StatsDisplayButton";
 
 interface MapKeywordStatsProps {
   sdocIds?: number[];

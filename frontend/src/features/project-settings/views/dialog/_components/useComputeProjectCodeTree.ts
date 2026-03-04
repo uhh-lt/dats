@@ -1,8 +1,8 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeRead } from "@api/models/CodeRead";
 import { dataToTree, ITree } from "@components/tree-explorer";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import { CodeHooks } from "../../../../../api/CodeHooks";
-import { CodeRead } from "../../../../../api/openapi/models/CodeRead";
 
 // create a dummy root node that will hold the results
 const dummyRootNode: CodeRead = {

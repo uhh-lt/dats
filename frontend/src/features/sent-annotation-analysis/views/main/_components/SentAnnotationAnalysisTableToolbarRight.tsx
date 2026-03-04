@@ -1,4 +1,6 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
+import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
+import { FilterTableToolbarProps } from "@components/filter";
+import { SentenceAnnotationExportButton } from "@core/sentence-annotation/SentenceAnnotationExportButton";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,
@@ -6,8 +8,6 @@ import {
   MRT_ToggleGlobalFilterButton,
 } from "material-react-table";
 import { useMemo } from "react";
-import { SentenceAnnotationRow } from "../../../../../api/openapi/models/SentenceAnnotationRow";
-import { SentenceAnnotationExportButton } from "../../../../../core/sentence-annotation/SentenceAnnotationExportButton";
 
 export function SentAnnotationAnalysisTableToolbarRight({
   table,

@@ -1,4 +1,6 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -16,8 +18,6 @@ import { TransitionProps } from "@mui/material/transitions";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { forwardRef, KeyboardEventHandler, MouseEventHandler, ReactElement, Ref, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
 
 interface SearchFormValues {

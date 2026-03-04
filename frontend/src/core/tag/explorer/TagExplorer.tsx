@@ -1,11 +1,11 @@
+import { TagRead } from "@api/models/TagRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { SearchActions } from "@features/search";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useState } from "react";
-import { TagRead } from "../../../api/openapi/models/TagRead";
-import { SearchActions } from "../../../features/search/DocumentSearch/searchSlice";
-import { TagCreateListItemButton } from "../dialog/TagCreateListItemButton";
+import { TagCreateListItemButton } from "../dialog";
 import { TagExportButton } from "../TagExportButton";
 import { TagExplorerActionMenu } from "./_components/TagExplorerActionMenu";
 import { useComputeTagTree } from "./useComputeTagTree";

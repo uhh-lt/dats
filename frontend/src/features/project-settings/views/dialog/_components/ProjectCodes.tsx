@@ -1,12 +1,12 @@
+import { CodeRead } from "@api/models/CodeRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { CodeToggleEnabledButton } from "@core/code/CodeToggleEnabledButton";
+import { CodeToggleVisibilityButton } from "@core/code/CodeToggleVisibilityButton";
+import { CodeCreateListItemButton } from "@core/code/dialog/CodeCreateListItemButton";
+import { CodeEditButton } from "@core/code/dialog/CodeEditButton";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
-import { CodeRead } from "../../../../../api/openapi/models/CodeRead";
-import { CodeToggleEnabledButton } from "../../../../../core/code/CodeToggleEnabledButton";
-import { CodeToggleVisibilityButton } from "../../../../../core/code/CodeToggleVisibilityButton";
-import { CodeCreateListItemButton } from "../../../../../core/code/dialog/CodeCreateListItemButton";
-import { CodeEditButton } from "../../../../../core/code/dialog/CodeEditButton";
 import { useComputeProjectCodeTree } from "./useComputeProjectCodeTree";
 
 const renderCodeActions = (node: ITree<CodeRead>) => (

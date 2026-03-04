@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
 import { Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { Annotations, Color, Datum, ScatterData } from "plotly.js";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"; // Added useRef
 import Plot, { Figure } from "react-plotly.js";
-import { PerspectivesDoc } from "../../../../../api/openapi/models/PerspectivesDoc";
-import { PerspectivesVisualization } from "../../../../../api/openapi/models/PerspectivesVisualization";
 import { PerspectivesActions } from "../../../store/perspectivesSlice";
 import { MapTooltip, MapTooltipData } from "./MapTooltip";
 

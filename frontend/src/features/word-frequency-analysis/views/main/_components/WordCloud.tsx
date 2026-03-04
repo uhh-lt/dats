@@ -1,3 +1,4 @@
+import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { DATSToolbar } from "@components/DATSToolbar";
 import CloudIcon from "@mui/icons-material/Cloud";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
@@ -17,7 +18,6 @@ import { Text } from "@visx/text";
 import { Wordcloud } from "@visx/wordcloud";
 import { toPng } from "html-to-image";
 import { useCallback, useRef, useState } from "react";
-import { WordFrequencyStat } from "../../../../../api/openapi/models/WordFrequencyStat";
 
 interface WordCloudProps {
   width: number;

@@ -1,8 +1,23 @@
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
+import { WhiteboardContent_Output } from "@api/models/WhiteboardContent_Output";
+import { WhiteboardEdgeData_Output } from "@api/models/WhiteboardEdgeData_Output";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
+import { WhiteboardRead } from "@api/models/WhiteboardRead";
 import { EditableTypography } from "@components/EditableTypography";
+import { BBoxAnnotationEditDialog } from "@core/bbox-annotation/BBoxAnnotationEditDialog";
+import { SentenceAnnotationEditDialog } from "@core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
+import { SpanAnnotationEditDialog } from "@core/span-annotation/SpanAnnotationEditDialog";
 import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "@mui/material";
 import { useBlocker } from "@tanstack/react-router";
+import { downloadFile } from "@utils/ExportUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -30,21 +45,6 @@ import {
   XYPosition,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { BboxAnnotationHooks } from "../../../api/BboxAnnotationHooks";
-import { CodeHooks } from "../../../api/CodeHooks";
-import { WhiteboardContent_Output } from "../../../api/openapi/models/WhiteboardContent_Output";
-import { WhiteboardEdgeData_Output } from "../../../api/openapi/models/WhiteboardEdgeData_Output";
-import { WhiteboardNodeType } from "../../../api/openapi/models/WhiteboardNodeType";
-import { WhiteboardRead } from "../../../api/openapi/models/WhiteboardRead";
-import { SentenceAnnotationHooks } from "../../../api/SentenceAnnotationHooks";
-import { SpanAnnotationHooks } from "../../../api/SpanAnnotationHooks";
-import { TagHooks } from "../../../api/TagHooks";
-import { WhiteboardHooks } from "../../../api/WhiteboardHooks";
-import { BBoxAnnotationEditDialog } from "../../../core/bbox-annotation/BBoxAnnotationEditDialog";
-import { SentenceAnnotationEditDialog } from "../../../core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
-import { SpanAnnotationEditDialog } from "../../../core/span-annotation/SpanAnnotationEditDialog";
-import { downloadFile } from "../../../utils/ExportUtils";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
 import { DATSNodeData } from "../_types/DATSNodeData";

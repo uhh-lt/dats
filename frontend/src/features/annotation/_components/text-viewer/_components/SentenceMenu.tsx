@@ -1,0 +1,182 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { MemoListItemButton } from "@core/memo";
+import { ImageSearchActions, SearchActions, SentenceSearchActions } from "@features/search";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Popover,
+  PopoverPosition,
+} from "@mui/material";
+import { useAppDispatch } from "@plugins/redux";
+import { useNavigate } from "@tanstack/react-router";
+import { Fragment, forwardRef, useImperativeHandle, useState } from "react";
+
+export interface SentenceMenuHandle {
+  open: (
+    position: PopoverPosition,
+    sentence: string | undefined,
+    annotations: SpanAnnotationRead[] | undefined,
+  ) => void;
+  close: () => void;
+}
+
+interface SentenceMenuProps {
+  projectId: number;
+}
+
+export const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({ projectId }, ref) => {
+  const navigate = useNavigate();
+
+  // global server state
+  const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
+
+  // local state
+  const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [sentence, setSentence] = useState<string>();
+  const [annotations, setAnnotations] = useState<SpanAnnotationRead[]>();
+
+  // global client state (redux)
+  const dispatch = useAppDispatch();
+
+  // methods
+  const openMenu = (
+    position: PopoverPosition,
+    sentence: string | undefined,
+    annotations: SpanAnnotationRead[] | undefined,
+  ) => {
+    setIsPopoverOpen(true);
+    setPosition(position);
+    setSentence(sentence);
+    setAnnotations(annotations);
+  };
+
+  const closeMenu = () => {
+    setIsPopoverOpen(false);
+  };
+
+  // exposed methods (via ref)
+  useImperativeHandle(ref, () => ({
+    open: openMenu,
+    close: closeMenu,
+  }));
+
+  // ui events
+  const handleSentenceSimilaritySearch = () => {
+    closeMenu();
+    dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
+    dispatch(SentenceSearchActions.onClearRowSelection());
+    closeMenu();
+    navigate({ to: "/project/$projectId/sentencesearch", params: { projectId } });
+  };
+
+  const handleImageSimilaritySearch = () => {
+    dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
+    dispatch(ImageSearchActions.clearSelectedDocuments());
+    closeMenu();
+    navigate({ to: "/project/$projectId/imagesearch", params: { projectId } });
+  };
+
+  const handleAddFilter = (anno: SpanAnnotationRead) => {
+    dispatch(
+      SearchActions.onAddSpanAnnotationFilter({
+        codeId: anno.code_id,
+        spanText: anno.text,
+        filterName: "root",
+      }),
+    );
+    closeMenu();
+    navigate({ to: "/project/$projectId/search", params: { projectId } });
+  };
+
+  return (
+    <Popover
+      open={isPopoverOpen}
+      onClose={() => closeMenu()}
+      anchorPosition={position}
+      anchorReference="anchorPosition"
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "left",
+      }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "left",
+      }}
+    >
+      <List dense>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
+            <ListItemIcon>
+              <SearchIcon />
+            </ListItemIcon>
+            <ListItemText primary="Find similar sentences" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={handleImageSimilaritySearch} disabled={!sentence}>
+            <ListItemIcon>
+              <SearchIcon />
+            </ListItemIcon>
+            <ListItemText primary="Find similar images" />
+          </ListItemButton>
+        </ListItem>
+        {annotations &&
+          codeId2CodeMap.isSuccess &&
+          annotations.map((anno) => {
+            const code = codeId2CodeMap.data[anno.code_id];
+            return (
+              <Fragment key={anno.id}>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => handleAddFilter(anno)}>
+                    <ListItemIcon>
+                      <FilterAltIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Filter: " />
+                    <Box
+                      style={{
+                        width: 20,
+                        height: 20,
+                        backgroundColor: code.color,
+                        marginRight: 8,
+                        marginLeft: 16,
+                      }}
+                    />
+                    <ListItemText primary={`${code.name}: ${anno.text}`} />
+                  </ListItemButton>
+                </ListItem>
+                <MemoListItemButton
+                  onClick={() => closeMenu()}
+                  attachedObjectId={anno.id}
+                  attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+                  content={
+                    <>
+                      <ListItemText primary="Memo: " />
+                      <Box
+                        style={{
+                          width: 20,
+                          height: 20,
+                          backgroundColor: code.color,
+                          marginRight: 8,
+                          marginLeft: 8,
+                        }}
+                      />
+                      <ListItemText primary={`${code.name}: ${anno.text}`} />
+                    </>
+                  }
+                />
+              </Fragment>
+            );
+          })}
+      </List>
+    </Popover>
+  );
+});

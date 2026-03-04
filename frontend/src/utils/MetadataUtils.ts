@@ -1,6 +1,6 @@
-import { MetaType } from "../api/openapi/models/MetaType";
-import { ProjectMetadataRead } from "../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../api/openapi/models/SourceDocumentMetadataUpdate";
+import { MetaType } from "@api/models/MetaType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { dateToLocaleYYYYMMDDString } from "./DateUtils";
 
 export const getValue = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {

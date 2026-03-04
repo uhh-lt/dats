@@ -1,5 +1,5 @@
 import { Grid2, Link, Typography } from "@mui/material";
-import { SUPPORT_EMAIL } from "../../../utils/GlobalConstants";
+import { SUPPORT_EMAIL } from "@utils/GlobalConstants";
 
 export function DataPrivacy() {
   return (

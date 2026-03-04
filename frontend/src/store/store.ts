@@ -1,12 +1,29 @@
+import { bboxFilterReducer } from "@core/bbox-annotation";
+import { memoDialogReducer, memoFilterReducer } from "@core/memo";
+import { tabReducer } from "@core/navigation";
+import { confirmationReducer, snackbarReducer } from "@core/notification";
+import { seatFilterReducer } from "@core/sentence-annotation";
+import { documentTableFilterReducer } from "@core/source-document";
+import { satFilterReducer } from "@core/span-annotation";
+import { annoReducer } from "@features/annotation";
+import { bboxAnnotationAnalysisReducer } from "@features/bbox-annotation-analysis";
+import { classifierReducer } from "@features/classifier";
+import { cotaReducer } from "@features/concept-over-time-analysis";
+import { documentSamplerReducer } from "@features/document-sampler";
+import { duplicateFinderReducer } from "@features/duplicate-finder";
+import { llmAssistantReducer } from "@features/llm-assistant";
+import { logbookReducer } from "@features/logbook";
+import { perspectivesReducer } from "@features/perspectives";
+import { imageSearchReducer, searchReducer, sentenceSearchReducer } from "@features/search";
+import { sentAnnotationAnalysisReducer } from "@features/sent-annotation-analysis";
+import { spanAnnotationAnalysisReducer } from "@features/span-annotation-analysis";
+import { timelineAnalysisReducer } from "@features/timeline-analysis";
+import { wordFrequencyReducer } from "@features/word-frequency-analysis";
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist";
-
-import { annoReducer } from "@features/annotation";
-import { imageSearchReducer, searchReducer, sentenceSearchReducer } from "@features/search";
+import { dialogReducer } from "./global/dialogSlice";
 import { layoutReducer } from "./global/layoutSlice";
 import { projectReducer } from "./global/projectSlice";
-import { spanAnnotationAnalysisReducer } from "@features/span-annotation-analysis";
-import { logbookReducer } from "@features/logbook";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +35,11 @@ export const store = configureStore({
     layout: layoutReducer,
     project: projectReducer,
     // non-persisted reducers
+    memo: memoDialogReducer,
+    snackbar: snackbarReducer,
+    confirmation: confirmationReducer,
+    classifier: classifierReducer,
+    llmAssistant: llmAssistantReducer,
     tabs: tabReducer,
     logbook: logbookReducer,
     spanAnnotationAnalysis: spanAnnotationAnalysisReducer,

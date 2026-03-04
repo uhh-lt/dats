@@ -1,10 +1,10 @@
+import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
-import { useCallback } from "react";
-import { BBoxAnnotationRow } from "../../../../../../api/openapi/models/BBoxAnnotationRow";
-import { UIDialogActions } from "../../../../../../store/global/dialogSlice";
 import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCallback } from "react";
 
 interface BulkChangeBBoxAnnotationCodeButtonProps {
   selectedData: BBoxAnnotationRow[];

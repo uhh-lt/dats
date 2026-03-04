@@ -1,13 +1,14 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { CodeRead } from "@api/models/CodeRead";
+import { TaskType } from "@api/models/TaskType";
+import { CodeTable } from "@core/code";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { CodeRead } from "../../../../../api/openapi/models/CodeRead";
-import { TaskType } from "../../../../../api/openapi/models/TaskType";
-import { CodeTable } from "../../../../../core/code/CodeTable";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 export const CodeSelectionStep = memo(() => {
@@ -15,9 +16,9 @@ export const CodeSelectionStep = memo(() => {
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global state
-  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
-  const selectedDocuments = useAppSelector((state) => state.dialog.llmDocumentIds);
-  const llmJobType = useAppSelector((state) => state.dialog.llmMethod);
+  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
+  const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
+  const llmJobType = useAppSelector((state) => state.llmAssistant.llmMethod);
   const dispatch = useAppDispatch();
 
   // initiate next step (get the generated prompts)
@@ -46,7 +47,7 @@ export const CodeSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              DialogActions.llmDialogGoToApproachSelection({
+              LLMAssistantActions.llmDialogGoToApproachSelection({
                 approach: data,
                 tags: [],
                 metadata: [],
@@ -61,7 +62,7 @@ export const CodeSelectionStep = memo(() => {
   );
 
   const handleBack = useCallback(() => {
-    dispatch(UIDialogActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
   // rendering

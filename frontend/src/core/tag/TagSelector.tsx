@@ -1,3 +1,4 @@
+import { TagHooks } from "@api/hooks/TagHooks";
 import { useWithLevel } from "@components/tree-explorer";
 import {
   Checkbox,
@@ -11,7 +12,6 @@ import {
   Stack,
 } from "@mui/material";
 import { Fragment, memo } from "react";
-import { TagHooks } from "../../api/TagHooks";
 import { TagRenderer } from "./TagRenderer";
 
 interface TagSelectorMultipleProps {

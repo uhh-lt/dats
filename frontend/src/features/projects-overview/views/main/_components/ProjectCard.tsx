@@ -1,3 +1,6 @@
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
+import { ProjectRead } from "@api/models/ProjectRead";
+import { SDocStatus } from "@api/models/SDocStatus";
 import {
   Card,
   CardActionArea,
@@ -10,9 +13,6 @@ import {
 } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
-import { ProjectHooks } from "../../../../../api/ProjectHooks";
-import { ProjectRead } from "../../../../../api/openapi/models/ProjectRead";
-import { SDocStatus } from "../../../../../api/openapi/models/SDocStatus";
 
 interface ProjectCardProps {
   project: ProjectRead;

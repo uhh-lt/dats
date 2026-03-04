@@ -1,7 +1,7 @@
+import { MemoFilterActions } from "@core/memo";
 import { createSlice } from "@reduxjs/toolkit";
-import { MemoFilterActions } from "../../../core/memo/table/memoFilterSlice";
-import { initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
+import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 
 const logbookSlice = createSlice({
   name: "logbook",

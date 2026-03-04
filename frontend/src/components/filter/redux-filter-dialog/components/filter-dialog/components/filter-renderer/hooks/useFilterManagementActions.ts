@@ -1,6 +1,6 @@
+import { LogicalOperator } from "@api/models/LogicalOperator";
 import { useAppDispatch } from "@plugins/redux";
 import { useCallback } from "react";
-import { LogicalOperator } from "../../../../../../../../api/openapi/models/LogicalOperator";
 import { FilterActions } from "../../../../../../filterSlice";
 import { FilterOperators } from "../../../../../../filterUtils";
 

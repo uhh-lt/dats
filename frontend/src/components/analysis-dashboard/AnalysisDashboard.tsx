@@ -1,6 +1,6 @@
+import { ContentContainerLayout } from "@components/content-layouts";
 import { Card, CardContent, CardHeader } from "@mui/material";
 import { MRT_TableInstance, MaterialReactTable } from "material-react-table";
-import { ContentContainerLayout } from "../content-layouts/ContentContainerLayout";
 import { AnalysisDashboardRow } from "./useAnalysisDashboardTable";
 
 interface AnalysisDashboardProps<T extends AnalysisDashboardRow> {

@@ -1,6 +1,6 @@
-import { BorderStyle } from "../../../../api/openapi/models/BorderStyle";
-import { HorizontalAlign } from "../../../../api/openapi/models/HorizontalAlign";
-import { VerticalAlign } from "../../../../api/openapi/models/VerticalAlign";
+import { BorderStyle } from "@api/models/BorderStyle";
+import { HorizontalAlign } from "@api/models/HorizontalAlign";
+import { VerticalAlign } from "@api/models/VerticalAlign";
 import { BackgroundColorData } from "../../_types/base/BackgroundColorData";
 import { BorderData } from "../../_types/base/BorderData";
 import { TextData } from "../../_types/base/TextData";

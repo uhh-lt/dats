@@ -1,7 +1,7 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeRenderer } from "@core/code/CodeRenderer";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, memo, useCallback, useState } from "react";
-import { CodeHooks } from "../../../../../../../../../../../../api/CodeHooks";
-import { CodeRenderer } from "../../../../../../../../../../../../core/code/CodeRenderer";
 import { useWithLevel } from "../../../../../../../../../../../tree-explorer/useWithLevel";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 

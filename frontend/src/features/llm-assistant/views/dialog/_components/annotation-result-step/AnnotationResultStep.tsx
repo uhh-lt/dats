@@ -1,20 +1,21 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { AnnotationLLMJobResult } from "@api/models/AnnotationLLMJobResult";
+import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { SdocRenderer } from "@core/source-document";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useMemo, useState } from "react";
-import { LLMHooks } from "../../../../../../api/LLMHooks";
-import { AnnotationLLMJobResult } from "../../../../../../api/openapi/models/AnnotationLLMJobResult";
-import { SpanAnnotationCreate } from "../../../../../../api/openapi/models/SpanAnnotationCreate";
-import { SpanAnnotationRead } from "../../../../../../api/openapi/models/SpanAnnotationRead";
-import { SpanAnnotationHooks } from "../../../../../../api/SpanAnnotationHooks";
-import { SdocRenderer } from "../../../../../../core/source-document/renderer/SdocRenderer";
+import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 import { LLMUtterance } from "../LLMUtterance";
 import { TextAnnotationValidator } from "./TextAnnotationValidator";
 
 export const AnnotationResultStep = memo(() => {
   // get the job
-  const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output) {
@@ -72,7 +73,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
   const { mutate: createBulkAnnotationsMutation, isPending } = SpanAnnotationHooks.useCreateBulkAnnotations();
@@ -99,7 +100,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
       { requestBody: bulkAnnotations },
       {
         onSuccess: () => {
-          dispatch(UIDialogActions.closeLLMDialog());
+          dispatch(LLMAssistantActions.closeLLMDialog());
         },
       },
     );

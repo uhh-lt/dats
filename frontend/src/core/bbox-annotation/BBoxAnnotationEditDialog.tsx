@@ -1,14 +1,14 @@
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { CodeRenderer, CodeTable } from "@core/code";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { BboxAnnotationHooks } from "../../api/BboxAnnotationHooks";
-import { useDialogMaximize } from "../../hooks/useDialogMaximize";
-import { CodeRenderer } from "../code/CodeRenderer";
-import { CodeTable } from "../code/CodeTable";
 import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
 
 export interface BBoxAnnotationEditDialogProps {

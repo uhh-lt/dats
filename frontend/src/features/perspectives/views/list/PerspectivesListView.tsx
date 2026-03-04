@@ -1,10 +1,10 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { ContentContainerLayout } from "@components/content-layouts";
+import { useDebounce } from "@hooks/useDebounce";
+import { useDialog } from "@hooks/useDialog";
 import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { ChangeEvent, useState } from "react";
-import { PerspectivesHooks } from "../../../../api/PerspectivesHooks";
-import { ContentContainerLayout } from "../../../../components/content-layouts/ContentContainerLayout";
-import { useDebounce } from "../../../../hooks/useDebounce";
-import { useDialog } from "../../../../hooks/useDialog";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 import { PerspectiveCard } from "./_components/PerspectiveCard";
 import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDialog";
 

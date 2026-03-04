@@ -1,3 +1,7 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { ApproachType } from "@api/models/ApproachType";
+import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
+import { FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
@@ -5,12 +9,8 @@ import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { LLMHooks } from "../../../../api/LLMHooks";
-import { ApproachType } from "../../../../api/openapi/models/ApproachType";
-import { LLMPromptTemplates } from "../../../../api/openapi/models/LLMPromptTemplates";
-import { FormTextMultiline } from "../../../../components/FormInputs/FormTextMultiline";
-import { CRUDDialogActions } from "../../../../store/dialogSlice";
-import { LLMUtterance } from "../../views/dialog/components/LLMUtterance";
+import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
+import { LLMUtterance } from "../LLMUtterance";
 import { ExampleSelection } from "./ExampleSelection";
 
 type PromptEditorValues = {
@@ -20,16 +20,15 @@ type PromptEditorValues = {
 
 export function PromptEditorStep() {
   // global state
-  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
-  const model = useAppSelector((state) => state.dialog.llmId);
-  const method = useAppSelector((state) => state.dialog.llmMethod);
-  const approach = useAppSelector((state) => state.dialog.llmApproach);
-  const tags = useAppSelector((state) => state.dialog.llmTags);
-  const metadata = useAppSelector((state) => state.dialog.llmMetadata);
-  const codes = useAppSelector((state) => state.dialog.llmCodes);
-  const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
-  const recommendedPrompts = useAppSelector((state) => state.dialog.llmPrompts);
-  const deleteExistingAnnotations = useAppSelector((state) => state.dialog.llmDeleteExistingAnnotations);
+  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
+  const method = useAppSelector((state) => state.llmAssistant.llmMethod);
+  const approach = useAppSelector((state) => state.llmAssistant.llmApproach);
+  const tags = useAppSelector((state) => state.llmAssistant.llmTags);
+  const metadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
+  const codes = useAppSelector((state) => state.llmAssistant.llmCodes);
+  const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
+  const recommendedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
+  const deleteExistingAnnotations = useAppSelector((state) => state.llmAssistant.llmDeleteExistingAnnotations);
   const dispatch = useAppDispatch();
 
   // local state (to manage tabs)
@@ -76,7 +75,7 @@ export function PromptEditorStep() {
         },
         {
           onSuccess(data) {
-            // dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: data }));
+            // dispatch(LLMAssistantActions.llmDialogUpdatePromptEditor({ prompts: data }));
             setPrompts(data);
           },
         },
@@ -87,7 +86,7 @@ export function PromptEditorStep() {
   const handleResetExamples = useCallback(() => {
     setSelectedAnnotationIds({});
     setPrompts(recommendedPrompts);
-    // dispatch(CRUDDialogActions.llmDialogUpdatePromptEditor({ prompts: recommendedPrompts }));
+    // dispatch(LLMAssistantActions.llmDialogUpdatePromptEditor({ prompts: recommendedPrompts }));
   }, [recommendedPrompts]);
 
   // react form handlers
@@ -139,7 +138,7 @@ export function PromptEditorStep() {
       {
         onSuccess: (data) => {
           dispatch(
-            CRUDDialogActions.llmDialogGoToWaiting({
+            LLMAssistantActions.llmDialogGoToWaiting({
               jobId: data.job_id,
               prompts: prompts,
             }),
@@ -163,7 +162,7 @@ export function PromptEditorStep() {
   ]);
 
   const handleBack = useCallback(() => {
-    dispatch(CRUDDialogActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
   return (

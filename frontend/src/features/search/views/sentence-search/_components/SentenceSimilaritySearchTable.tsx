@@ -1,8 +1,24 @@
+import { SdocColumns } from "@api/models/SdocColumns";
+import { SimSearchSentenceHit } from "@api/models/SimSearchSentenceHit";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { ReduxFilterDialog } from "@components/filter";
+import { useAuth } from "@core/auth";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import {
+  DeleteSdocsButton,
+  SdocAnnotatorsRenderer,
+  SdocExportButton,
+  SdocRenderer,
+  SdocSentenceRenderer,
+  SdocTagsRenderer,
+} from "@core/source-document";
+import { TagMenuButton } from "@core/tag";
+import { useReduxConnector } from "@hooks/useReduxConnector";
 import { Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { selectSelectedIds } from "@store/generic/tableSlice";
+import { RootState } from "@store/store";
 import { useNavigate } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,
@@ -13,20 +29,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useRef } from "react";
-import { SdocColumns } from "../../../../../api/openapi/models/SdocColumns";
-import { SimSearchSentenceHit } from "../../../../../api/openapi/models/SimSearchSentenceHit";
-import { useAuth } from "../../../../../core/auth/provider/useAuth";
-import { SdocMetadataRenderer } from "../../../../../core/sdoc-metadata/SdocMetadataRenderer";
-import { DeleteSdocsButton } from "../../../../../core/source-document/DeleteSdocsButton";
-import { SdocRenderer } from "../../../../../core/source-document/renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../../../../../core/source-document/renderer/SdocTagRenderer";
-import { SdocExportButton } from "../../../../../core/source-document/SdocExportButton";
-import { TagMenuButton } from "../../../../../core/tag/menu/TagMenuButton";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
-import { selectSelectedIds } from "../../../../../store/generic/tableSlice";
-import { RootState } from "../../../../../store/store";
-import { SdocAnnotatorsRenderer } from "../../../../core/source-document/SdocAnnotatorsRenderer";
-import { SdocSentenceRenderer } from "../../../../core/source-document/SdocSentenceRenderer";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";

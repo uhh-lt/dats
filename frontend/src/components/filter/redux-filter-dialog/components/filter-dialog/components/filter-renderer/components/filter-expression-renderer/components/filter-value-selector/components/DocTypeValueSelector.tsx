@@ -1,7 +1,7 @@
+import { DocType } from "@api/models/DocType";
 import { MenuItem, Stack, TextField } from "@mui/material";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { ChangeEvent, memo, useCallback } from "react";
-import { DocType } from "../../../../../../../../../../../../api/openapi/models/DocType";
-import { docTypeToIcon } from "../../../../../../../../../../../../utils/icons/docTypeToIcon";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
 export const DocTypeValueSelector = memo(({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) => {

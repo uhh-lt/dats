@@ -1,4 +1,4 @@
-import { ClusterRead } from "@api/openapi/models/ClusterRead";
+import { ClusterRead } from "@api/models/ClusterRead";
 import { Box, Card, Typography } from "@mui/material";
 import { scaleLog } from "@visx/scale";
 import { Text } from "@visx/text";

@@ -1,11 +1,11 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { MemoRead } from "@api/models/MemoRead";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Box, Stack, StackProps } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 import Markdown from "react-markdown";
-import { MemoHooks } from "../../../api/MemoHooks";
-import { MemoRead } from "../../../api/openapi/models/MemoRead";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 import { UserRenderer } from "../../user/UserRenderer";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 

@@ -1,6 +1,6 @@
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { Box, Card, CardActionArea, CardContent, Container, Grid2, Typography } from "@mui/material";
 import { useState } from "react";
-import { ProjectHooks } from "../../../../api/ProjectHooks";
 import { ProjectCard } from "./_components/ProjectCard";
 import { ProjectCreationDialog } from "./_components/ProjectCreationDialog";
 

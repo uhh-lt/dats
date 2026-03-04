@@ -1,6 +1,6 @@
+import { TagHooks } from "@api/hooks/TagHooks";
 import { Box, Stack } from "@mui/material";
 import { memo } from "react";
-import { TagHooks } from "../../../../../api/TagHooks";
 import { TagRenderer } from "../../../../tag/TagRenderer";
 import { TagUnlinkButton } from "../../../../tag/TagUnlinkButton";
 

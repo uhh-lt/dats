@@ -1,5 +1,5 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { Box } from "@mui/material";
-import { PerspectivesHooks } from "../../../../../api/PerspectivesHooks";
 import { MapPlot } from "./MapPlot";
 import { MapToolbar } from "./toolbar/MapToolbar";
 

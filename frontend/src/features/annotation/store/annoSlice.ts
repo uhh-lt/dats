@@ -1,15 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
+import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { RootState } from "../../../store/store";
 import { AnnotationMode } from "../_types/AnnotationMode";
+import { TagStyle } from "../_types/TagStyle";
 
-export enum TagStyle {
-  Inline = "inline",
-  Above = "above",
-  None = "none",
-}
 export interface AnnoState {
   // project state:
   selectedAnnotationId: number | undefined; // the annotation selected in the annotation explorer.

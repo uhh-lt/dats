@@ -1,9 +1,9 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { useAuth } from "@core/auth";
+import { UserRenderer } from "@core/user";
 import { Divider, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import * as React from "react";
-import { SdocHooks } from "../../../../../api/SdocHooks";
-import { useAuth } from "../../../../../core/auth/provider/useAuth";
-import { UserRenderer } from "../../../../../core/user/UserRenderer";
 import { AnnoActions } from "../../../store/annoSlice";
 
 interface CompareWithSelector {

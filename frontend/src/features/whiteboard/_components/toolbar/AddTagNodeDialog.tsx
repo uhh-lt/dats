@@ -1,13 +1,13 @@
+import { TagRead } from "@api/models/TagRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { TagTable } from "@core/tag/TagTable";
+import { useDialog } from "@hooks/useDialog";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { XYPosition } from "reactflow";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { TagTable } from "../../../../core/tag/TagTable";
-import { useDialog } from "../../../../hooks/useDialog";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
 import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";

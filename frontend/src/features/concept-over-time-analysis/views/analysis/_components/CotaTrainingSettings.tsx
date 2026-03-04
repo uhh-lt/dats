@@ -1,14 +1,14 @@
+import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
+import { DimensionalityReductionAlgorithm } from "@api/models/DimensionalityReductionAlgorithm";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormNumber } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Divider, MenuItem, Stack } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { COTATrainingSettings } from "../../../../../api/openapi/models/COTATrainingSettings";
-import { DimensionalityReductionAlgorithm } from "../../../../../api/openapi/models/DimensionalityReductionAlgorithm";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
 
 interface CotaTrainingSettingsProps {
   onUpdate: (trainingSettings: COTATrainingSettings) => void;

@@ -1,4 +1,7 @@
-import { JobStatusBadge } from "@core/job/index";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { AspectRead } from "@api/models/AspectRead";
+import { JobStatus } from "@api/models/JobStatus";
+import { JobStatusBadge } from "@core/job";
 import { useOpenConfirmationDialog } from "@core/notification";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -6,11 +9,8 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { ReactElement } from "react";
-import { AspectRead } from "../../../../../api/openapi/models/AspectRead";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
-import { PerspectivesHooks } from "../../../../../api/PerspectivesHooks";
-import { getIconComponent, Icon } from "../../../../../utils/icons/iconUtils";
 
 const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting

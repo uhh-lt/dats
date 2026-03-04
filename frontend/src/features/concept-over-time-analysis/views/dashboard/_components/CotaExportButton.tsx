@@ -1,6 +1,6 @@
+import { ExportJobType } from "@api/models/ExportJobType";
 import { ExportAnalysisButtonProps } from "@components/analysis-dashboard";
-import { ExportButton } from "@components/export-buttons/index";
-import { ExportJobType } from "../../../../../api/openapi/models/ExportJobType";
+import { ExportButton } from "@components/export-buttons";
 
 export function CotaExportButton({ analysisIds }: ExportAnalysisButtonProps) {
   const exportAll = analysisIds.length === 0;

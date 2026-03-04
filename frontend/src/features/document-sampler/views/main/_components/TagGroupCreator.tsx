@@ -1,3 +1,4 @@
+import { TagRead } from "@api/models/TagRead";
 import { EditableTypography } from "@components/EditableTypography";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
@@ -18,7 +19,6 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { TagRead } from "../../../../../api/openapi/models/TagRead";
 import { DocumentSamplerActions } from "../../../store/documentSamplerSlice";
 
 interface TagGroupCreatorProps {

@@ -1,8 +1,8 @@
+import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
+import { SEATFilterActions } from "@core/sentence-annotation/table/seatFilterSlice";
 import { createSlice } from "@reduxjs/toolkit";
-import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns";
-import { SEATFilterActions } from "../../../core/sentence-annotation/table/seatFilterSlice";
-import { initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
+import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 
 const SentAnnotationsSlice = createSlice({
   name: "sentAnnotationAnalysis",

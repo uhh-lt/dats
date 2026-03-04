@@ -1,11 +1,11 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { CardContainer } from "@components/CardContainer";
+import { MemoEditorView } from "@core/memo";
 import { CardHeader, CircularProgress } from "@mui/material";
 import { useCallback } from "react";
-import { MemoHooks } from "../../../../../api/MemoHooks";
-import { AttachedObjectType } from "../../../../../api/openapi/models/AttachedObjectType";
-import { MemoEditorView } from "../../../../../core/memo/editor/MemoEditorView";
 
 interface LogbookEditorProps {
   projectId: number;

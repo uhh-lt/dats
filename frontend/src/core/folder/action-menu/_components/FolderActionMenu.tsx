@@ -1,3 +1,6 @@
+import { FolderHooks } from "@api/hooks/FolderHooks";
+import { FolderRead } from "@api/models/FolderRead";
+import { FolderType } from "@api/models/FolderType";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import {
   Box,
@@ -13,14 +16,11 @@ import {
   PopoverOrigin,
   TextField,
 } from "@mui/material";
+import { CheckboxState } from "@utils/CheckboxState";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { FolderHooks } from "../../../../api/FolderHooks";
-import { FolderRead } from "../../../../api/openapi/models/FolderRead";
-import { FolderType } from "../../../../api/openapi/models/FolderType";
-import { CheckboxState } from "../../../../utils/CheckboxState";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
-import { FolderCreateButton } from "../../dialog/FolderCreateButton";
+import { FolderCreateButton } from "../../FolderCreateButton";
 
 interface FolderMenuProps {
   popoverOrigin: PopoverOrigin | undefined;

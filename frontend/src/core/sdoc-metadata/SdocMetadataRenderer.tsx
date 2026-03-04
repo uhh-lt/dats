@@ -1,9 +1,9 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetaType } from "@api/models/MetaType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
+import { dateToLocaleDateString } from "@utils/DateUtils";
 import { memo } from "react";
-import { MetadataHooks } from "../../api/MetadataHooks";
-import { MetaType } from "../../api/openapi/models/MetaType";
-import { ProjectMetadataRead } from "../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataRead } from "../../api/openapi/models/SourceDocumentMetadataRead";
-import { dateToLocaleDateString } from "../../utils/DateUtils";
 
 interface SdocMetadataRendererProps {
   sdocId: number;

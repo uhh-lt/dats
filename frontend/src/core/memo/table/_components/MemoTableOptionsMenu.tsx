@@ -1,6 +1,6 @@
 import { Box, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 
 interface SearchMemoOptionsMenuProps {
   isSearchContent: boolean;

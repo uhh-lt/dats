@@ -1,5 +1,11 @@
+import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeOccurrence } from "@api/models/CodeOccurrence";
 import { CardContainer } from "@components/CardContainer";
+import { SdocRenderer } from "@core/source-document/renderer/SdocRenderer";
+import { UserRenderer } from "@core/user/UserRenderer";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -11,12 +17,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { ChangeEventHandler, Fragment, useRef, useState } from "react";
-import { AnalysisHooks } from "../../../../../api/CodeFrequencyHooks";
-import { CodeHooks } from "../../../../../api/CodeHooks";
-import { CodeOccurrence } from "../../../../../api/openapi/models/CodeOccurrence";
-import { SdocRenderer } from "../../../../../core/source-document/renderer/SdocRenderer";
-import { UserRenderer } from "../../../../../core/user/UserRenderer";
-import { docTypeToIcon } from "../../../../../utils/icons/docTypeToIcon";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {

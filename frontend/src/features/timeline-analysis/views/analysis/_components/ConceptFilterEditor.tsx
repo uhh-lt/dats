@@ -1,4 +1,4 @@
-import { FilterRenderer } from "@components/filter/redux-filter-dialog/index";
+import { FilterRenderer } from "@components/filter";
 import { Box, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";

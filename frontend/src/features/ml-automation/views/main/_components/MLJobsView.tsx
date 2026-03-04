@@ -1,8 +1,8 @@
+import { JobHooks } from "@api/hooks/JobHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
-import { JobHooks } from "../../../../../api/JobHooks";
 import { MLJobListItem } from "./MLJobListItem";
 
 interface MLJobsViewProps {

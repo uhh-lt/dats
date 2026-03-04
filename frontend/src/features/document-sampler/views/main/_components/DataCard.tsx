@@ -2,8 +2,8 @@ import { CardContainer } from "@components/CardContainer";
 import { Box, CardContent, CardContentProps, CardHeader, CardProps, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { memo } from "react";
+import { ChartDataPoint } from "../../../_types/ChartDataPoint";
 import { selectIsValuesOutdated } from "../../../store/documentSamplerSlice";
-import { ChartDataPoint } from "./ChartDataPoint";
 import { StartRefreshButton } from "./StartRefreshButton";
 
 interface DataCardProps {

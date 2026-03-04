@@ -1,3 +1,10 @@
+import { IDListOperator } from "@api/models/IDListOperator";
+import { ListOperator } from "@api/models/ListOperator";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SdocColumns } from "@api/models/SdocColumns";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { StringOperator } from "@api/models/StringOperator";
 import {
   ColumnInfo,
   FilterState,
@@ -8,21 +15,14 @@ import {
   getDefaultOperator,
   getOrCreateFilter,
   resetProjectFilterState,
-} from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
+import { getValue } from "@utils/MetadataUtils";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { v4 as uuidv4 } from "uuid";
-import { IDListOperator } from "../../../api/openapi/models/IDListOperator";
-import { ListOperator } from "../../../api/openapi/models/ListOperator";
-import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator";
-import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
-import { SourceDocumentMetadataUpdate } from "../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { StringOperator } from "../../../api/openapi/models/StringOperator";
-import { TableState, initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { getValue } from "../../../utils/MetadataUtils";
 
 export enum FolderSelection {
   FOLDER = "FOLDER",

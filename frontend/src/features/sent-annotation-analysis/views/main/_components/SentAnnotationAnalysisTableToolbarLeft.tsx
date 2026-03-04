@@ -1,7 +1,6 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
+import { FilterTableToolbarProps, ReduxFilterDialog } from "@components/filter";
 import { Stack } from "@mui/material";
-import { SentenceAnnotationRow } from "../../../../../api/openapi/models/SentenceAnnotationRow";
 import { BulkChangeSentAnnotationCodeButton } from "./BulkChangeSentAnnotationCodeButton";
 import { BulkDeleteSentAnnotationsButton } from "./BulkDeleteSentAnnotationsButton";
 

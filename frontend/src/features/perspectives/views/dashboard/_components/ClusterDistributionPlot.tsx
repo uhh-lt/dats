@@ -1,3 +1,4 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { CardContainer } from "@components/CardContainer";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
@@ -14,7 +15,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { PerspectivesHooks } from "../../../../../api/PerspectivesHooks";
 
 interface Data {
   clusterId: number;

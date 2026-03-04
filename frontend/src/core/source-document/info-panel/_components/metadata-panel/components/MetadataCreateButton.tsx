@@ -1,11 +1,11 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { DocType } from "@api/models/DocType";
+import { MetaType } from "@api/models/MetaType";
 import { Button, PopoverPosition } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { MouseEvent, memo, useCallback, useState } from "react";
-import { MetadataHooks } from "../../../../../../api/MetadataHooks";
-import { SdocHooks } from "../../../../../../api/SdocHooks";
-import { DocType } from "../../../../../../api/openapi/models/DocType";
-import { MetaType } from "../../../../../../api/openapi/models/MetaType";
-import { Icon, getIconComponent } from "../../../../../../utils/icons/iconUtils";
 import { MetadataTypeSelectorMenu } from "./MetadataTypeSelectorMenu";
 
 interface MetadataCreateButtonProps {

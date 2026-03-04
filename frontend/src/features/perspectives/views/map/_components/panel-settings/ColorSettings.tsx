@@ -1,3 +1,6 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
+import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
 import { useOpenConfirmationDialog } from "@core/notification";
 import InfoIcon from "@mui/icons-material/Info";
 import {
@@ -23,12 +26,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";
 import { useState } from "react";
-import { PerspectivesJobType } from "../../../../../../api/openapi/models/PerspectivesJobType";
-import { PerspectivesVisualization } from "../../../../../../api/openapi/models/PerspectivesVisualization";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
-import { getIconComponent, Icon } from "../../../../../../utils/icons/iconUtils";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";
 

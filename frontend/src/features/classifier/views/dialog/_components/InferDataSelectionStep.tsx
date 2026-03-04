@@ -1,16 +1,17 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SdocTable } from "@core/source-document";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";
 import Stack from "@mui/material/Stack/Stack";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useMemo, useState } from "react";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { SdocTable } from "../../../../../core/source-document/table/SdocTable";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function InferDataSelectionStep() {
   // dialog state
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
-  const sdocIds = useAppSelector((state) => state.dialog.classifierSdocIds);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const sdocIds = useAppSelector((state) => state.classifier.classifierSdocIds);
   const dispatch = useAppDispatch();
 
   // global server state
@@ -35,10 +36,10 @@ export function InferDataSelectionStep() {
 
   // dialog actions
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeClassifierDialog());
+    dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
   const handleNext = useCallback(() => {
-    dispatch(UIDialogActions.onClassifierDialogSelectSdocs(selectedSdocIds));
+    dispatch(ClassifierActions.onClassifierDialogSelectSdocs(selectedSdocIds));
   }, [dispatch, selectedSdocIds]);
 
   return (

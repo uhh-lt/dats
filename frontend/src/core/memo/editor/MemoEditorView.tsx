@@ -6,8 +6,8 @@ import {
   SuggestionMenuController,
   useCreateBlockNote,
 } from "@blocknote/react";
+import { useDebounce } from "@hooks/useDebounce";
 import { memo, useCallback, useEffect, useState } from "react";
-import { useDebounce } from "../../../hooks/useDebounce";
 
 interface MemoEditorViewProps {
   editable: boolean;

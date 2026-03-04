@@ -1,3 +1,6 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { MetaType } from "@api/models/MetaType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { useOpenConfirmationDialog } from "@core/notification";
 import {
   Box,
@@ -13,12 +16,9 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
+import { metaTypeToIcon } from "@utils/icons/metaTypeToIcon";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
-import { MetadataHooks } from "../../../../../../api/MetadataHooks";
-import { MetaType } from "../../../../../../api/openapi/models/MetaType";
-import { ProjectMetadataRead } from "../../../../../../api/openapi/models/ProjectMetadataRead";
-import { Icon, getIconComponent } from "../../../../../../utils/icons/iconUtils";
-import { metaTypeToIcon } from "../../../../../../utils/icons/metaTypeToIcon";
 import { MetadataTypeSelectorMenu } from "./MetadataTypeSelectorMenu";
 
 interface MetadataEditMenuProps {

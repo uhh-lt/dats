@@ -1,6 +1,17 @@
-import { MyFilter, ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { SortDirection } from "@api/models/SortDirection";
+import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
+import { WordFrequencyResult } from "@api/models/WordFrequencyResult";
+import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
+import { WordFrequencyService } from "@api/services/WordFrequencyService";
+import { ContentContentLayout } from "@components/content-layouts";
+import { MyFilter, ReduxFilterDialog } from "@components/filter";
+import { useAuth } from "@core/auth";
+import { useReduxConnector } from "@hooks/useReduxConnector";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -12,17 +23,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { SortDirection } from "../../../../../api/openapi/models/SortDirection";
-import { WordFrequencyColumns } from "../../../../../api/openapi/models/WordFrequencyColumns";
-import { WordFrequencyResult } from "../../../../../api/openapi/models/WordFrequencyResult";
-import { WordFrequencyStat } from "../../../../../api/openapi/models/WordFrequencyStat";
-import { WordFrequencyService } from "../../../../../api/openapi/services/WordFrequencyService";
-import { ContentContentLayout } from "../../../../../components/content-layouts/ContentContentLayout";
-import { useAuth } from "../../../../../core/auth/provider/useAuth";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
-import { useTableInfiniteScroll } from "../../../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../../../store/store";
 import { useInitWordFrequencyFilterSlice } from "../../../store/useInitWordFrequencyFilterSlice";
 import { WordFrequencyActions } from "../../../store/wordFrequencySlice";
 import { WordCloud } from "./WordCloud";

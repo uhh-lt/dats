@@ -1,3 +1,7 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { ClusterRead } from "@api/models/ClusterRead";
+import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import {
   Box,
   Checkbox,
@@ -13,14 +17,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { CheckboxState } from "@utils/CheckboxState";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { ClusterRead } from "../../../../../../api/openapi/models/ClusterRead";
-import { PerspectivesDoc } from "../../../../../../api/openapi/models/PerspectivesDoc";
-import { PerspectivesJobType } from "../../../../../../api/openapi/models/PerspectivesJobType";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
-import { CheckboxState } from "../../../../../../utils/CheckboxState";
-import { getIconComponent, Icon } from "../../../../../../utils/icons/iconUtils";
 
 interface ClusterMenuProps {
   aspectId: number;

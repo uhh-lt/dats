@@ -1,19 +1,18 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { DocumentMetadataRow, DocumentTagRow } from "@core/source-document";
+import { TagMenuButton } from "@core/tag";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { Link } from "@tanstack/react-router";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useEffect } from "react";
-import { MetadataHooks } from "../../../../../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../../../../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
-import { SdocHooks } from "../../../../../../api/SdocHooks";
-import { TagHooks } from "../../../../../../api/TagHooks";
-import { DocumentMetadataRow } from "../../../../../../core/source-document/info-panel/_components/metadata-panel/components/DocumentMetadataRow";
-import { DocumentTagRow } from "../../../../../../core/source-document/info-panel/_components/tags-panel/DocumentTagRow";
-import { TagMenuButton } from "../../../../../../core/tag/menu/TagMenuButton";
-import { getIconComponent, Icon } from "../../../../../../utils/icons/iconUtils";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {

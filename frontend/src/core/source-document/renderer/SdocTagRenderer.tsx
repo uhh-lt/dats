@@ -1,5 +1,5 @@
+import { TagHooks } from "@api/hooks/TagHooks";
 import { Stack, StackProps } from "@mui/material";
-import { TagHooks } from "../../../api/TagHooks";
 import { TagRenderer } from "../../tag/TagRenderer";
 
 interface SharedProps {

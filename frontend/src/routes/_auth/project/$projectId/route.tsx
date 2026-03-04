@@ -1,18 +1,14 @@
+import { CodeCreateDialog, CodeEditDialog } from "@core/code";
+import { FolderCreateDialog, FolderEditDialog } from "@core/folder";
+import { MemoDialog } from "@core/memo";
+import { QuickCommandMenu, ShortcutManager } from "@core/navigation";
+import { ConfirmationDialog } from "@core/notification";
+import { TagCreateDialog, TagEditDialog } from "@core/tag";
+import { ClassifierDialog } from "@features/classifier";
+import { DocumentUploadDialog } from "@features/document-upload";
+import { LLMAssistantDialog } from "@features/llm-assistant";
+import { ProjectSettingsDialog } from "@features/project-settings";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import CodeCreateDialog from "../../../../core/code/dialog/CodeCreateDialog";
-import CodeEditDialog from "../../../../core/code/dialog/CodeEditDialog";
-import FolderCreateDialog from "../../../../core/folder/dialog/FolderCreateDialog";
-import FolderEditDialog from "../../../../core/folder/dialog/FolderEditDialog";
-import MemoDialog from "../../../../core/memo/dialog/MemoDialog";
-import QuickCommandMenu from "../../../../core/navigation/quick-command/QuickCommandMenu";
-import { ShortcutManager } from "../../../../core/navigation/shortcut/ShortcutManager";
-import ConfirmationDialog from "../../../../core/notification/confirmation/ConfirmationDialog";
-import TagCreateDialog from "../../../../core/tag/dialog/TagCreateDialog";
-import TagEditDialog from "../../../../core/tag/dialog/TagEditDialog";
-import ClassifierDialog from "../../../../features/classifier/views/dialog/ClassifierDialog";
-import DocumentUploadDialog from "../../../../features/document-upload/views/dialog/DocumentUploadDialog";
-import LLMDialog from "../../../../features/llm-assistant/views/dialog/LLMAssistantDialog";
-import ProjectSettingsDialog from "../../../../features/project-settings/views/dialog/ProjectSettingsDialog";
 
 export const Route = createFileRoute("/_auth/project/$projectId")({
   params: {
@@ -38,7 +34,7 @@ function ProjectRouteLayout() {
       <ConfirmationDialog />
       <ProjectSettingsDialog projectId={projectId} />
       <DocumentUploadDialog projectId={projectId} />
-      <LLMDialog />
+      <LLMAssistantDialog />
       <ClassifierDialog />
       <QuickCommandMenu projectId={projectId} />
       <ShortcutManager />

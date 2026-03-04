@@ -1,13 +1,13 @@
+import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TimelineAnalysisConcept } from "../../../../../api/openapi/models/TimelineAnalysisConcept";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
 import { ConceptFilterEditor } from "./ConceptFilterEditor";
 
 interface ConceptEditorProps {

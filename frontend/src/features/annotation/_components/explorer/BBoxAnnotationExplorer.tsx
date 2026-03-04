@@ -1,8 +1,8 @@
+import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { useAppSelector } from "@plugins/redux";
-import { BboxAnnotationHooks } from "../../../../api/BboxAnnotationHooks";
-import { BBoxAnnotationRead } from "../../../../api/openapi/models/BBoxAnnotationRead";
-import { AnnotationExplorer } from "./components/AnnotationExplorer";
-import { BBoxAnnotationCard } from "./components/BBoxAnnotationCard";
+import { AnnotationExplorer } from "./_components/AnnotationExplorer";
+import { BBoxAnnotationCard } from "./_components/BBoxAnnotationCard";
 
 const filterByText = (text: string) => (annotation: BBoxAnnotationRead) => `${annotation.x_max}`.includes(text);
 

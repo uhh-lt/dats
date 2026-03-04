@@ -1,15 +1,16 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { DocType } from "@api/models/DocType";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { TaskType } from "@api/models/TaskType";
+import { ProjectMetadataTable } from "@core/project-metadata";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { TaskType } from "../../../../../api/openapi/models/TaskType";
-import { ProjectMetadataTable } from "../../../../../core/project-metadata/ProjectMetadataTable";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 export const ProjectMetadataSelectionStep = memo(() => {
@@ -17,8 +18,8 @@ export const ProjectMetadataSelectionStep = memo(() => {
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global state
-  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
-  const selectedDocuments = useAppSelector((state) => state.dialog.llmDocumentIds);
+  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
+  const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
   const dispatch = useAppDispatch();
 
   // global server state
@@ -48,7 +49,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              DialogActions.llmDialogGoToApproachSelection({
+              LLMAssistantActions.llmDialogGoToApproachSelection({
                 approach: data,
                 tags: [],
                 metadata: projectMetadata,
@@ -63,7 +64,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
   );
 
   const handleBack = useCallback(() => {
-    dispatch(UIDialogActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
   const renderBottomToolbarContent = useCallback(

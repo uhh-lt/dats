@@ -1,4 +1,4 @@
-import { Icon } from "../../../../utils/icons/iconUtils";
+import { Icon } from "@utils/icons/iconUtils";
 import { TabData } from "../_types/TabData";
 
 const baseToIconMap: Record<string, Icon> = {

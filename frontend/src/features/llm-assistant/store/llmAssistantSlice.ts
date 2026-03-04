@@ -1,12 +1,12 @@
-import { ApproachRecommendation } from "@api/openapi/models/ApproachRecommendation";
-import { ApproachType } from "@api/openapi/models/ApproachType";
-import { CodeRead } from "@api/openapi/models/CodeRead";
-import { LlmAssistantJobRead } from "@api/openapi/models/LlmAssistantJobRead";
-import { LLMJobOutput } from "@api/openapi/models/LLMJobOutput";
-import { LLMPromptTemplates } from "@api/openapi/models/LLMPromptTemplates";
-import { ProjectMetadataRead } from "@api/openapi/models/ProjectMetadataRead";
-import { TagRead } from "@api/openapi/models/TagRead";
-import { TaskType } from "@api/openapi/models/TaskType";
+import { ApproachRecommendation } from "@api/models/ApproachRecommendation";
+import { ApproachType } from "@api/models/ApproachType";
+import { CodeRead } from "@api/models/CodeRead";
+import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
+import { LLMJobOutput } from "@api/models/LLMJobOutput";
+import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { TagRead } from "@api/models/TagRead";
+import { TaskType } from "@api/models/TaskType";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
 

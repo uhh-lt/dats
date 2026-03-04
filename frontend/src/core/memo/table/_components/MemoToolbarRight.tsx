@@ -1,8 +1,8 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
+import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
+import { FilterTableToolbarProps } from "@components/filter";
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_ToggleDensePaddingButton } from "material-react-table";
 import { useMemo } from "react";
-import { ElasticSearchHit } from "../../../../api/openapi/models/ElasticSearchHit";
 import { MemosExportButton } from "../../MemoExportButton";
 
 export function MemoToolbarRight({ table, selectedData }: FilterTableToolbarProps<ElasticSearchHit>) {

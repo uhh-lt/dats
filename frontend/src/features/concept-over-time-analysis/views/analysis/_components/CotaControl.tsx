@@ -1,3 +1,8 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { COTARead } from "@api/models/COTARead";
+import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
+import { JobStatus } from "@api/models/JobStatus";
 import { useOpenConfirmationDialog } from "@core/notification";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
@@ -18,13 +23,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { queryClient } from "@plugins/tanstack";
 import { useEffect } from "react";
-import { CotaHooks } from "../../../../../api/CotaHooks";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
-import { COTATrainingSettings } from "../../../../../api/openapi/models/COTATrainingSettings";
-import { JobStatus } from "../../../../../api/openapi/models/JobStatus";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { queryClient } from "../../../../../plugins/tanstack/queryClient";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";

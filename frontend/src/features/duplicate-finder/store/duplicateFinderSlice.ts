@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { ProjectActions } from "../../../store/global/projectSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 
 interface DuplicateFinderState {
   // project state:

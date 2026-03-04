@@ -1,5 +1,11 @@
+import { ApiError } from "@api/core/ApiError";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
+import { handleOIDCLogin } from "@core/auth/HandleOIDCLogin";
+import { useAuth } from "@core/auth/provider/useAuth";
+import { LoginStatus } from "@core/auth/types/LoginStatus";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
@@ -9,12 +15,6 @@ import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui
 import { useMutation } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { GeneralHooks } from "../../../../api/GeneralHooks";
-import { ApiError } from "../../../../api/openapi/core/ApiError";
-import { AuthenticationService } from "../../../../api/openapi/services/AuthenticationService";
-import { handleOIDCLogin } from "../../../../core/auth/HandleOIDCLogin";
-import { useAuth } from "../../../../core/auth/provider/useAuth";
-import { LoginStatus } from "../../../../core/auth/types/LoginStatus";
 
 const routeApi = getRouteApi("/_public/login");
 

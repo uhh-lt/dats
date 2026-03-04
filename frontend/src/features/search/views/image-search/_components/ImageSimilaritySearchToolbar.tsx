@@ -1,12 +1,11 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { ReduxFilterDialog } from "@components/filter";
+import { DeleteSdocsButton, SdocExportButton } from "@core/source-document";
+import { TagMenuButton } from "@core/tag";
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useRef } from "react";
-import { DeleteSdocsButton } from "../../../../../core/source-document/DeleteSdocsButton";
-import { SdocExportButton } from "../../../../../core/source-document/SdocExportButton";
-import { TagMenuButton } from "../../../../../core/tag/menu/TagMenuButton";
-import { RootState } from "../../../../../store/store";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSimilaritySearchOptionsMenu } from "./ImageSimilaritySearchOptionsMenu";

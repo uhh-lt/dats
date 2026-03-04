@@ -1,3 +1,7 @@
+import { AnnoscalingHooks } from "@api/hooks/AnnoscalingHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { AnnoscalingResult } from "@api/models/AnnoscalingResult";
+import { CodeRead } from "@api/models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
 import {
   Autocomplete,
@@ -13,15 +17,11 @@ import {
 } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { AnnoscalingHooks } from "../../../../api/AnnoscalingHooks";
-import { CodeHooks } from "../../../../api/CodeHooks";
-import { AnnoscalingResult } from "../../../../api/openapi/models/AnnoscalingResult";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
 import { AnnotationScalingList } from "./_components/AnnotationScalingList";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/annotation-scaling");
 
-export function AnnotationScaling() {
+export function AnnotationScalingView() {
   // global client state (react router)
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
   const codes = CodeHooks.useGetEnabledCodes();

@@ -1,7 +1,14 @@
-import { FilterTableProps } from "@components/filter/index";
-import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
+import { MemoColumns } from "@api/models/MemoColumns";
+import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
+import { SortDirection } from "@api/models/SortDirection";
+import { SearchService } from "@api/services/SearchService";
+import { FilterTableProps, MyFilter, createEmptyFilter } from "@components/filter";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -11,15 +18,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { ElasticSearchHit } from "../../../api/openapi/models/ElasticSearchHit";
-import { MemoColumns } from "../../../api/openapi/models/MemoColumns";
-import { PaginatedElasticSearchHits } from "../../../api/openapi/models/PaginatedElasticSearchHits";
-import { SortDirection } from "../../../api/openapi/models/SortDirection";
-import { SearchService } from "../../../api/openapi/services/SearchService";
-import { QueryKey } from "../../../api/QueryKey";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../store/store";
-import { MemoRenderer } from "../renderer/MemoRenderer";
+import { MemoRenderer } from "../renderer";
 import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
 import { MemoToolbarLeft } from "./_components/MemoToolbarLeft";
 import { MemoToolbarRight } from "./_components/MemoToolbarRight";

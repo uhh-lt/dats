@@ -1,3 +1,4 @@
+import { OpenAPI } from "@api/core/OpenAPI";
 import { LinkListItemButton, LinkMenuItem } from "@components/links";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -22,11 +23,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useLocation } from "@tanstack/react-router";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { OpenAPI } from "../../api/openapi/core/OpenAPI";
-import { UIDialogActions } from "../../store/global/dialogSlice";
-import { getIconComponent, Icon } from "../../utils/icons/iconUtils";
 import { useAuth } from "../auth/provider/useAuth";
 import { LoginStatus } from "../auth/types/LoginStatus";
 

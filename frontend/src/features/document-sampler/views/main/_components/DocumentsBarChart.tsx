@@ -2,7 +2,7 @@ import { CardProps } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { memo, useCallback } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartDataPoint } from "./ChartDataPoint";
+import { ChartDataPoint } from "../../../_types/ChartDataPoint";
 import { DataCard } from "./DataCard";
 
 interface DocumentsBarChartProps {

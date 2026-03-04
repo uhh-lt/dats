@@ -2,7 +2,6 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { MyFilter, ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
-import FolderToggleVisibilityButton from "@core/folder/explorer/_components/FolderToggleVisibilityButton";
 import { ClassifierInferenceButton } from "@features/classifier";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";

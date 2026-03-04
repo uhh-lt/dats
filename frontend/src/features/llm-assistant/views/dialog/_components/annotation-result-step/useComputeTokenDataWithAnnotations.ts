@@ -1,7 +1,7 @@
+import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { IToken } from "@types/IToken";
 import { useMemo } from "react";
-import { SourceDocumentDataRead } from "../../../../../../api/openapi/models/SourceDocumentDataRead";
-import { SpanAnnotationRead } from "../../../../../../api/openapi/models/SpanAnnotationRead";
-import { IToken } from "../../../../../../types/IToken";
 
 export function useComputeTokenDataWithAnnotations({
   sdocData,

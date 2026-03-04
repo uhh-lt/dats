@@ -1,3 +1,4 @@
+import { CodeRead } from "@api/models/CodeRead";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -7,10 +8,9 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useMemo } from "react";
-import { CodeRead } from "../../api/openapi/models/CodeRead";
 
+import { CodeHooks } from "@api/hooks/CodeHooks";
 import SquareIcon from "@mui/icons-material/Square";
-import { CodeHooks } from "../../api/CodeHooks";
 
 const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
   const hashTable: Record<number, CodeTableRow> = Object.create(null);

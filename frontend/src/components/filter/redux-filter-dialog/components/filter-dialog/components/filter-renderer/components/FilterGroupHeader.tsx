@@ -1,8 +1,8 @@
+import { LogicalOperator } from "@api/models/LogicalOperator";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Stack, TextField, Tooltip } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import { ChangeEvent, memo, MouseEvent, useCallback } from "react";
-import { LogicalOperator } from "../../../../../../../../api/openapi/models/LogicalOperator";
 
 interface FilterGroupHeaderProps {
   filterId: string;

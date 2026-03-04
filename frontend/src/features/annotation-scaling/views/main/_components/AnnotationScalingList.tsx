@@ -1,9 +1,9 @@
+import { AnnoscalingResult } from "@api/models/AnnoscalingResult";
 import AddIcon from "@mui/icons-material/Add";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { List, ListItem, ListItemButton, ListItemText, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { KeyboardEvent, useState } from "react";
-import { AnnoscalingResult } from "../../../../../api/openapi/models/AnnoscalingResult";
 
 interface AnnotationScalingListContentProps {
   data: AnnoscalingResult[];

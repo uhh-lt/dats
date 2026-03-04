@@ -1,3 +1,10 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { COTARead } from "@api/models/COTARead";
+import { DateGroupBy } from "@api/models/DateGroupBy";
+import { DocType } from "@api/models/DocType";
+import { MetaType } from "@api/models/MetaType";
+import { SdocsWithDateCounter } from "@core/sdoc-metadata/date-counter/SdocsWithDateCounter";
 import InfoIcon from "@mui/icons-material/Info";
 import { MenuItem, Stack, TextField } from "@mui/material";
 import Card from "@mui/material/Card";
@@ -5,13 +12,6 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent, FocusEvent } from "react";
-import { CotaHooks } from "../../../../../api/CotaHooks";
-import { MetadataHooks } from "../../../../../api/MetadataHooks";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
-import { DateGroupBy } from "../../../../../api/openapi/models/DateGroupBy";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { MetaType } from "../../../../../api/openapi/models/MetaType";
-import { SdocsWithDateCounter } from "../../../../../core/sdoc-metadata/date-counter/SdocsWithDateCounter";
 
 interface CotaSettingsProps {
   cota: COTARead;

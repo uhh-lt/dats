@@ -1,16 +1,16 @@
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
+import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import { CardContainer } from "@components/CardContainer";
+import { BBoxAnnotationTableSimple } from "@core/bbox-annotation";
+import { SentenceAnnotationTableSimple } from "@core/sentence-annotation";
+import { SdocTableSimple } from "@core/source-document";
+import { SpanAnnotationTableSimple } from "@core/span-annotation";
 import InfoIcon from "@mui/icons-material/Info";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { useAppSelector } from "@plugins/redux";
 import { useMemo } from "react";
-import { TimelineAnalysisRead } from "../../../../../api/openapi/models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "../../../../../api/openapi/models/TimelineAnalysisType";
-import { BBoxAnnotationTableSimple } from "../../../../../core/bbox-annotation/table/BBoxAnnotationTableSimple";
-import { SentenceAnnotationTableSimple } from "../../../../../core/sentence-annotation/table/SentenceAnnotationTableSimple";
-import { SdocTableSimple } from "../../../../../core/source-document/table/SdocTableSimple";
-import { SpanAnnotationTableSimple } from "../../../../../core/span-annotation/table/SpanAnnotationTableSimple";
 
 interface TimeAnalysisProvenanceProps {
   timelineAnalysis: TimelineAnalysisRead;

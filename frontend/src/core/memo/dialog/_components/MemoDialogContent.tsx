@@ -1,15 +1,15 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { CodeRead } from "@api/models/CodeRead";
+import { MemoRead } from "@api/models/MemoRead";
+import { ProjectRead } from "@api/models/ProjectRead";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { TagRead } from "@api/models/TagRead";
 import { memo, useCallback } from "react";
 import { SubmitHandler } from "react-hook-form";
-import { MemoHooks } from "../../../../api/MemoHooks";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "../../../../api/openapi/models/BBoxAnnotationRead";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { MemoRead } from "../../../../api/openapi/models/MemoRead";
-import { ProjectRead } from "../../../../api/openapi/models/ProjectRead";
-import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "../../../../api/openapi/models/SpanAnnotationRead";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
 import { MemoCreateSuccessHandler } from "../_types/MemoCreateSuccessHandler";
 import { MemoDialogForm, MemoFormValues } from "./MemoDialogForm";
 

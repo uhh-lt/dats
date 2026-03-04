@@ -1,10 +1,10 @@
+import { WhiteboardEdgeType } from "@api/models/WhiteboardEdgeType";
 import MovingIcon from "@mui/icons-material/Moving";
 import StraightIcon from "@mui/icons-material/Straight";
 import TurnRightIcon from "@mui/icons-material/TurnRight";
 import UTurnRightIcon from "@mui/icons-material/UTurnRight";
 import { Box, Button, Grid2 as Grid, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
-import { WhiteboardEdgeType } from "../../../../../api/openapi/models/WhiteboardEdgeType";
 import { StrokeStyle } from "../../../_types/base/StrokeStyle";
 import { ColorGrid } from "./ColorGrid";
 

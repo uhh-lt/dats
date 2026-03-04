@@ -1,12 +1,12 @@
+import { DocType } from "@api/models/DocType";
 import { CardContainer } from "@components/CardContainer";
+import { ContentContentLayout } from "@components/content-layouts";
+import { useComputeCodeTree } from "@core/code/explorer/useComputeCodeTree";
+import { DocTypeSelector } from "@core/source-document/DocTypeSelector";
+import { UserSelectorMulti } from "@core/user/selector/UserSelectorMulti";
 import { Card, CardHeader, Stack } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { DocType } from "../../../../api/openapi/models/DocType";
-import { ContentContentLayout } from "../../../../components/content-layouts/ContentContentLayout";
-import { useComputeCodeTree } from "../../../../core/code/explorer/useComputeCodeTree";
-import { DocTypeSelector } from "../../../../core/source-document/DocTypeSelector";
-import { UserSelectorMulti } from "../../../../core/user/selector/UserSelectorMulti";
 import { CodeFrequencyPlot } from "./_components/CodeFrequencyPlot";
 import { CodeOccurrenceTable } from "./_components/CodeOccurrenceTable";
 

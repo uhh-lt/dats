@@ -1,10 +1,10 @@
+import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
 import { Box, BoxProps, CircularProgress, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { SimSearchImageHit } from "../../../../../api/openapi/models/SimSearchImageHit";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSimilaritySearchResultCard } from "./ImageSimilaritySearchResultCard";
 

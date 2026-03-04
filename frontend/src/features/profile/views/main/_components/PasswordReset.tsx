@@ -1,3 +1,6 @@
+import { UserHooks } from "@api/hooks/UserHooks";
+import { FormPassword } from "@components/form-inputs";
+import { useOpenSnackbar } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import {
   Button,
@@ -9,12 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { SUPPORT_EMAIL } from "@utils/GlobalConstants";
 import { useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { UserHooks } from "../../../api/UserHooks";
-import { FormPassword } from "../../../components/FormInputs/FormPassword";
-import { useOpenSnackbar } from "../../../components/SnackbarDialog/useOpenSnackbar";
-import { SUPPORT_EMAIL } from "../../../utils/GlobalConstants";
 
 type UpdatePasswordValues = {
   password: string;

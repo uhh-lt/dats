@@ -1,14 +1,13 @@
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { LinkWrapper } from "@components/links";
+import { CodeRenderer } from "@core/code";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { AnnoActions } from "@features/annotation";
 import { Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { SentenceAnnotationRead } from "../../api/openapi/models/SentenceAnnotationRead";
-import { SentenceAnnotationHooks } from "../../api/SentenceAnnotationHooks";
-import { AnnoActions } from "../../features/annotation/store/annoSlice";
-import { CodeRenderer } from "../code/CodeRenderer";
-import { SdocMetadataRenderer } from "../sdoc-metadata/SdocMetadataRenderer";
-import { SdocRenderer, SdocRendererSharedProps } from "../source-document/renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../source-document/renderer/SdocTagRenderer";
 
 interface SentenceAnnotationRendererSharedProps {
   showCode?: boolean;

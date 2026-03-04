@@ -1,7 +1,6 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
+import { FilterTableToolbarProps, ReduxFilterDialog } from "@components/filter";
 import { Stack } from "@mui/material";
-import { BBoxAnnotationRow } from "../../../../../../api/openapi/models/BBoxAnnotationRow";
 import { BulkChangeBBoxAnnotationCodeButton } from "./BulkChangeBBoxAnnotationCodeButton";
 import { BulkDeleteBBoxAnnotationsButton } from "./BulkDeleteBBoxAnnotationsButton";
 

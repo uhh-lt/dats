@@ -1,6 +1,6 @@
+import { SelectSentenceAnnotationsDialog } from "@core/sentence-annotation/dialog/SelectSentenceAnnotationsDialog";
 import { ButtonProps } from "@mui/material";
 import { XYPosition } from "reactflow";
-import { SelectSentenceAnnotationsDialog } from "../../../../core/sentence-annotation/dialog/SelectSentenceAnnotationsDialog";
 import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { PendingAddNodeAction } from "../../_types/PendingAddNodeAction";

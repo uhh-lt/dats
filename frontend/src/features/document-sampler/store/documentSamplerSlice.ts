@@ -1,8 +1,8 @@
+import { TagRead } from "@api/models/TagRead";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "@store/store";
 import { v4 as uuidv4 } from "uuid";
-import { TagRead } from "../../../api/openapi/models/TagRead";
-import { RootState } from "../../../store/store";
-import { ChartDataPoint } from "../views/main/_components/ChartDataPoint";
+import { ChartDataPoint } from "../_types/ChartDataPoint";
 
 export interface DocumentSamplerState {
   aggregationGroups: Record<string, TagRead[]>;

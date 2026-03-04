@@ -1,9 +1,9 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
-import { PerspectivesDoc } from "../../../../../../api/openapi/models/PerspectivesDoc";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;

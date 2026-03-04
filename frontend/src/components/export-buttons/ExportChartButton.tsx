@@ -1,6 +1,6 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { exportChart } from "../../utils/ExportUtils";
-import { Icon, getIconComponent } from "../../utils/icons/iconUtils";
+import { exportChart } from "@utils/ExportUtils";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 
 interface ExportChartButtonProps {
   chartName: string;

@@ -1,22 +1,23 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { DocType } from "@api/models/DocType";
+import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { EditableTypography } from "@components/EditableTypography";
+import { SidebarContentSidebarLayout } from "@components/content-layouts";
+import { CodeExplorer } from "@core/code";
+import { DocumentInfoPanel } from "@core/source-document";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { getRouteApi } from "@tanstack/react-router";
 import { ReactElement, useEffect, useRef, useState } from "react";
-import { SdocHooks } from "../../../../api/SdocHooks";
-import { DocType } from "../../../../api/openapi/models/DocType";
-import { SourceDocumentDataRead } from "../../../../api/openapi/models/SourceDocumentDataRead";
-import { SidebarContentSidebarLayout } from "../../../../components/content-layouts/SidebarContentSidebarLayout";
-import { SpanAnnotationExplorer } from "../../_components/AnnotationExplorer/SpanAnnotationExplorer";
-import { AudioVideoViewer } from "../../_components/DocumentViewer/AudioVideoViewer";
-import { ImageViewer } from "../../_components/DocumentViewer/ImageViewer";
-import { TextViewer } from "../../_components/DocumentViewer/TextViewer";
+import { AudioVideoViewer } from "../../_components/AudioVideoViewer";
 import { ImageAnnotator } from "../../_components/ImageAnnotator";
-import { SentenceAnnotator } from "../../_components/SentenceAnnotator/Annotator/SentenceAnnotator";
-import { SentenceAnnotationComparison } from "../../_components/SentenceAnnotator/Comparator/SentenceAnnotationComparison";
+import { ImageViewer } from "../../_components/ImageViewer";
 import { TextAnnotator } from "../../_components/TextAnnotator";
-import { AnnotationToolbar } from "../../_components/Toolbar/AnnotationToolbar";
-import { BBoxAnnotationExplorer, SentenceAnnotationExplorer } from "../../_components/explorer/index";
+import { BBoxAnnotationExplorer, SentenceAnnotationExplorer, SpanAnnotationExplorer } from "../../_components/explorer";
+import { SentenceAnnotationComparison, SentenceAnnotator } from "../../_components/sentence-annotator";
+import { TextViewer } from "../../_components/text-viewer";
+import { AnnotationToolbar } from "../../_components/toolbar";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/annotation/$sdocId");
@@ -251,7 +252,7 @@ export function AnnotationView() {
           </Box>
         </Box>
       }
-      rightSidebar={<DocumentInformation sdocId={sdocId} filterName="root" />}
+      rightSidebar={<DocumentInfoPanel sdocId={sdocId} filterName="root" />}
     />
   );
 }

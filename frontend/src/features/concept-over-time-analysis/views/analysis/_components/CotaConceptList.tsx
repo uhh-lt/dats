@@ -1,3 +1,6 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
+import { COTAConcept } from "@api/models/COTAConcept";
+import { COTARead } from "@api/models/COTARead";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItemButton, ListItemIcon, Tooltip } from "@mui/material";
@@ -9,9 +12,6 @@ import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { v4 as uuidv4 } from "uuid";
-import { CotaHooks } from "../../../../../api/CotaHooks";
-import { COTAConcept } from "../../../../../api/openapi/models/COTAConcept";
-import { COTARead } from "../../../../../api/openapi/models/COTARead";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaConceptEditor } from "./CotaConceptEditor";
 import { CotaConceptListItem } from "./CotaConceptListItem";

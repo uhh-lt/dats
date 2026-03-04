@@ -1,11 +1,11 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { ClassifierData } from "@api/models/ClassifierData";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { TagRead } from "@api/models/TagRead";
 import { Typography } from "@mui/material";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CodeHooks } from "../../../api/CodeHooks";
-import { ClassifierData } from "../../../api/openapi/models/ClassifierData";
-import { ClassifierModel } from "../../../api/openapi/models/ClassifierModel";
-import { TagRead } from "../../../api/openapi/models/TagRead";
-import { TagHooks } from "../../../api/TagHooks";
 
 interface ClassifierDatum extends ClassifierData {
   name: string;

@@ -1,15 +1,15 @@
-import LinkCard from "@components/links";
+import { ContentContainerLayout } from "@components/content-layouts";
+import { LinkCard } from "@components/links";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import ContentContainerLayout from "../../../../../components/content-layouts/ContentContainerLayout";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/")({
-  component: Analysis,
+  component: AnalysisView,
 });
 
 const cardColor = "rgb(150, 200, 255)";
 
-function Analysis() {
+function AnalysisView() {
   const projectId = Route.useParams({ select: (params) => params.projectId });
 
   return (

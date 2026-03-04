@@ -1,23 +1,22 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { ClusterCreate } from "@api/models/ClusterCreate";
+import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { ClusterCreate } from "../../../../../../api/openapi/models/ClusterCreate";
-import { PerspectivesJobType } from "../../../../../../api/openapi/models/PerspectivesJobType";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
-import { useDialogMaximize } from "../../../../../../hooks/useDialogMaximize";
-import { RootState } from "../../../../../../store/store";
 
 interface ClusterCreationDialogProps {
   aspectId: number;
 }
 
 export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) {
-  const projectId = useAppSelector((state: RootState) => state.project.projectId);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // dialog state
   const [open, setOpen] = useState(false);

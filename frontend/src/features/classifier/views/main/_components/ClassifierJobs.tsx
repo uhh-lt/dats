@@ -1,8 +1,8 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
 import { ClassifierJobListItem } from "./ClassifierJobListItem";
 
 interface ClassifierJobsProps {

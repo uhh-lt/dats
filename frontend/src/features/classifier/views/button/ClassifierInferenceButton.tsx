@@ -1,4 +1,9 @@
-import { ClassifierActions } from "@features/classifier/store/classifierSlice";
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierRead } from "@api/models/ClassifierRead";
+import { ClassifierTask } from "@api/models/ClassifierTask";
+import { CodeRenderer } from "@core/code";
+import { TagRenderer } from "@core/tag";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import {
   Divider,
@@ -15,14 +20,9 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
-import { ClassifierHooks } from "../../../../api/ClassifierHooks";
-import { ClassifierModel } from "../../../../api/openapi/models/ClassifierModel";
-import { ClassifierRead } from "../../../../api/openapi/models/ClassifierRead";
-import { ClassifierTask } from "../../../../api/openapi/models/ClassifierTask";
-import { CodeRenderer } from "../../../../core/code/CodeRenderer";
-import { TagRenderer } from "../../../../core/tag/TagRenderer";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
+import { ClassifierActions } from "../../store/classifierSlice";
 
 const classifierType2Icon: Record<ClassifierModel, Icon> = {
   [ClassifierModel.DOCUMENT]: Icon.DOCUMENT,

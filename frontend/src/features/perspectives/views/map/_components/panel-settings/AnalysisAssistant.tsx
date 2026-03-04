@@ -1,4 +1,5 @@
-import { GeneralHooks } from "@api/GeneralHooks";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
@@ -7,7 +8,6 @@ import { Box, IconButton, MenuItem, Paper, Stack, TextField, Tooltip, Typography
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useState } from "react";
 import Markdown from "react-markdown";
-import { PerspectivesHooks } from "../../../../../../api/PerspectivesHooks";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface ChatMessage {

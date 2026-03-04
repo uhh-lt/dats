@@ -1,4 +1,6 @@
-import { FilterTableToolbarProps } from "@components/filter/index";
+import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { FilterTableToolbarProps } from "@components/filter";
+import { SpanAnnotationExportButton } from "@core/span-annotation/SpanAnnotationExportButton";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,
@@ -6,8 +8,6 @@ import {
   MRT_ToggleGlobalFilterButton,
 } from "material-react-table";
 import { useMemo } from "react";
-import { SpanAnnotationRow } from "../../../../../api/openapi/models/SpanAnnotationRow";
-import { SpanAnnotationExportButton } from "../../../../../core/span-annotation/SpanAnnotationExportButton";
 
 export function SpanAnnotationAnalysisTableToolbarRight({
   table,

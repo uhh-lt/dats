@@ -1,12 +1,28 @@
+import { QueryKey } from "@api/hooks/QueryKey";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { SortDirection } from "@api/models/SortDirection";
+import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { SpanAnnotationSearchResult } from "@api/models/SpanAnnotationSearchResult";
+import { SpanColumns } from "@api/models/SpanColumns";
+import { SearchService } from "@api/services/SearchService";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
   FilterTableToolbarProps,
   FilterTableToolbarRight,
+  MyFilter,
+  createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter/index";
-import { MyFilter, createEmptyFilter } from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
+import { MemoRenderer2 } from "@core/memo";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocTagsRenderer } from "@core/source-document";
+import { UserRenderer } from "@core/user";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
@@ -19,21 +35,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType";
-import { SortDirection } from "../../../api/openapi/models/SortDirection";
-import { SpanAnnotationRow } from "../../../api/openapi/models/SpanAnnotationRow";
-import { SpanAnnotationSearchResult } from "../../../api/openapi/models/SpanAnnotationSearchResult";
-import { SpanColumns } from "../../../api/openapi/models/SpanColumns";
-import { SearchService } from "../../../api/openapi/services/SearchService";
-import { QueryKey } from "../../../api/QueryKey";
-import { useTableInfiniteScroll } from "../../../hooks/useTableInfiniteScroll";
-import { RootState } from "../../../store/store";
-import { useAuth } from "../../auth/provider/useAuth";
-import { CodeRenderer } from "../../code/CodeRenderer";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
-import { SdocMetadataRenderer } from "../../sdoc-metadata/SdocMetadataRenderer";
-import { SdocTagsRenderer } from "../../source-document/renderer/SdocTagRenderer";
-import { UserRenderer } from "../../user/UserRenderer";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSATFilterSlice } from "./_hooks/useInitSATFilterSlice";
 import { SATFilterActions } from "./satFilterSlice";

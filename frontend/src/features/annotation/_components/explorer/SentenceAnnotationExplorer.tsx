@@ -1,10 +1,10 @@
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { useAppSelector } from "@plugins/redux";
 import { range } from "lodash";
 import { useMemo } from "react";
-import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead";
-import { SentenceAnnotationHooks } from "../../../../api/SentenceAnnotationHooks";
-import { AnnotationExplorer } from "./components/AnnotationExplorer";
-import { SentenceAnnotationCard } from "./components/SentenceAnnotationCard";
+import { AnnotationExplorer } from "./_components/AnnotationExplorer";
+import { SentenceAnnotationCard } from "./_components/SentenceAnnotationCard";
 
 const filterByText = (text: string) => (annotation: SentenceAnnotationRead) =>
   range(annotation.sentence_id_start + 1, annotation.sentence_id_end + 2)

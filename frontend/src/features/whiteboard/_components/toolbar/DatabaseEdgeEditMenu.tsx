@@ -1,9 +1,9 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
-import { CodeHooks } from "../../../../api/CodeHooks";
-import { WhiteboardEdgeData_Input } from "../../../../api/openapi/models/WhiteboardEdgeData_Input";
-import { TagHooks } from "../../../../api/TagHooks";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import { isCodeNode, isSdocNode, isTagNode } from "../../_types/typeGuards";
 import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../../_utils/whiteboardUtils";

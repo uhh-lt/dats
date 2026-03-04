@@ -1,13 +1,13 @@
+import { COTAConcept } from "@api/models/COTAConcept";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { COTAConcept } from "../../../../../api/openapi/models/COTAConcept";
-import { useDialogMaximize } from "../../../../../hooks/useDialogMaximize";
 
 interface CotaConceptEditorProps {
   onUpdate: (concept: COTAConcept) => void;

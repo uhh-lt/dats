@@ -1,7 +1,7 @@
+import { ContentLayout } from "@components/content-layouts";
+import { SentenceAnnotationEditDialog } from "@core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { ContentLayout } from "../../../../components/content-layouts/ContentLayout";
-import { SentenceAnnotationEditDialog } from "../../../../core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
 import { SentAnnotationAnalysisTable } from "./_components/SentAnnotationAnalysisTable";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/sentence-annotations");

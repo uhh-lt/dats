@@ -1,3 +1,9 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRecommendationHooks } from "@api/hooks/TagRecommendationHooks";
+import { TagRead } from "@api/models/TagRead";
+import { TagRecommendationResult } from "@api/models/TagRecommendationResult";
+import { ContentContainerLayout } from "@components/content-layouts";
+import { DocumentTaggingResultRow, DocumentTagResultStepTable } from "@features/llm-assistant";
 import { LoadingButton } from "@mui/lab";
 import {
   Card,
@@ -11,15 +17,8 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { TagRead } from "../../../../api/openapi/models/TagRead";
-import { TagRecommendationResult } from "../../../../api/openapi/models/TagRecommendationResult";
-import { TagHooks } from "../../../../api/TagHooks";
-import { TagRecommendationHooks } from "../../../../api/TagRecommendationHooks";
-import { ContentContainerLayout } from "../../../../components/content-layouts/ContentContainerLayout";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
-import { DocumentTaggingResultRow } from "../../../llm-assistant/steps/document-tagging-result-step/DocumentTaggingResultRow";
-import { DocumentTagResultStepTable } from "../../../llm-assistant/steps/document-tagging-result-step/DocumentTagResultStepTable";
 
 export function TagRecommendationsView() {
   // local state
@@ -31,8 +30,6 @@ export function TagRecommendationsView() {
   const recommendations = TagRecommendationHooks.useGetTagRecommendationsFromJob(
     selectedJobId === "-1" ? null : selectedJobId,
   );
-
-  console.log("recommendations", recommendations.data);
 
   // event handlers
   const handleChange = (event: SelectChangeEvent<string>) => {

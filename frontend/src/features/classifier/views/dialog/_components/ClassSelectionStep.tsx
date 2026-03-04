@@ -1,15 +1,16 @@
+import { ClassifierModel } from "@api/models/ClassifierModel";
+import { CodeTable } from "@core/code";
+import { TagTable } from "@core/tag";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
-import { CodeTable } from "../../../../../core/code/CodeTable";
-import { TagTable } from "../../../../../core/tag/TagTable";
+import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ClassSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
 
   // selection state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
@@ -19,11 +20,11 @@ export function ClassSelectionStep() {
   const dispatch = useAppDispatch();
   const handleNext = useCallback(() => {
     if (selectedClassIds.length === 0) return;
-    dispatch(UIDialogActions.onClassifierDialogSelectClasses(selectedClassIds));
+    dispatch(ClassifierActions.onClassifierDialogSelectClasses(selectedClassIds));
   }, [dispatch, selectedClassIds]);
 
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeClassifierDialog());
+    dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
 
   if (model === undefined) return null;

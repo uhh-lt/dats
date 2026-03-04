@@ -1,8 +1,8 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoHooks } from "../../api/MemoHooks";
 
 interface MemoDeleteMenuItemProps {
   memoId?: number;
@@ -37,7 +37,7 @@ export const MemoDeleteMenuItem = memo(
           throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
         }
       },
-      [memoId, memoTitle, deleteMemo, onClick],
+      [memoId, openConfirmationDialog, memoTitle, deleteMemo, onClick],
     );
 
     return (

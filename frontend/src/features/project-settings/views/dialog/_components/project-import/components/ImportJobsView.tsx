@@ -1,8 +1,8 @@
+import { ImportHooks } from "@api/hooks/ImportHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import { ImportHooks } from "../../../../../../../api/ImportHooks";
 import { ImportJobListItem } from "./ImportJobListItem";
 
 interface ImportJobsViewProps {

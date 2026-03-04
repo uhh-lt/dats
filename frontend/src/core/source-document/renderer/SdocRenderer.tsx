@@ -1,8 +1,8 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { SdocHooks } from "../../../api/SdocHooks";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead";
-import { docTypeToIcon } from "../../../utils/icons/docTypeToIcon";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 
 export interface SdocRendererSharedProps {
   link?: boolean;

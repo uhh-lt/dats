@@ -1,5 +1,5 @@
+import { LoginStatus } from "@core/auth";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { LoginStatus } from "../../core/auth/types/LoginStatus";
 
 export const Route = createFileRoute("/_public/")({
   beforeLoad: ({ context }) => {

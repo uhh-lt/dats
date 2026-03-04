@@ -1,10 +1,10 @@
-import { JobListItem } from "@core/job/index";
+import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
+import { CrawlerJobRead } from "@api/models/CrawlerJobRead";
+import { JobListItem } from "@core/job";
 import WebIcon from "@mui/icons-material/Web";
 import { Link, List, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Typography } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
-import { DocProcessingHooks } from "../../../../../api/DocProcessingHooks";
-import { CrawlerJobRead } from "../../../../../api/openapi/models/CrawlerJobRead";
-import { dateToLocaleString } from "../../../../../utils/DateUtils";
 
 interface CrawlerJobListItemProps {
   initialCrawlerJob: CrawlerJobRead;

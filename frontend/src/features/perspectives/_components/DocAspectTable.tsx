@@ -1,12 +1,12 @@
+import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { ClusterRead } from "@api/models/ClusterRead";
+import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { SdocRenderer } from "@core/source-document/renderer/SdocRenderer";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@plugins/redux";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
-import { ClusterRead } from "../../../api/openapi/models/ClusterRead";
-import { PerspectivesDoc } from "../../../api/openapi/models/PerspectivesDoc";
-import { PerspectivesHooks } from "../../../api/PerspectivesHooks";
-import { SdocRenderer } from "../../../core/source-document/renderer/SdocRenderer";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils";
 
 interface DocAspectTableProps {
   aspectId: number;

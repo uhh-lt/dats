@@ -1,8 +1,8 @@
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { useCallback } from "react";
-import { UIDialogActions } from "../../../../../store/global/dialogSlice";
 
 export function NoDocumentsPlaceholder() {
   const dispatch = useAppDispatch();

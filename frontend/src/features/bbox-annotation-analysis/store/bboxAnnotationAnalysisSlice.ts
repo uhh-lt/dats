@@ -1,8 +1,8 @@
+import { BBoxColumns } from "@api/models/BBoxColumns";
+import { BBoxFilterActions } from "@core/bbox-annotation";
 import { createSlice } from "@reduxjs/toolkit";
-import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns";
-import { BBoxFilterActions } from "../../../core/bbox-annotation/table/bboxFilterSlice";
-import { initialTableState, resetProjectTableState, tableReducer } from "../../../store/generic/tableSlice";
-import { ProjectActions } from "../../../store/global/projectSlice";
+import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
+import { ProjectActions } from "@store/global/projectSlice";
 
 const BBoxAnnotationsSlice = createSlice({
   name: "bboxAnnotationAnalysis",

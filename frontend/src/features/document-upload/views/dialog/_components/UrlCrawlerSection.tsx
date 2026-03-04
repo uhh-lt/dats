@@ -1,4 +1,7 @@
-import { GeneralHooks } from "@api/GeneralHooks";
+import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { Language } from "@api/models/Language";
+import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
 import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
@@ -6,9 +9,6 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
-import { DocProcessingHooks } from "../../../../../api/DocProcessingHooks";
-import { Language } from "../../../../../api/openapi/models/Language";
-import { ProcessingSettings } from "../../../../../api/openapi/models/ProcessingSettings";
 import { ProcessingSettingsButton } from "./ProcessingSettingsButton";
 
 interface UrlCrawlerSectionProps {

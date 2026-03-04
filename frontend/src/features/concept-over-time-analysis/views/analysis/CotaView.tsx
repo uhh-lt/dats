@@ -1,6 +1,6 @@
+import { CotaHooks } from "@api/hooks/CotaHooks";
 import { CircularProgress } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { CotaHooks } from "../../../../api/CotaHooks";
 import { CotaViewContent } from "./_components/CotaViewContent";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId");

@@ -1,5 +1,5 @@
-import { SentenceAnnotationTable } from "../../../../../core/sentence-annotation/table/SentenceAnnotationTable";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
+import { SentenceAnnotationTable } from "@core/sentence-annotation";
+import { useReduxConnector } from "@hooks/useReduxConnector";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 import { SentAnnotationAnalysisTableToolbarLeft } from "./SentAnnotationAnalysisTableToolbarLeft";
 import { SentAnnotationAnalysisTableToolbarRight } from "./SentAnnotationAnalysisTableToolbarRight";

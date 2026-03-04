@@ -1,5 +1,10 @@
-import { useWithLevel } from "@components/tree-explorer";
-import { NamedObjWithParentWithLevel } from "@components/tree-explorer/ITree";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { CodeRead } from "@api/models/CodeRead";
+import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
+import { MemoButton } from "@core/memo";
 import {
   Autocomplete,
   Box,
@@ -15,21 +20,15 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import { CodeHooks } from "../../../../api/CodeHooks";
-import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "../../../../api/openapi/models/BBoxAnnotationRead";
-import { CodeRead } from "../../../../api/openapi/models/CodeRead";
-import { SentenceAnnotationRead } from "../../../../api/openapi/models/SentenceAnnotationRead";
-import { MemoButton } from "../../../../core/memo/dialog/MemoButton";
-import { UIDialogActions } from "../../../../store/global/dialogSlice";
-import { getIconComponent, Icon } from "../../../../utils/icons/iconUtils";
-import { Annotations } from "../../views/main/AnnotationView";
-import { useComputeCodesForSelection } from "./useComputeCodesForSelection";
+import { Annotation, Annotations } from "../../_types/Annotation";
+import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
 
-interface CodeSelectorProps {
+interface AnnotationMenuProps {
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
   onAdd?: (codeId: number, isNewCode: boolean) => void;
   onEdit?: (annotationToEdit: Annotation, codeId: number) => void;
@@ -37,7 +36,7 @@ interface CodeSelectorProps {
   onDuplicate?: (annotationToDuplicate: Annotation, codeId: number) => void;
 }
 
-export interface CodeSelectorHandle {
+export interface AnnotationMenuHandle {
   open: (position: PopoverPosition, annotations?: Annotations) => void;
   isOpen: boolean;
 }
@@ -46,7 +45,7 @@ interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeRead> {
   title: string;
 }
 
-export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
+export const AnnotationMenu = forwardRef<AnnotationMenuHandle, AnnotationMenuProps>(
   ({ onClose, onAdd, onEdit, onDelete, onDuplicate }, ref) => {
     const dispatch = useAppDispatch();
 
@@ -71,14 +70,8 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       }));
     }, [codeTree]);
 
-    // exposed methods (via ref)
-    useImperativeHandle(ref, () => ({
-      open: openCodeSelector,
-      isOpen: isPopoverOpen,
-    }));
-
     // methods
-    const openCodeSelector = (position: PopoverPosition, annotations?: Annotations) => {
+    const openAnnotationMenu = (position: PopoverPosition, annotations?: Annotations) => {
       setEditingAnnotation(undefined);
       setDuplicatingAnnotation(undefined);
       setAnnotationsToEdit(annotations);
@@ -87,7 +80,13 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       setPosition(position);
     };
 
-    const closeCodeSelector = (reason?: "backdropClick" | "escapeKeyDown") => {
+    // exposed methods (via ref)
+    useImperativeHandle(ref, () => ({
+      open: openAnnotationMenu,
+      isOpen: isPopoverOpen,
+    }));
+
+    const closeAnnotationMenu = (reason?: "backdropClick" | "escapeKeyDown") => {
       setShowCodeSelection(false);
       setIsPopoverOpen(false);
       setIsAutoCompleteOpen(false);
@@ -138,7 +137,7 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
     const handleDelete = (annotation: Annotation) => {
       if (onDelete) onDelete(annotation);
-      closeCodeSelector();
+      closeAnnotationMenu();
     };
 
     const handleDuplicate = (annotation: Annotation, code: CodeRead) => {
@@ -158,13 +157,13 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       } else {
         if (onAdd) onAdd(code.id, isNewCode);
       }
-      closeCodeSelector();
+      closeAnnotationMenu();
     };
 
     return (
       <Popover
         open={isPopoverOpen}
-        onClose={(_event, reason) => closeCodeSelector(reason)}
+        onClose={(_event, reason) => closeAnnotationMenu(reason)}
         anchorPosition={position}
         anchorReference="anchorPosition"
         anchorOrigin={{
@@ -185,7 +184,7 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 annotation={annotation}
                 handleDelete={handleDelete}
                 handleEdit={handleEdit}
-                handleOpenMemo={closeCodeSelector}
+                handleOpenMemo={closeAnnotationMenu}
                 handleDuplicate={handleDuplicate}
               />
             ))}
@@ -246,7 +245,7 @@ export const AnnotationMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               handleHomeEndKeys
               freeSolo
               open={isAutoCompleteOpen}
-              onClose={(_event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
+              onClose={(_event, reason) => reason === "escape" && closeAnnotationMenu("escapeKeyDown")}
             />
           </>
         )}

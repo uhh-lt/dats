@@ -1,25 +1,26 @@
+import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierEvaluationParams } from "@api/models/ClassifierEvaluationParams";
+import { ClassifierModel } from "@api/models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { ClassifierHooks } from "../../../../../api/ClassifierHooks";
-import { ClassifierEvaluationParams } from "../../../../../api/openapi/models/ClassifierEvaluationParams";
-import { ClassifierModel } from "../../../../../api/openapi/models/ClassifierModel";
+import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 
 export function EvalDataSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.dialog.classifierModel);
-  const task = useAppSelector((state) => state.dialog.classifierTask);
-  const classifierId = useAppSelector((state) => state.dialog.classifierId);
-  const projectId = useAppSelector((state) => state.dialog.classifierProjectId);
-  const classIds = useAppSelector((state) => state.dialog.classifierClassIds);
-  const userIds = useAppSelector((state) => state.dialog.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.dialog.classifierTagIds);
+  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const task = useAppSelector((state) => state.classifier.classifierTask);
+  const classifierId = useAppSelector((state) => state.classifier.classifierId);
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
+  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
+  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
   const dispatch = useAppDispatch();
 
   // dialog actions
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeClassifierDialog());
+    dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
 
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
@@ -44,7 +45,7 @@ export function EvalDataSelectionStep() {
       },
       {
         onSuccess: (data) => {
-          dispatch(UIDialogActions.onClassifierDialogStartJob(data.job_id));
+          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
         },
       },
     );

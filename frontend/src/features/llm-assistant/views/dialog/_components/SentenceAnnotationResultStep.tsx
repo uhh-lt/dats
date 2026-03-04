@@ -1,14 +1,15 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { ApproachType } from "@api/models/ApproachType";
+import { SentenceAnnotationLLMJobResult } from "@api/models/SentenceAnnotationLLMJobResult";
+import { AnnoActions } from "@features/annotation";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { queryClient } from "@plugins/tanstack";
 import { useNavigate } from "@tanstack/react-router";
+import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { useCallback } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { ApproachType } from "../../../../../api/openapi/models/ApproachType";
-import { SentenceAnnotationLLMJobResult } from "../../../../../api/openapi/models/SentenceAnnotationLLMJobResult";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { queryClient } from "../../../../../plugins/tanstack/queryClient";
-import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "../../../../../utils/GlobalConstants";
-import { AnnoActions } from "../../../../annotation/store/annoSlice";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 const approach2AssistantID: Record<ApproachType, number> = {
@@ -18,7 +19,7 @@ const approach2AssistantID: Record<ApproachType, number> = {
 
 export function SentenceAnnotationResultStep() {
   // get the job
-  const llmJobId = useAppSelector((state) => state.dialog.llmJobId);
+  const llmJobId = useAppSelector((state) => state.llmAssistant.llmJobId);
   const llmJob = LLMHooks.usePollLLMJob(llmJobId, undefined);
 
   if (llmJob.isSuccess && llmJob.data.output) {
@@ -51,7 +52,7 @@ function SentenceAnnotationResultStepContent({
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
   const projectId = useAppSelector((state) => state.project.projectId);
@@ -61,7 +62,7 @@ function SentenceAnnotationResultStepContent({
 
     const firstSdocId = jobResult.results[0].sdoc_id;
 
-    dispatch(UIDialogActions.closeLLMDialog());
+    dispatch(LLMAssistantActions.closeLLMDialog());
     dispatch(AnnoActions.compareWithUser(approach2AssistantID[approachType]));
     navigate({ params: { projectId, sdocId: firstSdocId }, to: "/project/$projectId/annotation/$sdocId" });
 

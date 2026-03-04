@@ -1,12 +1,12 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { ReduxFilterDialog } from "@components/filter";
+import { TagMenuButton } from "@core/tag";
+import { useDebounce } from "@hooks/useDebounce";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { RootState } from "@store/store";
 import { ChangeEvent, memo, useEffect, useRef, useState } from "react";
-import { TagMenuButton } from "../../../../../../core/tag/menu/TagMenuButton";
-import { useDebounce } from "../../../../../../hooks/useDebounce";
-import { RootState } from "../../../../../../store/store";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterMenuButton } from "./ClusterMenuButton";
 import { ClusterReviewButtons } from "./ClusterReviewButtons";

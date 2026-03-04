@@ -1,9 +1,9 @@
+import { DocType } from "@api/models/DocType";
+import { ContentLayout } from "@components/content-layouts";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
-import { DocType } from "../../../../api/openapi/models/DocType";
-import { ContentLayout } from "../../../../components/content-layouts/ContentLayout";
 import { SdocStatusTable } from "./_components/SdocStatusTable";
 
 const routeApi = getRouteApi("/_auth/project/$projectId/tools/health");

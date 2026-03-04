@@ -1,3 +1,5 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
+import { MemoRead } from "@api/models/MemoRead";
 import {
   Card,
   CardActionArea,
@@ -8,10 +10,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useCallback, useMemo } from "react";
-import { MemoHooks } from "../../../api/MemoHooks";
-import { MemoRead } from "../../../api/openapi/models/MemoRead";
-import { dateToLocaleString } from "../../../utils/DateUtils";
 import { UserRenderer } from "../../user/UserRenderer";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";

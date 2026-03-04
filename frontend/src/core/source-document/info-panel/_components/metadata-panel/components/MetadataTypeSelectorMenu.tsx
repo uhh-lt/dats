@@ -1,3 +1,5 @@
+import { MetaType } from "@api/models/MetaType";
+import { useDebounce } from "@hooks/useDebounce";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
@@ -9,10 +11,8 @@ import {
   TextField,
   createFilterOptions,
 } from "@mui/material";
+import { metaTypeToIcon } from "@utils/icons/metaTypeToIcon";
 import { memo, useCallback } from "react";
-import { MetaType } from "../../../../../../api/openapi/models/MetaType";
-import { useDebounce } from "../../../../../../hooks/useDebounce";
-import { metaTypeToIcon } from "../../../../../../utils/icons/metaTypeToIcon";
 
 const filter = createFilterOptions<string>();
 

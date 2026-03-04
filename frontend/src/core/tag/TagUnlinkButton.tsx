@@ -1,9 +1,9 @@
+import { TagHooks } from "@api/hooks/TagHooks";
+import { TagRead } from "@api/models/TagRead";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { TagHooks } from "../../api/TagHooks";
-import { TagRead } from "../../api/openapi/models/TagRead";
 
 export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: TagRead }) => {
   // mutations

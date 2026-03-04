@@ -1,14 +1,13 @@
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { LinkWrapper } from "@components/links";
+import { CodeRenderer } from "@core/code";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { AnnoActions } from "@features/annotation";
 import { Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useCallback } from "react";
-import { SpanAnnotationRead } from "../../api/openapi/models/SpanAnnotationRead";
-import { SpanAnnotationHooks } from "../../api/SpanAnnotationHooks";
-import { AnnoActions } from "../../features/annotation/store/annoSlice";
-import { CodeRenderer } from "../code/CodeRenderer";
-import { SdocMetadataRenderer } from "../sdoc-metadata/SdocMetadataRenderer";
-import { SdocRenderer, SdocRendererSharedProps } from "../source-document/renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../source-document/renderer/SdocTagRenderer";
 
 interface SpanAnnotationRendererSharedProps {
   showCode?: boolean;

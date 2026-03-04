@@ -1,5 +1,17 @@
+import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { DocType } from "@api/models/DocType";
+import { Language } from "@api/models/Language";
+import { ProcessingSettings } from "@api/models/ProcessingSettings";
+import { SdocHealthResult } from "@api/models/SdocHealthResult";
+import { SDocStatus } from "@api/models/SDocStatus";
+import { SdocStatusRow } from "@api/models/SdocStatusRow";
+import { SortDirection } from "@api/models/SortDirection";
+import { DocprocessingService } from "@api/services/DocprocessingService";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -18,17 +30,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { JSX, UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DocProcessingHooks } from "../../../../../api/DocProcessingHooks";
-import { DocType } from "../../../../../api/openapi/models/DocType";
-import { Language } from "../../../../../api/openapi/models/Language";
-import { ProcessingSettings } from "../../../../../api/openapi/models/ProcessingSettings";
-import { SdocHealthResult } from "../../../../../api/openapi/models/SdocHealthResult";
-import { SDocStatus } from "../../../../../api/openapi/models/SDocStatus";
-import { SdocStatusRow } from "../../../../../api/openapi/models/SdocStatusRow";
-import { SortDirection } from "../../../../../api/openapi/models/SortDirection";
-import { DocprocessingService } from "../../../../../api/openapi/services/DocprocessingService";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { useTableInfiniteScroll } from "../../../../../hooks/useTableInfiniteScroll";
 import { ProcessingSettingsButton } from "../../../../document-upload/views/dialog/_components/ProcessingSettingsButton";
 
 const sdocStatus2Icon: Record<SDocStatus, JSX.Element> = {

@@ -1,7 +1,7 @@
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
-import { Icon, getIconComponent } from "../../../../utils/icons/iconUtils";
 import { LLMAssistantEvent } from "../../_types/LLMAssistantEvent";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";
 

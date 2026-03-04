@@ -1,5 +1,5 @@
-import { ExportMenuItem } from "@components/export-buttons/index";
-import { ExportJobType } from "../../api/openapi/models/ExportJobType";
+import { ExportJobType } from "@api/models/ExportJobType";
+import { ExportMenuItem } from "@components/export-buttons";
 
 export function FolderExportMenuItem() {
   return (

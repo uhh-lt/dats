@@ -1,15 +1,15 @@
+import { MetadataHooks, SourceDocumentMetadataReadCombined } from "@api/hooks/MetadataHooks";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { DocumentMetadataRowContent } from "@core/source-document";
 import { memo, useCallback } from "react";
-import { MetadataHooks, SourceDocumentMetadataReadCombined } from "../../../../../api/MetadataHooks";
-import { ProjectMetadataRead } from "../../../../../api/openapi/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "../../../../../api/openapi/models/SourceDocumentMetadataUpdate";
-import { DocumentMetadataRowContent } from "../../../../source-document/info-panel/_components/metadata-panel/components/DocumentMetadataRowContent";
 
 interface FolderDocumentMetadataRowProps {
   metadata: SourceDocumentMetadataReadCombined;
   onAddFilterClick: (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => void;
 }
 
-export const FolderDocumentMetadataRow = memo(({ metadata, onAddFilterClick }: FolderDocumentMetadataRowProps) => {
+export const FolderMetadataRow = memo(({ metadata, onAddFilterClick }: FolderDocumentMetadataRowProps) => {
   const projectMetadata = MetadataHooks.useGetProjectMetadata(metadata.project_metadata_id);
 
   // mutation

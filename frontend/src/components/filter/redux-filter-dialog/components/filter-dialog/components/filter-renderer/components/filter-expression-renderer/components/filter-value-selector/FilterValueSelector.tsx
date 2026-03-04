@@ -1,5 +1,5 @@
+import { FilterValueType } from "@api/models/FilterValueType";
 import { memo, useMemo } from "react";
-import { FilterValueType } from "../../../../../../../../../../../api/openapi/models/FilterValueType";
 import { ColumnInfo } from "../../../../../../../../../filterUtils";
 import { CodeIdValueSelector } from "./components/CodeIdValueSelector";
 import { DefaultValueSelector } from "./components/DefaultValueSelector";

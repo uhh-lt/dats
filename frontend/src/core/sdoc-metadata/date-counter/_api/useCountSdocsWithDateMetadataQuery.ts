@@ -1,5 +1,5 @@
+import { AnalysisService } from "@api/services/AnalysisService";
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService } from "../../../../api/openapi/services/AnalysisService";
 
 export const useCountSdocsWithDateMetadataQuery = (projectId: number, dateMetadataId: number) =>
   useQuery({

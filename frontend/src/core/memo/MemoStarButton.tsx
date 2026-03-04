@@ -1,8 +1,8 @@
+import { MemoHooks } from "@api/hooks/MemoHooks";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoHooks } from "../../api/MemoHooks";
 
 interface MemoStarButtonProps {
   memoIds: number[];

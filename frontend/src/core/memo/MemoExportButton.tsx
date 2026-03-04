@@ -1,5 +1,5 @@
-import { ExportButton } from "@components/export-buttons/index";
-import { ExportJobType } from "../../api/openapi/models/ExportJobType";
+import { ExportJobType } from "@api/models/ExportJobType";
+import { ExportButton } from "@components/export-buttons";
 
 interface MemosExportButtonProps {
   memoIds: number[];

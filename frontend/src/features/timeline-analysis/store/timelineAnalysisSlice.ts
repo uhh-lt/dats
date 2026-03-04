@@ -1,22 +1,22 @@
+import { BBoxColumns } from "@api/models/BBoxColumns";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { SdocColumns } from "@api/models/SdocColumns";
+import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
+import { SpanColumns } from "@api/models/SpanColumns";
+import { StringOperator } from "@api/models/StringOperator";
+import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
+import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import {
   createInitialFilterState,
   filterReducer,
   FilterState,
   MyFilterExpression,
   resetProjectFilterState,
-} from "@components/filter/redux-filter-dialog/index";
+} from "@components/filter";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ProjectActions } from "@store/global/projectSlice";
+import { ColorUtils } from "@utils/colors/ColorUtils";
 import { v4 as uuidv4 } from "uuid";
-import { BBoxColumns } from "../../../api/openapi/models/BBoxColumns";
-import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator";
-import { SdocColumns } from "../../../api/openapi/models/SdocColumns";
-import { SentAnnoColumns } from "../../../api/openapi/models/SentAnnoColumns";
-import { SpanColumns } from "../../../api/openapi/models/SpanColumns";
-import { StringOperator } from "../../../api/openapi/models/StringOperator";
-import { TimelineAnalysisConcept } from "../../../api/openapi/models/TimelineAnalysisConcept";
-import { TimelineAnalysisType } from "../../../api/openapi/models/TimelineAnalysisType";
-import { ProjectActions } from "../../../store/global/projectSlice";
-import { ColorUtils } from "../../../utils/colors/ColorUtils";
 
 export interface TimelineAnalysisState {
   // project state:

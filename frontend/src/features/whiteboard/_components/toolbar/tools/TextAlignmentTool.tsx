@@ -1,3 +1,5 @@
+import { HorizontalAlign } from "@api/models/HorizontalAlign";
+import { VerticalAlign } from "@api/models/VerticalAlign";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
@@ -7,8 +9,6 @@ import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import { Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { Node } from "reactflow";
-import { HorizontalAlign } from "../../../../../api/openapi/models/HorizontalAlign";
-import { VerticalAlign } from "../../../../../api/openapi/models/VerticalAlign";
 import { BackgroundColorData } from "../../../_types/base/BackgroundColorData";
 import { BorderData } from "../../../_types/base/BorderData";
 import { TextData } from "../../../_types/base/TextData";

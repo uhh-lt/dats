@@ -1,7 +1,7 @@
+import { TextNodeData } from "@api/models/TextNodeData";
 import { Box, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { TextNodeData } from "../../../../api/openapi/models/TextNodeData";
 
 export interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
   nodeProps: NodeProps<T>;

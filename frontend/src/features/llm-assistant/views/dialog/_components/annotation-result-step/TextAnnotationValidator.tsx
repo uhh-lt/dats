@@ -1,10 +1,10 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { CodeRead } from "@api/models/CodeRead";
+import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { DocumentRenderer } from "@features/annotation";
 import { memo, MouseEventHandler, useCallback, useMemo, useRef } from "react";
-import { CodeHooks } from "../../../../../../api/CodeHooks";
-import { CodeRead } from "../../../../../../api/openapi/models/CodeRead";
-import { SourceDocumentDataRead } from "../../../../../../api/openapi/models/SourceDocumentDataRead";
-import { SpanAnnotationRead } from "../../../../../../api/openapi/models/SpanAnnotationRead";
-import { SdocHooks } from "../../../../../../api/SdocHooks";
-import { DocumentRenderer } from "../../../../../annotation/_components/document-renderer/DocumentRenderer";
 import {
   TextAnnotationValidationMenu,
   TextAnnotationValidationMenuHandle,

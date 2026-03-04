@@ -1,10 +1,10 @@
+import { JobHooks } from "@api/hooks/JobHooks";
+import { ExportJobInput } from "@api/models/ExportJobInput";
+import { JobStatus } from "@api/models/JobStatus";
+import { useOpenSnackbar } from "@core/notification/snackbar/useOpenSnackbar";
 import { useAppSelector } from "@plugins/redux";
+import { downloadFile } from "@utils/ExportUtils";
 import { useCallback, useEffect } from "react";
-import { JobHooks } from "../../../api/JobHooks";
-import { ExportJobInput } from "../../../api/openapi/models/ExportJobInput";
-import { JobStatus } from "../../../api/openapi/models/JobStatus";
-import { useOpenSnackbar } from "../../../core/notification/snackbar/useOpenSnackbar";
-import { downloadFile } from "../../../utils/ExportUtils";
 
 export const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 

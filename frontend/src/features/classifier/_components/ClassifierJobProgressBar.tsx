@@ -1,7 +1,7 @@
+import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
 import { LinearProgressWithLabel } from "@components/progress-bars";
 import { Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
-import { ClassifierJobRead } from "../../../api/openapi/models/ClassifierJobRead";
 
 export function ClassifierJobProgressBar({ classifierJob }: { classifierJob: ClassifierJobRead | undefined | null }) {
   const progressTooltip = useMemo(() => {

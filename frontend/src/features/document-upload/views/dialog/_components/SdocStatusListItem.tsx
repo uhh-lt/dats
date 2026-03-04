@@ -1,11 +1,11 @@
-import { jobStatusToTypographyColor } from "@core/job/index";
+import { SDocStatus } from "@api/models/SDocStatus";
+import { SourceDocumentStatusSimple } from "@api/models/SourceDocumentStatusSimple";
+import { jobStatusToTypographyColor } from "@core/job";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { Box, CircularProgress, LinearProgress, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { memo } from "react";
-import { SDocStatus } from "../../../../../api/openapi/models/SDocStatus";
-import { SourceDocumentStatusSimple } from "../../../../../api/openapi/models/SourceDocumentStatusSimple";
-import { docTypeToIcon } from "../../../../../utils/icons/docTypeToIcon";
 
 interface SdocStatusSimpleListItemProps {
   sdocStatus: SourceDocumentStatusSimple;

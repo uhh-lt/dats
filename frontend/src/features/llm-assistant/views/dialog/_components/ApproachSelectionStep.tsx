@@ -1,4 +1,8 @@
-import { GeneralHooks } from "@api/GeneralHooks";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { LLMHooks } from "@api/hooks/LLMHooks";
+import { ApproachType } from "@api/models/ApproachType";
+import { TaskType } from "@api/models/TaskType";
+import { CodeRenderer } from "@core/code";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -17,11 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { Fragment, memo, useCallback, useMemo, useState } from "react";
-import { LLMHooks } from "../../../../../api/LLMHooks";
-import { ApproachType } from "../../../../../api/openapi/models/ApproachType";
-import { TaskType } from "../../../../../api/openapi/models/TaskType";
-import { CodeRenderer } from "../../../../../core/code/CodeRenderer";
+import { ChangeEvent, Fragment, memo, useCallback, useMemo, useState } from "react";
+import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 enum DeletionStrategy {
@@ -41,14 +42,13 @@ export const ApproachSelectionStep = memo(() => {
   const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   // global state
-  const projectId = useAppSelector((state) => state.dialog.llmProjectId);
-  const approachRecommendation = useAppSelector((state) => state.dialog.llmApproachRecommendation);
-  const llmId = useAppSelector((state) => state.dialog.llmId);
-  const llmMethod = useAppSelector((state) => state.dialog.llmMethod);
-  const metadata = useAppSelector((state) => state.dialog.llmMetadata);
-  const codes = useAppSelector((state) => state.dialog.llmCodes);
-  const tags = useAppSelector((state) => state.dialog.llmTags);
-  const sdocIds = useAppSelector((state) => state.dialog.llmDocumentIds);
+  const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
+  const approachRecommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
+  const llmMethod = useAppSelector((state) => state.llmAssistant.llmMethod);
+  const metadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
+  const codes = useAppSelector((state) => state.llmAssistant.llmCodes);
+  const tags = useAppSelector((state) => state.llmAssistant.llmTags);
+  const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
   const dispatch = useAppDispatch();
 
   // local state
@@ -70,7 +70,7 @@ export const ApproachSelectionStep = memo(() => {
   }, []);
 
   const handleBack = useCallback(() => {
-    dispatch(UIDialogActions.previousLLMDialogStep());
+    dispatch(LLMAssistantActions.previousLLMDialogStep());
   }, [dispatch]);
 
   // memoized values
@@ -123,7 +123,7 @@ export const ApproachSelectionStep = memo(() => {
           {
             onSuccess(data) {
               dispatch(
-                DialogActions.llmDialogGoToPromptEditor({
+                LLMAssistantActions.llmDialogGoToPromptEditor({
                   prompts: data,
                   approach: approachType,
                   deleteExistingAnnotations: deleteExistingAnnotations === DeletionStrategy.DELETE_EXISTING,

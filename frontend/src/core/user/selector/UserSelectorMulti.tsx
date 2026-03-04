@@ -1,3 +1,4 @@
+import { UserHooks } from "@api/hooks/UserHooks";
 import {
   Checkbox,
   FormControl,
@@ -9,7 +10,6 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import { Fragment, memo, useCallback } from "react";
-import { UserHooks } from "../../../api/UserHooks";
 import { UserRenderer } from "../UserRenderer";
 
 interface UserSelectorProps {

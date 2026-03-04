@@ -1,9 +1,9 @@
+import { TaskType } from "@api/models/TaskType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useMemo } from "react";
-import { TaskType } from "../../../../api/openapi/models/TaskType";
-import { useDialogMaximize } from "../../../../hooks/useDialogMaximize";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";
 import { AnnotationResultStep } from "./_components/annotation-result-step/AnnotationResultStep";
 import { ApproachSelectionStep } from "./_components/ApproachSelectionStep";
@@ -86,12 +86,12 @@ const contentDict: Record<number, Record<TaskType, JSX.Element>> = {
 
 export const LLMAssistantDialog = memo(() => {
   // global client state (redux)
-  const method = useAppSelector((state) => state.dialog.llmMethod);
-  const step = useAppSelector((state) => state.dialog.llmStep);
+  const method = useAppSelector((state) => state.llmAssistant.llmMethod);
+  const step = useAppSelector((state) => state.llmAssistant.llmStep);
   const dispatch = useAppDispatch();
 
   // open/close dialog
-  const open = useAppSelector((state) => state.dialog.isLLMDialogOpen);
+  const open = useAppSelector((state) => state.llmAssistant.isLLMDialogOpen);
   const handleClose = useCallback(() => {
     dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);

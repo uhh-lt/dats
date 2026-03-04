@@ -1,8 +1,8 @@
+import { QueryKey } from "@api/hooks/QueryKey";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { queryClient } from "@plugins/tanstack";
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { LogicalOperator } from "../../api/openapi/models/LogicalOperator";
-import { QueryKey } from "../../api/QueryKey";
-import { queryClient } from "../../plugins/tanstack/queryClient";
 import {
   ColumnInfo,
   FilterOperators,

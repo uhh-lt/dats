@@ -1,8 +1,8 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
+import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
-import { UIDialogActions } from "../../../store/global/dialogSlice";
-import { Icon, getIconComponent } from "../../../utils/icons/iconUtils";
 
 interface TagActionButtonCreateProps {
   tagName: string;

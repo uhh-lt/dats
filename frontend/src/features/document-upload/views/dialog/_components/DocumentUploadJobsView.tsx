@@ -1,8 +1,8 @@
+import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { memo, useMemo } from "react";
-import { DocProcessingHooks } from "../../../../../api/DocProcessingHooks";
 import { CrawlerJobListItem } from "./CrawlerJobListItem";
 import { SdocStatusSimpleListItem } from "./SdocStatusListItem";
 

@@ -1,9 +1,9 @@
 import { LinkButton } from "@components/links";
-import { SnackbarDialog } from "@core/notification/snackbar/SnackbarDialog";
+import { AuthState } from "@core/auth";
+import { SnackbarDialog } from "@core/notification";
 import { Box, Container, CssBaseline, Typography } from "@mui/material";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { AuthState } from "../core/auth/types/AuthState";
 
 interface DATSRouterContext {
   auth: AuthState;

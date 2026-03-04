@@ -1,3 +1,5 @@
+import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import ReplayIcon from "@mui/icons-material/Replay";
@@ -19,8 +21,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { TimelineAnalysisRead } from "../../../../../api/openapi/models/TimelineAnalysisRead";
-import { TimelineAnalysisHooks } from "../../../../../api/TimelineAnalysisHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount";
 import { TimelineAnalysisExportMenu } from "./TimelineAnalysisExportMenu";
