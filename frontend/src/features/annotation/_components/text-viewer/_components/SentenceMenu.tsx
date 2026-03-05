@@ -2,7 +2,6 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { MemoListItemButton } from "@core/memo";
-import { ImageSearchActions, SearchActions, SentenceSearchActions } from "@features/search";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -15,7 +14,6 @@ import {
   Popover,
   PopoverPosition,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { Fragment, forwardRef, useImperativeHandle, useState } from "react";
 
@@ -44,9 +42,6 @@ export const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({
   const [sentence, setSentence] = useState<string>();
   const [annotations, setAnnotations] = useState<SpanAnnotationRead[]>();
 
-  // global client state (redux)
-  const dispatch = useAppDispatch();
-
   // methods
   const openMenu = (
     position: PopoverPosition,
@@ -72,29 +67,25 @@ export const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({
   // ui events
   const handleSentenceSimilaritySearch = () => {
     closeMenu();
-    dispatch(SentenceSearchActions.onSearchQueryChange(sentence || ""));
-    dispatch(SentenceSearchActions.onClearRowSelection());
-    closeMenu();
-    navigate({ to: "/project/$projectId/sentencesearch", params: { projectId } });
+    navigate({
+      to: "/project/$projectId/sentencesearch",
+      params: { projectId },
+      search: { searchQuery: sentence || "" },
+    });
   };
 
   const handleImageSimilaritySearch = () => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
-    dispatch(ImageSearchActions.clearSelectedDocuments());
     closeMenu();
-    navigate({ to: "/project/$projectId/imagesearch", params: { projectId } });
+    navigate({ to: "/project/$projectId/imagesearch", params: { projectId }, search: { searchQuery: sentence || "" } });
   };
 
   const handleAddFilter = (anno: SpanAnnotationRead) => {
-    dispatch(
-      SearchActions.onAddSpanAnnotationFilter({
-        codeId: anno.code_id,
-        spanText: anno.text,
-        filterName: "root",
-      }),
-    );
     closeMenu();
-    navigate({ to: "/project/$projectId/search", params: { projectId } });
+    navigate({
+      to: "/project/$projectId/search",
+      params: { projectId },
+      search: { addSpanAnnotationFilter: { codeId: anno.code_id, spanText: anno.text } },
+    });
   };
 
   return (

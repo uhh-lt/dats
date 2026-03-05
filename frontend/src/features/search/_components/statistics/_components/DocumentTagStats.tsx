@@ -1,11 +1,11 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagStat } from "@api/models/TagStat";
+import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
-import { StatsDisplayButton, StatsDisplayButtonProps } from "./StatsDisplayButton";
 
 interface DocumentTagStatsProps {
   currentTab: string;

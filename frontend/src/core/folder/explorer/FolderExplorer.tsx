@@ -1,11 +1,9 @@
 import { FolderRead } from "@api/models/FolderRead";
 import { FolderType } from "@api/models/FolderType";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
-import { SearchActions } from "@features/search";
 import FolderIcon from "@mui/icons-material/Folder";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback, useState } from "react";
 import { FolderCreateButton } from "../FolderCreateButton";
 import { FolderExplorerActionMenu } from "./_components/FolderExplorerActionMenu";
@@ -17,93 +15,98 @@ const isDroppable = (node: ITree<FolderRead>) => node.data.folder_type === Folde
 const getDroppableId = (node: ITree<FolderRead>) => `folder-${node.data.id}`;
 
 interface FolderExplorerProps {
-  onFolderClick?: (FolderId: number) => void;
+  onFolderClick?: (folderId: number) => void;
+  expandedFolderIds: string[];
+  onExpandedFolderIdsChange: (ids: string[]) => void;
+  selectedFolderId: number;
+  onSelectedFolderIdChange: (folderId: number) => void;
+  showFolders: boolean;
+  onToggleShowFolders?: () => void;
 }
 
-export const FolderExplorer = memo(({ onFolderClick, ...props }: FolderExplorerProps & BoxProps) => {
-  // custom hooks
-  const { folderTree } = useComputeFolderTree();
+export const FolderExplorer = memo(
+  ({
+    onFolderClick,
+    expandedFolderIds,
+    onExpandedFolderIdsChange,
+    selectedFolderId,
+    onSelectedFolderIdChange,
+    showFolders,
+    onToggleShowFolders,
+    ...props
+  }: FolderExplorerProps & BoxProps) => {
+    // custom hooks
+    const { folderTree } = useComputeFolderTree();
 
-  // Folder expansion
-  const dispatch = useAppDispatch();
-  const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
-  const handleExpandedFolderIdsChange = useCallback(
-    (folderIds: string[]) => {
-      dispatch(SearchActions.setExpandedFolderIds(folderIds));
-    },
-    [dispatch],
-  );
+    // local client state
+    const [folderFilter, setFolderFilter] = useState<string>("");
 
-  // Folder selection
-  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
-  const handleSelectedFolderIdChange = useCallback(
-    (_event: React.SyntheticEvent, folderId: string | string[] | null) => {
-      if (typeof folderId === "string") {
-        dispatch(SearchActions.setSelectedFolderId(parseInt(folderId)));
-      } else {
-        dispatch(SearchActions.setSelectedFolderId(-1)); // the root folder is -1
-      }
-    },
-    [dispatch],
-  );
+    const handleFolderFilterChange = useCallback((newFilter: string) => {
+      setFolderFilter(newFilter);
+    }, []);
 
-  // local client state
-  const [FolderFilter, setFolderFilter] = useState<string>("");
+    const handleSelectedFolderIdChange = useCallback(
+      (_event: React.SyntheticEvent, folderId: string | string[] | null) => {
+        if (typeof folderId === "string") {
+          onSelectedFolderIdChange(parseInt(folderId));
+        } else {
+          onSelectedFolderIdChange(-1); // the root folder is -1
+        }
+      },
+      [onSelectedFolderIdChange],
+    );
 
-  const handleFolderFilterChange = useCallback((newFilter: string) => {
-    setFolderFilter(newFilter);
-  }, []);
+    const handleFolderClick = useCallback(
+      (_: React.MouseEvent, folderId: string) => {
+        onFolderClick?.(parseInt(folderId));
+      },
+      [onFolderClick],
+    );
 
-  const handleFolderClick = useCallback(
-    (_: React.MouseEvent, FolderId: string) => {
-      onFolderClick?.(parseInt(FolderId));
-    },
-    [onFolderClick],
-  );
+    return (
+      <Box {...props}>
+        {folderTree && (
+          <TreeExplorer
+            sx={{ pt: 0 }}
+            dataIcon={FolderIcon}
+            // data
+            dataTree={folderTree}
+            // filter
+            showFilter
+            dataFilter={folderFilter}
+            onDataFilterChange={handleFolderFilterChange}
+            // expansion
+            expandedItems={expandedFolderIds}
+            onExpandedItemsChange={onExpandedFolderIdsChange}
+            // selection
+            selectedItems={selectedFolderId}
+            onSelectedItemsChange={handleSelectedFolderIdChange}
+            // actions
+            onItemClick={onFolderClick ? handleFolderClick : undefined}
+            // renderers
+            renderActions={renderActions}
+            // components
+            listActions={<ListActions showFolders={showFolders} onToggleShowFolders={onToggleShowFolders} />}
+            // root node rendering
+            renderRoot={true}
+            disableRootActions={true}
+            // icons
+            rootIcon={InboxIcon}
+            // dnd
+            droppable={isDroppable}
+            droppableId={getDroppableId}
+          />
+        )}
+      </Box>
+    );
+  },
+);
 
-  return (
-    <Box {...props}>
-      {folderTree && (
-        <TreeExplorer
-          sx={{ pt: 0 }}
-          dataIcon={FolderIcon}
-          // data
-          dataTree={folderTree}
-          // filter
-          showFilter
-          dataFilter={FolderFilter}
-          onDataFilterChange={handleFolderFilterChange}
-          // expansion
-          expandedItems={expandedFolderIds}
-          onExpandedItemsChange={handleExpandedFolderIdsChange}
-          // selection
-          selectedItems={selectedFolderId}
-          onSelectedItemsChange={handleSelectedFolderIdChange}
-          // actions
-          onItemClick={onFolderClick ? handleFolderClick : undefined}
-          // renderers
-          renderActions={renderActions}
-          // components
-          listActions={<ListActions />}
-          // root node rendering
-          renderRoot={true}
-          disableRootActions={true}
-          // icons
-          rootIcon={InboxIcon}
-          // dnd
-          droppable={isDroppable}
-          droppableId={getDroppableId}
-        />
-      )}
-    </Box>
-  );
-});
-
-function ListActions() {
+function ListActions({ showFolders, onToggleShowFolders }: { showFolders: boolean; onToggleShowFolders?: () => void }) {
   return (
     <>
       <FolderCreateButton folderName="" />
-      <FolderExplorerMenu />
+      <FolderExplorerMenu showFolders={showFolders} onToggleShowFolders={onToggleShowFolders} />
     </>
   );
 }

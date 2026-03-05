@@ -1,13 +1,11 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagStat } from "@api/models/TagStat";
+import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
+
 import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
-import {
-  StatsDisplayButton,
-  StatsDisplayButtonProps,
-} from "../../../../../../search/_components/statistics/_components/StatsDisplayButton";
 
 interface MapTagStatsProps {
   projectId: number;

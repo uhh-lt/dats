@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { memo, useCallback } from "react";
-import { FilterDialog, FilterDialogProps } from "./components/filter-dialog/FilterDialog";
+import { FilterDialog, FilterDialogProps } from "./_components/FilterDialog";
 import { ReduxFilterDialogProps } from "./ReduxFilterDialogProps";
 
 export const ReduxFilterDialog = memo(

@@ -1,7 +1,9 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SdocColumns } from "@api/models/SdocColumns";
 import { SimSearchSentenceHit } from "@api/models/SimSearchSentenceHit";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SimsearchService } from "@api/services/SimsearchService";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
@@ -12,22 +14,29 @@ import { TagExplorer } from "@core/tag";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useQuery } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { SearchActions } from "../../store/documentSearchSlice";
+import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
+import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 
 const filterName = "sentenceSimilaritySearch";
-const routeApi = getRouteApi("/_auth/project/$projectId/sentencesearch");
 
 export function SentenceSimilaritySearchView() {
   // router
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
+  const { searchQuery } = SentenceSearchRouteAPI.useSearch();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
+  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
   const dispatch = useAppDispatch();
+
+  // clear stale selection whenever the search query changes (from SearchBar or cross-feature navigation)
+  useEffect(() => {
+    dispatch(SentenceSearchActions.onClearRowSelection());
+  }, [searchQuery, dispatch]);
 
   // filter
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
@@ -57,12 +66,23 @@ export function SentenceSimilaritySearchView() {
     },
     [dispatch],
   );
+  const handleAddMetadataFilter = useCallback(
+    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
+      dispatch(SearchActions.onAddMetadataFilter({ metadata, projectMetadata, filterName }));
+    },
+    [dispatch],
+  );
+
+  // tag explorer handlers
+  const handleExpandedTagIdsChange = useCallback(
+    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    [dispatch],
+  );
 
   // search
   const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
   const topK = useAppSelector((state) => state.sentenceSearch.topK);
   const threshold = useAppSelector((state) => state.sentenceSearch.threshold);
-  const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
   const { data, isError, isFetching, isLoading } = useQuery<SimSearchSentenceHit[]>({
     queryKey: [
       QueryKey.SENT_SIMSEARCH,
@@ -93,7 +113,14 @@ export function SentenceSimilaritySearchView() {
     <SidebarContentSidebarLayout
       leftSidebar={
         <PercentageResizablePanel
-          firstContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          firstContent={
+            <TagExplorer
+              className="h100"
+              onTagClick={handleAddTagFilter}
+              expandedTagIds={expandedTagIds}
+              onExpandedTagIdsChange={handleExpandedTagIdsChange}
+            />
+          }
           secondContent={
             <SearchStatistics
               sx={{ height: "100%" }}
@@ -120,8 +147,8 @@ export function SentenceSimilaritySearchView() {
       rightSidebar={
         <DocumentInfoPanel
           sdocId={selectedDocumentId}
-          filterName={filterName}
           isIdleContent={<Typography padding={2}>Click on a sentence to see info :)</Typography>}
+          onAddMetadataFilter={handleAddMetadataFilter}
         />
       }
     />

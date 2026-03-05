@@ -1,8 +1,8 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { useAppSelector } from "@plugins/redux";
 import { range } from "lodash";
 import { useMemo } from "react";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
 import { SentenceAnnotationCard } from "./_components/SentenceAnnotationCard";
 
@@ -13,7 +13,7 @@ const filterByText = (text: string) => (annotation: SentenceAnnotationRead) =>
 
 export function SentenceAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
   const annotator = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, visibleUserId);
   const annotations = useMemo(() => {
     if (!annotator.data) return [];

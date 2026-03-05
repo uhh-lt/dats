@@ -3,6 +3,7 @@ export * from "./explorer";
 export * from "./menu";
 export * from "./TagExportButton";
 export * from "./TagRenderer";
+export * from "./TagRow";
 export * from "./TagSelector";
 export * from "./TagTable";
 export * from "./TagUnlinkButton";

@@ -1,7 +1,9 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SdocColumns } from "@api/models/SdocColumns";
 import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SimsearchService } from "@api/services/SimsearchService";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
@@ -12,24 +14,31 @@ import { TagExplorer } from "@core/tag";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useQuery } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { useInitSearchFilterSlice } from "../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../store/documentSearchSlice";
+import { ImageSearchActions } from "../../store/imageSearchSlice";
 import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
+import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
 
 const filterName = "imageSimilaritySearch";
-const routeApi = getRouteApi("/_auth/project/$projectId/imagesearch");
 
 export function ImageSimilaritySearchView() {
   // router
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
+  const { searchQuery } = ImageSearchRouteAPI.useSearch();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
+  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
   const dispatch = useAppDispatch();
+
+  // clear stale selection whenever the search query changes (from SearchBar or cross-feature navigation)
+  useEffect(() => {
+    dispatch(ImageSearchActions.clearSelectedDocuments());
+  }, [searchQuery, dispatch]);
 
   // filter
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
@@ -59,13 +68,24 @@ export function ImageSimilaritySearchView() {
     },
     [dispatch],
   );
+  const handleAddMetadataFilter = useCallback(
+    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
+      dispatch(SearchActions.onAddMetadataFilter({ metadata, projectMetadata, filterName }));
+    },
+    [dispatch],
+  );
+
+  // tag explorer handlers
+  const handleExpandedTagIdsChange = useCallback(
+    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    [dispatch],
+  );
 
   // search
   useInitSearchFilterSlice({ projectId });
   const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
   const topK = useAppSelector((state) => state.imageSearch.topK);
   const threshold = useAppSelector((state) => state.imageSearch.threshold);
-  const searchQuery = useAppSelector((state) => state.imageSearch.searchQuery);
   const { data, isError, isFetching, isLoading } = useQuery<SimSearchImageHit[]>({
     queryKey: [
       QueryKey.IMG_SIMSEARCH,
@@ -97,7 +117,14 @@ export function ImageSimilaritySearchView() {
     <SidebarContentSidebarLayout
       leftSidebar={
         <PercentageResizablePanel
-          firstContent={<TagExplorer onTagClick={handleAddTagFilter} />}
+          firstContent={
+            <TagExplorer
+              className="h100"
+              onTagClick={handleAddTagFilter}
+              expandedTagIds={expandedTagIds}
+              onExpandedTagIdsChange={handleExpandedTagIdsChange}
+            />
+          }
           secondContent={
             <SearchStatistics
               sx={{ height: "100%" }}
@@ -130,9 +157,9 @@ export function ImageSimilaritySearchView() {
       }
       rightSidebar={
         <DocumentInfoPanel
-          filterName={filterName}
           sdocId={selectedDocumentId}
           isIdleContent={<Typography padding={2}>Click on an image to see info :)</Typography>}
+          onAddMetadataFilter={handleAddMetadataFilter}
         />
       }
     />

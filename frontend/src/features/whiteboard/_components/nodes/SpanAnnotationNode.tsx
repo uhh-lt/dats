@@ -6,7 +6,6 @@ import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
-import { AnnoActions } from "@features/annotation";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useAppDispatch } from "@plugins/redux";
 import { UIDialogActions } from "@store/global/dialogSlice";
@@ -132,11 +131,14 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   const handleContextMenuGoToDocument = () => {
     if (!annotation.data || !code.data) return;
 
-    dispatch(AnnoActions.setSelectedAnnotationId(annotation.data.id));
-    dispatch(AnnoActions.setVisibleUserId(annotation.data.user_id));
     navigate({
       to: "/project/$projectId/annotation/$sdocId",
       params: { sdocId: annotation.data.sdoc_id, projectId: code.data.project_id },
+      search: {
+        visibleUserId: annotation.data.user_id,
+        selectedAnnotationId: annotation.data.id,
+        compareWithUserId: undefined,
+      },
     });
 
     contextMenuRef.current?.close();

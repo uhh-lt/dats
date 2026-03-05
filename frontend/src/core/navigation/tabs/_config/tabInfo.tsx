@@ -1,5 +1,5 @@
 import { Icon } from "@utils/icons/iconUtils";
-import { TabData } from "../_types/TabData";
+import { TabData } from "../../_types/TabData";
 
 const baseToIconMap: Record<string, Icon> = {
   search: Icon.SEARCH,

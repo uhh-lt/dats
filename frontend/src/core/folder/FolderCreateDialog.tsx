@@ -4,7 +4,6 @@ import { FolderType } from "@api/models/FolderType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
-import { SearchActions } from "@features/search";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
@@ -16,7 +15,12 @@ import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderRenderer } from "./FolderRenderer";
 
-export function FolderCreateDialog({ projectId }: { projectId: number }) {
+interface FolderCreateDialogProps {
+  projectId: number;
+  onFoldersCreated?: (folderIdsToExpand: number[]) => void;
+}
+
+export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreateDialogProps) {
   const dispatch = useAppDispatch();
 
   // folders for selection as parent
@@ -70,20 +74,20 @@ export function FolderCreateDialog({ projectId }: { projectId: number }) {
           onSuccess: (data) => {
             // if we add a new folder successfully, we want to show the folder in the folder explorer
             // this means, we have to expand the parent folders, so the new folder is visible
-            const foldersToExpand = [];
+            const foldersToExpand: number[] = [];
             let parentFolderId = data.parent_id;
             while (parentFolderId) {
               const currentParentFolderId = parentFolderId;
               foldersToExpand.push(parentFolderId);
               parentFolderId = folders.data?.find((folder) => folder.id === currentParentFolderId)?.parent_id;
             }
-            dispatch(SearchActions.expandFolders(foldersToExpand.map((id) => id.toString())));
+            onFoldersCreated?.(foldersToExpand);
             handleClose();
           },
         },
       );
     },
-    [createFolderMutation, dispatch, handleClose, projectId, folders.data],
+    [createFolderMutation, handleClose, onFoldersCreated, projectId, folders.data],
   );
   const handleError: SubmitErrorHandler<FolderCreate> = (data) => console.error(data);
 

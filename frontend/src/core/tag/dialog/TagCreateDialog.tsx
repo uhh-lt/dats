@@ -3,7 +3,6 @@ import { TagCreate } from "@api/models/TagCreate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
-import { SearchActions } from "@features/search";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
@@ -16,7 +15,12 @@ import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagRenderer } from "../TagRenderer";
 
-export function TagCreateDialog({ projectId }: { projectId: number }) {
+interface TagCreateDialogProps {
+  projectId: number;
+  onTagsCreated?: (tagIdsToExpand: number[]) => void;
+}
+
+export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogProps) {
   const dispatch = useAppDispatch();
 
   // tags for selection as parent
@@ -72,20 +76,20 @@ export function TagCreateDialog({ projectId }: { projectId: number }) {
           onSuccess: (data) => {
             // if we add a new tag successfully, we want to show the tag in the tag explorer
             // this means, we have to expand the parent tags, so the new tag is visible
-            const tagsToExpand = [];
+            const tagsToExpand: number[] = [];
             let parentTagId = data.parent_id;
             while (parentTagId) {
               const currentParentTagId = parentTagId;
               tagsToExpand.push(parentTagId);
               parentTagId = tags.data?.find((tag) => tag.id === currentParentTagId)?.parent_id;
             }
-            dispatch(SearchActions.expandTags(tagsToExpand.map((id) => id.toString())));
+            onTagsCreated?.(tagsToExpand);
             handleClose();
           },
         },
       );
     },
-    [createTagMutation, dispatch, handleClose, projectId, tags.data],
+    [createTagMutation, handleClose, onTagsCreated, projectId, tags.data],
   );
   const handleError: SubmitErrorHandler<TagCreate> = (data) => console.error(data);
 

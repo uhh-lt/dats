@@ -3,7 +3,7 @@ import { ColumnInfo, tableInfoQueryKey } from "@components/filter";
 import { useAppDispatch } from "@plugins/redux";
 import { AppDispatch } from "@store/store";
 import { useQuery } from "@tanstack/react-query";
-import { SearchActions } from "../DocumentSearch/documentSearchSlice";
+import { SearchActions } from "../store/documentSearchSlice";
 
 const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({

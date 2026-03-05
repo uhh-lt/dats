@@ -1,10 +1,10 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { KeywordStat } from "@api/models/KeywordStat";
-import { useFilterStats } from "@hooks/useFilterStats";
+import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
-import { StatsDisplayButton } from "./StatsDisplayButton";
+import { useFilterStats } from "../_hooks/useFilterStats";
 
 interface KeywordStatsProps {
   currentTab: string;

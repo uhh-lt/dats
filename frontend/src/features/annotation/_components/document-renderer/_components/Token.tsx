@@ -1,9 +1,10 @@
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagStyle } from "@features/annotation/_types/TagStyle";
 import { useAppSelector } from "@plugins/redux";
-import { IToken } from "@types/IToken";
 import { range } from "lodash";
 import { useMemo } from "react";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
+import { IToken } from "../../../_types/IToken";
+import { TagStyle } from "../../../_types/TagStyle";
 import { CodeIndicator } from "./CodeIndicator";
 import { Mark } from "./Mark";
 
@@ -13,8 +14,10 @@ interface TokenProps {
 }
 
 export function Token({ token, spanAnnotations }: TokenProps) {
+  // global client state (URL search params)
+  const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
+
   // global client state (redux)
-  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 

@@ -8,6 +8,8 @@ import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { useAppSelector } from "@plugins/redux";
+import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { Annotation } from "../_types/Annotation";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { SVGBBox } from "./SVGBBox";
 import { SVGBBoxText } from "./SVGBBoxText";
@@ -39,8 +41,10 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const imgRef = useRef<SVGImageElement>(null);
   const codeSelectorRef = useRef<AnnotationMenuHandle>(null);
 
+  // global client state (URL search params)
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
+
   // global client state (redux)
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)

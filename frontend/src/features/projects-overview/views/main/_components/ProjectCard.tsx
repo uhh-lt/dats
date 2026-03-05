@@ -27,7 +27,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
   const openProject = () => {
     if (!projectTabs[project.id] || projectTabs[project.id].activeTabIndex === null) {
-      navigate({ to: `/project/$projectId/search`, params: { projectId: project.id } });
+      navigate({
+        to: `/project/$projectId/search`,
+        params: { projectId: project.id },
+        search: { addSpanAnnotationFilter: undefined },
+      });
     } else {
       console.log("Navigating to last active tab for project", project.id, projectTabs[project.id]);
       navigate({ to: projectTabs[project.id].tabs[projectTabs[project.id].activeTabIndex!].path });

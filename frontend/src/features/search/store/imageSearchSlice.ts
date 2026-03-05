@@ -5,7 +5,6 @@ import storage from "redux-persist/lib/storage";
 
 interface ImageSearchState {
   // project state:
-  searchQuery: string;
   selectedDocumentIds: number[];
   selectedDocumentId: number | undefined;
   // app state:
@@ -15,7 +14,6 @@ interface ImageSearchState {
 
 const initialState: ImageSearchState = {
   // project state:
-  searchQuery: "",
   selectedDocumentIds: [],
   selectedDocumentId: undefined,
   // app state:
@@ -65,11 +63,7 @@ const imageSearchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
-      state.searchQuery = action.payload;
-    },
     onClearSearch: (state) => {
-      state.searchQuery = "";
       state.selectedDocumentIds = [];
       state.selectedDocumentId = undefined;
     },
@@ -87,7 +81,6 @@ const imageSearchSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(ProjectActions.changeProject, (state) => {
       console.log("Project changed! Resetting 'imageSearch' state.");
-      state.searchQuery = initialState.searchQuery;
       state.selectedDocumentIds = initialState.selectedDocumentIds;
       state.selectedDocumentId = initialState.selectedDocumentId;
     });

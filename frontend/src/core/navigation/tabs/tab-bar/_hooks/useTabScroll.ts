@@ -1,5 +1,5 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
-import { TabData } from "../../_types/TabData";
+import { TabData } from "../../../_types/TabData";
 
 interface TabScrollHook {
   canScrollLeft: boolean;

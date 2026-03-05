@@ -1,9 +1,7 @@
 import { LinkListItemButton } from "@components/links";
-import { ImageSearchActions } from "@features/search";
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { forwardRef, useImperativeHandle, useState } from "react";
 
@@ -23,9 +21,6 @@ export const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, re
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [image, setImage] = useState<number | null | undefined>();
-
-  // global client state (redux)
-  const dispatch = useAppDispatch();
 
   // methods
   const openMenu = (position: PopoverPosition, image: number | null | undefined) => {
@@ -50,9 +45,12 @@ export const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, re
       console.error("Something went wrong. This is a bug, please report it to the developers.");
       return;
     }
-    dispatch(ImageSearchActions.onChangeSearchQuery(`${image}`));
     closeMenu();
-    navigate({ to: "/project/$projectId/imagesearch", params: { projectId: params.projectId } });
+    navigate({
+      to: "/project/$projectId/imagesearch",
+      params: { projectId: params.projectId },
+      search: { searchQuery: `${image}` },
+    });
   };
 
   return (
@@ -75,6 +73,7 @@ export const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, re
           <LinkListItemButton
             to="/project/$projectId/annotation/$sdocId"
             params={{ sdocId: image!, projectId: params.projectId }}
+            search={{ visibleUserId: undefined, selectedAnnotationId: undefined, compareWithUserId: undefined }}
           >
             <ListItemIcon>
               <ImageIcon />

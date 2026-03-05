@@ -3,7 +3,6 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { CodeRenderer } from "@core/code";
-import { SearchStatisticsMenu } from "@features/search";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
@@ -13,6 +12,7 @@ import { PerspectivesActions } from "../../../../../store/perspectivesSlice";
 import { MapCodeStats } from "./MapCodeStats";
 import { MapKeywordStats } from "./MapKeywordStats";
 import { MapTagStats } from "./MapTagStats";
+import { SearchStatisticsMenu } from "./SearchStatisticsMenu";
 
 interface SelectionStatisticsProps {
   projectId: number;

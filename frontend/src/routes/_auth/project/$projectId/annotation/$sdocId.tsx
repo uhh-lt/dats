@@ -5,5 +5,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
   params: {
     parse: ({ sdocId }) => ({ sdocId: parseInt(sdocId) }),
   },
+  validateSearch: (search) => ({
+    visibleUserId: typeof search?.visibleUserId === "number" ? search.visibleUserId : undefined,
+    selectedAnnotationId: typeof search?.selectedAnnotationId === "number" ? search.selectedAnnotationId : undefined,
+    compareWithUserId: typeof search?.compareWithUserId === "number" ? search.compareWithUserId : undefined,
+  }),
   component: AnnotationView,
 });

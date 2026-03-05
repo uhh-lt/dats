@@ -221,6 +221,7 @@ export function SentenceSimilaritySearchTable({
           navigate({
             to: "/project/$projectId/annotation/$sdocId",
             params: { projectId, sdocId: row.original.sdoc_id },
+            search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
           });
         } else {
           dispatch(SentenceSearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));
@@ -258,7 +259,10 @@ export function SentenceSimilaritySearchTable({
               selectedSdocIds={selectedDocumentIds}
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
             />
-            <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
+            <DeleteSdocsButton
+              sdocIds={selectedDocumentIds}
+              onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+            />
           </>
         )}
         <Box sx={{ flexGrow: 1 }} />

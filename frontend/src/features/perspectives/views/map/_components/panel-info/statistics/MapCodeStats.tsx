@@ -1,9 +1,9 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
+import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { Box } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
-import { StatsDisplayButton } from "../../../../../../search/_components/statistics/_components/StatsDisplayButton";
 
 interface MapCodeStatsProps {
   codeId: number;

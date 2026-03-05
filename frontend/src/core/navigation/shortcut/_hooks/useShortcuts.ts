@@ -2,7 +2,7 @@ import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { UIDialogActions } from "@store/global/dialogSlice";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { TabActions } from "../../tabs/tabSlice";
+import { TabActions } from "../../tabSlice";
 
 export interface Shortcut {
   id: string;
@@ -59,7 +59,12 @@ export function useShortcuts() {
         "goToSearch",
         "s",
         "Go to Search",
-        () => navigate({ to: "/project/$projectId/search", params: { projectId } }),
+        () =>
+          navigate({
+            to: "/project/$projectId/search",
+            params: { projectId },
+            search: { addSpanAnnotationFilter: undefined },
+          }),
         { ctrlmeta: true, shift: true },
       ),
       createShortcut(

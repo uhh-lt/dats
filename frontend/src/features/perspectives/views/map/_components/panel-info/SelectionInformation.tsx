@@ -4,15 +4,15 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
-import { DocumentMetadataRow, DocumentTagRow } from "@core/source-document";
-import { TagMenuButton } from "@core/tag";
+import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { TagMenuButton, TagRow } from "@core/tag";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { Link } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {
@@ -54,6 +54,26 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const handleAddMetadataFilter = (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
     dispatch(PerspectivesActions.onAddMetadataFilter({ metadata, projectMetadata, filterName: `aspect-${aspectId}` }));
   };
+
+  // mutation
+  const { mutate: updateMetadataMutation } = MetadataHooks.useUpdateBulkSdocMetadata();
+  const handleMetadataUpdate = useCallback(
+    (metadataId: number) => (data: SourceDocumentMetadataUpdate) => {
+      updateMetadataMutation({
+        requestBody: [
+          {
+            id: metadataId,
+            str_value: data.str_value,
+            int_value: data.int_value,
+            date_value: data.date_value ? new Date(data.date_value).toISOString() : data.date_value,
+            boolean_value: data.boolean_value,
+            list_value: data.list_value,
+          },
+        ],
+      });
+    },
+    [updateMetadataMutation],
+  );
 
   return (
     <Box>
@@ -171,7 +191,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
                 {documentTagIds.isError && <span>{documentTagIds.error.message}</span>}
                 {documentTagIds.isSuccess &&
                   documentTagIds.data.map((tagId) => (
-                    <DocumentTagRow
+                    <TagRow
                       key={`sdoc-${selectedSdocIds[selectedSdocIdsIndex]}-tag${tagId}`}
                       sdocId={selectedSdocIds[selectedSdocIdsIndex]}
                       tagId={tagId}
@@ -190,7 +210,12 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
               metadata.data
                 .sort((a, b) => a.id - b.id)
                 .map((data) => (
-                  <DocumentMetadataRow key={data.id} metadata={data} onAddFilterClick={handleAddMetadataFilter} />
+                  <SdocMetadataRow
+                    key={data.id}
+                    metadata={data}
+                    onAddFilterClick={handleAddMetadataFilter}
+                    onUpdateMetadata={handleMetadataUpdate(data.id)}
+                  />
                 ))}
           </Stack>
         </Stack>

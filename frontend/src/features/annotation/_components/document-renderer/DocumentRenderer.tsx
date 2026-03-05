@@ -1,16 +1,15 @@
-import { Box, BoxProps } from "@mui/material";
-import { useCallback, useEffect, useMemo } from "react";
-import "./DocumentRenderer.css";
-
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { useAppSelector } from "@plugins/redux";
+import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
-import { IToken } from "../../../../types/IToken";
+import { useCallback, useEffect, useMemo } from "react";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
+import { IToken } from "../../_types/IToken";
 import { DocumentPage } from "./_components/DocumentPage";
 import { SdocAudioLink } from "./_components/SdocAudioLink";
 import { SdocImage } from "./_components/SdocImage";
 import { SdocVideoLink } from "./_components/SdocVideoLink";
 import { Token } from "./_components/Token";
+import "./_styles/DocumentRenderer.css";
 
 interface DocumentRendererProps {
   html: string;
@@ -32,7 +31,7 @@ export function DocumentRenderer({
   ...props
 }: DocumentRendererProps & BoxProps) {
   // jump to annotations
-  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
+  const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
   useEffect(() => {
     const scrollIntoView = () => {
       const annotation = document.getElementById("span-annotation-" + selectedAnnotationId);

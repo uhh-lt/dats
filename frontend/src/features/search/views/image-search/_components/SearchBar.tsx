@@ -15,10 +15,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { ImageSearchActions } from "@store/imageSearchSlice";
+import { useAppDispatch } from "@plugins/redux";
 import { forwardRef, KeyboardEventHandler, MouseEventHandler, ReactElement, Ref, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { ImageSearchActions } from "../../../store/imageSearchSlice";
+import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
 
 interface SearchFormValues {
   query: string;
@@ -29,8 +30,11 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ placeholder }: SearchBarProps) {
+  // global client state (url search)
+  const { searchQuery } = ImageSearchRouteAPI.useSearch();
+  const navigate = ImageSearchRouteAPI.useNavigate();
+
   // global client state (redux)
-  const searchQuery = useAppSelector((state) => state.imageSearch.searchQuery);
   const dispatch = useAppDispatch();
 
   // react hook form
@@ -41,7 +45,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   });
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(data.query));
+    navigate({ search: (prev) => ({ ...prev, searchQuery: data.query }) });
     dispatch(ImageSearchActions.clearSelectedDocuments());
     reset({
       query: data.query,
@@ -53,6 +57,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch: MouseEventHandler<HTMLButtonElement> = () => {
+    navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
     dispatch(ImageSearchActions.onClearSearch());
     reset({
       query: "",
@@ -61,7 +66,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Backspace" && typeof searchQuery === "number") {
-      dispatch(ImageSearchActions.onChangeSearchQuery(""));
+      navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
       dispatch(ImageSearchActions.clearSelectedDocuments());
       reset({
         query: "",

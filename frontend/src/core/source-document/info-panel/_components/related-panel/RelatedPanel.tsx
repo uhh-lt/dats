@@ -7,7 +7,7 @@ import { useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
-import { SdocListItem } from "./SdocListItem";
+import { SdocListItem } from "./_components/SdocListItem";
 
 interface RelatedPanelProps {
   currentTab: string;
@@ -51,7 +51,11 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
       targetId = sdocId;
     }
     if (targetId !== undefined) {
-      navigate({ to: "/project/$projectId/annotation/$sdocId", params: { projectId, sdocId: targetId } });
+      navigate({
+        to: "/project/$projectId/annotation/$sdocId",
+        params: { projectId, sdocId: targetId },
+        search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
+      });
     }
   };
 

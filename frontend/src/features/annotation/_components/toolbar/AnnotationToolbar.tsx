@@ -12,21 +12,25 @@ import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useNavigate } from "@tanstack/react-router";
 import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { TagStyle } from "../../_types/TagStyle";
 import { AnnoActions } from "../../store/annoSlice";
-import { AnnotatorSelector } from "./components/AnnotatorSelector";
-import { CompareWithButton } from "./components/CompareWithButton";
-import { CompareWithSelector } from "./components/CompareWithSelector";
+import { AnnotatorSelector } from "./_components/AnnotatorSelector";
+import { CompareWithButton } from "./_components/CompareWithButton";
+import { CompareWithSelector } from "./_components/CompareWithSelector";
 
 interface AnnotationToolbarProps {
   sdoc?: SourceDocumentRead;
 }
 
 export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
-  // global client state
+  // global client state (URL search params)
+  const { compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const isCompareMode = compareWithUserId !== undefined;
+
+  // global client state (redux)
   const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
-  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
   const sdocFolder = FolderHooks.useGetSdocFolder(sdoc?.folder_id);

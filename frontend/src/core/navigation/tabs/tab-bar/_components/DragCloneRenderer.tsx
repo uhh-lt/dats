@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { memo } from "react";
 import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
-import { TabData } from "../../_types/TabData";
+import { TabData } from "../../../_types/TabData";
 import { StyledTab, TabContent } from "./styledComponents";
 import { TabTitle } from "./TabTitle";
 

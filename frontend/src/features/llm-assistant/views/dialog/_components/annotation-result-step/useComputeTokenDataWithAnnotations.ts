@@ -1,6 +1,9 @@
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { IToken } from "@types/IToken";
+// TODO: Rework Annotation Result Rendering!!
+/* eslint-disable boundaries/element-types */
+// eslint-disable-next-line local/no-internal-modules-public-entry
+import { IToken } from "@features/annotation/_types/IToken";
 import { useMemo } from "react";
 
 export function useComputeTokenDataWithAnnotations({

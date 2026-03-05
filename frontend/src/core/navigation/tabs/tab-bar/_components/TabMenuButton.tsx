@@ -3,7 +3,7 @@ import { useAppDispatch } from "@plugins/redux";
 import { UIDialogActions } from "@store/global/dialogSlice";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { TabActions } from "../../tabSlice";
+import { TabActions } from "../../../tabSlice";
 import { TabIconButton } from "./styledComponents";
 
 interface TabMenuButtonProps {

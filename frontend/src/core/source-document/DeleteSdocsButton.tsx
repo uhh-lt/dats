@@ -1,28 +1,19 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { SearchActions } from "@features/search";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { useAppDispatch } from "@plugins/redux";
-import { useNavigate } from "@tanstack/react-router";
 import { memo, useCallback } from "react";
 
 interface DeleteSdocsButtonProps {
   sdocIds: number[];
-  navigateTo?: string;
+  onDeleted?: (deletedSdocIds: number[]) => void;
 }
 
-export const DeleteSdocsButton = memo(({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonProps & IconButtonProps) => {
-  // react router
-  const navigate = useNavigate();
-
+export const DeleteSdocsButton = memo(({ sdocIds, onDeleted, ...props }: DeleteSdocsButtonProps & IconButtonProps) => {
   // mutations
   const { mutate: deleteDocuments } = SdocHooks.useDeleteDocuments();
-
-  // redux
-  const dispatch = useAppDispatch();
 
   // ui events
   const openConfirmationDialog = useOpenConfirmationDialog();
@@ -39,14 +30,13 @@ export const DeleteSdocsButton = memo(({ sdocIds, navigateTo, ...props }: Delete
           },
           {
             onSuccess: (sdocs) => {
-              dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
-              if (navigateTo) navigate({ to: navigateTo });
+              onDeleted?.(sdocs.map((sdoc) => sdoc.id));
             },
           },
         );
       },
     });
-  }, [deleteDocuments, dispatch, navigate, navigateTo, openConfirmationDialog, sdocIds]);
+  }, [deleteDocuments, onDeleted, openConfirmationDialog, sdocIds]);
 
   return (
     <Tooltip title="Delete">

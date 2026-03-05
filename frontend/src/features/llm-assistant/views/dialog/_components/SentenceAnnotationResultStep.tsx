@@ -2,7 +2,6 @@ import { LLMHooks } from "@api/hooks/LLMHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { ApproachType } from "@api/models/ApproachType";
 import { SentenceAnnotationLLMJobResult } from "@api/models/SentenceAnnotationLLMJobResult";
-import { AnnoActions } from "@features/annotation";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { queryClient } from "@plugins/tanstack";
@@ -63,8 +62,15 @@ function SentenceAnnotationResultStepContent({
     const firstSdocId = jobResult.results[0].sdoc_id;
 
     dispatch(LLMAssistantActions.closeLLMDialog());
-    dispatch(AnnoActions.compareWithUser(approach2AssistantID[approachType]));
-    navigate({ params: { projectId, sdocId: firstSdocId }, to: "/project/$projectId/annotation/$sdocId" });
+    navigate({
+      params: { projectId, sdocId: firstSdocId },
+      to: "/project/$projectId/annotation/$sdocId",
+      search: {
+        compareWithUserId: approach2AssistantID[approachType],
+        visibleUserId: undefined,
+        selectedAnnotationId: undefined,
+      },
+    });
 
     // reload annotations
     queryClient.invalidateQueries({

@@ -1,4 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useAuth } from "@core/auth";
@@ -6,11 +7,10 @@ import { Box, BoxProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
-import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
-
-import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
+import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
 import { useGetSentenceAnnotator } from "../_hooks/useGetSentenceAnnotator";
 import { DocumentSentence } from "./_components/DocumentSentence";
 import { DocumentSentenceHeader } from "./_components/DocumentSentenceHeader";
@@ -26,9 +26,8 @@ export const SentenceAnnotationComparison = memo(
     // auth state
     const user = useAuth().user;
 
-    // global client state (redux)
-    const leftUserId = useAppSelector((state) => state.annotations.visibleUserId);
-    const rightUserId = useAppSelector((state) => state.annotations.compareWithUserId);
+    // global client state (URL search params)
+    const { visibleUserId: leftUserId, compareWithUserId: rightUserId } = AnnotationRouteAPI.useSearch();
 
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();

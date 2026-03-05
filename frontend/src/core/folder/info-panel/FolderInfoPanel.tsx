@@ -1,16 +1,18 @@
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import { FolderMetadataPanel } from "./_components/metadata-panel/FolderMetadataPanel";
+import { FolderMetadataPanel } from "./_components/FolderMetadataPanel";
 
 interface FolderInformationProps {
   sdocFolderId: number;
-  filterName: string;
+  onAddMetadataFilter?: (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => void;
 }
 
 export function FolderInformation({
   sdocFolderId,
-  filterName,
+  onAddMetadataFilter,
   ...props
 }: FolderInformationProps & Omit<BoxProps, "className">) {
   // tabs
@@ -31,7 +33,7 @@ export function FolderInformation({
         </Box>
         <Box className="myFlexFillAllContainer">
           <TabPanel value="info" sx={{ p: 0 }} className="h100">
-            <FolderMetadataPanel sdocFolderId={sdocFolderId} filterName={filterName} />
+            <FolderMetadataPanel sdocFolderId={sdocFolderId} onAddMetadataFilter={onAddMetadataFilter} />
           </TabPanel>
           <TabPanel value="tags" sx={{ p: 1 }} className="h100">
             Not implemented (yet)! This panel will show common tags of all documents in this folder.

@@ -1,6 +1,7 @@
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useAppSelector } from "@plugins/redux";
 import { MouseEvent, useRef } from "react";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
 import { TagStyle } from "../../_types/TagStyle";
 import { DocumentRenderer } from "../document-renderer";
@@ -17,8 +18,10 @@ export function TextViewer({ sdocData: sdocData }: TextViewerProps) {
   // local state
   const sentenceMenuRef = useRef<SentenceMenuHandle>(null);
 
+  // global client state (URL search params)
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
+
   // global client state (redux)
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
 
   // global server state (react-query)

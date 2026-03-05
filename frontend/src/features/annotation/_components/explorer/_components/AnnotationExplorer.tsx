@@ -4,10 +4,10 @@ import { useDebounce } from "@hooks/useDebounce";
 import { Square } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, CircularProgress, Divider, Stack, TextField, ToggleButton } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef, useState } from "react";
-import { AnnoActions } from "../../../store/annoSlice";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationRead } from "../_types/AnnotationRead";
 
@@ -63,14 +63,16 @@ export function AnnotationExplorer<T extends AnnotationRead>({
   }, [annotations, filter, filterCodeIds, filterByText]);
 
   // annotation selection
-  const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
-  const dispatch = useAppDispatch();
+  const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
+  const navigate = useNavigate();
   const toggleSelectedAnnotationId = (annotationId: number) => {
-    if (selectedAnnotationId === annotationId) {
-      dispatch(AnnoActions.setSelectedAnnotationId(undefined));
-    } else {
-      dispatch(AnnoActions.setSelectedAnnotationId(annotationId));
-    }
+    navigate({
+      to: ".",
+      search: (prev) => ({
+        ...prev,
+        selectedAnnotationId: prev.selectedAnnotationId === annotationId ? undefined : annotationId,
+      }),
+    });
   };
 
   // virtualization

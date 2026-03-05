@@ -1,18 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { Box, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { isValidHttpUrl } from "@utils/URLUtils";
 import { useCallback } from "react";
-
-function isValidHttpUrl(string: string): boolean {
-  let url;
-  try {
-    url = new URL(string);
-  } catch (e) {
-    console.error(e);
-    return false;
-  }
-  return url.protocol === "http:" || url.protocol === "https:";
-}
 
 interface UrlInputProps {
   onUrlsChanged: (urls: string[]) => void;

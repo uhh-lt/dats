@@ -1,50 +1,71 @@
 import { CodeRead } from "@api/models/CodeRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
-import { AnnoActions } from "@features/annotation/store/annoSlice";
 import SquareIcon from "@mui/icons-material/Square";
-import { Box, BoxProps } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { Box, BoxProps, Typography } from "@mui/material";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { CodeExportButton } from "../CodeExportButton";
-import { CodeCreateListItemButton } from "../dialog/CodeCreateListItemButton";
+import { CodeCreateListItemButton } from "../dialog";
 import { CodeExplorerActionMenu } from "./_components/CodeExplorerActionMenu";
-import { CodeExplorerNodeRenderer } from "./_components/CodeExplorerNodeRenderer";
 import { useComputeCodeTree } from "./useComputeCodeTree";
 
-const renderNode = (node: ITree<CodeRead>) => <CodeExplorerNodeRenderer node={node} />;
 const renderActions = (node: ITree<CodeRead>) => <CodeExplorerActionMenu node={node} />;
 
-export function CodeExplorer(props: BoxProps) {
+interface CodeExplorerProps extends BoxProps {
+  // code selection
+  selectedCodeId?: number;
+  onSelectedCodeIdChange: (codeId: number | undefined) => void;
+  // code expansion
+  expandedCodeIds: string[];
+  onExpandedCodeIdsChange: (ids: string[]) => void;
+  // code hiding
+  hiddenCodeIds: number[];
+  onHoverCodeIdChange: (codeId: number | undefined) => void;
+}
+
+export function CodeExplorer({
+  selectedCodeId,
+  onSelectedCodeIdChange,
+  expandedCodeIds,
+  onExpandedCodeIdsChange,
+  hiddenCodeIds,
+  onHoverCodeIdChange,
+  ...props
+}: CodeExplorerProps) {
   // custom hooks
   const { codeTree } = useComputeCodeTree();
-
-  // global client state (redux)
-  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
-  const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
-  const dispatch = useAppDispatch();
 
   // local client state
   const [codeFilter, setCodeFilter] = useState<string>("");
 
-  // handle ui events
-  const handleExpandedCodeIdsChange = useCallback(
-    (newCodeIds: string[]) => {
-      dispatch(AnnoActions.setExpandedCodeIds(newCodeIds));
-    },
-    [dispatch],
-  );
-
   const handleSelectedCodeChange = useCallback(
     (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
       if (nodeIds === null) {
-        dispatch(AnnoActions.setSelectedCodeId(undefined));
+        onSelectedCodeIdChange(undefined);
       } else {
         const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-        dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
+        onSelectedCodeIdChange(selectedCodeId === id ? undefined : id);
       }
     },
-    [dispatch, selectedCodeId],
+    [onSelectedCodeIdChange, selectedCodeId],
+  );
+
+  const renderNode = useCallback(
+    (node: ITree<CodeRead>) => (
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: "inherit",
+          flexGrow: 1,
+          ...(hiddenCodeIds.includes(node.data.id) && { textDecoration: "line-through" }),
+        }}
+        onMouseEnter={() => onHoverCodeIdChange(node.data.id)}
+        onMouseLeave={() => onHoverCodeIdChange(undefined)}
+      >
+        {node.data.name}
+      </Typography>
+    ),
+    [onHoverCodeIdChange, hiddenCodeIds],
   );
 
   return (
@@ -61,7 +82,7 @@ export function CodeExplorer(props: BoxProps) {
           onDataFilterChange={setCodeFilter}
           // expansion
           expandedItems={expandedCodeIds}
-          onExpandedItemsChange={handleExpandedCodeIdsChange}
+          onExpandedItemsChange={onExpandedCodeIdsChange}
           // selection
           selectedItems={selectedCodeId}
           onSelectedItemsChange={handleSelectedCodeChange}

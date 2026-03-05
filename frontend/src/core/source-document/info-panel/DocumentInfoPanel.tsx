@@ -1,21 +1,23 @@
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import { DocumentMemos } from "./_components/memo-panel/DocumentMemos";
-import { MetadataPanel } from "./_components/metadata-panel/MetadataPanel";
+import { MemoPanel } from "./_components/MemoPanel";
+import { MetadataPanel } from "./_components/MetadataPanel";
 import { RelatedPanel } from "./_components/related-panel/RelatedPanel";
-import { TagPanel } from "./_components/tags-panel/TagPanel";
+import { TagPanel } from "./_components/TagPanel";
 
 interface DocumentInformationProps {
   sdocId: number | undefined;
   isIdleContent?: React.ReactNode;
-  filterName: string;
+  onAddMetadataFilter?: (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => void;
 }
 
 export function DocumentInfoPanel({
   sdocId,
   isIdleContent,
-  filterName,
+  onAddMetadataFilter,
   ...props
 }: DocumentInformationProps & Omit<BoxProps, "className">) {
   // tabs
@@ -45,11 +47,11 @@ export function DocumentInfoPanel({
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
-          <MetadataPanel currentTab={tab} sdocId={sdocId} filterName={filterName} />
+          <MetadataPanel currentTab={tab} sdocId={sdocId} onAddFilterClick={onAddMetadataFilter} />
           <TagPanel currentTab={tab} sdocId={sdocId} />
           <RelatedPanel currentTab={tab} sdocId={sdocId} />
           <TabPanel value="memos" sx={{ p: 0 }} className="h100">
-            <DocumentMemos sdocId={sdocId} key={sdocId} />
+            <MemoPanel sdocId={sdocId} key={sdocId} />
           </TabPanel>
         </Box>
       </TabContext>

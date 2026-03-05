@@ -7,6 +7,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
@@ -20,8 +21,8 @@ interface SentenceAnnotatorProps {
 
 export const SentenceAnnotator = memo(
   ({ sdocData, virtualizerScrollElementRef, ...props }: SentenceAnnotatorProps & BoxProps) => {
-    // global client state (redux)
-    const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+    // global client state (URL search params)
+    const { visibleUserId, selectedAnnotationId } = AnnotationRouteAPI.useSearch();
 
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
@@ -34,7 +35,6 @@ export const SentenceAnnotator = memo(
     const [isDragging, setIsDragging] = useState<boolean>(false);
 
     // highlighting
-    const selectedAnnotationId = useAppSelector((state) => state.annotations.selectedAnnotationId);
     const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
     const [hoverSentAnnoId, setHoverSentAnnoId] = useState<number | null>(null);
 

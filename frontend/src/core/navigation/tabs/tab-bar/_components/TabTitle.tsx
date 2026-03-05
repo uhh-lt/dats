@@ -6,7 +6,7 @@ import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import { Box } from "@mui/material";
 import { getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useMemo } from "react";
-import { TabData } from "../../_types/TabData";
+import { TabData } from "../../../_types/TabData";
 import { LabelText, TabLabel } from "./styledComponents";
 
 interface TabTitleProps {

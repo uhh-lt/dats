@@ -1,6 +1,6 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { useAppSelector } from "@plugins/redux";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
 import { SpanAnnotationCard } from "./_components/SpanAnnotationCard";
 
@@ -8,7 +8,7 @@ const filterByText = (text: string) => (annotation: SpanAnnotationRead) => annot
 
 export function SpanAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
   const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocId, visibleUserId);
 
   return (

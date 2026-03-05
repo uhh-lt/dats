@@ -8,23 +8,12 @@ import PlayCircle from "@mui/icons-material/PlayCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { isValidHttpUrl } from "@utils/URLUtils";
 import { useCallback, useState } from "react";
 import { ProcessingSettingsButton } from "./ProcessingSettingsButton";
 
 interface UrlCrawlerSectionProps {
   projectId: number;
-}
-
-function isValidHttpUrl(string: string): boolean {
-  if (!string.trim()) return false;
-
-  let url;
-  try {
-    url = new URL(string);
-  } catch {
-    return false;
-  }
-  return url.protocol === "http:" || url.protocol === "https:";
 }
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {

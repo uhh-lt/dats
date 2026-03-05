@@ -5,7 +5,6 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { AnnoActions } from "@features/annotation";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -13,11 +12,11 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { UIDialogActions } from "@store/global/dialogSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { CodeRenderer } from "../CodeRenderer";
-import { UIDialogActions } from "@store/global/dialogSlice";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -26,7 +25,11 @@ type CodeEditValues = {
   description: string | undefined;
 };
 
-export function CodeEditDialog() {
+interface CodeEditDialogProps {
+  onCodeUpdated?: (idsToExpand: number[]) => void;
+}
+
+export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
   const dispatch = useAppDispatch();
 
   // confirmation dialog
@@ -112,7 +115,7 @@ export function CodeEditDialog() {
                   codesToExpand.push(parentCodeId);
                   parentCodeId = codes.data?.find((code) => code.id === currentParentCodeId)?.parent_id;
                 }
-                dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+                onCodeUpdated?.(codesToExpand);
               }
               handleClose();
             },
@@ -120,7 +123,7 @@ export function CodeEditDialog() {
         );
       }
     },
-    [code, updateCodeMutation, codes, dispatch, handleClose],
+    [code, updateCodeMutation, codes, handleClose, onCodeUpdated],
   );
   const { mutate: deleteCodeMutation, isPending: isDeleteLoading } = CodeHooks.useDeleteCode();
   const handleCodeDelete = useCallback(() => {

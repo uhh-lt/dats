@@ -1,3 +1,4 @@
+export * from "./filter-renderer";
 export * from "./filterSlice";
 export * from "./filterUtils";
 export * from "./redux-filter-dialog";

@@ -54,7 +54,10 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
             selectedSdocIds={selectedDocumentIds}
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
-          <DeleteSdocsButton sdocIds={selectedDocumentIds} navigateTo="../search" />
+          <DeleteSdocsButton
+            sdocIds={selectedDocumentIds}
+            onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+          />
         </>
       )}
       <Box sx={{ flexGrow: 1 }} />

@@ -3,7 +3,6 @@ import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
-import { AnnoActions } from "@features/annotation";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
@@ -25,7 +24,12 @@ type CodeCreateValues = {
   description: string;
 };
 
-export function CodeCreateDialog({ projectId }: { projectId: number }) {
+interface CodeCreateDialogProps {
+  projectId: number;
+  onCodesCreated?: (idsToExpand: number[]) => void;
+}
+
+export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialogProps) {
   const dispatch = useAppDispatch();
 
   // codes for selection as parent
@@ -97,14 +101,14 @@ export function CodeCreateDialog({ projectId }: { projectId: number }) {
               codesToExpand.push(parentCodeId);
               parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
             }
-            dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+            onCodesCreated?.(codesToExpand);
             if (onSuccessHandler) onSuccessHandler(data, true);
             handleCloseCodeCreateDialog();
           },
         },
       );
     },
-    [createCodeMutation, dispatch, handleCloseCodeCreateDialog, onSuccessHandler, parentCodes, projectId],
+    [createCodeMutation, handleCloseCodeCreateDialog, onCodesCreated, onSuccessHandler, parentCodes, projectId],
   );
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 

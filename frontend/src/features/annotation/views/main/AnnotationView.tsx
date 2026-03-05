@@ -7,9 +7,8 @@ import { CodeExplorer } from "@core/code";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
-import { getRouteApi } from "@tanstack/react-router";
-import { ReactElement, useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { AudioVideoViewer } from "../../_components/AudioVideoViewer";
 import { ImageAnnotator } from "../../_components/ImageAnnotator";
 import { ImageViewer } from "../../_components/ImageViewer";
@@ -18,9 +17,9 @@ import { BBoxAnnotationExplorer, SentenceAnnotationExplorer, SpanAnnotationExplo
 import { SentenceAnnotationComparison, SentenceAnnotator } from "../../_components/sentence-annotator";
 import { TextViewer } from "../../_components/text-viewer";
 import { AnnotationToolbar } from "../../_components/toolbar";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/annotation/$sdocId");
+import { AnnoActions } from "../../store/annoSlice";
 
 const annotatorComponent = (
   sdocData: SourceDocumentDataRead,
@@ -143,12 +142,30 @@ const explorerComponent = (sdocId: number): Record<DocType, Record<AnnotationMod
 
 export function AnnotationView() {
   // global client state (URL)
-  const sdocId = routeApi.useParams({ select: (params) => params.sdocId });
+  const sdocId = AnnotationRouteAPI.useParams({ select: (params) => params.sdocId });
+  const { compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const isCompareMode = compareWithUserId !== undefined;
 
   // global client state (redux)
-  // components are selected based on these states
+  const dispatch = useAppDispatch();
   const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
-  const isCompareMode = useAppSelector((state) => state.annotations.isCompareMode);
+  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
+  const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
+  const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+
+  // code explorer handlers
+  const handleSelectedCodeIdChange = useCallback(
+    (codeId: number | undefined) => dispatch(AnnoActions.setSelectedCodeId(codeId)),
+    [dispatch],
+  );
+  const handleExpandedCodeIdsChange = useCallback(
+    (ids: string[]) => dispatch(AnnoActions.setExpandedCodeIds(ids)),
+    [dispatch],
+  );
+  const handleHoverCodeIdChange = useCallback(
+    (codeId: number | undefined) => dispatch(AnnoActions.setHoveredCodeId(codeId)),
+    [dispatch],
+  );
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
@@ -186,7 +203,15 @@ export function AnnotationView() {
         </Box>
         <Box className="myFlexFillAllContainer">
           <TabPanel value="code" style={{ padding: 0 }} className="h100">
-            <CodeExplorer className="h100" />
+            <CodeExplorer
+              className="h100"
+              selectedCodeId={selectedCodeId}
+              onSelectedCodeIdChange={handleSelectedCodeIdChange}
+              expandedCodeIds={expandedCodeIds}
+              onExpandedCodeIdsChange={handleExpandedCodeIdsChange}
+              hiddenCodeIds={hiddenCodeIds}
+              onHoverCodeIdChange={handleHoverCodeIdChange}
+            />
           </TabPanel>
           {sdoc.isSuccess && (
             <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
@@ -252,7 +277,7 @@ export function AnnotationView() {
           </Box>
         </Box>
       }
-      rightSidebar={<DocumentInfoPanel sdocId={sdocId} filterName="root" />}
+      rightSidebar={<DocumentInfoPanel sdocId={sdocId} onAddMetadataFilter={undefined} />}
     />
   );
 }

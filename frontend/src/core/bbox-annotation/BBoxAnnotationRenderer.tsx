@@ -1,11 +1,10 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { CodeRenderer } from "@core/code";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { CodeRenderer } from "../code/CodeRenderer";
-import { SdocMetadataRenderer } from "../sdoc-metadata/SdocMetadataRenderer";
-import { SdocRenderer, SdocRendererSharedProps } from "../source-document/renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../source-document/renderer/SdocTagRenderer";
 
 interface BBoxAnnotationRendererSharedProps {
   showCode?: boolean;

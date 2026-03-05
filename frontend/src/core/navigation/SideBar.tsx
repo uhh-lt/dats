@@ -1,5 +1,6 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { LinkListItemButton, LinkMenuItem } from "@components/links";
+import { LoginStatus, useAuth } from "@core/auth";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
@@ -27,8 +28,6 @@ import { UIDialogActions } from "@store/global/dialogSlice";
 import { useLocation } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
-import { useAuth } from "../auth/provider/useAuth";
-import { LoginStatus } from "../auth/types/LoginStatus";
 
 interface SideBarProps {
   projectId?: number;
@@ -188,15 +187,23 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <LinkMenuItem to="/project/$projectId/search" params={{ projectId }}>
+                <LinkMenuItem
+                  to="/project/$projectId/search"
+                  params={{ projectId }}
+                  search={{ addSpanAnnotationFilter: undefined }}
+                >
                   <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
                   <ListItemText>Document Search</ListItemText>
                 </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/imagesearch" params={{ projectId }}>
+                <LinkMenuItem to="/project/$projectId/imagesearch" params={{ projectId }} search={{ searchQuery: "" }}>
                   <ListItemIcon>{getIconComponent(Icon.IMAGE_SEARCH)}</ListItemIcon>
                   <ListItemText>Image Search</ListItemText>
                 </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/sentencesearch" params={{ projectId }}>
+                <LinkMenuItem
+                  to="/project/$projectId/sentencesearch"
+                  params={{ projectId }}
+                  search={{ searchQuery: "" }}
+                >
                   <ListItemIcon>{getIconComponent(Icon.SENTENCE_SEARCH)}</ListItemIcon>
                   <ListItemText>Sentence Search</ListItemText>
                 </LinkMenuItem>

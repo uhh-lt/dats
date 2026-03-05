@@ -1,13 +1,14 @@
 import { UserHooks } from "@api/hooks/UserHooks";
 import { UserRead } from "@api/models/UserRead";
-import { FormEmail } from "@components/FormInputs";
-import { useOpenSnackbar } from "@components/SnackbarDialog";
+import { FormEmail } from "@components/form-inputs";
+import { useAuth } from "@core/auth";
+import { useOpenSnackbar } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import { Button, Grid2, Stack, TextField, Typography } from "@mui/material";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "@utils/GlobalConstants";
 import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useAuth } from "../../auth/useAuth";
+
 type UpdateEmailValues = {
   newemail: string;
 };

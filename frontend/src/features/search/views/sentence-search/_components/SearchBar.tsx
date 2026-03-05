@@ -15,10 +15,11 @@ import {
   Tooltip,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch } from "@plugins/redux";
 import { forwardRef, KeyboardEventHandler, MouseEventHandler, ReactElement, Ref, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
+import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
 
 interface SearchFormValues {
   query: string;
@@ -29,8 +30,11 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ placeholder }: SearchBarProps) {
+  // global client state (url search)
+  const { searchQuery } = SentenceSearchRouteAPI.useSearch();
+  const navigate = SentenceSearchRouteAPI.useNavigate();
+
   // global client state (redux)
-  const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
   const dispatch = useAppDispatch();
 
   // react hook form
@@ -41,7 +45,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   });
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    dispatch(SentenceSearchActions.onSearchQueryChange(data.query));
+    navigate({ search: (prev) => ({ ...prev, searchQuery: data.query }) });
     dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: data.query,
@@ -53,7 +57,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch: MouseEventHandler<HTMLButtonElement> = () => {
-    dispatch(SentenceSearchActions.onSearchQueryChange());
+    navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
     dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: "",

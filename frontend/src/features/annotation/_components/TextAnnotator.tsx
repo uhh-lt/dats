@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useQueryClient } from "@tanstack/react-query";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
 import { MouseEvent, MouseEventHandler, useRef, useState } from "react";
+import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { useComputeTokenData } from "../_hooks/useComputeTokenData";
 import { Annotation } from "../_types/Annotation";
 import { TagStyle } from "../_types/TagStyle";
@@ -31,8 +32,10 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const spanMenuRef = useRef<AnnotationMenuHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
+  // global client state (URL search params)
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
+
   // global client state (redux)
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);

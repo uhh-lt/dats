@@ -1,13 +1,12 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { ImageSearchActions, SentenceSearchActions } from "@features/search";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { useNavigate } from "@tanstack/react-router";
+import { useAppSelector } from "@plugins/redux";
 import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { SVGBBox } from "./SVGBBox";
 import { SVGBBoxText } from "./SVGBBoxText";
 
@@ -40,8 +39,10 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   const imgContainerHeight = 500;
 
+  // global client state (URL search params)
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
+
   // global client state (redux)
-  const visibleUserId = useAppSelector((state) => state.annotations.visibleUserId);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
@@ -76,17 +77,22 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const xCentering = svgWidth / 2 - (width * scaledRatio) / 2;
 
   // find similar images
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const navigate = AnnotationRouteAPI.useNavigate();
   const handleImageSimilaritySearch = () => {
-    dispatch(ImageSearchActions.onChangeSearchQuery(`${sdocData.id}`));
-    navigate({ to: "/project/$projectId/imagesearch", params: { projectId: sdocData.project_id } });
+    navigate({
+      to: "/project/$projectId/imagesearch",
+      params: { projectId: sdocData.project_id },
+      search: { searchQuery: `${sdocData.id}` },
+    });
   };
 
   // find similar sentences
   const handleSentenceSimilaritySearch = () => {
-    dispatch(SentenceSearchActions.onSearchQueryChange(`${sdocData.id}`));
-    navigate({ to: "/project/$projectId/sentencesearch", params: { projectId: sdocData.project_id } });
+    navigate({
+      to: "/project/$projectId/sentencesearch",
+      params: { projectId: sdocData.project_id },
+      search: { searchQuery: `${sdocData.id}` },
+    });
   };
 
   return (

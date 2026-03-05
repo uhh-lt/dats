@@ -1,5 +1,5 @@
 import { ContentLayout } from "@components/content-layouts";
-import { BBoxAnnotationEditDialog } from "@core/bbox-annotation/BBoxAnnotationEditDialog";
+import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { BBoxAnnotationAnalysisTable } from "./_components/BBoxAnnotationAnalysisTable";

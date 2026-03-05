@@ -3,6 +3,10 @@ import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { MyFilter, ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
 import { ClassifierInferenceButton } from "@features/classifier";
+import { DocumentUploadButton } from "@features/document-upload";
+import { LLMAssistanceButton } from "@features/llm-assistant";
+import { useReduxConnector } from "@hooks/useReduxConnector";
+import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -32,7 +36,6 @@ import { SdocColumns } from "../../../../../api/openapi/models/SdocColumns";
 import { SortDirection } from "../../../../../api/openapi/models/SortDirection";
 import { SourceDocumentRead } from "../../../../../api/openapi/models/SourceDocumentRead";
 import { SearchService } from "../../../../../api/openapi/services/SearchService";
-import { LLMAssistanceButton } from "../../../../../components/LLMDialog/LLMAssistanceButton";
 import { FolderRenderer } from "../../../../../core/folder/FolderRenderer";
 import { FolderActionMenuButton } from "../../../../../core/folder/action-menu/FolderActionMenuButton";
 import { OpenInTabsButton } from "../../../../../core/navigation/tabs/OpenInTabsButton";
@@ -43,14 +46,11 @@ import { SdocExportButton } from "../../../../../core/source-document/SdocExport
 import { SdocRenderer } from "../../../../../core/source-document/renderer/SdocRenderer";
 import { SdocTagsRenderer } from "../../../../../core/source-document/renderer/SdocTagRenderer";
 import { TagMenuButton } from "../../../../../core/tag/menu/TagMenuButton";
-import { useReduxConnector } from "../../../../../hooks/useReduxConnector";
-import { useTableFetchMoreOnScroll } from "../../../../../hooks/useTableInfiniteScroll";
 import { queryClient } from "../../../../../plugins/tanstack/queryClient";
 import { FolderSelection, SearchActions } from "../../../../../store/documentSearchSlice";
 import { selectSelectedIds, selectSelectedRows } from "../../../../../store/generic/tableSlice";
 import { RootState } from "../../../../../store/store";
 import { useAuth } from "../../../../auth/useAuth";
-import { DocumentUploadButton } from "../../../../document-upload/views/button/DocumentUploadButton";
 import { NoDocumentsPlaceholder } from "../../../../document-upload/views/dialog/_components/NoDocumentsPlaceholder";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
@@ -441,6 +441,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
                 navigate({
                   to: "/project/$projectId/annotation/$sdocId",
                   params: { projectId, sdocId: row.original.id },
+                  search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
                 });
               } else {
                 dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));
@@ -505,7 +506,10 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
             selectedSdocIds={selectedSdocIds}
             popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
           />
-          <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
+          <DeleteSdocsButton
+            sdocIds={selectedSdocIds}
+            onDeleted={(ids) => dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(ids))}
+          />
           <LLMAssistanceButton sdocIds={selectedSdocIds} projectId={projectId} />
           <ClassifierInferenceButton sdocIds={selectedSdocIds} projectId={projectId} />
           <OpenInTabsButton sdocIds={selectedSdocIds} projectId={projectId} />
@@ -521,7 +525,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
       );
     }
     return null;
-  }, [selectedRows, projectId]);
+  }, [selectedRows, projectId, dispatch]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>

@@ -3,7 +3,6 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { CodeRead } from "@api/models/CodeRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { DocumentRenderer } from "@features/annotation";
 import { memo, MouseEventHandler, useCallback, useMemo, useRef } from "react";
 import {
   TextAnnotationValidationMenu,
@@ -12,6 +11,9 @@ import {
 } from "./TextAnnotationValidationMenu";
 import { useComputeTokenDataWithAnnotations } from "./useComputeTokenDataWithAnnotations";
 import "./validatorStyles.css";
+// TODO: Rework Annotation Result Rendering!!
+// eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
+import { DocumentRenderer } from "@features/annotation/_components/document-renderer/DocumentRenderer";
 
 interface TextAnnotatorValidatorSharedProps {
   annotations: SpanAnnotationRead[];

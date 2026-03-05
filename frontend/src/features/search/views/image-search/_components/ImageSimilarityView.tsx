@@ -44,6 +44,7 @@ export function ImageSimilarityView({ projectId, data, isLoading, isFetching, is
         navigate({
           to: "/project/$projectId/annotation/$sdocId",
           params: { projectId, sdocId },
+          search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
         });
       } else {
         dispatch(ImageSearchActions.onToggleSelectedDocumentId(sdocId));

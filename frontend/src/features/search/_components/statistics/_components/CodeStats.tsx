@@ -1,11 +1,11 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
-import { useFilterStats } from "@hooks/useFilterStats";
+import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
-import { StatsDisplayButton } from "./StatsDisplayButton";
+import { useFilterStats } from "../_hooks/useFilterStats";
 
 interface CodeStatsProps {
   currentTab: string;

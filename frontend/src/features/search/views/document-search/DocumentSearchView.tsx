@@ -2,6 +2,8 @@ import { FolderHooks } from "@api/hooks/FolderHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { FolderType } from "@api/models/FolderType";
 import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
+import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
@@ -12,24 +14,37 @@ import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } 
 import { Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { selectSelectedRows } from "@store/generic/tableSlice";
-import { getRouteApi } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
+import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 
 const filterName = "root";
-const routeApi = getRouteApi("/_auth/project/$projectId/search");
 
 export function DocumentSearchView() {
   // router
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
+  const { addSpanAnnotationFilter } = DocumentSearchRouteAPI.useSearch();
+  const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
+  const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
+  const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
+  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
+  const showFolders = useAppSelector((state) => state.search.showFolders);
   const dispatch = useAppDispatch();
+
+  // consume addSpanAnnotationFilter from URL search params (set by cross-feature navigations)
+  useEffect(() => {
+    if (addSpanAnnotationFilter) {
+      dispatch(SearchActions.onAddSpanAnnotationFilter({ ...addSpanAnnotationFilter, filterName }));
+      navigate({ search: (prev) => ({ ...prev, addSpanAnnotationFilter: undefined }) });
+    }
+  }, [addSpanAnnotationFilter, dispatch, navigate]);
 
   // filter
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
@@ -56,6 +71,31 @@ export function DocumentSearchView() {
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
       dispatch(SearchActions.onAddTagFilter({ tagId, filterName }));
+    },
+    [dispatch],
+  );
+
+  // folder explorer handlers
+  const handleExpandedFolderIdsChange = useCallback(
+    (ids: string[]) => dispatch(SearchActions.setExpandedFolderIds(ids)),
+    [dispatch],
+  );
+  const handleSelectedFolderIdChange = useCallback(
+    (folderId: number) => dispatch(SearchActions.setSelectedFolderId(folderId)),
+    [dispatch],
+  );
+  const handleToggleShowFolders = useCallback(() => dispatch(SearchActions.onToggleShowFolders()), [dispatch]);
+
+  // tag explorer handlers
+  const handleExpandedTagIdsChange = useCallback(
+    (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
+    [dispatch],
+  );
+
+  // metadata filter handler
+  const handleAddMetadataFilter = useCallback(
+    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
+      dispatch(SearchActions.onAddMetadataFilter({ metadata, projectMetadata, filterName }));
     },
     [dispatch],
   );
@@ -149,8 +189,25 @@ export function DocumentSearchView() {
       <SidebarContentSidebarLayout
         leftSidebar={
           <PercentageResizablePanel
-            firstContent={<FolderExplorer className="h100" />}
-            secondContent={<TagExplorer className="h100" onTagClick={handleAddTagFilter} />}
+            firstContent={
+              <FolderExplorer
+                className="h100"
+                expandedFolderIds={expandedFolderIds}
+                onExpandedFolderIdsChange={handleExpandedFolderIdsChange}
+                selectedFolderId={selectedFolderId}
+                onSelectedFolderIdChange={handleSelectedFolderIdChange}
+                showFolders={showFolders}
+                onToggleShowFolders={handleToggleShowFolders}
+              />
+            }
+            secondContent={
+              <TagExplorer
+                className="h100"
+                onTagClick={handleAddTagFilter}
+                expandedTagIds={expandedTagIds}
+                onExpandedTagIdsChange={handleExpandedTagIdsChange}
+              />
+            }
             contentPercentage={percentage}
             onResize={handleResize}
           />
@@ -158,9 +215,9 @@ export function DocumentSearchView() {
         content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
         rightSidebar={
           selectedDocumentId != undefined ? (
-            <DocumentInfoPanel sdocId={selectedDocumentId} filterName={filterName} />
+            <DocumentInfoPanel sdocId={selectedDocumentId} onAddMetadataFilter={handleAddMetadataFilter} />
           ) : selectedSdocFolderId != undefined ? (
-            <FolderInformation sdocFolderId={selectedSdocFolderId} filterName={filterName} />
+            <FolderInformation sdocFolderId={selectedSdocFolderId} onAddMetadataFilter={handleAddMetadataFilter} />
           ) : (
             <SearchStatistics
               className="h100"
