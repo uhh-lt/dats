@@ -14,7 +14,7 @@ from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate, ProjectRead, ProjectUpdate
 from core.project.project_orm import ProjectORM
 from core.tag.tag_dto import TagRead
-from core.user.user_crud import SYSTEM_USER_ID, crud_user
+from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate, UserRead
 from core.user.user_orm import UserORM
 from repos.db.crud_base import NoSuchElementError
@@ -91,11 +91,11 @@ def test_create_remove_project(db: Session) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
-    system_user = crud_user.read(db, SYSTEM_USER_ID)
+    # system_user = crud_user.read(db, SYSTEM_USER_ID)
     id = crud_project.create(
         db=db,
         create_dto=ProjectCreate(title=title, description=description),
-        creating_user_id=system_user.id,
+        # creating_user_id=system_user.id,
     ).id
 
     # check database again
