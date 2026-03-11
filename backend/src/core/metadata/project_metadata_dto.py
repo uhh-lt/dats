@@ -38,6 +38,10 @@ class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
     )
 
 
+class ProjectMetadataBulkUpdate(ProjectMetadataBaseDTO, UpdateDTOBase):
+    id: int = Field(description="ID of the ProjectMetadata")
+
+
 # Properties for reading (as in ORM)
 class ProjectMetadataRead(ProjectMetadataBaseDTO):
     id: int = Field(description="ID of the ProjectMetadata")
