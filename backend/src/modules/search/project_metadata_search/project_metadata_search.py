@@ -45,13 +45,13 @@ def find_project_metadata(
     for row in result_rows:
         data.append(
             ProjectMetadataRead(
-                id=row[0],
-                project_id=project_id,
-                key=row[1],
-                metatype=row[2],
-                read_only=row[3],
-                doctype=row[4],
-                description=row[5],
+                id=row.id,
+                project_id=row.project_id,
+                key=row.key,
+                metatype=row.metatype,
+                read_only=row.read_only,
+                doctype=row.doctype,
+                description=row.description,
             )
         )
     return ProjectMetadataSearchResult(total_results=total_results, data=data)
