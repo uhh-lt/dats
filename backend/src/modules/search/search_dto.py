@@ -5,6 +5,7 @@ from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
 from core.memo.memo_dto import MemoRead
+from core.metadata.project_metadata_dto import ProjectMetadataRead
 from repos.elastic.elastic_dto_base import ElasticSearchHit
 
 
@@ -122,3 +123,10 @@ class PaginatedSpanAnnotationHits(BaseModel):
     hits: list[SpanAnnotationHit] = Field(
         description=("The SpanAnnotation hits matching the search query.")
     )
+
+
+class ProjectMetadataSearchResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of project_metadata entries."
+    )
+    data: list[ProjectMetadataRead] = Field(description="The ProjectMetadata entries.")

@@ -10,6 +10,13 @@ from modules.search.bbox_anno_search.bbox_anno_search import (
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
 from modules.search.memo_search.memo_search import find_memo_info, find_memos
 from modules.search.memo_search.memo_search_columns import MemoColumns
+from modules.search.project_metadata_search.project_metadata_search import (
+    find_project_metadata,
+    find_project_metadata_info,
+)
+from modules.search.project_metadata_search.project_metadata_search_columns import (
+    ProjectMetadataColumns,
+)
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
     find_sdocs_info,
@@ -20,6 +27,7 @@ from modules.search.search_dto import (
     BBoxAnnotationSearchResult,
     PaginatedSDocHits,
     PaginatedSpanAnnotationHits,
+    ProjectMetadataSearchResult,
     SentenceAnnotationSearchResult,
     SpanAnnotationSearchResult,
 )
@@ -268,6 +276,47 @@ def search_bbox_annotations(
         filter=filter,
         page=page,
         page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/project_metadata_info",
+    response_model=list[ColumnInfo[ProjectMetadataColumns]],
+    summary="Returns Project Metadata Search Info.",
+)
+def search_project_metadata_info(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[ColumnInfo[ProjectMetadataColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_project_metadata_info(
+        db=db,
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/project_metadata",
+    response_model=ProjectMetadataSearchResult,
+    summary="Returns Project Metadata Search Result.",
+)
+def search_project_metadata(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    filter: Filter[ProjectMetadataColumns],
+    sorts: list[Sort[ProjectMetadataColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> ProjectMetadataSearchResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_project_metadata(
+        db=db,
+        project_id=project_id,
+        filter=filter,
         sorts=sorts,
     )
 
