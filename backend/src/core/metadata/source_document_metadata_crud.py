@@ -118,6 +118,41 @@ class CRUDSourceDocumentMetadata(
         db_objs = query.all()
         return db_objs
 
+    def read_by_project_metadata(
+        self,
+        db: Session,
+        *,
+        proj_metadata_id: int,
+        skip: int | None = None,
+        limit: int | None = None,
+    ) -> list[SourceDocumentMetadataORM]:
+        """Fetches all SourceDocumentMetadata entries for a specific ProjectMetadata definition."""
+        query = db.query(self.model).filter(
+            SourceDocumentMetadataORM.project_metadata_id == proj_metadata_id
+        )
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
+
+    def read_by_key(
+        self,
+        db: Session,
+        *,
+        key: str,
+    ) -> list[SourceDocumentMetadataORM]:
+        query = (
+            db.query(self.model)
+            .join(SourceDocumentMetadataORM.project_metadata)
+            .filter(
+                ProjectMetadataORM.key == key,
+            )
+        )
+        return query.all()
+
     def read_by_sdoc_and_key(
         self,
         db: Session,
