@@ -281,3 +281,13 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
                     source_document_id=source_document_id,
                     project_metadata=project_metadata,
                 )
+
+
+class MetadataFrequencyRead(BaseModel):
+    value: str | int | float | bool | None = Field(
+        description="The unique metadata value"
+    )
+    count: int = Field(description="Number of documents that have this value")
+    percentage: float = Field(
+        description="Percentage of documents that have this value (between 0 and 1)"
+    )
