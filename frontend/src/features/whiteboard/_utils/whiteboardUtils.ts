@@ -21,7 +21,8 @@ import { VerticalAlign } from "@api/models/VerticalAlign";
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
-import { theme } from "../../../plugins/mui/theme";
+// eslint-disable-next-line boundaries/element-types
+import { theme } from "@plugins/mui";
 
 const positionOffset = 50;
 

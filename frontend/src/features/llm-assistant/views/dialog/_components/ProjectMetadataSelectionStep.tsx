@@ -7,7 +7,7 @@ import { ProjectMetadataTable } from "@core/project-metadata";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";

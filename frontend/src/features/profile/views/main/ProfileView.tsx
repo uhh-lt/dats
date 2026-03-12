@@ -1,4 +1,4 @@
-import { useAuth } from "@core/auth/provider/useAuth";
+import { useAuth } from "@core/auth";
 import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
 import { Container, Grid2, Typography } from "@mui/material";
 import Box from "@mui/material/Box";

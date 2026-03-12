@@ -5,7 +5,7 @@ import { CodeRenderer } from "@core/code";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { Stack } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 
 interface SpanAnnotationRendererSharedProps {
   showCode?: boolean;

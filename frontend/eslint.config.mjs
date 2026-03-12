@@ -4,16 +4,18 @@ import js from "@eslint/js";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
 import boundaries from "eslint-plugin-boundaries";
 import checkFile from "eslint-plugin-check-file";
-import { flatConfigs as importPluginConfigs } from "eslint-plugin-import-x";
-import * as reactHooks from "eslint-plugin-react-hooks";
+import { flatConfigs as importPlugin } from "eslint-plugin-import-x";
+import { configs as reactHooks } from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint, { configs as tseslintConfigs } from "typescript-eslint";
 // eslint-disable-next-line import-x/extensions
 import localRules from "./eslint-dats-rules.js";
 
+const GLOBAL_DOMAINS = ["api", "components", "core", "features", "hooks", "routes", "store", "styles", "utils"];
+
 export default tseslint.config(
-  { ignores: ["*/dist", "*/src/api/openapi", "**/routeTree.gen.ts"] },
+  { ignores: ["*/dist", "*/src/api/openapi", "**/routeTree.gen.ts", "**/*.css", "**/*.md", "**/*.json"] },
   {
     languageOptions: {
       ecmaVersion: 2020,
@@ -39,14 +41,15 @@ export default tseslint.config(
   },
   js.configs.recommended,
   tseslintConfigs.recommended,
-  reactHooks.configs.flat["recommended-latest"],
+  reactHooks.flat["recommended-latest"],
   reactRefresh.configs.vite,
   tanstackQuery.configs["flat/recommended"],
-  importPluginConfigs.recommended,
-  importPluginConfigs.typescript,
-  // FILE NAMING RULES
+  importPlugin.recommended,
+  importPlugin.typescript,
+  // FILE NAMING RULES (excluding routes folder due to Tanstack Router's special naming conventions)
   {
     files: ["src/**/*.*"],
+    ignores: ["src/routes/**"],
     plugins: {
       "check-file": checkFile,
     },
@@ -79,7 +82,6 @@ export default tseslint.config(
     },
     settings: {
       "boundaries/elements": [
-        { type: "types", pattern: "src/types/**" },
         { type: "styles", pattern: "src/styles/**" },
         { type: "utils", pattern: "src/utils/**" },
         { type: "plugins", pattern: "src/plugins/**" },
@@ -100,32 +102,37 @@ export default tseslint.config(
           default: "disallow",
           message: "Architectural boundary violation: ${file.type} cannot import from ${dependency.type}",
           rules: [
-            { from: ["types"], allow: [] },
+            // Plugins contain configurations for third-party libraries and do not contain domain-specific logic. Plugins are registered in main.tsx. No other layer should use them.
+            { from: ["plugins"], allow: [] },
+            // Styles contain global styles and design tokens. Styles are registered in main.tsx. No other layer should use them.
             { from: ["styles"], allow: [] },
-            { from: ["utils"], allow: ["types"] },
-            { from: ["hooks"], allow: ["types", "utils"] },
-            { from: ["plugins"], allow: ["store", "api"] },
-            { from: ["store"], allow: ["api", "core", "features"] },
-            { from: ["api"], allow: ["types", "utils", "store", "plugins"] },
+            // Store contains global client state management logic. Having access to store, means having access to global states: layout, dialog, and project.
+            { from: ["store"], allow: [] },
+            // Utils are reusable functions. They do not contain domain-specific logic.
+            { from: ["utils"], allow: [] },
+            // Hooks are reusable functions. They do not contain domain-specific logic.
+            { from: ["hooks"], allow: ["utils"] },
+            // Components are low-level, reusable UI components. They do not contain domain-specific logic."
             {
               from: ["components"],
-              allow: ["types", "styles", "utils", "hooks"],
-              message:
-                "Components are low-level UI and cannot import from Core or Features. Move shared logic to hooks or utils.",
+              allow: ["components", "hooks", "store", "utils"],
             },
+            // API contains global server state management logic. Having access to API, means having access to all server state and mutation functions. It means being domain logic.
+            { from: ["api"], allow: ["hooks", "store", "utils"] },
+            // Core contains domain-specific logic and components that are shared across features.
             {
               from: ["core"],
-              allow: ["types", "styles", "utils", "plugins", "hooks", "store", "api", "components", "core"],
-              message: "Core infrastructure cannot import from high-level Features or Routes.",
+              allow: ["api", "components", "core", "hooks", "store", "utils"],
             },
+            // Features use generic and core components to compose domain-specific functionalities.
             {
               from: ["features"],
-              allow: ["types", "styles", "utils", "plugins", "hooks", "store", "api", "components", "core"],
-              message: "Features cannot import from Routes or other Features. Keep features isolated.",
+              allow: ["api", "components", "core", "hooks", "store", "utils"],
             },
+            // Routes are the entry point of the application. They compose generic components, core components, and features to create pages.
             {
               from: ["routes"],
-              allow: ["types", "styles", "utils", "plugins", "hooks", "store", "api", "components", "core", "features"],
+              allow: ["components", "core", "features"],
             },
           ],
         },
@@ -139,10 +146,23 @@ export default tseslint.config(
     },
     rules: {
       // Rule: Enforce path aliases for global folders based on resolved paths
-      "local/enforce-global-aliases": "error",
+      "local/enforce-global-aliases": [
+        "error",
+        {
+          globalFolders: GLOBAL_DOMAINS,
+          foldersWithSubdomains: ["api", "components", "core", "features", "plugins"],
+          srcDirName: "src",
+        },
+      ],
 
       // Rule: Enforce relative imports within the same subdomain
-      "local/no-alias-within-same-domain": "error",
+      "local/no-alias-within-same-domain": [
+        "error",
+        {
+          globalFolders: GLOBAL_DOMAINS,
+          srcDirName: "src",
+        },
+      ],
 
       // Rule: Imports may never start with /src
       // Rule: Imports may never be just "." or ".."
@@ -174,15 +194,12 @@ export default tseslint.config(
         "error",
         "never",
         {
-          ts: "never",
-          tsx: "never",
-          js: "never",
-          jsx: "never",
+          css: "always",
         },
       ],
     },
   },
-  // Import private and internal folder restrictions
+  // PUBLIC VS PRIVATE SCOPE RULES
   {
     plugins: {
       local: localRules,
@@ -190,22 +207,52 @@ export default tseslint.config(
     rules: {
       // Rule: Custom rule to enforce that private folders (prefixed with _) can only be accessed from within their own scope
       // This properly handles hierarchical scopes, e.g., my-feature/views/main/_components is only accessible from my-feature/views/main/**
-      "local/no-private-folder-scope-violation": "error",
-
-      // Rule: Enforce that imports cannot reach into internal modules of other layers (e.g., @features/*/** or @core/*/**)
-      "import-x/no-internal-modules": [
+      "local/no-private-folder-scope-violation": [
         "error",
         {
-          forbid: [
-            "@components/*/*",
-            "@components/*/*/**",
-            "@core/*/*",
-            "@core/*/*/**",
-            "@features/*/*",
-            "@features/*/*/**",
-            "@plugins/*/*",
-            "@plugins/*/*/**",
+          privatePrefixes: ["_"],
+        },
+      ],
+
+      // Rule: Disallow deep alias imports and auto-fix to public entry imports (e.g., @core/memo/editor/* -> @core/memo)
+      "local/no-internal-modules-public-entry": [
+        "error",
+        {
+          aliases: ["components", "core", "features", "plugins"],
+          depth: 2,
+        },
+      ],
+
+      // Rule: Enforce scope boundaries - prevent importing from sibling directory branches
+      "local/no-scope-violations": [
+        "error",
+        {
+          sharedFolders: [
+            "api",
+            "components",
+            "hooks",
+            "store",
+            "styles",
+            "types",
+            "utils",
+            "_api",
+            "_components",
+            "_hooks",
+            "_store",
+            "_styles",
+            "_types",
+            "_utils",
           ],
+        },
+      ],
+
+      // Rule: Prevent files from accessing Redux slices outside their scope.
+      // Slice ownership is auto-detected from *Slice.ts file locations — no manual mapping needed.
+      // Slices in store/global/ are always accessible from anywhere.
+      "local/no-cross-slice-access": [
+        "error",
+        {
+          srcDirName: "src",
         },
       ],
     },

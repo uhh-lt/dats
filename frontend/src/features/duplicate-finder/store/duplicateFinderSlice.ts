@@ -28,4 +28,4 @@ const duplicateFinderSlice = createSlice({
 
 // actions
 export const DuplicateFinderActions = duplicateFinderSlice.actions;
-export const duplicateFinderReducer = duplicateFinderSlice.reducer;
+export const duplicateFinderReducer = { [duplicateFinderSlice.name]: duplicateFinderSlice.reducer };

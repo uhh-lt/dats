@@ -4,7 +4,6 @@ import { COTARead } from "@api/models/COTARead";
 import { COTASentenceID } from "@api/models/COTASentenceID";
 import { DateGroupBy } from "@api/models/DateGroupBy";
 import { SdocRenderer } from "@core/source-document";
-import { useReduxConnector } from "@hooks/useReduxConnector";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -15,7 +14,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { dateToLocaleDate } from "@utils/DateUtils";
 import { padStart } from "lodash";
 import {
@@ -146,7 +145,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
       }
     });
     return result;
-  }, [cota, concept?.id, selectedDate]);
+  }, [cota, concept, selectedDate]);
 
   const columns: MRT_ColumnDef<COTASentenceRow>[] = useMemo(() => {
     const conceptDict = cota.concepts.reduce(

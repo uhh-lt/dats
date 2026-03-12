@@ -3,7 +3,7 @@ import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { FolderRead } from "@api/models/FolderRead";
 import { FolderType } from "@api/models/FolderType";
 import { dataToTree, ITree } from "@components/tree-explorer";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
 

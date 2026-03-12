@@ -3,14 +3,18 @@ import { existsSync, rmSync } from "fs";
 
 // settings
 const openapiFilePath = "src/openapi.json";
-const openapiFolderPath = "src/api/openapi";
+const openapiFolderPath = "src/api";
+const openapiFolders = ["core", "models", "services"];
 const prettierCacheDir = "frontend/node_modules/.cache/prettier";
 const barrelFilePath = `${openapiFolderPath}/index.ts`;
 
-// 1. remove existing generated code
-if (existsSync(openapiFolderPath)) {
-  rmSync(openapiFolderPath, { recursive: true, force: true });
-  console.log(`Removed existing generated code at ${openapiFolderPath}`);
+// 1. remove existing generated folders (core, models, services)
+for (const folder of openapiFolders) {
+  const folderPath = `${openapiFolderPath}/${folder}`;
+  if (existsSync(folderPath)) {
+    rmSync(folderPath, { recursive: true, force: true });
+    console.log(`Removed existing generated code at ${folderPath}`);
+  }
 }
 
 // 2. generate code
@@ -25,6 +29,9 @@ if (existsSync(barrelFilePath)) {
 }
 
 // 4. prettify files
-console.log(`Prettify generated code at ${openapiFolderPath}`);
-const prettierOutput = execSync(`npx prettier --write ${openapiFolderPath} --cache-location ${prettierCacheDir}`);
-console.log(prettierOutput.toString("utf-8"));
+for (const folder of openapiFolders) {
+  const folderPath = `${openapiFolderPath}/${folder}`;
+  console.log(`Prettify generated code at ${folderPath}`);
+  const prettierOutput = execSync(`npx prettier --write ${folderPath} --cache-location ${prettierCacheDir}`);
+  console.log(prettierOutput.toString("utf-8"));
+}

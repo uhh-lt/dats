@@ -28,11 +28,6 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<BackgroundColorData | TextData | BorderData>();
   const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
   const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState<boolean>(false);
-  // exposed methods (via ref)
-  useImperativeHandle(ref, () => ({
-    open: openMenu,
-    close: closeMenu,
-  }));
 
   // methods
   const openMenu = (nodes: Node[]) => {
@@ -43,6 +38,12 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   const closeMenu = () => {
     setNodes([]);
   };
+
+  // exposed methods (via ref)
+  useImperativeHandle(ref, () => ({
+    open: openMenu,
+    close: closeMenu,
+  }));
 
   const updateNodes = useCallback(
     (

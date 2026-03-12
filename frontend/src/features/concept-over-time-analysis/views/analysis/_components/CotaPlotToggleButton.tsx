@@ -1,7 +1,7 @@
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { Button, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { CotaActions } from "../../../store/cotaSlice";
 
 export function CotaPlotToggleButton() {

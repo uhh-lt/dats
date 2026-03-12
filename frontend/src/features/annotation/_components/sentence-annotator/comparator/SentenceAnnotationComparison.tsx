@@ -4,7 +4,7 @@ import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useAuth } from "@core/auth";
 import { Box, BoxProps } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
@@ -18,11 +18,11 @@ import { isAnnotationSame } from "./_utils/comparisonUtils";
 
 interface SentenceAnnotationComparisonProps {
   sdocData: SourceDocumentDataRead;
-  virtualizerScrollElementRef: React.RefObject<HTMLDivElement>;
+  virtualizerScrollElement: HTMLDivElement;
 }
 
 export const SentenceAnnotationComparison = memo(
-  ({ sdocData, virtualizerScrollElementRef, ...props }: SentenceAnnotationComparisonProps & BoxProps) => {
+  ({ sdocData, virtualizerScrollElement, ...props }: SentenceAnnotationComparisonProps & BoxProps) => {
     // auth state
     const user = useAuth().user;
 
@@ -276,7 +276,7 @@ export const SentenceAnnotationComparison = memo(
     // virtualization
     const virtualizer = useVirtualizer({
       count: sdocData.sentences.length + 1, // + 1 because of the header
-      getScrollElement: () => virtualizerScrollElementRef.current!,
+      getScrollElement: () => virtualizerScrollElement,
       estimateSize: () => 35,
       overscan: 2,
     });

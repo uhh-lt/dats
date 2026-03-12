@@ -11,25 +11,25 @@ import {
   MyFilter,
   createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter";
+} from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
-import { DocumentTableFilterActions } from "./documentTableFilterSlice";
+import { SdocTableFilterActions } from "./sdocTableFilterSlice";
 
 const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.documentTableFilter;
-const filterActions = DocumentTableFilterActions;
+const filterActions = SdocTableFilterActions;
 
 export const SdocTable = memo(
   ({

@@ -17,9 +17,9 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
-import { metaTypeToIcon } from "@utils/icons/metaTypeToIcon";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
+import { MetaTypeIcons } from "./MetaTypeIcons";
 
 interface ProjectMetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;
@@ -115,7 +115,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
           <Button
             onClick={handleClick}
             color="inherit"
-            startIcon={metaTypeToIcon[projectMetadata.metatype]}
+            startIcon={MetaTypeIcons[projectMetadata.metatype]}
             disabled={projectMetadata.read_only}
           >
             {projectMetadata.key}
@@ -152,7 +152,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
           <ListItemButton onClick={() => setIsTypeMenuOpen(true)}>
             <ListItemText>Type</ListItemText>
             <Box sx={{ textAlign: "right", color: "text.secondary", display: "flex", alignItems: "center", gap: 1 }}>
-              {metaTypeToIcon[metatype]}
+              {MetaTypeIcons[metatype]}
               {metatype}
             </Box>
           </ListItemButton>

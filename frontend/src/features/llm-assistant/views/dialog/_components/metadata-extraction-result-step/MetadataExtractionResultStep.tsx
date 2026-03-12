@@ -1,7 +1,7 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { MetadataExtractionLLMJobResult } from "@api/models/MetadataExtractionLLMJobResult";
 import { Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 import { LLMUtterance } from "../LLMUtterance";
 import { MetadataExtractionResultStepTable } from "./MetadataExtractionResultStepTable";

@@ -4,7 +4,7 @@ import { ClassifierInferenceOutput } from "@api/models/ClassifierInferenceOutput
 import { ClassifierTask } from "@api/models/ClassifierTask";
 import { ClassifierTrainingOutput } from "@api/models/ClassifierTrainingOutput";
 import { Button, DialogActions, DialogContent, Divider } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierActions } from "../../../store/classifierSlice";

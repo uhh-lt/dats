@@ -7,7 +7,7 @@ import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,

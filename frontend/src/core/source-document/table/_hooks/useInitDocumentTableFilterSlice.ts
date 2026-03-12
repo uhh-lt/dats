@@ -1,9 +1,9 @@
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueryKey } from "@components/filter";
-import { useAppDispatch } from "@plugins/redux";
+import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { AppDispatch } from "@store/store";
+import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
-import { DocumentTableFilterActions } from "../documentTableFilterSlice";
+import { SdocTableFilterActions } from "../sdocTableFilterSlice";
 
 const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
   useQuery<ColumnInfo[]>({
@@ -22,7 +22,7 @@ const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
           [info.column]: info,
         };
       }, {});
-      dispatch(DocumentTableFilterActions.init({ columnInfoMap }));
+      dispatch(SdocTableFilterActions.init({ columnInfoMap }));
       return columnInfo;
     },
     staleTime: Infinity,

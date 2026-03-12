@@ -1,5 +1,4 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
@@ -8,14 +7,11 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { CodeRenderer } from "../CodeRenderer";
-
-export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
 type CodeCreateValues = {
   parentCodeId: string | number;
@@ -30,18 +26,14 @@ interface CodeCreateDialogProps {
 }
 
 export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialogProps) {
-  const dispatch = useAppDispatch();
+  const { isOpen: isCodeCreateDialogOpen, data: dialogData } = useDialogState("codeCreate");
+  const handleCloseCodeCreateDialog = useCloseDialog("codeCreate");
 
+  // maximize
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
   const codeTree = useWithLevel(parentCodes);
-
-  // open/close dialog
-  const isCodeCreateDialogOpen = useAppSelector((state) => state.dialog.isCodeCreateDialogOpen);
-  const handleCloseCodeCreateDialog = useCallback(() => {
-    dispatch(UIDialogActions.closeCodeCreateDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -55,36 +47,34 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
   } = useForm<CodeCreateValues>();
 
   // reset form when dialog opens
-  const codeName = useAppSelector((state) => state.dialog.codeName);
-  const parentCodeId = useAppSelector((state) => state.dialog.parentCodeId);
   useEffect(() => {
     if (isCodeCreateDialogOpen) {
       reset({
-        parentCodeId: parentCodeId || -1,
-        name: codeName || "",
+        parentCodeId: dialogData?.parentCodeId || -1,
+        name: dialogData?.codeName || "",
         color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
         description: "",
       });
     }
-  }, [isCodeCreateDialogOpen, reset, codeName, parentCodeId]);
+  }, [dialogData, isCodeCreateDialogOpen, reset]);
 
   // form actions
   const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
-  const onSuccessHandler = useAppSelector((state) => state.dialog.codeCreateSuccessHandler);
+  const onSuccessHandler = dialogData?.codeCreateSuccessHandler;
   const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
-    (data) => {
+    (createData) => {
       let pcid: number | undefined = undefined;
-      if (typeof data.parentCodeId === "string") {
-        pcid = parseInt(data.parentCodeId);
+      if (typeof createData.parentCodeId === "string") {
+        pcid = parseInt(createData.parentCodeId);
       } else {
-        pcid = data.parentCodeId;
+        pcid = createData.parentCodeId;
       }
       createCodeMutation(
         {
           requestBody: {
-            name: data.name,
-            description: data.description,
-            color: data.color,
+            name: createData.name,
+            description: createData.description,
+            color: createData.color,
             project_id: projectId,
             parent_id: pcid === -1 ? null : pcid,
             is_system: false,

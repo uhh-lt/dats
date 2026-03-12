@@ -30,4 +30,4 @@ const snackbarSlice = createSlice({
 });
 
 export const SnackbarActions = snackbarSlice.actions;
-export const snackbarReducer = snackbarSlice.reducer;
+export const snackbarReducer = { [snackbarSlice.name]: snackbarSlice.reducer };

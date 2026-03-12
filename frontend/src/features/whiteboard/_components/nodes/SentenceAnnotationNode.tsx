@@ -7,8 +7,7 @@ import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/Gene
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
@@ -30,7 +29,7 @@ import { BaseCardNode } from "./BaseCardNode";
 
 export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeData>) {
   // global client state
-  const dispatch = useAppDispatch();
+  const openSentenceAnnotationEdit = useOpenDialog("sentenceAnnotationEdit");
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
@@ -122,7 +121,7 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeDa
     if (!annotation.data) return;
 
     if (event.detail >= 2) {
-      dispatch(UIDialogActions.openSentenceAnnotationEditDialog({ sentenceAnnotationIds: [annotation.data.id] }));
+      openSentenceAnnotationEdit({ annotationIds: [annotation.data.id] });
     }
   };
 

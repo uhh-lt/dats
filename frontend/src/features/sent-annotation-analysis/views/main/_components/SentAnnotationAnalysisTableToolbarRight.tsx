@@ -1,6 +1,6 @@
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
-import { FilterTableToolbarProps } from "@components/filter";
-import { SentenceAnnotationExportButton } from "@core/sentence-annotation/SentenceAnnotationExportButton";
+import { FilterTableToolbarProps } from "@core/filter";
+import { SentenceAnnotationExportButton } from "@core/sentence-annotation";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,

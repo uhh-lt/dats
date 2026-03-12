@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { forwardRef, KeyboardEventHandler, MouseEventHandler, ReactElement, Ref, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";

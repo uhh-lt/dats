@@ -1,7 +1,6 @@
 import { Box } from "@mui/material";
 import { ReactNode, memo } from "react";
-import { PixelResizablePanel } from "../resizable-panels/PixelResizablePanel";
-import { useLayoutSize } from "../resizable-panels/useLayoutSize";
+import { PixelResizablePanel, useLayoutSize  } from "@components/resizable-panels";
 
 export const SidebarContentSidebarLayout = memo(
   ({ leftSidebar, content, rightSidebar }: { leftSidebar: ReactNode; content: ReactNode; rightSidebar: ReactNode }) => {

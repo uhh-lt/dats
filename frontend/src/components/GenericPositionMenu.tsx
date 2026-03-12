@@ -16,12 +16,6 @@ export const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, Generic
     const [anchorPosition, setAnchorPosition] = useState<PopoverPosition | undefined>(undefined);
     const isOpen = Boolean(anchorPosition);
 
-    // exposed methods (via ref)
-    useImperativeHandle(ref, () => ({
-      open: openContextMenu,
-      close: closeContextMenu,
-    }));
-
     const openContextMenu = (position: PopoverPosition) => {
       setAnchorPosition(position);
     };
@@ -30,6 +24,12 @@ export const GenericPositionMenu = forwardRef<GenericPositionMenuHandle, Generic
       if (onClose) onClose();
       setAnchorPosition(undefined);
     };
+
+    // exposed methods (via ref)
+    useImperativeHandle(ref, () => ({
+      open: openContextMenu,
+      close: closeContextMenu,
+    }));
 
     return (
       <Menu

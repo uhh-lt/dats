@@ -25,7 +25,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";
 import { useState } from "react";

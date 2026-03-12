@@ -8,16 +8,16 @@ import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { TagRead } from "@api/models/TagRead";
 import { EditableTypography } from "@components/EditableTypography";
+import { useAuth } from "@core/auth";
+import { UserRenderer } from "@core/user";
 import SaveIcon from "@mui/icons-material/Save";
 import { DialogContent, Divider, IconButton, Stack, Toolbar, Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useCallback, useMemo, useState } from "react";
 import { SubmitHandler } from "react-hook-form";
-import { useAuth } from "../../../auth/provider/useAuth";
-import { UserRenderer } from "../../../user/UserRenderer";
 import { MemoActionMenu } from "../../MemoActionMenu";
-import { MemoEditorView } from "../../editor/MemoEditorView";
-import { AttachedObjectRenderer } from "../../renderer/AttachedObjectRenderer";
+import { MemoEditorView } from "../../editor";
+import { AttachedObjectRenderer } from "../../renderer";
 
 export interface MemoFormValues {
   title: string;
@@ -60,7 +60,7 @@ export const MemoDialogForm = memo(
       if (!memo?.updated) return "";
       const fullDate = dateToLocaleString(memo.updated);
       return fullDate.substring(0, fullDate.indexOf(","));
-    }, [memo?.updated]);
+    }, [memo]);
 
     const handleTitleChange = useCallback((title: string) => {
       setFormData((oldFormData) => ({

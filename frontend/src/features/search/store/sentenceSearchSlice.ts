@@ -81,10 +81,12 @@ const sentenceSearchSlice = createSlice({
 // actions
 export const SentenceSearchActions = sentenceSearchSlice.actions;
 
-export const sentenceSearchReducer = persistReducer(
-  {
-    key: "sentenceSearch",
-    storage,
-  },
-  sentenceSearchSlice.reducer,
-);
+export const sentenceSearchReducer = {
+  [sentenceSearchSlice.name]: persistReducer(
+    {
+      key: sentenceSearchSlice.name,
+      storage,
+    },
+    sentenceSearchSlice.reducer,
+  ),
+};

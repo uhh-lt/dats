@@ -48,4 +48,4 @@ const BBoxAnnotationsSlice = createSlice({
 });
 
 export const BBoxAnnotationsActions = BBoxAnnotationsSlice.actions;
-export const bboxAnnotationAnalysisReducer = BBoxAnnotationsSlice.reducer;
+export const bboxAnnotationAnalysisReducer = { [BBoxAnnotationsSlice.name]: BBoxAnnotationsSlice.reducer };

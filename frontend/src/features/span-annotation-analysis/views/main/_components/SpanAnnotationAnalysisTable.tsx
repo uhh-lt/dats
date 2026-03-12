@@ -1,5 +1,5 @@
 import { SpanAnnotationTable } from "@core/span-annotation";
-import { useReduxConnector } from "@hooks/useReduxConnector";
+import { useReduxConnector } from "@store/storeHooks";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
 import { SpanAnnotationAnalysisTableToolbarRight } from "./SpanAnnotationAnalysisTableToolbarRight";

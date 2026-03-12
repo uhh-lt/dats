@@ -7,7 +7,7 @@ import {
   useAnalysisDashboardTable,
 } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";

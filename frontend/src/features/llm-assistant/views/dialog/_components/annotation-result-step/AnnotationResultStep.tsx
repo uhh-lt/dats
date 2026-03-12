@@ -7,7 +7,7 @@ import { SdocRenderer } from "@core/source-document";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo, useState } from "react";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 import { LLMUtterance } from "../LLMUtterance";

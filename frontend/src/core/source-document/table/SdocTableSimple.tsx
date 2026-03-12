@@ -1,4 +1,6 @@
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { useAuth } from "@core/auth";
+import { MemoRenderer2 } from "@core/memo";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -9,10 +11,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useMemo } from "react";
-import { useAuth } from "../../auth/provider/useAuth";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
-import { SdocRenderer } from "../renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../renderer/SdocTagRenderer";
+import { SdocRenderer, SdocTagsRenderer } from "../renderer";
 
 interface SdocTableRow {
   sdocId: number;

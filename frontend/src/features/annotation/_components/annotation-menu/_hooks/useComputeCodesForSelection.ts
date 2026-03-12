@@ -1,7 +1,7 @@
 import { CodeRead } from "@api/models/CodeRead";
 import { flatTreeWithRoot } from "@components/tree-explorer";
 import { useComputeCodeTree } from "@core/code";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 
 export const useComputeCodesForSelection = () => {

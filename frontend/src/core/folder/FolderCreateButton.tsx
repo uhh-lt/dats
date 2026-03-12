@@ -1,6 +1,5 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
@@ -10,11 +9,11 @@ interface FolderActionButtonCreateProps {
 
 export const FolderCreateButton = memo(
   ({ folderName, ...props }: FolderActionButtonCreateProps & ListItemButtonProps) => {
-    const dispatch = useAppDispatch();
+    const openFolderCreateDialog = useOpenDialog("folderCreate");
 
     const handleClick = useCallback(() => {
-      dispatch(UIDialogActions.openFolderCreateDialog({ folderName }));
-    }, [dispatch, folderName]);
+      openFolderCreateDialog({ folderName });
+    }, [openFolderCreateDialog, folderName]);
 
     const buttonText = folderName.length > 0 ? `"${folderName}" (Create new)` : "Create new folder";
 

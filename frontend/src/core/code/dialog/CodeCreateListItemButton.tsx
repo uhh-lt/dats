@@ -1,6 +1,5 @@
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
@@ -10,12 +9,11 @@ interface CodeCreateListItemButtonProps {
 
 export const CodeCreateListItemButton = memo(
   ({ parentCodeId, ...props }: CodeCreateListItemButtonProps & Omit<ListItemButtonProps, "onClick">) => {
-    // global client state (redux)
-    const dispatch = useAppDispatch();
+    const openCodeCreateDialog = useOpenDialog("codeCreate");
 
     const handleClick = useCallback(() => {
-      dispatch(UIDialogActions.openCodeCreateDialog({ parentCodeId }));
-    }, [dispatch, parentCodeId]);
+      openCodeCreateDialog({ parentCodeId });
+    }, [openCodeCreateDialog, parentCodeId]);
 
     return (
       <ListItemButton {...props} onClick={handleClick}>

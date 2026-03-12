@@ -5,7 +5,7 @@ import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity
 import SendIcon from "@mui/icons-material/Send";
 import UndoIcon from "@mui/icons-material/Undo"; // Revert
 import { Box, IconButton, MenuItem, Paper, Stack, TextField, Tooltip, Typography, alpha, useTheme } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import Markdown from "react-markdown";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";

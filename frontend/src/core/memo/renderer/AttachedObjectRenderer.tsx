@@ -7,13 +7,13 @@ import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { TagRead } from "@api/models/TagRead";
 import { memo } from "react";
-import { BBoxAnnotationRenderer } from "../../bbox-annotation/BBoxAnnotationRenderer";
-import { CodeRenderer } from "../../code/CodeRenderer";
-import { ProjectRenderer } from "../../project/ProjectRenderer";
-import { SentenceAnnotationRenderer } from "../../sentence-annotation/SentenceAnnotationRenderer";
-import { SdocRenderer } from "../../source-document/renderer/SdocRenderer";
-import { SpanAnnotationRenderer } from "../../span-annotation/SpanAnnotationRenderer";
-import { TagRenderer } from "../../tag/TagRenderer";
+import { BBoxAnnotationRenderer } from "@core/bbox-annotation";
+import { CodeRenderer } from "@core/code";
+import { ProjectRenderer } from "@core/project";
+import { SentenceAnnotationRenderer } from "@core/sentence-annotation";
+import { SdocRenderer } from "@core/source-document";
+import { SpanAnnotationRenderer } from "@core/span-annotation";
+import { TagRenderer } from "@core/tag";
 
 interface AttachedObjectRendererProps {
   attachedObject:

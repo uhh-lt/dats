@@ -11,8 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -27,35 +26,28 @@ type CodeEditValues = {
 
 interface CodeEditDialogProps {
   onCodeUpdated?: (idsToExpand: number[]) => void;
+  onCodeDeleted?: (codeId: number) => void;
 }
 
-export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
-  const dispatch = useAppDispatch();
+export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogProps) {
+  const { isOpen, data: dialogData } = useDialogState("codeEdit");
+  const handleClose = useCloseDialog("codeEdit");
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();
 
-  // the code to edit
-  const code = useAppSelector((state) => state.dialog.code);
-
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
   const parentCodes = useMemo(() => {
-    if (!codes.data) return [];
+    if (!codes.data || !dialogData?.code) return [];
 
-    if (code?.is_system) {
-      return codes.data.filter((c) => c.id !== code.id);
+    if (dialogData.code.is_system) {
+      return codes.data.filter((c) => c.id !== dialogData.code.id);
     } else {
-      return codes.data.filter((c) => c.id !== code?.id && !c.is_system);
+      return codes.data.filter((c) => c.id !== dialogData.code.id && !c.is_system);
     }
-  }, [code, codes.data]);
+  }, [dialogData, codes.data]);
   const codeTree = useWithLevel(parentCodes);
-
-  // open/close dialog
-  const isOpen = useAppSelector((state) => state.dialog.isCodeEditDialogOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeCodeEditDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -70,42 +62,42 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isOpen && code) {
+    if (isOpen && dialogData?.code) {
       reset({
-        name: code.name,
-        description: code.description,
-        color: ColorUtils.rgbStringToHex(code.color) || code.color,
-        parentCodeId: code.parent_id || -1,
+        name: dialogData.code.name,
+        description: dialogData.code.description,
+        color: ColorUtils.rgbStringToHex(dialogData.code.color) || dialogData.code.color,
+        parentCodeId: dialogData.code.parent_id || -1,
       });
     }
-  }, [isOpen, reset, code]);
+  }, [isOpen, reset, dialogData]);
 
   // form actions
   const { mutate: updateCodeMutation, isPending: isUpdateLoading } = CodeHooks.useUpdateCode();
   const handleCodeUpdate = useCallback<SubmitHandler<CodeEditValues>>(
-    (data) => {
-      if (code) {
+    (updateData) => {
+      if (dialogData?.code) {
         // only allow updating of color for SYSTEM CODES
         let requestBody: CodeUpdate = {
-          color: data.color,
+          color: updateData.color,
         };
-        if (!code.is_system) {
+        if (!dialogData.code.is_system) {
           requestBody = {
             ...requestBody,
-            name: data.name,
-            description: data.description,
-            parent_id: data.parentCodeId === -1 ? null : data.parentCodeId,
+            name: updateData.name,
+            description: updateData.description,
+            parent_id: updateData.parentCodeId === -1 ? null : updateData.parentCodeId,
           };
         }
         updateCodeMutation(
           {
             requestBody,
-            codeId: code.id,
+            codeId: dialogData.code.id,
           },
           {
             onSuccess: (data: CodeRead) => {
               // check if we updated the parent code
-              if (data.parent_id !== code.parent_id) {
+              if (data.parent_id !== dialogData.code.parent_id) {
                 // if we edited a code successfully, we want to show the code in the code explorer
                 // this means, we might have to expand the parent codes, so the new code is visible
                 const codesToExpand = [];
@@ -123,20 +115,21 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
         );
       }
     },
-    [code, updateCodeMutation, codes, handleClose, onCodeUpdated],
+    [dialogData, updateCodeMutation, codes, handleClose, onCodeUpdated],
   );
   const { mutate: deleteCodeMutation, isPending: isDeleteLoading } = CodeHooks.useDeleteCode();
   const handleCodeDelete = useCallback(() => {
     // disallow deleting of SYSTEM CODES
-    if (code && !code.is_system) {
+    if (dialogData?.code && !dialogData.code.is_system) {
       openConfirmationDialog({
-        text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
         type: "DELETE",
+        text: `Do you really want to delete the code "${dialogData.code.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteCodeMutation(
-            { codeId: code.id },
+            { codeId: dialogData.code.id },
             {
               onSuccess: () => {
+                onCodeDeleted?.(dialogData.code.id);
                 handleClose();
               },
             },
@@ -146,7 +139,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
     }
-  }, [code, deleteCodeMutation, handleClose, openConfirmationDialog]);
+  }, [deleteCodeMutation, dialogData, handleClose, onCodeDeleted, openConfirmationDialog]);
   const handleError: SubmitErrorHandler<CodeEditValues> = (data) => console.error(data);
 
   return (
@@ -160,7 +153,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
       onSubmit={handleSubmit(handleCodeUpdate, handleError)}
     >
       <DATSDialogHeader
-        title={`Edit code ${code?.name}`}
+        title={`Edit code ${dialogData?.code?.name}`}
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}
@@ -175,7 +168,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
               error: Boolean(errors.parentCodeId),
               helperText: <ErrorMessage errors={errors} name="parentCodeId" />,
               variant: "filled",
-              disabled: code?.is_system,
+              disabled: dialogData?.code?.is_system,
             }}
           >
             <MenuItem key={-1} value={-1}>
@@ -196,7 +189,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
               error: Boolean(errors.name),
               helperText: <ErrorMessage errors={errors} name="name" />,
               variant: "standard",
-              disabled: code?.is_system,
+              disabled: dialogData?.code?.is_system,
             }}
           />
           <FormColorPicker
@@ -222,7 +215,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
               error: Boolean(errors.description),
               helperText: <ErrorMessage errors={errors} name="description" />,
               variant: "standard",
-              disabled: code?.is_system,
+              disabled: dialogData?.code?.is_system,
             }}
           />
         </Stack>
@@ -236,7 +229,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
           loadingPosition="start"
           onClick={handleCodeDelete}
           sx={{ flexShrink: 0 }}
-          disabled={!code || code.is_system}
+          disabled={!dialogData?.code || dialogData.code.is_system}
         >
           Delete Code
         </LoadingButton>
@@ -246,7 +239,7 @@ export function CodeEditDialog({ onCodeUpdated }: CodeEditDialogProps) {
           startIcon={<SaveIcon />}
           fullWidth
           type="submit"
-          disabled={!code}
+          disabled={!dialogData?.code || dialogData.code.is_system}
           loading={isUpdateLoading}
           loadingPosition="start"
         >

@@ -5,7 +5,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import ReplayIcon from "@mui/icons-material/Replay";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { Box, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ReactNode, useMemo } from "react";
 import {
   Bar,

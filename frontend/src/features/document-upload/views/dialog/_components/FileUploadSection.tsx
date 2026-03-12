@@ -3,10 +3,10 @@ import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { Language } from "@api/models/Language";
 import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
+import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
-import { ProcessingSettingsButton } from "./ProcessingSettingsButton";
 import { UploadDropzone } from "./UploadDropzone";
 
 interface FileUploadSectionProps {

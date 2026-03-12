@@ -15,10 +15,10 @@ import {
   getOrCreateFilter,
   MyFilterExpression,
   resetProjectFilterState,
-} from "@components/filter";
+} from "@core/filter";
+import { getMetadataValue } from "@core/sdoc-metadata";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
-import { getValue } from "@utils/MetadataUtils";
 import * as d3 from "d3";
 import { v4 as uuidv4 } from "uuid";
 
@@ -268,7 +268,7 @@ const perspectivesSlice = createSlice({
           id: uuidv4(),
           column: action.payload.projectMetadata.id,
           operator: getDefaultOperator(filterOperatorType),
-          value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
+          value: getMetadataValue(action.payload.metadata, action.payload.projectMetadata)!,
         },
       ];
     },
@@ -369,4 +369,4 @@ const perspectivesSlice = createSlice({
 });
 
 export const PerspectivesActions = perspectivesSlice.actions;
-export const perspectivesReducer = perspectivesSlice.reducer;
+export const perspectivesReducer = { [perspectivesSlice.name]: perspectivesSlice.reducer };

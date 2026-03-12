@@ -9,8 +9,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderRenderer } from "./FolderRenderer";
@@ -21,17 +20,12 @@ interface FolderCreateDialogProps {
 }
 
 export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreateDialogProps) {
-  const dispatch = useAppDispatch();
+  const { isOpen: isFolderCreateDialogOpen, data } = useDialogState("folderCreate");
+  const handleClose = useCloseDialog("folderCreate");
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();
   const foldersWithLevel = useWithLevel(folders.data || []);
-
-  // open/close dialog
-  const isFolderCreateDialogOpen = useAppSelector((state) => state.dialog.isFolderCreateDialogOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeFolderCreateDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -45,17 +39,16 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
   } = useForm<FolderCreate>();
 
   // reset form when dialog opens
-  const folderName = useAppSelector((state) => state.dialog.folderName);
   useEffect(() => {
-    if (isFolderCreateDialogOpen) {
+    if (isFolderCreateDialogOpen && data?.folderName) {
       reset({
-        name: folderName || "",
+        name: data.folderName || "",
         folder_type: FolderType.NORMAL,
         parent_id: -1,
         project_id: projectId,
       });
     }
-  }, [isFolderCreateDialogOpen, reset, folderName, projectId]);
+  }, [isFolderCreateDialogOpen, data, reset, projectId]);
 
   // form actions
   const { mutate: createFolderMutation, isPending } = FolderHooks.useCreateFolder();

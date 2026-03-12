@@ -1,5 +1,5 @@
 import { ContentLayout } from "@components/content-layouts";
-import { SpanAnnotationEditDialog } from "@core/span-annotation/SpanAnnotationEditDialog";
+import { SpanAnnotationEditDialog } from "@core/span-annotation";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { SpanAnnotationAnalysisTable } from "./_components/SpanAnnotationAnalysisTable";

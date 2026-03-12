@@ -1,9 +1,9 @@
 import { DocType } from "@api/models/DocType";
 import { CardContainer } from "@components/CardContainer";
 import { ContentContentLayout } from "@components/content-layouts";
-import { useComputeCodeTree } from "@core/code/explorer/useComputeCodeTree";
-import { DocTypeSelector } from "@core/source-document/DocTypeSelector";
-import { UserSelectorMulti } from "@core/user/selector/UserSelectorMulti";
+import { useComputeCodeTree } from "@core/code";
+import { DocTypeSelector } from "@core/source-document";
+import { UserSelectorMulti } from "@core/user";
 import { Card, CardHeader, Stack } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";

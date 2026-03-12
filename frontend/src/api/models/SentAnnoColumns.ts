@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 export enum SentAnnoColumns {
   SENT_ANNO_CODE_ID = "SentAnno_CODE_ID",
   SENT_ANNO_USER_ID = "SentAnno_USER_ID",

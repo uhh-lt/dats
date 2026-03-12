@@ -19,7 +19,7 @@ export const MemoDeleteButton = memo(({ memoIds, ...props }: MemoDeleteButtonPro
         deleteMemos({ memoIds: memoIds });
       },
     });
-  }, [memoIds, deleteMemos]);
+  }, [openConfirmationDialog, memoIds, deleteMemos]);
 
   return (
     <Tooltip title={"Delete"}>

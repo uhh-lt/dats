@@ -1,6 +1,5 @@
 import { ReactNode, memo } from "react";
-import { PercentageResizablePanel } from "../resizable-panels/PercentageResizablePanel";
-import { useLayoutPercentage } from "../resizable-panels/useLayoutPercentage";
+import { PercentageResizablePanel, useLayoutPercentage  } from "@components/resizable-panels";
 
 export const ContentContentLayout = memo(
   ({ leftContent, rightContent }: { leftContent: ReactNode; rightContent: ReactNode }) => {

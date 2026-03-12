@@ -3,6 +3,7 @@ import { QueryKey } from "@api/hooks/QueryKey";
 import { COTARead } from "@api/models/COTARead";
 import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
 import { JobStatus } from "@api/models/JobStatus";
+import { queryClient } from "@api/queryClient";
 import { useOpenConfirmationDialog } from "@core/notification";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
@@ -22,8 +23,7 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { queryClient } from "@plugins/tanstack";
+import { useAppDispatch } from "@store/storeHooks";
 import { useEffect } from "react";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";

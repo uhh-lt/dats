@@ -5,7 +5,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 

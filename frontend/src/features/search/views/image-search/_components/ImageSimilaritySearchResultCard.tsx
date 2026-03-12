@@ -1,7 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DocType } from "@api/models/DocType";
 import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
-import { SdocTagsRenderer } from "@core/source-document/renderer/SdocTagRenderer";
+import { SdocTagsRenderer } from "@core/source-document";
 import {
   Card,
   CardActionArea,

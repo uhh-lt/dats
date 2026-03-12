@@ -2,9 +2,9 @@ import { QueryKey } from "@api/hooks/QueryKey";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo } from "@components/filter";
-import { useAppDispatch } from "@plugins/redux";
+import { ColumnInfo } from "@core/filter";
 import { AppDispatch } from "@store/store";
+import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 

@@ -1,11 +1,6 @@
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { StringOperator } from "@api/models/StringOperator";
-import {
-  createInitialFilterState,
-  filterReducer,
-  MyFilterExpression,
-  resetProjectFilterState,
-} from "@components/filter";
+import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -32,4 +27,4 @@ const seatFilterSlice = createSlice({
 });
 
 export const SEATFilterActions = seatFilterSlice.actions;
-export const seatFilterReducer = seatFilterSlice.reducer;
+export const seatFilterReducer = { [seatFilterSlice.name]: seatFilterSlice.reducer };

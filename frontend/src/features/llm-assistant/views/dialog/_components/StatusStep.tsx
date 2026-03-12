@@ -2,7 +2,7 @@ import { LLMHooks } from "@api/hooks/LLMHooks";
 import { JobStatus } from "@api/models/JobStatus";
 import { LinearProgressWithLabel } from "@components/progress-bars";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";

@@ -1,6 +1,6 @@
 import { TagRead } from "@api/models/TagRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { TagTable } from "@core/tag/TagTable";
+import { TagTable } from "@core/tag";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";

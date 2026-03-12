@@ -30,7 +30,7 @@ export function BBoxAnnotationDeleteMenuItem({
 
       if (onClick) onClick();
     },
-    [annotationId, deleteMutation, onClick],
+    [annotationId, deleteMutation, onClick, openConfirmationDialog],
   );
 
   return (

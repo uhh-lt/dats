@@ -10,28 +10,19 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagRenderer } from "../TagRenderer";
 
 export function TagEditDialog() {
-  const dispatch = useAppDispatch();
-
-  // tag to edit
-  const tag = useAppSelector((state) => state.dialog.tag);
+  const { isOpen, data: dialogData } = useDialogState("tagEdit");
+  const handleClose = useCloseDialog("tagEdit");
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();
   const tagTree = useWithLevel(tags.data || []);
-
-  // open/close dialog
-  const isOpen = useAppSelector((state) => state.dialog.isTagEditDialogOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeTagEditDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -46,30 +37,30 @@ export function TagEditDialog() {
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isOpen && tag) {
+    if (isOpen && dialogData?.tag) {
       reset({
-        parent_id: tag.parent_id || -1,
-        name: tag.name,
-        color: ColorUtils.rgbStringToHex(tag.color) || tag.color,
-        description: tag.description,
+        parent_id: dialogData.tag.parent_id || -1,
+        name: dialogData.tag.name,
+        color: ColorUtils.rgbStringToHex(dialogData.tag.color) || dialogData.tag.color,
+        description: dialogData.tag.description,
       });
     }
-  }, [isOpen, reset, tag]);
+  }, [isOpen, reset, dialogData]);
 
   // form actions
   const { mutate: updateTagMutation, isPending: isUpdateLoading } = TagHooks.useUpdateTag();
   const handleTagUpdate = useCallback<SubmitHandler<TagUpdate>>(
-    (data) => {
-      if (tag) {
+    (updateData) => {
+      if (dialogData?.tag) {
         updateTagMutation(
           {
             requestBody: {
-              name: data.name,
-              description: data.description,
-              color: data.color,
-              parent_id: data.parent_id === -1 ? null : data.parent_id,
+              name: updateData.name,
+              description: updateData.description,
+              color: updateData.color,
+              parent_id: updateData.parent_id === -1 ? null : updateData.parent_id,
             },
-            tagId: tag.id,
+            tagId: dialogData.tag.id,
           },
           {
             onSuccess: () => {
@@ -81,18 +72,18 @@ export function TagEditDialog() {
         throw new Error("Invalid invocation of method handleTagUpdate! Only call when tag.data is available!");
       }
     },
-    [handleClose, tag, updateTagMutation],
+    [handleClose, dialogData, updateTagMutation],
   );
   const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: deleteTagMutation, isPending: isDeleteLoading } = TagHooks.useDeleteTag();
   const handleTagDelete = useCallback(() => {
-    if (tag) {
+    if (dialogData?.tag) {
       openConfirmationDialog({
-        text: `Do you really want to delete the tag "${tag.name}"? This action cannot be undone!`,
         type: "DELETE",
+        text: `Do you really want to delete the tag "${dialogData.tag.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteTagMutation(
-            { tagId: tag.id },
+            { tagId: dialogData.tag.id },
             {
               onSuccess: () => {
                 handleClose();
@@ -104,7 +95,7 @@ export function TagEditDialog() {
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag is available!");
     }
-  }, [deleteTagMutation, handleClose, openConfirmationDialog, tag]);
+  }, [dialogData, openConfirmationDialog, deleteTagMutation, handleClose]);
   const handleError: SubmitErrorHandler<TagUpdate> = (data) => console.error(data);
 
   return (
@@ -118,7 +109,7 @@ export function TagEditDialog() {
       onSubmit={handleSubmit(handleTagUpdate, handleError)}
     >
       <DATSDialogHeader
-        title={`Edit tag ${tag?.name}`}
+        title={`Edit tag ${dialogData?.tag?.name}`}
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}

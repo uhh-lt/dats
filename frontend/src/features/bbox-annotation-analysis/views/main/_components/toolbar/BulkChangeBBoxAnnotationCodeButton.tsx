@@ -1,10 +1,10 @@
 import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
+import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
 
 interface BulkChangeBBoxAnnotationCodeButtonProps {
   selectedData: BBoxAnnotationRow[];
@@ -13,6 +13,7 @@ interface BulkChangeBBoxAnnotationCodeButtonProps {
 export function BulkChangeBBoxAnnotationCodeButton({ selectedData }: BulkChangeBBoxAnnotationCodeButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
+  const openBBoxAnnotationEdit = useOpenDialog("bboxAnnotationEdit");
 
   // actions
   const handleEditSuccess = useCallback(() => {
@@ -20,12 +21,10 @@ export function BulkChangeBBoxAnnotationCodeButton({ selectedData }: BulkChangeB
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    dispatch(
-      UIDialogActions.openBBoxAnnotationEditDialog({
-        bboxAnnotationIds: selectedData.map((row) => row.id),
-        onEdit: handleEditSuccess,
-      }),
-    );
+    openBBoxAnnotationEdit({
+      annotationIds: selectedData.map((row) => row.id),
+      onEdit: handleEditSuccess,
+    });
   };
 
   return (

@@ -42,4 +42,4 @@ const logbookSlice = createSlice({
 });
 
 export const LogbookActions = logbookSlice.actions;
-export const logbookReducer = logbookSlice.reducer;
+export const logbookReducer = { [logbookSlice.name]: logbookSlice.reducer };

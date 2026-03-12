@@ -96,4 +96,4 @@ const computeValueRepresentation = (state: DocumentSamplerState) => {
 export const selectIsValuesOutdated = (state: RootState) =>
   state.documentSampler.oldValues !== computeValueRepresentation(state.documentSampler);
 
-export const documentSamplerReducer = documentSamplerSlice.reducer;
+export const documentSamplerReducer = { [documentSamplerSlice.name]: documentSamplerSlice.reducer };

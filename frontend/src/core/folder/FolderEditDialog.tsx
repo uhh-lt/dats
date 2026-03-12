@@ -11,27 +11,18 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderRenderer } from "./FolderRenderer";
 
 export function FolderEditDialog() {
-  const dispatch = useAppDispatch();
-
-  // folder to edit
-  const folder = useAppSelector((state) => state.dialog.folder);
+  const { isOpen, data: dialogData } = useDialogState("folderEdit");
+  const handleClose = useCloseDialog("folderEdit");
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();
   const folderTree = useWithLevel(folders.data || []);
-
-  // open/close dialog
-  const isOpen = useAppSelector((state) => state.dialog.isFolderEditDialogOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeFolderEditDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -46,26 +37,26 @@ export function FolderEditDialog() {
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isOpen && folder) {
+    if (isOpen && dialogData?.folder) {
       reset({
-        parent_id: folder.parent_id || -1,
-        name: folder.name,
+        parent_id: dialogData.folder.parent_id || -1,
+        name: dialogData.folder.name,
       });
     }
-  }, [isOpen, reset, folder]);
+  }, [isOpen, reset, dialogData]);
 
   // form actions
   const { mutate: updateFolderMutation, isPending: isUpdateLoading } = FolderHooks.useUpdateFolder();
   const handleFolderUpdate = useCallback<SubmitHandler<FolderUpdate>>(
-    (data) => {
-      if (folder) {
+    (updateData) => {
+      if (dialogData?.folder) {
         updateFolderMutation(
           {
             requestBody: {
-              name: data.name,
-              parent_id: data.parent_id === -1 ? null : data.parent_id,
+              name: updateData.name,
+              parent_id: updateData.parent_id === -1 ? null : updateData.parent_id,
             },
-            folderId: folder.id,
+            folderId: dialogData.folder.id,
           },
           {
             onSuccess: () => {
@@ -77,18 +68,18 @@ export function FolderEditDialog() {
         throw new Error("Invalid invocation of method handleFolderUpdate! Only call when folder.data is available!");
       }
     },
-    [handleClose, folder, updateFolderMutation],
+    [handleClose, dialogData, updateFolderMutation],
   );
   const { mutate: deleteFolderMutation, isPending: isDeleteLoading } = FolderHooks.useDeleteFolder();
   const openConfirmationDialog = useOpenConfirmationDialog();
   const handleFolderDelete = useCallback(() => {
-    if (folder) {
+    if (dialogData?.folder) {
       openConfirmationDialog({
-        text: `Do you really want to delete the folder "${folder.name}"? This will delete ALL contained documents, their annotations, memos, etc. This action cannot be undone!`,
         type: "DELETE",
+        text: `Do you really want to delete the folder "${dialogData.folder.name}"? This will delete ALL contained documents, their annotations, memos, etc. This action cannot be undone!`,
         onAccept: () => {
           deleteFolderMutation(
-            { folderId: folder.id },
+            { folderId: dialogData.folder.id },
             {
               onSuccess: () => {
                 handleClose();
@@ -100,7 +91,7 @@ export function FolderEditDialog() {
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when folder is available!");
     }
-  }, [folder, openConfirmationDialog, deleteFolderMutation, handleClose]);
+  }, [dialogData, openConfirmationDialog, deleteFolderMutation, handleClose]);
   const handleError: SubmitErrorHandler<FolderUpdate> = (data) => console.error(data);
 
   return (
@@ -114,7 +105,7 @@ export function FolderEditDialog() {
       onSubmit={handleSubmit(handleFolderUpdate, handleError)}
     >
       <DATSDialogHeader
-        title={`Edit folder ${folder?.name}`}
+        title={`Edit folder ${dialogData?.folder.name}`}
         onClose={handleClose}
         isMaximized={isMaximized}
         onToggleMaximize={toggleMaximize}

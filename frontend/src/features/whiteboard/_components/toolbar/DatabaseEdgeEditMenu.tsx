@@ -18,12 +18,6 @@ export const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, r
 
   const [edges, setEdges] = useState<Edge[]>([]);
 
-  // exposed methods (via ref)
-  useImperativeHandle(ref, () => ({
-    open: openMenu,
-    close: closeMenu,
-  }));
-
   // methods
   const openMenu = (edges: Edge[]) => {
     setEdges(edges);
@@ -32,6 +26,12 @@ export const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, r
   const closeMenu = () => {
     setEdges([]);
   };
+
+  // exposed methods (via ref)
+  useImperativeHandle(ref, () => ({
+    open: openMenu,
+    close: closeMenu,
+  }));
 
   // actions
   const bulkUnlinkTagsMutation = TagHooks.useBulkUnlinkTags();

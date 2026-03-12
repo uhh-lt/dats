@@ -9,10 +9,11 @@ interface FolderActionMenuButtonProps {
   popoverOrigin?: PopoverOrigin;
   type?: string;
   selectedFolderIds: number[];
+  onMoveFolder?: () => void;
 }
 
 export const FolderActionMenuButton = memo(
-  ({ popoverOrigin, type, selectedFolderIds }: FolderActionMenuButtonProps) => {
+  ({ popoverOrigin, type, selectedFolderIds, onMoveFolder }: FolderActionMenuButtonProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const handleClick: MouseEventHandler<HTMLButtonElement> = useCallback((event) => {
       setAnchorEl(event.currentTarget);
@@ -34,6 +35,7 @@ export const FolderActionMenuButton = memo(
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
           popoverOrigin={popoverOrigin}
+          onMoveFolder={onMoveFolder}
         />
       </>
     );

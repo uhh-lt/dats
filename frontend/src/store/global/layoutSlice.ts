@@ -40,10 +40,12 @@ const layoutSlice = createSlice({
 });
 
 export const LayoutActions = layoutSlice.actions;
-export const layoutReducer = persistReducer(
-  {
-    key: "layout",
-    storage,
-  },
-  layoutSlice.reducer,
-);
+export const layoutReducer = {
+  [layoutSlice.name]: persistReducer(
+    {
+      key: layoutSlice.name,
+      storage,
+    },
+    layoutSlice.reducer,
+  ),
+};

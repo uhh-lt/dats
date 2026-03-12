@@ -7,8 +7,8 @@ import { CodeExplorer } from "@core/code";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { ReactElement, useCallback, useState } from "react";
 import { AudioVideoViewer } from "../../_components/AudioVideoViewer";
 import { ImageAnnotator } from "../../_components/ImageAnnotator";
 import { ImageViewer } from "../../_components/ImageViewer";
@@ -23,7 +23,7 @@ import { AnnoActions } from "../../store/annoSlice";
 
 const annotatorComponent = (
   sdocData: SourceDocumentDataRead,
-  boxRef: React.RefObject<HTMLDivElement>,
+  boxRef: HTMLDivElement,
 ): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <TextAnnotator sdocData={sdocData} />,
@@ -31,7 +31,7 @@ const annotatorComponent = (
       <SentenceAnnotator
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <TextViewer sdocData={sdocData} />,
@@ -42,7 +42,7 @@ const annotatorComponent = (
       <SentenceAnnotator
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <ImageViewer sdocData={sdocData} />,
@@ -53,7 +53,7 @@ const annotatorComponent = (
       <SentenceAnnotator
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: (
@@ -66,7 +66,7 @@ const annotatorComponent = (
       <SentenceAnnotator
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <AudioVideoViewer sdocData={sdocData} showEntities={true} width={800} height={600} />,
@@ -75,7 +75,7 @@ const annotatorComponent = (
 
 const comparatorComponent = (
   sdocData: SourceDocumentDataRead,
-  boxRef: React.RefObject<HTMLDivElement>,
+  boxRef: HTMLDivElement,
 ): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
   [DocType.TEXT]: {
     [AnnotationMode.Annotation]: <div>Not supported</div>,
@@ -83,7 +83,7 @@ const comparatorComponent = (
       <SentenceAnnotationComparison
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
@@ -99,7 +99,7 @@ const comparatorComponent = (
       <SentenceAnnotationComparison
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
@@ -110,7 +110,7 @@ const comparatorComponent = (
       <SentenceAnnotationComparison
         sdocData={sdocData}
         style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
-        virtualizerScrollElementRef={boxRef}
+        virtualizerScrollElement={boxRef}
       />
     ),
     [AnnotationMode.Reader]: <div>Not supported</div>,
@@ -166,6 +166,10 @@ export function AnnotationView() {
     (codeId: number | undefined) => dispatch(AnnoActions.setHoveredCodeId(codeId)),
     [dispatch],
   );
+  const handleToggleCodeVisibility = useCallback(
+    (codeIds: number[]) => dispatch(AnnoActions.toggleCodeVisibility(codeIds)),
+    [dispatch],
+  );
 
   // global server state (react query)
   const sdoc = SdocHooks.useGetDocument(sdocId);
@@ -210,6 +214,7 @@ export function AnnotationView() {
               expandedCodeIds={expandedCodeIds}
               onExpandedCodeIdsChange={handleExpandedCodeIdsChange}
               hiddenCodeIds={hiddenCodeIds}
+              onToggleCodeVisibility={handleToggleCodeVisibility}
               onHoverCodeIdChange={handleHoverCodeIdChange}
             />
           </TabPanel>
@@ -224,13 +229,7 @@ export function AnnotationView() {
   );
 
   // for virtualization in annotator components
-  const [isBoxReady, setIsBoxReady] = useState(false);
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (boxRef.current) {
-      setIsBoxReady(true);
-    }
-  }, [boxRef]);
+  const [boxNode, setBoxNode] = useState<HTMLDivElement | null>(null);
 
   // rendering
   return (
@@ -239,13 +238,13 @@ export function AnnotationView() {
       content={
         <Box className="h100 myFlexContainer">
           <AnnotationToolbar sdoc={sdoc.data} />
-          <Box className="myFlexFillAllContainer" ref={boxRef}>
+          <Box className="myFlexFillAllContainer" ref={setBoxNode}>
             <Container sx={{ py: 2 }} maxWidth="xl">
               <Card raised>
                 <CardContent>
                   {sdocId ? (
                     <>
-                      {sdoc.isSuccess && sdocData.isSuccess && isBoxReady ? (
+                      {sdoc.isSuccess && sdocData.isSuccess && boxNode ? (
                         <>
                           <EditableTypography
                             value={sdoc.data.name}
@@ -259,8 +258,8 @@ export function AnnotationView() {
                             }}
                           />
                           {isCompareMode
-                            ? comparatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]
-                            : annotatorComponent(sdocData.data, boxRef)[sdoc.data.doctype][annotationMode]}
+                            ? comparatorComponent(sdocData.data, boxNode)[sdoc.data.doctype][annotationMode]
+                            : annotatorComponent(sdocData.data, boxNode)[sdoc.data.doctype][annotationMode]}
                         </>
                       ) : sdoc.isError ? (
                         <div>Error: {sdoc.error.message}</div>

@@ -11,8 +11,8 @@ import {
   TextField,
   createFilterOptions,
 } from "@mui/material";
-import { metaTypeToIcon } from "@utils/icons/metaTypeToIcon";
 import { memo, useCallback } from "react";
+import { MetaTypeIcons } from "../MetaTypeIcons";
 
 const filter = createFilterOptions<string>();
 
@@ -53,7 +53,7 @@ export const MetadataTypeSelectorMenu = memo(
     const renderOption = useCallback(
       (props: React.HTMLAttributes<HTMLLIElement>, option: string) => (
         <ListItem {...props} key={option}>
-          <ListItemIcon>{metaTypeToIcon[option as MetaType]}</ListItemIcon>
+          <ListItemIcon>{MetaTypeIcons[option as MetaType]}</ListItemIcon>
           <ListItemText>{option}</ListItemText>
         </ListItem>
       ),

@@ -5,7 +5,7 @@ import { KeywordStat } from "@api/models/KeywordStat";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { TagStat } from "@api/models/TagStat";
 import { StatisticsService } from "@api/services/StatisticsService";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 
 const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined) => {
   // global client state (redux)

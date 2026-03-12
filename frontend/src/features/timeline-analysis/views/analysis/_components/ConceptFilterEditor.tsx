@@ -1,6 +1,6 @@
-import { FilterRenderer } from "@components/filter";
+import { FilterRenderer } from "@core/filter";
 import { Box, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 
 export function ConceptFilterEditor() {

@@ -1,5 +1,5 @@
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";

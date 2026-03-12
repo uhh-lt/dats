@@ -1,1 +1,1 @@
-export * from "./QuickCommandMenu"
+export * from "./QuickCommandMenu";

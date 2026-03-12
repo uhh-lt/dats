@@ -18,8 +18,8 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
-import { TagCreateListItemButton } from "../../dialog/TagCreateListItemButton";
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { TagCreateListItemButton } from "../../dialog";
 
 interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
@@ -53,7 +53,10 @@ export function TagMenu(props: TagMenuProps) {
   if (!allTags.data || !initialChecked) {
     return null;
   }
-  return <TagMenuContent tags={allTags.data} initialChecked={initialChecked} {...props} />;
+  // Generate a unique key based on the selected sdocs
+  // When sdocIds change, React destroys the old component and mounts a fresh one
+  const componentKey = props.sdocIds.join("-");
+  return <TagMenuContent key={componentKey} tags={allTags.data} initialChecked={initialChecked} {...props} />;
 }
 
 function TagMenuContent({
@@ -71,10 +74,7 @@ function TagMenuContent({
   }, [setAnchorEl]);
 
   // checkbox state
-  const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map());
-  useEffect(() => {
-    setChecked(new Map(initialChecked));
-  }, [initialChecked]);
+  const [checked, setChecked] = useState<Map<number, CheckboxState>>(() => new Map(initialChecked));
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
   const handleCheck = (tagId: number) => () => {
     setChecked(

@@ -7,7 +7,7 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { Annotation } from "../_types/Annotation";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";

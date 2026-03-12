@@ -2,7 +2,7 @@ import { TaskType } from "@api/models/TaskType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";
 import { AnnotationResultStep } from "./_components/annotation-result-step/AnnotationResultStep";

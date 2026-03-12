@@ -1,7 +1,7 @@
+import { ExportChartMenuItem } from "@components/export-chart-buttons";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material";
-import { exportChart } from "@utils/ExportUtils";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo, useState } from "react";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
@@ -30,10 +30,6 @@ export function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAna
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleExportChartPNG = () => {
-    exportChart("timeline-chart", `timeline-analysis-${chartName}`);
-    setAnchorEl(null);
-  };
 
   // render
   return (
@@ -46,10 +42,11 @@ export function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAna
         </span>
       </Tooltip>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MenuItem onClick={handleExportChartPNG}>
-          <ListItemIcon>{getIconComponent(Icon.EXPORT_IMAGE, { fontSize: "small" })}</ListItemIcon>
-          <ListItemText>PNG</ListItemText>
-        </MenuItem>
+        <ExportChartMenuItem
+          title="PNG"
+          chartName={`timeline-analysis-${chartName}`}
+          chartIdentifier="timeline-chart"
+        />
         <CsvDownloader
           datas={(chartData as Datas) || []}
           columns={columns}

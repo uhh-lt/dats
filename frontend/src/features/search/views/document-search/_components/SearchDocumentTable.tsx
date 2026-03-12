@@ -1,14 +1,34 @@
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
-import { MyFilter, ReduxFilterDialog } from "@components/filter/redux-filter-dialog/index";
+import { useAuth } from "@core/auth";
+import { MyFilter, ReduxFilterDialog } from "@core/filter";
+import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
+import { OpenInTabsButton } from "@core/navigation";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import {
+  DeleteSdocsButton,
+  SdocAnnotatorsRenderer,
+  SdocExportButton,
+  SdocRenderer,
+  SdocTagsRenderer,
+} from "@core/source-document";
+import { TagMenuButton } from "@core/tag";
+// TODO: Fix feature-to-feature imports
+// eslint-disable-next-line boundaries/element-types
 import { ClassifierInferenceButton } from "@features/classifier";
+// TODO: Fix feature-to-feature imports
+// eslint-disable-next-line boundaries/element-types
 import { DocumentUploadButton } from "@features/document-upload";
+// TODO: Fix feature-to-feature imports
+// eslint-disable-next-line boundaries/element-types
+import { queryClient } from "@api/queryClient";
 import { LLMAssistanceButton } from "@features/llm-assistant";
-import { useReduxConnector } from "@hooks/useReduxConnector";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
+import { RootState } from "@store/store";
+import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import parse from "html-react-parser";
@@ -26,32 +46,7 @@ import {
   MRT_Updater,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { FolderMap } from "../../../../../api/FolderHooks";
-import { QueryKey } from "../../../../../api/QueryKey";
-import { FolderType } from "../../../../../api/openapi/models/FolderType";
-import { HierarchicalElasticSearchHit } from "../../../../../api/openapi/models/HierarchicalElasticSearchHit";
-import { PaginatedSDocHits } from "../../../../../api/openapi/models/PaginatedSDocHits";
-import { SdocColumns } from "../../../../../api/openapi/models/SdocColumns";
-import { SortDirection } from "../../../../../api/openapi/models/SortDirection";
-import { SourceDocumentRead } from "../../../../../api/openapi/models/SourceDocumentRead";
-import { SearchService } from "../../../../../api/openapi/services/SearchService";
-import { FolderRenderer } from "../../../../../core/folder/FolderRenderer";
-import { FolderActionMenuButton } from "../../../../../core/folder/action-menu/FolderActionMenuButton";
-import { OpenInTabsButton } from "../../../../../core/navigation/tabs/OpenInTabsButton";
-import { SdocMetadataRenderer } from "../../../../../core/sdoc-metadata/SdocMetadataRenderer";
-import { DeleteSdocsButton } from "../../../../../core/source-document/DeleteSdocsButton";
-import { SdocAnnotatorsRenderer } from "../../../../../core/source-document/SdocAnnotatorsRenderer";
-import { SdocExportButton } from "../../../../../core/source-document/SdocExportButton";
-import { SdocRenderer } from "../../../../../core/source-document/renderer/SdocRenderer";
-import { SdocTagsRenderer } from "../../../../../core/source-document/renderer/SdocTagRenderer";
-import { TagMenuButton } from "../../../../../core/tag/menu/TagMenuButton";
-import { queryClient } from "../../../../../plugins/tanstack/queryClient";
-import { FolderSelection, SearchActions } from "../../../../../store/documentSearchSlice";
-import { selectSelectedIds, selectSelectedRows } from "../../../../../store/generic/tableSlice";
-import { RootState } from "../../../../../store/store";
-import { useAuth } from "../../../../auth/useAuth";
-import { NoDocumentsPlaceholder } from "../../../../document-upload/views/dialog/_components/NoDocumentsPlaceholder";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
 
@@ -146,7 +141,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
   // virtualization
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -521,6 +516,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
         <FolderActionMenuButton
           selectedFolderIds={selectedFolderIds}
           popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+          onMoveFolder={() => dispatch(SearchActions.onMoveFolders())}
         />
       );
     }
@@ -529,9 +525,9 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <DATSToolbar variant="dense" ref={toolbarRef}>
+      <DATSToolbar variant="dense" ref={setToolbarEl}>
         <ReduxFilterDialog
-          anchorEl={toolbarRef.current}
+          anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}

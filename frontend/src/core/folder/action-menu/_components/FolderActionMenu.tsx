@@ -19,7 +19,7 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { FolderCreateButton } from "../../FolderCreateButton";
 
 interface FolderMenuProps {
@@ -27,6 +27,7 @@ interface FolderMenuProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: Dispatch<SetStateAction<HTMLElement | null>>;
   folderIds: number[];
+  onMoveFolder?: () => void;
 }
 
 export function FolderActionMenu(props: FolderMenuProps) {
@@ -78,7 +79,12 @@ export function FolderActionMenu(props: FolderMenuProps) {
   if (!allFoldersWithRoot || !initialChecked) {
     return null;
   }
-  return <FolderMenuContent folders={allFoldersWithRoot} initialChecked={initialChecked} {...props} />;
+  // Generate a unique key based on the selected folders
+  // When folderIds change, React destroys the old component and mounts a fresh one
+  const componentKey = props.folderIds.join("-");
+  return (
+    <FolderMenuContent key={componentKey} folders={allFoldersWithRoot} initialChecked={initialChecked} {...props} />
+  );
 }
 
 function FolderMenuContent({
@@ -88,7 +94,8 @@ function FolderMenuContent({
   popoverOrigin,
   folders,
   initialChecked,
-}: { folders: FolderRead[]; initialChecked: Map<number, CheckboxState> } & FolderMenuProps) {
+  onMoveFolder,
+}: { folders: FolderRead[]; initialChecked: Map<number, CheckboxState>; onMoveFolder?: () => void } & FolderMenuProps) {
   // menu state
   const open = Boolean(anchorEl);
   const handleClose = useCallback(() => {
@@ -96,10 +103,7 @@ function FolderMenuContent({
   }, [setAnchorEl]);
 
   // checkbox state
-  const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map());
-  useEffect(() => {
-    setChecked(new Map(initialChecked));
-  }, [initialChecked]);
+  const [checked, setChecked] = useState<Map<number, CheckboxState>>(() => new Map(initialChecked));
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
   const hasNoChecked = useMemo(
     () => Array.from(checked.values()).every((state) => state === CheckboxState.NOT_CHECKED),
@@ -146,11 +150,12 @@ function FolderMenuContent({
       },
       {
         onSuccess: () => {
+          onMoveFolder?.();
           handleClose();
         },
       },
     );
-  }, [checked, moveFoldersMutation, folderIds, handleClose]);
+  }, [checked, moveFoldersMutation, folderIds, onMoveFolder, handleClose]);
 
   // Display buttons depending on state
   const actionMenu: React.ReactNode = useMemo(() => {

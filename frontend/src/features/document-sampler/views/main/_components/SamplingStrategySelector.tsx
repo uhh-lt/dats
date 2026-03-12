@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, Card, CardContent, CardHeader, CardProps, TextField, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { DocumentSamplerActions } from "../../../store/documentSamplerSlice";
 

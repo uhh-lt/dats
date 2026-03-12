@@ -1,12 +1,12 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter";
+import { ReduxFilterDialog } from "@core/filter";
 import { TagMenuButton } from "@core/tag";
 import { useDebounce } from "@hooks/useDebounce";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, InputAdornment, Stack, TextField, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
-import { ChangeEvent, memo, useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { ChangeEvent, memo, useEffect, useState } from "react";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterMenuButton } from "./ClusterMenuButton";
 import { ClusterReviewButtons } from "./ClusterReviewButtons";
@@ -23,7 +23,7 @@ export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // filter dialog
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
 
   // search bar
   const dispatch = useAppDispatch();
@@ -37,7 +37,7 @@ export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
   }, [debouncedSearchQuery, dispatch]);
 
   return (
-    <DATSToolbar variant="dense" ref={toolbarRef}>
+    <DATSToolbar variant="dense" ref={setToolbarEl}>
       {selectedDocumentIds.length > 0 && (
         <Stack direction="row" alignItems="center">
           <Typography color="textSecondary">
@@ -58,7 +58,7 @@ export const MapToolbar = memo(({ aspectId }: MapToolbarProps) => {
       )}
       <Box sx={{ flexGrow: 1 }} />
       <ReduxFilterDialog
-        anchorEl={toolbarRef.current}
+        anchorEl={toolbarEl}
         buttonProps={{ size: "small" }}
         filterName={`aspect-${aspectId}`}
         filterStateSelector={filterStateSelector}

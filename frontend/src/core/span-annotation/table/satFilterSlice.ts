@@ -1,11 +1,6 @@
 import { SpanColumns } from "@api/models/SpanColumns";
 import { StringOperator } from "@api/models/StringOperator";
-import {
-  createInitialFilterState,
-  filterReducer,
-  MyFilterExpression,
-  resetProjectFilterState,
-} from "@components/filter";
+import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -32,4 +27,4 @@ const satFilterSlice = createSlice({
 });
 
 export const SATFilterActions = satFilterSlice.actions;
-export const satFilterReducer = satFilterSlice.reducer;
+export const satFilterReducer = { [satFilterSlice.name]: satFilterSlice.reducer };

@@ -1,6 +1,6 @@
 import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
 import { Box, BoxProps, CircularProgress, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback } from "react";

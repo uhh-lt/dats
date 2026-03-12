@@ -3,7 +3,7 @@ import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { BBoxAnnotationsActions } from "../../../../store/bboxAnnotationAnalysisSlice";
 
 interface BulkDeleteBBoxAnnotationsButtonProps {

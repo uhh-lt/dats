@@ -1,8 +1,8 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { MemoRead } from "@api/models/MemoRead";
-import { useAuth } from "@core/auth/provider/useAuth";
-import { MemoEditorView } from "@core/memo/editor/MemoEditorView";
+import { useAuth } from "@core/auth";
+import { MemoEditorView } from "@core/memo";
 import { Button, CircularProgress } from "@mui/material";
 import { useCallback } from "react";
 

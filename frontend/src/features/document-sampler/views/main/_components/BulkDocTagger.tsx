@@ -3,7 +3,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { MenuItem, Select, Stack } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useState } from "react";
 
 export const BulkDocTagger = memo(() => {

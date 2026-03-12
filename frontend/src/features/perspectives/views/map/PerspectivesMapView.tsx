@@ -1,5 +1,5 @@
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { ClusterJobProgressDialog } from "../../_components/ClusterJobProgressDialog";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";

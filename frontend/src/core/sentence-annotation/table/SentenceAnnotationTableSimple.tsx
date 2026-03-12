@@ -9,8 +9,8 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import { useAuth } from "../../auth/provider/useAuth";
-import { MemoRenderer2 } from "../../memo/renderer/MemoRenderer2";
+import { useAuth } from "@core/auth";
+import { MemoRenderer2 } from "@core/memo";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 interface SentenceAnnotationTableRow {

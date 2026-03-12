@@ -1,5 +1,5 @@
 import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { FilterTableToolbarProps, ReduxFilterDialog } from "@components/filter";
+import { FilterTableToolbarProps, ReduxFilterDialog } from "@core/filter";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
 import { MemoDeleteButton } from "../../MemoDeleteButton";

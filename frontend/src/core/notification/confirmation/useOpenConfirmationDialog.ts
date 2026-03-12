@@ -1,4 +1,4 @@
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ConfirmationEvent } from "./_types/ConfirmationEvent";
 import { ConfirmationActions } from "./confirmationSlice";

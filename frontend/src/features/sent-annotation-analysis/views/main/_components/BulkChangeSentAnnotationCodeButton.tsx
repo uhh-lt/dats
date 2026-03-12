@@ -1,8 +1,8 @@
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 
@@ -13,6 +13,7 @@ interface BulkChangeSentAnnotationCodeButtonProps {
 export function BulkChangeSentAnnotationCodeButton({ selectedData }: BulkChangeSentAnnotationCodeButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
+  const openSentenceAnnotationEdit = useOpenDialog("sentenceAnnotationEdit");
 
   // actions
   const handleEditSuccess = useCallback(() => {
@@ -20,12 +21,10 @@ export function BulkChangeSentAnnotationCodeButton({ selectedData }: BulkChangeS
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    dispatch(
-      UIDialogActions.openSentenceAnnotationEditDialog({
-        sentenceAnnotationIds: selectedData.map((row) => row.id),
-        onEdit: handleEditSuccess,
-      }),
-    );
+    openSentenceAnnotationEdit({
+      annotationIds: selectedData.map((row) => row.id),
+      onEdit: handleEditSuccess,
+    });
   };
 
   return (

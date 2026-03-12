@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { CrawlerJobInput_Output } from "./CrawlerJobInput_Output";
 import type { CrawlerJobOutput } from "./CrawlerJobOutput";
 import type { JobStatus } from "./JobStatus";

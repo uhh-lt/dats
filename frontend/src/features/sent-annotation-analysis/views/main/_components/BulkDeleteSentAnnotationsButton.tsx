@@ -3,7 +3,7 @@ import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 
 interface BulkDeleteSentAnnotationsButtonProps {

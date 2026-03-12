@@ -1,10 +1,10 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { TabData } from "../_types/TabData";
 import { TabActions } from "../tabSlice";
-import { getTabInfoFromPath } from "./_config/tabInfo";
+import { getTabInfoFromPath } from "./_utils/tabInfo";
 
 export const OpenInTabsButton = memo(({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) => {
   const dispatch = useAppDispatch();

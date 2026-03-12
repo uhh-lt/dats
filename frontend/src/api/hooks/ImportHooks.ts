@@ -1,8 +1,8 @@
 import { ImportJobRead } from "@api/models/ImportJobRead";
 import { ImportJobType } from "@api/models/ImportJobType";
 import { JobStatus } from "@api/models/JobStatus";
+import { queryClient } from "@api/queryClient";
 import { ImportService } from "@api/services/ImportService";
-import { queryClient } from "@plugins/tanstack";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { dateToLocaleDate } from "@utils/DateUtils";
 import { QueryKey } from "./QueryKey";

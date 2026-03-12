@@ -1,6 +1,6 @@
 import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
-import { FilterTableToolbarProps } from "@components/filter";
-import { BBoxAnnotationExportButton } from "@core/bbox-annotation/BBoxAnnotationExportButton";
+import { BBoxAnnotationExportButton } from "@core/bbox-annotation";
+import { FilterTableToolbarProps } from "@core/filter";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,

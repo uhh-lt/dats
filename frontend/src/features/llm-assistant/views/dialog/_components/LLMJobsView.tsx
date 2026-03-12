@@ -2,7 +2,7 @@ import { LLMHooks } from "@api/hooks/LLMHooks";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import { LLMJobListItem } from "./LLMJobListItem";
 

@@ -1,5 +1,5 @@
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusSlice";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { TabActions } from "../../tabSlice";
@@ -39,6 +39,8 @@ export function useShortcuts() {
   const projectId = useAppSelector((state) => state.project.projectId);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const toggleQuickCommandMenu = useToggleDialog("quickCommandMenu");
+  const openProjectSettingsDialog = useOpenDialog("projectSettings");
 
   // Memoize the sorted shortcuts
   const sortedShortcuts = useMemo(() => {
@@ -46,13 +48,10 @@ export function useShortcuts() {
 
     const shortcuts: Shortcut[] = [
       // Existing quick command menu shortcut
-      createShortcut(
-        "toggleQuickCommandMenu",
-        "p",
-        "Toggle Quick Command Menu",
-        () => dispatch(UIDialogActions.toggleQuickCommandMenu()),
-        { ctrlmeta: true, shift: true },
-      ),
+      createShortcut("toggleQuickCommandMenu", "p", "Toggle Quick Command Menu", toggleQuickCommandMenu, {
+        ctrlmeta: true,
+        shift: true,
+      }),
 
       // Navigation shortcuts
       createShortcut(
@@ -134,7 +133,7 @@ export function useShortcuts() {
           shift: true,
         },
       ),
-      createShortcut("goToSettings", ",", "Go to Settings", () => dispatch(UIDialogActions.openProjectSettings()), {
+      createShortcut("goToSettings", ",", "Go to Settings", openProjectSettingsDialog, {
         ctrlmeta: true,
         shift: true,
       }),
@@ -182,7 +181,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [dispatch, navigate, projectId]);
+  }, [dispatch, navigate, projectId, toggleQuickCommandMenu, openProjectSettingsDialog]);
 
   return sortedShortcuts;
 }

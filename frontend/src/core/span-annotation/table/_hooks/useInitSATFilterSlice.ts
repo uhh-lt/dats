@@ -1,7 +1,7 @@
 import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueryKey } from "@components/filter";
-import { useAppDispatch } from "@plugins/redux";
+import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { AppDispatch } from "@store/store";
+import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { SATFilterActions } from "../satFilterSlice";
 

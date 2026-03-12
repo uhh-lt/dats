@@ -4,7 +4,7 @@ import { TaggingLLMJobResult } from "@api/models/TaggingLLMJobResult";
 import { TagRead } from "@api/models/TagRead";
 import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";

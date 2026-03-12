@@ -4,7 +4,7 @@ import { COTARead } from "@api/models/COTARead";
 import { DateGroupBy } from "@api/models/DateGroupBy";
 import { DocType } from "@api/models/DocType";
 import { MetaType } from "@api/models/MetaType";
-import { SdocsWithDateCounter } from "@core/sdoc-metadata/date-counter/SdocsWithDateCounter";
+import { SdocsWithDateCounter } from "@core/sdoc-metadata";
 import InfoIcon from "@mui/icons-material/Info";
 import { MenuItem, Stack, TextField } from "@mui/material";
 import Card from "@mui/material/Card";

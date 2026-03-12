@@ -20,7 +20,7 @@ import {
 import { CheckboxState } from "@utils/CheckboxState";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 
 interface ClusterMenuProps {
   aspectId: number;
@@ -78,7 +78,12 @@ export function ClusterMenu(props: ClusterMenuProps) {
   if (!vis.data || !initialChecked || vis.data.clusters.length === 0) {
     return null;
   }
-  return <ClusterMenuContent clusters={vis.data.clusters} initialChecked={initialChecked} {...props} />;
+  // Generate a unique key based on the selected sdocs
+  // When sdocIds change, React destroys the old component and mounts a fresh one
+  const componentKey = props.sdocIds.join("-");
+  return (
+    <ClusterMenuContent key={componentKey} clusters={vis.data.clusters} initialChecked={initialChecked} {...props} />
+  );
 }
 
 function ClusterMenuContent({
@@ -98,10 +103,7 @@ function ClusterMenuContent({
   }, [setAnchorEl]);
 
   // checkbox state
-  const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map());
-  useEffect(() => {
-    setChecked(new Map(initialChecked));
-  }, [initialChecked]);
+  const [checked, setChecked] = useState<Map<number, CheckboxState>>(() => new Map(initialChecked));
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
   const hasNoChecked = useMemo(
     () => Array.from(checked.values()).every((state) => state === CheckboxState.NOT_CHECKED),

@@ -9,8 +9,7 @@ import {
   TextField,
   alpha,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { useNavigate } from "@tanstack/react-router";
 import { SyntheticEvent, useCallback, useRef } from "react";
 import { useDefaultCommands } from "./_hooks/useDefaultCommands";
@@ -22,9 +21,8 @@ export function QuickCommandMenu({ projectId }: { projectId: number }) {
 
   // open close the menu
   const anchorRef = useRef<HTMLDivElement>(null);
-  const isOpen = useAppSelector((state) => state.dialog.isQuickCommandMenuOpen);
-  const dispatch = useAppDispatch();
-  const closeMenu = useCallback(() => dispatch(UIDialogActions.closeQuickCommandMenu()), [dispatch]);
+  const { isOpen } = useDialogState("quickCommandMenu");
+  const closeMenu = useCloseDialog("quickCommandMenu");
 
   // handle comands
   const navigate = useNavigate();

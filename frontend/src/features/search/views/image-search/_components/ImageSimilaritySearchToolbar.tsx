@@ -1,11 +1,11 @@
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter";
+import { ReduxFilterDialog } from "@core/filter";
 import { DeleteSdocsButton, SdocExportButton } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { Box, Checkbox, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
-import { useRef } from "react";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useState } from "react";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../../store/imageSearchSlice";
 import { ImageSimilaritySearchOptionsMenu } from "./ImageSimilaritySearchOptionsMenu";
@@ -25,7 +25,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   const dispatch = useAppDispatch();
 
   // local client state
-  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
+  const [filterDialogAnchor, setFilterDialogAnchor] = useState<HTMLDivElement | null>(null);
 
   // toggle documents button
   const numSelectedDocuments = selectedDocumentIds.length;
@@ -38,7 +38,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
   };
 
   return (
-    <DATSToolbar disableGutters variant="dense" ref={filterDialogAnchorRef}>
+    <DATSToolbar disableGutters variant="dense" ref={setFilterDialogAnchor}>
       <Checkbox
         color="primary"
         indeterminate={numSelectedDocuments > 0 && numSelectedDocuments < searchResultDocumentIds.length}
@@ -62,7 +62,7 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
       )}
       <Box sx={{ flexGrow: 1 }} />
       <ReduxFilterDialog
-        anchorEl={filterDialogAnchorRef.current}
+        anchorEl={filterDialogAnchor}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
         filterName={filterName}
         filterStateSelector={filterStateSelector}

@@ -1,6 +1,6 @@
 import { ContentContentLayout } from "@components/content-layouts";
 import { MemoTable } from "@core/memo";
-import { useReduxConnector } from "@hooks/useReduxConnector";
+import { useReduxConnector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { LogbookActions } from "../../store/logbookSlice";
 import { LogbookEditor } from "./_components/LogbookEditor";

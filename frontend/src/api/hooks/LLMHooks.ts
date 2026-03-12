@@ -2,8 +2,8 @@ import { ApproachType } from "@api/models/ApproachType";
 import { JobStatus } from "@api/models/JobStatus";
 import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
 import { TaskType } from "@api/models/TaskType";
+import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
-import { queryClient } from "@plugins/tanstack";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

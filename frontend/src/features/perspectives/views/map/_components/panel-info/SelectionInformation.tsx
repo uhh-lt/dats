@@ -9,7 +9,7 @@ import { TagMenuButton, TagRow } from "@core/tag";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Link } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useEffect } from "react";

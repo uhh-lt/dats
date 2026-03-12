@@ -1,7 +1,7 @@
 import { COTARead } from "@api/models/COTARead";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { CotaConceptList } from "./CotaConceptList";
 import { CotaControl } from "./CotaControl";
 import { CotaScatterPlotly } from "./CotaScatterPlotly";

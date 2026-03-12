@@ -11,6 +11,7 @@ import { SortDirection } from "@api/models/SortDirection";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
@@ -29,8 +30,7 @@ import {
   MRT_ToolbarAlertBanner,
   useMaterialReactTable,
 } from "material-react-table";
-import { JSX, UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ProcessingSettingsButton } from "../../../../document-upload/views/dialog/_components/ProcessingSettingsButton";
+import { UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const sdocStatus2Icon: Record<SDocStatus, JSX.Element> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { JobStatus } from "./JobStatus";
 import type { PerspectivesJobInput } from "./PerspectivesJobInput";
 export type PerspectivesJobRead = {

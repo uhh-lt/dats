@@ -92,10 +92,12 @@ export const ImageSearchActions = imageSearchSlice.actions;
 
 // selectors
 export const getSelectedDocumentIds = (state: ImageSearchState) => state.selectedDocumentIds;
-export const imageSearchReducer = persistReducer(
-  {
-    key: "imageSearch",
-    storage,
-  },
-  imageSearchSlice.reducer,
-);
+export const imageSearchReducer = {
+  [imageSearchSlice.name]: persistReducer(
+    {
+      key: imageSearchSlice.name,
+      storage,
+    },
+    imageSearchSlice.reducer,
+  ),
+};

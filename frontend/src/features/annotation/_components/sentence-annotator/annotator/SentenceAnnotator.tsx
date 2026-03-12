@@ -2,7 +2,7 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
@@ -16,11 +16,11 @@ import { DocumentSentence } from "./_components/DocumentSentence";
 
 interface SentenceAnnotatorProps {
   sdocData: SourceDocumentDataRead;
-  virtualizerScrollElementRef: React.RefObject<HTMLDivElement>;
+  virtualizerScrollElement: HTMLDivElement;
 }
 
 export const SentenceAnnotator = memo(
-  ({ sdocData, virtualizerScrollElementRef, ...props }: SentenceAnnotatorProps & BoxProps) => {
+  ({ sdocData, virtualizerScrollElement, ...props }: SentenceAnnotatorProps & BoxProps) => {
     // global client state (URL search params)
     const { visibleUserId, selectedAnnotationId } = AnnotationRouteAPI.useSearch();
 
@@ -197,7 +197,7 @@ export const SentenceAnnotator = memo(
     // virtualization
     const virtualizer = useVirtualizer({
       count: sdocData.sentences.length,
-      getScrollElement: () => virtualizerScrollElementRef.current!,
+      getScrollElement: () => virtualizerScrollElement,
       estimateSize: () => 35,
       overscan: 2,
     });

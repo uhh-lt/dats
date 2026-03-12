@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { BorderStyle } from "./BorderStyle";
 import type { HorizontalAlign } from "./HorizontalAlign";
 import type { VerticalAlign } from "./VerticalAlign";

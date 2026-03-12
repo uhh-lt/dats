@@ -5,59 +5,30 @@ import { BBoxAnnotationSearchResult } from "@api/models/BBoxAnnotationSearchResu
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
+import { ImageCropper } from "@components/ImageCropper";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
-  FilterTableToolbarProps,
   FilterTableToolbarRight,
   MyFilter,
   createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter";
-import { ImageCropper } from "@components/ImageCropper";
-import { useAuth } from "@core/auth";
-import { CodeRenderer } from "@core/code";
+} from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocTagsRenderer } from "@core/source-document";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  MRT_ColumnDef,
-  MRT_RowSelectionState,
-  MRT_RowVirtualizer,
-  MRT_SortingState,
-  MRT_TableOptions,
-  MRT_VisibilityState,
-  MaterialReactTable,
-  useMaterialReactTable,
-} from "material-react-table";
+import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions } from "./bboxFilterSlice";
 
 const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
-
-export interface BBoxAnnotationTableProps {
-  projectId: number;
-  filterName: string;
-  // selection
-  rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: MRT_TableOptions<BBoxAnnotationRow>["onRowSelectionChange"];
-  // sorting
-  sortingModel: MRT_SortingState;
-  onSortingChange: MRT_TableOptions<BBoxAnnotationRow>["onSortingChange"];
-  // column visibility
-  columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: MRT_TableOptions<BBoxAnnotationRow>["onColumnVisibilityChange"];
-  // components
-  positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationRow>["positionToolbarAlertBanner"];
-  renderTopRightToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
-  renderTopLeftToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
-  renderBottomToolbar?: (props: FilterTableToolbarProps<BBoxAnnotationRow>) => React.ReactNode;
-}
 
 // this defines which filter slice is used
 const filterStateSelector = (state: RootState) => state.bboxFilter;

@@ -8,7 +8,7 @@ import { SdocRenderer } from "@core/source-document";
 import LabelIcon from "@mui/icons-material/Label";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import {
   MaterialReactTable,
   MRT_ColumnDef,

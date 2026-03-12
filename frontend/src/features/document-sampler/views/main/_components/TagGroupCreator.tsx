@@ -17,7 +17,7 @@ import {
   Tooltip,
   UseAutocompleteProps,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { DocumentSamplerActions } from "../../../store/documentSamplerSlice";
 

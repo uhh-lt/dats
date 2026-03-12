@@ -1,16 +1,15 @@
+import { Droppable } from "@components/drag-and-drop";
+import AbcIcon from "@mui/icons-material/Abc";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import FolderIcon from "@mui/icons-material/Folder";
+import { Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import { SvgIconProps } from "@mui/material/SvgIcon";
 import { TreeItem, TreeViewProps } from "@mui/x-tree-view";
-import * as React from "react";
-
-import AbcIcon from "@mui/icons-material/Abc";
-import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
+import * as React from "react";
 import { useCallback } from "react";
-import { Droppable } from "../../drag-and-drop/Droppable";
 import { ITree, NamedObjWithParent } from "../ITree";
 
 export interface DataTreeViewProps<T extends NamedObjWithParent> {
@@ -46,7 +45,7 @@ export function DataTreeView<T extends NamedObjWithParent>({
   ...props
 }: DataTreeViewProps<T> & TreeViewProps<boolean>) {
   const renderTree = useCallback(
-    (nodes: ITree<T>[], isRoot = false) => {
+    function renderTreeFn(nodes: ITree<T>[], isRoot = false) {
       return nodes.map((node) => {
         const hasChildren = Array.isArray(node.children) && node.children.length > 0;
         // Use rootIcon for the root node if provided and isRoot is true
@@ -77,7 +76,7 @@ export function DataTreeView<T extends NamedObjWithParent>({
               )
             }
           >
-            {hasChildren && <React.Fragment> {renderTree(node.children!, false)} </React.Fragment>}
+            {hasChildren && <React.Fragment> {renderTreeFn(node.children!, false)} </React.Fragment>}
           </TreeItem>
         );
       });

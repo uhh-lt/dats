@@ -1,6 +1,6 @@
 import { ListItemText, Menu, MenuItem, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useAppDispatch } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
 import { TabActions } from "../../../tabSlice";
@@ -16,6 +16,7 @@ export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: Tab
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const dispatch = useAppDispatch();
+  const openQuickCommandMenu = useOpenDialog("quickCommandMenu");
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -49,8 +50,8 @@ export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: Tab
 
   const handleOpenCommandMenu = useCallback(() => {
     handleClose();
-    dispatch(UIDialogActions.openQuickCommandMenu());
-  }, [dispatch, handleClose]);
+    openQuickCommandMenu();
+  }, [openQuickCommandMenu, handleClose]);
 
   return (
     <>

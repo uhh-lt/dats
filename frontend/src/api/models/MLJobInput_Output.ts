@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 import type { CoreferenceResolutionParams } from "./CoreferenceResolutionParams";
 import type { DocTagRecommendationParams } from "./DocTagRecommendationParams";
 import type { DocumentEmbeddingParams } from "./DocumentEmbeddingParams";

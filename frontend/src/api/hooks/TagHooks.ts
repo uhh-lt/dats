@@ -1,9 +1,9 @@
 import { Body_tag_update_tags_batch } from "@api/models/Body_tag_update_tags_batch";
 import { SourceDocumentTagMultiLink } from "@api/models/SourceDocumentTagMultiLink";
 import { TagRead } from "@api/models/TagRead";
+import { queryClient } from "@api/queryClient";
 import { TagService } from "@api/services/TagService";
-import { useAppSelector } from "@plugins/redux";
-import { queryClient } from "@plugins/tanstack";
+import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

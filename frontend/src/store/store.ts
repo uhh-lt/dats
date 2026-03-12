@@ -1,3 +1,7 @@
+/* eslint-disable boundaries/element-types */
+// This file configures the Redux store for the application, combining reducers from various features and core modules.
+// Hence, it is expected to have imports from many different parts of the codebase, which is why the boundaries rule is disabled here.
+
 import { bboxFilterReducer } from "@core/bbox-annotation";
 import { memoDialogReducer, memoFilterReducer } from "@core/memo";
 import { tabReducer } from "@core/navigation";
@@ -21,42 +25,43 @@ import { timelineAnalysisReducer } from "@features/timeline-analysis";
 import { wordFrequencyReducer } from "@features/word-frequency-analysis";
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from "redux-persist";
-import { dialogReducer } from "./global/dialogSlice";
+import { dialogBusReducer } from "./global/dialogBusSlice";
 import { layoutReducer } from "./global/layoutSlice";
 import { projectReducer } from "./global/projectSlice";
 
 export const store = configureStore({
   reducer: {
     // persisted reducers
-    annotations: annoReducer,
-    search: searchReducer,
-    imageSearch: imageSearchReducer,
-    sentenceSearch: sentenceSearchReducer,
-    layout: layoutReducer,
-    project: projectReducer,
+    ...annoReducer,
+    ...searchReducer,
+    ...imageSearchReducer,
+    ...sentenceSearchReducer,
+    ...layoutReducer,
+    ...projectReducer,
     // non-persisted reducers
-    memo: memoDialogReducer,
-    snackbar: snackbarReducer,
-    confirmation: confirmationReducer,
-    classifier: classifierReducer,
-    llmAssistant: llmAssistantReducer,
-    tabs: tabReducer,
-    logbook: logbookReducer,
-    spanAnnotationAnalysis: spanAnnotationAnalysisReducer,
-    sentAnnotationAnalysis: sentAnnotationAnalysisReducer,
-    bboxAnnotationAnalysis: bboxAnnotationAnalysisReducer,
-    timelineAnalysis: timelineAnalysisReducer,
-    satFilter: satFilterReducer,
-    seatFilter: seatFilterReducer,
-    bboxFilter: bboxFilterReducer,
-    memoFilter: memoFilterReducer,
-    documentTableFilter: documentTableFilterReducer,
-    wordFrequency: wordFrequencyReducer,
-    cota: cotaReducer,
-    dialog: dialogReducer,
-    documentSampler: documentSamplerReducer,
-    perspectives: perspectivesReducer,
-    duplicateFinder: duplicateFinderReducer,
+    ...memoDialogReducer,
+    ...snackbarReducer,
+    ...confirmationReducer,
+    ...classifierReducer,
+    ...llmAssistantReducer,
+    ...tabReducer,
+    ...logbookReducer,
+    ...spanAnnotationAnalysisReducer,
+    ...sentAnnotationAnalysisReducer,
+    ...bboxAnnotationAnalysisReducer,
+    ...timelineAnalysisReducer,
+    ...satFilterReducer,
+    ...seatFilterReducer,
+    ...bboxFilterReducer,
+    ...memoFilterReducer,
+    ...documentTableFilterReducer,
+    ...wordFrequencyReducer,
+    ...cotaReducer,
+    ...documentSamplerReducer,
+    ...perspectivesReducer,
+    ...duplicateFinderReducer,
+    // dialog bus
+    ...dialogBusReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -1,15 +1,9 @@
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Box, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
-import { useCallback } from "react";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 
 export function NoDocumentsPlaceholder() {
-  const dispatch = useAppDispatch();
-
-  const handleClick = useCallback(() => {
-    dispatch(UIDialogActions.openDocumentUpload());
-  }, [dispatch]);
+  const openDocumentUploadDialog = useOpenDialog("documentUpload");
 
   return (
     <Box
@@ -37,7 +31,7 @@ export function NoDocumentsPlaceholder() {
             transform: "scale(0.95)",
           },
         }}
-        onClick={handleClick}
+        onClick={openDocumentUploadDialog}
       />
       <Typography variant="h6" color="text.secondary">
         No Documents Found

@@ -2,10 +2,9 @@ import { LoginStatus } from "@core/auth";
 import { SideBar, TabBar } from "@core/navigation";
 import { Box } from "@mui/material";
 // eslint-disable-next-line boundaries/element-types
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 // eslint-disable-next-line boundaries/element-types
 import { ProjectActions } from "@store/global/projectSlice";
-import "@styles/layout.css";
 import { createFileRoute, Outlet, redirect, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 

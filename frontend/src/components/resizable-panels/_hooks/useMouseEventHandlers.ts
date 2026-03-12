@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 interface MouseEventHandlersConfig {
   dragHandleRef: React.RefObject<HTMLElement>;
@@ -17,13 +17,14 @@ export function useMouseEventHandlers({
   const handlersRef = useRef({ handleMouseDown, handleMouseMove, handleMouseUp });
 
   // Update ref values when handlers change
-  handlersRef.current.handleMouseDown = handleMouseDown;
-  handlersRef.current.handleMouseMove = handleMouseMove;
-  handlersRef.current.handleMouseUp = handleMouseUp;
+  useLayoutEffect(() => {
+    handlersRef.current.handleMouseDown = handleMouseDown;
+    handlersRef.current.handleMouseMove = handleMouseMove;
+    handlersRef.current.handleMouseUp = handleMouseUp;
+  }, [handleMouseDown, handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
     const dragHandle = dragHandleRef.current;
-    console.log("add resize event listener");
     if (!dragHandle) return;
 
     // Create stable event handler functions that read from ref

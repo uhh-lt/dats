@@ -9,7 +9,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 
 interface TimeAnalysisProvenanceProps {

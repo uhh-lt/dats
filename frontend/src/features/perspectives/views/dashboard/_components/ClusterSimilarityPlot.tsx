@@ -10,7 +10,7 @@ import {
   TooltipProps,
   Typography,
 } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";

@@ -6,7 +6,7 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "reactflow";
 import { StrokeStyle } from "../../_types/base/StrokeStyle";
 import { DATSNodeData } from "../../_types/DATSNodeData";
-import { isDashed, isDotted } from "../edges/edgeUtils";
+import { isDashed, isDotted } from "../edgeUtils";
 import { BgColorTool } from "./tools/BgColorTool";
 import { EdgeMarkerTool } from "./tools/EdgeMarkerTool";
 import { EdgeStyleTool } from "./tools/EdgeStyleTool";
@@ -22,12 +22,6 @@ export const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
   const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
 
-  // exposed methods (via ref)
-  useImperativeHandle(ref, () => ({
-    open: openMenu,
-    close: closeMenu,
-  }));
-
   // methods
   const openMenu = (edges: Edge<WhiteboardEdgeData_Input>[]) => {
     // TODO: This is a workaround. It seems there is a bug in react-flow
@@ -37,6 +31,12 @@ export const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   const closeMenu = () => {
     setEdges([]);
   };
+
+  // exposed methods (via ref)
+  useImperativeHandle(ref, () => ({
+    open: openMenu,
+    close: closeMenu,
+  }));
 
   const updateEdges = useCallback(
     (updateFnc: (oldEdge: Edge<WhiteboardEdgeData_Input>) => Edge<WhiteboardEdgeData_Input>) => {

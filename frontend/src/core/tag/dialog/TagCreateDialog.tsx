@@ -8,8 +8,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -21,17 +20,12 @@ interface TagCreateDialogProps {
 }
 
 export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogProps) {
-  const dispatch = useAppDispatch();
+  const { isOpen: isTagCreateDialogOpen, data: dialogData } = useDialogState("tagCreate");
+  const handleClose = useCloseDialog("tagCreate");
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();
   const tagsWithLevel = useWithLevel(tags.data || []);
-
-  // open/close dialog
-  const isTagCreateDialogOpen = useAppSelector((state) => state.dialog.isTagCreateDialogOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeTagCreateDialog());
-  }, [dispatch]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -45,30 +39,29 @@ export function TagCreateDialog({ projectId, onTagsCreated }: TagCreateDialogPro
   } = useForm<TagCreate>();
 
   // reset form when dialog opens
-  const tagName = useAppSelector((state) => state.dialog.tagName);
   useEffect(() => {
     if (isTagCreateDialogOpen) {
       reset({
         parent_id: -1,
-        name: tagName || "",
+        name: dialogData?.tagName || "",
         color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
         description: "",
         project_id: projectId,
       });
     }
-  }, [isTagCreateDialogOpen, reset, tagName, projectId]);
+  }, [dialogData, isTagCreateDialogOpen, reset, projectId]);
 
   // form actions
   const { mutate: createTagMutation, isPending } = TagHooks.useCreateTag();
   const handleTagCreation = useCallback<SubmitHandler<TagCreate>>(
-    (data) => {
+    (createData) => {
       createTagMutation(
         {
           requestBody: {
-            name: data.name,
-            description: data.description || "",
-            color: data.color,
-            parent_id: data.parent_id === -1 ? null : data.parent_id,
+            name: createData.name,
+            description: createData.description || "",
+            color: createData.color,
+            parent_id: createData.parent_id === -1 ? null : createData.parent_id,
             project_id: projectId,
           },
         },

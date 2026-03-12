@@ -2,10 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { queryClient } from "@api/queryClient";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";
 import { TagService } from "@api/services/TagService";
-import { queryClient } from "@plugins/tanstack";
 import { QueryKey } from "./QueryKey";
 
 // SDOC QUERIES

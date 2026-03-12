@@ -4,15 +4,15 @@ import { MemoRead } from "@api/models/MemoRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { CircularProgress, Dialog } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoDialogContent } from "./_components/MemoDialogContent";
-import { MemoDialogActions } from "./memoDialogSlice";
+import { MemoDialogActions } from "./store/memoDialogSlice";
 
 export function MemoDialog() {
-  const isMemoDialogOpen = useAppSelector((state) => state.memo.isMemoDialogOpen);
-  const memoEventData = useAppSelector((state) => state.memo.memoEventData);
+  const isMemoDialogOpen = useAppSelector((state) => state.memoDialog.isMemoDialogOpen);
+  const memoEventData = useAppSelector((state) => state.memoDialog.memoEventData);
   const dispatch = useAppDispatch();
 
   const handleClose = useCallback(() => {

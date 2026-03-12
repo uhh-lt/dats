@@ -1,4 +1,4 @@
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { SnackbarEvent } from "./_types/SnackbarEvent";
 import { SnackbarActions } from "./snackbarSlice";

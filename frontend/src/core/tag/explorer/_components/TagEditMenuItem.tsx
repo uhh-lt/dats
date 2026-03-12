@@ -1,7 +1,6 @@
 import { TagRead } from "@api/models/TagRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
@@ -10,15 +9,15 @@ interface TagEditMenuItemProps {
 }
 
 export const TagEditMenuItem = memo(({ tag, onClick, ...props }: TagEditMenuItemProps & MenuItemProps) => {
-  const dispatch = useAppDispatch();
+  const openTagEditDialog = useOpenDialog("tagEdit");
 
   const handleClickOpen = useCallback(
     (event: React.MouseEvent<HTMLLIElement>) => {
       event.stopPropagation();
       if (onClick) onClick(event);
-      dispatch(UIDialogActions.openTagEditDialog({ tag }));
+      openTagEditDialog({ tag });
     },
-    [dispatch, onClick, tag],
+    [openTagEditDialog, onClick, tag],
   );
 
   return (

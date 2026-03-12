@@ -3,11 +3,11 @@ import { OpenAPI } from "@api/core/OpenAPI";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { UserAuthorizationHeaderData } from "@api/models/UserAuthorizationHeaderData";
 import { UserRead } from "@api/models/UserRead";
+import { queryClient } from "@api/queryClient";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { queryClient } from "../../../plugins/tanstack/queryClient";
 import { AuthContext } from "../types/AuthContext";
 import { LoginStatus } from "../types/LoginStatus";
 

@@ -5,6 +5,8 @@ import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { SentenceAnnotationSearchResult } from "@api/models/SentenceAnnotationSearchResult";
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
@@ -12,16 +14,14 @@ import {
   MyFilter,
   createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter";
-import { useAuth } from "@core/auth";
-import { CodeRenderer } from "@core/code";
+} from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";

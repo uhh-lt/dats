@@ -1,5 +1,5 @@
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import { SEATFilterActions } from "@core/sentence-annotation/table/seatFilterSlice";
+import { SEATFilterActions } from "@core/sentence-annotation";
 import { createSlice } from "@reduxjs/toolkit";
 import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -46,4 +46,4 @@ const SentAnnotationsSlice = createSlice({
 });
 
 export const SentAnnotationsActions = SentAnnotationsSlice.actions;
-export const sentAnnotationAnalysisReducer = SentAnnotationsSlice.reducer;
+export const sentAnnotationAnalysisReducer = { [SentAnnotationsSlice.name]: SentAnnotationsSlice.reducer };

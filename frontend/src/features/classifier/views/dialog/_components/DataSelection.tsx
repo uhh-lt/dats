@@ -3,7 +3,7 @@ import { ClassifierModel } from "@api/models/ClassifierModel";
 import { TagSelector } from "@core/tag";
 import { UserSelectorMulti } from "@core/user";
 import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ClassifierDataPlot } from "../../../_components/ClassifierDataPlot";
 import { ClassifierActions } from "../../../store/classifierSlice";
 

@@ -68,7 +68,6 @@ export const useTabScroll = (
 
   // Initialize scroll state
   useEffect(() => {
-    updateScrollButtonVisibility();
     // Add resize observer to update scroll buttons when container size changes
     const resizeObserver = new ResizeObserver(() => {
       updateScrollButtonVisibility();

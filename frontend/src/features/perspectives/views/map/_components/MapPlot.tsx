@@ -2,7 +2,7 @@
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
 import { Box } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Annotations, Color, Datum, ScatterData } from "plotly.js";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"; // Added useRef
 import Plot, { Figure } from "react-plotly.js";
@@ -286,11 +286,14 @@ export const MapPlot = memo(({ vis }: MapPlotProps) => {
     [setFigure], // setFigure is stable, panStartCoordsForEventRef is read directly
   );
 
-  const handleMouseUp = useCallback(() => {
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp); // Self-removal is fine with stable handleMouseUp
-    panStartCoordsForEventRef.current = null; // Clear the ref
-  }, [handleMouseMove]); // handleMouseMove is now stable, setPanStartCoords is stable
+  const handleMouseUp = useCallback(
+    function onMouseUp() {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      panStartCoordsForEventRef.current = null;
+    },
+    [handleMouseMove],
+  );
 
   const handleMouseDown = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {

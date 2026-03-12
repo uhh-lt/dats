@@ -147,4 +147,4 @@ const cotaSlice = createSlice({
 });
 
 export const CotaActions = cotaSlice.actions;
-export const cotaReducer = cotaSlice.reducer;
+export const cotaReducer = { [cotaSlice.name]: cotaSlice.reducer };

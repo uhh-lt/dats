@@ -4,11 +4,11 @@ import { MemoColumns } from "@api/models/MemoColumns";
 import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
-import { FilterTableProps, MyFilter, createEmptyFilter } from "@components/filter";
+import { FilterTableProps, MyFilter, createEmptyFilter } from "@core/filter";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,

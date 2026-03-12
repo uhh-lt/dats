@@ -5,11 +5,10 @@ import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { CodeNodeData } from "@api/models/CodeNodeData";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { CodeRenderer } from "@core/code/CodeRenderer";
+import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useEffect, useMemo, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -29,7 +28,8 @@ import { BaseCardNode } from "./BaseCardNode";
 
 export function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
-  const dispatch = useAppDispatch();
+  const openCodeEdit = useOpenDialog("codeEdit");
+  const openCodeCreate = useOpenDialog("codeCreate");
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
@@ -127,7 +127,7 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && code.isSuccess) {
-      dispatch(UIDialogActions.openCodeEditDialog({ code: code.data }));
+      openCodeEdit({ code: code.data });
     }
   };
 
@@ -164,17 +164,13 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
   };
 
   const handleContextMenuCreateChildCode = () => {
-    dispatch(
-      UIDialogActions.openCodeCreateDialog({
-        codeName: undefined,
-        parentCodeId: props.data.codeId,
-        codeCreateSuccessHandler(code) {
-          reactFlowService.addNodes(
-            createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }),
-          );
-        },
-      }),
-    );
+    openCodeCreate({
+      codeName: undefined,
+      parentCodeId: props.data.codeId,
+      codeCreateSuccessHandler(code) {
+        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }));
+      },
+    });
     contextMenuRef.current?.close();
   };
 

@@ -2,7 +2,7 @@ import { FormNumber } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Button, IconButton, Popover, Stack, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";

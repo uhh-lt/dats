@@ -23,7 +23,7 @@ export const TagUnlinkButton = memo(({ sdocId, tag, ...props }: IconButtonProps 
         });
       },
     });
-  }, [removeTagMutation, tag, sdocId]);
+  }, [openConfirmationDialog, tag.name, tag.id, sdocId, removeTagMutation]);
 
   return (
     <Tooltip title="Remove tag from document">

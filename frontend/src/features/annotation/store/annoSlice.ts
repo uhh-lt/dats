@@ -31,7 +31,7 @@ const initialState: AnnoState = {
 };
 
 const annoSlice = createSlice({
-  name: "anno",
+  name: "annotations",
   initialState,
   reducers: {
     onChangeAnnotationMode: (state, action: PayloadAction<AnnotationMode>) => {
@@ -123,10 +123,12 @@ export const AnnoActions = annoSlice.actions;
 export const isHiddenCodeId = (codeId: number) => (state: RootState) =>
   state.annotations.hiddenCodeIds.indexOf(codeId) !== -1;
 
-export const annoReducer = persistReducer(
-  {
-    key: "anno",
-    storage,
-  },
-  annoSlice.reducer,
-);
+export const annoReducer = {
+  [annoSlice.name]: persistReducer(
+    {
+      key: annoSlice.name,
+      storage,
+    },
+    annoSlice.reducer,
+  ),
+};

@@ -6,11 +6,10 @@ import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { ImageCropper } from "@components/ImageCropper";
-import { CodeRenderer } from "@core/code/CodeRenderer";
+import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -31,7 +30,7 @@ import { BaseCardNode } from "./BaseCardNode";
 
 export const BboxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNodeData>) => {
   // global client state
-  const dispatch = useAppDispatch();
+  const openBBoxAnnotationEdit = useOpenDialog("bboxAnnotationEdit");
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
@@ -126,10 +125,10 @@ export const BboxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNodeData>
       if (!annotation.data) return;
 
       if (event.detail >= 2) {
-        dispatch(UIDialogActions.openBBoxAnnotationEditDialog({ bboxAnnotationIds: [annotation.data.id] }));
+        openBBoxAnnotationEdit({ annotationIds: [annotation.data.id] });
       }
     },
-    [annotation.data, dispatch],
+    [annotation.data, openBBoxAnnotationEdit],
   );
 
   const handleContextMenuExpandDocument = useCallback(() => {
@@ -171,7 +170,7 @@ export const BboxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNodeData>
       },
     });
     contextMenuRef.current?.close();
-  }, [memo.data, props.data.bboxAnnotationId, props.xPos, props.yPos, reactFlowService]);
+  }, [memo.data, openMemoDialog, props.data.bboxAnnotationId, props.xPos, props.yPos, reactFlowService]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

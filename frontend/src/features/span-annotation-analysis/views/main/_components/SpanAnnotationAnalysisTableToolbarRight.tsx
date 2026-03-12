@@ -1,6 +1,6 @@
 import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
-import { FilterTableToolbarProps } from "@components/filter";
-import { SpanAnnotationExportButton } from "@core/span-annotation/SpanAnnotationExportButton";
+import { FilterTableToolbarProps } from "@core/filter";
+import { SpanAnnotationExportButton } from "@core/span-annotation";
 import { Stack } from "@mui/material";
 import {
   MRT_ShowHideColumnsButton,

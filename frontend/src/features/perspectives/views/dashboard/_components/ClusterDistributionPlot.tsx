@@ -1,7 +1,7 @@
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { CardContainer } from "@components/CardContainer";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { memo, useMemo } from "react";
 import {
   Bar,

@@ -1,8 +1,8 @@
 import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 
@@ -13,6 +13,7 @@ interface BulkChangeSpanAnnotationCodeButtonProps {
 export function BulkChangeSpanAnnotationCodeButton({ selectedData }: BulkChangeSpanAnnotationCodeButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
+  const openSpanAnnotationEdit = useOpenDialog("spanAnnotationEdit");
 
   // actions
   const handleEditSuccess = useCallback(() => {
@@ -20,12 +21,10 @@ export function BulkChangeSpanAnnotationCodeButton({ selectedData }: BulkChangeS
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    dispatch(
-      UIDialogActions.openSpanAnnotationEditDialog({
-        spanAnnotationIds: selectedData.map((row) => row.id),
-        onEdit: handleEditSuccess,
-      }),
-    );
+    openSpanAnnotationEdit({
+      annotationIds: selectedData.map((row) => row.id),
+      onEdit: handleEditSuccess,
+    });
   };
 
   return (

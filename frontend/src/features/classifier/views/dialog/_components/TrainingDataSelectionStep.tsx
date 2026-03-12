@@ -1,6 +1,6 @@
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";

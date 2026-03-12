@@ -1,11 +1,6 @@
 import { MemoColumns } from "@api/models/MemoColumns";
 import { StringOperator } from "@api/models/StringOperator";
-import {
-  createInitialFilterState,
-  filterReducer,
-  MyFilterExpression,
-  resetProjectFilterState,
-} from "@components/filter";
+import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -33,4 +28,4 @@ const memoFilterSlice = createSlice({
 
 export const MemoFilterActions = memoFilterSlice.actions;
 
-export const memoFilterReducer = memoFilterSlice.reducer;
+export const memoFilterReducer = { [memoFilterSlice.name]: memoFilterSlice.reducer };

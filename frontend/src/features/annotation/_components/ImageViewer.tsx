@@ -3,7 +3,7 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";

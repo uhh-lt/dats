@@ -1,29 +1,43 @@
 import { CodeRead } from "@api/models/CodeRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
-import { CodeToggleEnabledButton } from "@core/code/CodeToggleEnabledButton";
-import { CodeToggleVisibilityButton } from "@core/code/CodeToggleVisibilityButton";
-import { CodeCreateListItemButton } from "@core/code/dialog/CodeCreateListItemButton";
-import { CodeEditButton } from "@core/code/dialog/CodeEditButton";
+import {
+  CodeCreateListItemButton,
+  CodeEditButton,
+  CodeToggleEnabledButton,
+  CodeToggleVisibilityButton,
+} from "@core/code";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { useComputeProjectCodeTree } from "./useComputeProjectCodeTree";
 
-const renderCodeActions = (node: ITree<CodeRead>) => (
-  <>
-    <CodeEditButton code={node.data} />
-    <CodeToggleVisibilityButton code={node} />
-    <CodeToggleEnabledButton code={node} />
-  </>
-);
+interface ProjectCodesProps {
+  hiddenCodeIds: number[];
+  onToggleCodeVisibility: (codeIds: number[]) => void;
+}
 
-export const ProjectCodes = memo(() => {
+export const ProjectCodes = memo(({ hiddenCodeIds, onToggleCodeVisibility }: ProjectCodesProps) => {
   // custom hooks
   const { codeTree } = useComputeProjectCodeTree();
 
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
+
+  const renderCodeActions = useCallback(
+    (node: ITree<CodeRead>) => (
+      <>
+        <CodeEditButton code={node.data} />
+        <CodeToggleVisibilityButton
+          code={node}
+          isHidden={hiddenCodeIds.includes(node.data.id)}
+          onToggleVisibility={onToggleCodeVisibility}
+        />
+        <CodeToggleEnabledButton code={node} />
+      </>
+    ),
+    [hiddenCodeIds, onToggleCodeVisibility],
+  );
 
   const handleCodeFilterChange = useCallback((value: string) => {
     setCodeFilter(value);

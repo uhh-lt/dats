@@ -1,5 +1,5 @@
 import { ApproachType } from "@api/models/ApproachType";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 import { PromptEditorStep } from "./PromptEditorStep";
 

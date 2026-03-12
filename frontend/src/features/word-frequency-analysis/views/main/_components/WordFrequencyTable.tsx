@@ -5,13 +5,12 @@ import { WordFrequencyResult } from "@api/models/WordFrequencyResult";
 import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { ContentContentLayout } from "@components/content-layouts";
-import { MyFilter, ReduxFilterDialog } from "@components/filter";
 import { useAuth } from "@core/auth";
-import { useReduxConnector } from "@hooks/useReduxConnector";
+import { MyFilter, ReduxFilterDialog } from "@core/filter";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { Stack, Typography } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,

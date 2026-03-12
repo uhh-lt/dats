@@ -23,8 +23,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useLocation } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
@@ -38,7 +37,7 @@ interface SideBarProps {
 export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const { loginStatus, logout, user } = useAuth();
   const location = useLocation();
-  const dispatch = useAppDispatch();
+  const openProjectSettingsDialog = useOpenDialog("projectSettings");
 
   // Memoize isActive function
   const isActive = useCallback(
@@ -84,11 +83,6 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const handleUserMenuClose = useCallback(() => {
     setUserMenuAnchorEl(null);
   }, []);
-
-  // Settings handler
-  const handleSettingsClick = useCallback(() => {
-    dispatch(UIDialogActions.openProjectSettings());
-  }, [dispatch]);
 
   const selectedColor = "rgba(0, 0, 0, 0.5)";
 
@@ -510,7 +504,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Settings (⌘⇧,)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
-                  onClick={handleSettingsClick}
+                  onClick={openProjectSettingsDialog}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",

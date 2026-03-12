@@ -24,10 +24,12 @@ const projectSlice = createSlice({
 });
 
 export const ProjectActions = projectSlice.actions;
-export const projectReducer = persistReducer(
-  {
-    key: "project",
-    storage,
-  },
-  projectSlice.reducer,
-);
+export const projectReducer = {
+  [projectSlice.name]: persistReducer(
+    {
+      key: projectSlice.name,
+      storage,
+    },
+    projectSlice.reducer,
+  ),
+};

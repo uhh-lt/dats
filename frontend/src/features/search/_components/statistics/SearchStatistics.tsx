@@ -6,7 +6,7 @@ import PublicOffIcon from "@mui/icons-material/PublicOff";
 import SearchIcon from "@mui/icons-material/Search";
 import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ChangeEvent, SyntheticEvent, useCallback, useRef, useState } from "react";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { CodeStats } from "./_components/CodeStats";

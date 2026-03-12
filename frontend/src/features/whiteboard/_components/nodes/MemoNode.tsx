@@ -3,7 +3,7 @@ import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
 
-import { useGetMemosAttachedObject } from "@core/memo/useGetMemosAttachedObject";
+import { useGetMemosAttachedObject, useOpenMemoDialog , attachedObjectTypeToText , MemoRenderer  } from "@core/memo";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
@@ -21,9 +21,6 @@ import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { TagNodeData } from "@api/models/TagNodeData";
 import { TagRead } from "@api/models/TagRead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { useOpenMemoDialog } from "@core/memo";
-import { attachedObjectTypeToText } from "@core/memo/renderer/attachedObjectTypeToText";
-import { MemoRenderer } from "@core/memo/renderer/MemoRenderer";
 import Markdown from "react-markdown";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import {

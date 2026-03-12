@@ -5,8 +5,8 @@ import { DocType } from "@api/models/DocType";
 import { PipelineSettings } from "@api/models/PipelineSettings";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
-import { DocTypeSelector } from "@core/source-document/DocTypeSelector";
-import { TagSelector } from "@core/tag/TagSelector";
+import { DocTypeSelector } from "@core/source-document";
+import { TagSelector } from "@core/tag";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -28,7 +28,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";

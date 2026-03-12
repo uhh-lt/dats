@@ -15,12 +15,10 @@ export const MemoListItemButton = memo(
     const handleClick = useCallback(
       (event: React.MouseEvent) => {
         event.stopPropagation();
-        if (onClick) {
-          onClick();
-        }
+        onClick?.();
         openMemoDialog({ memoId, attachedObjectId, attachedObjectType });
       },
-      [memoId, attachedObjectId, attachedObjectType, onClick],
+      [onClick, openMemoDialog, memoId, attachedObjectId, attachedObjectType],
     );
 
     return (

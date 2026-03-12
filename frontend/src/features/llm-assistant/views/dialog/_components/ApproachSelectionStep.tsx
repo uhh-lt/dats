@@ -20,8 +20,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { ChangeEvent, Fragment, memo, useCallback, useMemo, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { Fragment, memo, useCallback, useMemo, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 

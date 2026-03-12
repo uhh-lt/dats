@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-/* eslint-disable */
+ 
 export enum SpanColumns {
   SP_SPAN_TEXT = "SP_SPAN_TEXT",
   SP_CODE_ID = "SP_CODE_ID",

@@ -12,8 +12,8 @@ import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { selectSelectedRows } from "@store/generic/tableSlice";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { SearchActions } from "../../store/documentSearchSlice";
@@ -114,12 +114,19 @@ export function DocumentSearchView() {
   const { mutate: moveFoldersMutation } = FolderHooks.useMoveFolders();
   const handleMoveFolders = useCallback(
     (folderIds: number[], targetFolderId: number) => {
-      moveFoldersMutation({
-        targetFolderId,
-        requestBody: folderIds,
-      });
+      moveFoldersMutation(
+        {
+          targetFolderId,
+          requestBody: folderIds,
+        },
+        {
+          onSuccess: () => {
+            dispatch(SearchActions.onMoveFolders());
+          },
+        },
+      );
     },
-    [moveFoldersMutation],
+    [dispatch, moveFoldersMutation],
   );
 
   // Drag and drop handler for moving sdoc_folders into normal folders (dnd-kit)

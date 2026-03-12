@@ -3,7 +3,7 @@ import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { FilterTableToolbarProps } from "@components/filter";
+import { FilterTableToolbarProps } from "@core/filter";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";

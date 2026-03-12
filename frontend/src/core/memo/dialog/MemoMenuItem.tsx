@@ -17,7 +17,7 @@ export const MemoMenuItem = memo(
         onClick(event);
         openMemoDialog({ memoId, attachedObjectId, attachedObjectType });
       },
-      [memoId, attachedObjectId, attachedObjectType, onClick],
+      [onClick, openMemoDialog, memoId, attachedObjectId, attachedObjectType],
     );
 
     return (

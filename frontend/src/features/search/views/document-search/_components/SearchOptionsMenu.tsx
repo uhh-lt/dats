@@ -1,6 +1,6 @@
 import HelpIcon from "@mui/icons-material/Help";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useState } from "react";
 import { SearchActions } from "../../../store/documentSearchSlice";

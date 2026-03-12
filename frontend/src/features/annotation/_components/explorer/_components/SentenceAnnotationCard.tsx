@@ -1,7 +1,7 @@
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { CodeRenderer } from "@core/code/CodeRenderer";
-import { UserRenderer } from "@core/user/UserRenderer";
+import { CodeRenderer } from "@core/code";
+import { UserRenderer } from "@core/user";
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";

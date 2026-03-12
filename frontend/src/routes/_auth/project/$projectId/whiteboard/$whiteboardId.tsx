@@ -6,9 +6,9 @@ import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { TagRead } from "@api/models/TagRead";
+import { queryClient } from "@api/queryClient";
 import { WhiteboardService } from "@api/services/WhiteboardService";
 import { WhiteboardView } from "@features/whiteboard";
-import { queryClient } from "@plugins/tanstack";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({

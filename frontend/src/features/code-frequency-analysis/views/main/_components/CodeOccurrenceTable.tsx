@@ -2,10 +2,9 @@ import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { CodeOccurrence } from "@api/models/CodeOccurrence";
 import { CardContainer } from "@components/CardContainer";
-import { SdocRenderer } from "@core/source-document/renderer/SdocRenderer";
-import { UserRenderer } from "@core/user/UserRenderer";
+import { DocTypeIcons, SdocRenderer } from "@core/source-document";
+import { UserRenderer } from "@core/user";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
-import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -23,7 +22,7 @@ const columns: MRT_ColumnDef<CodeOccurrence>[] = [
     header: "Type",
     id: "type",
     accessorFn: (params) => params.sdoc.doctype,
-    Cell: ({ row }) => docTypeToIcon[row.original.sdoc.doctype],
+    Cell: ({ row }) => DocTypeIcons[row.original.sdoc.doctype],
   },
   {
     header: "Document",

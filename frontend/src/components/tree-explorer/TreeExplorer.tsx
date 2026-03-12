@@ -96,9 +96,9 @@ export function TreeExplorer<T extends NamedObjWithParent>({
     });
   }, []);
   const isChecked = useCallback(
-    (node: ITree<T>): boolean => {
-      // a node is checked if it's id as well as all of its children are in the checkedTagIds array
-      return checkedDataIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
+    function checkNode(node: ITree<T>): boolean {
+      // a node is checked if its id as well as all of its children are in the checkedDataIds array
+      return checkedDataIds.indexOf(node.data.id) !== -1 && (node.children?.every(checkNode) || true);
     },
     [checkedDataIds],
   );

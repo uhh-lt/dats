@@ -2,9 +2,9 @@ import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@api/models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@api/models/SpanAnnotationUpdate";
+import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { useAuth } from "@core/auth";
-import { queryClient } from "@plugins/tanstack";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

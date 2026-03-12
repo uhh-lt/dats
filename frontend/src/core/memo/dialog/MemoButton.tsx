@@ -23,7 +23,7 @@ export const MemoButton = memo(
         if (onClick) onClick();
         openMemoDialog({ memoId, attachedObjectType, attachedObjectId });
       },
-      [memoId, attachedObjectType, attachedObjectId, onClick],
+      [onClick, openMemoDialog, memoId, attachedObjectType, attachedObjectId],
     );
 
     return (

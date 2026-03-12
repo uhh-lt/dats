@@ -6,8 +6,7 @@ import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
@@ -23,26 +22,24 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
   // global client state (redux)
-  const open = useAppSelector((state) => state.dialog.isSentenceAnnotationEditDialogOpen);
-  const annotationIds = useAppSelector((state) => state.dialog.sentenceAnnotationIds);
-  const onEdit = useAppSelector((state) => state.dialog.sentenceAnnotationEditDialogOnEdit);
+  const { isOpen: open, data: dialogData } = useDialogState("sentenceAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = SentenceAnnotationHooks.useUpdateBulkSentenceAnno();
 
   // actions
-  const dispatch = useAppDispatch();
+  const closeDialog = useCloseDialog("sentenceAnnotationEdit");
   const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeSentenceAnnotationEditDialog());
+    closeDialog();
     setRowSelectionModel({});
-  }, [dispatch]);
+  }, [closeDialog]);
 
   const handleUpdateAnnotations = useCallback(() => {
-    if (!selectedCodeId) return;
+    if (!selectedCodeId || !dialogData || dialogData.annotationIds.length === 0) return;
 
     updateAnnotationBulkMutation(
       {
-        requestBody: annotationIds.map((annotation) => ({
+        requestBody: dialogData.annotationIds.map((annotation) => ({
           sent_annotation_id: annotation,
           code_id: selectedCodeId,
         })),
@@ -50,62 +47,66 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
       {
         onSuccess: () => {
           handleClose();
-          onEdit?.();
+          dialogData?.onEdit?.();
         },
       },
     );
-  }, [selectedCodeId, annotationIds, updateAnnotationBulkMutation, onEdit, handleClose]);
+  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
-      <DATSDialogHeader
-        title={`Changing the code of ${annotationIds.length} sentence annotation${annotationIds.length > 1 && "s"}`}
-        onClose={handleClose}
-        isMaximized={isMaximized}
-        onToggleMaximize={toggleMaximize}
-      />
-      <CodeTable
-        projectId={projectId}
-        rowSelectionModel={rowSelectionModel}
-        onRowSelectionChange={setRowSelectionModel}
-        enableMultiRowSelection={false}
-      />
-      {annotationIds.length > 0 && (
+      {dialogData && (
         <>
-          <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
-            <Typography variant="h6">Preview</Typography>
-            <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showCode showSpanText />
-            <ArrowRight />
-            {selectedCodeId ? (
-              <Stack direction="row" alignItems="center">
-                <CodeRenderer code={selectedCodeId} />
-                {": "}
-                <SentenceAnnotationRenderer sentenceAnnotation={annotationIds[0]} showSpanText />
+          <DATSDialogHeader
+            title={`Changing the code of ${dialogData.annotationIds.length} sentence annotation${dialogData.annotationIds.length > 1 && "s"}`}
+            onClose={handleClose}
+            isMaximized={isMaximized}
+            onToggleMaximize={toggleMaximize}
+          />
+          <CodeTable
+            projectId={projectId}
+            rowSelectionModel={rowSelectionModel}
+            onRowSelectionChange={setRowSelectionModel}
+            enableMultiRowSelection={false}
+          />
+          {dialogData.annotationIds.length > 0 && (
+            <>
+              <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
+                <Typography variant="h6">Preview</Typography>
+                <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showSpanText />
+                <ArrowRight />
+                {selectedCodeId ? (
+                  <Stack direction="row" alignItems="center">
+                    <CodeRenderer code={selectedCodeId} />
+                    {": "}
+                    <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showSpanText />
+                  </Stack>
+                ) : (
+                  <span>Select a code to preview the change.</span>
+                )}
               </Stack>
-            ) : (
-              <span>Select a code to preview the change.</span>
-            )}
-          </Stack>
+            </>
+          )}
+
+          <DialogActions>
+            <LoadingButton
+              variant="contained"
+              color="success"
+              startIcon={<SaveIcon />}
+              onClick={handleUpdateAnnotations}
+              disabled={!selectedCodeId}
+              loading={isPending}
+              loadingPosition="start"
+              fullWidth
+            >
+              Update Annotation{dialogData.annotationIds.length > 1 && "s"}
+            </LoadingButton>
+          </DialogActions>
         </>
       )}
-
-      <DialogActions>
-        <LoadingButton
-          variant="contained"
-          color="success"
-          startIcon={<SaveIcon />}
-          onClick={handleUpdateAnnotations}
-          disabled={!selectedCodeId}
-          loading={isPending}
-          loadingPosition="start"
-          fullWidth
-        >
-          Update Annotation{annotationIds.length > 1 && "s"}
-        </LoadingButton>
-      </DialogActions>
     </Dialog>
   );
 }

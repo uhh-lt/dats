@@ -1,7 +1,7 @@
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
 import { MemoEvent } from "./_types/MemoEvent";
-import { MemoDialogActions } from "./memoDialogSlice";
+import { MemoDialogActions } from "./store/memoDialogSlice";
 
 export const useOpenMemoDialog = () => {
   const dispatch = useAppDispatch();

@@ -1,6 +1,6 @@
 import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { CodeTable } from "@core/code/CodeTable";
+import { CodeTable } from "@core/code";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";

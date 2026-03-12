@@ -3,7 +3,7 @@ import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SdocTable } from "@core/source-document";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";
 import Stack from "@mui/material/Stack/Stack";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useMemo, useState } from "react";
 import { ClassifierActions } from "../../../store/classifierSlice";

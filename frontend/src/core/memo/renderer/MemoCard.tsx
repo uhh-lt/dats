@@ -1,5 +1,6 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { MemoRead } from "@api/models/MemoRead";
+import { UserRenderer } from "@core/user";
 import {
   Card,
   CardActionArea,
@@ -12,7 +13,6 @@ import {
 } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useCallback, useMemo } from "react";
-import { UserRenderer } from "../../user/UserRenderer";
 import { MemoActionMenu } from "../MemoActionMenu";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
@@ -30,7 +30,6 @@ function MemoCardWithContent({
   onStarredClick,
 }: MemoCardSharedProps & { memo: MemoRead }) {
   const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
-
   const handleClick = useCallback(() => {
     if (onClick) {
       onClick(memo);

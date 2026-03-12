@@ -1,2 +1,2 @@
-export { memoFilterReducer } from "./memoFilterSlice";
+export * from "./memoFilterSlice";
 export * from "./MemoTable";

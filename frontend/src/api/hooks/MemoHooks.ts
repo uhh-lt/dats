@@ -1,7 +1,7 @@
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { MemoRead } from "@api/models/MemoRead";
+import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { queryClient } from "@plugins/tanstack";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

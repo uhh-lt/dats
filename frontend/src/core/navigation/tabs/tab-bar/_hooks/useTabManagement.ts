@@ -1,10 +1,10 @@
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
 import { DropResult } from "react-beautiful-dnd";
 import { TabData } from "../../../_types/TabData";
 import { selectProjectTabs, TabActions } from "../../../tabSlice";
-import { getTabInfoFromPath } from "../../_config/tabInfo";
+import { getTabInfoFromPath } from "../../_utils/tabInfo";
 
 interface TabManagementHook {
   tabs: TabData[];

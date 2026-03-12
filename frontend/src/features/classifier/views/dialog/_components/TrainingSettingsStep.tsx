@@ -16,7 +16,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import { ClassifierActions } from "../../../store/classifierSlice";
 

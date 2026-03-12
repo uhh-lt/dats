@@ -1,11 +1,6 @@
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { StringOperator } from "@api/models/StringOperator";
-import {
-  createInitialFilterState,
-  filterReducer,
-  MyFilterExpression,
-  resetProjectFilterState,
-} from "@components/filter";
+import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -32,4 +27,4 @@ const bboxFilterSlice = createSlice({
 });
 
 export const BBoxFilterActions = bboxFilterSlice.actions;
-export const bboxFilterReducer = bboxFilterSlice.reducer;
+export const bboxFilterReducer = { [bboxFilterSlice.name]: bboxFilterSlice.reducer };

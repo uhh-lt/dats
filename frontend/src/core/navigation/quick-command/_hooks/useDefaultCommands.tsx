@@ -1,12 +1,14 @@
 import { Settings } from "@mui/icons-material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo } from "react";
 import { CommandItem } from "../_types/CommandItem";
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {
-  const dispatch = useAppDispatch();
+  const openCodeCreate = useOpenDialog("codeCreate");
+  const openTagCreate = useOpenDialog("tagCreate");
+  const openDocumentUpload = useOpenDialog("documentUpload");
+  const openProjectSettings = useOpenDialog("projectSettings");
 
   return useMemo(
     () => [
@@ -18,7 +20,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         category: "Create",
         icon: getIconComponent(Icon.CREATE),
         action: () => {
-          dispatch(UIDialogActions.openCodeCreateDialog({}));
+          openCodeCreate({});
         },
         keywords: ["new", "code", "create", "add"],
       },
@@ -29,7 +31,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         category: "Create",
         icon: getIconComponent(Icon.CREATE),
         action: () => {
-          dispatch(UIDialogActions.openTagCreateDialog({}));
+          openTagCreate({});
         },
         keywords: ["new", "tag", "create", "add"],
       },
@@ -40,7 +42,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         category: "Create",
         icon: getIconComponent(Icon.CREATE),
         action: () => {
-          dispatch(UIDialogActions.openDocumentUpload());
+          openDocumentUpload();
         },
         keywords: ["new", "document", "create", "add", "upload"],
       },
@@ -236,11 +238,11 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         category: "Settings",
         icon: <Settings />,
         action: () => {
-          dispatch(UIDialogActions.openProjectSettings());
+          openProjectSettings();
         },
         keywords: ["settings", "config", "configuration", "project"],
       },
     ],
-    [dispatch, projectId],
+    [openCodeCreate, openTagCreate, openDocumentUpload, openProjectSettings, projectId],
   );
 };

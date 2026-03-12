@@ -12,7 +12,7 @@ import {
   FilterState,
   MyFilterExpression,
   resetProjectFilterState,
-} from "@components/filter";
+} from "@core/filter";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
@@ -167,4 +167,4 @@ const timelineAnalysisSlice = createSlice({
 });
 
 export const TimelineAnalysisActions = timelineAnalysisSlice.actions;
-export const timelineAnalysisReducer = timelineAnalysisSlice.reducer;
+export const timelineAnalysisReducer = { [timelineAnalysisSlice.name]: timelineAnalysisSlice.reducer };

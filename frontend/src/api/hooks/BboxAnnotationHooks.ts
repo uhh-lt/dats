@@ -2,9 +2,9 @@ import { CancelablePromise } from "@api/core/CancelablePromise";
 import { BBoxAnnotationCreate } from "@api/models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@api/models/BBoxAnnotationUpdate";
+import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { useAuth } from "@core/auth";
-import { queryClient } from "@plugins/tanstack";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

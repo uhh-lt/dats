@@ -4,11 +4,10 @@ import { TagHooks } from "@api/hooks/TagHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { TagNodeData } from "@api/models/TagNodeData";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { useOpenMemoDialog } from "@core/memo/dialog";
-import { TagRenderer } from "@core/tag/TagRenderer";
+import { useOpenMemoDialog } from "@core/memo";
+import { TagRenderer } from "@core/tag";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
@@ -27,7 +26,7 @@ import { BaseCardNode } from "./BaseCardNode";
 
 export function TagNode(props: NodeProps<TagNodeData>) {
   // global client state
-  const dispatch = useAppDispatch();
+  const openTagEdit = useOpenDialog("tagEdit");
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DATSNodeData>();
@@ -89,7 +88,7 @@ export function TagNode(props: NodeProps<TagNodeData>) {
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && tag.isSuccess) {
-      dispatch(UIDialogActions.openTagEditDialog({ tag: tag.data }));
+      openTagEdit({ tag: tag.data });
     }
   };
 

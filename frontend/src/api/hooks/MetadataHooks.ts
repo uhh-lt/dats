@@ -1,9 +1,9 @@
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
+import { queryClient } from "@api/queryClient";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
-import { useAppSelector } from "@plugins/redux";
-import { queryClient } from "@plugins/tanstack";
+import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

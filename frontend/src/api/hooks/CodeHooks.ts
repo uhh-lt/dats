@@ -1,8 +1,7 @@
 import { CodeRead } from "@api/models/CodeRead";
+import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
-import { AnnoActions } from "@features/annotation";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { queryClient } from "@plugins/tanstack";
+import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { QueryKey } from "./QueryKey";
@@ -86,7 +85,6 @@ const useUpdateCode = () =>
   });
 
 const useDeleteCode = () => {
-  const dispatch = useAppDispatch();
   return useMutation({
     mutationFn: CodeService.deleteById,
     onSuccess: (data) => {
@@ -102,8 +100,6 @@ const useDeleteCode = () => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, data.project_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, data.id] });
-      // reset global client state
-      dispatch(AnnoActions.onDeleteCode(data.id));
     },
     meta: {
       successMessage: (data: CodeRead) => `Deleted code ${data.name}`,

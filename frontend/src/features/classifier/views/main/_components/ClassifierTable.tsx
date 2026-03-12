@@ -8,7 +8,7 @@ import { CodeRenderer } from "@core/code";
 import { TagRenderer } from "@core/tag";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { dateToLocaleDate } from "@utils/DateUtils";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import {

@@ -18,7 +18,7 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";

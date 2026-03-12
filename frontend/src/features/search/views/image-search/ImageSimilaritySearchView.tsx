@@ -7,12 +7,12 @@ import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadata
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SimsearchService } from "@api/services/SimsearchService";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
-import { MyFilter, createEmptyFilter } from "@components/filter";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
+import { MyFilter, createEmptyFilter } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { Box, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";

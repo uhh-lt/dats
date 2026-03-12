@@ -19,8 +19,7 @@ import {
   Tooltip,
   UseAutocompleteProps,
 } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";
@@ -47,7 +46,7 @@ interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeRead> {
 
 export const AnnotationMenu = forwardRef<AnnotationMenuHandle, AnnotationMenuProps>(
   ({ onClose, onAdd, onEdit, onDelete, onDuplicate }, ref) => {
-    const dispatch = useAppDispatch();
+    const openCodeCreate = useOpenDialog("codeCreate");
 
     // local client state
     const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -120,9 +119,7 @@ export const AnnotationMenu = forwardRef<AnnotationMenuHandle, AnnotationMenuPro
 
       // if code does not exist, open the code creation dialog
       if (newValue.data.id === -1) {
-        dispatch(
-          UIDialogActions.openCodeCreateDialog({ codeName: newValue.data.name, codeCreateSuccessHandler: submit }),
-        );
+        openCodeCreate({ codeName: newValue.data.name, codeCreateSuccessHandler: submit });
         return;
       }
 

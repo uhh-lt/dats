@@ -96,4 +96,4 @@ const classifierSlice = createSlice({
 });
 
 export const ClassifierActions = classifierSlice.actions;
-export const classifierReducer = classifierSlice.reducer;
+export const classifierReducer = { [classifierSlice.name]: classifierSlice.reducer };

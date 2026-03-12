@@ -1,5 +1,5 @@
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { MouseEvent, useRef } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { useComputeTokenData } from "../../_hooks/useComputeTokenData";

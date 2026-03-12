@@ -3,7 +3,7 @@ import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
+import { useAppDispatch } from "@store/storeHooks";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 
 interface BulkDeleteSpanAnnotationsButtonProps {

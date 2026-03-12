@@ -27,4 +27,4 @@ const confirmationSlice = createSlice({
 });
 
 export const ConfirmationActions = confirmationSlice.actions;
-export const confirmationReducer = confirmationSlice.reducer;
+export const confirmationReducer = { [confirmationSlice.name]: confirmationSlice.reducer };

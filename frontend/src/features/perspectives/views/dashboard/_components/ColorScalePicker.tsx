@@ -1,7 +1,7 @@
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import { Box, IconButton, Menu, MenuItem } from "@mui/material";
+import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
 import { useState } from "react";
-import { D3ColorScale, d3ColorSchemes } from "src/utils/colors/D3ColorScale";
 
 interface ColorScalePickerProps {
   onColorChange: (color: D3ColorScale) => void;

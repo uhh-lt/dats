@@ -1,7 +1,6 @@
 import { CodeRead } from "@api/models/CodeRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { MouseEvent, memo, useCallback } from "react";
 
@@ -12,15 +11,15 @@ interface CodeEditMenuItemProps {
 
 export const CodeEditMenuItem = memo(
   ({ code, onClick, ...props }: CodeEditMenuItemProps & Omit<MenuItemProps, "onClick">) => {
-    const dispatch = useAppDispatch();
+    const openCodeEditDialog = useOpenDialog("codeEdit");
 
     const handleClickOpen = useCallback(
       (event: MouseEvent) => {
         event.stopPropagation();
-        dispatch(UIDialogActions.openCodeEditDialog({ code }));
+        openCodeEditDialog({ code });
         onClick();
       },
-      [code, dispatch, onClick],
+      [code, openCodeEditDialog, onClick],
     );
 
     return (

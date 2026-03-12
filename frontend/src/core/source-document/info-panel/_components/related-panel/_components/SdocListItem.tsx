@@ -1,8 +1,8 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { docTypeToIcon } from "@utils/icons/docTypeToIcon";
 import { memo } from "react";
+import { DocTypeIcons } from "../../../../DocTypeIcons";
 
 interface SdocListItemProps {
   sdocId: number;
@@ -17,7 +17,7 @@ export const SdocListItem = memo(
       <ListItemButton component={Link} to="../annotation/$sdocId" params={{ sdocId }} {...props}>
         {sdoc.isSuccess ? (
           <>
-            <ListItemIcon>{docTypeToIcon[sdoc.data.doctype]}</ListItemIcon>
+            <ListItemIcon>{DocTypeIcons[sdoc.data.doctype]}</ListItemIcon>
             <ListItemText primary={sdoc.data.name} />
           </>
         ) : sdoc.isError ? (

@@ -9,8 +9,6 @@ import { CodeCreateListItemButton } from "../dialog";
 import { CodeExplorerActionMenu } from "./_components/CodeExplorerActionMenu";
 import { useComputeCodeTree } from "./useComputeCodeTree";
 
-const renderActions = (node: ITree<CodeRead>) => <CodeExplorerActionMenu node={node} />;
-
 interface CodeExplorerProps extends BoxProps {
   // code selection
   selectedCodeId?: number;
@@ -20,6 +18,7 @@ interface CodeExplorerProps extends BoxProps {
   onExpandedCodeIdsChange: (ids: string[]) => void;
   // code hiding
   hiddenCodeIds: number[];
+  onToggleCodeVisibility: (codeIds: number[]) => void;
   onHoverCodeIdChange: (codeId: number | undefined) => void;
 }
 
@@ -29,6 +28,7 @@ export function CodeExplorer({
   expandedCodeIds,
   onExpandedCodeIdsChange,
   hiddenCodeIds,
+  onToggleCodeVisibility,
   onHoverCodeIdChange,
   ...props
 }: CodeExplorerProps) {
@@ -66,6 +66,17 @@ export function CodeExplorer({
       </Typography>
     ),
     [onHoverCodeIdChange, hiddenCodeIds],
+  );
+
+  const renderActions = useCallback(
+    (node: ITree<CodeRead>) => (
+      <CodeExplorerActionMenu
+        node={node}
+        isHidden={hiddenCodeIds.includes(node.data.id)}
+        onToggleVisibility={onToggleCodeVisibility}
+      />
+    ),
+    [hiddenCodeIds, onToggleCodeVisibility],
   );
 
   return (

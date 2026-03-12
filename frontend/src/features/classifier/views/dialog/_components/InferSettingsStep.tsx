@@ -20,7 +20,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_TRAINED_ID } from "@utils/GlobalConstants";
 import { useEffect } from "react";
 import { SubmitErrorHandler, useForm } from "react-hook-form";

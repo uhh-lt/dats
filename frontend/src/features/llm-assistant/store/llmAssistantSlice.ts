@@ -172,4 +172,4 @@ const llmAssistantSlice = createSlice({
 });
 
 export const LLMAssistantActions = llmAssistantSlice.actions;
-export const llmAssistantReducer = llmAssistantSlice.reducer;
+export const llmAssistantReducer = { [llmAssistantSlice.name]: llmAssistantSlice.reducer };

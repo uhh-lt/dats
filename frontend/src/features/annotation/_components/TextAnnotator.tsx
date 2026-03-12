@@ -5,7 +5,7 @@ import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
 import { MouseEvent, MouseEventHandler, useRef, useState } from "react";

@@ -2,7 +2,7 @@ import { ClassifierModel } from "@api/models/ClassifierModel";
 import { CodeTable } from "@core/code";
 import { TagTable } from "@core/tag";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
 import { ClassifierActions } from "../../../store/classifierSlice";

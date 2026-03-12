@@ -1,5 +1,5 @@
 import { ExportJobType } from "@api/models/ExportJobType";
-import { ExportButton } from "@components/export-buttons";
+import { ExportButton } from "@core/export-buttons";
 
 export function TagExportButton() {
   return (

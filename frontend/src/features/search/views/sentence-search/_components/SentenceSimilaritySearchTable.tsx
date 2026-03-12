@@ -2,8 +2,8 @@ import { SdocColumns } from "@api/models/SdocColumns";
 import { SimSearchSentenceHit } from "@api/models/SimSearchSentenceHit";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
-import { ReduxFilterDialog } from "@components/filter";
 import { useAuth } from "@core/auth";
+import { ReduxFilterDialog } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
   DeleteSdocsButton,
@@ -14,11 +14,10 @@ import {
   SdocTagsRenderer,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
-import { useReduxConnector } from "@hooks/useReduxConnector";
 import { Box } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
 import { selectSelectedIds } from "@store/generic/tableSlice";
 import { RootState } from "@store/store";
+import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,
@@ -28,7 +27,7 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
@@ -86,7 +85,7 @@ export function SentenceSimilaritySearchTable({
   const selectedDocumentIds = useAppSelector((state) => selectSelectedIds(state.sentenceSearch));
 
   // virtualization
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -243,9 +242,9 @@ export function SentenceSimilaritySearchTable({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <DATSToolbar variant="dense" ref={toolbarRef}>
+      <DATSToolbar variant="dense" ref={setToolbarEl}>
         <ReduxFilterDialog
-          anchorEl={toolbarRef.current}
+          anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}

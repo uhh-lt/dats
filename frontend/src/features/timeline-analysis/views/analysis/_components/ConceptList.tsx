@@ -14,8 +14,8 @@ import { LogicalOperator } from "@api/models/LogicalOperator";
 import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
-import { MyFilter } from "@components/filter";
-import { useAppDispatch, useAppStore } from "@plugins/redux";
+import { MyFilter } from "@core/filter";
+import { useAppDispatch, useAppStore } from "@store/storeHooks";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";
@@ -80,18 +80,19 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
       console.error(`Concept ${concept.id} not found`);
     } else {
       const updatedFilter = store.getState().timelineAnalysis.editableFilter as MyFilter<BBoxColumns>;
-      timelineAnalysis.concepts[index] = {
+      const updatedConcepts = [...timelineAnalysis.concepts];
+      updatedConcepts[index] = {
         ...concept,
         ta_specific_filter: {
           ...concept.ta_specific_filter,
           filter: updatedFilter,
         },
       };
-      console.log(timelineAnalysis.concepts[index]);
+      console.log(updatedConcepts[index]);
       updateTimelineAnalysisMutation.mutate({
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
-          concepts: [...timelineAnalysis.concepts],
+          concepts: updatedConcepts,
         },
       });
     }
@@ -104,14 +105,11 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   };
 
   const handleDeleteConcept = (conceptId: string) => {
-    const index = timelineAnalysis.concepts.findIndex((c) => c.id === conceptId);
-    if (index !== -1) {
-      timelineAnalysis.concepts.splice(index, 1);
-    }
+    const updatedConcepts = timelineAnalysis.concepts.filter((c) => c.id !== conceptId);
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
       requestBody: {
-        concepts: [...timelineAnalysis.concepts],
+        concepts: updatedConcepts,
       },
     });
   };
@@ -121,14 +119,15 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
     if (index === -1) {
       console.error(`Concept ${conceptId} not found`);
     } else {
-      timelineAnalysis.concepts[index] = {
-        ...timelineAnalysis.concepts[index],
-        visible: !timelineAnalysis.concepts[index].visible,
+      const updatedConcepts = [...timelineAnalysis.concepts];
+      updatedConcepts[index] = {
+        ...updatedConcepts[index],
+        visible: !updatedConcepts[index].visible,
       };
       updateTimelineAnalysisMutation.mutate({
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
-          concepts: [...timelineAnalysis.concepts],
+          concepts: updatedConcepts,
         },
       });
     }
@@ -144,7 +143,6 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
         id: uuidv4(),
         name: `Duplicated Concept #${timelineAnalysis.concepts.length + 1}`,
       };
-      timelineAnalysis.concepts.push(duplicatedConcept);
       updateTimelineAnalysisMutation.mutate({
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {

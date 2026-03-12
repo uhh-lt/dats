@@ -1,6 +1,6 @@
 import { ExportJobType } from "@api/models/ExportJobType";
 import { ExportAnalysisButtonProps } from "@components/analysis-dashboard";
-import { ExportButton } from "@components/export-buttons";
+import { ExportButton } from "@core/export-buttons";
 
 export function TimelineAnalysisExportButton({ analysisIds }: ExportAnalysisButtonProps) {
   const exportAll = analysisIds.length === 0;

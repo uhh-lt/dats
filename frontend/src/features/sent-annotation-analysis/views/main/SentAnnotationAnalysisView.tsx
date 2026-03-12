@@ -1,5 +1,5 @@
 import { ContentLayout } from "@components/content-layouts";
-import { SentenceAnnotationEditDialog } from "@core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
+import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
 import { Box } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
 import { SentAnnotationAnalysisTable } from "./_components/SentAnnotationAnalysisTable";

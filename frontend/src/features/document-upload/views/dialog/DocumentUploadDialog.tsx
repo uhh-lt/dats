@@ -1,20 +1,15 @@
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Dialog, Stack } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
-import { useCallback } from "react";
+import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { DocumentUploadJobsView } from "./_components/DocumentUploadJobsView";
 import { FileUploadSection } from "./_components/FileUploadSection";
 import { UrlCrawlerSection } from "./_components/UrlCrawlerSection";
 
 export function DocumentUploadDialog({ projectId }: { projectId: number }) {
   // open/close dialog
-  const dispatch = useAppDispatch();
-  const open = useAppSelector((state) => state.dialog.isDocumentUploadOpen);
-  const handleClose = useCallback(() => {
-    dispatch(UIDialogActions.closeDocumentUpload());
-  }, [dispatch]);
+  const { isOpen: open } = useDialogState("documentUpload");
+  const handleClose = useCloseDialog("documentUpload");
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

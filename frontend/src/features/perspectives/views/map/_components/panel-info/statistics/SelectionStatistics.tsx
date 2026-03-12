@@ -6,7 +6,7 @@ import { CodeRenderer } from "@core/code";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@plugins/redux";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo } from "react";
 import { PerspectivesActions } from "../../../../../store/perspectivesSlice";
 import { MapCodeStats } from "./MapCodeStats";

@@ -15,11 +15,11 @@ import {
   getDefaultOperator,
   getOrCreateFilter,
   resetProjectFilterState,
-} from "@components/filter";
+} from "@core/filter";
+import { getMetadataValue } from "@core/sdoc-metadata";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
-import { getValue } from "@utils/MetadataUtils";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { v4 as uuidv4 } from "uuid";
@@ -238,7 +238,7 @@ const searchSlice = createSlice({
           id: uuidv4(),
           column: action.payload.projectMetadata.id,
           operator: getDefaultOperator(filterOperatorType),
-          value: getValue(action.payload.metadata, action.payload.projectMetadata)!,
+          value: getMetadataValue(action.payload.metadata, action.payload.projectMetadata)!,
         },
       ];
     },
@@ -273,10 +273,12 @@ const searchSlice = createSlice({
 // actions
 export const SearchActions = searchSlice.actions;
 
-export const searchReducer = persistReducer(
-  {
-    key: "search",
-    storage,
-  },
-  searchSlice.reducer,
-);
+export const searchReducer = {
+  [searchSlice.name]: persistReducer(
+    {
+      key: searchSlice.name,
+      storage,
+    },
+    searchSlice.reducer,
+  ),
+};

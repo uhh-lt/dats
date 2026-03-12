@@ -5,6 +5,8 @@ import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import { SpanAnnotationSearchResult } from "@api/models/SpanAnnotationSearchResult";
 import { SpanColumns } from "@api/models/SpanColumns";
 import { SearchService } from "@api/services/SearchService";
+import { useAuth } from "@core/auth";
+import { CodeRenderer } from "@core/code";
 import {
   FilterTableProps,
   FilterTableToolbarLeft,
@@ -13,16 +15,14 @@ import {
   MyFilter,
   createEmptyFilter,
   useRenderFilterToolbars,
-} from "@components/filter";
-import { useAuth } from "@core/auth";
-import { CodeRenderer } from "@core/code";
+} from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
-import { useAppSelector } from "@plugins/redux";
 import { RootState } from "@store/store";
+import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,

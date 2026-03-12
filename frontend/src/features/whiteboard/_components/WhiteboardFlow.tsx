@@ -4,19 +4,18 @@ import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
-import { WhiteboardContent_Output } from "@api/models/WhiteboardContent_Output";
 import { WhiteboardEdgeData_Output } from "@api/models/WhiteboardEdgeData_Output";
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { WhiteboardRead } from "@api/models/WhiteboardRead";
 import { EditableTypography } from "@components/EditableTypography";
-import { BBoxAnnotationEditDialog } from "@core/bbox-annotation/BBoxAnnotationEditDialog";
-import { SentenceAnnotationEditDialog } from "@core/sentence-annotation/dialog/SentenceAnnotationEditDialog";
-import { SpanAnnotationEditDialog } from "@core/span-annotation/SpanAnnotationEditDialog";
+import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
+import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
+import { SpanAnnotationEditDialog } from "@core/span-annotation";
 import InterestsIcon from "@mui/icons-material/Interests";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "@mui/material";
 import { useBlocker } from "@tanstack/react-router";
-import { downloadFile } from "@utils/ExportUtils";
+import { downloadFile } from "@utils/downloadUtils";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -340,53 +339,62 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
     });
   }, [selectedEdges]);
 
-  // SAVE Feature
-  const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
+  // 1. SAVE Feature
+  const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = WhiteboardHooks.useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
-    const mutation = updateWhiteboard.mutate;
-    mutation({
+    updateWhiteboard({
       whiteboardId: whiteboard.id,
       requestBody: {
         title: whiteboard.title,
-        content: { nodes: nodes, edges: edges },
+        content: { nodes, edges },
       },
     });
-  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
+  }, [edges, nodes, updateWhiteboard, whiteboard.id, whiteboard.title]);
 
-  // autosave whiteboard every 3 minutes
-  const lastSaveTime = useRef<number>(Date.now());
-  if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {
-    lastSaveTime.current = Date.now();
-    handleSaveWhiteboard();
-  }
-
-  // autosave whiteboard on page unload
-  const [oldData, setOldData] = useState(JSON.stringify(whiteboard.content));
+  // 2. Keep track of the latest save function without triggering re-renders
+  const latestSaveRef = useRef(handleSaveWhiteboard);
   useEffect(() => {
-    setOldData(JSON.stringify(whiteboard.content));
-  }, [whiteboard.content]);
+    latestSaveRef.current = handleSaveWhiteboard;
+  }, [handleSaveWhiteboard]);
+
+  // 3. Autosave whiteboard every 3 minutes (Timer never resets now!)
+  useEffect(() => {
+    const AUTOSAVE_INTERVAL = 1000 * 60 * 3;
+
+    const timerId = setInterval(() => {
+      // Call whatever the freshest save function is
+      latestSaveRef.current();
+    }, AUTOSAVE_INTERVAL);
+
+    return () => clearInterval(timerId);
+  }, []); // Empty array: interval starts once on mount and never restarts
+
+  // 4. Autosave whiteboard on page unload (No cascading renders!)
   useBlocker({
     shouldBlockFn: () => {
-      const newData: WhiteboardContent_Output = { nodes: nodes, edges: edges };
-      if (oldData !== JSON.stringify(newData)) {
-        handleSaveWhiteboard();
+      const currentData = JSON.stringify({ nodes, edges });
+      const dbData = JSON.stringify(whiteboard.content);
+
+      // Compare current canvas state against what we loaded from the DB
+      if (dbData !== currentData) {
+        // Use the ref here too just to be safe
+        latestSaveRef.current();
       }
-      return false;
+      return false; // Don't actually block the navigation
     },
   });
 
   // CHANGE TITLE Feature
   const handleTitleChange = useCallback(
     (newTitle: string) => {
-      const mutation = updateWhiteboard.mutate;
-      mutation({
+      updateWhiteboard({
         whiteboardId: whiteboard.id,
         requestBody: {
           title: newTitle,
         },
       });
     },
-    [updateWhiteboard.mutate, whiteboard.id],
+    [updateWhiteboard, whiteboard.id],
   );
 
   const handleShapeMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -490,7 +498,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                       variant="h5"
                     />
                     <Tooltip title="Save whiteboard" placement="bottom" arrow>
-                      <IconButton size="small" loading={updateWhiteboard.isPending} onClick={handleSaveWhiteboard}>
+                      <IconButton size="small" loading={updateWhiteboardPending} onClick={handleSaveWhiteboard}>
                         <SaveIcon />
                       </IconButton>
                     </Tooltip>

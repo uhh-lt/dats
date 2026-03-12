@@ -1,7 +1,6 @@
 import { FolderRead } from "@api/models/FolderRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { useAppDispatch } from "@plugins/redux";
-import { UIDialogActions } from "@store/global/dialogSlice";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
@@ -10,15 +9,15 @@ interface FolderEditMenuItemProps {
 }
 
 export const FolderEditMenuItem = memo(({ folder, onClick, ...props }: FolderEditMenuItemProps & MenuItemProps) => {
-  const dispatch = useAppDispatch();
+  const openFolderEditDialog = useOpenDialog("folderEdit");
 
   const handleClickOpen = useCallback(
     (event: React.MouseEvent<HTMLLIElement>) => {
       event.stopPropagation();
       if (onClick) onClick(event);
-      dispatch(UIDialogActions.openFolderEditDialog({ folder }));
+      openFolderEditDialog({ folder });
     },
-    [dispatch, onClick, folder],
+    [openFolderEditDialog, onClick, folder],
   );
 
   return (

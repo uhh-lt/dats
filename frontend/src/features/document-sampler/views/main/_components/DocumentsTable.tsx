@@ -1,6 +1,6 @@
 import { SdocTableSimple } from "@core/source-document";
 import { CardProps } from "@mui/material";
-import { useAppSelector } from "@plugins/redux";
+import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { ChartDataPoint } from "../../../_types/ChartDataPoint";
 import { BulkDocTagger } from "./BulkDocTagger";

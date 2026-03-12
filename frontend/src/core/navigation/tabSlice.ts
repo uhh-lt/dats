@@ -147,4 +147,4 @@ export const selectProjectTabs = (projectId: number) => (state: RootState) => {
 };
 
 export const TabActions = tabSlice.actions;
-export const tabReducer = tabSlice.reducer;
+export const tabReducer = { [tabSlice.name]: tabSlice.reducer };

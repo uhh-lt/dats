@@ -7,7 +7,7 @@ import {
   createInitialFilterState,
   filterReducer,
   resetProjectFilterState,
-} from "@components/filter";
+} from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -82,4 +82,4 @@ const WordFrequencySlice = createSlice({
 });
 
 export const WordFrequencyActions = WordFrequencySlice.actions;
-export const wordFrequencyReducer = WordFrequencySlice.reducer;
+export const wordFrequencyReducer = { [WordFrequencySlice.name]: WordFrequencySlice.reducer };

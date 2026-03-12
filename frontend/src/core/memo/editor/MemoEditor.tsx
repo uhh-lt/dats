@@ -57,7 +57,7 @@ export const MemoEditor = memo(({ memoId, renderToolbar, onDelete, onStarred }: 
     if (!memo.data?.updated) return "";
     const fullDate = dateToLocaleString(memo.data.updated);
     return fullDate.substring(0, fullDate.indexOf(","));
-  }, [memo.data?.updated]);
+  }, [memo.data]);
 
   return (
     <Box className="h100 myFlexContainer">
