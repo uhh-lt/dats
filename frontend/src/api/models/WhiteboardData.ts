@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { BBoxAnnotationRead } from "./BBoxAnnotationRead";
 import type { CodeRead } from "./CodeRead";
 import type { MemoRead } from "./MemoRead";

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { WhiteboardContent_Output } from "./WhiteboardContent_Output";
 export type WhiteboardRead = {
   /**

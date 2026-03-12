@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { FilterExpression_SentAnnoColumns_ } from "./FilterExpression_SentAnnoColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_SentAnnoColumns__Output = {

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 /**
  * Settings for the perspective creation pipeline.
  * When updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)

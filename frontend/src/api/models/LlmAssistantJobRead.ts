@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { JobStatus } from "./JobStatus";
 import type { LLMJobInput_Output } from "./LLMJobInput_Output";
 import type { LLMJobOutput } from "./LLMJobOutput";

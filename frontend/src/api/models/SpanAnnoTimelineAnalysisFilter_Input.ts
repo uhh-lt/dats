@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { Filter_SpanColumns__Input } from "./Filter_SpanColumns__Input";
 export type SpanAnnoTimelineAnalysisFilter_Input = {
   timeline_analysis_type: string;

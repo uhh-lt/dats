@@ -3,7 +3,7 @@ import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
 
-import { useGetMemosAttachedObject, useOpenMemoDialog , attachedObjectTypeToText , MemoRenderer  } from "@core/memo";
+import { useGetMemosAttachedObject, useOpenMemoDialog, attachedObjectTypeToText, MemoRenderer } from "@core/memo";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 
 import { AttachedObjectType } from "@api/models/AttachedObjectType";

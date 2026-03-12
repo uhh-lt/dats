@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 export enum TimelineAnalysisType {
   DOCUMENT = "document",
   SENTENCE_ANNOTATION = "sentence_annotation",

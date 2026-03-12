@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { AnnotationParams } from "./AnnotationParams";
 import type { ApproachType } from "./ApproachType";
 import type { FewShotParams } from "./FewShotParams";

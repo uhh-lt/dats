@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { ProcessingSettings } from "./ProcessingSettings";
 export type CrawlerJobInput_Input = {
   /**

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { LLMPromptTemplates } from "./LLMPromptTemplates";
 export type FewShotParams = {
   llm_approach_type: string;

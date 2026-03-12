@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { Filter_MemoColumns_ } from "./Filter_MemoColumns_";
 import type { Sort_MemoColumns_ } from "./Sort_MemoColumns_";
 export type Body_search_search_memos = {

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { ImportJobInput } from "./ImportJobInput";
 import type { JobStatus } from "./JobStatus";
 export type ImportJobRead = {

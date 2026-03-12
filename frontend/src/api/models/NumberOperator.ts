@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 export enum NumberOperator {
   NUMBER_EQUALS = "NUMBER_EQUALS",
   NUMBER_NOT_EQUALS = "NUMBER_NOT_EQUALS",

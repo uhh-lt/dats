@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { ClassifierEvaluationOutput } from "./ClassifierEvaluationOutput";
 import type { ClassifierInferenceOutput } from "./ClassifierInferenceOutput";
 import type { ClassifierTask } from "./ClassifierTask";

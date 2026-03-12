@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 import type { JobStatus } from "./JobStatus";
 import type { MLJobInput_Output } from "./MLJobInput_Output";
 export type MlJobRead = {

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
- 
+
 export enum MemoColumns {
   M_TITLE = "M_TITLE",
   M_CONTENT = "M_CONTENT",
