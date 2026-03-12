@@ -1,4 +1,3 @@
-import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -6,37 +5,43 @@ import {
   useAnalysisDashboardTable,
 } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import {
+  projectWhiteboardsQueryOptions,
+  useCreateWhiteboard,
+  useDeleteWhiteboard,
+  useDuplicateWhiteboard,
+  useUpdateWhiteboard,
+} from "../../_api/whiteboardQueryOptions";
 import { WhiteboardsExportButton } from "./_components/WhiteboardsExportButton";
 
-const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/");
+const WhiteboardDashboardRouteAPI = getRouteApi("/_auth/project/$projectId/whiteboard/");
 
 export function WhiteboardDashboardView() {
-  // global client state
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  // route params
+  const projectId = WhiteboardDashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const {
-    data: projectWhiteboards,
-    isLoading: isLoadingWhiteboards,
-    isFetching: isFetchingWhiteboards,
-    isError: isLoadingWhiteboardsError,
-  } = WhiteboardHooks.useGetProjectWhiteboardsList();
+  const { data: projectWhiteboards } = useSuspenseQuery({
+    ...projectWhiteboardsQueryOptions(projectId),
+    select: (data) => Object.values(data),
+  });
 
   // mutations
-  const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = WhiteboardHooks.useCreateWhiteboard();
+  const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = useCreateWhiteboard();
   const {
     mutate: deleteWhiteboard,
     isPending: isDeletingWhiteboard,
     variables: deletingVariables,
-  } = WhiteboardHooks.useDeleteWhiteboard();
-  const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = WhiteboardHooks.useUpdateWhiteboard();
+  } = useDeleteWhiteboard(projectId);
+  const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = useUpdateWhiteboard();
   const {
     mutate: duplicateWhiteboard,
     isPending: isDuplicatingWhiteboard,
     variables: duplicatingVariables,
-  } = WhiteboardHooks.useDuplicateWhiteboard();
+  } = useDuplicateWhiteboard(projectId);
 
   // CRUD actions
   const handleDuplicateClick = (row: MRT_Row<AnalysisDashboardRow>) => {
@@ -98,7 +103,7 @@ export function WhiteboardDashboardView() {
     );
   };
 
-  const navigate = routeApi.useNavigate();
+  const navigate = WhiteboardDashboardRouteAPI.useNavigate();
   const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
     console.log("Opening Whiteboard " + row.id);
     navigate({ to: "./$whiteboardId", params: { whiteboardId: row.id } });
@@ -107,10 +112,10 @@ export function WhiteboardDashboardView() {
   // table
   const table = useAnalysisDashboardTable({
     analysisName: "Whiteboard",
-    data: projectWhiteboards || [],
-    isLoadingData: isLoadingWhiteboards,
-    isFetchingData: isFetchingWhiteboards,
-    isLoadingDataError: isLoadingWhiteboardsError,
+    data: projectWhiteboards,
+    isLoadingData: false,
+    isFetchingData: false,
+    isLoadingDataError: false,
     isCreatingAnalysis: isCreatingWhiteboard,
     isDeletingAnalysis: isDeletingWhiteboard,
     isDuplicatingAnalysis: isDuplicatingWhiteboard,

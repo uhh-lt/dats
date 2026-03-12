@@ -1,7 +1,7 @@
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { ContentContainerLayout } from "@components/content-layouts";
+import { ExportChartButton } from "@components/export-chart-buttons";
 import { LinkButton } from "@components/links";
-import { ExportChartButton } from "@core/export-buttons";
 import { JobStatusBadge } from "@core/job";
 import { TagRenderer } from "@core/tag";
 import BarChartIcon from "@mui/icons-material/BarChart";

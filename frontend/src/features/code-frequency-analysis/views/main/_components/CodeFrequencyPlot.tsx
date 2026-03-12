@@ -3,7 +3,6 @@ import { CodeFrequency } from "@api/models/CodeFrequency";
 import { CodeRead } from "@api/models/CodeRead";
 import { DocType } from "@api/models/DocType";
 import { ITree } from "@components/tree-explorer";
-import { ExportChartButton } from "@core/export-buttons";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
@@ -35,6 +34,7 @@ interface CodeFrequencyViewProps {
   data: Node<ITree<CodeRead>>;
 }
 
+import { ExportChartButton } from "@components/export-chart-buttons";
 import type { TooltipProps } from "recharts";
 
 function CustomTooltip(props: TooltipProps<number, string>) {

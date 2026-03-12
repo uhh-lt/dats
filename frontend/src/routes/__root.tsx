@@ -2,11 +2,13 @@ import { LinkButton } from "@components/links";
 import { AuthState } from "@core/auth";
 import { SnackbarDialog } from "@core/notification";
 import { Box, Container, CssBaseline, Typography } from "@mui/material";
+import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 interface DATSRouterContext {
   auth: AuthState;
+  queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<DATSRouterContext>()({

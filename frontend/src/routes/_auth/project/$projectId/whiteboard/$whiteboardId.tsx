@@ -1,51 +1,18 @@
-import { CodeMap } from "@api/hooks/CodeHooks";
-import { QueryKey } from "@api/hooks/QueryKey";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { MemoRead } from "@api/models/MemoRead";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagRead } from "@api/models/TagRead";
-import { queryClient } from "@api/queryClient";
-import { WhiteboardService } from "@api/services/WhiteboardService";
-import { WhiteboardView } from "@features/whiteboard";
+import { WhiteboardView, whiteboardViewLoader } from "@features/whiteboard";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whiteboardId")({
   params: {
     parse: ({ whiteboardId }) => ({ whiteboardId: parseInt(whiteboardId) }),
   },
+  loader: ({ context, params }) =>
+    whiteboardViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+      whiteboardId: params.whiteboardId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load whiteboard: {(error as Error).message}</div>,
   component: WhiteboardView,
-  loader: async ({ params }) => {
-    const whiteboardData = await WhiteboardService.getDataById({ whiteboardId: params.whiteboardId });
-    whiteboardData.span_annotations.forEach((sa) => {
-      queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, sa.id], sa);
-    });
-    whiteboardData.sent_annotations.forEach((sa) => {
-      queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, sa.id], sa);
-    });
-    whiteboardData.bbox_annotations.forEach((ba) => {
-      queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, ba.id], ba);
-    });
-    whiteboardData.memos.forEach((memo) => {
-      queryClient.setQueryData<MemoRead>([QueryKey.MEMO, memo.id], memo);
-    });
-    whiteboardData.sdocs.forEach((sdoc) => {
-      queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, sdoc.id], sdoc);
-    });
-
-    if (whiteboardData.codes.length > 0) {
-      const codeMap = whiteboardData.codes.reduce((acc, code) => {
-        acc[code.id] = code;
-        return acc;
-      }, {} as CodeMap);
-      queryClient.setQueryData<CodeMap>([QueryKey.PROJECT_CODES, params.projectId], codeMap);
-    }
-
-    if (whiteboardData.tags.length > 0) {
-      queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, params.projectId], whiteboardData.tags);
-    }
-
-    return null;
-  },
 });

@@ -3,7 +3,6 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
 import { WhiteboardEdgeData_Output } from "@api/models/WhiteboardEdgeData_Output";
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { WhiteboardRead } from "@api/models/WhiteboardRead";
@@ -44,6 +43,7 @@ import {
   XYPosition,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { useUpdateWhiteboard } from "../../../_api/whiteboardQueryOptions";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
 import { DATSNodeData } from "../_types/DATSNodeData";
@@ -340,7 +340,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   }, [selectedEdges]);
 
   // 1. SAVE Feature
-  const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = WhiteboardHooks.useUpdateWhiteboard();
+  const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
     updateWhiteboard({
       whiteboardId: whiteboard.id,

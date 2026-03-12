@@ -1,11 +1,4 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
-import { useEffect, useRef } from "react";
-import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
-
-import { useGetMemosAttachedObject, useOpenMemoDialog, attachedObjectTypeToText, MemoRenderer } from "@core/memo";
-import { useReactFlowService } from "../../_hooks/ReactFlowService";
-
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
@@ -21,7 +14,12 @@ import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { TagNodeData } from "@api/models/TagNodeData";
 import { TagRead } from "@api/models/TagRead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
+import { attachedObjectTypeToText, MemoRenderer, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
+import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
+import { useEffect, useRef } from "react";
 import Markdown from "react-markdown";
+import { Edge, Node, NodeProps, useReactFlow, XYPosition } from "reactflow";
+import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import {
   isBBoxAnnotationNode,

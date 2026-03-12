@@ -1,29 +1,20 @@
-import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
-import { CircularProgress } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ReactFlowProvider } from "reactflow";
-import { WhiteboardFlow } from "../../_components/WhiteboardFlow";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/whiteboard/$whiteboardId");
+import { projectWhiteboardsQueryOptions } from "../../_api/whiteboardQueryOptions";
+import { WhiteboardFlow } from "./_components/WhiteboardFlow";
+import { WhiteboardViewRouteAPI } from "./_hooks/whiteboardRouteAPI";
 
 export function WhiteboardView() {
-  // global client state
-  const { projectId, whiteboardId } = routeApi.useParams();
+  const { projectId, whiteboardId } = WhiteboardViewRouteAPI.useParams();
 
-  // global server state
-  const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);
+  const { data: whiteboard } = useSuspenseQuery({
+    ...projectWhiteboardsQueryOptions(projectId),
+    select: (data) => data[whiteboardId],
+  });
 
   return (
-    <>
-      {whiteboard.isSuccess ? (
-        <ReactFlowProvider>
-          <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard.data} />
-        </ReactFlowProvider>
-      ) : whiteboard.isLoading ? (
-        <CircularProgress />
-      ) : whiteboard.isError ? (
-        <div>ERROR: {whiteboard.error.message}</div>
-      ) : null}
-    </>
+    <ReactFlowProvider>
+      <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard} />
+    </ReactFlowProvider>
   );
 }

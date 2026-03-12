@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { COTARead } from "@api/models/COTARead";
 import { DateGroupBy } from "@api/models/DateGroupBy";
-import { ExportChartButton } from "@core/export-buttons";
+import { ExportChartButton } from "@components/export-chart-buttons";
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { dateToLocaleDate } from "@utils/DateUtils";

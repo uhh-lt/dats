@@ -159,13 +159,8 @@ export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
       yaxis: { zeroline: false },
       showlegend: false,
       uirevision: "preserve-ui-state", // Magic property: Plotly will not reset zoom/pan unless this string changes
+      ...(isSelectionEmpty && { selections: [] }), // If Redux selection is empty, force Plotly to wipe the drawn selection bounding box
     };
-
-    // If Redux selection is empty, force Plotly to wipe the drawn selection bounding box
-    if (isSelectionEmpty) {
-      baseLayout.selections = [];
-    }
-
     return baseLayout;
   }, [isSelectionEmpty]);
 

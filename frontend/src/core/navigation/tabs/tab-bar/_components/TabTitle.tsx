@@ -2,7 +2,7 @@ import { CotaHooks } from "@api/hooks/CotaHooks";
 import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
-import { WhiteboardHooks } from "@api/hooks/WhiteboardHooks";
+import { useGetWhiteboardById } from "@features/whiteboard";
 import { Box } from "@mui/material";
 import { getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useMemo } from "react";
@@ -22,7 +22,7 @@ function getDefaultLabel(base: string): string {
 
 export const TabTitle = memo(({ tab }: TabTitleProps) => {
   const sdoc = SdocHooks.useGetDocument(tab.base === "annotation" ? parseInt(tab.data_id!) : undefined);
-  const whiteboard = WhiteboardHooks.useGetWhiteboard(tab.base === "whiteboard" ? parseInt(tab.data_id!) : undefined);
+  const whiteboard = useGetWhiteboardById(tab.base === "whiteboard" ? parseInt(tab.data_id!) : undefined);
   const cota = CotaHooks.useGetCota(tab.base === "concepts-over-time-analysis" ? parseInt(tab.data_id!) : undefined);
   const timeline = TimelineAnalysisHooks.useGetTimelineAnalysis(
     tab.base === "timeline" ? parseInt(tab.data_id!) : undefined,
