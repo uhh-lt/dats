@@ -2,7 +2,7 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { DocTypeIcons } from "../DocTypeIcons";
+import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 
 export interface SdocRendererSharedProps {
   link?: boolean;
@@ -42,7 +42,7 @@ function SdocRendererWithData({
 }: { sdoc: SourceDocumentRead } & SdocRendererSharedProps) {
   const content = (
     <Stack direction="row" alignItems="center">
-      {renderDoctypeIcon && DocTypeIcons[sdoc.doctype]}
+      {renderDoctypeIcon && getIconComponent(DocTypeIcons[sdoc.doctype])}
       {renderName && sdoc.name}
     </Stack>
   );

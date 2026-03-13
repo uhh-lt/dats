@@ -4,8 +4,7 @@ import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
+import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
 import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -94,7 +93,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
           )}
 
           <DialogActions>
-            <LoadingButton
+            <Button
               variant="contained"
               color="success"
               startIcon={<SaveIcon />}
@@ -105,7 +104,7 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
               fullWidth
             >
               Update Annotation{dialogData.annotationIds.length > 1 && "s"}
-            </LoadingButton>
+            </Button>
           </DialogActions>
         </>
       )}

@@ -4,7 +4,7 @@ import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
 import { FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useState } from "react";
@@ -222,7 +222,7 @@ export function PromptEditorStep() {
         )}
         <Box flexGrow={1} />
         <Button onClick={handleBack}>Back</Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isStartPending}
@@ -230,7 +230,7 @@ export function PromptEditorStep() {
           onClick={handleStartLLMJob}
         >
           Start!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </>
   );

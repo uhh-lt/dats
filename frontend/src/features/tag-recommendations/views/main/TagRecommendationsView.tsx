@@ -3,9 +3,12 @@ import { TagRecommendationHooks } from "@api/hooks/TagRecommendationHooks";
 import { TagRead } from "@api/models/TagRead";
 import { TagRecommendationResult } from "@api/models/TagRecommendationResult";
 import { ContentContainerLayout } from "@components/content-layouts";
-import { DocumentTaggingResultRow, DocumentTagResultStepTable } from "@features/llm-assistant";
-import { LoadingButton } from "@mui/lab";
+// eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
+import { DocumentTaggingResultRow } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTaggingResultRow";
+// eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
+import { DocumentTagResultStepTable } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTagResultStepTable";
 import {
+  Button,
   Card,
   CardContent,
   FormControl,
@@ -119,7 +122,7 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
     <>
       <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <Stack sx={{ p: 2 }}>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={getIconComponent(Icon.TAG)}
           onClick={handleApplyNewTags}
@@ -127,7 +130,7 @@ function TagRecommendationsContent({ results, tags }: { results: TagRecommendati
           loadingPosition="start"
         >
           Apply Final Tags
-        </LoadingButton>
+        </Button>
       </Stack>
     </>
   );

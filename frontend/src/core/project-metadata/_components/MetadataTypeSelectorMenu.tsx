@@ -3,16 +3,16 @@ import { useDebounce } from "@hooks/useDebounce";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,
+  createFilterOptions,
   ListItem,
   ListItemIcon,
   ListItemText,
   Popover,
   PopoverPosition,
   TextField,
-  createFilterOptions,
 } from "@mui/material";
+import { getIconComponent, MetaTypeIcons } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
-import { MetaTypeIcons } from "../MetaTypeIcons";
 
 const filter = createFilterOptions<string>();
 
@@ -53,7 +53,7 @@ export const MetadataTypeSelectorMenu = memo(
     const renderOption = useCallback(
       (props: React.HTMLAttributes<HTMLLIElement>, option: string) => (
         <ListItem {...props} key={option}>
-          <ListItemIcon>{MetaTypeIcons[option as MetaType]}</ListItemIcon>
+          <ListItemIcon>{getIconComponent(MetaTypeIcons[option as MetaType])}</ListItemIcon>
           <ListItemText>{option}</ListItemText>
         </ListItem>
       ),

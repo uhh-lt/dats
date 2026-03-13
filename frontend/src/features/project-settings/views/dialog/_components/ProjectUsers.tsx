@@ -4,9 +4,9 @@ import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
+  Button,
   CardContent,
   Divider,
   IconButton,
@@ -104,7 +104,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
                 size: "small",
               }}
             />
-            <LoadingButton
+            <Button
               variant="contained"
               startIcon={<AddIcon />}
               sx={{ ml: 1 }}
@@ -114,7 +114,7 @@ export const ProjectUsers = memo(({ project }: ProjectUsersProps) => {
               loadingPosition="start"
             >
               Add
-            </LoadingButton>
+            </Button>
           </Stack>
         </Toolbar>
       </form>

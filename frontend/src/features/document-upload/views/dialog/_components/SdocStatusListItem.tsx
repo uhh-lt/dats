@@ -1,10 +1,10 @@
 import { SDocStatus } from "@api/models/SDocStatus";
 import { SourceDocumentStatusSimple } from "@api/models/SourceDocumentStatusSimple";
 import { jobStatusToTypographyColor } from "@core/job";
-import { DocTypeIcons } from "@core/source-document";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { Box, CircularProgress, LinearProgress, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 
 interface SdocStatusSimpleListItemProps {
@@ -15,7 +15,7 @@ export const SdocStatusSimpleListItem = memo(({ sdocStatus }: SdocStatusSimpleLi
   return (
     <ListItem>
       <Box width="50%" display="flex" alignItems="center">
-        <ListItemIcon>{DocTypeIcons[sdocStatus.doctype]}</ListItemIcon>
+        <ListItemIcon>{getIconComponent(DocTypeIcons[sdocStatus.doctype])}</ListItemIcon>
         <ListItemText
           primary={sdocStatus.name}
           primaryTypographyProps={{

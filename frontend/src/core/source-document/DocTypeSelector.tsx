@@ -10,8 +10,8 @@ import {
   SelectChangeEvent,
   Stack,
 } from "@mui/material";
+import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment } from "react";
-import { DocTypeIcons } from "./DocTypeIcons";
 
 interface DocTypeSelectorMultipleProps {
   multiple: true;
@@ -57,7 +57,7 @@ export function DocTypeSelector({ docTypes, onDocTypeChange, title, multiple, ..
               <Stack direction="row" alignItems="center">
                 {docTypesArray.map((docType, index) => (
                   <Fragment key={docType}>
-                    {DocTypeIcons[docType]} {docType}
+                    {getIconComponent(DocTypeIcons[docType])} {docType}
                     {index < docTypesArray.length - 1 && ", "}
                   </Fragment>
                 ))}
@@ -68,7 +68,7 @@ export function DocTypeSelector({ docTypes, onDocTypeChange, title, multiple, ..
             if (!docType) return null;
             return (
               <Stack direction="row" alignItems="center">
-                {DocTypeIcons[docType]} {docType}
+                {getIconComponent(DocTypeIcons[docType])} {docType}
               </Stack>
             );
           }
@@ -79,7 +79,7 @@ export function DocTypeSelector({ docTypes, onDocTypeChange, title, multiple, ..
             {multiple && <Checkbox checked={(docTypes as DocType[]).indexOf(docType) !== -1} />}
             <ListItemText>
               <Stack direction="row" alignItems="center">
-                {DocTypeIcons[docType]} {docType}
+                {getIconComponent(DocTypeIcons[docType])} {docType}
               </Stack>
             </ListItemText>
           </MenuItem>

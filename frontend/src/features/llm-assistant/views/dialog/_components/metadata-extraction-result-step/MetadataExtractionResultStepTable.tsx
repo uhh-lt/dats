@@ -6,7 +6,6 @@ import { SourceDocumentMetadataReadResolved } from "@api/models/SourceDocumentMe
 import { SdocMetadataRendererWithData } from "@core/sdoc-metadata";
 import { SdocRenderer } from "@core/source-document";
 import LabelIcon from "@mui/icons-material/Label";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import {
@@ -309,7 +308,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
       <DialogActions sx={{ width: "100%", p: 0 }}>
         <Box flexGrow={1} />
         <Button onClick={handleClose}>Discard results & close</Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<LabelIcon />}
           onClick={handleUpdateBulkMetadata}
@@ -317,7 +316,7 @@ export const MetadataExtractionResultStepTable = memo(({ data }: { data: Metadat
           loadingPosition="start"
         >
           Update metadata
-        </LoadingButton>
+        </Button>
       </DialogActions>
     ),
     [handleClose, handleUpdateBulkMetadata, isUpdatePending],

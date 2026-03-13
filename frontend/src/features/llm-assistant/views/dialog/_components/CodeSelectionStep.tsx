@@ -3,7 +3,6 @@ import { CodeRead } from "@api/models/CodeRead";
 import { TaskType } from "@api/models/TaskType";
 import { CodeTable } from "@core/code";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
@@ -73,7 +72,7 @@ export const CodeSelectionStep = memo(() => {
         <Button disabled={isPending} onClick={handleBack}>
           Back
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isPending}
@@ -82,7 +81,7 @@ export const CodeSelectionStep = memo(() => {
           onClick={() => handleNext(props.selectedCodes)}
         >
           Next!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     ),
     [isPending, handleNext, handleBack],

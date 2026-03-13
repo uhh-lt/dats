@@ -5,8 +5,7 @@ import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
@@ -103,7 +102,7 @@ export function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogPr
         </Stack>
       </DialogContent>
       <DialogActions>
-        <LoadingButton
+        <Button
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
@@ -113,7 +112,7 @@ export function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogPr
           fullWidth
         >
           Create project
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

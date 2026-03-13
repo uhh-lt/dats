@@ -5,7 +5,7 @@ import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { SdocRenderer } from "@core/source-document";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton, TabContext, TabList, TabPanel } from "@mui/lab";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -163,7 +163,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isPending}
@@ -171,7 +171,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
           onClick={handleApplySuggestedAnnotations}
         >
           Apply annotations!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </>
   );

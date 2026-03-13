@@ -4,7 +4,6 @@ import { ApproachType } from "@api/models/ApproachType";
 import { TaskType } from "@api/models/TaskType";
 import { CodeRenderer } from "@core/code";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -247,7 +246,7 @@ export const ApproachSelectionStep = memo(() => {
         <Button disabled={isPTPending} onClick={handleBack}>
           Back
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isPTPending}
@@ -255,7 +254,7 @@ export const ApproachSelectionStep = memo(() => {
           onClick={handleNext}
         >
           Next!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </>
   );

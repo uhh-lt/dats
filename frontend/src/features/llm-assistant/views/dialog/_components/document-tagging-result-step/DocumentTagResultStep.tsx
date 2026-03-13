@@ -2,7 +2,6 @@ import { LLMHooks } from "@api/hooks/LLMHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TaggingLLMJobResult } from "@api/models/TaggingLLMJobResult";
 import { TagRead } from "@api/models/TagRead";
-import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
@@ -104,7 +103,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
       <DocumentTagResultStepTable rows={rows} onUpdateRows={setRows} />
       <DialogActions>
         <Button onClick={handleClose}>Discard results & close</Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={getIconComponent(Icon.TAG)}
           onClick={handleApplyNewTags}
@@ -112,7 +111,7 @@ function DocumentTagResultStepContent({ jobResult, tags }: { jobResult: TaggingL
           loadingPosition="start"
         >
           Apply new tags
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </>
   );

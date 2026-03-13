@@ -7,8 +7,7 @@ import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -151,7 +150,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
         </Stack>
       </DialogContent>
       <DialogActions>
-        <LoadingButton
+        <Button
           variant="contained"
           color="success"
           type="submit"
@@ -161,7 +160,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
           loadingPosition="start"
         >
           Create Folder
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

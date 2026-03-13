@@ -1,3 +1,9 @@
+/* eslint-disable boundaries/element-types */
+// We want to define icons for all kinds of things in one place, so we can easily maintain a consistent iconography across the app and avoid importing MUI icons all over the codebase
+// Hence, allow this utils file to import from all layers, making this not a "pure" utils file
+import { DocType } from "@api/models/DocType";
+import { JobStatus } from "@api/models/JobStatus";
+import { MetaType } from "@api/models/MetaType";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
@@ -10,6 +16,7 @@ import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CancelIcon from "@mui/icons-material/Cancel";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CircleIcon from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
@@ -17,6 +24,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
 import EditIcon from "@mui/icons-material/Edit";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ExploreIcon from "@mui/icons-material/Explore";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import FilterIcon from "@mui/icons-material/Filter";
@@ -25,6 +33,7 @@ import FolderOffIcon from "@mui/icons-material/FolderOff";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import HomeIcon from "@mui/icons-material/Home";
+import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import ImageIcon from "@mui/icons-material/Image";
 import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import InboxIcon from "@mui/icons-material/Inbox";
@@ -47,13 +56,14 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SquareIcon from "@mui/icons-material/Square";
 import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import SubjectIcon from "@mui/icons-material/Subject";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { SvgIconProps } from "@mui/material";
+import { CircularProgress, SvgIconProps } from "@mui/material";
 import { ReactElement } from "react";
 
 export enum Icon {
@@ -83,6 +93,13 @@ export enum Icon {
   LLM_JOB = "llm_job",
   ML_JOB = "ml_job",
   EXPORT_JOB = "export_job",
+
+  // Job status
+  JOB_WAITING = "job_waiting",
+  JOB_RUNNING = "job_running",
+  JOB_DONE = "job_done",
+  JOB_ERROR = "job_error",
+  JOB_ABORTED = "job_aborted",
 
   // SEARCH
   SEARCH = "search",
@@ -201,6 +218,13 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.ML_JOB]: (iconProps) => <AutoAwesomeIcon {...iconProps} />,
   [Icon.EXPORT_JOB]: (iconProps) => <SaveAltIcon {...iconProps} />,
 
+  // Job status
+  [Icon.JOB_WAITING]: (iconProps) => <HourglassTopOutlinedIcon {...iconProps} />,
+  [Icon.JOB_RUNNING]: () => <CircularProgress size={24} />,
+  [Icon.JOB_DONE]: (iconProps) => <TaskAltIcon {...iconProps} />,
+  [Icon.JOB_ERROR]: (iconProps) => <ErrorOutlineIcon {...iconProps} />,
+  [Icon.JOB_ABORTED]: (iconProps) => <CancelIcon {...iconProps} />,
+
   // SEARCH
   [Icon.SEARCH]: (iconProps) => <SearchIcon {...iconProps} />,
   [Icon.DOCUMENT_SEARCH]: (iconProps) => <DescriptionIcon {...iconProps} />,
@@ -293,4 +317,35 @@ const iconMap: Record<Icon, IconFactory> = {
  */
 export const getIconComponent = (icon: Icon, props?: SvgIconProps): React.ReactElement => {
   return iconMap[icon](props || {});
+};
+
+export const DocTypeIcons: Record<DocType, Icon> = {
+  [DocType.TEXT]: Icon.TEXT_DOCUMENT,
+  [DocType.IMAGE]: Icon.IMAGE_DOCUMENT,
+  [DocType.VIDEO]: Icon.VIDEO_DOCUMENT,
+  [DocType.AUDIO]: Icon.AUDIO_DOCUMENT,
+};
+
+export const MetaTypeIcons: Record<MetaType, Icon> = {
+  [MetaType.STRING]: Icon.META_STRING,
+  [MetaType.NUMBER]: Icon.META_NUMBER,
+  [MetaType.DATE]: Icon.META_DATE,
+  [MetaType.BOOLEAN]: Icon.META_BOOLEAN,
+  [MetaType.LIST]: Icon.META_LIST,
+};
+
+export const JobStatusIcons: Record<JobStatus, Icon> = {
+  // waiting
+  [JobStatus.QUEUED]: Icon.JOB_WAITING,
+  [JobStatus.DEFERRED]: Icon.JOB_WAITING,
+  [JobStatus.SCHEDULED]: Icon.JOB_WAITING,
+  // running
+  [JobStatus.STARTED]: Icon.JOB_RUNNING,
+  // done
+  [JobStatus.FINISHED]: Icon.JOB_DONE,
+  // errors
+  [JobStatus.FAILED]: Icon.JOB_ERROR,
+  // aborted
+  [JobStatus.STOPPED]: Icon.JOB_ABORTED,
+  [JobStatus.CANCELED]: Icon.JOB_ABORTED,
 };

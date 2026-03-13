@@ -5,9 +5,9 @@ import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import PlayCircle from "@mui/icons-material/PlayCircle";
-import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
 import { UploadDropzone } from "./UploadDropzone";
+import { Button } from "@mui/material";
 
 interface FileUploadSectionProps {
   projectId: number;
@@ -72,7 +72,7 @@ function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectio
       }
     >
       <UploadDropzone onFilesChanged={handleFilesChange} files={files} />
-      <LoadingButton
+      <Button
         variant="contained"
         color="primary"
         onClick={handleUpload}
@@ -84,7 +84,7 @@ function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectio
         sx={{ mt: 2 }}
       >
         Upload {files.length} File{files.length !== 1 ? "s" : ""}
-      </LoadingButton>
+      </Button>
     </DialogSection>
   );
 }

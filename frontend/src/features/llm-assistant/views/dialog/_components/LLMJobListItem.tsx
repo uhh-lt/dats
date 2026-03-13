@@ -9,11 +9,11 @@ import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
 import { ZeroShotParams } from "@api/models/ZeroShotParams";
 import { LinkListItemButton } from "@components/links";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
-import { DocTypeIcons } from "@core/source-document";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback, useRef, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
@@ -199,7 +199,7 @@ function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; 
           }`,
         }}
       >
-        {DocTypeIcons[DocType.TEXT]}
+        {getIconComponent(DocTypeIcons[DocType.TEXT])}
       </ListItemIcon>
       <ListItemText primary={`Document with ID ${result.sdoc_id} - ${result.status_message}`} />
     </LinkListItemButton>

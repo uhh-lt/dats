@@ -1,6 +1,6 @@
 import { DocType } from "@api/models/DocType";
-import { DocTypeIcons } from "@core/source-document";
 import { MenuItem, Stack, TextField } from "@mui/material";
+import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { ChangeEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
@@ -31,7 +31,7 @@ export const DocTypeValueSelector = memo(({ filterExpression, onChangeValue }: S
       {Object.values(DocType).map((docType) => (
         <MenuItem key={docType} value={docType}>
           <Stack direction="row" alignItems="center">
-            {DocTypeIcons[docType]}
+            {getIconComponent(DocTypeIcons[docType])}
             {docType}
           </Stack>
         </MenuItem>

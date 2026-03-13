@@ -3,7 +3,6 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
 import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
@@ -97,7 +96,7 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
           )}
           <DialogActions>
             <Button onClick={handleClose}>Close</Button>
-            <LoadingButton
+            <Button
               variant="contained"
               color="success"
               startIcon={<SaveIcon />}
@@ -108,7 +107,7 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
               loadingPosition="start"
             >
               Update Annotation{dialogData.annotationIds.length > 1 && "s"}
-            </LoadingButton>
+            </Button>
           </DialogActions>
         </>
       )}

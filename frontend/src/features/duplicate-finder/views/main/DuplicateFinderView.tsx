@@ -5,7 +5,6 @@ import { jobStatusToSimple } from "@core/job";
 import { SdocRenderer } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, Card, CardContent, CardHeader, TextField, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
@@ -244,7 +243,7 @@ export function DuplicateFinderView() {
                 size="small"
                 sx={{ width: 150 }}
               />
-              <LoadingButton
+              <Button
                 variant="contained"
                 startIcon={<TroubleshootIcon />}
                 sx={{ ml: 1 }}
@@ -253,7 +252,7 @@ export function DuplicateFinderView() {
                 loadingPosition="start"
               >
                 Start
-              </LoadingButton>
+              </Button>
             </>
           }
         />

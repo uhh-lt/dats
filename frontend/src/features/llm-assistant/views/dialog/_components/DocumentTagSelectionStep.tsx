@@ -3,7 +3,6 @@ import { TagRead } from "@api/models/TagRead";
 import { TaskType } from "@api/models/TaskType";
 import { TagTable } from "@core/tag";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
@@ -66,7 +65,7 @@ export const DocumentTagSelectionStep = memo(() => {
         <Button disabled={isPending} onClick={handleBack}>
           Back
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isPending}
@@ -75,7 +74,7 @@ export const DocumentTagSelectionStep = memo(() => {
           onClick={handleNext(props.selectedTags)}
         >
           Next!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     ),
     [isPending, handleBack, handleNext],

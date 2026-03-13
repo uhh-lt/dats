@@ -5,8 +5,7 @@ import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ProjectExportButton } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { Box, CardActions, CardContent, Divider, Stack } from "@mui/material";
+import { Box, Button, CardActions, CardContent, Divider, Stack } from "@mui/material";
 import { memo, useCallback } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
@@ -82,7 +81,7 @@ export const ProjectDetails = memo(({ project }: ProjectDetailsProps) => {
       <CardActions>
         <ProjectExportButton />
         <Box sx={{ flexGrow: 1 }} />
-        <LoadingButton
+        <Button
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
@@ -92,7 +91,7 @@ export const ProjectDetails = memo(({ project }: ProjectDetailsProps) => {
           loadingPosition="start"
         >
           Update project
-        </LoadingButton>
+        </Button>
       </CardActions>
     </form>
   );

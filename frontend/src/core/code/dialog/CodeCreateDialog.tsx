@@ -5,8 +5,7 @@ import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
@@ -178,7 +177,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
         </Stack>
       </DialogContent>
       <DialogActions>
-        <LoadingButton
+        <Button
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
@@ -188,7 +187,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
           loadingPosition="start"
         >
           Create Code
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

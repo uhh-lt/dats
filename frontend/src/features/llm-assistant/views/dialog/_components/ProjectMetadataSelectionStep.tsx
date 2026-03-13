@@ -5,7 +5,6 @@ import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { TaskType } from "@api/models/TaskType";
 import { ProjectMetadataTable } from "@core/project-metadata";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { LoadingButton } from "@mui/lab";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
@@ -74,7 +73,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
         <Button disabled={isPending} onClick={handleBack}>
           Back
         </Button>
-        <LoadingButton
+        <Button
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loading={isPending}
@@ -83,7 +82,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
           onClick={() => handleNext(props.selectedProjectMetadata)}
         >
           Next!
-        </LoadingButton>
+        </Button>
       </DialogActions>
     ),
     [isPending, handleNext, handleBack],

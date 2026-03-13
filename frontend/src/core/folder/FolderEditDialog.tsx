@@ -9,8 +9,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
-import { LoadingButton } from "@mui/lab";
-import { Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -163,7 +162,7 @@ export function FolderEditDialog() {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <LoadingButton
+        <Button
           variant="contained"
           color="error"
           startIcon={<DeleteIcon />}
@@ -173,8 +172,8 @@ export function FolderEditDialog() {
           sx={{ flexShrink: 0 }}
         >
           Delete Folder
-        </LoadingButton>
-        <LoadingButton
+        </Button>
+        <Button
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
@@ -184,7 +183,7 @@ export function FolderEditDialog() {
           loadingPosition="start"
         >
           Update Folder
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

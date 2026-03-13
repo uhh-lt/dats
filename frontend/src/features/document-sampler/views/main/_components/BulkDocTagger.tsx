@@ -1,8 +1,7 @@
 import { TagHooks } from "@api/hooks/TagHooks";
 import CheckIcon from "@mui/icons-material/Check";
 import LabelIcon from "@mui/icons-material/Label";
-import { LoadingButton } from "@mui/lab";
-import { MenuItem, Select, Stack } from "@mui/material";
+import { Button, MenuItem, Select, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useState } from "react";
 
@@ -52,7 +51,7 @@ export const BulkDocTagger = memo(() => {
           </MenuItem>
         ))}
       </Select>
-      <LoadingButton
+      <Button
         onClick={bulkTagDocuments}
         disabled={selectedDocumentTagId === -1 || chartData.length === 0}
         loading={isLinkingTags}
@@ -60,7 +59,7 @@ export const BulkDocTagger = memo(() => {
         startIcon={<CheckIcon />}
       >
         Apply tag to documents
-      </LoadingButton>
+      </Button>
     </Stack>
   );
 });

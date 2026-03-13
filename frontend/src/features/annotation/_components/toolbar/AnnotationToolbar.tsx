@@ -2,7 +2,6 @@ import { FolderHooks } from "@api/hooks/FolderHooks";
 import { DocType } from "@api/models/DocType";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { DATSToolbar } from "@components/DATSToolbar";
-import { DocTypeIcons } from "@core/source-document";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
 import { LLMAssistanceButton } from "@features/llm-assistant";
@@ -13,7 +12,7 @@ import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
+import { DocTypeIcons, getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { TagStyle } from "../../_types/TagStyle";
@@ -72,7 +71,9 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
               </ToggleButton>
             </Tooltip>
             <Tooltip title="Annotation" placement="bottom">
-              <ToggleButton value={AnnotationMode.Annotation}>{DocTypeIcons[sdoc.doctype]}</ToggleButton>
+              <ToggleButton value={AnnotationMode.Annotation}>
+                {getIconComponent(DocTypeIcons[sdoc.doctype])}
+              </ToggleButton>
             </Tooltip>
             <Tooltip title="Reading" placement="bottom">
               <ToggleButton value={AnnotationMode.Reader}>

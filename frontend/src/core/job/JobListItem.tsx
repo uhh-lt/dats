@@ -3,8 +3,8 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
+import { getIconComponent, JobStatusIcons } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { jobStatusToIcon } from "./JobStatusToIcon";
 
 const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];
 
@@ -36,7 +36,7 @@ export const JobListItem = memo(
     return (
       <>
         <ListItem>
-          <ListItemIcon>{jobStatusToIcon[jobStatus]}</ListItemIcon>
+          <ListItemIcon>{getIconComponent(JobStatusIcons[jobStatus])}</ListItemIcon>
 
           <ListItemText primary={title} secondary={subTitle} />
           <Tooltip title={expanded ? "Collapse" : "Expand"}>

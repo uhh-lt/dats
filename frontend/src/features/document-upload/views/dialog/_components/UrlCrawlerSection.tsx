@@ -7,8 +7,7 @@ import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import AddIcon from "@mui/icons-material/Add";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { LoadingButton } from "@mui/lab";
-import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Button, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { isValidHttpUrl } from "@utils/URLUtils";
 import { useCallback, useState } from "react";
 
@@ -153,7 +152,7 @@ function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectio
       </Paper>
 
       {/* Import Button */}
-      <LoadingButton
+      <Button
         variant="contained"
         color="primary"
         onClick={handleImport}
@@ -164,7 +163,7 @@ function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectio
         fullWidth
       >
         Import {urls.length} URL{urls.length !== 1 ? "s" : ""}
-      </LoadingButton>
+      </Button>
     </DialogSection>
   );
 }

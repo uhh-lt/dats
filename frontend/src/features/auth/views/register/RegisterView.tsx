@@ -5,9 +5,9 @@ import { FormEmail, FormPassword, FormText } from "@components/form-inputs";
 import { LinkButton } from "@components/links";
 import { ErrorMessage } from "@hookform/error-message";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import { LoadingButton } from "@mui/lab";
 import {
   Box,
+  Button,
   Card,
   CardActions,
   CardContent,
@@ -227,7 +227,7 @@ export function RegisterView() {
               Back
             </LinkButton>
             <Box sx={{ flexGrow: 1 }} />
-            <LoadingButton
+            <Button
               variant="contained"
               color="success"
               type="submit"
@@ -237,7 +237,7 @@ export function RegisterView() {
               startIcon={<AppRegistrationIcon />}
             >
               Register
-            </LoadingButton>
+            </Button>
           </CardActions>
         </form>
       </Card>

@@ -3,12 +3,11 @@ import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
-import { handleOIDCLogin, useAuth, LoginStatus } from "@core/auth";
+import { handleOIDCLogin, LoginStatus, useAuth } from "@core/auth";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
-import LoadingButton from "@mui/lab/LoadingButton/LoadingButton";
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
@@ -142,7 +141,7 @@ export function LoginView() {
                   <Button color="primary" component={Link} to="/register">
                     Create Account
                   </Button>
-                  <LoadingButton
+                  <Button
                     variant="contained"
                     color="primary"
                     type="submit"
@@ -151,7 +150,7 @@ export function LoginView() {
                     startIcon={<LoginIcon />}
                   >
                     Sign in
-                  </LoadingButton>
+                  </Button>
                 </Box>
               </form>
               {instanceInfo.data.is_oidc_enabled && (

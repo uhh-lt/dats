@@ -16,10 +16,9 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
+import { Icon, MetaTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
-import { MetaTypeIcons } from "./MetaTypeIcons";
 
 interface ProjectMetadataEditMenuProps {
   projectMetadata: ProjectMetadataRead;
@@ -115,7 +114,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
           <Button
             onClick={handleClick}
             color="inherit"
-            startIcon={MetaTypeIcons[projectMetadata.metatype]}
+            startIcon={getIconComponent(MetaTypeIcons[projectMetadata.metatype])}
             disabled={projectMetadata.read_only}
           >
             {projectMetadata.key}

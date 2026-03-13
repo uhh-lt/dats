@@ -1,8 +1,8 @@
 import { ImportJobType } from "@api/models/ImportJobType";
 import { DialogSection } from "@components/DialogSection";
 import { PlayCircle } from "@mui/icons-material";
-import { LoadingButton } from "@mui/lab";
 import {
+  Button,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -100,7 +100,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
         {/* Import dropzone component */}
         <ImportDropzone onFileChanged={handleFilesChange} file={file} />
 
-        <LoadingButton
+        <Button
           variant="contained"
           color="primary"
           onClick={handleImport}
@@ -111,7 +111,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
           fullWidth
         >
           Import File
-        </LoadingButton>
+        </Button>
       </Stack>
     </DialogSection>
   );

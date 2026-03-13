@@ -1,6 +1,7 @@
 import { SdocColumns } from "@api/models/SdocColumns";
 import { StringOperator } from "@api/models/StringOperator";
-import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
+import type { MyFilterExpression } from "@core/filter";
+import { createInitialFilterState, filterReducer, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { v4 as uuidv4 } from "uuid";
