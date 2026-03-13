@@ -5,57 +5,48 @@ import { KeywordStat } from "@api/models/KeywordStat";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { TagStat } from "@api/models/TagStat";
 import { StatisticsService } from "@api/services/StatisticsService";
-import { useAppSelector } from "@store/storeHooks";
 
-const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-
-  return useQuery<SpanEntityStat[], Error>({
-    queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, codeId, sdocIds, sortStatsByGlobal],
+const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
+  useQuery<SpanEntityStat[], Error>({
+    queryKey: [QueryKey.FILTER_ENTITY_STATISTICS, codeId, sdocIds, sortByGlobal],
     queryFn: () =>
       StatisticsService.filterCodeStats({
         codeId,
         requestBody: sdocIds!,
-        sortByGlobal: sortStatsByGlobal,
+        sortByGlobal,
       }),
     enabled: !!sdocIds,
     staleTime: 1000 * 60 * 5,
   });
-};
 
-const useFilterKeywordStats = (projectId: number, sdocIds: number[] | null | undefined) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-
-  return useQuery<KeywordStat[], Error>({
-    queryKey: [QueryKey.FILTER_KEYWORD_STATISTICS, projectId, sdocIds, sortStatsByGlobal],
+const useFilterKeywordStats = (
+  projectId: number,
+  sdocIds: number[] | null | undefined,
+  sortByGlobal: boolean | undefined,
+) =>
+  useQuery<KeywordStat[], Error>({
+    queryKey: [QueryKey.FILTER_KEYWORD_STATISTICS, projectId, sdocIds, sortByGlobal],
     queryFn: () =>
       StatisticsService.filterKeywordStats({
         projectId,
         requestBody: sdocIds!,
-        sortByGlobal: sortStatsByGlobal,
+        sortByGlobal,
       }),
     enabled: !!sdocIds,
     staleTime: 1000 * 60 * 5,
   });
-};
 
-const useFilterTagStats = (sdocIds: number[] | null | undefined) => {
-  // global client state (redux)
-  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
-
-  return useQuery<TagStat[], Error>({
-    queryKey: [QueryKey.FILTER_TAG_STATISTICS, sdocIds, sortStatsByGlobal],
+const useFilterTagStats = (sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>
+  useQuery<TagStat[], Error>({
+    queryKey: [QueryKey.FILTER_TAG_STATISTICS, sdocIds, sortByGlobal],
     queryFn: () =>
       StatisticsService.filterTagStats({
         requestBody: sdocIds!,
-        sortByGlobal: sortStatsByGlobal,
+        sortByGlobal,
       }),
     enabled: !!sdocIds,
     staleTime: 1000 * 60 * 5,
   });
-};
 
 export const StatisticsHooks = {
   useFilterCodeStats,

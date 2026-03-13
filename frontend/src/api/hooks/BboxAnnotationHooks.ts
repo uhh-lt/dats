@@ -2,9 +2,9 @@ import { CancelablePromise } from "@api/core/CancelablePromise";
 import { BBoxAnnotationCreate } from "@api/models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@api/models/BBoxAnnotationUpdate";
+import { UserRead } from "@api/models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
-import { useAuth } from "@core/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -32,8 +32,8 @@ const useGetByCodeAndUser = (codeId: number | undefined) =>
     enabled: !!codeId,
   });
 
-const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  return useQuery<BBoxAnnotationRead[], Error>({
+const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  useQuery<BBoxAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
     queryFn: () =>
       BboxAnnotationService.getBySdocAndUser({
@@ -42,12 +42,10 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
       }) as Promise<BBoxAnnotationRead[]>,
     enabled: !!sdocId && !!userId,
   });
-};
 
 // BBOX MUTATIONS
-const useCreateBBoxAnnotation = () => {
-  const { user } = useAuth();
-  return useMutation({
+const useCreateBBoxAnnotation = (user: UserRead | undefined) =>
+  useMutation({
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.addBboxAnnotation({ requestBody: variables }),
     // optimistic update:
@@ -91,7 +89,6 @@ const useCreateBBoxAnnotation = () => {
       successMessage: (bbox: BBoxAnnotationRead) => `Created Bounding Box Annotation ${bbox.id}`,
     },
   });
-};
 
 const useUpdateBBoxAnnotation = () =>
   useMutation({

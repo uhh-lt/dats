@@ -22,6 +22,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo } from "react";
+import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 interface PositionSettingsProps {
   aspectId: number;
@@ -58,7 +59,7 @@ export function PositionSettings({ aspectId }: PositionSettingsProps) {
   };
 
   // statistics
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const { cluster2count, cluster2total } = useMemo(() => {
     const cluster2count: Record<number, number> = {};
     const cluster2total: Record<number, number> = {};

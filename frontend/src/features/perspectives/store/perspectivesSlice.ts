@@ -58,6 +58,8 @@ export interface PerspectivesState {
   chatSessionId?: string;
   chatMessages: ChatMessage[];
   lastDeletedChatMessages: ChatMessage[]; // For redo functionality
+  // statistics
+  sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
 }
 
 const defaultFilterExpression: MyFilterExpression = {
@@ -98,6 +100,8 @@ const initialState: PerspectivesState & FilterState = {
   chatSessionId: undefined,
   chatMessages: [],
   lastDeletedChatMessages: [],
+  // statistics
+  sortStatsByGlobal: false,
 };
 
 const resetPerspectivesState = (state: Draft<PerspectivesState>) => {
@@ -341,6 +345,10 @@ const perspectivesSlice = createSlice({
         state.chatMessages.push(...state.lastDeletedChatMessages);
         state.lastDeletedChatMessages = [];
       }
+    },
+    // statistics
+    onToggleSortStatsByGlobal: (state) => {
+      state.sortStatsByGlobal = !state.sortStatsByGlobal;
     },
   },
   extraReducers: (builder) => {

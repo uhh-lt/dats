@@ -2,9 +2,9 @@ import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@api/models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@api/models/SpanAnnotationUpdate";
+import { UserRead } from "@api/models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
-import { useAuth } from "@core/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -53,9 +53,8 @@ const useCreateBulkAnnotations = () =>
     },
   });
 
-const useCreateSpanAnnotation = () => {
-  const { user } = useAuth();
-  return useMutation({
+const useCreateSpanAnnotation = (user: UserRead | undefined) =>
+  useMutation({
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.addSpanAnnotation({ requestBody: variables }),
     // optimistic update:
@@ -109,7 +108,6 @@ const useCreateSpanAnnotation = () => {
       successMessage: (data: SpanAnnotationRead) => `Created Span Annotation ${data.id}`,
     },
   });
-};
 
 const useUpdateSpanAnnotation = () =>
   useMutation({

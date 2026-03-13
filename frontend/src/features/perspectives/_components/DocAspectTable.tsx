@@ -7,6 +7,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
+import { useGetDocVisualization } from "../_api/useGetDocVisualization";
 
 interface DocAspectTableProps {
   aspectId: number;
@@ -16,7 +17,7 @@ interface DocAspectTableProps {
 
 export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTableProps) => {
   // global server state
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // computed

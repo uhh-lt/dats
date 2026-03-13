@@ -7,6 +7,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { useAuth } from "@core/auth";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
@@ -41,7 +42,8 @@ export const SentenceAnnotator = memo(
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
-    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
+    const { user } = useAuth();
+    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation(user);
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {

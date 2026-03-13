@@ -2,6 +2,7 @@ import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { KeywordStat } from "@api/models/KeywordStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
+import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
@@ -24,7 +25,8 @@ export function KeywordStats(props: KeywordStatsProps) {
 }
 
 function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps) {
-  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds);
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds, sortStatsByGlobal);
   return (
     <>
       {keywordStats.isSuccess ? (

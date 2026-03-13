@@ -6,6 +6,7 @@ import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
@@ -60,7 +61,8 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationRead | null>(null);
 
   // mutations for create, update, delete
-  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
+  const { user } = useAuth();
+  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation(user);
   const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
   const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
 

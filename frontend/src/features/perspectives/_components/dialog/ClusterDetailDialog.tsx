@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Markdown from "react-markdown";
+import { useGetDocVisualization } from "../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../store/perspectivesSlice";
 import { DocAspectTable } from "../DocAspectTable";
 import { ClusterWordCloud } from "./ClusterWordCloud";
@@ -27,7 +28,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
   };
 
   // get cluster information
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const cluster = useMemo(() => {
     if (!vis.data) return null;
     return vis.data.clusters.find((t) => t.id === clusterId);

@@ -1,4 +1,3 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { CardContainer } from "@components/CardContainer";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -15,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useGetDocVisualization } from "../../../_api/useGetDocVisualization";
 
 interface Data {
   clusterId: number;
@@ -38,7 +38,7 @@ export const ClusterDistributionPlot = memo(({ aspectId, height, showPieChart }:
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // global server state
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
 
   // computed
   const chartData = useMemo(() => {

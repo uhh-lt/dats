@@ -3,6 +3,7 @@ import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
@@ -25,7 +26,9 @@ export function CodeStats(props: CodeStatsProps) {
 }
 
 function CodeStatsContent({ codeId, sdocIds, ...props }: CodeStatsProps) {
-  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds);
+  // global client state (redux)
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds, sortStatsByGlobal);
   return (
     <TabPanel value={`${codeId}`} sx={{ p: 0 }}>
       {codeStats.isSuccess ? (

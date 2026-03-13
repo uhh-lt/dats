@@ -13,6 +13,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import { D3ColorScale } from "@utils/colors/D3ColorScale";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo, useState } from "react";
+import { useGetDocVisualization } from "../../_api/useGetDocVisualization";
 import { ClusterJobProgressCard } from "../../_components/ClusterJobProgressCard";
 import { ClusterDetailDialog } from "../../_components/dialog/ClusterDetailDialog";
 import { DocAspectTable } from "../../_components/DocAspectTable";
@@ -39,7 +40,7 @@ export function PerspectiveDashboardView() {
   // global server state
   const aspect = PerspectivesHooks.useGetAspect(aspectId);
   const perspectivesJob = PerspectivesHooks.usePollPerspectivesJob(aspect.data?.most_recent_job_id, undefined);
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
 
   // computed
   const documentCount = useMemo(() => {

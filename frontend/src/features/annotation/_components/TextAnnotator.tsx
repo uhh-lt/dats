@@ -52,7 +52,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
   // mutations for create, update, delete
   const queryClient = useQueryClient();
-  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
+  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation(user);
   const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
 

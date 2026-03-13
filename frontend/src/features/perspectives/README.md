@@ -126,7 +126,7 @@ A detailed view for a specific cluster.
   - **Read**: Users browse the AI-generated description and word cloud.
   - **Recompute**: Users can trigger a re-computation of the cluster description.
 - **Server Communication**:
-  - **Fetching**: `PerspectivesHooks.useGetDocVisualization` (cached) provides the cluster data.
+  - **Fetching**: `useGetDocVisualization` (cached) provides the cluster data.
 - **Sub Components**: `ClusterWordCloud`, `DocAspectTable`, `RecomputeClusterDescriptionButton`.
 
 ### 7. Job Progress Card (`components/ClusterJobProgressCard.tsx`)

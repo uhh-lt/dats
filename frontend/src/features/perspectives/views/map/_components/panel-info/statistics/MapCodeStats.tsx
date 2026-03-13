@@ -2,6 +2,7 @@ import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { Box } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 
@@ -12,7 +13,8 @@ interface MapCodeStatsProps {
 }
 
 export function MapCodeStats({ codeId, sdocIds, ...props }: MapCodeStatsProps) {
-  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds);
+  const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
+  const codeStats = StatisticsHooks.useFilterCodeStats(codeId, sdocIds, sortStatsByGlobal);
   return (
     <>
       {codeStats.isSuccess ? (

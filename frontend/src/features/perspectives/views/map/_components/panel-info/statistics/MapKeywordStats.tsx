@@ -2,6 +2,7 @@ import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { KeywordStat } from "@api/models/KeywordStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { Box } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 
@@ -12,7 +13,8 @@ interface MapKeywordStatsProps {
 }
 
 export function MapKeywordStats({ projectId, sdocIds, ...props }: MapKeywordStatsProps) {
-  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds);
+  const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
+  const keywordStats = StatisticsHooks.useFilterKeywordStats(projectId, sdocIds, sortStatsByGlobal);
   return (
     <>
       {keywordStats.isSuccess ? (

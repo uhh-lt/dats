@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Link } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useEffect } from "react";
+import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 
 interface SelectionInformationProps {
@@ -47,7 +48,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
   const docClusters = PerspectivesHooks.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 
   // filtering

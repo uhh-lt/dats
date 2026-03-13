@@ -47,8 +47,8 @@ export const SentenceAnnotationComparison = memo(
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
-    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
-    const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
+    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation(user);
+    const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation(user);
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotationSingleSdoc();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();

@@ -6,6 +6,7 @@ import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { RefObject, useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
+import { useAppSelector } from "@store/storeHooks";
 
 interface DocumentTagStatsProps {
   currentTab: string;
@@ -25,7 +26,8 @@ export function DocumentTagStats(props: DocumentTagStatsProps) {
 }
 
 function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
-  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds);
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds, sortStatsByGlobal);
   return (
     <>
       {tagStats.isSuccess ? (

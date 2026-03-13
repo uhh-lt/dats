@@ -2,18 +2,18 @@ import { CancelablePromise } from "@api/core/CancelablePromise";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@api/models/SentenceAnnotationUpdate";
 import { SentenceAnnotatorResult } from "@api/models/SentenceAnnotatorResult";
+import { UserRead } from "@api/models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
-import { useAuth } from "@core/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 
 // SENTENCE QUERIES
-const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  // TODO: filter out all disabled code ids
-  return useQuery<SentenceAnnotatorResult, Error>({
+// TODO: filter out all disabled code ids
+const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) =>
+  useQuery<SentenceAnnotatorResult, Error>({
     queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
     queryFn: () =>
       SentenceAnnotationService.getBySdocAndUser({
@@ -22,7 +22,6 @@ const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: numb
       }),
     enabled: !!sdocId && !!userId,
   });
-};
 
 const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
   useQuery<SentenceAnnotationRead, Error>({
@@ -36,9 +35,8 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
   });
 
 // SENTENCE MUTATIONS
-const useCreateSentenceAnnotation = () => {
-  const { user } = useAuth();
-  return useMutation({
+const useCreateSentenceAnnotation = (user: UserRead | undefined) =>
+  useMutation({
     mutationFn: SentenceAnnotationService.addSentenceAnnotation,
     // optimistic update:
     // 1. Cancel any outgoing refetches (so they don't overwrite our optimistic update)
@@ -100,11 +98,9 @@ const useCreateSentenceAnnotation = () => {
       successMessage: (data: SentenceAnnotationRead) => `Created Sentence Annotation ${data.id}`,
     },
   });
-};
 
-const useCreateBulkSentenceAnnotation = () => {
-  const { user } = useAuth();
-  return useMutation({
+const useCreateBulkSentenceAnnotation = (user: UserRead | undefined) =>
+  useMutation({
     mutationFn: SentenceAnnotationService.addSentenceAnnotationsBulk,
     // optimistic updates
     onMutate: async ({ requestBody: annotationsToCreate }) => {
@@ -158,7 +154,6 @@ const useCreateBulkSentenceAnnotation = () => {
       successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
     },
   });
-};
 
 const useUpdateSentenceAnnotation = () =>
   useMutation({

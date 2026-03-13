@@ -4,6 +4,7 @@ import { TagStat } from "@api/models/TagStat";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
 
 import { Box } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
 
@@ -14,7 +15,8 @@ interface MapTagStatsProps {
 }
 
 export function MapTagStats(props: MapTagStatsProps) {
-  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds);
+  const sortStatsByGlobal = useAppSelector((state) => state.perspectives.sortStatsByGlobal);
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds, sortStatsByGlobal);
   return (
     <>
       {tagStats.isSuccess ? (

@@ -1,13 +1,12 @@
 import { AspectRead } from "@api/models/AspectRead";
+import { Body_perspectives_visualize_documents } from "@api/models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@api/models/ClusterRead";
 import { CodeRead } from "@api/models/CodeRead";
 import { JobStatus } from "@api/models/JobStatus";
 import { PerspectivesJobRead } from "@api/models/PerspectivesJobRead";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
-import { MyFilter } from "@core/filter";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { dateToLocaleDate } from "@utils/DateUtils";
@@ -118,8 +117,8 @@ const useStartPerspectivesJob = () =>
 const usePollPerspectivesJob = (
   perspectivesJobId: string | null | undefined,
   initialData: PerspectivesJobRead | undefined,
-) => {
-  return useQuery<PerspectivesJobRead, Error>({
+) =>
+  useQuery<PerspectivesJobRead, Error>({
     queryKey: [QueryKey.PERSPECTIVES_JOB, perspectivesJobId],
     queryFn: () =>
       PerspectivesService.getPerspectivesJob({
@@ -160,7 +159,6 @@ const usePollPerspectivesJob = (
     },
     initialData,
   });
-};
 
 // LABLING
 
@@ -187,28 +185,28 @@ const useUnlabelDocs = () =>
   });
 
 // VISUALIZATION
-
-const useGetDocVisualization = (aspectId: number) => {
-  const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);
-  const filter = useAppSelector((state) => state.perspectives.filter[`aspect-${aspectId}`]);
-  return useQuery({
+const useGetDocVisualization = (
+  aspectId: number,
+  searchQuery: string,
+  filter: Body_perspectives_visualize_documents["filter"],
+) =>
+  useQuery({
     queryKey: [QueryKey.DOCUMENT_VISUALIZATION, aspectId, searchQuery, filter],
     queryFn: () =>
       PerspectivesService.visualizeDocuments({
         aspectId,
         searchQuery,
         requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
+          filter,
           sorts: [],
         },
       }),
     staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,
   });
-};
 
-const useGetClusterSimilarities = (aspectId: number) => {
-  return useQuery({
+const useGetClusterSimilarities = (aspectId: number) =>
+  useQuery({
     queryKey: [QueryKey.CLUSTER_SIMILARITIES, aspectId],
     queryFn: () =>
       PerspectivesService.getClusterSimilarities({
@@ -216,7 +214,6 @@ const useGetClusterSimilarities = (aspectId: number) => {
       }),
     staleTime: 1000 * 60 * 5,
   });
-};
 
 // Clusters
 const useUpdateClusterDetails = () =>

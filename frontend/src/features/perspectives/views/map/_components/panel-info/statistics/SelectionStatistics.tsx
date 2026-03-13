@@ -1,6 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { CodeRenderer } from "@core/code";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -8,6 +7,7 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback, useMemo } from "react";
+import { useGetDocVisualization } from "../../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../../store/perspectivesSlice";
 import { MapCodeStats } from "./MapCodeStats";
 import { MapKeywordStats } from "./MapKeywordStats";
@@ -24,7 +24,7 @@ export function SelectionStatistics({ projectId, aspectId }: SelectionStatistics
   const selectedSdocIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
 
   // global server state
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const total = vis.data?.docs.length || 0;
   const count = selectedSdocIds.length;
 

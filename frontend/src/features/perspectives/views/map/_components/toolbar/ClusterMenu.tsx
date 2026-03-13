@@ -21,6 +21,7 @@ import { CheckboxState } from "@utils/CheckboxState";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 
 interface ClusterMenuProps {
   aspectId: number;
@@ -33,7 +34,7 @@ interface ClusterMenuProps {
 
 export function ClusterMenu(props: ClusterMenuProps) {
   // global server state (react-query)
-  const vis = PerspectivesHooks.useGetDocVisualization(props.aspectId);
+  const vis = useGetDocVisualization(props.aspectId);
 
   const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
     if (!vis.data) return undefined;

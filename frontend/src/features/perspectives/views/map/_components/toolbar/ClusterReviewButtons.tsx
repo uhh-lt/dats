@@ -4,6 +4,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
+import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 
 interface ClusterReviewButtonsProps {
   aspectId: number;
@@ -12,7 +13,7 @@ interface ClusterReviewButtonsProps {
 
 export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterReviewButtonsProps) {
   // check which buttons to show
-  const vis = PerspectivesHooks.useGetDocVisualization(aspectId);
+  const vis = useGetDocVisualization(aspectId);
   const sdocId2Doc = useMemo(() => {
     if (!vis.data) return undefined;
     return vis.data.docs.reduce(
