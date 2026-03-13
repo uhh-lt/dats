@@ -1,7 +1,7 @@
 import { TextNodeData } from "@api/models/TextNodeData";
 import { Box, TextField, Typography } from "@mui/material";
+import { NodeProps, useReactFlow } from "@xyflow/react";
 import { useState } from "react";
-import { NodeProps, useReactFlow } from "reactflow";
 
 export interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
   nodeProps: NodeProps<T>;

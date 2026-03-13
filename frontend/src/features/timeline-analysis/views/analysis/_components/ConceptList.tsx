@@ -7,8 +7,6 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import { v4 as uuidv4 } from "uuid";
-
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { LogicalOperator } from "@api/models/LogicalOperator";
 import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
@@ -41,7 +39,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
         concepts: [
           ...timelineAnalysis.concepts,
           {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             name: `New Concept #${timelineAnalysis.concepts.length + 1}`,
             visible: true,
             color: "#000000",
@@ -49,7 +47,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
             ta_specific_filter: {
               timeline_analysis_type: timelineAnalysis.timeline_analysis_type,
               filter: {
-                id: uuidv4(),
+                id: crypto.randomUUID(),
                 items: [],
                 logic_operator: LogicalOperator.AND,
               },
@@ -140,7 +138,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
     } else {
       const duplicatedConcept = {
         ...timelineAnalysis.concepts[index],
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         name: `Duplicated Concept #${timelineAnalysis.concepts.length + 1}`,
       };
       updateTimelineAnalysisMutation.mutate({

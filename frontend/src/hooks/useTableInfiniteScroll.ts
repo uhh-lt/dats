@@ -63,7 +63,7 @@ export const useTableFetchMoreOnScroll = ({
 };
 
 interface UseTableInfiniteScrollProps<T, U> {
-  tableContainerRef: React.RefObject<HTMLDivElement>;
+  tableContainerRef: React.RefObject<HTMLDivElement | null>;
   data: InfiniteData<T> | undefined;
   isFetching: boolean;
   fetchNextPage: () => void;

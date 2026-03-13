@@ -16,9 +16,9 @@ import { TagRead } from "@api/models/TagRead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { attachedObjectTypeToText, MemoRenderer, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
 import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
+import { Edge, Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import Markdown from "react-markdown";
-import { Edge, Node, NodeProps, useReactFlow, XYPosition } from "reactflow";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import {

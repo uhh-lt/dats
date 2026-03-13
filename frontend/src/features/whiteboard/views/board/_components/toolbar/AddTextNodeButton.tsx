@@ -1,7 +1,7 @@
 import TitleIcon from "@mui/icons-material/Title";
 import { Button, Tooltip } from "@mui/material";
+import { XYPosition } from "@xyflow/react";
 import { useCallback } from "react";
-import { XYPosition } from "reactflow";
 import { ReactFlowService } from "../../_hooks/ReactFlowService";
 import { AddNodeDialogProps } from "../../_types/AddNodeDialogProps";
 import { createTextNode } from "../../_utils/whiteboardUtils";

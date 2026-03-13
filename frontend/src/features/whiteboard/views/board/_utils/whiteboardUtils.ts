@@ -19,8 +19,7 @@ import { TagRead } from "@api/models/TagRead";
 import { TextNodeData } from "@api/models/TextNodeData";
 import { VerticalAlign } from "@api/models/VerticalAlign";
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
-import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
-import { v4 as uuidv4 } from "uuid";
+import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "@xyflow/react";
 // eslint-disable-next-line boundaries/element-types
 import { theme } from "@plugins/mui";
 
@@ -105,7 +104,7 @@ export const duplicateCustomNodes = (
   const newNodes = nodes.map((node) => {
     return {
       ...node,
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       position: { x: node.position.x - rect.x + position.x, y: node.position.y - rect.y + position.y },
     };
   });
@@ -115,7 +114,7 @@ export const duplicateCustomNodes = (
 
 export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     data: {
       type: WhiteboardNodeType.TEXT,
       text: "test",
@@ -136,7 +135,7 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
 
 export const createNoteNode = ({ position }: { position?: XYPosition }): Node<NoteNodeData> => {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     data: {
       type: WhiteboardNodeType.NOTE,
       text: "test",
@@ -165,7 +164,7 @@ export const createBorderNode = ({
   borderRadius: string;
 }): Node<BorderNodeData> => {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     data: {
       type: WhiteboardNodeType.BORDER,
       text: "test",

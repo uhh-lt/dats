@@ -16,7 +16,6 @@ import {
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
-import { v4 as uuidv4 } from "uuid";
 
 export interface TimelineAnalysisState {
   // project state:
@@ -32,25 +31,25 @@ export interface TimelineAnalysisState {
 const defaultAnalysisType = TimelineAnalysisType.DOCUMENT;
 const defaultFilterExpressions: Record<TimelineAnalysisType, MyFilterExpression> = {
   [TimelineAnalysisType.DOCUMENT]: {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.SENTENCE_ANNOTATION]: {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     column: SentAnnoColumns.SENT_ANNO_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.BBOX_ANNOTATION]: {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
   [TimelineAnalysisType.SPAN_ANNOTATION]: {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     column: SpanColumns.SP_SOURCE_SOURCE_DOCUMENT_NAME,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
@@ -65,7 +64,7 @@ const initialState: FilterState & TimelineAnalysisState = {
   conceptEditorOpen: false,
   currentConcept: {
     timeline_analysis_type: defaultAnalysisType,
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     name: "",
     color: "#ff0000",
     visible: true,
@@ -73,7 +72,7 @@ const initialState: FilterState & TimelineAnalysisState = {
     ta_specific_filter: {
       timeline_analysis_type: defaultAnalysisType,
       filter: {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         items: [],
         logic_operator: LogicalOperator.AND,
       },

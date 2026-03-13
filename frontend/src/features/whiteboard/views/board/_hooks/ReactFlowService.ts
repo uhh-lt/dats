@@ -1,6 +1,6 @@
+import { Node, ReactFlowInstance } from "@xyflow/react";
 import { differenceBy } from "lodash";
 import { useMemo } from "react";
-import { Node, ReactFlowInstance } from "reactflow";
 import { DATSNodeData } from "../_types/DATSNodeData";
 
 export class ReactFlowService {

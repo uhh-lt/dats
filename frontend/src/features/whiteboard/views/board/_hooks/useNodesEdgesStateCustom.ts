@@ -1,5 +1,5 @@
+import { Edge, EdgeChange, Node, NodeChange, applyEdgeChanges, applyNodeChanges } from "@xyflow/react";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
-import { Edge, EdgeChange, Node, NodeChange, applyEdgeChanges, applyNodeChanges } from "reactflow";
 
 type OnChange<ChangesType> = (changes: ChangesType[]) => void;
 

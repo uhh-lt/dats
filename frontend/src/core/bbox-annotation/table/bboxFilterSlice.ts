@@ -3,10 +3,9 @@ import { StringOperator } from "@api/models/StringOperator";
 import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
-import { v4 as uuidv4 } from "uuid";
 
 const defaultFilterExpression: MyFilterExpression = {
-  id: uuidv4(),
+  id: crypto.randomUUID(),
   column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",

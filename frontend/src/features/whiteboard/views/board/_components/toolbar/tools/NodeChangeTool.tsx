@@ -5,8 +5,8 @@ import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
 import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
+import { Node } from "@xyflow/react";
 import { useMemo, useState } from "react";
-import { Node } from "reactflow";
 import { BorderData } from "../../../_types/base/BorderData";
 
 enum NodeType {

@@ -54,7 +54,7 @@ const documentSamplerSlice = createSlice({
       state.aggregationGroups[groupName] = tags;
     },
     onAddNewGroup: (state) => {
-      state.aggregationGroups[`Group ${uuidv4().substring(0, 4)}`] = [];
+      state.aggregationGroups[`Group ${crypot.randomUUID().substring(0, 4)}`] = [];
     },
     onDeleteGroup: (state, action: PayloadAction<string>) => {
       const groupName = action.payload;

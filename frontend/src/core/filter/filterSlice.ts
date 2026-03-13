@@ -97,7 +97,7 @@ export const filterReducer = {
       currentFilter.items = [
         {
           ...state.defaultFilterExpression,
-          id: uuidv4(),
+          id: crypto.randomUUID(),
         },
       ];
     }
@@ -120,7 +120,7 @@ export const filterReducer = {
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           items: [],
           logic_operator: LogicalOperator.AND,
         } as MyFilter,
@@ -139,14 +139,14 @@ export const filterReducer = {
           ...filterItem.items,
           {
             ...state.defaultFilterExpression,
-            id: uuidv4(),
+            id: crypto.randomUUID(),
           } as MyFilterExpression,
         ];
       } else {
         filterItem.items = [
           {
             ...state.defaultFilterExpression,
-            id: uuidv4(),
+            id: crypto.randomUUID(),
           } as MyFilterExpression,
           ...filterItem.items,
         ];

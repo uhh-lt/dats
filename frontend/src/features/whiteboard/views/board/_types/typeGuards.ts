@@ -5,7 +5,7 @@ import { SdocNodeData } from "@api/models/SdocNodeData";
 import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
 import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
 import { TagNodeData } from "@api/models/TagNodeData";
-import { type Node } from "reactflow";
+import { type Node } from "@xyflow/react";
 import { DATSNodeData } from "./DATSNodeData";
 import { BackgroundColorData } from "./base/BackgroundColorData";
 import { BorderData } from "./base/BorderData";

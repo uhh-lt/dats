@@ -1,4 +1,4 @@
-import { Node, Edge, Position, XYPosition } from "reactflow";
+import { Edge, Node, Position, XYPosition } from "@xyflow/react";
 
 export const isDashed = (edge: Edge) => {
   return (

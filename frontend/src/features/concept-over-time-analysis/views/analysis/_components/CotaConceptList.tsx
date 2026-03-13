@@ -11,7 +11,6 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { v4 as uuidv4 } from "uuid";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaConceptEditor } from "./CotaConceptEditor";
 import { CotaConceptListItem } from "./CotaConceptListItem";
@@ -31,7 +30,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
 
   // actions
   const handleAddConcept = () => {
-    const conceptId = uuidv4();
+    const conceptId = crypto.randomUUID();
     updateCota.mutate({
       cotaId: cota.id,
       requestBody: {
@@ -110,7 +109,7 @@ export function CotaConceptList({ cota }: CotaConceptListProps) {
     if (index !== -1) {
       const duplicatedConcept = {
         ...cotaConcepts[index],
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         name: `${cotaConcepts[index].name} (copy)`,
       };
       cotaConcepts.push(duplicatedConcept);

@@ -9,9 +9,9 @@ import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/Gene
 import { useOpenMemoDialog } from "@core/memo";
 import { SdocRenderer } from "@core/source-document";
 import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
+import { NodeProps, useReactFlow } from "@xyflow/react";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
-import { NodeProps, useReactFlow } from "reactflow";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSNodeData } from "../../_types/DATSNodeData";
 import { isMemoNode, isTagNode } from "../../_types/typeGuards";

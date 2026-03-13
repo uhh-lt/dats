@@ -1,5 +1,5 @@
 import { NoteNodeData } from "@api/models/NoteNodeData";
-import { NodeProps } from "reactflow";
+import { NodeProps } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { TextNodeComponent } from "./TextNodeComponent";
 

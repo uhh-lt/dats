@@ -16,8 +16,6 @@ import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "
 import { useBlocker } from "@tanstack/react-router";
 import { downloadFile } from "@utils/downloadUtils";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
-import { toPng } from "html-to-image";
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
   addEdge,
   Background,
@@ -41,7 +39,9 @@ import {
   useReactFlow,
   useStore,
   XYPosition,
-} from "reactflow";
+} from "@xyflow/react";
+import { toPng } from "html-to-image";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { useUpdateWhiteboard } from "../../../_api/whiteboardQueryOptions";
 import { useReactFlowService } from "../_hooks/ReactFlowService";

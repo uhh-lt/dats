@@ -1,6 +1,5 @@
 import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
 import { Box, TextField, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -10,7 +9,8 @@ import {
   getSmoothStepPath,
   getStraightPath,
   useReactFlow,
-} from "reactflow";
+} from "@xyflow/react";
+import { useMemo, useState } from "react";
 
 const useGetPath = (edge: EdgeProps<WhiteboardEdgeData_Input>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {

@@ -1,6 +1,6 @@
 import { Box, BoxProps } from "@mui/material";
+import { Handle, NodeProps, NodeResizer, Position } from "@xyflow/react";
 import { ReactNode } from "react";
-import { Handle, NodeProps, NodeResizer, Position } from "reactflow";
 import { useConnectionHelper } from "../../_hooks/useConnectionHelper";
 import "./nodes.css";
 

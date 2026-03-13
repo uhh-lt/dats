@@ -2,8 +2,8 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { MenuItem, Select, SelectChangeEvent, Stack, Tooltip } from "@mui/material";
+import { EdgeMarker } from "@xyflow/react";
 import { useState } from "react";
-import { EdgeMarker } from "reactflow";
 
 const arrow2icon: Record<string, React.ReactElement> = {
   noarrow: <HorizontalRuleIcon />,

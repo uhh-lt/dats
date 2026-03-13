@@ -1,4 +1,4 @@
-import { ReactFlowState, useStore } from "reactflow";
+import { ReactFlowState, useStore } from "@xyflow/react";
 import { isConnectionAllowed } from "../_utils/whiteboardUtils";
 
 const connectionNodeIdSelector = (state: ReactFlowState) => state.connectionNodeId;

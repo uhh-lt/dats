@@ -1,5 +1,5 @@
 import { BorderNodeData } from "@api/models/BorderNodeData";
-import { NodeProps } from "reactflow";
+import { NodeProps } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { TextNodeComponent } from "./TextNodeComponent";
 

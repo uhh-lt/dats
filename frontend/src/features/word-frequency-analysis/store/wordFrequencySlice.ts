@@ -11,10 +11,9 @@ import {
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
-import { v4 as uuidv4 } from "uuid";
 
 const defaultFilterExpression: MyFilterExpression = {
-  id: uuidv4(),
+  id: crypto.randomUUID(),
   column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",

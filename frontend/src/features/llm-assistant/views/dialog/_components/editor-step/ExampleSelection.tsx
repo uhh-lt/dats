@@ -16,7 +16,6 @@ import { useAppDispatch } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 const filterNameSentAnno = "selectExampleSentenceAnnotationDialog";
 const filterNameSpanAnno = "selectExampleSpanAnnotationDialog";
@@ -57,11 +56,11 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
           SEATFilterActions.setFilter({
             filterName: filterNameSentAnno,
             filter: {
-              id: uuidv4(),
+              id: crypto.randomUUID(),
               logic_operator: LogicalOperator.AND,
               items: [
                 {
-                  id: uuidv4(),
+                  id: crypto.randomUUID(),
                   column: SentAnnoColumns.SENT_ANNO_CODE_ID,
                   operator: IDOperator.ID_EQUALS,
                   value: codeId,
@@ -75,11 +74,11 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
           SATFilterActions.setFilter({
             filterName: filterNameSpanAnno,
             filter: {
-              id: uuidv4(),
+              id: crypto.randomUUID(),
               logic_operator: LogicalOperator.AND,
               items: [
                 {
-                  id: uuidv4(),
+                  id: crypto.randomUUID(),
                   column: SpanColumns.SP_CODE_ID,
                   operator: IDOperator.ID_EQUALS,
                   value: codeId,

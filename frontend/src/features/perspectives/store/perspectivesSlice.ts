@@ -63,7 +63,7 @@ export interface PerspectivesState {
 }
 
 const defaultFilterExpression: MyFilterExpression = {
-  id: uuidv4(),
+  id: crypto.randomUUID(),
   column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
@@ -208,7 +208,7 @@ const perspectivesSlice = createSlice({
     ) => {
       const filterItems: MyFilterExpression[] = action.payload.keywordMetadataIds?.map((keywordMetadataId) => {
         return {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           column: keywordMetadataId,
           operator: ListOperator.LIST_CONTAINS,
           value: [action.payload.keyword],
@@ -220,7 +220,7 @@ const perspectivesSlice = createSlice({
       currentFilter.items = [
         ...currentFilter.items,
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           logic_operator: LogicalOperator.OR,
           items: filterItems,
         },
@@ -231,7 +231,7 @@ const perspectivesSlice = createSlice({
       currentFilter.items = [
         ...currentFilter.items,
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           column: SdocColumns.SD_TAG_ID_LIST,
           operator: IDListOperator.ID_LIST_CONTAINS,
           value: action.payload.tagId,
@@ -246,7 +246,7 @@ const perspectivesSlice = createSlice({
       currentFilter.items = [
         ...currentFilter.items,
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           column: SdocColumns.SD_SPAN_ANNOTATIONS,
           operator: ListOperator.LIST_CONTAINS,
           value: [action.payload.codeId.toString(), action.payload.spanText],
@@ -269,7 +269,7 @@ const perspectivesSlice = createSlice({
       currentFilter.items = [
         ...currentFilter.items,
         {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           column: action.payload.projectMetadata.id,
           operator: getDefaultOperator(filterOperatorType),
           value: getMetadataValue(action.payload.metadata, action.payload.projectMetadata)!,
