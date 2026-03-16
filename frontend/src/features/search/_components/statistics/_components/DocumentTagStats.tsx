@@ -13,7 +13,7 @@ interface DocumentTagStatsProps {
   projectId: number;
   sdocIds?: number[];
   handleClick: (tagId: number) => void;
-  parentRef: RefObject<HTMLDivElement>;
+  parentRef: RefObject<HTMLDivElement | null>;
   filterBy: string;
 }
 

@@ -53,7 +53,7 @@ export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> 
   handleEditAnalysis: MRT_TableOptions<T>["onEditingRowSave"];
   analysisCreateOptions?: AnalysisCreateOption[];
   additionalColumns?: MRT_ColumnDef<T>[];
-  renderExportButton: (props: ExportAnalysisButtonProps) => JSX.Element;
+  renderExportButton: (props: ExportAnalysisButtonProps) => React.ReactNode;
 }
 
 export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props: UseAnaylsisDashboardTableProps<T>) => {

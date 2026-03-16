@@ -45,7 +45,7 @@ const steps: Record<TaskType, string[]> = {
   ],
 };
 
-const contentDict: Record<number, Record<TaskType, JSX.Element>> = {
+const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {
   0: {
     [TaskType.TAGGING]: <MethodSelectionStep />,
     [TaskType.METADATA_EXTRACTION]: <MethodSelectionStep />,

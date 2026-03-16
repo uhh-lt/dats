@@ -5,15 +5,17 @@ import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { DocType } from "@api/models/DocType";
 import { SdocNodeData } from "@api/models/SdocNodeData";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { useOpenMemoDialog } from "@core/memo";
 import { SdocRenderer } from "@core/source-document";
 import { CardContent, CardHeader, CardMedia, CircularProgress, Divider, MenuItem, Typography } from "@mui/material";
-import { NodeProps, useReactFlow } from "@xyflow/react";
+import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 import { isMemoNode, isTagNode } from "../../_types/typeGuards";
 import {
   createMemoNodes,
@@ -25,9 +27,10 @@ import {
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
 
-export function SdocNode(props: NodeProps<SdocNodeData>) {
+export type SdocNode = Node<SdocNodeData, WhiteboardNodeType.SDOC>;
+export function SdocNode(props: NodeProps<SdocNode>) {
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DATSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -89,7 +92,9 @@ export function SdocNode(props: NodeProps<SdocNodeData>) {
   const handleContextMenuExpandTags = () => {
     if (!tagIds.data) return;
 
-    reactFlowService.addNodes(createTagNodes({ tags: tagIds.data, position: { x: props.xPos, y: props.yPos - 200 } }));
+    reactFlowService.addNodes(
+      createTagNodes({ tags: tagIds.data, position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -97,7 +102,10 @@ export function SdocNode(props: NodeProps<SdocNodeData>) {
     if (!memo.data) return;
 
     reactFlowService.addNodes(
-      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createMemoNodes({
+        memos: [memo.data],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -110,7 +118,12 @@ export function SdocNode(props: NodeProps<SdocNodeData>) {
       attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
       attachedObjectId: props.data.sdocId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
+        reactFlowService.addNodes(
+          createMemoNodes({
+            memos: [memo],
+            position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+          }),
+        );
       },
     });
     contextMenuRef.current?.close();

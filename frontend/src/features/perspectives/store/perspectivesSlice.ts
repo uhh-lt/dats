@@ -20,7 +20,6 @@ import { getMetadataValue } from "@core/sdoc-metadata";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import * as d3 from "d3";
-import { v4 as uuidv4 } from "uuid";
 
 interface ChatMessage {
   id: string;

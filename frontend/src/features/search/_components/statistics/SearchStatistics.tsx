@@ -81,12 +81,14 @@ export function SearchStatistics({
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
-            {projectCodes.data?.map((code) => <Tab key={code.id} label={code.name} value={`${code.id}`} />)}
+            {projectCodes.data?.map((code) => (
+              <Tab key={code.id} label={code.name} value={`${code.id}`} />
+            ))}
           </Tabs>
         </Stack>
 
         {/* Stats Searchbar Component */}
-        <Box ref={parentRef} className="myFlexFitContentContainer" sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box className="myFlexFitContentContainer" sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="row" alignItems="center" spacing={2} pl={2}>
             <SearchIcon sx={{ color: "dimgray" }} />
             <TextField

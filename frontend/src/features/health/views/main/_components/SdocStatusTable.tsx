@@ -30,9 +30,9 @@ import {
   MRT_ToolbarAlertBanner,
   useMaterialReactTable,
 } from "material-react-table";
-import { UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactElement, UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const sdocStatus2Icon: Record<SDocStatus, JSX.Element> = {
+const sdocStatus2Icon: Record<SDocStatus, ReactElement> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
   [SDocStatus._0]: <HourglassTopOutlinedIcon sx={{ color: "primary.main" }} />,
   [SDocStatus._1]: <TaskAltIcon sx={{ color: "success.main" }} />,

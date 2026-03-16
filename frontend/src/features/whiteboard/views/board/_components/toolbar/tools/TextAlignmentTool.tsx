@@ -7,11 +7,9 @@ import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import { Button, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
-import { Node } from "@xyflow/react";
 import { useState } from "react";
-import { BackgroundColorData } from "../../../_types/base/BackgroundColorData";
-import { BorderData } from "../../../_types/base/BorderData";
 import { TextData } from "../../../_types/base/TextData";
+import { DATSCustomNode } from "../../../_types/DATSNode";
 
 const horizontalAlignIcons = {
   [HorizontalAlign.LEFT]: <FormatAlignLeftIcon />,
@@ -26,7 +24,7 @@ const verticalAlignIcons = {
 };
 
 interface TextAlignmentToolProps {
-  nodes: Node<BackgroundColorData | TextData | BorderData>[];
+  nodes: DATSCustomNode[];
   handleHorizontalAlignClick: (align: HorizontalAlign) => () => void;
   handleVerticalAlignClick: (align: VerticalAlign) => () => void;
 }

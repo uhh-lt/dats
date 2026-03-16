@@ -10,7 +10,7 @@ interface TabScrollHook {
 }
 
 export const useTabScroll = (
-  containerRef: RefObject<HTMLDivElement>,
+  containerRef: RefObject<HTMLDivElement | null>,
   activeTabIndex: number | null,
   tabs: TabData[],
 ): TabScrollHook => {

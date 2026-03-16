@@ -4,15 +4,17 @@ import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { CodeNodeData } from "@api/models/CodeNodeData";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { NodeProps, useReactFlow } from "@xyflow/react";
+import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useMemo, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 import { isCodeNode, isMemoNode } from "../../_types/typeGuards";
 import {
   createBBoxAnnotationNodes,
@@ -26,13 +28,14 @@ import {
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
 
-export function CodeNode(props: NodeProps<CodeNodeData>) {
+export type CodeNode = Node<CodeNodeData, WhiteboardNodeType.CODE>;
+export function CodeNode(props: NodeProps<CodeNode>) {
   // global client state
   const openCodeEdit = useOpenDialog("codeEdit");
   const openCodeCreate = useOpenDialog("codeCreate");
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DATSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -138,7 +141,7 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
     reactFlowService.addNodes(
       createBBoxAnnotationNodes({
         bboxAnnotations: bboxAnnotations.data,
-        position: { x: props.xPos, y: props.yPos - 200 },
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
     contextMenuRef.current?.close();
@@ -150,7 +153,7 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
     reactFlowService.addNodes(
       createSpanAnnotationNodes({
         spanAnnotations: spanAnnotations.data,
-        position: { x: props.xPos, y: props.yPos - 200 },
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
     contextMenuRef.current?.close();
@@ -159,7 +162,12 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
   const handleContextMenuExpandChildCodes = () => {
     if (childCodes.length === 0) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: props.xPos, y: props.yPos - 200 } }));
+    reactFlowService.addNodes(
+      createCodeNodes({
+        codes: childCodes,
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -168,7 +176,12 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
       codeName: undefined,
       parentCodeId: props.data.codeId,
       codeCreateSuccessHandler(code) {
-        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }));
+        reactFlowService.addNodes(
+          createCodeNodes({
+            codes: [code],
+            position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+          }),
+        );
       },
     });
     contextMenuRef.current?.close();
@@ -178,7 +191,10 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
     if (!parentCode.data) return;
 
     reactFlowService.addNodes(
-      createCodeNodes({ codes: [parentCode.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createCodeNodes({
+        codes: [parentCode.data],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -187,7 +203,10 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
     if (!memo.data) return;
 
     reactFlowService.addNodes(
-      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createMemoNodes({
+        memos: [memo.data],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -200,7 +219,12 @@ export function CodeNode(props: NodeProps<CodeNodeData>) {
       attachedObjectType: AttachedObjectType.CODE,
       attachedObjectId: props.data.codeId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
+        reactFlowService.addNodes(
+          createMemoNodes({
+            memos: [memo],
+            position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+          }),
+        );
       },
     });
     contextMenuRef.current?.close();

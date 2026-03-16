@@ -3,7 +3,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 
 export interface ImageMenuHandle {
   open: (position: PopoverPosition, image: number | null | undefined) => void;
@@ -11,10 +11,11 @@ export interface ImageMenuHandle {
 }
 
 interface ImageMenuProps {
+  ref: React.Ref<ImageMenuHandle>;
   projectId: number;
 }
 
-export const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, ref) => {
+export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
   const navigate = useNavigate();
 
   // local state
@@ -92,4 +93,4 @@ export const ImageMenu = forwardRef<ImageMenuHandle, ImageMenuProps>((params, re
       </List>
     </Popover>
   );
-});
+};

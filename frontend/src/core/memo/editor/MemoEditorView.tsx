@@ -1,4 +1,5 @@
-import { BlockNoteEditor, filterSuggestionItems } from "@blocknote/core";
+import { BlockNoteEditor } from "@blocknote/core";
+import { filterSuggestionItems } from "@blocknote/core/extensions";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
   DefaultReactSuggestionItem,
@@ -49,9 +50,8 @@ export const MemoEditorView = memo(
       if (!editor || !debouncedContent) return;
       // only update if there are actually changes
       if (debouncedContent === initialContentJson) return;
-      editor.blocksToMarkdownLossy().then((markdown) => {
-        onChange(markdown, debouncedContent);
-      });
+      const markdown = editor.blocksToMarkdownLossy();
+      onChange(markdown, debouncedContent);
     }, [initialContentJson, debouncedContent, editor, onChange]);
 
     // Renders the editor instance using a React component.

@@ -1,10 +1,10 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { Edge, useReactFlow } from "@xyflow/react";
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { Ref, useImperativeHandle, useState } from "react";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 import { isCodeNode, isSdocNode, isTagNode } from "../../_types/typeGuards";
 import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../../_utils/whiteboardUtils";
 
@@ -13,8 +13,12 @@ export interface DatabaseEdgeEditMenuHandle {
   close: () => void;
 }
 
-export const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
+interface DatabaseEdgeEditMenuProps {
+  ref: Ref<DatabaseEdgeEditMenuHandle>;
+}
+
+export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
 
   const [edges, setEdges] = useState<Edge[]>([]);
 
@@ -101,4 +105,4 @@ export const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle>((_, r
       )}
     </>
   );
-});
+};

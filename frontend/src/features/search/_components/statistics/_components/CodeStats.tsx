@@ -13,7 +13,7 @@ interface CodeStatsProps {
   codeId: number;
   sdocIds?: number[];
   handleClick: (stat: SpanEntityStat) => void;
-  parentRef: RefObject<HTMLDivElement>;
+  parentRef: RefObject<HTMLDivElement | null>;
   filterBy: string;
 }
 
@@ -48,7 +48,7 @@ interface CodeStatsWithDataProps {
   codeStats: SpanEntityStat[];
 
   handleClick: (stat: SpanEntityStat) => void;
-  parentRef: RefObject<HTMLDivElement>;
+  parentRef: RefObject<HTMLDivElement | null>;
   filterBy: string;
 }
 

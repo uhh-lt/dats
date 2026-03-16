@@ -19,7 +19,7 @@ export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<Da
   onExpandedItemsChange: (newExpandedDataIds: string[]) => void;
   // selection
   selectedItems?: number | undefined;
-  onSelectedItemsChange?: (event: React.SyntheticEvent, itemIds: string | string[] | null) => void;
+  onSelectedItemsChange?: (event: React.SyntheticEvent | null, itemIds: string | string[] | null) => void;
   // filter
   showFilter?: boolean;
   dataFilter: string;
@@ -172,7 +172,7 @@ export function TreeExplorer<T extends NamedObjWithParent>({
         // expand / collapse
         expandedItems={expandedItems}
         onExpandedItemsChange={(event, itemIds) => {
-          event.stopPropagation();
+          if(event) event.stopPropagation();
           onExpandedItemsChange(itemIds);
         }}
         // actions

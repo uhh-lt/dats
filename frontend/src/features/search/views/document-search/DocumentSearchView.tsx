@@ -259,7 +259,7 @@ export function DocumentSearchView() {
                   />
                 );
               } else {
-                let folders: JSX.Element[] = [];
+                let folders: React.ReactNode[] = [];
                 rowSelectionModel.forEach((key) => {
                   if (key.startsWith("folder-")) {
                     const folderId = parseInt(key.replace("folder-", ""));

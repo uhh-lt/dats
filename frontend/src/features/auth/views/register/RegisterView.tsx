@@ -47,7 +47,7 @@ export function RegisterView() {
   });
 
   // password
-  const password = useRef<string>();
+  const password = useRef<string>("");
   password.current = watch("password", "");
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +55,7 @@ export function RegisterView() {
   };
 
   // mail
-  const mail = useRef<string>();
+  const mail = useRef<string>("");
   mail.current = watch("email", "");
 
   // registration

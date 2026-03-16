@@ -1,20 +1,33 @@
 import { BorderStyle } from "@api/models/BorderStyle";
 import { HorizontalAlign } from "@api/models/HorizontalAlign";
 import { VerticalAlign } from "@api/models/VerticalAlign";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { BackgroundColorData } from "../../_types/base/BackgroundColorData";
 import { BorderData } from "../../_types/base/BorderData";
 import { TextData } from "../../_types/base/TextData";
+import { NodeType } from "./tools/NodeType";
 
 // Helper to extract a property from an object, or return a default value if the property is undefined
 export function getOrDefault<T, K extends keyof T>(obj: Partial<T>, key: K, defaultValue: T[K]): T[K] {
   return obj[key] !== undefined ? obj[key]! : defaultValue;
 }
 
+const nodeTypeToWhiteboardNodeTypeMap: Record<NodeType, WhiteboardNodeType> = {
+  [NodeType.TEXT]: WhiteboardNodeType.TEXT,
+  [NodeType.NOTE]: WhiteboardNodeType.NOTE,
+  [NodeType.ELLIPSE]: WhiteboardNodeType.BORDER,
+  [NodeType.RECTANGLE]: WhiteboardNodeType.BORDER,
+  [NodeType.ROUNDED]: WhiteboardNodeType.BORDER,
+};
+
 // Function to create new node data based on node type and existing data
-export function createNodeDataByType(oldData: Partial<TextData & BorderData & BackgroundColorData>, nodeType: string) {
+export function createNodeDataByType(
+  oldData: Partial<TextData & BorderData & BackgroundColorData>,
+  nodeType: NodeType,
+) {
   // Get common properties that might exist in the current node
   const commonProps = {
-    type: nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded" ? "border" : nodeType,
+    type: nodeTypeToWhiteboardNodeTypeMap[nodeType],
     text: getOrDefault(oldData, "text", "New Text"),
     color: getOrDefault(oldData, "color", "#000000"),
     fontSize: getOrDefault(oldData, "fontSize", 12),
@@ -94,9 +107,9 @@ export function createNodeDataByType(oldData: Partial<TextData & BorderData & Ba
 
   return {
     newData,
-    nodeType: nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded" ? "border" : nodeType,
+    nodeType: nodeTypeToWhiteboardNodeTypeMap[nodeType],
     dimensions:
-      nodeType === "ellipse" || nodeType === "rectangle" || nodeType === "rounded"
+      nodeType === NodeType.ELLIPSE || nodeType === NodeType.RECTANGLE || nodeType === NodeType.ROUNDED
         ? { width: 200, height: 200 }
         : undefined,
   };

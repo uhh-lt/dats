@@ -39,7 +39,7 @@ export const DocumentClusterScatterPlot = memo(({ aspectId, height }: DocumentCl
           <ScatterChart>
             <XAxis dataKey="x" type="number" name="X" hide />
             <YAxis dataKey="y" type="number" name="Y" hide />
-            <ZAxis range={[10]} />
+            <ZAxis range={[10, 10]} />
             {Object.entries(chartData).map(([clusterId, docs], index) => (
               <Scatter
                 key={clusterId}

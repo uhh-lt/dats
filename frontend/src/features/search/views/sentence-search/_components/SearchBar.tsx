@@ -3,20 +3,9 @@ import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  IconButton,
-  InputBase,
-  Paper,
-  Slide,
-  Tooltip,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
+import { Button, CircularProgress, Dialog, DialogContent, IconButton, InputBase, Paper, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { forwardRef, KeyboardEventHandler, MouseEventHandler, ReactElement, Ref, useState } from "react";
+import { KeyboardEventHandler, MouseEventHandler, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
 import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
@@ -113,15 +102,6 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   );
 }
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: ReactElement;
-  },
-  ref: Ref<unknown>,
-) {
-  return <Slide direction="down" ref={ref} {...props} />;
-});
-
 function SdocImageRenderer({ sdocId }: { sdocId: number }) {
   const thumbnail = SdocHooks.useGetThumbnailURL(sdocId);
 
@@ -154,7 +134,7 @@ function SdocImageRenderer({ sdocId }: { sdocId: number }) {
             }}
           />
         </Button>
-        <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={handleClose} fullScreen={isMaximized}>
+        <Dialog open={open} onClose={handleClose} fullScreen={isMaximized}>
           <DATSDialogHeader
             title="Image Preview"
             onClose={handleClose}

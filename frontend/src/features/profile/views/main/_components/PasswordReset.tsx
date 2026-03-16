@@ -36,7 +36,7 @@ export function PasswordReset() {
   });
 
   // password
-  const password = useRef<string>();
+  const password = useRef<string>("");
   password.current = watch("password", "");
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {

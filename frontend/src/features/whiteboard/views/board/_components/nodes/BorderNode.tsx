@@ -1,9 +1,11 @@
 import { BorderNodeData } from "@api/models/BorderNodeData";
-import { NodeProps } from "@xyflow/react";
+import { Node, NodeProps } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { TextNodeComponent } from "./TextNodeComponent";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 
-export function BorderNode(props: NodeProps<BorderNodeData>) {
+export type BorderNode = Node<BorderNodeData, WhiteboardNodeType.BORDER>;
+export function BorderNode(props: NodeProps<BorderNode>) {
   return (
     <BaseNode
       allowDrawConnection={false}

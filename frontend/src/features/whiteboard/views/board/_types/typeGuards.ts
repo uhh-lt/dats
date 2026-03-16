@@ -1,88 +1,76 @@
-import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
-import { CodeNodeData } from "@api/models/CodeNodeData";
-import { MemoNodeData } from "@api/models/MemoNodeData";
-import { SdocNodeData } from "@api/models/SdocNodeData";
-import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
-import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
-import { TagNodeData } from "@api/models/TagNodeData";
-import { type Node } from "@xyflow/react";
-import { DATSNodeData } from "./DATSNodeData";
-import { BackgroundColorData } from "./base/BackgroundColorData";
-import { BorderData } from "./base/BorderData";
-import { TextData } from "./base/TextData";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
+import type { BBoxAnnotationNode } from "../_components/nodes/BBoxAnnotationNode";
+import type { BorderNode } from "../_components/nodes/BorderNode";
+import type { CodeNode } from "../_components/nodes/CodeNode";
+import type { MemoNode } from "../_components/nodes/MemoNode";
+import type { NoteNode } from "../_components/nodes/NoteNode";
+import type { SdocNode } from "../_components/nodes/SdocNode";
+import type { SentenceAnnotationNode } from "../_components/nodes/SentenceAnnotationNode";
+import type { SpanAnnotationNode } from "../_components/nodes/SpanAnnotationNode";
+import type { TagNode } from "../_components/nodes/TagNode";
+import type { TextNode } from "../_components/nodes/TextNode";
+import { DATSCustomNode, DATSNode } from "./DATSNode";
 
-export const hasBorderData = (node: Node): node is Node<BorderData> => {
-  const data = node.data as BorderData;
-  return (
-    data.borderRadius !== undefined &&
-    data.borderColor !== undefined &&
-    data.borderStyle !== undefined &&
-    data.borderWidth !== undefined
-  );
+export const isBBoxAnnotationNode = (value: DATSNode): value is BBoxAnnotationNode => {
+  return value.type === WhiteboardNodeType.BBOX_ANNOTATION;
 };
 
-export const isBorderDataArray = (nodes: Node[]): nodes is Node<BorderData>[] => {
-  return nodes.every(hasBorderData);
+export const isBorderNode = (value: DATSNode): value is BorderNode => {
+  return value.type === WhiteboardNodeType.BORDER;
 };
 
-export const hasTextData = (node: Node): node is Node<TextData> => {
-  const data = node.data as TextData;
-  return (
-    data.text !== undefined &&
-    data.color !== undefined &&
-    data.horizontalAlign !== undefined &&
-    data.verticalAlign !== undefined &&
-    data.bold !== undefined &&
-    data.italic !== undefined &&
-    data.underline !== undefined &&
-    data.strikethrough !== undefined &&
-    data.fontFamily !== undefined &&
-    data.fontSize !== undefined
-  );
+export const isBorderNodeArray = (nodes: DATSNode[]): nodes is BorderNode[] => {
+  return nodes.every(isBorderNode);
 };
 
-// we exploit the fact that every custoom node has text data, but none of the database nodes
-export const isCustomNode = (node: Node): boolean => {
-  return hasTextData(node);
+export const isCodeNode = (value: DATSNode): value is CodeNode => {
+  return value.type === WhiteboardNodeType.CODE;
 };
 
-export const isTextDataArray = (nodes: Node[]): nodes is Node<TextData>[] => {
-  return nodes.every(hasTextData);
+export const isMemoNode = (value: DATSNode): value is MemoNode => {
+  return value.type === WhiteboardNodeType.MEMO;
 };
 
-export const hasBackgroundColorData = (node: Node): node is Node<BackgroundColorData> => {
-  const data = node.data as BackgroundColorData;
-  return data.bgcolor !== undefined && data.bgalpha !== undefined;
+export const isNoteNode = (value: DATSNode): value is NoteNode => {
+  return value.type === WhiteboardNodeType.NOTE;
 };
 
-export const isBackgroundColorDataArray = (nodes: Node[]): nodes is Node<BackgroundColorData>[] => {
-  return nodes.every(hasBackgroundColorData);
+export const isSdocNode = (value: DATSNode): value is SdocNode => {
+  return value.type === WhiteboardNodeType.SDOC;
 };
 
-export const isTagNode = (node: Node<DATSNodeData>): node is Node<TagNodeData> => {
-  return (node.data as TagNodeData).tagId !== undefined;
+export const isSentenceAnnotationNode = (value: DATSNode): value is SentenceAnnotationNode => {
+  return value.type === WhiteboardNodeType.SENTENCE_ANNOTATION;
 };
 
-export const isSdocNode = (node: Node<DATSNodeData>): node is Node<SdocNodeData> => {
-  return (node.data as SdocNodeData).sdocId !== undefined;
+export const isSpanAnnotationNode = (value: DATSNode): value is SpanAnnotationNode => {
+  return value.type === WhiteboardNodeType.SPAN_ANNOTATION;
 };
 
-export const isSpanAnnotationNode = (node: Node<DATSNodeData>): node is Node<SpanAnnotationNodeData> => {
-  return (node.data as SpanAnnotationNodeData).spanAnnotationId !== undefined;
+export const isTagNode = (value: DATSNode): value is TagNode => {
+  return value.type === WhiteboardNodeType.TAG;
 };
 
-export const isSentenceAnnotationNode = (node: Node<DATSNodeData>): node is Node<SentenceAnnotationNodeData> => {
-  return (node.data as SentenceAnnotationNodeData).sentenceAnnotationId !== undefined;
+export const isTextNode = (value: DATSNode): value is TextNode => {
+  return value.type === WhiteboardNodeType.TEXT;
 };
 
-export const isBBoxAnnotationNode = (node: Node<DATSNodeData>): node is Node<BBoxAnnotationNodeData> => {
-  return (node.data as BBoxAnnotationNodeData).bboxAnnotationId !== undefined;
+export const isTextNodeArray = (nodes: DATSNode[]): nodes is TextNode[] => {
+  return nodes.every(isTextNode);
 };
 
-export const isMemoNode = (node: Node<DATSNodeData>): node is Node<MemoNodeData> => {
-  return (node.data as MemoNodeData).memoId !== undefined;
+export const isCustomNode = (node: DATSNode): node is DATSCustomNode => {
+  return isBorderNode(node) || isNoteNode(node) || isTextNode(node);
 };
 
-export const isCodeNode = (node: Node<DATSNodeData>): node is Node<CodeNodeData> => {
-  return (node.data as CodeNodeData).codeId !== undefined;
+export const isCustomNodeArray = (nodes: DATSNode[]): nodes is DATSCustomNode[] => {
+  return nodes.every(isCustomNode);
+};
+
+export const isNodeWithBackground = (node: DATSNode): node is BorderNode | NoteNode => {
+  return isBorderNode(node) || isNoteNode(node);
+};
+
+export const isNodeWithBackgroundArray = (nodes: DATSNode[]): nodes is (BorderNode | NoteNode)[] => {
+  return nodes.every(isNodeWithBackground);
 };

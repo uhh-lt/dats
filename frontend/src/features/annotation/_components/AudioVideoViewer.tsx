@@ -1,8 +1,8 @@
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { Box, Tooltip } from "@mui/material";
+import type { SyntheticEvent } from "react";
 import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import type { OnProgressProps } from "react-player/base.d";
 
 interface AudioVideoViewerProps {
   sdocData: SourceDocumentDataRead;
@@ -14,16 +14,14 @@ interface AudioVideoViewerProps {
 export function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerProps) {
   // local client state
   const [highlightedWordId, setHighlightedWordId] = useState(-1);
-  const playerRef = useRef<ReactPlayer>(null);
+  const playerRef = useRef<HTMLVideoElement>(null);
   const currentHighlightedWordSpanRef = useRef<HTMLSpanElement>(null);
 
   // ui events
-  const handleProgress = (state: OnProgressProps) => {
+  const handleProgress = (event: SyntheticEvent<HTMLVideoElement, Event>) => {
     if (!sdocData.word_level_transcriptions) return;
-
-    // TODO: this is not very efficient!
-    const time = state.playedSeconds * 1000;
-    const wordId = sdocData.word_level_transcriptions.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
+    const time = event.currentTarget.currentTime * 1000;
+    const wordId = sdocData.word_level_transcriptions.findIndex((word) => time >= word.start_ms && time <= word.end_ms);
     setHighlightedWordId(wordId);
     if (currentHighlightedWordSpanRef.current) {
       currentHighlightedWordSpanRef.current.scrollIntoView({
@@ -35,7 +33,7 @@ export function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerPr
 
   const handleJumpToTimestamp = (timestamp: number, wordId: number) => {
     if (!playerRef.current) return;
-    playerRef.current.seekTo(timestamp / 1000);
+    playerRef.current.currentTime = timestamp / 1000;
     setHighlightedWordId(wordId);
   };
 
@@ -67,7 +65,7 @@ export function AudioVideoViewer({ sdocData, width, height }: AudioVideoViewerPr
     <>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
         <ReactPlayer
-          url={encodeURI("/content/" + sdocData.repo_url)}
+          src={encodeURI("/content/" + sdocData.repo_url)}
           controls={true}
           width={width}
           height={height}

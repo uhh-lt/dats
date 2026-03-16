@@ -1,11 +1,11 @@
-import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
 import { WhiteboardEdgeType } from "@api/models/WhiteboardEdgeType";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, ButtonGroup, Divider, Paper, SelectChangeEvent, Stack } from "@mui/material";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "@xyflow/react";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { Ref, useCallback, useImperativeHandle, useState } from "react";
 import { StrokeStyle } from "../../_types/base/StrokeStyle";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { DATSNode } from "../../_types/DATSNode";
+import { CustomEdge } from "../edges/CustomEdge";
 import { isDashed, isDotted } from "../edgeUtils";
 import { BgColorTool } from "./tools/BgColorTool";
 import { EdgeMarkerTool } from "./tools/EdgeMarkerTool";
@@ -14,16 +14,20 @@ import { FontColorTool } from "./tools/FontColorTool";
 import { NumberTool } from "./tools/NumberTool";
 
 export interface EdgeEditMenuHandle {
-  open: (edges: Edge<WhiteboardEdgeData_Input>[]) => void;
+  open: (edges: CustomEdge[]) => void;
   close: () => void;
 }
 
-export const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<DATSNodeData, WhiteboardEdgeData_Input>();
-  const [edges, setEdges] = useState<Edge<WhiteboardEdgeData_Input>[]>([]);
+interface EdgeEditMenuProps {
+  ref: Ref<EdgeEditMenuHandle>;
+}
+
+export const EdgeEditMenu = ({ ref }: EdgeEditMenuProps) => {
+  const reactFlowInstance = useReactFlow<DATSNode, CustomEdge>();
+  const [edges, setEdges] = useState<CustomEdge[]>([]);
 
   // methods
-  const openMenu = (edges: Edge<WhiteboardEdgeData_Input>[]) => {
+  const openMenu = (edges: CustomEdge[]) => {
     // TODO: This is a workaround. It seems there is a bug in react-flow
     setEdges(edges.map((edge) => reactFlowInstance.getEdge(edge.id)!));
   };
@@ -39,9 +43,9 @@ export const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
   }));
 
   const updateEdges = useCallback(
-    (updateFnc: (oldEdge: Edge<WhiteboardEdgeData_Input>) => Edge<WhiteboardEdgeData_Input>) => {
+    (updateFnc: (oldEdge: CustomEdge) => CustomEdge) => {
       const idsToCheck = new Set(edges.map((edge) => edge.id));
-      const updatedEdges: Edge<WhiteboardEdgeData_Input>[] = [];
+      const updatedEdges: CustomEdge[] = [];
       reactFlowInstance.setEdges((edges) => {
         const newEdges = edges.map((edge) => {
           if (idsToCheck.has(edge.id)) {
@@ -360,4 +364,4 @@ export const EdgeEditMenu = forwardRef<EdgeEditMenuHandle>((_, ref) => {
       )}
     </>
   );
-});
+};

@@ -2,7 +2,6 @@ import { QueryKey } from "@api/hooks/QueryKey";
 import { LogicalOperator } from "@api/models/LogicalOperator";
 import { queryClient } from "@api/queryClient";
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
-import { v4 as uuidv4 } from "uuid";
 import {
   ColumnInfo,
   FilterOperators,

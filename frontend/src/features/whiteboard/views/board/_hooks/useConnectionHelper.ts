@@ -1,17 +1,15 @@
-import { ReactFlowState, useStore } from "@xyflow/react";
+import { useConnection } from "@xyflow/react";
 import { isConnectionAllowed } from "../_utils/whiteboardUtils";
 
-const connectionNodeIdSelector = (state: ReactFlowState) => state.connectionNodeId;
-const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHandleId;
-
 export const useConnectionHelper = (nodeId: string) => {
-  const connectionNodeId = useStore(connectionNodeIdSelector);
-  const connectionHandleId = useStore(connectionHandleIdSelector);
+  const connection = useConnection();
+  const connectionNodeId = connection.fromNode?.id;
+  const connectionHandleId = connection.fromHandle?.id;
 
   return {
-    isConnecting: !!connectionNodeId,
+    isConnecting: connection.inProgress,
     isValidDatabaseConnectionTarget:
-      connectionNodeId && connectionHandleId === "database" && isConnectionAllowed(connectionNodeId, nodeId),
-    isValidCustomConnectionTarget: connectionNodeId && connectionHandleId !== "database",
+      !!connectionNodeId && connectionHandleId === "database" && isConnectionAllowed(connectionNodeId, nodeId),
+    isValidCustomConnectionTarget: !!connectionNodeId && connectionHandleId !== "database",
   };
 };

@@ -13,12 +13,12 @@ const uniqueItemsById = <T extends { id: string }>(items: T[]): T[] => {
   return Object.values(uniqueItems);
 };
 
-export const useEdgeStateCustom = (
-  initialEdges: Edge[],
-): [Edge[], Dispatch<SetStateAction<Edge[]>>, OnChange<EdgeChange>] => {
+export const useEdgeStateCustom = <T extends Edge>(
+  initialEdges: T[],
+): [T[], Dispatch<SetStateAction<T[]>>, OnChange<EdgeChange<T>>] => {
   const [edges, setEdges] = useState(initialEdges);
 
-  const setItemsUnique = useCallback((edges: Edge[] | ((edges: Edge[]) => Edge[])) => {
+  const setItemsUnique = useCallback((edges: T[] | ((edges: T[]) => T[])) => {
     setEdges((currentItems) => {
       const newItems = typeof edges === "function" ? edges(currentItems) : edges;
       return uniqueItemsById(newItems);
@@ -26,19 +26,19 @@ export const useEdgeStateCustom = (
   }, []);
 
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => setItemsUnique((edges) => applyEdgeChanges(changes, edges)),
+    (changes: EdgeChange<T>[]) => setItemsUnique((edges) => applyEdgeChanges(changes, edges)),
     [setItemsUnique],
   );
 
   return [edges, setItemsUnique, onEdgesChange];
 };
 
-export const useNodeStateCustom = <T>(
-  initialNodes: Node<T>[],
-): [Node<T>[], Dispatch<Node<T>[]>, OnChange<NodeChange>] => {
+export const useNodeStateCustom = <T extends Node>(
+  initialNodes: T[],
+): [T[], Dispatch<T[]>, OnChange<NodeChange<T>>] => {
   const [nodes, setNodes] = useState(initialNodes);
 
-  const setItemsUnique = useCallback((nodes: Node<T>[] | ((nodes: Node<T>[]) => Node<T>[])) => {
+  const setItemsUnique = useCallback((nodes: T[] | ((nodes: T[]) => T[])) => {
     setNodes((currentItems) => {
       const newItems = typeof nodes === "function" ? nodes(currentItems) : nodes;
       return uniqueItemsById(newItems);
@@ -46,7 +46,7 @@ export const useNodeStateCustom = <T>(
   }, []);
 
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) => setItemsUnique((nodes) => applyNodeChanges(changes, nodes)),
+    (changes: NodeChange<T>[]) => setItemsUnique((nodes) => applyNodeChanges(changes, nodes)),
     [setItemsUnique],
   );
 

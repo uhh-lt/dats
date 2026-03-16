@@ -39,7 +39,7 @@ export function CodeExplorer({
   const [codeFilter, setCodeFilter] = useState<string>("");
 
   const handleSelectedCodeChange = useCallback(
-    (_event: React.SyntheticEvent, nodeIds: string[] | string | null) => {
+    (_event: React.SyntheticEvent | null, nodeIds: string[] | string | null) => {
       if (nodeIds === null) {
         onSelectedCodeIdChange(undefined);
       } else {

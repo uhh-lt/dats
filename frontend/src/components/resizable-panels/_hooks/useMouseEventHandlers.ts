@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 interface MouseEventHandlersConfig {
-  dragHandleRef: React.RefObject<HTMLElement>;
+  dragHandleRef: React.RefObject<HTMLElement | null>;
   handleMouseDown: (e: MouseEvent) => void;
   handleMouseMove: (e: MouseEvent) => void;
   handleMouseUp: (e: MouseEvent) => void;

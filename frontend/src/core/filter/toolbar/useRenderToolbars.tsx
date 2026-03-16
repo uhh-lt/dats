@@ -15,7 +15,7 @@ interface UseRenderFilterToolbarsProps<T extends TableRowWithId> extends ReduxFi
   renderTopLeftToolbar: (props: FilterTableToolbarProps<T>) => React.ReactNode;
   renderBottomToolbar?: (props: FilterTableToolbarProps<T>) => React.ReactNode;
   rowSelectionModel: MRT_RowSelectionState;
-  tableContainerRef: React.RefObject<HTMLElement>;
+  tableContainerRef: React.RefObject<HTMLElement | null>;
 }
 
 export const useRenderFilterToolbars = <T extends TableRowWithId>({

@@ -1,19 +1,20 @@
-import { Node, ReactFlowInstance } from "@xyflow/react";
+import { ReactFlowInstance } from "@xyflow/react";
 import { differenceBy } from "lodash";
 import { useMemo } from "react";
-import { DATSNodeData } from "../_types/DATSNodeData";
+import { DATSNode } from "../_types/DATSNode";
+import { DATSEdge } from "../_types/DATSEdge";
 
 export class ReactFlowService {
   zoom = 1.85;
   duration = 1000;
   timeout = 100;
-  reactFlowInstance: ReactFlowInstance<DATSNodeData>;
+  reactFlowInstance: ReactFlowInstance<DATSNode, DATSEdge>;
 
-  constructor(reactFlowInstance: ReactFlowInstance<DATSNodeData>) {
+  constructor(reactFlowInstance: ReactFlowInstance<DATSNode, DATSEdge>) {
     this.reactFlowInstance = reactFlowInstance;
   }
 
-  addNodes(nodes: Node<DATSNodeData>[]) {
+  addNodes(nodes: DATSNode[]) {
     const currentNodes = this.reactFlowInstance.getNodes();
     const newNodes = differenceBy(nodes, currentNodes, "id");
 
@@ -24,13 +25,13 @@ export class ReactFlowService {
     });
   }
 
-  addNodesWithoutDelay(nodes: Node<DATSNodeData>[]) {
+  addNodesWithoutDelay(nodes: DATSNode[]) {
     const currentNodes = this.reactFlowInstance.getNodes();
     const newNodes = differenceBy(nodes, currentNodes, "id");
     this.reactFlowInstance.addNodes(newNodes);
   }
 }
 
-export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DATSNodeData>) => {
+export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DATSNode, DATSEdge>) => {
   return useMemo(() => new ReactFlowService(reactFlowInstance), [reactFlowInstance]);
 };

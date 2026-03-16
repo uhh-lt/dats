@@ -1,36 +1,54 @@
+import { BorderNodeData } from "@api/models/BorderNodeData";
 import { BorderStyle } from "@api/models/BorderStyle";
 import { HorizontalAlign } from "@api/models/HorizontalAlign";
+import { NoteNodeData } from "@api/models/NoteNodeData";
+import { TextNodeData } from "@api/models/TextNodeData";
 import { VerticalAlign } from "@api/models/VerticalAlign";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { Divider, Paper, SelectChangeEvent, Stack, Typography } from "@mui/material";
-import { Node, useReactFlow } from "@xyflow/react";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { useReactFlow } from "@xyflow/react";
+import { useCallback, useImperativeHandle, useState } from "react";
 import { BackgroundColorData } from "../../_types/base/BackgroundColorData";
 import { BorderData } from "../../_types/base/BorderData";
 import { TextData } from "../../_types/base/TextData";
 import { TextStyle } from "../../_types/base/TextStyle";
-import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../../_types/typeGuards";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSCustomNode } from "../../_types/DATSNode";
+import {
+  isBorderNode,
+  isBorderNodeArray,
+  isCustomNodeArray,
+  isNodeWithBackgroundArray,
+  isNoteNode,
+  isTextNode,
+} from "../../_types/typeGuards";
 import { createNodeDataByType } from "./nodeTypeUtils";
 import { BgColorTool } from "./tools/BgColorTool";
 import { BorderColorTool } from "./tools/BorderColorTool";
 import { FontColorTool } from "./tools/FontColorTool";
 import { FontSelectionTool } from "./tools/FontSelectionTool";
 import { NodeChangeTool } from "./tools/NodeChangeTool";
+import { NodeType } from "./tools/NodeType";
 import { NumberTool } from "./tools/NumberTool";
 import { TextAlignmentTool } from "./tools/TextAlignmentTool";
 import { TextStyleTool } from "./tools/TextStyleTool";
 
 export interface NodeEditMenuHandle {
-  open: (nodes: Node[]) => void;
+  open: (nodes: DATSCustomNode[]) => void;
   close: () => void;
 }
 
-export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
-  const reactFlowInstance = useReactFlow<BackgroundColorData | TextData | BorderData>();
-  const [nodes, setNodes] = useState<Node<BackgroundColorData | TextData | BorderData>[]>([]);
+interface NodeEditMenuProps {
+  ref: React.Ref<NodeEditMenuHandle>;
+}
+
+export const NodeEditMenu = ({ ref }: NodeEditMenuProps) => {
+  const reactFlowInstance = useReactFlow<DATSCustomNode, DATSEdge>();
+  const [nodes, setNodes] = useState<DATSCustomNode[]>([]);
   const [isFontFamilyMenuOpen, setIsFontFamilyMenuOpen] = useState<boolean>(false);
 
   // methods
-  const openMenu = (nodes: Node[]) => {
+  const openMenu = (nodes: DATSCustomNode[]) => {
     // TODO: This is a workaround. It seems there is a bug in react-flow
     setNodes(nodes.map((node) => reactFlowInstance.getNode(node.id)!));
   };
@@ -46,18 +64,12 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   }));
 
   const updateNodes = useCallback(
-    (
-      updateFnc: (
-        oldNode: Node<BackgroundColorData | TextData | BorderData>,
-      ) => Node<BackgroundColorData | TextData | BorderData>,
-    ) => {
+    (updateFnc: (oldNode: DATSCustomNode) => DATSCustomNode) => {
       const idsToCheck = new Set(nodes.map((node) => node.id));
-      const updatedNodes: Node<BackgroundColorData | TextData | BorderData>[] = [];
       reactFlowInstance.setNodes((nodes) =>
         nodes.map((node) => {
           if (idsToCheck.has(node.id)) {
             const newNode = updateFnc(node);
-            updatedNodes.push(newNode);
             idsToCheck.delete(node.id);
             return newNode;
           }
@@ -69,117 +81,130 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
     [nodes, reactFlowInstance],
   );
 
+  const updateTextData = useCallback(
+    (patchData: (oldData: TextData) => Partial<TextData>) => {
+      updateNodes((oldNode) => {
+        const patch = patchData(oldNode.data);
+
+        if (isTextNode(oldNode)) {
+          return {
+            ...oldNode,
+            data: {
+              ...oldNode.data,
+              ...patch,
+            },
+          };
+        }
+
+        if (isNoteNode(oldNode)) {
+          return {
+            ...oldNode,
+            data: {
+              ...oldNode.data,
+              ...patch,
+            },
+          };
+        }
+
+        return {
+          ...oldNode,
+          data: {
+            ...oldNode.data,
+            ...patch,
+          },
+        };
+      });
+    },
+    [updateNodes],
+  );
+
+  const updateBackgroundData = useCallback(
+    (patchData: (oldData: BackgroundColorData) => Partial<BackgroundColorData>) => {
+      updateNodes((oldNode) => {
+        if (isNoteNode(oldNode)) {
+          return {
+            ...oldNode,
+            data: {
+              ...oldNode.data,
+              ...patchData(oldNode.data),
+            },
+          };
+        }
+
+        if (isBorderNode(oldNode)) {
+          return {
+            ...oldNode,
+            data: {
+              ...oldNode.data,
+              ...patchData(oldNode.data),
+            },
+          };
+        }
+
+        return oldNode;
+      });
+    },
+    [updateNodes],
+  );
+
+  const updateBorderData = useCallback(
+    (patchData: (oldData: BorderData) => Partial<BorderData>) => {
+      updateNodes((oldNode) => {
+        if (!isBorderNode(oldNode)) {
+          return oldNode;
+        }
+
+        return {
+          ...oldNode,
+          data: {
+            ...oldNode.data,
+            ...patchData(oldNode.data),
+          },
+        };
+      });
+    },
+    [updateNodes],
+  );
+
   const handleFontSizeChange = (fontSize: number) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          fontSize: fontSize,
-        },
-      };
-    });
+    updateTextData(() => ({ fontSize }));
   };
 
   const handleHorizontalAlignClick = (horizontal: HorizontalAlign) => () => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          horizontalAlign: horizontal,
-        },
-      };
-    });
+    updateTextData(() => ({ horizontalAlign: horizontal }));
   };
 
   const handleVerticalAlignClick = (verticalAlign: VerticalAlign) => () => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          verticalAlign: verticalAlign,
-        },
-      };
-    });
+    updateTextData(() => ({ verticalAlign }));
   };
 
   const handleBorderStyleChange = (borderStyle: BorderStyle) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          borderStyle: borderStyle,
-        },
-      };
-    });
+    updateBorderData(() => ({ borderStyle }));
   };
 
   const handleColorChange = (color: string) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          color: color,
-        },
-      };
-    });
+    updateTextData(() => ({ color }));
   };
 
   const handleBGColorChange = (color: string) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          bgcolor: color,
-        },
-      };
-    });
+    updateBackgroundData(() => ({ bgcolor: color }));
   };
 
   const handleBorderColorChange = (color: string) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          borderColor: color,
-        },
-      };
-    });
+    updateBorderData(() => ({ borderColor: color }));
   };
 
   const handleBorderWidthChange = (width: number) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          borderWidth: Math.max(1, Math.min(width, 20)),
-        },
-      };
-    });
+    updateBorderData(() => ({ borderWidth: Math.max(1, Math.min(width, 20)) }));
   };
 
   const handleBGAlphaChange = (alpha: number) => {
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          bgalpha: alpha,
-        },
-      };
-    });
+    updateBackgroundData(() => ({ bgalpha: alpha }));
   };
 
-  const showTextTools = isTextDataArray(nodes);
-  const showBackgroundColorTools = isBackgroundColorDataArray(nodes);
-  const showBorderTools = isBorderDataArray(nodes);
+  const showTextTools = isCustomNodeArray(nodes);
+  const showBackgroundColorTools = isNodeWithBackgroundArray(nodes);
+  const showBorderTools = isBorderNodeArray(nodes);
 
   // Get current font family, default to Arial if not set or inconsistent
   const getCurrentFontFamily = () => {
@@ -195,26 +220,42 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   // New handler for font family change
   const handleFontFamilyChange = (event: SelectChangeEvent) => {
     const fontFamily = event.target.value as string;
-    updateNodes((oldNode) => {
-      return {
-        ...oldNode,
-        data: {
-          ...oldNode.data,
-          fontFamily: fontFamily,
-        },
-      };
-    });
+    updateTextData(() => ({ fontFamily }));
   };
 
-  const handleChangeNodeType = (nodeType: string) => {
+  const handleChangeNodeType = (nodeType: NodeType) => {
     updateNodes((oldNode) => {
       const oldData = oldNode.data as Partial<TextData & BackgroundColorData & BorderData>;
       const { newData, nodeType: type, dimensions } = createNodeDataByType(oldData, nodeType);
 
+      if (type === WhiteboardNodeType.TEXT) {
+        return {
+          ...oldNode,
+          type: WhiteboardNodeType.TEXT,
+          data: newData as TextNodeData,
+          position: {
+            x: oldNode.position.x,
+            y: oldNode.position.y,
+          },
+        };
+      }
+
+      if (type === WhiteboardNodeType.NOTE) {
+        return {
+          ...oldNode,
+          type: WhiteboardNodeType.NOTE,
+          data: newData as NoteNodeData,
+          position: {
+            x: oldNode.position.x,
+            y: oldNode.position.y,
+          },
+        };
+      }
+
       return {
         ...oldNode,
-        type,
-        data: newData,
+        type: WhiteboardNodeType.BORDER,
+        data: newData as BorderNodeData,
         ...(dimensions || {}),
         position: {
           x: oldNode.position.x,
@@ -225,21 +266,12 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
   };
 
   const handleStyleChange = (style: TextStyle) => {
-    updateNodes((oldNode) => {
-      if (hasTextData(oldNode)) {
-        return {
-          ...oldNode,
-          data: {
-            ...oldNode.data,
-            ...(style === TextStyle.BOLD && { bold: !oldNode.data.bold }),
-            ...(style === TextStyle.ITALIC && { italic: !oldNode.data.italic }),
-            ...(style === TextStyle.UNDERLINE && { underline: !oldNode.data.underline }),
-            ...(style === TextStyle.STRIKETHROUGH && { strikethrough: !oldNode.data.strikethrough }),
-          },
-        };
-      }
-      return oldNode;
-    });
+    updateTextData((oldData) => ({
+      ...(style === TextStyle.BOLD && { bold: !oldData.bold }),
+      ...(style === TextStyle.ITALIC && { italic: !oldData.italic }),
+      ...(style === TextStyle.UNDERLINE && { underline: !oldData.underline }),
+      ...(style === TextStyle.STRIKETHROUGH && { strikethrough: !oldData.strikethrough }),
+    }));
   };
 
   return (
@@ -319,4 +351,4 @@ export const NodeEditMenu = forwardRef<NodeEditMenuHandle>((_, ref) => {
       )}
     </>
   );
-});
+};

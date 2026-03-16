@@ -101,7 +101,7 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
                 key={concept.name}
                 dataKey={concept.name}
                 fill={concept.color}
-                onClick={(data) => handleClick(data.date, concept.name)}
+                onClick={(data) => handleClick(data.payload.date, concept.name)}
               >
                 {chartData.map((entry, index) => (
                   <Cell
@@ -187,17 +187,18 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
   );
 }
 
-interface CustomizedDotProps extends DotProps {
+interface CustomizedDotProps extends Omit<DotProps, "points"> {
   isSelected: boolean;
   onClick?: () => void;
 }
 
 const CustomizedDot = ({ cx, cy, r, stroke, isSelected, onClick }: CustomizedDotProps) => {
+  const radius = r ? parseFloat(r.toString()) : undefined;
   return (
     <Dot
       cx={cx}
       cy={cy}
-      r={isSelected && r ? 2 * r : r}
+      r={isSelected && radius ? 2 * radius : radius}
       stroke={isSelected ? "black" : undefined}
       strokeWidth={isSelected ? 2 : undefined}
       fill={stroke}

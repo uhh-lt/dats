@@ -23,8 +23,8 @@ interface Data {
   index: number; // used to render the correct color
 }
 
-const renderCustomizedLabel = (data: { value: string; percent: number }) => {
-  return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;
+const renderCustomizedLabel = (data: { value: number; percent?: number }) => {
+  return `${data.value} (${(data.percent ?? 0 * 100).toFixed(0)}%)`;
 };
 
 interface ClusterDistributionPlotProps {

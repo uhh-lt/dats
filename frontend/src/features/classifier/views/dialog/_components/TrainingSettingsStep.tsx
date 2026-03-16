@@ -406,8 +406,8 @@ function FormItem({
   subtitle,
   children,
 }: {
-  title: string | JSX.Element;
-  subtitle: string | JSX.Element;
+  title: React.ReactNode;
+  subtitle: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (

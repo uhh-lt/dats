@@ -15,7 +15,7 @@ import {
   PopoverPosition,
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
-import { Fragment, forwardRef, useImperativeHandle, useState } from "react";
+import { Fragment, useImperativeHandle, useState } from "react";
 
 export interface SentenceMenuHandle {
   open: (
@@ -27,10 +27,11 @@ export interface SentenceMenuHandle {
 }
 
 interface SentenceMenuProps {
+  ref: React.Ref<SentenceMenuHandle>;
   projectId: number;
 }
 
-export const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({ projectId }, ref) => {
+export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
   const navigate = useNavigate();
 
   // global server state
@@ -170,4 +171,4 @@ export const SentenceMenu = forwardRef<SentenceMenuHandle, SentenceMenuProps>(({
       </List>
     </Popover>
   );
-});
+};

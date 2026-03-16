@@ -2,11 +2,13 @@ import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
 import { CodeFrequency } from "@api/models/CodeFrequency";
 import { CodeRead } from "@api/models/CodeRead";
 import { DocType } from "@api/models/DocType";
+import { ExportChartButton } from "@components/export-chart-buttons";
 import { ITree } from "@components/tree-explorer";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { Dispatch, SetStateAction, useMemo, useReducer, useState } from "react";
+import type { TooltipContentProps } from "recharts";
 import {
   Bar,
   BarChart,
@@ -22,22 +24,11 @@ import {
 } from "recharts";
 import { Node } from "ts-tree-structure";
 
-const renderCustomizedLabel = (data: { value: string; percent: number }) => {
-  return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;
+const renderCustomizedLabel = (data: { value: number; percent?: number }) => {
+  return `${data.value} (${(data.percent ?? 0 * 100).toFixed(0)}%)`;
 };
 
-interface CodeFrequencyViewProps {
-  projectId: number;
-  userIds: number[];
-  docTypes: DocType[];
-  setSelectedCode: Dispatch<SetStateAction<number | undefined>>;
-  data: Node<ITree<CodeRead>>;
-}
-
-import { ExportChartButton } from "@components/export-chart-buttons";
-import type { TooltipProps } from "recharts";
-
-function CustomTooltip(props: TooltipProps<number, string>) {
+function CustomTooltipContent(props: TooltipContentProps) {
   const { active, payload, label } = props;
   const isVisible = !!active && !!payload && payload.length > 0;
 
@@ -57,7 +48,15 @@ function CustomTooltip(props: TooltipProps<number, string>) {
   );
 }
 
-export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelectedCode }: CodeFrequencyViewProps) {
+interface CodeFrequencyPlotProps {
+  projectId: number;
+  userIds: number[];
+  docTypes: DocType[];
+  setSelectedCode: Dispatch<SetStateAction<number | undefined>>;
+  data: Node<ITree<CodeRead>>;
+}
+
+export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelectedCode }: CodeFrequencyPlotProps) {
   // local state
   const [selectedData, setSelectedData] = useState<Node<ITree<CodeRead>>>();
   const [showPieChart, toggleShowPieChart] = useReducer((previous) => !previous, false);
@@ -123,7 +122,7 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
                     cy="50%"
                     fill="#8884d8"
                     label={renderCustomizedLabel}
-                    onClick={handleClick}
+                    onClick={(data) => handleClick(data.payload as CodeFrequency)}
                   >
                     {chartData.data.map((entry) => (
                       <Cell
@@ -154,8 +153,12 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
                     allowDataOverflow
                   />
                   <CartesianGrid stroke="#eee" />
-                  <ChartTooltip content={CustomTooltip} />
-                  <Bar dataKey={(codeFrequency) => codeFrequency.total_count} fill="#8884d8" onClick={handleClick}>
+                  <ChartTooltip content={CustomTooltipContent} />
+                  <Bar
+                    dataKey={(codeFrequency) => codeFrequency.total_count}
+                    fill="#8884d8"
+                    onClick={(data) => handleClick(data.payload as CodeFrequency)}
+                  >
                     {chartData.data.map((codeFrequency) => (
                       <Cell
                         key={`codecell-${codeFrequency.code_id}`}

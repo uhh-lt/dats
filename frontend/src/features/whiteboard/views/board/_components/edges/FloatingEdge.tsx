@@ -1,11 +1,13 @@
-import { EdgeProps, getStraightPath, useStore } from "@xyflow/react";
-import { useCallback } from "react";
-
+import { Edge, EdgeProps, getStraightPath, useInternalNode } from "@xyflow/react";
 import { getEdgeParams } from "../edgeUtils";
 
-export function FloatingEdge({ id, source, target, markerEnd, style, selected }: EdgeProps) {
-  const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(source), [source]));
-  const targetNode = useStore(useCallback((store) => store.nodeInternals.get(target), [target]));
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type FloatingEdgeData = {};
+
+export type FloatingEdge = Edge<FloatingEdgeData, "floating">;
+export function FloatingEdge({ id, source, target, markerEnd, style, selected }: EdgeProps<FloatingEdge>) {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
 
   if (!sourceNode || !targetNode) {
     return null;

@@ -1,6 +1,6 @@
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { TreeItem2 } from "@mui/x-tree-view";
+import {TreeItem} from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { memo, useCallback, useMemo } from "react";
 import { FilterRendererProps } from "../_types/FilterRendererProps";
@@ -26,7 +26,7 @@ export const FilterRenderer = memo(({ editableFilter, filterActions, column2Info
   const renderFilter = useCallback(
     function renderFilterFn(filter: MyFilter, disableDeleteButton: boolean) {
       return (
-        <TreeItem2
+        <TreeItem
           key={filter.id}
           itemId={filter.id}
           label={
@@ -39,7 +39,7 @@ export const FilterRenderer = memo(({ editableFilter, filterActions, column2Info
             />
           }
         >
-          <TreeItem2
+          <TreeItem
             key={`${filter.id}-add`}
             itemId={`${filter.id}-add`}
             label={
@@ -69,7 +69,7 @@ export const FilterRenderer = memo(({ editableFilter, filterActions, column2Info
             }
             return null;
           })}
-        </TreeItem2>
+        </TreeItem>
       );
     },
     [

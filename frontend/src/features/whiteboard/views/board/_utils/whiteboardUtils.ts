@@ -1,27 +1,30 @@
-import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { BorderNodeData } from "@api/models/BorderNodeData";
 import { BorderStyle } from "@api/models/BorderStyle";
-import { CodeNodeData } from "@api/models/CodeNodeData";
 import { CodeRead } from "@api/models/CodeRead";
 import { HorizontalAlign } from "@api/models/HorizontalAlign";
-import { MemoNodeData } from "@api/models/MemoNodeData";
 import { MemoRead } from "@api/models/MemoRead";
-import { NoteNodeData } from "@api/models/NoteNodeData";
-import { SdocNodeData } from "@api/models/SdocNodeData";
-import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagNodeData } from "@api/models/TagNodeData";
 import { TagRead } from "@api/models/TagRead";
-import { TextNodeData } from "@api/models/TextNodeData";
 import { VerticalAlign } from "@api/models/VerticalAlign";
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
-import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "@xyflow/react";
+import { DefaultEdgeOptions, Edge, MarkerType, XYPosition, getNodesBounds } from "@xyflow/react";
+import type { BBoxAnnotationNode } from "../_components/nodes/BBoxAnnotationNode";
+import type { BorderNode } from "../_components/nodes/BorderNode";
+import type { CodeNode } from "../_components/nodes/CodeNode";
+import type { MemoNode } from "../_components/nodes/MemoNode";
+import type { NoteNode } from "../_components/nodes/NoteNode";
+import type { SdocNode } from "../_components/nodes/SdocNode";
+import type { SentenceAnnotationNode } from "../_components/nodes/SentenceAnnotationNode";
+import type { SpanAnnotationNode } from "../_components/nodes/SpanAnnotationNode";
+import type { TagNode } from "../_components/nodes/TagNode";
+import type { TextNode } from "../_components/nodes/TextNode";
 // eslint-disable-next-line boundaries/element-types
 import { theme } from "@plugins/mui";
+import { CustomEdge } from "../_components/edges/CustomEdge";
+import { FloatingEdge } from "../_components/edges/FloatingEdge";
+import { DATSNode } from "../_types/DATSNode";
 
 const positionOffset = 50;
 
@@ -45,14 +48,14 @@ export const PREDEFINED_COLORS = [
   "#000080", // Navy
 ];
 
-export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
+export const defaultDatabaseEdgeOptions = {
   style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
   type: "floating",
   markerEnd: {
     type: MarkerType.ArrowClosed,
     color: theme.palette.grey[400],
   },
-};
+} as const satisfies DefaultEdgeOptions;
 
 const defaultDatabaseNodeData = {
   bgcolor: "#ffffff",
@@ -96,11 +99,8 @@ export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) 
   return false;
 };
 
-export const duplicateCustomNodes = (
-  position: XYPosition,
-  nodes: Node<TextNodeData | NoteNodeData | BorderNodeData>[],
-): Node<TextNodeData | NoteNodeData | BorderNodeData>[] => {
-  const rect = getRectOfNodes(nodes);
+export const duplicateNodes = (position: XYPosition, nodes: DATSNode[]): DATSNode[] => {
+  const rect = getNodesBounds(nodes);
   const newNodes = nodes.map((node) => {
     return {
       ...node,
@@ -112,7 +112,7 @@ export const duplicateCustomNodes = (
   return newNodes;
 };
 
-export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
+export const createTextNode = ({ position }: { position?: XYPosition }): TextNode => {
   return {
     id: crypto.randomUUID(),
     data: {
@@ -133,7 +133,7 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
   };
 };
 
-export const createNoteNode = ({ position }: { position?: XYPosition }): Node<NoteNodeData> => {
+export const createNoteNode = ({ position }: { position?: XYPosition }): NoteNode => {
   return {
     id: crypto.randomUUID(),
     data: {
@@ -162,7 +162,7 @@ export const createBorderNode = ({
 }: {
   position?: XYPosition;
   borderRadius: string;
-}): Node<BorderNodeData> => {
+}): BorderNode => {
   return {
     id: crypto.randomUUID(),
     data: {
@@ -195,7 +195,7 @@ export const createTagNodes = ({
 }: {
   tags: number[] | TagRead[];
   position?: XYPosition;
-}): Node<TagNodeData>[] => {
+}): TagNode[] => {
   const tagIds = tags.map((tag) => (typeof tag === "number" ? tag : tag.id));
   return tagIds.map((tagId, index) => ({
     id: `tag-${tagId}`,
@@ -211,7 +211,7 @@ export const createMemoNodes = ({
 }: {
   memos: number[] | MemoRead[];
   position?: XYPosition;
-}): Node<MemoNodeData>[] => {
+}): MemoNode[] => {
   const memoIds = memos.map((memo) => (typeof memo === "number" ? memo : memo.id));
   return memoIds.map((memoId, index) => ({
     id: `memo-${memoId}`,
@@ -227,7 +227,7 @@ export const createSdocNodes = ({
 }: {
   sdocs: number[] | SourceDocumentRead[];
   position?: XYPosition;
-}): Node<SdocNodeData>[] => {
+}): SdocNode[] => {
   const sdocIds = sdocs.map((sdoc) => (typeof sdoc === "number" ? sdoc : sdoc.id));
   return sdocIds.map((sdocId, index) => ({
     id: `sdoc-${sdocId}`,
@@ -237,13 +237,7 @@ export const createSdocNodes = ({
   }));
 };
 
-export const createCodeNodes = ({
-  codes,
-  position,
-}: {
-  codes: CodeRead[];
-  position?: XYPosition;
-}): Node<CodeNodeData>[] => {
+export const createCodeNodes = ({ codes, position }: { codes: CodeRead[]; position?: XYPosition }): CodeNode[] => {
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
     type: WhiteboardNodeType.CODE,
@@ -258,7 +252,7 @@ export const createSpanAnnotationNodes = ({
 }: {
   spanAnnotations: number[] | SpanAnnotationRead[];
   position?: XYPosition;
-}): Node<SpanAnnotationNodeData>[] => {
+}): SpanAnnotationNode[] => {
   const spanAnnotationIds = spanAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return spanAnnotationIds.map((spanAnnotationId, index) => ({
     id: `spanAnnotation-${spanAnnotationId}`,
@@ -274,7 +268,7 @@ export const createSentenceAnnotationNodes = ({
 }: {
   sentenceAnnotations: number[] | SentenceAnnotationRead[];
   position?: XYPosition;
-}): Node<SentenceAnnotationNodeData>[] => {
+}): SentenceAnnotationNode[] => {
   const sentenceAnnotationIds = sentenceAnnotations.map((span) => (typeof span === "number" ? span : span.id));
   return sentenceAnnotationIds.map((sentenceAnnotationId, index) => ({
     id: `sentenceAnnotation-${sentenceAnnotationId}`,
@@ -290,7 +284,7 @@ export const createBBoxAnnotationNodes = ({
 }: {
   bboxAnnotations: number[] | BBoxAnnotationRead[] | BBoxAnnotationRead[];
   position?: XYPosition;
-}): Node<BBoxAnnotationNodeData>[] => {
+}): BBoxAnnotationNode[] => {
   const bboxAnnotationIds = bboxAnnotations.map((bbox) => (typeof bbox === "number" ? bbox : bbox.id));
   return bboxAnnotationIds.map((bboxAnnotationId, index) => ({
     id: `bboxAnnotation-${bboxAnnotationId}`,
@@ -300,7 +294,13 @@ export const createBBoxAnnotationNodes = ({
   }));
 };
 
-export const createCodeParentCodeEdge = ({ codeId, parentCodeId }: { codeId: number; parentCodeId: number }): Edge => {
+export const createCodeParentCodeEdge = ({
+  codeId,
+  parentCodeId,
+}: {
+  codeId: number;
+  parentCodeId: number;
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-code-${parentCodeId}`,
@@ -315,23 +315,23 @@ export const isDatabaseEdge = (edge: Edge): boolean => {
   return edge.sourceHandle === "database" && edge.targetHandle === "database";
 };
 
-export const isDatabaseEdgeArray = (edges: Edge[]): boolean => {
+export const isDatabaseEdgeArray = (edges: Edge[]): edges is FloatingEdge[] => {
   return edges.every(isDatabaseEdge);
 };
 
-export const isCustomEdge = (edge: Edge): boolean => {
+export const isCustomEdge = (edge: Edge): edge is CustomEdge => {
   return !isDatabaseEdge(edge);
 };
 
-export const isCustomEdgeArray = (edges: Edge[]): boolean => {
+export const isCustomEdgeArray = (edges: Edge[]): edges is CustomEdge[] => {
   return !edges.some(isDatabaseEdge);
 };
 
-export const isCodeParentCodeEdge = (edge: Edge): boolean => {
+export const isCodeParentCodeEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("code-");
 };
 
-export const isCodeParentCodeEdgeArray = (edges: Edge[]): boolean => {
+export const isCodeParentCodeEdgeArray = (edges: Edge[]): edges is FloatingEdge[] => {
   return edges.every(isCodeParentCodeEdge);
 };
 
@@ -341,7 +341,7 @@ export const createMemoSpanAnnotationEdge = ({
 }: {
   memoId: number;
   spanAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-spanAnnotation-${spanAnnotationId}`,
@@ -352,11 +352,11 @@ export const createMemoSpanAnnotationEdge = ({
   };
 };
 
-export const isMemoSpanAnnotationEdge = (edge: Edge): boolean => {
+export const isMemoSpanAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("spanAnnotation-");
 };
 
-export const createMemoSdocEdge = ({ memoId, sdocId }: { memoId: number; sdocId: number }): Edge => {
+export const createMemoSdocEdge = ({ memoId, sdocId }: { memoId: number; sdocId: number }): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-sdoc-${sdocId}`,
@@ -367,11 +367,11 @@ export const createMemoSdocEdge = ({ memoId, sdocId }: { memoId: number; sdocId:
   };
 };
 
-export const isMemoSdocEdge = (edge: Edge): boolean => {
+export const isMemoSdocEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("sdoc-");
 };
 
-export const createMemoTagEdge = ({ memoId, tagId }: { memoId: number; tagId: number }): Edge => {
+export const createMemoTagEdge = ({ memoId, tagId }: { memoId: number; tagId: number }): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-tag-${tagId}`,
@@ -382,7 +382,7 @@ export const createMemoTagEdge = ({ memoId, tagId }: { memoId: number; tagId: nu
   };
 };
 
-export const isMemoTagEdge = (edge: Edge): boolean => {
+export const isMemoTagEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("tag-");
 };
 
@@ -392,7 +392,7 @@ export const createCodeSpanAnnotationEdge = ({
 }: {
   codeId: number;
   spanAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-spanAnnotation-${spanAnnotationId}`,
@@ -403,7 +403,7 @@ export const createCodeSpanAnnotationEdge = ({
   };
 };
 
-export const isCodeSpanAnnotationEdge = (edge: Edge): boolean => {
+export const isCodeSpanAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("spanAnnotation-");
 };
 
@@ -413,7 +413,7 @@ export const createSdocSpanAnnotationEdge = ({
 }: {
   sdocId: number;
   spanAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-spanAnnotation-${spanAnnotationId}`,
@@ -424,7 +424,7 @@ export const createSdocSpanAnnotationEdge = ({
   };
 };
 
-export const isSdocSpanAnnotationEdge = (edge: Edge): boolean => {
+export const isSdocSpanAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
 };
 
@@ -434,7 +434,7 @@ export const createCodeSentenceAnnotationEdge = ({
 }: {
   codeId: number;
   sentenceAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-sentenceAnnotation-${sentenceAnnotationId}`,
@@ -445,7 +445,7 @@ export const createCodeSentenceAnnotationEdge = ({
   };
 };
 
-export const isCodeSentenceAnnotationEdge = (edge: Edge): boolean => {
+export const isCodeSentenceAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("sentenceAnnotation-");
 };
 
@@ -455,7 +455,7 @@ export const createSdocSentenceAnnotationEdge = ({
 }: {
   sdocId: number;
   sentenceAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-sentenceAnnotation-${sentenceAnnotationId}`,
@@ -466,7 +466,7 @@ export const createSdocSentenceAnnotationEdge = ({
   };
 };
 
-export const isSdocSentenceAnnotationEdge = (edge: Edge): boolean => {
+export const isSdocSentenceAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("sentenceAnnotation-");
 };
 
@@ -476,7 +476,7 @@ export const createCodeBBoxAnnotationEdge = ({
 }: {
   codeId: number;
   bboxAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-bboxAnnotation-${bboxAnnotationId}`,
@@ -487,7 +487,7 @@ export const createCodeBBoxAnnotationEdge = ({
   };
 };
 
-export const isCodeBBoxAnnotationEdge = (edge: Edge): boolean => {
+export const isCodeBBoxAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("bboxAnnotation-");
 };
 
@@ -497,7 +497,7 @@ export const createSdocBBoxAnnotationEdge = ({
 }: {
   sdocId: number;
   bboxAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-bboxAnnotation-${bboxAnnotationId}`,
@@ -508,7 +508,7 @@ export const createSdocBBoxAnnotationEdge = ({
   };
 };
 
-export const isSdocBBoxAnnotationEdge = (edge: Edge): boolean => {
+export const isSdocBBoxAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("bboxAnnotation-");
 };
 
@@ -518,7 +518,7 @@ export const createMemoBBoxAnnotationEdge = ({
 }: {
   memoId: number;
   bboxAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-bboxAnnotation-${bboxAnnotationId}`,
@@ -529,11 +529,11 @@ export const createMemoBBoxAnnotationEdge = ({
   };
 };
 
-export const isMemoBBoxAnnotationEdge = (edge: Edge): boolean => {
+export const isMemoBBoxAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("bboxAnnotation-");
 };
 
-export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId: number }): Edge => {
+export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId: number }): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-code-${codeId}`,
@@ -544,7 +544,7 @@ export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId:
   };
 };
 
-export const isMemoCodeEdge = (edge: Edge): boolean => {
+export const isMemoCodeEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("code-");
 };
 
@@ -554,7 +554,7 @@ export const createMemoSentenceAnnotationEdge = ({
 }: {
   memoId: number;
   sentenceAnnotationId: number;
-}): Edge => {
+}): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-sentenceAnnotation-${sentenceAnnotationId}`,
@@ -565,11 +565,11 @@ export const createMemoSentenceAnnotationEdge = ({
   };
 };
 
-export const isMemoSentenceAnnotationEdge = (edge: Edge): boolean => {
+export const isMemoSentenceAnnotationEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("sentenceAnnotation-");
 };
 
-export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: number }): Edge => {
+export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: number }): FloatingEdge => {
   return {
     ...defaultDatabaseEdgeOptions,
     id: `tag-${tagId}-sdoc-${sdocId}`,
@@ -580,10 +580,10 @@ export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: nu
   };
 };
 
-export const isTagSdocEdge = (edge: Edge): boolean => {
+export const isTagSdocEdge = (edge: Edge): edge is FloatingEdge => {
   return isDatabaseEdge(edge) && edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
 };
 
-export const isTagSdocEdgeArray = (edges: Edge[]): boolean => {
+export const isTagSdocEdgeArray = (edges: Edge[]): edges is FloatingEdge[] => {
   return edges.every(isTagSdocEdge);
 };

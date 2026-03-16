@@ -3,16 +3,18 @@ import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useNavigate } from "@tanstack/react-router";
-import { NodeProps, useReactFlow } from "@xyflow/react";
+import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 import { isCodeNode, isMemoNode, isSdocNode } from "../../_types/typeGuards";
 import {
   createCodeNodes,
@@ -27,12 +29,13 @@ import {
 } from "../../_utils/whiteboardUtils";
 import { BaseCardNode } from "./BaseCardNode";
 
-export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeData>) {
+export type SentenceAnnotationNode = Node<SentenceAnnotationNodeData, WhiteboardNodeType.SENTENCE_ANNOTATION>;
+export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>) {
   // global client state
   const openSentenceAnnotationEdit = useOpenDialog("sentenceAnnotationEdit");
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DATSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -147,7 +150,10 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeDa
     if (!annotation.data) return;
 
     reactFlowService.addNodes(
-      createSdocNodes({ sdocs: [annotation.data.sdoc_id], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createSdocNodes({
+        sdocs: [annotation.data.sdoc_id],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -156,7 +162,10 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeDa
     if (!code.data) return;
 
     reactFlowService.addNodes(
-      createCodeNodes({ codes: [code.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createCodeNodes({
+        codes: [code.data],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -165,7 +174,10 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeDa
     if (!memo.data) return;
 
     reactFlowService.addNodes(
-      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+      createMemoNodes({
+        memos: [memo.data],
+        position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -178,7 +190,12 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNodeDa
       attachedObjectType: AttachedObjectType.SENTENCE_ANNOTATION,
       attachedObjectId: props.data.sentenceAnnotationId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
+        reactFlowService.addNodes(
+          createMemoNodes({
+            memos: [memo],
+            position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
+          }),
+        );
       },
     });
     contextMenuRef.current?.close();

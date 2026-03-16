@@ -1,39 +1,63 @@
-import { TextNodeData } from "@api/models/TextNodeData";
 import { Box, TextField, Typography } from "@mui/material";
 import { NodeProps, useReactFlow } from "@xyflow/react";
 import { useState } from "react";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSCustomNode } from "../../_types/DATSNode";
+import { isBorderNode, isNoteNode, isTextNode } from "../../_types/typeGuards";
 
-export interface TextNodeComponentProps<T extends Partial<TextNodeData>> {
+export interface TextNodeComponentProps<T extends DATSCustomNode> {
   nodeProps: NodeProps<T>;
 }
 
-export function TextNodeComponent<T extends Partial<TextNodeData>>({ nodeProps }: TextNodeComponentProps<T>) {
+export function TextNodeComponent<T extends DATSCustomNode>({ nodeProps }: TextNodeComponentProps<T>) {
   // Edit Mode
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [draftText, setDraftText] = useState<string>(nodeProps.data.text);
+
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2) {
+      setDraftText(nodeProps.data.text);
       setIsEditing(true);
     }
   };
 
   // Handle Text Change
-  const reactFlowInstance = useReactFlow();
-  const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
-  ) => {
-    // @ts-expect-error - value is always a string
-    const value: string = event.target.value;
-
+  const reactFlowInstance = useReactFlow<DATSCustomNode, DATSEdge>();
+  const commitText = (value: string) => {
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === nodeProps.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              text: value,
-            },
-          };
+          if (isTextNode(node)) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                text: value,
+              },
+            };
+          }
+
+          if (isNoteNode(node)) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                text: value,
+              },
+            };
+          }
+
+          if (isBorderNode(node)) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                text: value,
+              },
+            };
+          }
+
+          return node;
         }
         return node;
       }),
@@ -61,9 +85,14 @@ export function TextNodeComponent<T extends Partial<TextNodeData>>({ nodeProps }
         <Box className="nodrag">
           <TextField
             variant="outlined"
-            defaultValue={nodeProps.data.text}
-            onBlur={handleChangeText}
-            onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
+            value={draftText}
+            onChange={(event) => setDraftText(event.target.value)}
+            onBlur={() => commitText(draftText)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                commitText(draftText);
+              }
+            }}
             slotProps={{
               htmlInput: {
                 style: textStyle,

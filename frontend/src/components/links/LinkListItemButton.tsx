@@ -2,11 +2,8 @@ import type { ListItemButtonProps } from "@mui/material";
 import { ListItemButton } from "@mui/material";
 import type { LinkComponent } from "@tanstack/react-router";
 import { createLink } from "@tanstack/react-router";
-import { forwardRef } from "react";
 
-const ListItemButtonLinkComponent = forwardRef<HTMLAnchorElement, ListItemButtonProps<"a">>((props, ref) => (
-  <ListItemButton ref={ref} component="a" {...props} />
-));
+const ListItemButtonLinkComponent = (props: ListItemButtonProps<"a">) => <ListItemButton component="a" {...props} />;
 
 const CreatedListItemButtonLinkComponent = createLink(ListItemButtonLinkComponent);
 

@@ -1,7 +1,6 @@
 import { TagRead } from "@api/models/TagRead";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
-import { v4 as uuidv4 } from "uuid";
 import { ChartDataPoint } from "../_types/ChartDataPoint";
 
 export interface DocumentSamplerState {
@@ -54,7 +53,7 @@ const documentSamplerSlice = createSlice({
       state.aggregationGroups[groupName] = tags;
     },
     onAddNewGroup: (state) => {
-      state.aggregationGroups[`Group ${crypot.randomUUID().substring(0, 4)}`] = [];
+      state.aggregationGroups[`Group ${crypto.randomUUID().substring(0, 4)}`] = [];
     },
     onDeleteGroup: (state, action: PayloadAction<string>) => {
       const groupName = action.payload;

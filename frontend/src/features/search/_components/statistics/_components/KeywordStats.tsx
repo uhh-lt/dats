@@ -12,7 +12,7 @@ interface KeywordStatsProps {
   sdocIds?: number[];
   projectId: number;
   handleClick: (keyword: string) => void;
-  parentRef: RefObject<HTMLDivElement>;
+  parentRef: RefObject<HTMLDivElement | null>;
   filterBy: string;
 }
 
@@ -51,7 +51,7 @@ function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps
 interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
   handleClick: (keyword: string) => void;
-  parentRef: React.RefObject<HTMLDivElement>;
+  parentRef: React.RefObject<HTMLDivElement | null>;
   filterBy: string;
 }
 
@@ -61,7 +61,7 @@ function KeywordStatsWithData({ keywordStats, handleClick, parentRef, filterBy }
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: filteredKeywordStats.length || 0,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => parentRef?.current,
     estimateSize: () => 35,
   });
 

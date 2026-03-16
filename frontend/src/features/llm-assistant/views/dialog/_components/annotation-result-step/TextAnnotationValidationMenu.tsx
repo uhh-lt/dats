@@ -17,7 +17,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
 interface ICodeFilter extends CodeRead {
   title: string;
@@ -26,6 +26,7 @@ interface ICodeFilter extends CodeRead {
 const filter = createFilterOptions<ICodeFilter>();
 
 export interface TextAnnotationValidationMenuProps {
+  ref: React.Ref<TextAnnotationValidationMenuHandle>;
   codesForSelection: CodeRead[];
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
   onEdit: (annotationToEdit: SpanAnnotationRead, newCode: CodeRead) => void;
@@ -36,10 +37,13 @@ export interface TextAnnotationValidationMenuHandle {
   open: (position: PopoverPosition, annotations?: SpanAnnotationRead[] | undefined) => void;
 }
 
-export const TextAnnotationValidationMenu = forwardRef<
-  TextAnnotationValidationMenuHandle,
-  TextAnnotationValidationMenuProps
->(({ codesForSelection, onClose, onEdit, onDelete }, ref) => {
+export const TextAnnotationValidationMenu = ({
+  ref,
+  codesForSelection,
+  onClose,
+  onEdit,
+  onDelete,
+}: TextAnnotationValidationMenuProps) => {
   // local client state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -204,7 +208,7 @@ export const TextAnnotationValidationMenu = forwardRef<
       )}
     </Popover>
   );
-});
+};
 
 interface AnnotationMenuListItemProps {
   annotation: SpanAnnotationRead;

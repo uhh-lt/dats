@@ -46,7 +46,7 @@ export const FolderExplorer = memo(
     }, []);
 
     const handleSelectedFolderIdChange = useCallback(
-      (_event: React.SyntheticEvent, folderId: string | string[] | null) => {
+      (_event: React.SyntheticEvent | null, folderId: string | string[] | null) => {
         if (typeof folderId === "string") {
           onSelectedFolderIdChange(parseInt(folderId));
         } else {

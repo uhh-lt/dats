@@ -1,37 +1,28 @@
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import TitleIcon from "@mui/icons-material/Title";
 import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import { Node } from "@xyflow/react";
 import { useMemo, useState } from "react";
-import { BorderData } from "../../../_types/base/BorderData";
-
-enum NodeType {
-  TEXT = "text",
-  NOTE = "note",
-  ELLIPSE = "ellipse",
-  RECTANGLE = "rectangle",
-  ROUNDED = "rounded",
-}
+import { DATSNode } from "../../../_types/DATSNode";
+import { isBorderNode, isNoteNode, isTextNode } from "../../../_types/typeGuards";
+import { NodeType } from "./NodeType";
 
 // Check if a node type is currently active
-const getNodeType = (node: Node | undefined): NodeType => {
+const getNodeType = (node: DATSNode | undefined): NodeType => {
   if (!node) return NodeType.TEXT;
 
-  if (node.type === WhiteboardNodeType.TEXT) {
+  if (isTextNode(node)) {
     return NodeType.TEXT;
   }
-  if (node.type === WhiteboardNodeType.NOTE) {
+  if (isNoteNode(node)) {
     return NodeType.NOTE;
   }
-  if (node.type === WhiteboardNodeType.BORDER) {
-    const borderData = node.data as BorderData;
-    if (borderData.borderRadius === "100%") return NodeType.ELLIPSE;
-    if (borderData.borderRadius === "0px") return NodeType.RECTANGLE;
-    if (borderData.borderRadius === "25px") return NodeType.ROUNDED;
+  if (isBorderNode(node)) {
+    if (node.data.borderRadius === "100%") return NodeType.ELLIPSE;
+    if (node.data.borderRadius === "0px") return NodeType.RECTANGLE;
+    if (node.data.borderRadius === "25px") return NodeType.ROUNDED;
   }
   return NodeType.TEXT;
 };
@@ -45,8 +36,8 @@ const NodeTypeIconMap = {
 };
 
 interface NodeChangeToolProps {
-  onNodeTypeChange: (nodeType: string) => void;
-  node?: Node;
+  onNodeTypeChange: (nodeType: NodeType) => void;
+  node?: DATSNode;
 }
 
 export const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange, node }) => {
@@ -61,7 +52,7 @@ export const NodeChangeTool: React.FC<NodeChangeToolProps> = ({ onNodeTypeChange
     setAnchorEl(null);
   };
 
-  const handleNodeTypeChange = (nodeType: string) => {
+  const handleNodeTypeChange = (nodeType: NodeType) => {
     onNodeTypeChange(nodeType);
     handleMenuClose();
   };

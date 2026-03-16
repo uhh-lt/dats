@@ -1,26 +1,22 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { BBoxAnnotationNodeData } from "@api/models/BBoxAnnotationNodeData";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { CodeNodeData } from "@api/models/CodeNodeData";
 import { CodeRead } from "@api/models/CodeRead";
 import { MemoNodeData } from "@api/models/MemoNodeData";
-import { SdocNodeData } from "@api/models/SdocNodeData";
-import { SentenceAnnotationNodeData } from "@api/models/SentenceAnnotationNodeData";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagNodeData } from "@api/models/TagNodeData";
 import { TagRead } from "@api/models/TagRead";
+import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { attachedObjectTypeToText, MemoRenderer, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
 import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
-import { Edge, Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
+import { Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import Markdown from "react-markdown";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
-import { DATSNodeData } from "../../_types/DATSNodeData";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 import {
   isBBoxAnnotationNode,
   isCodeNode,
@@ -89,20 +85,26 @@ const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
   }
 };
 
-const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (node: Node<DATSNodeData>) => {
+const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (node: DATSNode) => {
   switch (attachedObjectType) {
     case AttachedObjectType.TAG:
-      return (node as Node<TagNodeData>).data.tagId;
+      if (isTagNode(node)) return node.data.tagId;
+      break;
     case AttachedObjectType.CODE:
-      return (node as Node<CodeNodeData>).data.codeId;
+      if (isCodeNode(node)) return node.data.codeId;
+      break;
     case AttachedObjectType.SOURCE_DOCUMENT:
-      return (node as Node<SdocNodeData>).data.sdocId;
+      if (isSdocNode(node)) return node.data.sdocId;
+      break;
     case AttachedObjectType.SPAN_ANNOTATION:
-      return (node as Node<SpanAnnotationNodeData>).data.spanAnnotationId;
+      if (isSpanAnnotationNode(node)) return node.data.spanAnnotationId;
+      break;
     case AttachedObjectType.BBOX_ANNOTATION:
-      return (node as Node<BBoxAnnotationNodeData>).data.bboxAnnotationId;
+      if (isBBoxAnnotationNode(node)) return node.data.bboxAnnotationId;
+      break;
     case AttachedObjectType.SENTENCE_ANNOTATION:
-      return (node as Node<SentenceAnnotationNodeData>).data.sentenceAnnotationId;
+      if (isSentenceAnnotationNode(node)) return node.data.sentenceAnnotationId;
+      break;
     default:
       return -1;
   }
@@ -112,7 +114,7 @@ const createMemoAttachedObjectEdge = (
   attachedObjectType: AttachedObjectType,
   attachedObjectId: number,
   memoId: number,
-): Edge | undefined => {
+) => {
   switch (attachedObjectType) {
     case AttachedObjectType.TAG:
       return createMemoTagEdge({
@@ -154,7 +156,7 @@ const createAttachedObjectNodes = (
   attachedObject:
     TagRead | CodeRead | SpanAnnotationRead | BBoxAnnotationRead | SentenceAnnotationRead | SourceDocumentRead,
   position: XYPosition,
-): Node<DATSNodeData>[] => {
+): DATSNode[] => {
   switch (attachedObjectType) {
     case AttachedObjectType.TAG:
       return createTagNodes({
@@ -190,9 +192,10 @@ const createAttachedObjectNodes = (
   }
 };
 
-export function MemoNode(props: NodeProps<MemoNodeData>) {
+export type MemoNode = Node<MemoNodeData, WhiteboardNodeType.MEMO>;
+export function MemoNode(props: NodeProps<MemoNode>) {
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DATSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -247,8 +250,8 @@ export function MemoNode(props: NodeProps<MemoNodeData>) {
 
     reactFlowService.addNodes(
       createAttachedObjectNodes(memo.data.attached_object_type, attachedObject.data, {
-        x: props.xPos,
-        y: props.yPos,
+        x: props.positionAbsoluteX,
+        y: props.positionAbsoluteY,
       }),
     );
     contextMenuRef.current?.close();

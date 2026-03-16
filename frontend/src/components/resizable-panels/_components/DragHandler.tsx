@@ -1,8 +1,8 @@
-import { RefObject, memo } from "react";
+import { Ref, memo } from "react";
 import { StyledDragHandler } from "./styledComponents";
 
 interface DragHandlerProps {
-  dragHandleRef: RefObject<HTMLDivElement>;
+  dragHandleRef: Ref<HTMLDivElement>;
   isDragging: boolean;
   isCollapsed: boolean;
   isHorizontal: boolean;

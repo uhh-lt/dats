@@ -48,7 +48,7 @@ const steps: Record<ClassifierTask, string[]> = {
   ],
 };
 
-const content: Record<ClassifierTask, JSX.Element[]> = {
+const content: Record<ClassifierTask, React.ReactNode[]> = {
   [ClassifierTask.TRAINING]: [
     <ClassSelectionStep />,
     <TrainingDataSelectionStep />,

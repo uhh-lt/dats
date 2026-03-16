@@ -14,7 +14,7 @@ import { AnnotationRead } from "../_types/AnnotationRead";
 interface AnnotationExplorerProps<T extends AnnotationRead> {
   annotations: T[] | undefined;
   filterByText: (text: string) => (annotation: T) => boolean; // this has to be a useCallback / constant function!
-  renderAnnotationCard: (props: AnnotationCardProps<T>) => JSX.Element;
+  renderAnnotationCard: (props: AnnotationCardProps<T>) => React.ReactNode;
   estimateSize?: () => number;
 }
 

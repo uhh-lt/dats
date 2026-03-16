@@ -23,11 +23,9 @@ import {
   ConnectionMode,
   Controls,
   DefaultEdgeOptions,
-  Edge,
   IsValidConnection,
   MarkerType,
   MiniMap,
-  Node,
   NodeMouseHandler,
   NodeTypes,
   OnConnect,
@@ -35,18 +33,20 @@ import {
   Panel,
   ReactFlow,
   ReactFlowState,
-  updateEdge,
+  reconnectEdge,
+  useConnection,
   useReactFlow,
   useStore,
   XYPosition,
 } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import "reactflow/dist/style.css";
 import { useUpdateWhiteboard } from "../../../_api/whiteboardQueryOptions";
 import { useReactFlowService } from "../_hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "../_hooks/useNodesEdgesStateCustom";
-import { DATSNodeData } from "../_types/DATSNodeData";
+import { DATSEdge } from "../_types/DATSEdge";
+import { DATSNode } from "../_types/DATSNode";
 import { PendingAddNodeAction } from "../_types/PendingAddNodeAction";
 import {
   isBBoxAnnotationNode,
@@ -59,7 +59,7 @@ import {
 } from "../_types/typeGuards";
 import {
   defaultDatabaseEdgeOptions,
-  duplicateCustomNodes,
+  duplicateNodes,
   isCustomEdge,
   isCustomEdgeArray,
   isDatabaseEdge,
@@ -67,7 +67,7 @@ import {
 import { StraightConnectionLine } from "./connectionlines/StraightConnectionLine";
 import { CustomEdge } from "./edges/CustomEdge";
 import { FloatingEdge } from "./edges/FloatingEdge";
-import { BboxAnnotationNode } from "./nodes/BboxAnnotationNode";
+import { BBoxAnnotationNode } from "./nodes/BBoxAnnotationNode";
 import { BorderNode } from "./nodes/BorderNode";
 import { CodeNode } from "./nodes/CodeNode";
 import { MemoNode } from "./nodes/MemoNode";
@@ -93,16 +93,18 @@ import { NodeEditMenu, NodeEditMenuHandle } from "./toolbar/NodeEditMenu";
 import "./whiteboardFlow.css";
 
 const nodeTypes: NodeTypes = {
+  // custom nodes
   [WhiteboardNodeType.BORDER]: BorderNode,
   [WhiteboardNodeType.NOTE]: NoteNode,
   [WhiteboardNodeType.TEXT]: TextNode,
+  // db nodes
   [WhiteboardNodeType.MEMO]: MemoNode,
   [WhiteboardNodeType.SDOC]: SdocNode,
   [WhiteboardNodeType.TAG]: TagNode,
   [WhiteboardNodeType.CODE]: CodeNode,
   [WhiteboardNodeType.SPAN_ANNOTATION]: SpanAnnotationNode,
   [WhiteboardNodeType.SENTENCE_ANNOTATION]: SentenceAnnotationNode,
-  [WhiteboardNodeType.BBOX_ANNOTATION]: BboxAnnotationNode,
+  [WhiteboardNodeType.BBOX_ANNOTATION]: BBoxAnnotationNode,
 };
 
 const edgeTypes = {
@@ -153,7 +155,6 @@ const isValidConnection: IsValidConnection = (connection) => {
 };
 
 const resetSelectedElementsSelector = (state: ReactFlowState) => state.resetSelectedElements;
-const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHandleId;
 
 interface WhiteboardFlowProps {
   whiteboard: WhiteboardRead;
@@ -161,10 +162,11 @@ interface WhiteboardFlowProps {
 
 export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // whiteboard (react-flow)
-  const reactFlowInstance = useReactFlow<DATSNodeData>();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
   const resetSelection = useStore(resetSelectedElementsSelector);
-  const connectionHandleId = useStore(connectionHandleIdSelector);
+  const connection = useConnection();
+  const connectionHandleId = connection?.fromHandle?.id;
 
   // mutations
   const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();
@@ -181,10 +183,10 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
   // local state
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
-  const [nodes, , onNodesChange] = useNodeStateCustom<DATSNodeData>(whiteboard.content.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges as Edge[]);
-  const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
-  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [nodes, , onNodesChange] = useNodeStateCustom<DATSNode>(whiteboard.content.nodes as DATSNode[]);
+  const [edges, setEdges, onEdgesChange] = useEdgeStateCustom<DATSEdge>(whiteboard.content.edges as DATSEdge[]);
+  const [selectedEdges, setSelectedEdges] = useState<DATSEdge[]>([]);
+  const [selectedNodes, setSelectedNodes] = useState<DATSNode[]>([]);
   const [shapeMenuAnchor, setShapeMenuAnchor] = useState<null | HTMLElement>(null);
   const shapeMenuOpen = Boolean(shapeMenuAnchor);
 
@@ -199,8 +201,11 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const handleExecutePendingAction = (event: React.MouseEvent<Element, MouseEvent>) => {
     if (!pendingAction) return;
 
-    // 64 is toolbar sizse
-    const whiteboardPosition: XYPosition = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 64 });
+    // 64 is toolbar size
+    const whiteboardPosition: XYPosition = reactFlowInstance.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY - 64,
+    });
     pendingAction(whiteboardPosition, reactFlowService);
     setPendingAction(undefined);
   };
@@ -286,8 +291,8 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   );
 
   // gets called after end of edge gets dragged to another source or target
-  const onEdgeUpdate = useCallback(
-    (oldEdge: Edge, newConnection: Connection) => setEdges((els) => updateEdge(oldEdge, newConnection, els)),
+  const onReconnect = useCallback(
+    (oldEdge: DATSEdge, newConnection: Connection) => setEdges((els) => reconnectEdge(oldEdge, newConnection, els)),
     [setEdges],
   );
 
@@ -299,7 +304,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
     setPendingAction(undefined);
   };
 
-  const handleSelectionChange: OnSelectionChangeFunc = ({ nodes, edges }) => {
+  const handleSelectionChange: OnSelectionChangeFunc<DATSNode, DATSEdge> = ({ nodes, edges }) => {
     setSelectedEdges(edges);
     setSelectedNodes(nodes);
 
@@ -312,8 +317,9 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       databaseEdgeEditMenuRef.current?.close();
     }
 
-    if (nodes.length >= 1) {
-      nodeEditMenuRef.current?.open(nodes);
+    const customNodes = nodes.filter(isCustomNode);
+    if (customNodes.length >= 1) {
+      nodeEditMenuRef.current?.open(customNodes);
     } else {
       nodeEditMenuRef.current?.close();
     }
@@ -342,11 +348,12 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // 1. SAVE Feature
   const { mutate: updateWhiteboard, isPending: updateWhiteboardPending } = useUpdateWhiteboard();
   const handleSaveWhiteboard = useCallback(() => {
+    const customEdges = edges.filter(isCustomEdge);
     updateWhiteboard({
       whiteboardId: whiteboard.id,
       requestBody: {
         title: whiteboard.title,
-        content: { nodes, edges },
+        content: { nodes, edges: customEdges },
       },
     });
   }, [edges, nodes, updateWhiteboard, whiteboard.id, whiteboard.title]);
@@ -440,7 +447,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             onEdgesChange={onEdgesChange}
             onEdgeClick={onEdgeClick}
             onEdgeContextMenu={onEdgeClick}
-            onEdgeUpdate={onEdgeUpdate}
+            onReconnect={onReconnect}
             onSelectionChange={handleSelectionChange}
             onConnect={onConnect}
             connectionLineComponent={connectionHandleId === "database" ? StraightConnectionLine : undefined}
@@ -465,7 +472,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             minZoom={0.1}
             maxZoom={2}
             // readonly:
-            // onEdgeUpdate={readonly ? undefined : onEdgeUpdate}
+            // onReconnect={readonly ? undefined : onReconnect}
             // elementsSelectable={!readonly}
             // nodesDraggable={!readonly}
             // nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
@@ -475,9 +482,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               // copy
               if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
                 const action: PendingAddNodeAction = (position, reactFlowService) => {
-                  reactFlowService.addNodesWithoutDelay(
-                    duplicateCustomNodes(position, selectedNodes.filter(isCustomNode)),
-                  );
+                  reactFlowService.addNodesWithoutDelay(duplicateNodes(position, selectedNodes.filter(isCustomNode)));
                 };
                 setPendingAction(() => action);
               }

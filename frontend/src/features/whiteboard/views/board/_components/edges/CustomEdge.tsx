@@ -2,6 +2,7 @@ import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
 import { Box, TextField, Typography } from "@mui/material";
 import {
   BaseEdge,
+  Edge,
   EdgeLabelRenderer,
   EdgeProps,
   getBezierPath,
@@ -11,8 +12,12 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { useMemo, useState } from "react";
+import { DATSEdge } from "../../_types/DATSEdge";
+import { DATSNode } from "../../_types/DATSNode";
 
-const useGetPath = (edge: EdgeProps<WhiteboardEdgeData_Input>): [string, number, number] => {
+export type CustomEdge = Edge<WhiteboardEdgeData_Input, "custom">;
+
+const useGetPath = (edge: EdgeProps<CustomEdge>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {
     switch (edge.data?.type) {
       case "bezier":
@@ -31,9 +36,25 @@ const useGetPath = (edge: EdgeProps<WhiteboardEdgeData_Input>): [string, number,
   return [edgePath, labelX, labelY];
 };
 
-export function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
+const updateEdgeLabelText = (edge: CustomEdge, text: string): CustomEdge => {
+  if (!edge.data) {
+    return edge;
+  }
+  return {
+    ...edge,
+    data: {
+      ...edge.data,
+      label: {
+        ...edge.data.label,
+        text: text,
+      },
+    },
+  };
+};
+
+export function CustomEdge(props: EdgeProps<CustomEdge>) {
   const [edgePath, labelX, labelY] = useGetPath(props);
-  const reactFlowInstance = useReactFlow();
+  const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -50,18 +71,8 @@ export function CustomEdge(props: EdgeProps<WhiteboardEdgeData_Input>) {
     reactFlowInstance.setEdges((edges) =>
       edges.map((edge) => {
         if (edge.id === props.id) {
-          return {
-            ...edge,
-            data: {
-              ...edge.data,
-              label: {
-                ...edge.data.label,
-                text: value,
-              },
-            },
-          };
+          return updateEdgeLabelText(edge as CustomEdge, value);
         }
-
         return edge;
       }),
     );

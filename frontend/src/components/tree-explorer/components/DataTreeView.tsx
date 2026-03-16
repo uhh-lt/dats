@@ -6,7 +6,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import { Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import { SvgIconProps } from "@mui/material/SvgIcon";
-import { TreeItem, TreeViewProps } from "@mui/x-tree-view";
+import { SimpleTreeViewProps, TreeItem } from "@mui/x-tree-view";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import * as React from "react";
 import { useCallback } from "react";
@@ -43,7 +43,7 @@ export function DataTreeView<T extends NamedObjWithParent>({
   rootIcon = FolderIcon,
   parentIcon = FolderIcon,
   ...props
-}: DataTreeViewProps<T> & TreeViewProps<boolean>) {
+}: DataTreeViewProps<T> & SimpleTreeViewProps<boolean>) {
   const renderTree = useCallback(
     function renderTreeFn(nodes: ITree<T>[], isRoot = false) {
       return nodes.map((node) => {

@@ -6,5 +6,5 @@ export interface FilterTableToolbarProps<T extends TableRowWithId> extends Redux
   table: MRT_TableInstance<T>;
   selectedData: T[];
   // for dialogs
-  anchor: React.RefObject<HTMLElement>;
+  anchor: React.RefObject<HTMLElement | null>;
 }
