@@ -1,11 +1,19 @@
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
-import { memo, useRef } from "react";
-import { DragDropContext } from "react-beautiful-dnd";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { DragCloneRenderer } from "./_components/DragCloneRenderer";
 import { DraggableTab } from "./_components/DraggableTab";
-import { StrictModeDroppable } from "./_components/StrictModeDroppable";
 import { TabIconButton } from "./_components/styledComponents";
 import { TabMenuButton } from "./_components/TabMenuButton";
 import { useTabManagement } from "./_hooks/useTabManagement";
@@ -18,11 +26,42 @@ interface TabBarProps {
 export const TabBar = memo(({ projectId }: TabBarProps) => {
   // Container ref for scrolling
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [activeDragTabId, setActiveDragTabId] = useState<string | null>(null);
 
   // Use custom hooks
   const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement(projectId);
   const { canScrollLeft, canScrollRight, handleScrollLeft, handleScrollRight, updateScrollButtonVisibility } =
     useTabScroll(tabsContainerRef, activeTabIndex, tabs);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  );
+
+  const activeDragTab = useMemo(() => {
+    if (!activeDragTabId) {
+      return null;
+    }
+    return tabs.find((tab) => tab.id === activeDragTabId) ?? null;
+  }, [tabs, activeDragTabId]);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragTabId(String(event.active.id));
+  }, []);
+
+  const handleDragEndEvent = useCallback(
+    (event: DragEndEvent) => {
+      const overId = event.over ? String(event.over.id) : null;
+      handleDragEnd(String(event.active.id), overId);
+      setActiveDragTabId(null);
+    },
+    [handleDragEnd],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragTabId(null);
+  }, []);
 
   return (
     <Box
@@ -39,7 +78,13 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
         <KeyboardArrowLeftIcon />
       </TabIconButton>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEndEvent}
+        onDragCancel={handleDragCancel}
+      >
         <Box
           sx={{
             height: 48,
@@ -49,55 +94,41 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
             position: "relative",
           }}
         >
-          <StrictModeDroppable
-            droppableId="tabs"
-            direction="horizontal"
-            renderClone={(provided, snapshot, rubric) => (
-              <DragCloneRenderer
-                provided={provided}
-                snapshot={snapshot}
-                rubric={rubric}
-                tabs={tabs}
-                activeTabIndex={activeTabIndex}
-              />
-            )}
+          <div
+            ref={tabsContainerRef}
+            style={{
+              display: "flex",
+              flexGrow: 1,
+              height: "100%",
+              alignItems: "flex-end",
+              overflowX: "auto",
+              scrollbarWidth: "none", // Firefox
+              msOverflowStyle: "none", // IE and Edge
+            }}
+            className="hide-scrollbar" // Use existing class for Chrome, Safari, and Opera
+            onScroll={updateScrollButtonVisibility}
           >
-            {(provided) => (
-              <div
-                ref={(el) => {
-                  provided.innerRef(el);
-                  //@ts-expect-error Ignore TS error for now
-                  tabsContainerRef.current = el;
-                }}
-                {...provided.droppableProps}
-                style={{
-                  display: "flex",
-                  flexGrow: 1,
-                  height: "100%",
-                  alignItems: "flex-end",
-                  overflowX: "auto",
-                  scrollbarWidth: "none", // Firefox
-                  msOverflowStyle: "none", // IE and Edge
-                }}
-                className="hide-scrollbar" // Use existing class for Chrome, Safari, and Opera
-                onScroll={updateScrollButtonVisibility}
-              >
-                {tabs.map((tab, index) => (
-                  <DraggableTab
-                    key={tab.id}
-                    tab={tab}
-                    index={index}
-                    isActive={activeTabIndex === index}
-                    onTabClick={() => handleTabClick(index)}
-                    onCloseClick={() => handleCloseTab(index)}
-                  />
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </StrictModeDroppable>
+            {tabs.map((tab, index) => (
+              <DraggableTab
+                key={tab.id}
+                tab={tab}
+                index={index}
+                isActive={activeTabIndex === index}
+                onTabClick={() => handleTabClick(index)}
+                onCloseClick={() => handleCloseTab(index)}
+              />
+            ))}
+          </div>
         </Box>
-      </DragDropContext>
+        <DragOverlay>
+          {activeDragTab ? (
+            <DragCloneRenderer
+              tab={activeDragTab}
+              isActive={activeTabIndex !== null && tabs[activeTabIndex]?.id === activeDragTab.id}
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <TabIconButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
         <KeyboardArrowRightIcon />

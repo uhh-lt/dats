@@ -1,29 +1,18 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { memo } from "react";
-import { DraggableProvided, DraggableRubric, DraggableStateSnapshot } from "react-beautiful-dnd";
 import { TabData } from "../../../_types/TabData";
 import { StyledTab, TabContent } from "./styledComponents";
 import { TabTitle } from "./TabTitle";
 
 interface DragCloneRendererProps {
-  provided: DraggableProvided;
-  snapshot: DraggableStateSnapshot;
-  rubric: DraggableRubric;
-  tabs: TabData[];
-  activeTabIndex: number | null;
+  tab: TabData;
+  isActive: boolean;
 }
 
-export const DragCloneRenderer = memo(({ provided, rubric, tabs, activeTabIndex }: DragCloneRendererProps) => {
-  const tab = tabs[rubric.source.index];
-  const isActiveTab = activeTabIndex === rubric.source.index;
-
+export const DragCloneRenderer = memo(({ tab, isActive }: DragCloneRendererProps) => {
   return (
     <div
-      ref={provided.innerRef}
-      {...provided.draggableProps}
-      {...provided.dragHandleProps}
       style={{
-        ...provided.draggableProps.style,
         display: "flex",
         width: "auto",
         minWidth: "100px",
@@ -42,7 +31,7 @@ export const DragCloneRenderer = memo(({ provided, rubric, tabs, activeTabIndex 
           boxSizing: "border-box",
           padding: "8px 8px 10px 8px",
         }}
-        className={isActiveTab ? "Mui-selected" : ""}
+        className={isActive ? "Mui-selected" : ""}
       />
     </div>
   );

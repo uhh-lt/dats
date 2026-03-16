@@ -1,5 +1,6 @@
 import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { ReactWordcloud } from "@cp949/react-wordcloud";
 import CloudIcon from "@mui/icons-material/Cloud";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import {
@@ -13,11 +14,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { scaleLog } from "@visx/scale";
-import { Text } from "@visx/text";
-import { Wordcloud } from "@visx/wordcloud";
 import { toPng } from "html-to-image";
-import { useCallback, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 interface WordCloudProps {
   width: number;
@@ -26,14 +24,14 @@ interface WordCloudProps {
 }
 
 const colors = ["#143059", "#2F6B9A", "#82a6c2"];
-
-function getRotationDegree() {
-  const rand = Math.random();
-  const degree = rand > 0.5 ? 60 : -60;
-  return rand * degree;
-}
-
-const fixedValueGenerator = () => 0.5;
+const baseWordCloudOptions = {
+  colors,
+  deterministic: true,
+  fontFamily: "Impact",
+  fontSizes: [10, 100] as [number, number],
+  padding: 2,
+  scale: "log" as const,
+};
 
 type SpiralType = "archimedean" | "rectangular";
 
@@ -42,17 +40,13 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
   const [withRotation, setWithRotation] = useState<boolean>(false);
   const wordCloudRef = useRef<HTMLDivElement>(null);
 
-  const fontSizeSetter = useCallback(
-    (datum: { text: string; value: number }) => {
-      const fontScale = scaleLog({
-        domain: [Math.min(...words.map((w) => w.count)), Math.max(...words.map((w) => w.count))],
-        range: [10, 100],
-      });
+  const cloudWords = useMemo(() => words.map((w) => ({ text: w.word, value: w.count })), [words]);
 
-      return fontScale(datum.value);
-    },
-    [words],
-  );
+  const wordCloudOptions = {
+    ...baseWordCloudOptions,
+    rotationAngles: withRotation ? ([-60, 60] as [number, number]) : ([0, 0] as [number, number]),
+    spiral: spiralType,
+  };
 
   const hasWords = words.length > 0;
 
@@ -100,32 +94,7 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
         }}
       >
         {hasWords ? (
-          <Wordcloud
-            words={words.map((w) => ({ text: w.word, value: w.count }))}
-            width={width}
-            height={height}
-            fontSize={fontSizeSetter}
-            font={"Impact"}
-            padding={2}
-            spiral={spiralType}
-            rotate={withRotation ? getRotationDegree : 0}
-            random={fixedValueGenerator}
-          >
-            {(cloudWords) =>
-              cloudWords.map((w, i) => (
-                <Text
-                  key={w.text}
-                  fill={colors[i % colors.length]}
-                  textAnchor={"middle"}
-                  transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
-                  fontSize={w.size}
-                  fontFamily={w.font}
-                >
-                  {w.text}
-                </Text>
-              ))
-            }
-          </Wordcloud>
+          <ReactWordcloud words={cloudWords} options={wordCloudOptions} size={[width, height]} />
         ) : (
           <Box
             sx={{

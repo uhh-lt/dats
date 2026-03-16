@@ -1,7 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
-import { DropResult } from "react-beautiful-dnd";
 import { TabData } from "../../../_types/TabData";
 import { selectProjectTabs, TabActions } from "../../../tabSlice";
 import { getTabInfoFromPath } from "../../_utils/tabInfo";
@@ -11,7 +10,7 @@ interface TabManagementHook {
   activeTabIndex: number | null;
   handleTabClick: (index: number) => void;
   handleCloseTab: (index: number) => void;
-  handleDragEnd: (result: DropResult) => void;
+  handleDragEnd: (activeTabId: string, overTabId: string | null) => void;
 }
 
 export const useTabManagement = (projectId: number): TabManagementHook => {
@@ -96,21 +95,26 @@ export const useTabManagement = (projectId: number): TabManagementHook => {
   );
 
   const handleDragEnd = useCallback(
-    (result: DropResult) => {
-      if (!result.destination) return;
+    (activeTabId: string, overTabId: string | null) => {
+      if (!overTabId || activeTabId === overTabId) {
+        return;
+      }
 
-      const { source, destination } = result;
-      if (source.index === destination.index) return;
+      const sourceIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+      const destinationIndex = tabs.findIndex((tab) => tab.id === overTabId);
+      if (sourceIndex === -1 || destinationIndex === -1 || sourceIndex === destinationIndex) {
+        return;
+      }
 
       dispatch(
         TabActions.reorderTabs({
-          sourceIndex: source.index,
-          destinationIndex: destination.index,
+          sourceIndex,
+          destinationIndex,
           projectId,
         }),
       );
     },
-    [dispatch, projectId],
+    [dispatch, projectId, tabs],
   );
 
   return {

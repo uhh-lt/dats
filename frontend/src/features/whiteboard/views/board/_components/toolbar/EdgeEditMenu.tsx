@@ -5,7 +5,7 @@ import { Edge, EdgeMarker, MarkerType, useReactFlow } from "@xyflow/react";
 import { Ref, useCallback, useImperativeHandle, useState } from "react";
 import { StrokeStyle } from "../../_types/base/StrokeStyle";
 import { DATSNode } from "../../_types/DATSNode";
-import { CustomEdge } from "../edges/CustomEdge";
+import { CustomEdge } from "../edges";
 import { isDashed, isDotted } from "../edgeUtils";
 import { BgColorTool } from "./tools/BgColorTool";
 import { EdgeMarkerTool } from "./tools/EdgeMarkerTool";

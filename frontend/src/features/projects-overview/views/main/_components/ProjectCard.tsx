@@ -21,6 +21,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const numFinishedSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._1);
   const numProcessingSdocs = ProjectHooks.useCountSdocsWithStatus(project.id, SDocStatus._0);
 
+  // eslint-disable-next-line local/no-cross-slice-access
   const projectTabs = useAppSelector((state) => state.tabs.tabsByProject);
 
   // open project

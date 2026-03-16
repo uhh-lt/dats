@@ -8,15 +8,16 @@ interface DraggableProps {
 }
 
 export function Draggable({ id, data, children, Element = "div" }: DraggableProps) {
-  const draggable = useDraggable({ id, data });
+  const { setNodeRef, isDragging, listeners, attributes } = useDraggable({ id, data });
+
   return (
     <Element
-      ref={draggable.setNodeRef}
+      ref={setNodeRef}
       style={{
-        cursor: draggable.isDragging ? "grabbing" : "grab",
+        cursor: isDragging ? "grabbing" : "grab",
       }}
-      {...draggable.listeners}
-      {...draggable.attributes}
+      {...listeners}
+      {...attributes}
     >
       {children}
     </Element>

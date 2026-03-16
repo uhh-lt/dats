@@ -1,9 +1,7 @@
 import { ClusterRead } from "@api/models/ClusterRead";
+import { ReactWordcloud } from "@cp949/react-wordcloud";
 import { Box, Card, Typography } from "@mui/material";
-import { scaleLog } from "@visx/scale";
-import { Text } from "@visx/text";
-import { Wordcloud } from "@visx/wordcloud";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 interface ClusterWordCloudProps {
   width: number;
   height: number;
@@ -45,8 +43,17 @@ export function ClusterWordCloud({ width, height, cluster }: ClusterWordCloudPro
   );
 }
 
-const fixedValueGenerator = () => 0.5;
 const colors = ["#143059", "#2F6B9A", "#82a6c2"];
+const clusterWordCloudOptions = {
+  colors,
+  deterministic: true,
+  fontFamily: "Impact",
+  fontSizes: [10, 100] as [number, number],
+  padding: 2,
+  rotationAngles: [0, 0] as [number, number],
+  scale: "log" as const,
+  spiral: "rectangular" as const,
+};
 
 interface ClusterWordCloudContentProps {
   width: number;
@@ -56,65 +63,15 @@ interface ClusterWordCloudContentProps {
 }
 
 function ClusterWordCloudContent({ width, height, topWords, topWordScores }: ClusterWordCloudContentProps) {
-  const { words, domain } = useMemo(() => {
+  const words = useMemo(() => {
     const words = topWords.map((w, index) => ({
       text: w,
       value: topWordScores[index],
     }));
 
-    // filter out words with score 0
-    const filteredWords = words.filter((w) => w.value > 0);
-    const filteredValues = filteredWords.map((w) => w.value);
-
-    // Handle case where filteredValues might be empty to avoid Math.min/max errors
-    const minDomain = filteredValues.length > 0 ? Math.min(...filteredValues) : 1; // Default to 1 or some sensible minimum
-    const maxDomain = filteredValues.length > 0 ? Math.max(...filteredValues) : minDomain + 1; // Ensure max is greater than min if only one element or empty
-    const domain = [minDomain, maxDomain];
-
-    return {
-      words: filteredWords,
-      domain: domain,
-    };
+    // Log scaling expects positive values.
+    return words.filter((w) => w.value > 0);
   }, [topWords, topWordScores]);
 
-  const fontSizeSetter = useCallback(
-    (datum: { text: string; value: number }) => {
-      const fontScale = scaleLog({
-        domain: domain,
-        range: [10, 100],
-      });
-
-      return fontScale(datum.value);
-    },
-    [domain],
-  );
-
-  return (
-    <Wordcloud
-      words={words}
-      width={width}
-      height={height}
-      fontSize={fontSizeSetter}
-      font={"Impact"}
-      padding={2}
-      spiral="rectangular"
-      rotate={0}
-      random={fixedValueGenerator}
-    >
-      {(cloudWords) =>
-        cloudWords.map((w, i) => (
-          <Text
-            key={w.text}
-            fill={colors[i % colors.length]}
-            textAnchor={"middle"}
-            transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
-            fontSize={w.size}
-            fontFamily={w.font}
-          >
-            {w.text}
-          </Text>
-        ))
-      }
-    </Wordcloud>
-  );
+  return <ReactWordcloud words={words} options={clusterWordCloudOptions} size={[width, height]} />;
 }
