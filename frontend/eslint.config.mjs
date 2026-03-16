@@ -6,7 +6,7 @@ import boundaries from "eslint-plugin-boundaries";
 import checkFile from "eslint-plugin-check-file";
 import { flatConfigs as importPlugin } from "eslint-plugin-import-x";
 import { configs as reactHooks } from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { reactRefresh } from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint, { configs as tseslintConfigs } from "typescript-eslint";
 // eslint-disable-next-line import-x/extensions
@@ -42,7 +42,14 @@ export default tseslint.config(
   js.configs.recommended,
   tseslintConfigs.recommended,
   reactHooks.flat["recommended-latest"],
-  reactRefresh.configs.vite,
+  reactRefresh.configs.vite(),
+  // ALLOW ROUTE EXPORTS IN TANSTACK ROUTER
+  {
+    files: ["src/routes/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   tanstackQuery.configs["flat/recommended"],
   importPlugin.recommended,
   importPlugin.typescript,
