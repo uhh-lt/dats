@@ -14,7 +14,7 @@ import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } 
 import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
@@ -25,8 +25,6 @@ const filterName = "root";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { addSpanAnnotationFilter } = DocumentSearchRouteAPI.useSearch();
-  const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -37,14 +35,6 @@ export function DocumentSearchView() {
   const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const dispatch = useAppDispatch();
-
-  // consume addSpanAnnotationFilter from URL search params (set by cross-feature navigations)
-  useEffect(() => {
-    if (addSpanAnnotationFilter) {
-      dispatch(SearchActions.onAddSpanAnnotationFilter({ ...addSpanAnnotationFilter, filterName }));
-      navigate({ search: (prev) => ({ ...prev, addSpanAnnotationFilter: undefined }) });
-    }
-  }, [addSpanAnnotationFilter, dispatch, navigate]);
 
   // filter
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();

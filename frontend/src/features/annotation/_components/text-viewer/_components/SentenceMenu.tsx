@@ -85,7 +85,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
     navigate({
       to: "/project/$projectId/search",
       params: { projectId },
-      search: { addSpanAnnotationFilter: { codeId: anno.code_id, spanText: anno.text } },
+      search: { searchQuery: anno.text },
     });
   };
 

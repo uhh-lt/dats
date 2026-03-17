@@ -31,7 +31,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       navigate({
         to: `/project/$projectId/search`,
         params: { projectId: project.id },
-        search: { addSpanAnnotationFilter: undefined },
+        search: { searchQuery: "" },
       });
     } else {
       console.log("Navigating to last active tab for project", project.id, projectTabs[project.id]);

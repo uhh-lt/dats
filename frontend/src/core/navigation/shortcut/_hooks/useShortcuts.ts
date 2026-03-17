@@ -62,7 +62,7 @@ export function useShortcuts() {
           navigate({
             to: "/project/$projectId/search",
             params: { projectId },
-            search: { addSpanAnnotationFilter: undefined },
+            search: { searchQuery: "" },
           }),
         { ctrlmeta: true, shift: true },
       ),

@@ -181,11 +181,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <LinkMenuItem
-                  to="/project/$projectId/search"
-                  params={{ projectId }}
-                  search={{ addSpanAnnotationFilter: undefined }}
-                >
+                <LinkMenuItem to="/project/$projectId/search" params={{ projectId }} search={{ searchQuery: "" }}>
                   <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
                   <ListItemText>Document Search</ListItemText>
                 </LinkMenuItem>

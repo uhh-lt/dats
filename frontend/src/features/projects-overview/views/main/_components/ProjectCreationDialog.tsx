@@ -41,7 +41,7 @@ export function ProjectCreationDialog({ open, onClose }: ProjectCreationDialogPr
           navigate({
             to: "/project/$projectId/search",
             params: { projectId: project.id },
-            search: { addSpanAnnotationFilter: undefined },
+            search: { searchQuery: "" },
           }),
       },
     );
