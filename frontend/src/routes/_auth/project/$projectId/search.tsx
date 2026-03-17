@@ -5,6 +5,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   validateSearch: (search) => {
     const asf = search?.addSpanAnnotationFilter;
     return {
+      searchQuery: typeof search?.searchQuery === "string" ? search.searchQuery : "",
       addSpanAnnotationFilter:
         asf !== null &&
         typeof asf === "object" &&

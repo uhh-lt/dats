@@ -30,7 +30,6 @@ import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -48,6 +47,9 @@ import {
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
+import { FolderSelection, SearchActions } from "../../../store/documentSearchSlice";
+import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
+import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
 
 // this has to match Search.tsx!
@@ -71,7 +73,8 @@ interface DocumentTableProps {
 }
 
 export function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTableProps) {
-  const navigate = useNavigate();
+  const { searchQuery } = DocumentSearchRouteAPI.useSearch();
+  const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
   const { user } = useAuth();
@@ -109,10 +112,6 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   );
 
   // global client state (redux) connected to table state
-  const [searchQuery, setSearchQuery] = useReduxConnector(
-    (state) => state.search.searchQuery,
-    SearchActions.onSearchQueryChange,
-  );
   const [sortingModel, setSortingModel] = useReduxConnector(
     (state) => state.search.sortingModel,
     SearchActions.onSortChange,
@@ -139,6 +138,16 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   const showFolders = useAppSelector((state: RootState) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
+
+  const setSearchQuery = useCallback(
+    (value: string | undefined) => {
+      navigate({
+        search: (prev) => ({ ...prev, searchQuery: value ?? "" }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
 
   // virtualization
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
