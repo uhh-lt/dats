@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import createWebStorage from "redux-persist/es/storage/createWebStorage";
+const storage = createWebStorage("local");
 
 interface LayoutState {
   // Stores percentage values (0-100) for resizable components

@@ -21,7 +21,8 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import createWebStorage from "redux-persist/es/storage/createWebStorage";
+const storage = createWebStorage("local");
 
 export enum FolderSelection {
   FOLDER = "FOLDER",

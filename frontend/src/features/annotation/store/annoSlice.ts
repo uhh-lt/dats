@@ -2,9 +2,10 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { RootState } from "@store/store";
 import { persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import createWebStorage from "redux-persist/es/storage/createWebStorage";
 import { AnnotationMode } from "../_types/AnnotationMode";
 import { TagStyle } from "../_types/TagStyle";
+const storage = createWebStorage("local");
 
 export interface AnnoState {
   // project state:
