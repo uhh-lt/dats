@@ -9,15 +9,14 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagRenderer } from "../TagRenderer";
 
 export function TagEditDialog() {
-  const { isOpen, data: dialogData } = useDialogState("tagEdit");
-  const handleClose = useCloseDialog("tagEdit");
+  const { isOpen, data: dialogData, close: handleClose } = useDialog("tagEdit");
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();

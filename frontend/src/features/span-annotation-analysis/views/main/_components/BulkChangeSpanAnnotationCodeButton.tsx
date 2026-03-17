@@ -21,10 +21,12 @@ export function BulkChangeSpanAnnotationCodeButton({ selectedData }: BulkChangeS
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    openSpanAnnotationEdit({
-      annotationIds: selectedData.map((row) => row.id),
-      onEdit: handleEditSuccess,
-    });
+    openSpanAnnotationEdit(
+      {
+        annotationIds: selectedData.map((row) => row.id),
+      },
+      handleEditSuccess,
+    );
   };
 
   return (

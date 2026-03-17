@@ -5,7 +5,7 @@ import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
 import { AppBar, Dialog, DialogContent, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { SyntheticEvent, memo, useCallback, useState } from "react";
 import { ProjectImport } from "./_components/project-import/ProjectImport";
 import { ProjectCodes } from "./_components/ProjectCodes";
@@ -22,8 +22,7 @@ interface ProjectSettingsDialogProps {
 export const ProjectSettingsDialog = memo(
   ({ projectId, hiddenCodeIds, onToggleCodeVisibility }: ProjectSettingsDialogProps) => {
     // dialog state
-    const { isOpen } = useDialogState("projectSettings");
-    const handleClose = useCloseDialog("projectSettings");
+    const { isOpen, close: handleClose } = useDialog("projectSettings");
 
     // queries
     const project = ProjectHooks.useGetProject(projectId);

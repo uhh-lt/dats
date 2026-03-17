@@ -7,7 +7,7 @@ export function DocumentUploadButton() {
 
   return (
     <Tooltip title="Upload Documents">
-      <IconButton onClick={openDocumentUploadDialog}>
+      <IconButton onClick={() => openDocumentUploadDialog()}>
         <UploadFileIcon />
       </IconButton>
     </Tooltip>

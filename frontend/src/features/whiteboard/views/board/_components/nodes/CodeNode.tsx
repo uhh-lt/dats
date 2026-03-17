@@ -172,10 +172,12 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   };
 
   const handleContextMenuCreateChildCode = () => {
-    openCodeCreate({
-      codeName: undefined,
-      parentCodeId: props.data.codeId,
-      codeCreateSuccessHandler(code) {
+    openCodeCreate(
+      {
+        codeName: undefined,
+        parentCodeId: props.data.codeId,
+      },
+      (code) => {
         reactFlowService.addNodes(
           createCodeNodes({
             codes: [code],
@@ -183,7 +185,7 @@ export function CodeNode(props: NodeProps<CodeNode>) {
           }),
         );
       },
-    });
+    );
     contextMenuRef.current?.close();
   };
 

@@ -4,7 +4,7 @@ import { CodeRenderer, CodeTable } from "@core/code";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import { BBoxAnnotationRenderer } from "./BBoxAnnotationRenderer";
@@ -20,13 +20,12 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
   // global client state (redux)
-  const { isOpen: open, data: dialogData } = useDialogState("bboxAnnotationEdit");
+  const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("bboxAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = BboxAnnotationHooks.useUpdateBulkBBoxAnnotation();
 
   // actions
-  const closeDialog = useCloseDialog("bboxAnnotationEdit");
   const handleClose = useCallback(() => {
     closeDialog();
     setRowSelectionModel({});
@@ -45,11 +44,11 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
       {
         onSuccess: () => {
           handleClose();
-          dialogData?.onEdit?.();
+          onSuccess();
         },
       },
     );
-  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose]);
+  }, [selectedCodeId, dialogData, updateAnnotationBulkMutation, handleClose, onSuccess]);
 
   // maximize dialog
   const { isMaximized, toggleMaximize } = useDialogMaximize();

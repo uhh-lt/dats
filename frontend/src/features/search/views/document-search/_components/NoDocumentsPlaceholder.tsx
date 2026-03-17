@@ -31,7 +31,7 @@ export function NoDocumentsPlaceholder() {
             transform: "scale(0.95)",
           },
         }}
-        onClick={openDocumentUploadDialog}
+        onClick={() => openDocumentUploadDialog()}
       />
       <Typography variant="h6" color="text.secondary">
         No Documents Found

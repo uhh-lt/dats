@@ -119,7 +119,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 
     // if code does not exist, open the code creation dialog
     if (newValue.data.id === -1) {
-      openCodeCreate({ codeName: newValue.data.name, codeCreateSuccessHandler: submit });
+      openCodeCreate({ codeName: newValue.data.name }, submit);
       return;
     }
 

@@ -21,10 +21,12 @@ export function BulkChangeSentAnnotationCodeButton({ selectedData }: BulkChangeS
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    openSentenceAnnotationEdit({
-      annotationIds: selectedData.map((row) => row.id),
-      onEdit: handleEditSuccess,
-    });
+    openSentenceAnnotationEdit(
+      {
+        annotationIds: selectedData.map((row) => row.id),
+      },
+      handleEditSuccess,
+    );
   };
 
   return (

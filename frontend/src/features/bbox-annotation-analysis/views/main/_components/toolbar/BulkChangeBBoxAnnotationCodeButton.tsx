@@ -21,10 +21,12 @@ export function BulkChangeBBoxAnnotationCodeButton({ selectedData }: BulkChangeB
   }, [dispatch]);
 
   const handleChangeCodeClick = () => {
-    openBBoxAnnotationEdit({
-      annotationIds: selectedData.map((row) => row.id),
-      onEdit: handleEditSuccess,
-    });
+    openBBoxAnnotationEdit(
+      {
+        annotationIds: selectedData.map((row) => row.id),
+      },
+      handleEditSuccess,
+    );
   };
 
   return (

@@ -504,7 +504,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Settings (⌘⇧,)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
-                  onClick={openProjectSettingsDialog}
+                  onClick={() => openProjectSettingsDialog()}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",

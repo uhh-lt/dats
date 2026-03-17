@@ -10,7 +10,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -29,8 +29,7 @@ interface CodeEditDialogProps {
 }
 
 export function CodeEditDialog({ onCodeUpdated, onCodeDeleted }: CodeEditDialogProps) {
-  const { isOpen, data: dialogData } = useDialogState("codeEdit");
-  const handleClose = useCloseDialog("codeEdit");
+  const { isOpen, data: dialogData, close: handleClose } = useDialog("codeEdit");
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();

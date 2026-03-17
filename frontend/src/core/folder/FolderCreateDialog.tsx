@@ -8,7 +8,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { useCallback, useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderRenderer } from "./FolderRenderer";
@@ -19,8 +19,7 @@ interface FolderCreateDialogProps {
 }
 
 export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreateDialogProps) {
-  const { isOpen: isFolderCreateDialogOpen, data } = useDialogState("folderCreate");
-  const handleClose = useCloseDialog("folderCreate");
+  const { isOpen: isFolderCreateDialogOpen, data, close: handleClose } = useDialog("folderCreate");
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();

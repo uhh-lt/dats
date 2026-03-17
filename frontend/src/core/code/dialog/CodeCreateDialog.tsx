@@ -6,7 +6,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { contrastiveColors } from "@utils/colors/colors";
 import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -25,8 +25,12 @@ interface CodeCreateDialogProps {
 }
 
 export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialogProps) {
-  const { isOpen: isCodeCreateDialogOpen, data: dialogData } = useDialogState("codeCreate");
-  const handleCloseCodeCreateDialog = useCloseDialog("codeCreate");
+  const {
+    isOpen: isCodeCreateDialogOpen,
+    data: dialogData,
+    close: handleCloseCodeCreateDialog,
+    onSuccess: onSuccessHandler,
+  } = useDialog("codeCreate");
 
   // maximize
   // codes for selection as parent
@@ -59,7 +63,6 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
 
   // form actions
   const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
-  const onSuccessHandler = dialogData?.codeCreateSuccessHandler;
   const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
     (createData) => {
       let pcid: number | undefined = undefined;
@@ -91,7 +94,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
               parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
             }
             onCodesCreated?.(codesToExpand);
-            if (onSuccessHandler) onSuccessHandler(data, true);
+            onSuccessHandler(data, true);
             handleCloseCodeCreateDialog();
           },
         },

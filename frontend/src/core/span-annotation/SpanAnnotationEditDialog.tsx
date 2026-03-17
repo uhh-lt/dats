@@ -5,7 +5,7 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { ArrowRight } from "@mui/icons-material";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, ButtonProps, Dialog, DialogActions, Stack, Typography } from "@mui/material";
-import { useCloseDialog, useDialogState } from "@store/global/dialogBusSlice";
+import { useDialog } from "@store/global/dialogBusSlice";
 import { MRT_RowSelectionState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
 import { SpanAnnotationRenderer } from "./SpanAnnotationRenderer";
@@ -21,13 +21,12 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
     Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
   // global client state (redux)
-  const { isOpen: open, data: dialogData } = useDialogState("spanAnnotationEdit");
+  const { isOpen: open, data: dialogData, close: closeDialog, onSuccess } = useDialog("spanAnnotationEdit");
 
   // mutations
   const { mutate: updateAnnotationBulkMutation, isPending } = SpanAnnotationHooks.useUpdateBulkSpan();
 
   // actions
-  const closeDialog = useCloseDialog("spanAnnotationEdit");
   const handleClose = useCallback(() => {
     closeDialog();
     setRowSelectionModel({});
@@ -46,11 +45,11 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
       {
         onSuccess: () => {
           handleClose();
-          dialogData?.onEdit?.();
+          onSuccess();
         },
       },
     );
-  }, [dialogData, handleClose, selectedCodeId, updateAnnotationBulkMutation]);
+  }, [dialogData, handleClose, onSuccess, selectedCodeId, updateAnnotationBulkMutation]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
