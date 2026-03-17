@@ -2,6 +2,7 @@ import type { LinkProps } from "@mui/material";
 import { Card, CardActionArea, CardActions, CardContent, Typography } from "@mui/material";
 import type { LinkComponent } from "@tanstack/react-router";
 import { createLink } from "@tanstack/react-router";
+import { useTabAwareLinkProps } from "./useTabAwareLinkProps";
 
 interface LinkCardProps extends LinkProps {
   title: string;
@@ -31,5 +32,6 @@ const CardLinkComponent = ({ ref, title, description, color, ...props }: LinkCar
 const CreatedCardLinkComponent = createLink(CardLinkComponent);
 
 export const LinkCard: LinkComponent<typeof CardLinkComponent> = (props) => {
-  return <CreatedCardLinkComponent preload={"intent"} {...props} />;
+  const tabAwareProps = useTabAwareLinkProps(props);
+  return <CreatedCardLinkComponent preload={"intent"} {...tabAwareProps} />;
 };

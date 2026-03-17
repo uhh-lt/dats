@@ -1,10 +1,9 @@
 import { Box, IconButton, styled, Tab } from "@mui/material";
 
-// Styled components for tabs
 export const StyledTab = styled(Tab)(({ theme }) => ({
   minHeight: "42px",
-  minWidth: "100px", // Minimum tab width
-  maxWidth: "240px", // Maximum tab width
+  minWidth: "100px",
+  maxWidth: "240px",
   padding: "8px 8px 10px 8px",
   fontSize: theme.typography.body2.fontSize,
   borderRight: `1px solid ${theme.palette.divider}`,
@@ -44,13 +43,10 @@ export const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-// Tab wrapper styling
 export const TabWrapper = styled("div")(({ theme }) => ({
   display: "flex",
   position: "relative",
   cursor: "grab",
-
-  // Hover styling
   "&:hover": {
     "& .MuiTab-root::before": {
       backgroundColor: theme.palette.grey[600],
@@ -59,7 +55,6 @@ export const TabWrapper = styled("div")(({ theme }) => ({
       opacity: 1,
     },
   },
-  // Active tab styling
   "&.active-tab": {
     "& .MuiTab-root": {
       opacity: 1,
@@ -69,7 +64,6 @@ export const TabWrapper = styled("div")(({ theme }) => ({
       },
     },
   },
-  // Dragging tab styling
   "&.dragging": {
     boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
     opacity: 0.9,
@@ -78,7 +72,6 @@ export const TabWrapper = styled("div")(({ theme }) => ({
   },
 }));
 
-// Scroll button styling
 export const TabIconButton = styled(IconButton)(({ theme }) => ({
   width: "48px",
   height: "48px",
@@ -90,7 +83,6 @@ export const TabIconButton = styled(IconButton)(({ theme }) => ({
   zIndex: 2,
 }));
 
-// Close button styling
 export const CloseButton = styled(IconButton)(({ theme }) => ({
   marginLeft: theme.spacing(1),
   opacity: 0.5,
@@ -103,31 +95,28 @@ export const CloseButton = styled(IconButton)(({ theme }) => ({
   pointerEvents: "auto",
 }));
 
-// Container for the tab content
 export const TabContent = styled(Box)({
   display: "flex",
   alignItems: "center",
   width: "100%",
   justifyContent: "space-between",
   pointerEvents: "none",
-  minWidth: 0, // Allow content to shrink
+  minWidth: 0,
 });
 
-// Container for the tab label and icon
 export const TabLabel = styled(Box)({
   display: "flex",
   alignItems: "center",
-  minWidth: 0, // This allows flex items to shrink below their minimum content size
-  maxWidth: "200px", // Maximum width for the tab label container
+  minWidth: 0,
+  maxWidth: "200px",
   flex: 1,
 });
 
-// Label text styling
 export const LabelText = styled("span")({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   marginLeft: "8px",
-  minWidth: 0, // Allows text to shrink
+  minWidth: 0,
   flex: 1,
 });

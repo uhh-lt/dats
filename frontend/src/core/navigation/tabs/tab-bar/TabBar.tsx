@@ -11,12 +11,15 @@ import {
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { selectProjectTabs, TabActions } from "../../tabSlice";
+import { useTabManager } from "../hooks/useTabManager";
 import { DragCloneRenderer } from "./_components/DragCloneRenderer";
 import { DraggableTab } from "./_components/DraggableTab";
-import { TabIconButton } from "./_components/styledComponents";
 import { TabMenuButton } from "./_components/TabMenuButton";
-import { useTabManagement } from "./_hooks/useTabManagement";
+import { TabIconButton } from "./_components/styledComponents";
 import { useTabScroll } from "./_hooks/useTabScroll";
 
 interface TabBarProps {
@@ -24,12 +27,19 @@ interface TabBarProps {
 }
 
 export const TabBar = memo(({ projectId }: TabBarProps) => {
-  // Container ref for scrolling
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useRouterState({ select: (state) => state.location });
+  const tabs = useAppSelector(selectProjectTabs(projectId));
+  const tabManager = useTabManager(projectId);
+
+  const activeTabIndex = useMemo(() => {
+    return tabs.findIndex((tab) => tab.id === location.pathname);
+  }, [tabs, location.pathname]);
+
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [activeDragTabId, setActiveDragTabId] = useState<string | null>(null);
 
-  // Use custom hooks
-  const { tabs, activeTabIndex, handleTabClick, handleCloseTab, handleDragEnd } = useTabManagement(projectId);
   const { canScrollLeft, canScrollRight, handleScrollLeft, handleScrollRight, updateScrollButtonVisibility } =
     useTabScroll(tabsContainerRef, activeTabIndex, tabs);
 
@@ -44,24 +54,39 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
       return null;
     }
     return tabs.find((tab) => tab.id === activeDragTabId) ?? null;
-  }, [tabs, activeDragTabId]);
+  }, [activeDragTabId, tabs]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveDragTabId(String(event.active.id));
   }, []);
 
-  const handleDragEndEvent = useCallback(
+  const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const overId = event.over ? String(event.over.id) : null;
-      handleDragEnd(String(event.active.id), overId);
+      const activeId = String(event.active.id);
+
+      if (overId && activeId !== overId) {
+        dispatch(
+          TabActions.reorderTabs({
+            projectId,
+            sourceTabId: activeId,
+            destinationTabId: overId,
+          }),
+        );
+      }
+
       setActiveDragTabId(null);
     },
-    [handleDragEnd],
+    [dispatch, projectId],
   );
 
   const handleDragCancel = useCallback(() => {
     setActiveDragTabId(null);
   }, []);
+
+  if (!tabs.length) {
+    return null;
+  }
 
   return (
     <Box
@@ -82,7 +107,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
-        onDragEnd={handleDragEndEvent}
+        onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
         <Box
@@ -102,10 +127,10 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
               height: "100%",
               alignItems: "flex-end",
               overflowX: "auto",
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE and Edge
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
-            className="hide-scrollbar" // Use existing class for Chrome, Safari, and Opera
+            className="hide-scrollbar"
             onScroll={updateScrollButtonVisibility}
           >
             {tabs.map((tab, index) => (
@@ -113,19 +138,16 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
                 key={tab.id}
                 tab={tab}
                 index={index}
-                isActive={activeTabIndex === index}
-                onTabClick={() => handleTabClick(index)}
-                onCloseClick={() => handleCloseTab(index)}
+                isActive={tab.id === location.pathname}
+                onTabClick={() => navigate({ to: tab.href })}
+                onCloseClick={() => tabManager.closeTab(tab.id)}
               />
             ))}
           </div>
         </Box>
         <DragOverlay>
           {activeDragTab ? (
-            <DragCloneRenderer
-              tab={activeDragTab}
-              isActive={activeTabIndex !== null && tabs[activeTabIndex]?.id === activeDragTab.id}
-            />
+            <DragCloneRenderer tab={activeDragTab} isActive={activeDragTab.id === location.pathname} />
           ) : null}
         </DragOverlay>
       </DndContext>
@@ -133,7 +155,11 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
       <TabIconButton onClick={handleScrollRight} disabled={!canScrollRight} aria-label="scroll tabs right" size="small">
         <KeyboardArrowRightIcon />
       </TabIconButton>
-      <TabMenuButton projectId={projectId} activeTabIndex={activeTabIndex} totalTabs={tabs.length} />
+      <TabMenuButton
+        projectId={projectId}
+        activeTabId={activeTabIndex >= 0 ? tabs[activeTabIndex].id : null}
+        totalTabs={tabs.length}
+      />
     </Box>
   );
 });

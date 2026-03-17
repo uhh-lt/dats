@@ -2,8 +2,14 @@ import { ContentContainerLayout } from "@components/content-layouts";
 import { LinkCard } from "@components/links";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
+import { Icon } from "@utils/icons/iconUtils";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/")({
+  staticData: {
+    tab: true,
+    icon: Icon.ANALYSIS,
+    getTitle: () => "Analysis",
+  },
   component: AnalysisView,
 });
 

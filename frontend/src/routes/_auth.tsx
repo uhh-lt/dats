@@ -1,5 +1,5 @@
 import { LoginStatus } from "@core/auth";
-import { SideBar, TabBar } from "@core/navigation";
+import { SideBar, TabBar, TabSynchronizer } from "@core/navigation";
 import { Box } from "@mui/material";
 // eslint-disable-next-line boundaries/element-types
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -55,6 +55,7 @@ function AuthRouteLayout() {
             flexDirection: "column",
           }}
         >
+          <TabSynchronizer />
           {projectId && <TabBar projectId={projectId} />}
           <Box
             component="main"

@@ -3,9 +3,9 @@ import { QueryKey } from "@api/hooks/QueryKey";
 import { ApproachType } from "@api/models/ApproachType";
 import { SentenceAnnotationLLMJobResult } from "@api/models/SentenceAnnotationLLMJobResult";
 import { queryClient } from "@api/queryClient";
+import { useTabNavigate } from "@core/navigation";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
 import { useCallback } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
@@ -55,14 +55,14 @@ function SentenceAnnotationResultStepContent({
   }, [dispatch]);
 
   const projectId = useAppSelector((state) => state.project.projectId);
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
   const handleOpenFirstDocument = () => {
     if (!projectId) return;
 
     const firstSdocId = jobResult.results[0].sdoc_id;
 
     dispatch(LLMAssistantActions.closeLLMDialog());
-    navigate({
+    tabNavigate({
       params: { projectId, sdocId: firstSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {

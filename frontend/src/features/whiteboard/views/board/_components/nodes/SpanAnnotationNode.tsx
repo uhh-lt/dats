@@ -7,9 +7,9 @@ import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
+import { useTabNavigate } from "@core/navigation";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useNavigate } from "@tanstack/react-router";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
@@ -129,11 +129,11 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   };
 
   // context menu actions
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
   const handleContextMenuGoToDocument = () => {
     if (!annotation.data || !code.data) return;
 
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/annotation/$sdocId",
       params: { sdocId: annotation.data.sdoc_id, projectId: code.data.project_id },
       search: {

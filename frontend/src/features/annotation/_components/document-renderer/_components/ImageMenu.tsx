@@ -1,8 +1,8 @@
 import { LinkListItemButton } from "@components/links";
+import { useTabNavigate } from "@core/navigation";
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
 import { useImperativeHandle, useState } from "react";
 
 export interface ImageMenuHandle {
@@ -16,7 +16,7 @@ interface ImageMenuProps {
 }
 
 export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -47,7 +47,7 @@ export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
       return;
     }
     closeMenu();
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/imagesearch",
       params: { projectId: params.projectId },
       search: { searchQuery: `${image}` },

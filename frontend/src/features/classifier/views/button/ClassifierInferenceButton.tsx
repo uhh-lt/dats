@@ -3,6 +3,7 @@ import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierRead } from "@api/models/ClassifierRead";
 import { ClassifierTask } from "@api/models/ClassifierTask";
 import { CodeRenderer } from "@core/code";
+import { useTabNavigate } from "@core/navigation";
 import { TagRenderer } from "@core/tag";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import {
@@ -19,7 +20,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
 import { ClassifierActions } from "../../store/classifierSlice";
@@ -77,10 +77,10 @@ export const ClassifierInferenceButton = memo(({ sdocIds, projectId }: { sdocIds
   );
 
   // go to classifiers
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
   const handleCreateClassifier = useCallback(() => {
-    navigate({ to: "/project/$projectId/classifier", params: { projectId } });
-  }, [navigate, projectId]);
+    tabNavigate({ to: "/project/$projectId/classifier", params: { projectId } });
+  }, [projectId, tabNavigate]);
 
   return (
     <>

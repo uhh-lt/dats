@@ -13,11 +13,11 @@ import { useMemo } from "react";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
+const COTADashboardRouteAPI = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/");
 
 export function CotaDashboardView() {
   // global client state
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = COTADashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
   const {
@@ -101,7 +101,7 @@ export function CotaDashboardView() {
     );
   };
 
-  const navigate = routeApi.useNavigate();
+  const navigate = COTADashboardRouteAPI.useNavigate();
   const handleOpenAnalysis = (row: AnalysisDashboardRow) => {
     dispatch(CotaActions.onOpenCota({ analysisId: row.id }));
     navigate({ to: "./$cotaId", params: { cotaId: row.id } });

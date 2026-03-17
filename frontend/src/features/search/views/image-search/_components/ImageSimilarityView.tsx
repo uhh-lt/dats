@@ -1,7 +1,7 @@
 import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
+import { useTabNavigate } from "@core/navigation";
 import { Box, BoxProps, CircularProgress, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -36,21 +36,20 @@ export function ImageSimilarityView({ projectId, data, isLoading, isFetching, is
   const selectedDocumentIds = useAppSelector((state) => state.imageSearch.selectedDocumentIds);
 
   // handle search selection & navigation
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
   const handleClick = useCallback(
     (event: React.MouseEvent<unknown>, sdocId: number) => {
       if (event.detail >= 2) {
-        navigate({
+        tabNavigate({
           to: "/project/$projectId/annotation/$sdocId",
           params: { projectId, sdocId },
-          search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
         });
       } else {
         dispatch(ImageSearchActions.onToggleSelectedDocumentId(sdocId));
       }
     },
-    [dispatch, navigate, projectId],
+    [dispatch, projectId, tabNavigate],
   );
 
   // compute number of cards per row

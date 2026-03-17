@@ -25,6 +25,7 @@ export function QuickCommandMenu({ projectId }: { projectId: number }) {
 
   // handle comands
   const navigate = useNavigate();
+
   const handleCommandSelect = useCallback(
     (_event: SyntheticEvent, command: CommandItem | null) => {
       if (command) {
@@ -36,7 +37,7 @@ export function QuickCommandMenu({ projectId }: { projectId: number }) {
         closeMenu();
       }
     },
-    [navigate, closeMenu],
+    [closeMenu, navigate],
   );
 
   return (

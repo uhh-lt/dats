@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
+const TimelineAnalysisRouteAPI = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
 
 interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
   type: TimelineAnalysisType;
@@ -31,7 +31,7 @@ const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
 
 export function TimelineAnalysisDashboardView() {
   // global client state
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
   const {
@@ -127,7 +127,7 @@ export function TimelineAnalysisDashboardView() {
     );
   };
 
-  const navigate = routeApi.useNavigate();
+  const navigate = TimelineAnalysisRouteAPI.useNavigate();
   const handleOpenAnalysis = (row: TimelineAnaylsisDashboardRow) => {
     dispatch(
       TimelineAnalysisActions.onOpenTimelineAnalysis({

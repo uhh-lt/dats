@@ -1,10 +1,10 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
+import { useTabNavigate } from "@core/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useRef } from "react";
 import { SdocListItem } from "./_components/SdocListItem";
@@ -35,7 +35,7 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
 
   // check if we are in annotation view
   const projectId = useAppSelector((state) => state.project.projectId);
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
 
   // Navigation handler for prev, next, and open
   const handleNavigate = (direction: "prev" | "next" | "open") => {
@@ -51,10 +51,9 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
       targetId = sdocId;
     }
     if (targetId !== undefined) {
-      navigate({
+      tabNavigate({
         to: "/project/$projectId/annotation/$sdocId",
         params: { projectId, sdocId: targetId },
-        search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
       });
     }
   };

@@ -1,24 +1,27 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
+import { Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 import { TabData } from "../_types/TabData";
 import { TabActions } from "../tabSlice";
-import { getTabInfoFromPath } from "./_utils/tabInfo";
 
 export const OpenInTabsButton = memo(({ sdocIds, projectId }: { sdocIds: number[]; projectId: number }) => {
   const dispatch = useAppDispatch();
+
   const handleClick = useCallback(() => {
-    const tabDatas = sdocIds.map((sdocId) => {
-      const tabData = getTabInfoFromPath(`/project/${projectId}/annotation/${sdocId}`);
-      const newTab: TabData = {
-        id: `tab-${Date.now()}`,
-        ...tabData,
+    const tabs: TabData[] = sdocIds.map((sdocId) => {
+      const pathname = `/project/${projectId}/annotation/${sdocId}`;
+      return {
+        id: pathname,
+        href: pathname,
+        label: `Document ${sdocId}`,
+        icon: Icon.ANNOTATION,
       };
-      return newTab;
     });
-    dispatch(TabActions.addMultipleTabs({ tabDatas, projectId }));
-  }, [sdocIds, dispatch, projectId]);
+
+    dispatch(TabActions.addOrUpdateTabs({ tabs, projectId }));
+  }, [dispatch, projectId, sdocIds]);
 
   return (
     <Tooltip title="Open in tabs">

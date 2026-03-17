@@ -1,6 +1,7 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { useTabNavigate } from "@core/navigation";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -77,9 +78,9 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
   const xCentering = svgWidth / 2 - (width * scaledRatio) / 2;
 
   // find similar images
-  const navigate = AnnotationRouteAPI.useNavigate();
+  const tabNavigate = useTabNavigate();
   const handleImageSimilaritySearch = () => {
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/imagesearch",
       params: { projectId: sdocData.project_id },
       search: { searchQuery: `${sdocData.id}` },
@@ -88,7 +89,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
 
   // find similar sentences
   const handleSentenceSimilaritySearch = () => {
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/sentencesearch",
       params: { projectId: sdocData.project_id },
       search: { searchQuery: `${sdocData.id}` },

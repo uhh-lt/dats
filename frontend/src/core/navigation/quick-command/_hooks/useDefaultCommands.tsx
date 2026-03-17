@@ -2,6 +2,7 @@ import { Settings } from "@mui/icons-material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo } from "react";
+import { useTabNavigate } from "../../tabs";
 import { CommandItem } from "../_types/CommandItem";
 
 export const useDefaultCommands = (projectId: number): CommandItem[] => {
@@ -9,6 +10,7 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
   const openTagCreate = useOpenDialog("tagCreate");
   const openDocumentUpload = useOpenDialog("documentUpload");
   const openProjectSettings = useOpenDialog("projectSettings");
+  const tabNavigate = useTabNavigate();
 
   return useMemo(
     () => [
@@ -54,7 +56,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Search through documents",
         category: "Navigation",
         icon: getIconComponent(Icon.DOCUMENT_SEARCH),
-        route: `/project/${projectId}/search`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/search", params: { projectId } });
+        },
         keywords: ["find", "search", "documents", "navigate"],
       },
       {
@@ -63,7 +67,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Search through images",
         category: "Navigation",
         icon: getIconComponent(Icon.IMAGE_SEARCH),
-        route: `/project/${projectId}/imagesearch`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/imagesearch", params: { projectId } });
+        },
         keywords: ["find", "search", "images", "navigate"],
       },
       {
@@ -72,7 +78,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Search through sentences",
         category: "Navigation",
         icon: getIconComponent(Icon.SENTENCE_SEARCH),
-        route: `/project/${projectId}/sentencesearch`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/sentencesearch", params: { projectId } });
+        },
         keywords: ["find", "search", "sentences", "navigate"],
       },
       {
@@ -81,7 +89,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to project perspectives",
         category: "Navigation",
         icon: getIconComponent(Icon.PERSPECTIVES),
-        route: `/project/${projectId}/perspectives`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/perspectives", params: { projectId } });
+        },
         keywords: ["perspectives", "map"],
       },
       {
@@ -90,7 +100,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to project classifiers",
         category: "Navigation",
         icon: getIconComponent(Icon.CLASSIFIER),
-        route: `/project/${projectId}/classifier`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/classifier", params: { projectId } });
+        },
         keywords: ["classifier", "document", "span", "sentence", "annotation", "training", "evaluation", "inference"],
       },
       {
@@ -99,7 +111,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to annotation view",
         category: "Navigation",
         icon: getIconComponent(Icon.ANNOTATION),
-        route: `/project/${projectId}/annotation`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/annotation", params: { projectId } });
+        },
         keywords: ["annotate", "annotation", "tag", "code"],
       },
       {
@@ -108,7 +122,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to project logbook",
         category: "Navigation",
         icon: getIconComponent(Icon.LOGBOOK),
-        route: `/project/${projectId}/logbook`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/logbook", params: { projectId } });
+        },
         keywords: ["log", "notes", "journal", "memo"],
       },
       {
@@ -117,7 +133,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to project whiteboards",
         category: "Navigation",
         icon: getIconComponent(Icon.WHITEBOARD),
-        route: `/project/${projectId}/whiteboard`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/whiteboard", params: { projectId } });
+        },
         keywords: ["whiteboard", "board", "visualization", "brainstorming"],
       },
       // Analysis commands
@@ -127,7 +145,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to analysis dashboard",
         category: "Analysis",
         icon: getIconComponent(Icon.ANALYSIS),
-        route: `/project/${projectId}/analysis`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "analysis", "dashboard"],
       },
       {
@@ -136,7 +156,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to timeline analysis dashboard",
         category: "Analysis",
         icon: getIconComponent(Icon.TIMELINE_ANALYSIS),
-        route: `/project/${projectId}/analysis/timeline`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/timeline", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "timeline", "analysis"],
       },
       {
@@ -145,7 +167,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to concept over time analysis dashboard",
         category: "Analysis",
         icon: getIconComponent(Icon.COTA),
-        route: `/project/${projectId}/analysis/concepts-over-time-analysis`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/concepts-over-time-analysis", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "concept", "over", "time", "analysis"],
       },
       {
@@ -154,7 +178,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to word frequency analysis",
         category: "Analysis",
         icon: getIconComponent(Icon.WORD_FREQUENCY),
-        route: `/project/${projectId}/analysis/word-frequency`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/word-frequency", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "word", "frequency", "analysis"],
       },
       {
@@ -163,7 +189,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to code frequency analysis",
         category: "Analysis",
         icon: getIconComponent(Icon.CODE_FREQUENCY),
-        route: `/project/${projectId}/analysis/code-frequency`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/code-frequency", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "code", "frequency", "analysis"],
       },
       {
@@ -172,7 +200,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to span annotation table",
         category: "Analysis",
         icon: getIconComponent(Icon.SPAN_ANNOTATION_TABLE),
-        route: `/project/${projectId}/analysis/span-annotations`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/span-annotations", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "span", "annotation", "table"],
       },
       {
@@ -181,7 +211,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to sentence annotation table",
         category: "Analysis",
         icon: getIconComponent(Icon.SENTENCE_ANNOTATION_TABLE),
-        route: `/project/${projectId}/analysis/sentence-annotations`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/sentence-annotations", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "sentence", "annotation", "table"],
       },
       {
@@ -190,7 +222,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to image annotation table",
         category: "Analysis",
         icon: getIconComponent(Icon.BBOX_ANNOTATION_TABLE),
-        route: `/project/${projectId}/analysis/bbox-annotations`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/analysis/bbox-annotations", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "image", "bbox", "box", "annotation", "table"],
       },
       // TOOLS
@@ -200,7 +234,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Configure and run ML automation tasks",
         category: "Tools",
         icon: getIconComponent(Icon.ML_AUTOMATION),
-        route: `/project/${projectId}/tools/ml-automation`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/tools/ml-automation", params: { projectId } });
+        },
         keywords: ["machine learning", "automation", "ai", "ml"],
       },
       {
@@ -209,7 +245,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to duplicate finder",
         category: "Tools",
         icon: getIconComponent(Icon.DUPLICATE_FINDER),
-        route: `/project/${projectId}/tools/duplicate-finder`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/tools/duplicate-finder", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "duplicate", "finder"],
       },
       {
@@ -218,7 +256,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to document sampler",
         category: "Tools",
         icon: getIconComponent(Icon.DOCUMENT_SAMPLER),
-        route: `/project/${projectId}/tools/document-sampler`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/tools/document-sampler", params: { projectId } });
+        },
         keywords: ["go", "to", "navigate", "document", "sampler"],
       },
       {
@@ -227,7 +267,9 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         description: "Go to document health",
         category: "Tools",
         icon: getIconComponent(Icon.HEALTH),
-        route: `/project/${projectId}/tools/health`,
+        action: () => {
+          tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } });
+        },
         keywords: ["health", "document", "status", "processing"],
       },
       // Settings commands
@@ -243,6 +285,6 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["settings", "config", "configuration", "project"],
       },
     ],
-    [openCodeCreate, openTagCreate, openDocumentUpload, openProjectSettings, projectId],
+    [openCodeCreate, openTagCreate, openDocumentUpload, openProjectSettings, tabNavigate, projectId],
   );
 };

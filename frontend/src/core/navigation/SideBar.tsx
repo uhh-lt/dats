@@ -18,6 +18,7 @@ import {
   ListItemIcon,
   ListItemText,
   Menu,
+  MenuItem,
   Popover,
   Stack,
   Tooltip,
@@ -27,6 +28,7 @@ import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useLocation } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
+import { useTabNavigate } from "./tabs";
 
 interface SideBarProps {
   projectId?: number;
@@ -38,6 +40,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const { loginStatus, logout, user } = useAuth();
   const location = useLocation();
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
+  const tabNavigate = useTabNavigate();
 
   // Memoize isActive function
   const isActive = useCallback(
@@ -70,6 +73,18 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
   const handleSearchMenuClose = useCallback(() => {
     setSearchMenuAnchorEl(null);
   }, []);
+
+  const handleOpenSearchTab = useCallback(
+    (to: "/project/$projectId/search" | "/project/$projectId/imagesearch" | "/project/$projectId/sentencesearch") => {
+      if (!projectId) {
+        return;
+      }
+
+      tabNavigate({ to, params: { projectId } });
+      handleSearchMenuClose();
+    },
+    [handleSearchMenuClose, projectId, tabNavigate],
+  );
 
   // User menu state and handlers
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -181,22 +196,18 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
               >
-                <LinkMenuItem to="/project/$projectId/search" params={{ projectId }} search={{ searchQuery: "" }}>
+                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/search")}>
                   <ListItemIcon>{getIconComponent(Icon.DOCUMENT_SEARCH)}</ListItemIcon>
                   <ListItemText>Document Search</ListItemText>
-                </LinkMenuItem>
-                <LinkMenuItem to="/project/$projectId/imagesearch" params={{ projectId }} search={{ searchQuery: "" }}>
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/imagesearch")}>
                   <ListItemIcon>{getIconComponent(Icon.IMAGE_SEARCH)}</ListItemIcon>
                   <ListItemText>Image Search</ListItemText>
-                </LinkMenuItem>
-                <LinkMenuItem
-                  to="/project/$projectId/sentencesearch"
-                  params={{ projectId }}
-                  search={{ searchQuery: "" }}
-                >
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenSearchTab("/project/$projectId/sentencesearch")}>
                   <ListItemIcon>{getIconComponent(Icon.SENTENCE_SEARCH)}</ListItemIcon>
                   <ListItemText>Sentence Search</ListItemText>
-                </LinkMenuItem>
+                </MenuItem>
               </Menu>
             </ListItem>
 

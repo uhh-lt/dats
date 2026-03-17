@@ -1,8 +1,8 @@
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusSlice";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
+import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { TabActions } from "../../tabSlice";
+import { useTabNavigate } from "../../tabs";
+import { useTabManager } from "../../tabs/hooks/useTabManager";
 
 export interface Shortcut {
   id: string;
@@ -37,8 +37,8 @@ export function createShortcut(
 
 export function useShortcuts() {
   const projectId = useAppSelector((state) => state.project.projectId);
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
+  const tabManager = useTabManager(projectId || -1);
   const toggleQuickCommandMenu = useToggleDialog("quickCommandMenu");
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
 
@@ -58,19 +58,14 @@ export function useShortcuts() {
         "goToSearch",
         "s",
         "Go to Search",
-        () =>
-          navigate({
-            to: "/project/$projectId/search",
-            params: { projectId },
-            search: { searchQuery: "" },
-          }),
+        () => tabNavigate({ to: "/project/$projectId/search", params: { projectId } }),
         { ctrlmeta: true, shift: true },
       ),
       createShortcut(
         "goToPerspectives",
         "m",
         "Go to Perspectives",
-        () => navigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -80,7 +75,7 @@ export function useShortcuts() {
         "goToAnnotation",
         "a",
         "Go to Annotation",
-        () => navigate({ to: "/project/$projectId/annotation", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/annotation", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -90,7 +85,7 @@ export function useShortcuts() {
         "goToAnalysis",
         "y",
         "Go to Analysis",
-        () => navigate({ to: "/project/$projectId/analysis", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/analysis", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -100,7 +95,7 @@ export function useShortcuts() {
         "goToClassifier",
         "c",
         "Go to Classifier",
-        () => navigate({ to: "/project/$projectId/classifier", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/classifier", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -110,7 +105,7 @@ export function useShortcuts() {
         "goToWhiteboard",
         "b",
         "Go to Whiteboard",
-        () => navigate({ to: "/project/$projectId/whiteboard", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/whiteboard", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -120,14 +115,14 @@ export function useShortcuts() {
         "goToLogbook",
         "l",
         "Go to Logbook",
-        () => navigate({ to: "/project/$projectId/logbook", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/logbook", params: { projectId } }),
         { ctrlmeta: true, shift: true },
       ),
       createShortcut(
         "goToHealth",
         "h",
         "Go to Health",
-        () => navigate({ to: "/project/$projectId/tools/health", params: { projectId } }),
+        () => tabNavigate({ to: "/project/$projectId/tools/health", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,
@@ -143,7 +138,7 @@ export function useShortcuts() {
         "goToLeftTab",
         "ArrowLeft",
         "Go to Left Tab",
-        () => dispatch(TabActions.goToLeftTab({ projectId })),
+        () => tabManager.goToPreviousTab(),
         {
           ctrlmeta: true,
           shift: true,
@@ -153,7 +148,7 @@ export function useShortcuts() {
         "goToRightTab",
         "ArrowRight",
         "Go to Right Tab",
-        () => dispatch(TabActions.goToRightTab({ projectId })),
+        () => tabManager.goToNextTab(),
         {
           ctrlmeta: true,
           shift: true,
@@ -163,7 +158,7 @@ export function useShortcuts() {
         "closeActiveTab",
         "w",
         "Close Active Tab",
-        () => dispatch(TabActions.closeActiveTab({ projectId })),
+        () => tabManager.closeActiveTab(),
         {
           ctrlmeta: true,
         },
@@ -181,7 +176,7 @@ export function useShortcuts() {
       const bModifiers = (b.keys.ctrlmeta ? 1 : 0) + (b.keys.shift ? 1 : 0) + (b.keys.alt ? 1 : 0);
       return bModifiers - aModifiers; // Sort in descending order
     });
-  }, [dispatch, navigate, projectId, toggleQuickCommandMenu, openProjectSettingsDialog]);
+  }, [tabNavigate, openProjectSettingsDialog, projectId, tabManager, toggleQuickCommandMenu]);
 
   return sortedShortcuts;
 }

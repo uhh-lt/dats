@@ -38,8 +38,8 @@ export const DraggableTab = memo(({ tab, index, isActive, onTabClick, onCloseCli
   };
 
   const handleCloseClick: MouseEventHandler = useCallback(
-    (e) => {
-      e.stopPropagation();
+    (event) => {
+      event.stopPropagation();
       onCloseClick();
     },
     [onCloseClick],

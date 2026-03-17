@@ -5,6 +5,7 @@ import { DocType } from "@api/models/DocType";
 import { PipelineSettings } from "@api/models/PipelineSettings";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
+import { useTabNavigate } from "@core/navigation";
 import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import { ErrorMessage } from "@hookform/error-message";
@@ -29,7 +30,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
@@ -99,7 +99,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   // perspective creation
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
   const [selectedDocType, setSelectedDocType] = useState<DocType>(DocType.TEXT);
   const [tagId, setTagId] = useState<number | null>(null);
 
@@ -154,7 +154,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
       },
       {
         onSuccess: (aspect) =>
-          navigate({
+          tabNavigate({
             to: "/project/$projectId/perspectives/$aspectId",
             params: { projectId: aspect.project_id, aspectId: aspect.id },
           }),

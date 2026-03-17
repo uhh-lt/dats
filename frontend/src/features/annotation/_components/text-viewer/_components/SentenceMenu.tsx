@@ -2,6 +2,7 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { MemoListItemButton } from "@core/memo";
+import { useTabNavigate } from "@core/navigation";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -14,7 +15,6 @@ import {
   Popover,
   PopoverPosition,
 } from "@mui/material";
-import { useNavigate } from "@tanstack/react-router";
 import { Fragment, useImperativeHandle, useState } from "react";
 
 export interface SentenceMenuHandle {
@@ -32,7 +32,7 @@ interface SentenceMenuProps {
 }
 
 export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
 
   // global server state
   const codeId2CodeMap = CodeHooks.useGetAllCodesMap();
@@ -68,21 +68,25 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
   // ui events
   const handleSentenceSimilaritySearch = () => {
     closeMenu();
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/sentencesearch",
       params: { projectId },
-      search: { searchQuery: sentence || "" },
+      search: sentence ? { searchQuery: sentence } : undefined,
     });
   };
 
   const handleImageSimilaritySearch = () => {
     closeMenu();
-    navigate({ to: "/project/$projectId/imagesearch", params: { projectId }, search: { searchQuery: sentence || "" } });
+    tabNavigate({
+      to: "/project/$projectId/imagesearch",
+      params: { projectId },
+      search: sentence ? { searchQuery: sentence } : undefined,
+    });
   };
 
   const handleAddFilter = (anno: SpanAnnotationRead) => {
     closeMenu();
-    navigate({
+    tabNavigate({
       to: "/project/$projectId/search",
       params: { projectId },
       search: { searchQuery: anno.text },

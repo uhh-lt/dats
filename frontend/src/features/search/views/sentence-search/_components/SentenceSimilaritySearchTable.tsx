@@ -4,6 +4,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
 import { ReduxFilterDialog } from "@core/filter";
+import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
   DeleteSdocsButton,
@@ -18,7 +19,6 @@ import { Box } from "@mui/material";
 import { selectSelectedIds } from "@store/generic/tableSlice";
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -53,7 +53,7 @@ export function SentenceSimilaritySearchTable({
   isFetching,
   isError,
 }: SentenceSimilaritySearchTableProps) {
-  const navigate = useNavigate();
+  const tabNavigate = useTabNavigate();
 
   // global client state (react router)
   const { user } = useAuth();
@@ -217,10 +217,9 @@ export function SentenceSimilaritySearchTable({
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
         if (event.detail >= 2) {
-          navigate({
+          tabNavigate({
             to: "/project/$projectId/annotation/$sdocId",
             params: { projectId, sdocId: row.original.sdoc_id },
-            search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
           });
         } else {
           dispatch(SentenceSearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));

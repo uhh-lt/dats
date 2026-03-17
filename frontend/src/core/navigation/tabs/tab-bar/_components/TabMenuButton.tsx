@@ -1,22 +1,21 @@
 import { ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useAppDispatch } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
-import { TabActions } from "../../../tabSlice";
+import { useTabManager } from "../../hooks/useTabManager";
 import { TabIconButton } from "./styledComponents";
 
 interface TabMenuButtonProps {
   projectId: number;
-  activeTabIndex: number | null;
+  activeTabId: string | null;
   totalTabs: number;
 }
 
-export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: TabMenuButtonProps) => {
+export const TabMenuButton = memo(({ projectId, activeTabId, totalTabs }: TabMenuButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const dispatch = useAppDispatch();
   const openQuickCommandMenu = useOpenDialog("quickCommandMenu");
+  const { goToPreviousTab, goToNextTab, closeAllTabs, closeTabsToRight } = useTabManager(projectId);
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -27,31 +26,31 @@ export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: Tab
   }, []);
 
   const handleSelectPreviousTab = useCallback(() => {
-    dispatch(TabActions.goToLeftTab({ projectId }));
+    goToPreviousTab();
     handleClose();
-  }, [dispatch, projectId, handleClose]);
+  }, [handleClose, goToPreviousTab]);
 
   const handleSelectNextTab = useCallback(() => {
-    dispatch(TabActions.goToRightTab({ projectId }));
+    goToNextTab();
     handleClose();
-  }, [dispatch, projectId, handleClose]);
+  }, [handleClose, goToNextTab]);
 
   const handleCloseAll = useCallback(() => {
-    dispatch(TabActions.closeAllTabs({ projectId }));
+    closeAllTabs();
     handleClose();
-  }, [dispatch, projectId, handleClose]);
+  }, [handleClose, closeAllTabs]);
 
   const handleCloseAllToRight = useCallback(() => {
-    if (activeTabIndex !== null) {
-      dispatch(TabActions.closeTabsToRight({ projectId, fromIndex: activeTabIndex }));
+    if (activeTabId) {
+      closeTabsToRight(activeTabId);
     }
     handleClose();
-  }, [dispatch, projectId, activeTabIndex, handleClose]);
+  }, [activeTabId, handleClose, closeTabsToRight]);
 
   const handleOpenCommandMenu = useCallback(() => {
     handleClose();
     openQuickCommandMenu();
-  }, [openQuickCommandMenu, handleClose]);
+  }, [handleClose, openQuickCommandMenu]);
 
   return (
     <>
@@ -74,7 +73,7 @@ export const TabMenuButton = memo(({ projectId, activeTabIndex, totalTabs }: Tab
         <MenuItem onClick={handleCloseAll} disabled={totalTabs === 0}>
           <ListItemText>Close all tabs</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleCloseAllToRight} disabled={activeTabIndex === null || activeTabIndex >= totalTabs - 1}>
+        <MenuItem onClick={handleCloseAllToRight} disabled={!activeTabId || totalTabs <= 1}>
           <ListItemText>Close tabs to the right</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleOpenCommandMenu}>
