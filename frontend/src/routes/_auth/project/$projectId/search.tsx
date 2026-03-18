@@ -13,6 +13,16 @@ const documentSearchSchema = z.object({
     .union([z.boolean(), z.enum(["true", "false"])])
     .transform((value) => value === true || value === "true")
     .default(false),
+  selectedFolderId: z.coerce.number().default(-1),
+  sortingModel: z
+    .array(
+      z.object({
+        id: z.string(),
+        desc: z.boolean(),
+      }),
+    )
+    .default([]),
+  fetchSize: z.coerce.number().default(20),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/search")({
@@ -25,6 +35,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
   loaderDeps: ({ search }) => ({
     searchQuery: search.searchQuery,
     searchFilter: search[FILTER_PARAM],
+    expertMode: search[FILTER_EXPERT_MODE_PARAM],
+    selectedFolderId: search.selectedFolderId,
+    sortingModel: search.sortingModel,
+    fetchSize: search.fetchSize,
   }),
   loader: ({ context, params, deps }) =>
     documentSearchViewLoader({
@@ -32,6 +46,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
       projectId: params.projectId,
       searchQuery: deps.searchQuery,
       searchFilter: deps.searchFilter,
+      expertMode: deps.expertMode,
+      selectedFolderId: deps.selectedFolderId,
+      sortingModel: deps.sortingModel,
+      fetchSize: deps.fetchSize,
     }),
   pendingComponent: () => <CircularProgress />,
   errorComponent: ({ error }) => <div>Failed to load document search: {(error as Error).message}</div>,

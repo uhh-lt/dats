@@ -14,6 +14,7 @@ interface DocumentSearchQueryOptionsArgs {
   selectedFolderId: number;
   searchQuery: string;
   filter: MyFilter<SdocColumns>;
+  expertMode: boolean;
   sortingModel: { id: string; desc: boolean }[];
   fetchSize: number;
 }
@@ -23,18 +24,28 @@ export const documentSearchQueryOptions = ({
   selectedFolderId,
   searchQuery,
   filter,
+  expertMode,
   sortingModel,
   fetchSize,
 }: DocumentSearchQueryOptionsArgs) =>
   infiniteQueryOptions({
-    queryKey: [QueryKey.SEARCH_TABLE, projectId, selectedFolderId, searchQuery, filter, sortingModel, fetchSize],
+    queryKey: [
+      QueryKey.SEARCH_TABLE,
+      projectId,
+      selectedFolderId,
+      searchQuery,
+      filter,
+      expertMode,
+      sortingModel,
+      fetchSize,
+    ],
     queryFn: async ({ pageParam }) => {
       const data = await SearchService.searchSdocs({
         searchQuery,
         projectId,
         folderId: selectedFolderId === -1 ? null : selectedFolderId,
         highlight: true,
-        expertMode: false,
+        expertMode,
         requestBody: {
           filter,
           sorts: sortingModel.map((sort) => ({
@@ -71,5 +82,6 @@ export const documentSearchQueryOptions = ({
     },
     initialPageParam: 0,
     getNextPageParam: (_lastGroup, groups) => groups.length,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   });

@@ -18,12 +18,10 @@ interface SearchState {
   selectedSdocFolderId: number | undefined; // the id of the selected sdoc folder document. Used to highlight the selected folder in the table, and to show the folder information (tags, metadata etc.).
   expandedTagIds: string[]; // the ids of the tags that are expanded in the tag tree.
   expandedFolderIds: string[]; // the ids of the folders that are expanded in the folder tree.
-  selectedFolderId: number; // the id of the selected folder. (the root folder is -1)
   showFolders: boolean; // whether the folders are shown in search table.
   scrollPosition: number; // the scroll position of the document table, used to restore position when returning to the table
   folderSelectionType: FolderSelection; // whether a folder or a document is selected
   // app state:
-  expertSearchMode: boolean; // whether the expert search mode is enabled.
   sortStatsByGlobal: boolean; // whether the search statistics are sorted by the global frequency or the "local" ().
   column2Info: Record<string, ColumnInfo>;
 }
@@ -36,12 +34,10 @@ const initialState: TableState & SearchState = {
   sortingModel: [{ id: SdocColumns.SD_SOURCE_DOCUMENT_NAME, desc: false }],
   expandedTagIds: [],
   expandedFolderIds: [],
-  selectedFolderId: -1, // the root folder is -1
-  showFolders: false,
+  showFolders: true,
   scrollPosition: 0,
   folderSelectionType: FolderSelection.UNKNOWN,
   // app state:
-  expertSearchMode: false,
   sortStatsByGlobal: false,
   column2Info: {},
 };
@@ -132,9 +128,6 @@ const searchSlice = createSlice({
         }
       }
     },
-    setSelectedFolderId: (state, action: PayloadAction<number>) => {
-      state.selectedFolderId = action.payload;
-    },
     onMoveFolders: (state) => {
       state.rowSelectionModel = initialTableState.rowSelectionModel; // reset row selection model after moving folders
     },
@@ -145,10 +138,6 @@ const searchSlice = createSlice({
     onToggleSortStatsByGlobal: (state) => {
       state.sortStatsByGlobal = !state.sortStatsByGlobal;
     },
-    // expert mode
-    onChangeExpertSearchMode: (state, action: PayloadAction<boolean>) => {
-      state.expertSearchMode = action.payload;
-    },
   },
   extraReducers(builder) {
     builder.addCase(ProjectActions.changeProject, (state) => {
@@ -157,7 +146,6 @@ const searchSlice = createSlice({
       state.expandedTagIds = initialState.expandedTagIds;
       state.scrollPosition = initialState.scrollPosition;
       state.expandedFolderIds = initialState.expandedFolderIds;
-      state.selectedFolderId = initialState.selectedFolderId;
       state.folderSelectionType = initialState.folderSelectionType;
       state.column2Info = initialState.column2Info;
       resetProjectTableState(state);

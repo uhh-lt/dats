@@ -31,4 +31,5 @@ export const imageSimilaritySearchQueryOptions = ({
           filter,
         },
       }),
+    staleTime: 1000 * 60 * 5,
   });

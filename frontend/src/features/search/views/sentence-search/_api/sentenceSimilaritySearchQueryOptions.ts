@@ -31,4 +31,5 @@ export const sentenceSimilaritySearchQueryOptions = ({
           query: searchQuery,
         },
       }),
+    staleTime: 1000 * 60 * 5,
   });

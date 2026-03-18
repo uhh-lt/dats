@@ -15,7 +15,7 @@ import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } 
 import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
@@ -35,7 +35,8 @@ const filterName = "root";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, searchFilter } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchFilter, filterExpertMode, selectedFolderId, sortingModel, fetchSize } =
+    DocumentSearchRouteAPI.useSearch();
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // redux (global client state)
@@ -44,10 +45,7 @@ export function DocumentSearchView() {
   const rowSelectionModel = useAppSelector((state) => selectSelectedRows(state.search));
   const expandedFolderIds = useAppSelector((state) => state.search.expandedFolderIds);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
-  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
   const showFolders = useAppSelector((state) => state.search.showFolders);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const fetchSize = useAppSelector((state) => state.search.fetchSize);
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
 
@@ -100,8 +98,13 @@ export function DocumentSearchView() {
     [dispatch],
   );
   const handleSelectedFolderIdChange = useCallback(
-    (folderId: number) => dispatch(SearchActions.setSelectedFolderId(folderId)),
-    [dispatch],
+    (folderId: number) => {
+      navigate({
+        search: (prev) => ({ ...prev, selectedFolderId: folderId }),
+        replace: true,
+      });
+    },
+    [navigate],
   );
   const handleToggleShowFolders = useCallback(() => dispatch(SearchActions.onToggleShowFolders()), [dispatch]);
 
@@ -126,12 +129,13 @@ export function DocumentSearchView() {
     setSdocIds(sdocIds);
   }, []);
 
-  const documentSearchQuery = useInfiniteQuery(
+  const documentSearchQuery = useSuspenseInfiniteQuery(
     documentSearchQueryOptions({
       projectId,
       selectedFolderId,
       searchQuery,
       filter: filter as MyFilter<SdocColumns>,
+      expertMode: filterExpertMode,
       sortingModel,
       fetchSize,
     }),
@@ -255,7 +259,7 @@ export function DocumentSearchView() {
             searchData={documentSearchQuery.data}
             isError={documentSearchQuery.isError}
             isFetching={documentSearchQuery.isFetching}
-            isLoading={documentSearchQuery.isLoading}
+            isLoading={false}
             onFetchNextPage={() => {
               void documentSearchQuery.fetchNextPage();
             }}

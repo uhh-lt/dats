@@ -9,7 +9,7 @@ import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
@@ -103,7 +103,7 @@ export function SentenceSimilaritySearchView() {
   );
 
   // search
-  const { data, isError, isFetching, isLoading } = useQuery(
+  const { data, isError, isFetching } = useSuspenseQuery(
     sentenceSimilaritySearchQueryOptions({
       projectId,
       searchQuery,
@@ -148,7 +148,7 @@ export function SentenceSimilaritySearchView() {
         <SentenceSimilaritySearchTable
           projectId={projectId}
           data={data}
-          isLoading={isLoading}
+          isLoading={false}
           isFetching={isFetching}
           isError={isError}
         />

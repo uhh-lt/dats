@@ -9,7 +9,7 @@ import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
@@ -106,7 +106,7 @@ export function ImageSimilaritySearchView() {
     [dispatch],
   );
 
-  const { data, isError, isFetching, isLoading } = useQuery(
+  const { data, isError, isFetching } = useSuspenseQuery(
     imageSimilaritySearchQueryOptions({
       projectId,
       searchQuery,
@@ -154,7 +154,7 @@ export function ImageSimilaritySearchView() {
           <ImageSimilarityView
             projectId={projectId}
             data={data}
-            isLoading={isLoading}
+            isLoading={false}
             isFetching={isFetching}
             isError={isError}
             boxProps={{

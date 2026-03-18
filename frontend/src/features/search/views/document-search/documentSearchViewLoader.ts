@@ -9,6 +9,10 @@ interface DocumentSearchViewLoaderArgs {
   projectId: number;
   searchQuery: string;
   searchFilter: string;
+  expertMode: boolean;
+  selectedFolderId: number;
+  sortingModel: { id: string; desc: boolean }[];
+  fetchSize: number;
 }
 
 export async function documentSearchViewLoader({
@@ -16,6 +20,10 @@ export async function documentSearchViewLoader({
   projectId,
   searchQuery,
   searchFilter,
+  expertMode,
+  selectedFolderId,
+  sortingModel,
+  fetchSize,
 }: DocumentSearchViewLoaderArgs) {
   const filter = deserializeFilterFromSearchParam(searchFilter, "root") as MyFilter<SdocColumns>;
 
@@ -25,11 +33,12 @@ export async function documentSearchViewLoader({
     queryClient.prefetchInfiniteQuery(
       documentSearchQueryOptions({
         projectId,
-        selectedFolderId: -1,
+        selectedFolderId,
         searchQuery,
         filter,
-        sortingModel: [],
-        fetchSize: 20,
+        expertMode,
+        sortingModel,
+        fetchSize,
       }),
     ),
   ]);

@@ -13,8 +13,8 @@ const imageSimilaritySearchSchema = z.object({
     .union([z.boolean(), z.enum(["true", "false"])])
     .transform((value) => value === true || value === "true")
     .default(false),
-  topK: z.number().default(10),
-  threshold: z.number().default(0),
+  topK: z.coerce.number().default(10),
+  threshold: z.coerce.number().default(0),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({

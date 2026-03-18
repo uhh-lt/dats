@@ -28,6 +28,7 @@ import { DocumentUploadButton } from "@features/document-upload";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
 import { LLMAssistanceButton } from "@features/llm-assistant";
+import { useDebounce } from "@hooks/useDebounce";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
@@ -42,6 +43,7 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
+  MRT_SortingState,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   MRT_ToolbarAlertBanner,
@@ -93,7 +95,7 @@ export function SearchDocumentTable({
   onFetchNextPage,
   onSearchResultsChange,
 }: DocumentTableProps) {
-  const { searchQuery, searchFilter } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchFilter, sortingModel } = DocumentSearchRouteAPI.useSearch();
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
@@ -132,10 +134,6 @@ export function SearchDocumentTable({
   );
 
   // global client state (redux) connected to table state
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.search.sortingModel,
-    SearchActions.onSortChange,
-  );
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.search.columnVisibilityModel,
     SearchActions.onColumnVisibilityChange,
@@ -157,15 +155,39 @@ export function SearchDocumentTable({
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 300);
 
-  const setSearchQuery = useCallback(
-    (value: string | undefined) => {
+  const setSearchQuery = useCallback((value: string | undefined) => {
+    setLocalSearchQuery(value ?? "");
+  }, []);
+
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (debouncedSearchQuery === searchQuery) {
+      return;
+    }
+    navigate({
+      search: (prev) => ({ ...prev, searchQuery: debouncedSearchQuery }),
+      replace: true,
+    });
+  }, [debouncedSearchQuery, searchQuery, navigate]);
+
+  const setSortingModel = useCallback(
+    (updater: MRT_Updater<MRT_SortingState>) => {
+      const nextSortingModel = updater instanceof Function ? updater(sortingModel as MRT_SortingState) : updater;
       navigate({
-        search: (prev) => ({ ...prev, searchQuery: value ?? "" }),
+        search: (prev) => ({
+          ...prev,
+          sortingModel: nextSortingModel,
+        }),
         replace: true,
       });
     },
-    [navigate],
+    [navigate, sortingModel],
   );
 
   // virtualization
@@ -319,7 +341,7 @@ export function SearchDocumentTable({
     onExpandedChange: setExpandedModel,
     // state
     state: {
-      globalFilter: searchQuery,
+      globalFilter: localSearchQuery,
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       columnVisibility: columnVisibilityModel,
@@ -532,7 +554,18 @@ export function SearchDocumentTable({
             <Typography variant="body2" color="textSecondary" pt={0.5} mr={1}>
               Fetched {totalFetchedSdocs} of {totalResults} documents
             </Typography>
-            <Button size="small" onClick={() => dispatch(SearchActions.onFetchSizeChange(totalResults))}>
+            <Button
+              size="small"
+              onClick={() =>
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    fetchSize: totalResults,
+                  }),
+                  replace: true,
+                })
+              }
+            >
               Fetch All
             </Button>
           </Stack>
