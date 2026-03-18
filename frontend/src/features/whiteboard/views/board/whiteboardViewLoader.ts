@@ -17,7 +17,7 @@ interface WhiteboardViewLoaderArgs {
 }
 
 export async function whiteboardViewLoader({ queryClient, projectId, whiteboardId }: WhiteboardViewLoaderArgs) {
-  const [whiteboardData] = await Promise.all([
+  const [whiteboardData, whiteboardMap] = await Promise.all([
     WhiteboardService.getDataById({ whiteboardId }),
     queryClient.ensureQueryData(projectWhiteboardsQueryOptions(projectId)),
   ]);
@@ -50,4 +50,6 @@ export async function whiteboardViewLoader({ queryClient, projectId, whiteboardI
   if (whiteboardData.tags.length > 0) {
     queryClient.setQueryData<TagRead[]>([QueryKey.PROJECT_TAGS, projectId], whiteboardData.tags);
   }
+
+  return whiteboardMap[whiteboardId];
 }

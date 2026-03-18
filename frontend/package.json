@@ -9,6 +9,7 @@
     "lint": "eslint . --max-warnings 0",
     "lint-fix": "eslint . --ext js,jsx,ts,tsx --max-warnings 0 --fix",
     "tsc-watch": "tsc --noEmit --watch",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "update-api": "node bin/updateAPI.js",
     "generate-api": "node bin/generateAPI.js",

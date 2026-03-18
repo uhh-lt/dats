@@ -4,51 +4,35 @@ import { Icon } from "@utils/icons/iconUtils";
 import { useEffect } from "react";
 import { TabActions } from "../tabSlice";
 
-interface TabStaticData {
-  tab?: boolean;
-  icon?: Icon;
-  getTitle?: (loaderData?: unknown, params?: Record<string, unknown>) => string;
-}
-
-function isProjectPath(pathname: string): boolean {
-  return /^\/project\/\d+(?:\/|$)/.test(pathname);
-}
-
 export function TabSynchronizer() {
   const dispatch = useAppDispatch();
   const location = useRouterState({ select: (state) => state.location });
+
   const params = useParams({ strict: false }) as { projectId?: string | number };
   const matches = useMatches();
 
   useEffect(() => {
-    if (!isProjectPath(location.pathname)) {
-      return;
-    }
-
-    if (!params.projectId) {
-      return;
-    }
+    // 1. Bail early if there's no valid projectId in the route parameters
+    if (!params.projectId) return;
 
     const projectId = Number(params.projectId);
-    if (!Number.isFinite(projectId)) {
-      return;
-    }
+    if (!Number.isFinite(projectId)) return;
 
-    const matchedTabRoute = [...matches].reverse().find((match) => {
-      const staticData = (match.staticData ?? {}) as TabStaticData;
-      return staticData.tab;
-    });
+    // 2. Find the deepest matched route that is flagged as a tab
+    // We spread into a new array to safely reverse it without mutating the original
+    const matchedTabRoute = [...matches].reverse().find((match) => match.staticData?.tab);
 
-    if (!matchedTabRoute) {
-      return;
-    }
+    // Bail if none of the active routes are configured to be a tab
+    if (!matchedTabRoute) return;
 
-    const staticData = (matchedTabRoute.staticData ?? {}) as TabStaticData;
+    // 3. Extract static data and invoke your getTitle function safely
+    const staticData = matchedTabRoute.staticData ?? {};
     const label = staticData.getTitle?.(
       matchedTabRoute.loaderData,
       (matchedTabRoute.params ?? {}) as Record<string, unknown>,
     );
 
+    // 4. Sync the tab data to your Redux store
     dispatch(
       TabActions.addOrUpdateTab({
         projectId,
