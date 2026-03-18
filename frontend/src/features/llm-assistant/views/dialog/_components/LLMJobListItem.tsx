@@ -185,11 +185,7 @@ interface ResultStatusItem {
 
 function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; projectId: number }) {
   return (
-    <LinkListItemButton
-      to="/project/$projectId/annotation/$sdocId"
-      params={{ projectId, sdocId: result.sdoc_id }}
-      search={{ compareWithUserId: undefined, selectedAnnotationId: undefined, visibleUserId: undefined }}
-    >
+    <LinkListItemButton to="/project/$projectId/annotation/$sdocId" params={{ projectId, sdocId: result.sdoc_id }}>
       <ListItemIcon
         sx={{
           color: `${

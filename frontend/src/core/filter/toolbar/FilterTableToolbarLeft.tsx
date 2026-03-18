@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
 import { TableRowWithId } from "../_types/TableRowWithId";
-import { ReduxFilterDialog } from "../redux-filter-dialog";
+import { ReduxFilterDialog } from "../filter-dialogs";
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 export function FilterTableToolbarLeft<T extends TableRowWithId>({

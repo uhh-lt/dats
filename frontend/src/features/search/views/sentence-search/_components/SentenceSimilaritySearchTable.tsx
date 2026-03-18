@@ -1,9 +1,10 @@
 import { SdocColumns } from "@api/models/SdocColumns";
 import { SimSearchSentenceHit } from "@api/models/SimSearchSentenceHit";
+import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
-import { ReduxFilterDialog } from "@core/filter";
+import { FILTER_PARAM, URLFilterDialog } from "@core/filter";
 import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
@@ -17,7 +18,6 @@ import {
 import { TagMenuButton } from "@core/tag";
 import { Box } from "@mui/material";
 import { selectSelectedIds } from "@store/generic/tableSlice";
-import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import {
   MRT_ColumnDef,
@@ -31,12 +31,17 @@ import { useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
+import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
 import { SearchBar } from "./SearchBar";
 import { SentenceSimilaritySearchOptionsMenu } from "./SentenceSimilaritySearchOptionsMenu";
 
-// this has to match SentenceSimilaritySearch.tsx!
-const filterStateSelector = (state: RootState) => state.search;
 const filterName = "sentenceSimilaritySearch";
+const defaultFilterExpression = {
+  id: "",
+  column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
 
 interface SentenceSimilaritySearchTableProps {
   projectId: number;
@@ -242,12 +247,14 @@ export function SentenceSimilaritySearchTable({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={setToolbarEl}>
-        <ReduxFilterDialog
+        <URLFilterDialog
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           filterName={filterName}
-          filterStateSelector={filterStateSelector}
-          filterActions={SearchActions}
+          routeApi={SentenceSearchRouteAPI}
+          defaultFilterExpression={defaultFilterExpression}
+          column2InfoSelector={(state) => state.search.column2Info}
+          filterSearchParam={FILTER_PARAM}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

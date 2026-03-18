@@ -55,7 +55,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Backspace" && typeof searchQuery === "number") {
-      dispatch(SentenceSearchActions.onSearchQueryChange(""));
+      navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
       dispatch(SentenceSearchActions.onClearRowSelection());
       reset({
         query: "",

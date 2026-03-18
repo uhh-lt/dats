@@ -1,6 +1,14 @@
+import { Icon } from "@core/navigation";
 import { AnnotationView } from "@features/annotation";
 import { createFileRoute } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+
+const annotationSearchSchema = z.object({
+  visibleUserId: z.number().optional(),
+  selectedAnnotationId: z.number().optional(),
+  compareWithUserId: z.number().optional(),
+});
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdocId")({
   staticData: {
@@ -11,10 +19,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdoc
   params: {
     parse: ({ sdocId }) => ({ sdocId: parseInt(sdocId) }),
   },
-  validateSearch: (search) => ({
-    visibleUserId: typeof search?.visibleUserId === "number" ? search.visibleUserId : undefined,
-    selectedAnnotationId: typeof search?.selectedAnnotationId === "number" ? search.selectedAnnotationId : undefined,
-    compareWithUserId: typeof search?.compareWithUserId === "number" ? search.compareWithUserId : undefined,
-  }),
+  validateSearch: zodValidator(annotationSearchSchema),
   component: AnnotationView,
 });

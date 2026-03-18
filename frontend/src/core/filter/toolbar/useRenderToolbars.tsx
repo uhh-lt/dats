@@ -2,7 +2,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState, MRT_TableInstance } from "material-react-table";
 import { useCallback } from "react";
 import { TableRowWithId } from "../_types/TableRowWithId";
-import { ReduxFilterDialogProps } from "../redux-filter-dialog";
+import { ReduxFilterDialogProps } from "../filter-dialogs";
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 interface UseRenderFilterToolbarsProps<T extends TableRowWithId> extends ReduxFilterDialogProps {

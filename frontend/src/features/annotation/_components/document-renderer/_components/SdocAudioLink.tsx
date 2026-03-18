@@ -16,11 +16,7 @@ export function SdocAudioLink({ projectId, filename }: SdocAudioLinkProps) {
     <>
       {thumbnailUrl.isSuccess && sdocId.isSuccess ? (
         <div>
-          <LinkLink
-            to="/project/$projectId/annotation/$sdocId"
-            params={{ projectId, sdocId: sdocId.data }}
-            search={{ compareWithUserId: undefined, selectedAnnotationId: undefined, visibleUserId: undefined }}
-          >
+          <LinkLink to="/project/$projectId/annotation/$sdocId" params={{ projectId, sdocId: sdocId.data }}>
             <Box sx={{ position: "relative", height: 200, textAlign: "center" }}>
               <PlayCircleFilledWhiteIcon
                 sx={{

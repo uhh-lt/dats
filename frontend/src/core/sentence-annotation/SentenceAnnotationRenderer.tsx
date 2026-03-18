@@ -69,7 +69,6 @@ function SentenceAnnotationRendererWithData({
       search={{
         visibleUserId: sentenceAnnotation.user_id,
         selectedAnnotationId: sentenceAnnotation.id,
-        compareWithUserId: undefined,
       }}
       link={!!link}
     >

@@ -2,11 +2,12 @@ import { FolderType } from "@api/models/FolderType";
 import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
 import { PaginatedSDocHits } from "@api/models/PaginatedSDocHits";
 import { SdocColumns } from "@api/models/SdocColumns";
+import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { ColumnInfo, ReduxFilterDialog } from "@core/filter";
+import { ColumnInfo, FILTER_PARAM, URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -30,7 +31,6 @@ import { LLMAssistanceButton } from "@features/llm-assistant";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
-import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import parse from "html-react-parser";
@@ -55,9 +55,13 @@ import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
 import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
 
-// this has to match Search.tsx!
-const filterStateSelector = (state: RootState) => state.search;
 const filterName = "root";
+const defaultFilterExpression = {
+  id: "",
+  column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
 
 const rowSelection = (fs: FolderSelection) => (row: MRT_Row<HierarchicalElasticSearchHit>) => {
   switch (fs) {
@@ -89,7 +93,7 @@ export function SearchDocumentTable({
   onFetchNextPage,
   onSearchResultsChange,
 }: DocumentTableProps) {
-  const { searchQuery } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchFilter } = DocumentSearchRouteAPI.useSearch();
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
@@ -244,7 +248,7 @@ export function SearchDocumentTable({
   }, [tableInfo, user]);
 
   // search
-  const filter = useAppSelector((state) => state.search.filter[filterName]);
+  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
 
   // this is a custom version of the useTransformInfiniteData hook
   const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {
@@ -487,12 +491,14 @@ export function SearchDocumentTable({
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <DATSToolbar variant="dense" ref={setToolbarEl}>
-        <ReduxFilterDialog
+        <URLFilterDialog
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
           filterName={filterName}
-          filterStateSelector={filterStateSelector}
-          filterActions={SearchActions}
+          routeApi={DocumentSearchRouteAPI}
+          defaultFilterExpression={defaultFilterExpression}
+          column2InfoSelector={(state) => state.search.column2Info}
+          filterSearchParam={FILTER_PARAM}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

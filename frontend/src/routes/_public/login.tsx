@@ -1,11 +1,15 @@
 import { LoginStatus } from "@core/auth";
 import { LoginView } from "@features/auth";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+
+const loginSearchSchema = z.object({
+  redirect: z.string().default("/projects"),
+});
 
 export const Route = createFileRoute("/_public/login")({
-  validateSearch: (search) => ({
-    redirect: (search.redirect as string) || "/projects",
-  }),
+  validateSearch: zodValidator(loginSearchSchema),
   beforeLoad: ({ context, search }) => {
     if (context.auth.loginStatus === LoginStatus.LOGGED_IN) {
       throw redirect({ to: search.redirect });

@@ -9,18 +9,12 @@ const storage = createWebStorage("local");
 interface SentenceSearchState {
   // project state:
   selectedDocumentId: number | undefined;
-  // app state:
-  threshold: number;
-  topK: number;
 }
 
 const initialState: TableState & SentenceSearchState = {
   ...initialTableState,
   // project state:
   selectedDocumentId: undefined,
-  // app state:
-  threshold: 0.0,
-  topK: 10,
 };
 
 const sentenceSearchSlice = createSlice({
@@ -41,17 +35,6 @@ const sentenceSearchSlice = createSlice({
       for (const sdocId of action.payload) {
         delete state.rowSelectionModel[`${sdocId}`];
       }
-    },
-    // similarity search options
-    onChangeSearchOptions: (state, action: PayloadAction<{ threshold: number; topK: number }>) => {
-      state.threshold = action.payload.threshold;
-      state.topK = action.payload.topK;
-    },
-    onChangeThreshold: (state, action: PayloadAction<number>) => {
-      state.threshold = action.payload;
-    },
-    onChangeTopK: (state, action: PayloadAction<number>) => {
-      state.topK = action.payload;
     },
   },
   extraReducers(builder) {

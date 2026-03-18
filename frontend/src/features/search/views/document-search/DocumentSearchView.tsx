@@ -7,7 +7,7 @@ import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadata
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { MyFilter, createEmptyFilter } from "@core/filter";
+import { FILTER_PARAM, MyFilter, deserializeFilterFromSearchParam, serializeFilterToSearchParam } from "@core/filter";
 import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
@@ -19,6 +19,12 @@ import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
+import {
+  addKeywordFilter,
+  addMetadataFilter,
+  addSpanAnnotationFilter,
+  addTagFilter,
+} from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
@@ -29,7 +35,8 @@ const filterName = "root";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchFilter } = DocumentSearchRouteAPI.useSearch();
+  const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -41,8 +48,23 @@ export function DocumentSearchView() {
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
   const fetchSize = useAppSelector((state) => state.search.fetchSize);
-  const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
+  const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
+
+  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
+
+  const updateFilterInUrl = useCallback(
+    (nextFilter: MyFilter) => {
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter),
+        }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
 
   // filter
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
@@ -55,21 +77,21 @@ export function DocumentSearchView() {
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }));
+      updateFilterInUrl(addSpanAnnotationFilter(filter, stat.code_id, stat.span_text));
     },
-    [dispatch],
+    [filter, updateFilterInUrl],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
+      updateFilterInUrl(addKeywordFilter(filter, keywordMetadataIds, keyword));
     },
-    [dispatch, keywordMetadataIds],
+    [filter, keywordMetadataIds, updateFilterInUrl],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
-      dispatch(SearchActions.onAddTagFilter({ tagId, filterName }));
+      updateFilterInUrl(addTagFilter(filter, tagId));
     },
-    [dispatch],
+    [filter, updateFilterInUrl],
   );
 
   // folder explorer handlers
@@ -92,9 +114,9 @@ export function DocumentSearchView() {
   // metadata filter handler
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      dispatch(SearchActions.onAddMetadataFilter({ metadata, projectMetadata, filterName }));
+      updateFilterInUrl(addMetadataFilter(filter, metadata, projectMetadata, column2Info));
     },
-    [dispatch],
+    [column2Info, filter, updateFilterInUrl],
   );
 
   // search results

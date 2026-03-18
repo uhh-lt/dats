@@ -49,11 +49,7 @@ function SdocRendererWithData({
 
   if (link) {
     return (
-      <Link
-        to="/project/$projectId/annotation/$sdocId"
-        params={{ projectId: sdoc.project_id, sdocId: sdoc.id }}
-        search={{ visibleUserId: undefined, selectedAnnotationId: undefined, compareWithUserId: undefined }}
-      >
+      <Link to="/project/$projectId/annotation/$sdocId" params={{ projectId: sdoc.project_id, sdocId: sdoc.id }}>
         {content}
       </Link>
     );

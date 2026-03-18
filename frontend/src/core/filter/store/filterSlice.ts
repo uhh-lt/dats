@@ -1,21 +1,19 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { LogicalOperator } from "@api/models/LogicalOperator";
 import { queryClient } from "@api/queryClient";
 import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ColumnInfo, FilterOperators, MyFilter, MyFilterExpression, createEmptyFilter } from "../filterUtils";
 import {
-  ColumnInfo,
-  FilterOperators,
-  MyFilter,
-  MyFilterExpression,
-  createEmptyFilter,
-  deleteInFilter,
-  filterOperator2FilterOperatorType,
-  findInFilter,
-  getDefaultOperator,
-  getDefaultValue,
-  isFilter,
-  isFilterExpression,
-} from "./filterUtils";
+  addDefaultFilterExpressionToEditableFilter,
+  addDefaultFilterToEditableFilter,
+  changeEditableFilterColumn,
+  changeEditableFilterLogicalOperator,
+  changeEditableFilterOperator,
+  changeEditableFilterValue,
+  createClearedFilter,
+  deleteFilterFromEditableFilter,
+  finishFilterEdit,
+  startFilterEdit,
+} from "./_utils/filterLogic";
 
 export interface FilterState {
   // project state:
@@ -35,17 +33,9 @@ export const tableInfoQueryKey = (sliceName: string, projectId: number) => [Quer
 export const createInitialFilterState = (defaultFilterExpression: MyFilterExpression): FilterState => {
   return {
     filter: {
-      root: {
-        id: "root",
-        logic_operator: LogicalOperator.AND,
-        items: [],
-      },
+      root: createClearedFilter("root"),
     },
-    editableFilter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    },
+    editableFilter: createClearedFilter("root"),
     defaultFilterExpression,
     column2Info: {},
     expertMode: false,
@@ -87,125 +77,71 @@ export const getOrCreateFilter = (state: FilterState, filterId: string, filter?:
 
 export const filterReducer = {
   onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; filter?: MyFilter }>) => {
-    const currentFilter = JSON.parse(
-      JSON.stringify(getOrCreateFilter(state, action.payload.filterId, action.payload.filter)),
-    );
-
-    // add a default filter expression if the filter is empty
-    if (currentFilter.items.length === 0) {
-      currentFilter.items = [
-        {
-          ...state.defaultFilterExpression,
-          id: crypto.randomUUID(),
-        },
-      ];
-    }
-
-    state.editableFilter = currentFilter;
+    const currentFilter = getOrCreateFilter(state, action.payload.filterId, action.payload.filter);
+    state.editableFilter = startFilterEdit(currentFilter, state.defaultFilterExpression);
   },
   onFinishFilterEdit: (state: Draft<FilterState>) => {
-    state.filter = {
-      ...state.filter,
-      [state.editableFilter.id]: state.editableFilter,
-    };
-    state.editableFilter = {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    };
+    const result = finishFilterEdit(state.filter, state.editableFilter);
+    state.filter = result.filter;
+    state.editableFilter = result.editableFilter;
   },
   addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilter(filterItem)) {
-      filterItem.items = [
-        {
-          id: crypto.randomUUID(),
-          items: [],
-          logic_operator: LogicalOperator.AND,
-        } as MyFilter,
-        ...filterItem.items,
-      ];
-    }
+    state.editableFilter = addDefaultFilterToEditableFilter(state.editableFilter, action.payload.filterId);
   },
   addDefaultFilterExpression: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; addEnd?: boolean }>,
   ) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilter(filterItem)) {
-      if (action.payload.addEnd) {
-        filterItem.items = [
-          ...filterItem.items,
-          {
-            ...state.defaultFilterExpression,
-            id: crypto.randomUUID(),
-          } as MyFilterExpression,
-        ];
-      } else {
-        filterItem.items = [
-          {
-            ...state.defaultFilterExpression,
-            id: crypto.randomUUID(),
-          } as MyFilterExpression,
-          ...filterItem.items,
-        ];
-      }
-    }
+    state.editableFilter = addDefaultFilterExpressionToEditableFilter(
+      state.editableFilter,
+      action.payload.filterId,
+      state.defaultFilterExpression,
+      action.payload.addEnd,
+    );
   },
   deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
-    state.editableFilter = deleteInFilter(state.editableFilter, action.payload.filterId);
+    state.editableFilter = deleteFilterFromEditableFilter(state.editableFilter, action.payload.filterId);
   },
   changeFilterLogicalOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: LogicalOperator }>,
+    action: PayloadAction<{ filterId: string; operator: import("@api/models/LogicalOperator").LogicalOperator }>,
   ) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilter(filterItem)) {
-      filterItem.logic_operator = action.payload.operator;
-    }
+    state.editableFilter = changeEditableFilterLogicalOperator(
+      state.editableFilter,
+      action.payload.filterId,
+      action.payload.operator,
+    );
   },
   changeFilterColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilterExpression(filterItem)) {
-      if (parseInt(action.payload.columnValue)) {
-        // it is a Metadata column: metadata columns are stored as project_metadata.id
-        filterItem.column = parseInt(action.payload.columnValue);
-      } else {
-        // it is a proper Column
-        filterItem.column = action.payload.columnValue;
-      }
-
-      const columnInfo = state.column2Info[action.payload.columnValue];
-      const filterOperatorType = filterOperator2FilterOperatorType[columnInfo.operator];
-
-      filterItem.operator = getDefaultOperator(filterOperatorType);
-      filterItem.value = getDefaultValue(columnInfo.value, columnInfo.operator);
-    }
+    state.editableFilter = changeEditableFilterColumn(
+      state.editableFilter,
+      action.payload.filterId,
+      action.payload.columnValue,
+      state.column2Info,
+    );
   },
   changeFilterOperator: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; operator: FilterOperators }>,
   ) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilterExpression(filterItem)) {
-      filterItem.operator = action.payload.operator;
-    }
+    state.editableFilter = changeEditableFilterOperator(
+      state.editableFilter,
+      action.payload.filterId,
+      action.payload.operator,
+    );
   },
   changeFilterValue: (
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; value: string | number | boolean | string[] }>,
   ) => {
-    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
-    if (filterItem && isFilterExpression(filterItem)) {
-      filterItem.value = action.payload.value;
-    }
+    state.editableFilter = changeEditableFilterValue(
+      state.editableFilter,
+      action.payload.filterId,
+      action.payload.value,
+    );
   },
   resetEditFilter: (state: Draft<FilterState>) => {
-    state.editableFilter = {
-      id: state.editableFilter.id,
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    };
+    state.editableFilter = createClearedFilter(state.editableFilter.id);
   },
   init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
     state.column2Info = action.payload.columnInfoMap;

@@ -223,7 +223,7 @@ export function RegisterView() {
             </FormGroup>
           </CardContent>
           <CardActions>
-            <LinkButton to="/login" search={{ redirect: "/projects" }} color="primary">
+            <LinkButton to="/login" color="primary">
               Back
             </LinkButton>
             <Box sx={{ flexGrow: 1 }} />

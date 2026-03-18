@@ -1,6 +1,6 @@
 import { MRT_TableInstance } from "material-react-table";
 import { TableRowWithId } from "../_types/TableRowWithId";
-import { ReduxFilterDialogProps } from "../redux-filter-dialog";
+import { ReduxFilterDialogProps } from "../filter-dialogs";
 
 export interface FilterTableToolbarProps<T extends TableRowWithId> extends ReduxFilterDialogProps {
   table: MRT_TableInstance<T>;

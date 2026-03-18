@@ -16,11 +16,7 @@ export function SdocVideoLink({ projectId, filename }: SdocVideoLinkProps) {
     <>
       {thumbnailUrl.isSuccess && sdocId.isSuccess ? (
         <div>
-          <LinkLink
-            to="/project/$projectId/annotation/$sdocId"
-            params={{ sdocId: sdocId.data, projectId }}
-            search={{ compareWithUserId: undefined, selectedAnnotationId: undefined, visibleUserId: undefined }}
-          >
+          <LinkLink to="/project/$projectId/annotation/$sdocId" params={{ sdocId: sdocId.data, projectId }}>
             <Box sx={{ position: "relative", height: 200, textAlign: "center" }}>
               <PlayCircleFilledWhiteIcon
                 sx={{

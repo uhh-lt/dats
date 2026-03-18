@@ -69,7 +69,6 @@ function SpanAnnotationRendererWithData({
       search={{
         visibleUserId: spanAnnotation.user_id,
         selectedAnnotationId: spanAnnotation.id,
-        compareWithUserId: undefined,
       }}
       link={!!link}
     >

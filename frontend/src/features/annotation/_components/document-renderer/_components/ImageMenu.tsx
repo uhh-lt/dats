@@ -74,7 +74,6 @@ export const ImageMenu = ({ ref, ...params }: ImageMenuProps) => {
           <LinkListItemButton
             to="/project/$projectId/annotation/$sdocId"
             params={{ sdocId: image!, projectId: params.projectId }}
-            search={{ visibleUserId: undefined, selectedAnnotationId: undefined, compareWithUserId: undefined }}
           >
             <ListItemIcon>
               <ImageIcon />

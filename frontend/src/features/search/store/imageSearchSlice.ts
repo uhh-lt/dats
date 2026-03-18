@@ -8,18 +8,12 @@ interface ImageSearchState {
   // project state:
   selectedDocumentIds: number[];
   selectedDocumentId: number | undefined;
-  // app state:
-  threshold: number;
-  topK: number;
 }
 
 const initialState: ImageSearchState = {
   // project state:
   selectedDocumentIds: [],
   selectedDocumentId: undefined,
-  // app state:
-  threshold: 0.0,
-  topK: 10,
 };
 
 const imageSearchSlice = createSlice({
@@ -67,16 +61,6 @@ const imageSearchSlice = createSlice({
     onClearSearch: (state) => {
       state.selectedDocumentIds = [];
       state.selectedDocumentId = undefined;
-    },
-    onChangeSearchOptions: (state, action: PayloadAction<{ threshold: number; topK: number }>) => {
-      state.threshold = action.payload.threshold;
-      state.topK = action.payload.topK;
-    },
-    onChangeThreshold: (state, action: PayloadAction<number>) => {
-      state.threshold = action.payload;
-    },
-    onChangeTopK: (state, action: PayloadAction<number>) => {
-      state.topK = action.payload;
     },
   },
   extraReducers: (builder) => {

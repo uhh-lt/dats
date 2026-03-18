@@ -2,10 +2,9 @@ import { FormNumber } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Button, IconButton, Popover, Stack, Tooltip } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { ImageSearchActions } from "../../../store/imageSearchSlice";
+import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
 
 type SearchOptionValues = {
   topK: number;
@@ -17,10 +16,9 @@ export function ImageSimilaritySearchOptionsMenu() {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
 
-  // global client state (redux)
-  const topK = useAppSelector((state) => state.imageSearch.topK);
-  const threshold = useAppSelector((state) => state.imageSearch.threshold);
-  const dispatch = useAppDispatch();
+  // global client state (url)
+  const { topK, threshold } = ImageSearchRouteAPI.useSearch();
+  const navigate = ImageSearchRouteAPI.useNavigate();
 
   // use react hook form
   const {
@@ -41,8 +39,14 @@ export function ImageSimilaritySearchOptionsMenu() {
   };
 
   const handleChangeSearchOptions: SubmitHandler<SearchOptionValues> = (data) => {
-    // update global state
-    dispatch(ImageSearchActions.onChangeSearchOptions({ threshold: data.threshold, topK: data.topK }));
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        topK: data.topK,
+        threshold: data.threshold,
+      }),
+      replace: true,
+    });
     // close popover
     setAnchorEl(null);
   };

@@ -1,8 +1,8 @@
 import { LogicalOperator } from "@api/models/LogicalOperator";
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
-import { FilterActions } from "../../filterSlice";
 import { FilterOperators } from "../../filterUtils";
+import { FilterActions } from "../../store";
 
 export const useFilterManagementActions = (filterActions: FilterActions) => {
   // global client state (redux)

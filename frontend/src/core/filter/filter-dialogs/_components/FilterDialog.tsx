@@ -3,11 +3,10 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Switch } from "@mui/material";
-import { useAppDispatch } from "@store/storeHooks";
 import { ChangeEvent, memo, useCallback } from "react";
-import { FilterRendererProps } from "../../_types/FilterRendererProps";
+import { FilterRendererHandlers } from "../../_types/FilterRendererProps";
 import { FilterRenderer, FilterRendererSimple } from "../../filter-renderer";
-import { countFilterExpressions, MyFilter } from "../../filterUtils";
+import { ColumnInfo, countFilterExpressions, MyFilter } from "../../filterUtils";
 
 export interface FilterDialogProps {
   anchorEl: HTMLElement | null;
@@ -18,6 +17,11 @@ export interface FilterDialogProps {
   buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
   anchorOrigin?: PopoverProps["anchorOrigin"];
   transformOrigin?: PopoverProps["transformOrigin"];
+  editableFilter: MyFilter;
+  column2Info: Record<string, ColumnInfo>;
+  onStartFilterEdit: (filterName: string) => void;
+  onFinishFilterEdit: () => void;
+  onResetEditFilter: () => void;
 }
 
 export const FilterDialog = memo(
@@ -37,27 +41,25 @@ export const FilterDialog = memo(
       horizontal: "left",
     },
     ...props
-  }: FilterDialogProps & FilterRendererProps) => {
+  }: FilterDialogProps & FilterRendererHandlers) => {
     // local client state
     const dialog = useDialog();
-    // global client state (redux)
     const numFilterExpressions = countFilterExpressions(filter);
-    const dispatch = useAppDispatch();
 
     // actions
     const handleOpenEditDialog = useCallback(() => {
       dialog.open();
-      dispatch(props.filterActions.onStartFilterEdit({ filterId: filterName }));
-    }, [dispatch, filterName, props.filterActions, dialog]);
+      props.onStartFilterEdit(filterName);
+    }, [filterName, props, dialog]);
 
     const handleApplyChanges = useCallback(() => {
       dialog.close();
-      dispatch(props.filterActions.onFinishFilterEdit());
-    }, [dispatch, props.filterActions, dialog]);
+      props.onFinishFilterEdit();
+    }, [props, dialog]);
 
     const handleRemoveAll = useCallback(() => {
-      dispatch(props.filterActions.resetEditFilter());
-    }, [dispatch, props.filterActions]);
+      props.onResetEditFilter();
+    }, [props]);
 
     const handleExpertModeChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +92,31 @@ export const FilterDialog = memo(
             },
           }}
         >
-          {expertMode ? <FilterRenderer {...props} /> : <FilterRendererSimple {...props} />}
+          {expertMode ? (
+            <FilterRenderer
+              editableFilter={props.editableFilter}
+              column2Info={props.column2Info}
+              onAddFilter={props.onAddFilter}
+              onAddFilterExpression={props.onAddFilterExpression}
+              onDeleteFilter={props.onDeleteFilter}
+              onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
+              onChangeFilterColumn={props.onChangeFilterColumn}
+              onChangeFilterOperator={props.onChangeFilterOperator}
+              onChangeFilterValue={props.onChangeFilterValue}
+            />
+          ) : (
+            <FilterRendererSimple
+              editableFilter={props.editableFilter}
+              column2Info={props.column2Info}
+              onAddFilter={props.onAddFilter}
+              onAddFilterExpression={props.onAddFilterExpression}
+              onDeleteFilter={props.onDeleteFilter}
+              onChangeFilterLogicalOperator={props.onChangeFilterLogicalOperator}
+              onChangeFilterColumn={props.onChangeFilterColumn}
+              onChangeFilterOperator={props.onChangeFilterOperator}
+              onChangeFilterValue={props.onChangeFilterValue}
+            />
+          )}
           <Box display="flex" width="100%">
             <FormControlLabel
               control={<Switch checked={expertMode} onChange={handleExpertModeChange} />}
