@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
   staticData: {
     tab: true,
     icon: Icon.COTA,
-    getTitle: () => "Concepts Over Time",
+    getTitle: () => "Concepts Over Time Analysis",
   },
   loader: ({ context, params }) =>
     cotaDashboardViewLoader({

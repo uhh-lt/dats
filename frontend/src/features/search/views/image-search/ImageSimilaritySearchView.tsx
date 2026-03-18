@@ -1,11 +1,7 @@
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { QueryKey } from "@api/hooks/QueryKey";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SdocColumns } from "@api/models/SdocColumns";
-import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
-import { SimsearchService } from "@api/services/SimsearchService";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
 import { MyFilter, createEmptyFilter } from "@core/filter";
@@ -13,12 +9,14 @@ import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
+import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { useInitSearchFilterSlice } from "../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../store/imageSearchSlice";
+import { imageSimilaritySearchQueryOptions } from "./_api/imageSimilaritySearchQueryOptions";
 import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearchToolbar";
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
 import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
@@ -41,13 +39,12 @@ export function ImageSimilaritySearchView() {
   }, [searchQuery, dispatch]);
 
   // filter
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
-    if (!projectMetadata.data) return [];
-    return projectMetadata.data.filter((m) => m.key === "keywords").map((m) => m.id);
-  }, [projectMetadata.data]);
+    return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
+  }, [projectMetadata]);
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
@@ -86,26 +83,15 @@ export function ImageSimilaritySearchView() {
   const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
   const topK = useAppSelector((state) => state.imageSearch.topK);
   const threshold = useAppSelector((state) => state.imageSearch.threshold);
-  const { data, isError, isFetching, isLoading } = useQuery<SimSearchImageHit[]>({
-    queryKey: [
-      QueryKey.IMG_SIMSEARCH,
+  const { data, isError, isFetching, isLoading } = useQuery(
+    imageSimilaritySearchQueryOptions({
       projectId,
-      searchQuery, // refetch when searchQuery changes
-      filter, // refetch when columnFilters changes
+      searchQuery,
+      filter: filter as MyFilter<SdocColumns>,
       topK,
       threshold,
-    ],
-    queryFn: () =>
-      SimsearchService.findSimilarImages({
-        projId: projectId,
-        threshold: threshold,
-        topK: topK,
-        requestBody: {
-          query: searchQuery,
-          filter: filter as MyFilter<SdocColumns>,
-        },
-      }),
-  });
+    }),
+  );
   // extract sdoc ids from results, but they have to be unique
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 

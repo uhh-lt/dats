@@ -1,6 +1,7 @@
-import { SentenceSimilaritySearchView } from "@features/search";
+import { Icon } from "@core/navigation";
+import { SentenceSimilaritySearchView, sentenceSimilaritySearchViewLoader } from "@features/search";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 
 export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")({
   staticData: {
@@ -11,5 +12,12 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
   validateSearch: (search) => ({
     searchQuery: typeof search?.searchQuery === "string" ? search.searchQuery : "",
   }),
+  loader: ({ context, params }) =>
+    sentenceSimilaritySearchViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load sentence search: {(error as Error).message}</div>,
   component: SentenceSimilaritySearchView,
 });

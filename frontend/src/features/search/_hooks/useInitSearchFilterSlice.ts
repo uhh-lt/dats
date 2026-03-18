@@ -1,39 +1,35 @@
-import { SearchService } from "@api/services/SearchService";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
-import { AppDispatch } from "@store/store";
+import { ColumnInfo } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { searchTableInfoQueryOptions } from "../_api/searchQueryOptions";
 import { SearchActions } from "../store/documentSearchSlice";
 
-const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
-  useQuery<ColumnInfo[]>({
-    queryKey: tableInfoQueryKey("search", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchSdocInfo({ projectId });
-      const columnInfo = result.map((info) => {
-        return {
-          ...info,
-          column: info.column.toString(),
-        };
-      });
-      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
-        return {
-          ...acc,
-          [info.column]: info,
-        };
-      }, {});
-      dispatch(SearchActions.init({ columnInfoMap }));
-      return columnInfo;
-    },
-    staleTime: Infinity,
-  });
+const useGetSearchInfo = (projectId: number) => useQuery(searchTableInfoQueryOptions(projectId));
 
 export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetSearchInfo(projectId, dispatch);
+  const { data: columnData } = useGetSearchInfo(projectId);
+
+  const columnInfoMap = useMemo(
+    () =>
+      (columnData || []).reduce(
+        (acc, info) => {
+          acc[info.column] = info;
+          return acc;
+        },
+        {} as Record<string, ColumnInfo>,
+      ),
+    [columnData],
+  );
+
+  useEffect(() => {
+    if (!columnData || columnData.length === 0) return;
+    dispatch(SearchActions.init({ columnInfoMap }));
+  }, [columnData, columnInfoMap, dispatch]);
 
   return columnData;
 };

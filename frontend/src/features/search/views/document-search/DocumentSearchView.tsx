@@ -1,12 +1,13 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
-import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { FolderType } from "@api/models/FolderType";
 import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { SdocColumns } from "@api/models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
+import { MyFilter, createEmptyFilter } from "@core/filter";
 import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
@@ -14,9 +15,12 @@ import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } 
 import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
+import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import { SearchActions } from "../../store/documentSearchSlice";
+import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 
@@ -25,6 +29,7 @@ const filterName = "root";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
+  const { searchQuery } = DocumentSearchRouteAPI.useSearch();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -34,16 +39,18 @@ export function DocumentSearchView() {
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
   const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
   const showFolders = useAppSelector((state) => state.search.showFolders);
+  const sortingModel = useAppSelector((state) => state.search.sortingModel);
+  const fetchSize = useAppSelector((state) => state.search.fetchSize);
+  const filter = useAppSelector((state) => state.search.filter[filterName]) || createEmptyFilter(filterName);
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
-    if (!projectMetadata.data) return [];
-    return projectMetadata.data.filter((m) => m.key === "keywords").map((m) => m.id);
-  }, [projectMetadata.data]);
+    return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
+  }, [projectMetadata]);
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
@@ -96,6 +103,17 @@ export function DocumentSearchView() {
     console.log("Search results changed", sdocIds);
     setSdocIds(sdocIds);
   }, []);
+
+  const documentSearchQuery = useInfiniteQuery(
+    documentSearchQueryOptions({
+      projectId,
+      selectedFolderId,
+      searchQuery,
+      filter: filter as MyFilter<SdocColumns>,
+      sortingModel,
+      fetchSize,
+    }),
+  );
 
   // vertical sidebar percentage
   const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
@@ -209,7 +227,19 @@ export function DocumentSearchView() {
             onResize={handleResize}
           />
         }
-        content={<SearchDocumentTable projectId={projectId} onSearchResultsChange={handleSearchResultsChange} />}
+        content={
+          <SearchDocumentTable
+            projectId={projectId}
+            searchData={documentSearchQuery.data}
+            isError={documentSearchQuery.isError}
+            isFetching={documentSearchQuery.isFetching}
+            isLoading={documentSearchQuery.isLoading}
+            onFetchNextPage={() => {
+              void documentSearchQuery.fetchNextPage();
+            }}
+            onSearchResultsChange={handleSearchResultsChange}
+          />
+        }
         rightSidebar={
           selectedDocumentId != undefined ? (
             <DocumentInfoPanel sdocId={selectedDocumentId} onAddMetadataFilter={handleAddMetadataFilter} />

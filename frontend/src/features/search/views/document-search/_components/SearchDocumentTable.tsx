@@ -1,8 +1,12 @@
+import { FolderType } from "@api/models/FolderType";
+import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
+import { PaginatedSDocHits } from "@api/models/PaginatedSDocHits";
+import { SdocColumns } from "@api/models/SdocColumns";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { MyFilter, ReduxFilterDialog } from "@core/filter";
+import { ColumnInfo, ReduxFilterDialog } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -22,14 +26,13 @@ import { ClassifierInferenceButton } from "@features/classifier";
 import { DocumentUploadButton } from "@features/document-upload";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
-import { queryClient } from "@api/queryClient";
 import { LLMAssistanceButton } from "@features/llm-assistant";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
 import { RootState } from "@store/store";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { InfiniteData } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -69,10 +72,23 @@ const rowSelection = (fs: FolderSelection) => (row: MRT_Row<HierarchicalElasticS
 
 interface DocumentTableProps {
   projectId: number;
+  searchData: InfiniteData<PaginatedSDocHits, unknown> | undefined;
+  isError: boolean;
+  isFetching: boolean;
+  isLoading: boolean;
+  onFetchNextPage: () => void;
   onSearchResultsChange?: (sdocIds: number[]) => void;
 }
 
-export function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTableProps) {
+export function SearchDocumentTable({
+  projectId,
+  searchData,
+  isError,
+  isFetching,
+  isLoading,
+  onFetchNextPage,
+  onSearchResultsChange,
+}: DocumentTableProps) {
   const { searchQuery } = DocumentSearchRouteAPI.useSearch();
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
@@ -134,8 +150,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   );
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedSdocFolderId = useAppSelector((state) => state.search.selectedSdocFolderId);
-  const selectedFolderId = useAppSelector((state) => state.search.selectedFolderId);
-  const showFolders = useAppSelector((state: RootState) => state.search.showFolders);
+  const showFolders = useAppSelector((state) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
 
@@ -154,7 +169,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitSearchFilterSlice({ projectId });
+  const tableInfo = useInitSearchFilterSlice({ projectId }) as ColumnInfo[] | undefined;
   const columns = useMemo(() => {
     if (!tableInfo || !user) return [];
 
@@ -229,81 +244,18 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   }, [tableInfo, user]);
 
   // search
-  const fetchSize = useAppSelector((state) => state.search.fetchSize);
   const filter = useAppSelector((state) => state.search.filter[filterName]);
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
-    queryKey: [
-      QueryKey.SEARCH_TABLE,
-      projectId,
-      selectedFolderId,
-      searchQuery, // refetch when searchQuery changes
-      filter, // refetch when columnFilters changes
-      sortingModel, // refetch when sorting changes
-      fetchSize,
-    ],
-    queryFn: async ({ pageParam }) => {
-      const data = await SearchService.searchSdocs({
-        searchQuery: searchQuery || "",
-        projectId: projectId!,
-        folderId: selectedFolderId === -1 ? null : selectedFolderId, // -1 is the root folder -> search in all projects
-        highlight: true,
-        expertMode: false,
-        requestBody: {
-          filter: filter as MyFilter<SdocColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SdocColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        pageNumber: pageParam as number,
-        pageSize: fetchSize,
-      });
-
-      // initialize the query cache
-      console.log("Initializing sdoc query cache");
-      Object.entries(data.sdocs).forEach(([sdocId, sdoc]) => {
-        queryClient.setQueryData<SourceDocumentRead>([QueryKey.SDOC, parseInt(sdocId)], sdoc);
-        queryClient.setQueryData<number>([QueryKey.SDOC_ID, projectId, sdoc.filename], sdoc.id);
-      });
-
-      console.log("Initializing annotators query cache");
-      Object.entries(data.annotators).forEach(([sdocId, annotators]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_ANNOTATORS, parseInt(sdocId)], annotators);
-      });
-
-      console.log("Initializing tags query cache");
-      Object.entries(data.tags).forEach(([sdocId, tags]) => {
-        queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
-      });
-
-      console.log("Initializing sdocs folder query cache");
-      queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, projectId, FolderType.SDOC_FOLDER], (prev) => {
-        prev = prev || {};
-        Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
-          prev[parseInt(folderId)] = folder;
-        });
-        return prev;
-      });
-
-      return data;
-    },
-    initialPageParam: 0,
-    enabled: !!projectId,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
-    refetchOnWindowFocus: false,
-  });
 
   // this is a custom version of the useTransformInfiniteData hook
   const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {
     // the backend may send a folder multiple times (e.g. in page 1, and in page 2, if the folder has many documents)
     // this is why we need to merge results here!
-    if (!data || data.pages.length === 0) return { flatData: [], totalFetchedSdocs: 0, totalFetchedFolders: 0 };
+    if (!searchData || searchData.pages.length === 0)
+      return { flatData: [], totalFetchedSdocs: 0, totalFetchedFolders: 0 };
 
     // if we do not want to show folders, we simply show all sub_rows
     if (!showFolders) {
-      const flatData = data.pages.flatMap((page) =>
+      const flatData = searchData.pages.flatMap((page) =>
         page.hits.reduce((acc, hit) => {
           acc.push(...hit.sub_rows);
           return acc;
@@ -315,7 +267,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
     // if showFolders is true, we need to merge the sub_rows
     const hits: Record<number, HierarchicalElasticSearchHit> = {};
     const sortedHitIds: number[] = [];
-    data.pages.forEach((page) => {
+    searchData.pages.forEach((page) => {
       page.hits.forEach((hit) => {
         // do the merging here!
         if (hits[hit.id]) {
@@ -336,8 +288,8 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
       totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
       totalFetchedFolders: flatData.length,
     };
-  }, [showFolders, data]);
-  const totalResults = data?.pages?.[0]?.total_results ?? 0;
+  }, [showFolders, searchData]);
+  const totalResults = searchData?.pages?.[0]?.total_results ?? 0;
 
   // lengthData: showFolders ? lengthDataChildren : lengthData,
 
@@ -471,7 +423,7 @@ export function SearchDocumentTable({ projectId, onSearchResultsChange }: Docume
   const fetchMoreOnScroll = useTableFetchMoreOnScroll({
     tableContainerRef: table.refs.tableContainerRef,
     isFetching,
-    fetchNextPage,
+    fetchNextPage: onFetchNextPage,
     totalFetched: totalFetchedSdocs,
     totalResults,
   });

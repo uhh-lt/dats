@@ -1,6 +1,7 @@
-import { DocumentSearchView } from "@features/search";
+import { Icon } from "@core/navigation";
+import { DocumentSearchView, documentSearchViewLoader } from "@features/search";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 
 export const Route = createFileRoute("/_auth/project/$projectId/search")({
   staticData: {
@@ -13,5 +14,12 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
       searchQuery: typeof search?.searchQuery === "string" ? search.searchQuery : "",
     };
   },
+  loader: ({ context, params }) =>
+    documentSearchViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load document search: {(error as Error).message}</div>,
   component: DocumentSearchView,
 });
