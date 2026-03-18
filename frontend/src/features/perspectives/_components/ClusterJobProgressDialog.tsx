@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { JobStatus } from "@api/models/JobStatus";
 import { Dialog } from "@mui/material";
 import { memo } from "react";
@@ -9,8 +9,8 @@ interface ClusterJobProgressDialog {
 }
 
 export const ClusterJobProgressDialog = memo(({ aspectId }: ClusterJobProgressDialog) => {
-  const aspect = PerspectivesHooks.useGetAspect(aspectId);
-  const job = PerspectivesHooks.usePollPerspectivesJob(aspect.data?.most_recent_job_id, undefined);
+  const aspect = PerspectivesQueryOptions.useGetAspect(aspectId);
+  const job = PerspectivesQueryOptions.usePollPerspectivesJob(aspect.data?.most_recent_job_id, undefined);
 
   if (!job.data) {
     return null;

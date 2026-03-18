@@ -1,15 +1,23 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { useDebounce } from "@hooks/useDebounce";
 import { useDialog } from "@hooks/useDialog";
-import { Box, Button, CircularProgress, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { ChangeEvent, useState } from "react";
+import { projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { PerspectiveCard } from "./_components/PerspectiveCard";
 import { PerspectiveCreationDialog } from "./_components/PerspectiveCreationDialog";
 
+const routeApi = getRouteApi("/_auth/project/$projectId/perspectives/");
+
 export function PerspectivesListView() {
-  const aspects = PerspectivesHooks.useGetAllAspectsList();
+  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const { data: aspects } = useSuspenseQuery({
+    ...projectAspectsQueryOptions(projectId),
+    select: (data) => Object.values(data),
+  });
 
   // filter query state
   const [filterQuery, setFilterQuery] = useState("");
@@ -25,10 +33,9 @@ export function PerspectivesListView() {
   };
 
   // filtered data
-  const filteredAspects =
-    aspects.data?.filter((data) => {
-      return data.name.includes(debouncedFilterQuery);
-    }) || [];
+  const filteredAspects = aspects.filter((data) => {
+    return data.name.includes(debouncedFilterQuery);
+  });
 
   // creation dialog
   const creationDialog = useDialog();
@@ -92,32 +99,9 @@ export function PerspectivesListView() {
             </TextField>
           </Stack>
           <Box display="flex" gap={2} paddingY={0} flexWrap="wrap">
-            {aspects.isLoading ? (
-              <Box
-                sx={{
-                  pt: 4,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <CircularProgress color="primary" />
-              </Box>
-            ) : aspects.isError ? (
-              <Typography color="error">Error loading aspects</Typography>
-            ) : (
-              <>
-                {filteredAspects.map((aspect) => (
-                  <PerspectiveCard
-                    key={aspect.id}
-                    to={`./dashboard/${aspect.id}`}
-                    title={aspect.name}
-                    aspect={aspect}
-                  />
-                ))}
-              </>
-            )}
+            {filteredAspects.map((aspect) => (
+              <PerspectiveCard key={aspect.id} to={`./dashboard/${aspect.id}`} title={aspect.name} aspect={aspect} />
+            ))}
           </Box>
         </Stack>
       </ContentContainerLayout>

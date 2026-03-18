@@ -9,13 +9,13 @@ The frontend is built using React, Redux Toolkit, and React Query, with heavy re
 ## Dependencies & Technologies
 
 - **[Plotly.js](https://plotly.com/javascript/)**: Used via `react-plotly.js` for the main scatter plot visualization (`MapPlot.tsx`) and diverse charts (bar, pie) in the dashboard.
-- **[React Query (TanStack Query)](https://tanstack.com/query/latest)**: Manages server state, caching, and background polling for long-running jobs (via `PerspectivesHooks.ts`).
+- **[React Query (TanStack Query)](https://tanstack.com/query/latest)**: Manages server state, caching, and background polling for long-running jobs (via `perspectivesQueryOptions.ts`).
 - **[Redux Toolkit](https://redux-toolkit.js.org/)**: Manages local UI state (selections, view settings, filters) via `perspectivesSlice.ts`.
 - **[D3.js](https://d3js.org/)**: Used for color scales and some utility functions.
 
 ## Server Communication
 
-Server communication is centralized in `PerspectivesHooks.ts`, which provides custom React Query hooks. These hooks handle:
+Server communication is centralized in `perspectivesQueryOptions.ts`, which provides feature-local React Query hooks. These hooks handle:
 
 - **Fetching Data**: `useGetAllAspectsList`, `useGetAspect`, `useGetDocVisualization`.
 - **Mutations**: `useCreateAspect` (triggering generation), `useUpdateAspect`, `useDeleteAspect`.
@@ -58,7 +58,7 @@ This is the entry point for the module.
   - **Create**: Clicking the "Create Perspective" button opens the `PerspectiveCreationDialog`.
   - **Navigate**: Clicking a card navigates to the `PerspectiveDashboard`.
 - **Server Communication**:
-  - **Fetching**: `PerspectivesHooks.useGetAllAspectsList()` fetches the list of available perspectives.
+  - **Fetching**: `PerspectivesQueryOptions.useGetAllAspectsList()` fetches the list of available perspectives.
 - **Sub Components**: `PerspectiveCard`.
 
 ### 2. Creation Dialog (`PerspectiveCreationDialog.tsx`)
@@ -72,7 +72,7 @@ A wizard-like dialog for configuring new perspectives.
   - **Expert Settings**: Advanced users can toggle this to adjust UMAP (neighbors, metric, components) and HDBSCAN (min cluster size) parameters.
   - **Maximize**: The dialog can be maximized for better visibility.
 - **Server Communication**:
-  - **Data Manipulation**: `PerspectivesHooks.useCreateAspect()` triggers the backend job to generate the perspective.
+  - **Data Manipulation**: `PerspectivesQueryOptions.useCreateAspect()` triggers the backend job to generate the perspective.
 
 ### 3. Dashboard (`dashboard/PerspectiveDashboard.tsx`)
 
@@ -85,8 +85,8 @@ The landing page for a specific perspective, providing analytics and status.
   - **Color Scale**: Users can adjust the color scale for similarity plots.
 - **Server Communication**:
   - **Fetching**:
-    - `PerspectivesHooks.useGetAspect(aspectId)`: Gets metadata.
-    - `PerspectivesHooks.usePollPerspectivesJob(...)`: Polls the status of the generation job.
+    - `PerspectivesQueryOptions.useGetAspect(aspectId)`: Gets metadata.
+    - `PerspectivesQueryOptions.usePollPerspectivesJob(...)`: Polls the status of the generation job.
 - **Sub Components**:
   - `DocumentClusterScatterPlot` (Preview)
   - `ClusterList`
@@ -144,4 +144,4 @@ A modal wrapper for the progress card.
 - **Functionality**: Automatically appears to show the progress of an active job associated with the current perspective.
 - **Interactions**: It is modal but generally non-interactive (dismissal is handled by completion or explicit close if enabled).
 - **Server Communication**:
-  - **Fetching**: `PerspectivesHooks.usePollPerspectivesJob` is used to check if the dialog should be open (i.e., if a job is running).
+  - **Fetching**: `PerspectivesQueryOptions.usePollPerspectivesJob` is used to check if the dialog should be open (i.e., if a job is running).

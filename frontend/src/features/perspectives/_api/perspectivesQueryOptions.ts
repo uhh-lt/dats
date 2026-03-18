@@ -1,3 +1,4 @@
+import { QueryKey } from "@api/hooks/QueryKey";
 import { AspectRead } from "@api/models/AspectRead";
 import { Body_perspectives_visualize_documents } from "@api/models/Body_perspectives_visualize_documents";
 import { ClusterRead } from "@api/models/ClusterRead";
@@ -8,13 +9,25 @@ import { queryClient } from "@api/queryClient";
 import { PerspectivesService } from "@api/services/PerspectivesService";
 import { RagService } from "@api/services/RagService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { dateToLocaleDate } from "@utils/DateUtils";
-import { QueryKey } from "./QueryKey";
-
-// ASPECTS
 
 export type AspectMap = Record<number, AspectRead>;
+
+export const projectAspectsQueryOptions = (projectId: number) =>
+  queryOptions({
+    queryKey: [QueryKey.PROJECT_ASPECTS, projectId],
+    queryFn: async () => {
+      const aspects = await PerspectivesService.getAllAspects({
+        projId: projectId,
+      });
+      return aspects.reduce((acc, aspect) => {
+        acc[aspect.id] = aspect;
+        return acc;
+      }, {} as AspectMap);
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
 interface UseProjectAspectsQueryParams<T> {
   select?: (data: AspectMap) => T;
@@ -24,17 +37,7 @@ interface UseProjectAspectsQueryParams<T> {
 const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAspectsQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_ASPECTS, projectId],
-    queryFn: async () => {
-      const aspects = await PerspectivesService.getAllAspects({
-        projId: projectId!,
-      });
-      return aspects.reduce((acc, aspect) => {
-        acc[aspect.id] = aspect;
-        return acc;
-      }, {} as AspectMap);
-    },
-    staleTime: 1000 * 60 * 5,
+    ...projectAspectsQueryOptions(projectId!),
     select,
     enabled: !!projectId && enabled,
   });
@@ -56,12 +59,10 @@ const useGetDocumentAspect = (aspectId: number | null | undefined, sdocId: numbe
     staleTime: Infinity,
   });
 
-// ASPECT MUTATIONS
 const useCreateAspect = () =>
   useMutation({
     mutationFn: PerspectivesService.createAspect,
     onSuccess: (data, variables) => {
-      console.log("Aspect created:", data);
       queryClient.setQueryData<AspectMap>([QueryKey.PROJECT_ASPECTS, variables.requestBody.project_id], (oldData) =>
         oldData ? { ...oldData, [data.id]: data } : { [data.id]: data },
       );
@@ -100,8 +101,6 @@ const useDeleteAspect = () =>
     },
   });
 
-// PERSPECTIVES JOBS
-
 const useStartPerspectivesJob = () =>
   useMutation({
     mutationFn: PerspectivesService.startPerspectivesJob,
@@ -130,7 +129,6 @@ const usePollPerspectivesJob = (
         return 1000;
       }
 
-      // do invalidation if the status is FINISHED (and the job is max 3 minutes old)
       const localDate = new Date();
       if (
         query.state.data.finished &&
@@ -160,8 +158,6 @@ const usePollPerspectivesJob = (
     initialData,
   });
 
-// LABLING
-
 const useLabelDocs = () =>
   useMutation({
     mutationFn: PerspectivesService.acceptLabel,
@@ -184,7 +180,6 @@ const useUnlabelDocs = () =>
     },
   });
 
-// VISUALIZATION
 const useGetDocVisualization = (
   aspectId: number,
   searchQuery: string,
@@ -215,7 +210,6 @@ const useGetClusterSimilarities = (aspectId: number) =>
     staleTime: 1000 * 60 * 5,
   });
 
-// Clusters
 const useUpdateClusterDetails = () =>
   useMutation({
     mutationFn: PerspectivesService.updateClusterDetails,
@@ -235,35 +229,25 @@ const useGetClustersBySdocId = (aspectId: number | null | undefined, sdocId: num
     staleTime: 1000 * 60 * 5,
   });
 
-// CHAT
 const useRAGChat = () =>
   useMutation({
     mutationFn: RagService.ragSession,
-    onSuccess: (data) => {
-      console.log(data);
-    },
   });
 
-export const PerspectivesHooks = {
-  // aspects
+export const PerspectivesQueryOptions = {
   useGetAllAspectsList,
   useGetAspect,
   useGetDocumentAspect,
   useCreateAspect,
   useUpdateAspect,
   useDeleteAspect,
-  // tm jobs
   useStartPerspectivesJob,
   usePollPerspectivesJob,
-  // labeling
   useLabelDocs,
   useUnlabelDocs,
-  // visualization
   useGetDocVisualization,
   useGetClusterSimilarities,
-  // cluster
   useGetClustersBySdocId,
   useUpdateClusterDetails,
-  // chat
   useRAGChat,
 };

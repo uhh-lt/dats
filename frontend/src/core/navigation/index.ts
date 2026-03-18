@@ -1,4 +1,3 @@
-export { Icon } from "@utils/icons/iconUtils";
 export * from "./quick-command";
 export * from "./shortcut";
 export * from "./SideBar";

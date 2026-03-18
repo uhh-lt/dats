@@ -1,7 +1,7 @@
-import { Icon } from "@core/navigation";
 import { AnnotationView } from "@features/annotation";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const annotationSearchSchema = z.object({

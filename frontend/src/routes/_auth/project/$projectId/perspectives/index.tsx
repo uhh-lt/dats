@@ -1,4 +1,5 @@
-import { PerspectivesListView } from "@features/perspectives";
+import { PerspectivesListView, perspectivesListViewLoader } from "@features/perspectives";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 
@@ -8,5 +9,12 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/")(
     icon: Icon.PERSPECTIVES,
     getTitle: () => "Perspectives",
   },
+  loader: ({ context, params }) =>
+    perspectivesListViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load perspectives: {(error as Error).message}</div>,
   component: PerspectivesListView,
 });

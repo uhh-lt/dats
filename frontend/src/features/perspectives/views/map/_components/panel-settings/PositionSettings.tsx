@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { DocType } from "@api/models/DocType";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
@@ -30,7 +30,7 @@ interface PositionSettingsProps {
 
 export function PositionSettings({ aspectId }: PositionSettingsProps) {
   // aspect (to check modality and disable refinment)
-  const aspect = PerspectivesHooks.useGetAspect(aspectId);
+  const aspect = PerspectivesQueryOptions.useGetAspect(aspectId);
 
   // position settings
   const xAxis = useAppSelector((state) => state.perspectives.xAxis);
@@ -77,7 +77,7 @@ export function PositionSettings({ aspectId }: PositionSettingsProps) {
   }, [vis.data]);
 
   // refinement
-  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
   const handleRefineTM = () => {
     startPerspectivesJob({
       aspectId,

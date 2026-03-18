@@ -1,9 +1,9 @@
 import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
-import { Icon } from "@core/navigation";
 import { DocumentSearchView, documentSearchViewLoader } from "@features/search";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
+import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const documentSearchSchema = z.object({

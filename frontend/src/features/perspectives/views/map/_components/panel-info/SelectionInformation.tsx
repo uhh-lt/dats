@@ -1,5 +1,5 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
@@ -47,7 +47,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   // global server state
   const metadata = MetadataHooks.useGetSdocMetadata(selectedSdocIds[selectedSdocIdsIndex]);
   const documentTagIds = TagHooks.useGetAllTagIdsBySdocId(selectedSdocIds[selectedSdocIdsIndex]);
-  const docClusters = PerspectivesHooks.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
+  const docClusters = PerspectivesQueryOptions.useGetClustersBySdocId(aspectId, selectedSdocIds[selectedSdocIdsIndex]);
   const vis = useGetDocVisualization(aspectId);
   const sdoc = SdocHooks.useGetDocument(selectedSdocIds[selectedSdocIdsIndex]);
 

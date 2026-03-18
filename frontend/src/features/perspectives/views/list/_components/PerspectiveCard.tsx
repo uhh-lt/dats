@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 import { AspectRead } from "@api/models/AspectRead";
 import { JobStatus } from "@api/models/JobStatus";
 import { JobStatusBadge } from "@core/job";
@@ -51,9 +51,9 @@ interface PerspectiveCardProps {
 }
 
 export function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
-  const perspectivesJob = PerspectivesHooks.usePollPerspectivesJob(aspect.most_recent_job_id, undefined);
+  const perspectivesJob = PerspectivesQueryOptions.usePollPerspectivesJob(aspect.most_recent_job_id, undefined);
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const { mutate: deleteMutation, isPending } = PerspectivesHooks.useDeleteAspect();
+  const { mutate: deleteMutation, isPending } = PerspectivesQueryOptions.useDeleteAspect();
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = (event) => {
     event.preventDefault();
     openConfirmationDialog({

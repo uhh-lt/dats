@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -86,7 +86,7 @@ export function ColorSettings({ aspectId }: ColorSettingsProps) {
   };
 
   // legend
-  const { mutate: startPerspectivesJob, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJob, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
 
   // global server state
   const vis = useGetDocVisualization(aspectId);

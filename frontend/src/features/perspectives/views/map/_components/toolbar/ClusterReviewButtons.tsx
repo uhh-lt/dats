@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -38,7 +38,7 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
   }, [sdocId2Doc, selectedSdocIds]);
 
   // event handlers
-  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesHooks.useLabelDocs();
+  const { mutate: labelDocsMutation, isPending: isLabelPending } = PerspectivesQueryOptions.useLabelDocs();
   const handleLabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     labelDocsMutation({
@@ -47,7 +47,7 @@ export function ClusterReviewButtons({ aspectId, selectedSdocIds }: ClusterRevie
     });
   };
 
-  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesHooks.useUnlabelDocs();
+  const { mutate: unlabelDocsMutation, isPending: isUnlabelPending } = PerspectivesQueryOptions.useUnlabelDocs();
   const handleUnlabelDocs = () => {
     if (selectedSdocIds.length === 0) return;
     unlabelDocsMutation({

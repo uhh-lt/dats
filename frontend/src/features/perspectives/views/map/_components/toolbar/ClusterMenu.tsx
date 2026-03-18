@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
@@ -138,7 +138,7 @@ function ClusterMenuContent({
   };
 
   // actions
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
   const handleSetCluster = useCallback(() => {
     // find entry where CheckboxState is Checked
     const checkedClusters = Array.from(checked).filter(([, state]) => state === CheckboxState.CHECKED);

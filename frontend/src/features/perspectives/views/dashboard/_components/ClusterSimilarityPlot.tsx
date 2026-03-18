@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 import {
   Box,
   Card,
@@ -27,7 +27,7 @@ export const ClusterSimilarityPlot = memo(({ aspectId, height, colorName }: Clus
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
 
   // global server state
-  const vis = PerspectivesHooks.useGetClusterSimilarities(aspectId);
+  const vis = PerspectivesQueryOptions.useGetClusterSimilarities(aspectId);
 
   const labelFontSize = "0.75rem";
   const cellFontSize = "0.75rem";

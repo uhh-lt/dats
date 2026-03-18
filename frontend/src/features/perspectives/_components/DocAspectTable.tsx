@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { SdocRenderer } from "@core/source-document";
@@ -128,7 +128,7 @@ export const DocAspectTable = memo(({ aspectId, height, cluster }: DocAspectTabl
 });
 
 function ContentRenderer({ aspectId, sdocId }: { aspectId: number; sdocId: number }) {
-  const content = PerspectivesHooks.useGetDocumentAspect(aspectId, sdocId);
+  const content = PerspectivesQueryOptions.useGetDocumentAspect(aspectId, sdocId);
   if (!content.data) return null;
   return content.data;
 }

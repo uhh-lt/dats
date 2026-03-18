@@ -1,4 +1,4 @@
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { ClusterCreate } from "@api/models/ClusterCreate";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
@@ -34,7 +34,7 @@ export function ClusterCreationDialog({ aspectId }: ClusterCreationDialogProps) 
       description: "",
     },
   });
-  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesHooks.useStartPerspectivesJob();
+  const { mutate: startPerspectivesJobMutation, isPending } = PerspectivesQueryOptions.useStartPerspectivesJob();
   const handleClusterCreation: SubmitHandler<ClusterCreate> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");

@@ -1,5 +1,4 @@
 import { GeneralHooks } from "@api/hooks/GeneralHooks";
-import { PerspectivesHooks } from "@api/hooks/PerspectivesHooks";
 import { AspectCreate } from "@api/models/AspectCreate";
 import { DocType } from "@api/models/DocType";
 import { PipelineSettings } from "@api/models/PipelineSettings";
@@ -32,6 +31,7 @@ import {
 import { useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
 interface AspectTemplate {
   name: string;
@@ -122,7 +122,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
     },
   });
 
-  const createAspectMutation = PerspectivesHooks.useCreateAspect();
+  const createAspectMutation = PerspectivesQueryOptions.useCreateAspect();
   const handleAspectCreation: SubmitHandler<PerspectiveFormData> = (data) => {
     if (!projectId) {
       console.error("Project ID is not set");
