@@ -1,4 +1,3 @@
-import { CotaHooks } from "@api/hooks/CotaHooks";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -7,9 +6,17 @@ import {
 } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { useAppDispatch } from "@store/storeHooks";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
+import {
+  projectCotasQueryOptions,
+  useCreateCota,
+  useDeleteCota,
+  useDuplicateCota,
+  useUpdateCota,
+} from "../../_api/cotaQueryOptions";
 import { CotaActions } from "../../store/cotaSlice";
 import { CotaExportButton } from "./_components/CotaExportButton";
 
@@ -20,12 +27,10 @@ export function CotaDashboardView() {
   const projectId = COTADashboardRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const {
-    data: userAnalysis,
-    isLoading: isLoadingAnalysis,
-    isFetching: isFetchingAnalysis,
-    isError: isLoadingAnalysisError,
-  } = CotaHooks.useGetProjectCotaList();
+  const { data: userAnalysis } = useSuspenseQuery({
+    ...projectCotasQueryOptions(projectId),
+    select: (data) => Object.values(data),
+  });
   const projectAnalysisTableData: AnalysisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
@@ -37,14 +42,10 @@ export function CotaDashboardView() {
   );
 
   // mutations
-  const { mutate: createCota, isPending: isCreatingCota } = CotaHooks.useCreateCota();
-  const { mutate: deleteCota, isPending: isDeletingCota, variables: deletingVariables } = CotaHooks.useDeleteCota();
-  const { mutate: updateCota, isPending: isUpdatingCota } = CotaHooks.useUpdateCota();
-  const {
-    mutate: duplicateCota,
-    isPending: isDuplicatingCota,
-    variables: duplicatingVariables,
-  } = CotaHooks.useDuplicateCota();
+  const { mutate: createCota, isPending: isCreatingCota } = useCreateCota();
+  const { mutate: deleteCota, isPending: isDeletingCota, variables: deletingVariables } = useDeleteCota();
+  const { mutate: updateCota, isPending: isUpdatingCota } = useUpdateCota();
+  const { mutate: duplicateCota, isPending: isDuplicatingCota, variables: duplicatingVariables } = useDuplicateCota();
 
   const dispatch = useAppDispatch();
 
@@ -111,9 +112,9 @@ export function CotaDashboardView() {
   const table = useAnalysisDashboardTable({
     analysisName: "COTA",
     data: projectAnalysisTableData,
-    isLoadingData: isLoadingAnalysis,
-    isFetchingData: isFetchingAnalysis,
-    isLoadingDataError: isLoadingAnalysisError,
+    isLoadingData: false,
+    isFetchingData: false,
+    isLoadingDataError: false,
     isCreatingAnalysis: isCreatingCota,
     isUpdatingAnalysis: isUpdatingCota,
     isDuplicatingAnalysis: isDuplicatingCota,

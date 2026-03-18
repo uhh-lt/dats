@@ -1,5 +1,4 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
 import { DateGroupBy } from "@api/models/DateGroupBy";
 import { DocType } from "@api/models/DocType";
 import { MetaType } from "@api/models/MetaType";
@@ -15,6 +14,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import { ChangeEvent } from "react";
+import { useUpdateTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 
 const aggregationType2HumanReadable: Record<TimelineAnalysisType, Record<TAAnnotationAggregationType, string>> = {
   [TimelineAnalysisType.DOCUMENT]: {
@@ -83,7 +83,7 @@ function TimelineAnalysisSettingsContent({
   projectMetadata,
 }: TimelineAnalysisSettingsProps & { projectMetadata: ProjectMetadataRead[] }) {
   // handlers (for ui)
-  const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
+  const updateTimelineAnalysisMutation = useUpdateTimelineAnalysis();
   const handleGroupByChange = (event: ChangeEvent<HTMLInputElement>) => {
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,

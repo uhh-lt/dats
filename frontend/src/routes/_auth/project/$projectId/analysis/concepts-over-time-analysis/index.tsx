@@ -1,4 +1,5 @@
-import { CotaDashboardView } from "@features/concept-over-time-analysis";
+import { CotaDashboardView, cotaDashboardViewLoader } from "@features/concept-over-time-analysis";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 
@@ -8,5 +9,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
     icon: Icon.COTA,
     getTitle: () => "Concepts Over Time",
   },
+  loader: ({ context, params }) =>
+    cotaDashboardViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+    }),
+  pendingComponent: () => <CircularProgress />,
   component: CotaDashboardView,
 });

@@ -1,53 +1,31 @@
+import { QueryKey } from "@api/hooks/QueryKey";
 import { COTARead } from "@api/models/COTARead";
 import { COTARefinementJobRead } from "@api/models/COTARefinementJobRead";
 import { JobStatus } from "@api/models/JobStatus";
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
-
-// COTA QUERIES
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 export type CotaMap = Record<number, COTARead>;
 
-interface UseCotaQueryParams<T> {
-  select?: (data: CotaMap) => T;
-  enabled?: boolean;
-}
-
-const useCotasQuery = <T = CotaMap>({ select, enabled }: UseCotaQueryParams<T>) => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  return useQuery({
+export const projectCotasQueryOptions = (projectId: number) =>
+  queryOptions({
     queryKey: [QueryKey.PROJECT_COTAS, projectId],
     queryFn: async () => {
-      const data = await ConceptOverTimeAnalysisService.getByProject({ projectId: projectId! });
+      const data = await ConceptOverTimeAnalysisService.getByProject({ projectId });
       return data.reduce((acc, cota) => {
         acc[cota.id] = cota;
         return acc;
       }, {} as CotaMap);
     },
     staleTime: 1000 * 60 * 5,
-    select,
-    enabled: !!projectId && enabled,
-  });
-};
-
-const useGetCota = (cotaId: number | null | undefined) =>
-  useCotasQuery({
-    select: (data) => data[cotaId!],
-    enabled: !!cotaId,
   });
 
-const useGetProjectCotaList = () => useCotasQuery({ select: (data) => Object.values(data) });
-
-// COTA MUTATIONS
-
-// create mutations
-const useCreateCota = () =>
+export const useCreateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.create,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -57,7 +35,7 @@ const useCreateCota = () =>
     },
   });
 
-const useDuplicateCota = () =>
+export const useDuplicateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.duplicateById,
     onSuccess(cota) {
@@ -70,11 +48,10 @@ const useDuplicateCota = () =>
     },
   });
 
-// update mutations
-const useUpdateCota = () =>
+export const useUpdateCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.updateById,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -84,10 +61,10 @@ const useUpdateCota = () =>
     },
   });
 
-const useAnnotateCotaSentences = () =>
+export const useAnnotateCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.annotateCotaSentence,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -97,10 +74,10 @@ const useAnnotateCotaSentences = () =>
     },
   });
 
-const useRemoveCotaSentences = () =>
+export const useRemoveCotaSentences = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.removeCotaSentence,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -110,10 +87,10 @@ const useRemoveCotaSentences = () =>
     },
   });
 
-const useResetCota = () =>
+export const useResetCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.resetCota,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -123,16 +100,15 @@ const useResetCota = () =>
     },
   });
 
-// delete mutations
-const useDeleteCota = () =>
+export const useDeleteCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.deleteById,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) => {
         if (!prev) return prev;
-        const newData = { ...prev };
-        delete newData[cota.id];
-        return newData;
+        const next = { ...prev };
+        delete next[cota.id];
+        return next;
       });
     },
     meta: {
@@ -140,9 +116,8 @@ const useDeleteCota = () =>
     },
   });
 
-// COTA REFINEMENT JOB QUERIES
-const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
-  return useQuery<COTARefinementJobRead | null, Error>({
+export const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) =>
+  useQuery<COTARefinementJobRead | null, Error>({
     queryKey: [QueryKey.COTA_REFINEMENT_JOB, cotaRefinementJobId],
     queryFn: () =>
       ConceptOverTimeAnalysisService.getCotaJob({
@@ -159,7 +134,6 @@ const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
         case JobStatus.FAILED:
         case JobStatus.FINISHED:
         case JobStatus.STOPPED:
-          // TODO: maybe invalidate the cota query here or set it directly (see CotaControl.tsx)
           return false;
         case JobStatus.DEFERRED:
         case JobStatus.QUEUED:
@@ -171,13 +145,11 @@ const usePollCOTARefinementJob = (cotaRefinementJobId: string | null) => {
       }
     },
   });
-};
 
-// COTA REFINEMENT JOB MUTATIONS
-const useRefineCota = () =>
+export const useRefineCota = () =>
   useMutation({
     mutationFn: ConceptOverTimeAnalysisService.refineCota,
-    onSuccess: (cota) => {
+    onSuccess(cota) {
       queryClient.setQueryData<CotaMap>([QueryKey.PROJECT_COTAS, cota.project_id], (prev) =>
         prev ? { ...prev, [cota.id]: cota } : { [cota.id]: cota },
       );
@@ -187,16 +159,26 @@ const useRefineCota = () =>
     },
   });
 
-export const CotaHooks = {
-  useGetCota,
-  useGetProjectCotaList,
-  useCreateCota,
-  useDuplicateCota,
-  useUpdateCota,
-  useAnnotateCotaSentences,
-  useRemoveCotaSentences,
-  useResetCota,
-  useDeleteCota,
-  usePollCOTARefinementJob,
-  useRefineCota,
+/**
+ * Convenience hook for components that need a single COTA by ID but have no route context.
+ * For route-backed components, use useSuspenseQuery with projectCotasQueryOptions directly.
+ */
+export const useGetCotaById = (cotaId: number | null | undefined) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+
+  return useQuery({
+    ...projectCotasQueryOptions(projectId!),
+    select: (data) => (cotaId != null ? data[cotaId] : undefined),
+    enabled: !!projectId && cotaId != null,
+  });
+};
+
+export const useGetProjectCotaList = () => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+
+  return useQuery({
+    ...projectCotasQueryOptions(projectId!),
+    select: (data) => Object.values(data),
+    enabled: !!projectId,
+  });
 };

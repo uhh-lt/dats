@@ -81,7 +81,7 @@ export const QueryKey = {
   // WhiteboardMap of a project (by project id)
   PROJECT_WHITEBOARDS: "projectWhiteboards",
 
-  // managed by TimelineAnalysisHooks:
+  // managed by features/timeline-analysis/_api/timelineAnalysisQueryOptions:
   // TimelineMap of a project (by project id)
   PROJECT_TIMELINE_ANALYSIS: "projectTimelineAnalysis",
 
@@ -91,7 +91,7 @@ export const QueryKey = {
   // CodeOccurrence[] (by project id, user ids, code id)
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
 
-  // managed by CotaHooks:
+  // managed by features/concept-over-time-analysis/_api/cotaQueryOptions:
   // CotaMap of a project (by project id)
   PROJECT_COTAS: "projectCotas",
   // COTARefinementJobRead (by cotaRefinementJob id)

@@ -1,4 +1,3 @@
-import { CotaHooks } from "@api/hooks/CotaHooks";
 import { COTAConcept } from "@api/models/COTAConcept";
 import { COTARead } from "@api/models/COTARead";
 import { COTASentenceID } from "@api/models/COTASentenceID";
@@ -27,6 +26,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { MouseEventHandler, useMemo, useRef, useState } from "react";
+import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 
 interface CotaSentenceAnnotatorProps {
@@ -222,7 +222,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   // }, [provenanceSdocIdSentenceId, searchSpace]);
 
   // actions
-  const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
+  const annotateCotaSentences = useAnnotateCotaSentences();
   const handleAnnotateSentences = (sentences: COTASentenceID[], conceptId: string | null) => {
     annotateCotaSentences.mutate({
       cotaId: cota.id,
@@ -231,7 +231,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     });
   };
 
-  const removeCotaSentences = CotaHooks.useRemoveCotaSentences();
+  const removeCotaSentences = useRemoveCotaSentences();
   const handleRemoveSentences = (sentences: COTASentenceID[]) => {
     removeCotaSentences.mutate(
       {

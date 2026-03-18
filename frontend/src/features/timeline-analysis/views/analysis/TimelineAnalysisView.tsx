@@ -1,34 +1,23 @@
-import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { CircularProgress } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { projectTimelineAnalysisQueryOptions } from "../../_api/timelineAnalysisQueryOptions";
 import { ConceptList } from "./_components/ConceptList";
 import { TimeAnalysisProvenance } from "./_components/TimeAnalysisProvenance";
 import { TimelineAnalysisViz } from "./_components/TimeAnalysisViz";
 import { TimelineAnalysisSettings } from "./_components/TimelineAnalysisSettings";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/timeline/$analysisId");
+import { TimelineAnalysisRouteAPI } from "./_hooks/timelineAnalysisRouteAPI";
 
 export function TimelineAnalysisView() {
-  // global client state
-  const { projectId, analysisId } = routeApi.useParams();
+  const { projectId, analysisId } = TimelineAnalysisRouteAPI.useParams();
 
-  // global server state (react-query)
-  const timelineAnalysis = TimelineAnalysisHooks.useGetTimelineAnalysis(analysisId);
+  const { data: timelineAnalysis } = useSuspenseQuery({
+    ...projectTimelineAnalysisQueryOptions(projectId),
+    select: (data) => data[analysisId],
+  });
 
-  return (
-    <>
-      {timelineAnalysis.isSuccess ? (
-        <TimelineAnalysisContent key={`${projectId}-${analysisId}`} timelineAnalysis={timelineAnalysis.data} />
-      ) : timelineAnalysis.isLoading ? (
-        <CircularProgress />
-      ) : timelineAnalysis.isError ? (
-        <div>ERROR: {timelineAnalysis.error.message}</div>
-      ) : null}
-    </>
-  );
+  return <TimelineAnalysisContent key={`${projectId}-${analysisId}`} timelineAnalysis={timelineAnalysis} />;
 }
 
 interface TimelineAnalysisContentProps {

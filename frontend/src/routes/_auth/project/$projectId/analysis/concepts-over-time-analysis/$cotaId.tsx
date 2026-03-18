@@ -1,4 +1,5 @@
-import { CotaView } from "@features/concept-over-time-analysis";
+import { CotaView, cotaViewLoader } from "@features/concept-over-time-analysis";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 
@@ -6,10 +7,18 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
   staticData: {
     tab: true,
     icon: Icon.COTA,
-    getTitle: (_, params) => `COTA ${String(params?.cotaId ?? "")}`,
+    getTitle: (cota: Awaited<ReturnType<typeof cotaViewLoader>> | undefined) => `COTA ${String(cota?.name ?? "")}`,
   },
   params: {
     parse: ({ cotaId }) => ({ cotaId: parseInt(cotaId) }),
   },
+  loader: ({ context, params }) =>
+    cotaViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+      cotaId: params.cotaId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load COTA: {(error as Error).message}</div>,
   component: CotaView,
 });

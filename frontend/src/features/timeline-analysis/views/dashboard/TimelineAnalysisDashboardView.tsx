@@ -1,4 +1,3 @@
-import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
 import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import {
   AnalysisDashboard,
@@ -8,9 +7,17 @@ import {
 } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { useAppDispatch } from "@store/storeHooks";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useMemo } from "react";
+import {
+  projectTimelineAnalysisQueryOptions,
+  useCreateTimelineAnalysis,
+  useDeleteTimelineAnalysis,
+  useDuplicateTimelineAnalysis,
+  useUpdateTimelineAnalysis,
+} from "../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
 import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
 
@@ -34,12 +41,10 @@ export function TimelineAnalysisDashboardView() {
   const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   // global server state
-  const {
-    data: userAnalysis,
-    isLoading: isLoadingAnalysis,
-    isFetching: isFetchingAnalysis,
-    isError: isLoadingAnalysisError,
-  } = TimelineAnalysisHooks.useGetProjectTimelineAnalysisList();
+  const { data: userAnalysis } = useSuspenseQuery({
+    ...projectTimelineAnalysisQueryOptions(projectId),
+    select: (data) => Object.values(data),
+  });
   const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(
     () =>
       userAnalysis?.map((analysis) => ({
@@ -52,20 +57,18 @@ export function TimelineAnalysisDashboardView() {
   );
 
   // mutations
-  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
-    TimelineAnalysisHooks.useCreateTimelineAnalysis();
+  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } = useCreateTimelineAnalysis();
   const {
     mutate: deleteTimelineAnalysis,
     isPending: isDeletingTimelineAnalysis,
     variables: deletingVariables,
-  } = TimelineAnalysisHooks.useDeleteTimelineAnalysis();
-  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } =
-    TimelineAnalysisHooks.useUpdateTimelineAnalysis();
+  } = useDeleteTimelineAnalysis();
+  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } = useUpdateTimelineAnalysis();
   const {
     mutate: duplicateTimelineAnalysis,
     isPending: isDuplicatingTimelineAnalysis,
     variables: duplicatingVariables,
-  } = TimelineAnalysisHooks.useDuplicateTimelineAnalysis();
+  } = useDuplicateTimelineAnalysis();
 
   const dispatch = useAppDispatch();
 
@@ -143,9 +146,9 @@ export function TimelineAnalysisDashboardView() {
   const table = useAnalysisDashboardTable({
     analysisName: "Timeline Analysis",
     data: userAnalysisTableData,
-    isLoadingData: isLoadingAnalysis,
-    isFetchingData: isFetchingAnalysis,
-    isLoadingDataError: isLoadingAnalysisError,
+    isLoadingData: false,
+    isFetchingData: false,
+    isLoadingDataError: false,
     isCreatingAnalysis: isCreatingTimelineAnalysis,
     isUpdatingAnalysis: isUpdatingTimelineAnalysis,
     isDuplicatingAnalysis: isDuplicatingTimelineAnalysis,

@@ -1,4 +1,3 @@
-import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -21,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useRecomputeTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { TimelineAnalysisCount } from "./TimelineAnalysisCount";
 import { TimelineAnalysisExportMenu } from "./TimelineAnalysisExportMenu";
@@ -37,7 +37,7 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
   const dispatch = useAppDispatch();
 
   // event handlers
-  const recomputeMutation = TimelineAnalysisHooks.useRecomputeTimelineAnalysis();
+  const recomputeMutation = useRecomputeTimelineAnalysis();
   const recomputeTimelineAnalysis = () => {
     recomputeMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,

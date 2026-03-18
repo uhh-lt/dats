@@ -1,26 +1,15 @@
-import { CotaHooks } from "@api/hooks/CotaHooks";
-import { CircularProgress } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { projectCotasQueryOptions } from "../../_api/cotaQueryOptions";
 import { CotaViewContent } from "./_components/CotaViewContent";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId");
+import { CotaRouteAPI } from "./_hooks/cotaRouteAPI";
 
 export function CotaView() {
-  // global client state
-  const { projectId, cotaId } = routeApi.useParams();
+  const { projectId, cotaId } = CotaRouteAPI.useParams();
 
-  // global server state
-  const cota = CotaHooks.useGetCota(cotaId);
+  const { data: cota } = useSuspenseQuery({
+    ...projectCotasQueryOptions(projectId),
+    select: (data) => data[cotaId],
+  });
 
-  return (
-    <>
-      {cota.isSuccess ? (
-        <CotaViewContent key={`${projectId}-${cotaId}`} cota={cota.data} />
-      ) : cota.isLoading ? (
-        <CircularProgress />
-      ) : cota.isError ? (
-        <div>ERROR: {cota.error.message}</div>
-      ) : null}
-    </>
-  );
+  return <CotaViewContent key={`${projectId}-${cotaId}`} cota={cota} />;
 }

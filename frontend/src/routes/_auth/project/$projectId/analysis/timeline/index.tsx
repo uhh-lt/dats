@@ -1,4 +1,5 @@
-import { TimelineAnalysisDashboardView } from "@features/timeline-analysis";
+import { TimelineAnalysisDashboardView, timelineAnalysisDashboardViewLoader } from "@features/timeline-analysis";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 
@@ -8,5 +9,11 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
     icon: Icon.TIMELINE_ANALYSIS,
     getTitle: () => "Timeline",
   },
+  loader: ({ context, params }) =>
+    timelineAnalysisDashboardViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+    }),
+  pendingComponent: () => <CircularProgress />,
   component: TimelineAnalysisDashboardView,
 });

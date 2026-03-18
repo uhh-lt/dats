@@ -1,46 +1,26 @@
+import { QueryKey } from "@api/hooks/QueryKey";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { queryClient } from "@api/queryClient";
 import { TimelineAnalysisService } from "@api/services/TimelineAnalysisService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
-
-// TIMELINE QUERIES
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 export type TimelineMap = Record<number, TimelineAnalysisRead>;
 
-interface UseTimelineAnalysisQueryParams<T> {
-  select?: (data: TimelineMap) => T;
-  enabled?: boolean;
-}
-
-const useTimelinesQuery = <T = TimelineMap>({ select, enabled }: UseTimelineAnalysisQueryParams<T>) => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  return useQuery({
+export const projectTimelineAnalysisQueryOptions = (projectId: number) =>
+  queryOptions({
     queryKey: [QueryKey.PROJECT_TIMELINE_ANALYSIS, projectId],
     queryFn: async () => {
-      const data = await TimelineAnalysisService.getByProject({ projectId: projectId! });
+      const data = await TimelineAnalysisService.getByProject({ projectId });
       return data.reduce((acc, timeline) => {
         acc[timeline.id] = timeline;
         return acc;
       }, {} as TimelineMap);
     },
     staleTime: 1000 * 60 * 5,
-    select,
-    enabled: !!projectId && enabled,
-  });
-};
-
-const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =>
-  useTimelinesQuery({
-    select: (data) => data[timelineAnalysisId!],
-    enabled: !!timelineAnalysisId,
   });
 
-const useGetProjectTimelineAnalysisList = () => useTimelinesQuery({ select: (data) => Object.values(data) });
-
-// TIMELINE MUTATIONS
-const useCreateTimelineAnalysis = () =>
+export const useCreateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.create,
     onSuccess(data) {
@@ -53,7 +33,7 @@ const useCreateTimelineAnalysis = () =>
     },
   });
 
-const useUpdateTimelineAnalysis = () =>
+export const useUpdateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.updateById,
     onSuccess(data) {
@@ -66,7 +46,7 @@ const useUpdateTimelineAnalysis = () =>
     },
   });
 
-const useRecomputeTimelineAnalysis = () =>
+export const useRecomputeTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.recomputeById,
     onSuccess(data) {
@@ -79,7 +59,7 @@ const useRecomputeTimelineAnalysis = () =>
     },
   });
 
-const useDuplicateTimelineAnalysis = () =>
+export const useDuplicateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.duplicateById,
     onSuccess(data) {
@@ -92,15 +72,15 @@ const useDuplicateTimelineAnalysis = () =>
     },
   });
 
-const useDeleteTimelineAnalysis = () =>
+export const useDeleteTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.deleteById,
     onSuccess(data) {
       queryClient.setQueryData<TimelineMap>([QueryKey.PROJECT_TIMELINE_ANALYSIS, data.project_id], (prev) => {
         if (!prev) return prev;
-        const newData = { ...prev };
-        delete newData[data.id];
-        return newData;
+        const next = { ...prev };
+        delete next[data.id];
+        return next;
       });
     },
     meta: {
@@ -108,12 +88,26 @@ const useDeleteTimelineAnalysis = () =>
     },
   });
 
-export const TimelineAnalysisHooks = {
-  useGetProjectTimelineAnalysisList,
-  useGetTimelineAnalysis,
-  useCreateTimelineAnalysis,
-  useUpdateTimelineAnalysis,
-  useRecomputeTimelineAnalysis,
-  useDuplicateTimelineAnalysis,
-  useDeleteTimelineAnalysis,
+/**
+ * Convenience hook for components that need a single timeline analysis by ID but have no route context.
+ * For route-backed components, use useSuspenseQuery with projectTimelineAnalysisQueryOptions directly.
+ */
+export const useGetTimelineAnalysisById = (analysisId: number | null | undefined) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+
+  return useQuery({
+    ...projectTimelineAnalysisQueryOptions(projectId!),
+    select: (data) => (analysisId != null ? data[analysisId] : undefined),
+    enabled: !!projectId && analysisId != null,
+  });
+};
+
+export const useGetProjectTimelineAnalysisList = () => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+
+  return useQuery({
+    ...projectTimelineAnalysisQueryOptions(projectId!),
+    select: (data) => Object.values(data),
+    enabled: !!projectId,
+  });
 };

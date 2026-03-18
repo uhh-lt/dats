@@ -1,4 +1,3 @@
-import { CotaHooks } from "@api/hooks/CotaHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { COTARead } from "@api/models/COTARead";
 import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
@@ -25,6 +24,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useEffect } from "react";
+import { usePollCOTARefinementJob, useRefineCota, useResetCota, useUpdateCota } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 import { JobStatusIndicator } from "./BackgroundJobStatusIndicator";
 import { CotaTrainingSettings } from "./CotaTrainingSettings";
@@ -45,7 +45,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const refinementJob = CotaHooks.usePollCOTARefinementJob(cota.last_refinement_job_id);
+  const refinementJob = usePollCOTARefinementJob(cota.last_refinement_job_id);
 
   // track the status of the refinement job and refetch cota once it is finished
   useEffect(() => {
@@ -56,7 +56,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   }, [refinementJob.data]);
 
   // actions
-  const refineCota = CotaHooks.useRefineCota();
+  const refineCota = useRefineCota();
   const handleRefineCota = () => {
     refineCota.mutate({
       requestBody: {
@@ -67,7 +67,7 @@ export function CotaControl({ cota }: CotaControlProps) {
   };
 
   const openConfirmationDialog = useOpenConfirmationDialog();
-  const resetCota = CotaHooks.useResetCota();
+  const resetCota = useResetCota();
   const handleResetCota = () => {
     openConfirmationDialog({
       text: `Do you really want to reset the analysis "${cota.name}"? This action cannot be undone! It will reset the search space and delete all sentence annotations.`,
@@ -88,7 +88,7 @@ export function CotaControl({ cota }: CotaControlProps) {
     dispatch(CotaActions.onCloseTrainingSettings());
   };
 
-  const updateCota = CotaHooks.useUpdateCota();
+  const updateCota = useUpdateCota();
   const handleApplyTrainingSettings = (trainingSettings: COTATrainingSettings) => {
     updateCota.mutate(
       {

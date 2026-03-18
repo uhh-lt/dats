@@ -1,4 +1,9 @@
-import { TimelineAnalysisHooks } from "@api/hooks/TimelineAnalysisHooks";
+import { BBoxColumns } from "@api/models/BBoxColumns";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
+import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
+import { CardContainer } from "@components/CardContainer";
+import { MyFilter } from "@core/filter";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItem, ListItemButton, ListItemIcon } from "@mui/material";
@@ -7,13 +12,8 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import { BBoxColumns } from "@api/models/BBoxColumns";
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
-import { CardContainer } from "@components/CardContainer";
-import { MyFilter } from "@core/filter";
 import { useAppDispatch, useAppStore } from "@store/storeHooks";
+import { useUpdateTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
 import { ConceptListItem } from "./ConceptListItem";
@@ -31,7 +31,7 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
   useInitTimelineAnalysisFilterSlice({ timelineAnalysis });
 
   // actions
-  const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
+  const updateTimelineAnalysisMutation = useUpdateTimelineAnalysis();
   const handleAddConcept = () => {
     updateTimelineAnalysisMutation.mutate({
       timelineAnalysisId: timelineAnalysis.id,
