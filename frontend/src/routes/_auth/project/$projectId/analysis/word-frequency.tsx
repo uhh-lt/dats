@@ -1,6 +1,33 @@
-import { WordFrequencyView } from "@features/word-frequency-analysis";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
+import { WordFrequencyView, wordFrequencyViewLoader } from "@features/word-frequency-analysis";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Icon } from "@utils/icons/iconUtils";
+import { z } from "zod";
+
+const wordFrequencySearchSchema = z.object({
+  [FILTER_PARAM]: z.string().default(""),
+  [FILTER_EXPERT_MODE_PARAM]: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .transform((value) => value === true || value === "true")
+    .default(false),
+  sortingModel: z
+    .array(
+      z.object({
+        id: z.string(),
+        desc: z.boolean(),
+      }),
+    )
+    .default([
+      {
+        id: "WF_WORD_FREQUENCY",
+        desc: true,
+      },
+    ]),
+});
+
+const wordFrequencyPageSize = 20;
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-frequency")({
   staticData: {
@@ -8,5 +35,20 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
     icon: Icon.WORD_FREQUENCY,
     getTitle: () => "Word Frequency",
   },
+  validateSearch: zodValidator(wordFrequencySearchSchema),
+  loaderDeps: ({ search }) => ({
+    searchFilter: search[FILTER_PARAM],
+    sortingModel: search.sortingModel,
+  }),
+  loader: ({ context, params, deps }) =>
+    wordFrequencyViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+      searchFilter: deps.searchFilter,
+      sortingModel: deps.sortingModel,
+      pageSize: wordFrequencyPageSize,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load word frequency analysis: {(error as Error).message}</div>,
   component: WordFrequencyView,
 });

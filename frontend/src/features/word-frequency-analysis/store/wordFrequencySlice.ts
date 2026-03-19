@@ -1,46 +1,24 @@
-import { StringOperator } from "@api/models/StringOperator";
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
-import {
-  ColumnInfo,
-  FilterState,
-  MyFilterExpression,
-  createInitialFilterState,
-  filterReducer,
-  resetProjectFilterState,
-} from "@core/filter";
+import { ColumnInfo } from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const defaultFilterExpression: MyFilterExpression = {
-  id: crypto.randomUUID(),
-  column: WordFrequencyColumns.WF_SOURCE_DOCUMENT_NAME,
-  operator: StringOperator.STRING_CONTAINS,
-  value: "",
-};
+export interface WordFrequencyState extends TableState {
+  column2Info: Record<string, ColumnInfo>;
+}
 
-const initialState: FilterState & TableState = {
-  ...createInitialFilterState(defaultFilterExpression),
+const initialState: WordFrequencyState = {
   ...initialTableState,
-  // project state:
-  // override initial table state
-  sortingModel: [
-    {
-      id: WordFrequencyColumns.WF_WORD_FREQUENCY,
-      desc: true,
-    },
-  ],
+  column2Info: {},
 };
 
 const WordFrequencySlice = createSlice({
   name: "wordFrequency",
   initialState,
   reducers: {
-    ...filterReducer,
     ...tableReducer,
-    // extend filterReducer's init
     init: (state, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
-      filterReducer.init(state, action);
+      state.column2Info = action.payload.columnInfoMap;
       state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
         if (!column.column) return acc;
         // this is a normal column
@@ -55,26 +33,18 @@ const WordFrequencySlice = createSlice({
         }
       }, {});
     },
-    // extend filterReducer's onFinishFilterEdit
-    onFinishFilterEdit: (state) => {
-      filterReducer.onFinishFilterEdit(state);
-      // reset variables that depend on search parameters
+    // preserve legacy behavior from onFinishFilterEdit after URL-state migration:
+    // when filter criteria change, reset state that depends on result-set identity
+    onURLFilterChange: (state) => {
       state.rowSelectionModel = initialTableState.rowSelectionModel;
       state.fetchSize = initialTableState.fetchSize;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(ProjectActions.changeProject, (state, action) => {
-        console.log("Project changed! Resetting 'wordFrequency' state.");
-        resetProjectFilterState({
-          state,
-          defaultFilterExpression,
-          projectId: action.payload,
-          sliceName: "wordFrequency",
-        });
+      .addCase(ProjectActions.changeProject, (state) => {
         resetProjectTableState(state);
-        state.sortingModel = initialState.sortingModel;
+        state.column2Info = initialState.column2Info;
       })
       .addDefaultCase(() => {});
   },
