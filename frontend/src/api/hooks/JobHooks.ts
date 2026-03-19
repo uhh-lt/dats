@@ -1,8 +1,6 @@
 import { DuplicateFinderJobRead } from "@api/models/DuplicateFinderJobRead";
 import { ExportJobRead } from "@api/models/ExportJobRead";
 import { JobStatus } from "@api/models/JobStatus";
-import { MlJobRead } from "@api/models/MlJobRead";
-import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -94,69 +92,9 @@ const usePollExportJob = (exportJobId: string | undefined) => {
   });
 };
 
-const useStartMLJob = () =>
-  useMutation({
-    mutationFn: JobService.startMlJob,
-    onSuccess: (job) => {
-      // force refetch of all ml jobs when adding a new one
-      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_ML_JOBS, job.input.project_id] });
-    },
-    meta: {
-      successMessage: (data: MlJobRead) => `Started ML Job as a new background task (ID: ${data.job_id})`,
-    },
-  });
-
-const usePollMLJob = (mlJobId: string | undefined, initialData: MlJobRead | undefined) => {
-  return useQuery<MlJobRead, Error>({
-    queryKey: [QueryKey.ML_JOB, mlJobId],
-    queryFn: () =>
-      JobService.getMlJobById({
-        jobId: mlJobId!,
-      }),
-    enabled: !!mlJobId,
-    refetchInterval: (query) => {
-      if (query.state.error) {
-        return false;
-      }
-      if (!query.state.data) {
-        return 1000;
-      }
-      switch (query.state.data.status) {
-        case JobStatus.CANCELED:
-        case JobStatus.FAILED:
-        case JobStatus.FINISHED:
-        case JobStatus.STOPPED:
-          return false;
-        case JobStatus.DEFERRED:
-        case JobStatus.QUEUED:
-        case JobStatus.SCHEDULED:
-        case JobStatus.STARTED:
-          return 1000;
-        default:
-          return false;
-      }
-    },
-    initialData,
-  });
-};
-
-const useGetAllMLJobs = (projectId: number) => {
-  return useQuery<MlJobRead[], Error>({
-    queryKey: [QueryKey.PROJECT_ML_JOBS, projectId],
-    queryFn: () =>
-      JobService.getMlJobsByProject({
-        projectId: projectId!,
-      }),
-    enabled: !!projectId,
-  });
-};
-
 export const JobHooks = {
   useStartDuplicateFinderJob,
   usePollDuplicateFinderJob,
   useStartExportJob,
   usePollExportJob,
-  useStartMLJob,
-  usePollMLJob,
-  useGetAllMLJobs,
 };

@@ -1,10 +1,10 @@
-import { JobHooks } from "@api/hooks/JobHooks";
 import { JobStatus } from "@api/models/JobStatus";
 import { MlJobRead } from "@api/models/MlJobRead";
 import { JobListItem } from "@core/job";
 import { Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";
+import { usePollMLJob } from "../../../_api/mlAutomationQueryOptions";
 
 interface MLJobListItemProps {
   initialMLJob: MlJobRead;
@@ -12,7 +12,7 @@ interface MLJobListItemProps {
 
 export const MLJobListItem = memo(({ initialMLJob }: MLJobListItemProps) => {
   // global server state (react-query)
-  const mlJob = JobHooks.usePollMLJob(initialMLJob.job_id, initialMLJob);
+  const mlJob = usePollMLJob(initialMLJob.job_id, initialMLJob);
 
   // compute subtitle
   const subTitle = useMemo(() => {

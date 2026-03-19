@@ -140,6 +140,8 @@ export const QueryKey = {
   DUPLICATE_FINDER_JOB: "duplicateFinderJob",
   // exportjob (by export job id)
   EXPORT_JOB: "exportJob",
+
+  // managed by features/ml-automation/_api/mlAutomationQueryOptions.ts
   // a single MlJobRead (by ml job id)
   ML_JOB: "mlJob",
   // all MlJobRead[] of a project (by project id)

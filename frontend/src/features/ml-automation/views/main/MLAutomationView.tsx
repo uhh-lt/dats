@@ -1,4 +1,3 @@
-import { JobHooks } from "@api/hooks/JobHooks";
 import { MLJobType } from "@api/models/MLJobType";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { useOpenConfirmationDialog } from "@core/notification";
@@ -19,8 +18,10 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
+import { projectMLJobsQueryOptions, useStartMLJob } from "../../_api/mlAutomationQueryOptions";
 import { MLJobsView } from "./_components/MLJobsView";
 
 const routeAPI = getRouteApi("/_auth/project/$projectId/tools/ml-automation");
@@ -30,7 +31,10 @@ export function MlAutomationView() {
   const projectId = routeAPI.useParams({ select: (params) => params.projectId });
 
   // actions
-  const startMlJob = JobHooks.useStartMLJob();
+  const startMlJob = useStartMLJob();
+
+  // global server state (react-query)
+  const mlJobsQuery = useSuspenseQuery(projectMLJobsQueryOptions(projectId));
 
   // confirmation dialog
   const openConfirmationDialog = useOpenConfirmationDialog();
@@ -292,7 +296,13 @@ export function MlAutomationView() {
           </List>
         </CardContent>
       </Card>
-      <MLJobsView projectId={projectId} />
+      <MLJobsView
+        mlJobs={mlJobsQuery.data}
+        isMLFetching={mlJobsQuery.isFetching}
+        onRefreshMLJobs={() => {
+          void mlJobsQuery.refetch();
+        }}
+      />
     </ContentContainerLayout>
   );
 }
