@@ -1,6 +1,15 @@
+import { DocType } from "@api/models/DocType";
 import { CodeFrequencyAnalysisView } from "@features/code-frequency-analysis";
 import { createFileRoute } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Icon } from "@utils/icons/iconUtils";
+import { z } from "zod";
+
+const codeFrequencySearchSchema = z.object({
+  selectedCode: z.number().optional(),
+  selectedUserIds: z.array(z.number()).default([]),
+  selectedDocTypes: z.array(z.nativeEnum(DocType)).default([]),
+});
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/code-frequency")({
   staticData: {
@@ -8,5 +17,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/code-fr
     icon: Icon.CODE_FREQUENCY,
     getTitle: () => "Code Frequency",
   },
+  validateSearch: zodValidator(codeFrequencySearchSchema),
   component: CodeFrequencyAnalysisView,
 });

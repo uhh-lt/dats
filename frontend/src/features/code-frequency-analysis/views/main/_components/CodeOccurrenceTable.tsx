@@ -1,4 +1,3 @@
-import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { CodeOccurrence } from "@api/models/CodeOccurrence";
 import { CardContainer } from "@components/CardContainer";
@@ -17,6 +16,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { ChangeEventHandler, Fragment, useRef, useState } from "react";
+import { useCodeOccurrencesQuery } from "../../../_api/codeFrequencyAnalysisQueryOptions";
 
 const columns: MRT_ColumnDef<CodeOccurrence>[] = [
   {
@@ -63,7 +63,7 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurren
   const code = CodeHooks.useGetCode(codeId);
 
   // computed
-  const codeOccurrences = AnalysisHooks.useCodeOccurrences(projectId, userIds, codeId, withChildren);
+  const codeOccurrences = useCodeOccurrencesQuery(projectId, userIds, codeId, withChildren);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);

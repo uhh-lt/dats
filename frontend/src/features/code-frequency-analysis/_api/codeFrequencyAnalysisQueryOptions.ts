@@ -1,11 +1,11 @@
+import { QueryKey } from "@api/hooks/QueryKey";
 import { CodeFrequency } from "@api/models/CodeFrequency";
 import { CodeOccurrence } from "@api/models/CodeOccurrence";
 import { DocType } from "@api/models/DocType";
 import { AnalysisService } from "@api/services/AnalysisService";
 import { useQuery } from "@tanstack/react-query";
-import { QueryKey } from "./QueryKey";
 
-const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>
+export const useCodeFrequenciesQuery = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>
   useQuery<CodeFrequency[], Error>({
     queryKey: [QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds, docTypes],
     queryFn: () =>
@@ -19,7 +19,7 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
       }),
   });
 
-const useCodeOccurrences = (
+export const useCodeOccurrencesQuery = (
   projectId: number,
   userIds: number[],
   codeId: number | null | undefined,
@@ -36,8 +36,3 @@ const useCodeOccurrences = (
       }),
     enabled: userIds.length > 0 && !!codeId,
   });
-
-export const AnalysisHooks = {
-  useCodeFrequencies,
-  useCodeOccurrences,
-};

@@ -1,4 +1,3 @@
-import { AnalysisHooks } from "@api/hooks/CodeFrequencyHooks";
 import { CodeFrequency } from "@api/models/CodeFrequency";
 import { CodeRead } from "@api/models/CodeRead";
 import { DocType } from "@api/models/DocType";
@@ -23,6 +22,7 @@ import {
   YAxis,
 } from "recharts";
 import { Node } from "ts-tree-structure";
+import { useCodeFrequenciesQuery } from "../../../_api/codeFrequencyAnalysisQueryOptions";
 
 const renderCustomizedLabel = (data: { value: number; percent?: number }) => {
   return `${data.value} (${(data.percent ?? 0 * 100).toFixed(0)}%)`;
@@ -62,7 +62,7 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
   const [showPieChart, toggleShowPieChart] = useReducer((previous) => !previous, false);
 
   // global server state (react-query)
-  const chartData = AnalysisHooks.useCodeFrequencies(
+  const chartData = useCodeFrequenciesQuery(
     projectId,
     userIds,
     data.children.map((node) => node.model.data.id) || [],

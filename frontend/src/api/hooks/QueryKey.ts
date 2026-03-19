@@ -77,7 +77,7 @@ export const QueryKey = {
   // SentenceAnnotator of a document (by sdoc id, user id)
   SDOC_SENTENCE_ANNOTATOR: "sdocSentenceAnnotator",
 
-  // managed by WhiteboardHooks:
+  // managed by features/whiteboard/_api/whiteboardQueryOptions:):
   // WhiteboardMap of a project (by project id)
   PROJECT_WHITEBOARDS: "projectWhiteboards",
 
@@ -85,7 +85,7 @@ export const QueryKey = {
   // TimelineMap of a project (by project id)
   PROJECT_TIMELINE_ANALYSIS: "projectTimelineAnalysis",
 
-  // managed by CodeFrequencyHooks:
+  // managed by features/code-frequency-analysis/_api/codeFrequencyAnalysisQueryOptions:
   // CodeFrequency[] (by project id, user ids, code ids, doc types)
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   // CodeOccurrence[] (by project id, user ids, code id)

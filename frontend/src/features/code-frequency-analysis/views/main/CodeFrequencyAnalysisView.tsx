@@ -1,28 +1,27 @@
-import { DocType } from "@api/models/DocType";
 import { CardContainer } from "@components/CardContainer";
 import { ContentContentLayout } from "@components/content-layouts";
 import { useComputeCodeTree } from "@core/code";
 import { DocTypeSelector } from "@core/source-document";
 import { UserSelectorMulti } from "@core/user";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Card, CardHeader, Stack } from "@mui/material";
 import { getRouteApi } from "@tanstack/react-router";
-import { useState } from "react";
 import { CodeFrequencyPlot } from "./_components/CodeFrequencyPlot";
 import { CodeOccurrenceTable } from "./_components/CodeOccurrenceTable";
 
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/code-frequency");
+const CodeFrequencyRouteApi = getRouteApi("/_auth/project/$projectId/analysis/code-frequency");
 
 export function CodeFrequencyAnalysisView() {
   // global client state (react-router)
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = CodeFrequencyRouteApi.useParams({ select: (params) => params.projectId });
 
   // custom hook
   const { codeTree } = useComputeCodeTree();
 
-  // local state
-  const [selectedCode, setSelectedCode] = useState<number>();
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [selectedDocTypes, setSelectedDocTypes] = useState<DocType[]>([]);
+  // global client state (URL)
+  const [selectedCode, setSelectedCode] = useURLConnector(CodeFrequencyRouteApi, "selectedCode");
+  const [selectedUserIds, setSelectedUserIds] = useURLConnector(CodeFrequencyRouteApi, "selectedUserIds");
+  const [selectedDocTypes, setSelectedDocTypes] = useURLConnector(CodeFrequencyRouteApi, "selectedDocTypes");
 
   return (
     <ContentContentLayout
