@@ -1,9 +1,9 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierEvaluationParams } from "@api/models/ClassifierEvaluationParams";
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
+import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 

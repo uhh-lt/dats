@@ -1,8 +1,8 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { JobStatus } from "@api/models/JobStatus";
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
+import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierJobProgressBar } from "../../../_components/ClassifierJobProgressBar";
 import { ClassifierActions } from "../../../store/classifierSlice";
 

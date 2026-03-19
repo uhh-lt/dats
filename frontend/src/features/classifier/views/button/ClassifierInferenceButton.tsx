@@ -1,4 +1,3 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierRead } from "@api/models/ClassifierRead";
 import { ClassifierTask } from "@api/models/ClassifierTask";
@@ -22,6 +21,7 @@ import {
 import { useAppDispatch } from "@store/storeHooks";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
+import { ClassifierHooks } from "../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../store/classifierSlice";
 
 const classifierType2Icon: Record<ClassifierModel, Icon> = {
@@ -42,7 +42,7 @@ export const ClassifierInferenceButton = memo(({ sdocIds, projectId }: { sdocIds
   };
 
   // classifier menu
-  const classifiers = ClassifierHooks.useGetAllClassifiers();
+  const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
   const groupedClassifiers = useMemo(() => {
     if (!classifiers.data) {
       return {};

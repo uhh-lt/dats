@@ -1,4 +1,3 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierTrainingParams } from "@api/models/ClassifierTrainingParams";
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText, FreeSoloOptions } from "@components/form-inputs";
@@ -18,6 +17,7 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
+import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface TrainingSettings {

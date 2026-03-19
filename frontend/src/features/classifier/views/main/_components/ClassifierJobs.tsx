@@ -1,25 +1,23 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
+import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
 import { DialogSection } from "@components/DialogSection";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
-import { useMemo } from "react";
 import { ClassifierJobListItem } from "./ClassifierJobListItem";
 
 interface ClassifierJobsProps {
-  projectId: number;
+  classifierJobs: ClassifierJobRead[];
+  isFetching: boolean;
+  onRefresh: () => void;
 }
 
-export function ClassifierJobs({ projectId }: ClassifierJobsProps) {
-  const { data: classifierJobs, refetch, isFetching } = ClassifierHooks.useGetAllClassifierJobs(projectId);
-  const allClassifierJobs = useMemo(() => classifierJobs || [], [classifierJobs]);
-
+export function ClassifierJobs({ classifierJobs, isFetching, onRefresh }: ClassifierJobsProps) {
   return (
     <DialogSection
       title="Previous Classifier Jobs"
       action={
         <Tooltip title="Refresh Jobs">
           <span>
-            <IconButton loading={isFetching} onClick={() => refetch()}>
+            <IconButton loading={isFetching} onClick={onRefresh}>
               <RefreshIcon />
             </IconButton>
           </span>
@@ -27,15 +25,15 @@ export function ClassifierJobs({ projectId }: ClassifierJobsProps) {
       }
     >
       <List sx={{ width: "100%", bgcolor: "background.paper" }} component="nav">
-        {allClassifierJobs.length > 0 && (
+        {classifierJobs.length > 0 && (
           <Stack spacing={1}>
-            {allClassifierJobs.map((job) => (
+            {classifierJobs.map((job) => (
               <ClassifierJobListItem key={job.job_id} initialClassifierJob={job} />
             ))}
           </Stack>
         )}
 
-        {allClassifierJobs.length === 0 && (
+        {classifierJobs.length === 0 && (
           <Typography color="textSecondary" textAlign="center" sx={{ py: 2 }}>
             No classifier jobs...
           </Typography>

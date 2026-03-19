@@ -1,4 +1,3 @@
-import { ClassifierHooks } from "@api/hooks/ClassifierHooks";
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierRead } from "@api/models/ClassifierRead";
 import { ClassifierTask } from "@api/models/ClassifierTask";
@@ -23,11 +22,16 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useRef, useState } from "react";
+import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface ClassifierTableProps {
   projectId: number;
+  classifiers: ClassifierRead[];
+  isFetching: boolean;
+  isError: boolean;
+  onRefresh: () => void;
 }
 
 const columns: MRT_ColumnDef<ClassifierRead>[] = [
@@ -79,10 +83,7 @@ const columns: MRT_ColumnDef<ClassifierRead>[] = [
   },
 ];
 
-export function ClassifierTable({ projectId }: ClassifierTableProps) {
-  // data
-  const { data, isError, isFetching, isLoading, refetch } = ClassifierHooks.useGetAllClassifiers();
-
+export function ClassifierTable({ projectId, classifiers, isFetching, isError, onRefresh }: ClassifierTableProps) {
   // selection
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const selectedRows = useMemo(() => {
@@ -170,13 +171,12 @@ export function ClassifierTable({ projectId }: ClassifierTableProps) {
   // table
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
   const table = useMaterialReactTable<ClassifierRead>({
-    data: data || [],
+    data: classifiers,
     columns: columns,
     getRowId: (row) => `${row.id}`,
     // state
     state: {
       rowSelection: rowSelectionModel,
-      isLoading: isLoading,
       isSaving: isRenamePending,
       showAlertBanner: isError,
       showProgressBars: isFetching,
@@ -295,7 +295,7 @@ export function ClassifierTable({ projectId }: ClassifierTableProps) {
         <MRT_LinearProgressBar isTopToolbar={true} table={table} />
         <Tooltip title="Refresh table">
           <span>
-            <IconButton loading={isFetching || isLoading} onClick={() => refetch()}>
+            <IconButton loading={isFetching} onClick={onRefresh}>
               <RefreshIcon />
             </IconButton>
           </span>

@@ -196,7 +196,7 @@ export const QueryKey = {
   // all llm jobs of a Project (by project id)
   PROJECT_LLM_JOBS: "projectLLMJobs",
 
-  // managed by ClassifierHooks:
+  // managed by features/classifier/_api/classifierQueryOptions:
   // llmjob (by llm job id)
   CLASSIFIER_JOB: "classifierJob",
   // all classifier jobs of a Project (by project id)
