@@ -1,21 +1,35 @@
 import { DocType } from "@api/models/DocType";
 import { ContentLayout } from "@components/content-layouts";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
-import { useState } from "react";
+import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { SyntheticEvent, useCallback } from "react";
+import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
 import { SdocStatusTable } from "./_components/SdocStatusTable";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/tools/health");
+import { HealthRouteAPI } from "./_hooks/healthRouteAPI";
 
 export function HealthView() {
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = HealthRouteAPI.useParams({ select: (params) => params.projectId });
+  const { sortingModel, fetchSize } = HealthRouteAPI.useSearch();
+  const [tab, setTab] = useURLConnector(HealthRouteAPI, "doctype");
 
-  // tabs
-  const [tab, setTab] = useState(DocType.TEXT);
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: DocType): void => {
-    setTab(newValue);
-  };
+  const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
+  const healthTableQuery = useSuspenseInfiniteQuery(
+    sdocHealthTableQueryOptions({
+      projectId,
+      doctype: tab,
+      sortingModel,
+      fetchSize,
+    }),
+  );
+
+  const handleTabChange = useCallback(
+    (_event: SyntheticEvent, newValue: DocType): void => {
+      setTab(newValue);
+    },
+    [setTab],
+  );
 
   return (
     <ContentLayout>
@@ -29,11 +43,24 @@ export function HealthView() {
             </Tabs>
           </Box>
           <Box className="myFlexFillAllContainer">
-            {Object.values(DocType).map((docType) => (
-              <TabPanel key={docType} value={docType} sx={{ p: 0 }} className="h100">
-                <SdocStatusTable doctype={docType} projectId={projectId} />
-              </TabPanel>
-            ))}
+            <TabPanel value={tab} sx={{ p: 0 }} className="h100">
+              <SdocStatusTable
+                key={tab}
+                doctype={tab}
+                projectId={projectId}
+                tableColumnInfo={tableColumnInfo}
+                searchData={healthTableQuery.data}
+                isError={healthTableQuery.isError}
+                isFetching={healthTableQuery.isFetching}
+                isLoading={false}
+                onFetchNextPage={() => {
+                  void healthTableQuery.fetchNextPage();
+                }}
+                onRefetch={() => {
+                  void healthTableQuery.refetch();
+                }}
+              />
+            </TabPanel>
           </Box>
         </TabContext>
       </Box>

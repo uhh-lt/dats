@@ -1,6 +1,23 @@
-import { HealthView } from "@features/health";
+import { DocType } from "@api/models/DocType";
+import { HealthView, healthViewLoader } from "@features/health";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Icon } from "@utils/icons/iconUtils";
+import { z } from "zod";
+
+const healthSearchSchema = z.object({
+  doctype: z.nativeEnum(DocType).default(DocType.TEXT),
+  sortingModel: z
+    .array(
+      z.object({
+        id: z.string(),
+        desc: z.boolean(),
+      }),
+    )
+    .default([]),
+  fetchSize: z.coerce.number().default(20),
+});
 
 export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
   staticData: {
@@ -8,5 +25,21 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
     icon: Icon.HEALTH,
     getTitle: () => "Health",
   },
+  validateSearch: zodValidator(healthSearchSchema),
+  loaderDeps: ({ search }) => ({
+    doctype: search.doctype,
+    sortingModel: search.sortingModel,
+    fetchSize: search.fetchSize,
+  }),
+  loader: ({ context, params, deps }) =>
+    healthViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+      doctype: deps.doctype,
+      sortingModel: deps.sortingModel,
+      fetchSize: deps.fetchSize,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load health view: {(error as Error).message}</div>,
   component: HealthView,
 });

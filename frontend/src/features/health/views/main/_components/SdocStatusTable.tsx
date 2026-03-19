@@ -1,36 +1,35 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
 import { GeneralHooks } from "@api/hooks/GeneralHooks";
-import { QueryKey } from "@api/hooks/QueryKey";
 import { DocType } from "@api/models/DocType";
 import { Language } from "@api/models/Language";
 import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { SdocHealthResult } from "@api/models/SdocHealthResult";
 import { SDocStatus } from "@api/models/SDocStatus";
 import { SdocStatusRow } from "@api/models/SdocStatusRow";
-import { SortDirection } from "@api/models/SortDirection";
-import { DocprocessingService } from "@api/services/DocprocessingService";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
+import { useURLConnector } from "@hooks/useURLConnector";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { Box, Button, Divider, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { InfiniteData } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
   MRT_LinearProgressBar,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
-  MRT_SortingState,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   MRT_ToolbarAlertBanner,
   useMaterialReactTable,
 } from "material-react-table";
 import { ReactElement, UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flatMapSdocHealthRows } from "../../../_api/healthQueryOptions";
+import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
 
 const sdocStatus2Icon: Record<SDocStatus, ReactElement> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
@@ -47,11 +46,18 @@ const sdocStatus2Text: Record<SDocStatus, string> = {
 interface SdocStatusTableProps {
   doctype: DocType;
   projectId: number;
+  tableColumnInfo: string[];
+  searchData: InfiniteData<SdocHealthResult>;
+  isError: boolean;
+  isFetching: boolean;
+  isLoading: boolean;
+  onFetchNextPage: () => void;
+  onRefetch: () => void;
 }
 
 const flatMapData = (page: SdocHealthResult) => page.data;
 
-export function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
+export function SdocStatusTable(props: SdocStatusTableProps) {
   const availableLLMs = GeneralHooks.useGetAvailableLLMs();
 
   return (
@@ -63,21 +69,29 @@ export function SdocStatusTable({ doctype, projectId }: SdocStatusTableProps) {
       ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
         <p>No available LLMs found. Please contact the administrator.</p>
       ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
-        <SdocStatusTableContent doctype={doctype} projectId={projectId} availableLLMs={availableLLMs.data} />
+        <SdocStatusTableContent availableLLMs={availableLLMs.data} {...props} />
       ) : null}
     </>
   );
 }
 
+
 function SdocStatusTableContent({
+  availableLLMs,
   doctype,
   projectId,
-  availableLLMs,
+  tableColumnInfo,
+  searchData,
+  isError,
+  isFetching,
+  isLoading,
+  onFetchNextPage,
+  onRefetch,
 }: SdocStatusTableProps & { availableLLMs: string[] }) {
   // local state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
-  const [fetchSize, setFetchSize] = useState(20);
+  const [sortingModel, setSortingModel] = useURLConnector(HealthRouteAPI, "sortingModel");
+  const [, setFetchSize] = useURLConnector(HealthRouteAPI, "fetchSize");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // computed
@@ -124,14 +138,9 @@ function SdocStatusTableContent({
   );
 
   // table columns
-  const tableColumnInfo = useQuery({
-    queryKey: [QueryKey.SDOC_HEALTH_TABLE_COLUMNS, doctype],
-    queryFn: () => DocprocessingService.getSearchColumnsByDoctype({ doctype }),
-    staleTime: Infinity,
-  });
   const columns: MRT_ColumnDef<SdocStatusRow>[] = useMemo(() => {
-    if (!tableColumnInfo.data) return [];
-    const result: MRT_ColumnDef<SdocStatusRow>[] = tableColumnInfo.data.reduce(
+    if (!tableColumnInfo) return [];
+    const result: MRT_ColumnDef<SdocStatusRow>[] = tableColumnInfo.reduce(
       (prev, current) => {
         prev.push({
           id: current,
@@ -173,44 +182,16 @@ function SdocStatusTableContent({
       ],
     );
     return result;
-  }, [tableColumnInfo.data]);
-
-  // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading, refetch } = useInfiniteQuery<SdocHealthResult>({
-    queryKey: [
-      QueryKey.SDOC_HEALTH_TABLE,
-      projectId,
-      doctype,
-      sortingModel, //refetch when sorting changes
-      fetchSize,
-    ],
-    queryFn: ({ pageParam }) =>
-      DocprocessingService.searchSdocHealth({
-        projId: projectId!,
-        doctype: doctype,
-        requestBody: sortingModel.map((sort) => ({
-          column: sort.id,
-          direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-        })),
-        page: pageParam as number,
-        pageSize: fetchSize,
-      }),
-    initialPageParam: 0,
-    enabled: !!projectId,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
-    refetchOnWindowFocus: false,
-  });
+  }, [tableColumnInfo]);
 
   // infinite scrolling
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
     tableContainerRef,
-    data,
+    data: searchData,
     isFetching,
-    fetchNextPage,
-    flatMapData,
+    fetchNextPage: onFetchNextPage,
+    flatMapData: flatMapSdocHealthRows,
   });
 
   // infinite scrolling reset:
@@ -319,7 +300,7 @@ function SdocStatusTableContent({
                   onClose={() => setAnchorEl(null)}
                   anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
                 >
-                  {tableColumnInfo.data?.map((step) => (
+                  {tableColumnInfo.map((step) => (
                     <MenuItem key={step} onClick={() => handleRecompute(step)}>
                       {step}
                     </MenuItem>
@@ -339,7 +320,7 @@ function SdocStatusTableContent({
         <MRT_LinearProgressBar isTopToolbar={true} table={table} />
         <Tooltip title="Refresh table">
           <span>
-            <IconButton loading={isFetching || isLoading} onClick={() => refetch()}>
+            <IconButton loading={isFetching || isLoading} onClick={onRefetch}>
               <RefreshIcon />
             </IconButton>
           </span>
