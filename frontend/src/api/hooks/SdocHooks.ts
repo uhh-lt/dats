@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
@@ -9,20 +9,30 @@ import { TagService } from "@api/services/TagService";
 import { QueryKey } from "./QueryKey";
 
 // SDOC QUERIES
+const getDocumentQueryOptions = (sdocId: number) =>
+  queryOptions<SourceDocumentRead, Error>({
+    queryKey: [QueryKey.SDOC, sdocId],
+    queryFn: () => SourceDocumentService.getById({ sdocId }),
+    staleTime: Infinity,
+  });
+
 const useGetDocument = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentRead, Error>({
-    queryKey: [QueryKey.SDOC, sdocId],
-    queryFn: () => SourceDocumentService.getById({ sdocId: sdocId! }),
+    ...getDocumentQueryOptions(sdocId!),
     enabled: !!sdocId,
+  });
+
+const getDocumentDataQueryOptions = (sdocId: number) =>
+  queryOptions<SourceDocumentDataRead, Error>({
+    queryKey: [QueryKey.SDOC_DATA, sdocId],
+    queryFn: () => SourceDocumentService.getByIdWithData({ sdocId }),
     staleTime: Infinity,
   });
 
 const useGetDocumentData = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentDataRead, Error>({
-    queryKey: [QueryKey.SDOC_DATA, sdocId],
-    queryFn: () => SourceDocumentService.getByIdWithData({ sdocId: sdocId! }),
+    ...getDocumentDataQueryOptions(sdocId!),
     enabled: !!sdocId,
-    staleTime: Infinity,
   });
 
 const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
@@ -116,6 +126,8 @@ const useGetAnnotators = (sdocId: number | null | undefined) =>
 
 export const SdocHooks = {
   // sdoc
+  getDocumentQueryOptions,
+  getDocumentDataQueryOptions,
   useGetDocument,
   useGetDocumentData,
   useGetSameFolderSdocIds,

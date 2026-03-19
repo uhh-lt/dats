@@ -1,4 +1,5 @@
-import { AnnotationView } from "@features/annotation";
+import { AnnotationView, annotationViewLoader } from "@features/annotation";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { Icon } from "@utils/icons/iconUtils";
@@ -8,17 +9,26 @@ const annotationSearchSchema = z.object({
   visibleUserId: z.number().optional(),
   selectedAnnotationId: z.number().optional(),
   compareWithUserId: z.number().optional(),
+  explorerTab: z.enum(["code", "annotation"]).default("code"),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/$sdocId")({
   staticData: {
     tab: true,
     icon: Icon.ANNOTATION,
-    getTitle: (_, params) => `Document ${String(params?.sdocId ?? "")}`,
+    getTitle: (sdoc: Awaited<ReturnType<typeof annotationViewLoader>> | undefined) =>
+      `Document ${String(sdoc?.name ?? "")}`,
   },
   params: {
     parse: ({ sdocId }) => ({ sdocId: parseInt(sdocId) }),
   },
   validateSearch: zodValidator(annotationSearchSchema),
+  loader: ({ context, params }) =>
+    annotationViewLoader({
+      queryClient: context.queryClient,
+      sdocId: params.sdocId,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load document: {(error as Error).message}</div>,
   component: AnnotationView,
 });

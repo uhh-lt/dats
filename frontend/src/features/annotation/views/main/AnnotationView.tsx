@@ -5,10 +5,12 @@ import { EditableTypography } from "@components/EditableTypography";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { CodeExplorer } from "@core/code";
 import { DocumentInfoPanel } from "@core/source-document";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ReactElement, useCallback, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { ReactElement, SyntheticEvent, useCallback, useState } from "react";
 import { AudioVideoViewer } from "../../_components/AudioVideoViewer";
 import { ImageAnnotator } from "../../_components/ImageAnnotator";
 import { ImageViewer } from "../../_components/ImageViewer";
@@ -172,37 +174,38 @@ export function AnnotationView() {
   );
 
   // global server state (react query)
-  const sdoc = SdocHooks.useGetDocument(sdocId);
-  const sdocData = SdocHooks.useGetDocumentData(sdocId);
+  const { data: sdoc } = useSuspenseQuery(SdocHooks.getDocumentQueryOptions(sdocId));
+  const { data: sdocData } = useSuspenseQuery(SdocHooks.getDocumentDataQueryOptions(sdocId));
 
   // rename document
   const updateNameMutation = SdocHooks.useUpdateName();
   const handleUpdateName = (newName: string) => {
-    if (sdoc.isSuccess) {
-      if (newName === sdoc.data.name) {
-        return;
-      }
-      updateNameMutation.mutate({
-        sdocId: sdoc.data.id,
-        requestBody: {
-          name: newName,
-        },
-      });
+    if (newName === sdoc.name) {
+      return;
     }
+    updateNameMutation.mutate({
+      sdocId: sdoc.id,
+      requestBody: {
+        name: newName,
+      },
+    });
   };
 
   // explorer
-  const [tab, setTab] = useState("code");
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
-    setTab(newValue);
-  };
+  const [explorerTab, setExplorerTab] = useURLConnector(AnnotationRouteAPI, "explorerTab");
+  const handleTabChange = useCallback(
+    (_event: SyntheticEvent, newValue: "code" | "annotation"): void => {
+      setExplorerTab(newValue);
+    },
+    [setExplorerTab],
+  );
   const explorer = (
     <Box className="h100 myFlexContainer">
-      <TabContext value={tab}>
+      <TabContext value={explorerTab}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
-          <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
+          <Tabs value={explorerTab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Code Explorer" value="code" />
-            <Tab label="Annotation Explorer" value="Annotation" />
+            <Tab label="Annotation Explorer" value="annotation" />
           </Tabs>
         </Box>
         <Box className="myFlexFillAllContainer">
@@ -218,11 +221,9 @@ export function AnnotationView() {
               onHoverCodeIdChange={handleHoverCodeIdChange}
             />
           </TabPanel>
-          {sdoc.isSuccess && (
-            <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-              {explorerComponent(sdoc.data.id)[sdoc.data.doctype][annotationMode]}
-            </TabPanel>
-          )}
+          <TabPanel value="annotation" style={{ padding: 0 }} className="h100">
+            {explorerComponent(sdoc.id)[sdoc.doctype][annotationMode]}
+          </TabPanel>
         </Box>
       </TabContext>
     </Box>
@@ -237,17 +238,17 @@ export function AnnotationView() {
       leftSidebar={explorer}
       content={
         <Box className="h100 myFlexContainer">
-          <AnnotationToolbar sdoc={sdoc.data} />
+          <AnnotationToolbar sdoc={sdoc} />
           <Box className="myFlexFillAllContainer" ref={setBoxNode}>
             <Container sx={{ py: 2 }} maxWidth="xl">
               <Card raised>
                 <CardContent>
                   {sdocId ? (
                     <>
-                      {sdoc.isSuccess && sdocData.isSuccess && boxNode ? (
+                      {boxNode ? (
                         <>
                           <EditableTypography
-                            value={sdoc.data.name}
+                            value={sdoc.name}
                             onChange={handleUpdateName}
                             variant="h4"
                             whiteColor={false}
@@ -258,11 +259,9 @@ export function AnnotationView() {
                             }}
                           />
                           {isCompareMode
-                            ? comparatorComponent(sdocData.data, boxNode)[sdoc.data.doctype][annotationMode]
-                            : annotatorComponent(sdocData.data, boxNode)[sdoc.data.doctype][annotationMode]}
+                            ? comparatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]
+                            : annotatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]}
                         </>
-                      ) : sdoc.isError ? (
-                        <div>Error: {sdoc.error.message}</div>
                       ) : (
                         <div>Loading...</div>
                       )}
