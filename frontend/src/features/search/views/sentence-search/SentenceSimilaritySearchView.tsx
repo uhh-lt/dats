@@ -7,6 +7,7 @@ import { PercentageResizablePanel, useLayoutPercentage } from "@components/resiz
 import { FILTER_PARAM, MyFilter, deserializeFilterFromSearchParam, serializeFilterToSearchParam } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -30,8 +31,8 @@ const filterName = "sentenceSimilaritySearch";
 export function SentenceSimilaritySearchView() {
   // router
   const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, searchFilter, topK, threshold } = SentenceSearchRouteAPI.useSearch();
-  const navigate = SentenceSearchRouteAPI.useNavigate();
+  const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
+  const [searchFilter, setSearchFilter] = useURLConnector(SentenceSearchRouteAPI, FILTER_PARAM);
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
@@ -58,42 +59,30 @@ export function SentenceSimilaritySearchView() {
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
       const nextFilter = addSpanAnnotationFilter(filter, stat.code_id, stat.span_text);
-      navigate({
-        search: (prev) => ({ ...prev, [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter) }),
-        replace: true,
-      });
+      setSearchFilter(serializeFilterToSearchParam(nextFilter));
     },
-    [filter, navigate],
+    [filter, setSearchFilter],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
       const nextFilter = addKeywordFilter(filter, keywordMetadataIds, keyword);
-      navigate({
-        search: (prev) => ({ ...prev, [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter) }),
-        replace: true,
-      });
+      setSearchFilter(serializeFilterToSearchParam(nextFilter));
     },
-    [filter, keywordMetadataIds, navigate],
+    [filter, keywordMetadataIds, setSearchFilter],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
       const nextFilter = addTagFilter(filter, tagId);
-      navigate({
-        search: (prev) => ({ ...prev, [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter) }),
-        replace: true,
-      });
+      setSearchFilter(serializeFilterToSearchParam(nextFilter));
     },
-    [filter, navigate],
+    [filter, setSearchFilter],
   );
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
       const nextFilter = addMetadataFilter(filter, metadata, projectMetadata, column2Info);
-      navigate({
-        search: (prev) => ({ ...prev, [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter) }),
-        replace: true,
-      });
+      setSearchFilter(serializeFilterToSearchParam(nextFilter));
     },
-    [column2Info, filter, navigate],
+    [column2Info, filter, setSearchFilter],
   );
 
   // tag explorer handlers

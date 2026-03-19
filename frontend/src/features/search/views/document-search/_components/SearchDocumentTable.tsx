@@ -28,8 +28,9 @@ import { DocumentUploadButton } from "@features/document-upload";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
 import { LLMAssistanceButton } from "@features/llm-assistant";
-import { useDebounce } from "@hooks/useDebounce";
 import { useTableFetchMoreOnScroll } from "@hooks/useTableInfiniteScroll";
+import { useURLConnector } from "@hooks/useURLConnector";
+import { useURLConnectorDebounced } from "@hooks/useURLConnectorDebounced";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
@@ -95,7 +96,9 @@ export function SearchDocumentTable({
   onFetchNextPage,
   onSearchResultsChange,
 }: DocumentTableProps) {
-  const { searchQuery, searchFilter, sortingModel } = DocumentSearchRouteAPI.useSearch();
+  const { searchFilter } = DocumentSearchRouteAPI.useSearch();
+  const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
+  const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
@@ -155,40 +158,6 @@ export function SearchDocumentTable({
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const selectedRows = useAppSelector((state) => selectSelectedRows(state.search));
   const selectedSdocIds = useAppSelector((state) => selectSelectedIds(state.search));
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
-  const debouncedSearchQuery = useDebounce(localSearchQuery, 300);
-
-  const setSearchQuery = useCallback((value: string | undefined) => {
-    setLocalSearchQuery(value ?? "");
-  }, []);
-
-  useEffect(() => {
-    setLocalSearchQuery(searchQuery);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (debouncedSearchQuery === searchQuery) {
-      return;
-    }
-    navigate({
-      search: (prev) => ({ ...prev, searchQuery: debouncedSearchQuery }),
-      replace: true,
-    });
-  }, [debouncedSearchQuery, searchQuery, navigate]);
-
-  const setSortingModel = useCallback(
-    (updater: MRT_Updater<MRT_SortingState>) => {
-      const nextSortingModel = updater instanceof Function ? updater(sortingModel as MRT_SortingState) : updater;
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          sortingModel: nextSortingModel,
-        }),
-        replace: true,
-      });
-    },
-    [navigate, sortingModel],
-  );
 
   // virtualization
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
@@ -341,9 +310,9 @@ export function SearchDocumentTable({
     onExpandedChange: setExpandedModel,
     // state
     state: {
-      globalFilter: localSearchQuery,
+      globalFilter: searchQuery,
       rowSelection: rowSelectionModel,
-      sorting: sortingModel,
+      sorting: sortingModel as MRT_SortingState,
       columnVisibility: columnVisibilityModel,
       columnSizing: columnSizingModel,
       density: gridDensity,

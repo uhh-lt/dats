@@ -1,4 +1,5 @@
 import { FILTER_EXPERT_MODE_PARAM } from "@core/filter";
+import { useURLConnector } from "@hooks/useURLConnector";
 import HelpIcon from "@mui/icons-material/Help";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { Icon, getIconComponent } from "@utils/icons/iconUtils";
@@ -11,9 +12,7 @@ export function SearchOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (url)
-  const search = DocumentSearchRouteAPI.useSearch();
-  const navigate = DocumentSearchRouteAPI.useNavigate();
-  const expertMode = search[FILTER_EXPERT_MODE_PARAM] === true;
+  const [expertMode, setExpertMode] = useURLConnector(DocumentSearchRouteAPI, FILTER_EXPERT_MODE_PARAM);
 
   return (
     <>
@@ -44,20 +43,7 @@ export function SearchOptionsMenu() {
       >
         <Box>
           <FormControlLabel
-            control={
-              <Switch
-                checked={expertMode}
-                onChange={(event) =>
-                  navigate({
-                    search: (prev) => ({
-                      ...prev,
-                      [FILTER_EXPERT_MODE_PARAM]: event.target.checked,
-                    }),
-                    replace: true,
-                  })
-                }
-              />
-            }
+            control={<Switch checked={expertMode} onChange={(event) => setExpertMode(event.target.checked)} />}
             label="Expert search"
             sx={{ ml: "-9px" }}
           />

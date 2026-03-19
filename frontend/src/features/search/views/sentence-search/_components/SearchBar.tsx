@@ -1,6 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { useURLConnector } from "@hooks/useURLConnector";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { Button, CircularProgress, Dialog, DialogContent, IconButton, InputBase, Paper, Tooltip } from "@mui/material";
@@ -20,8 +21,7 @@ interface SearchBarProps {
 
 export function SearchBar({ placeholder }: SearchBarProps) {
   // global client state (url search)
-  const { searchQuery } = SentenceSearchRouteAPI.useSearch();
-  const navigate = SentenceSearchRouteAPI.useNavigate();
+  const [searchQuery, setSearchQuery] = useURLConnector(SentenceSearchRouteAPI, "searchQuery");
 
   // global client state (redux)
   const dispatch = useAppDispatch();
@@ -34,7 +34,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   });
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    navigate({ search: (prev) => ({ ...prev, searchQuery: data.query }) });
+    setSearchQuery(data.query);
     dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: data.query,
@@ -46,7 +46,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch: MouseEventHandler<HTMLButtonElement> = () => {
-    navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
+    setSearchQuery("");
     dispatch(SentenceSearchActions.onClearRowSelection());
     reset({
       query: "",
@@ -55,7 +55,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Backspace" && typeof searchQuery === "number") {
-      navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
+      setSearchQuery("");
       dispatch(SentenceSearchActions.onClearRowSelection());
       reset({
         query: "",

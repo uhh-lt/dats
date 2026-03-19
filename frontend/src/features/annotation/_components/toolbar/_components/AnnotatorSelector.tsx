@@ -1,6 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { useAuth } from "@core/auth";
 import { UserRenderer } from "@core/user";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
 import { useEffect } from "react";
@@ -20,8 +21,8 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   const { user } = useAuth();
 
   // global client state (URL search params)
-  const navigate = AnnotationRouteAPI.useNavigate();
-  const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const { compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const [visibleUserId, setVisibleUserId] = useURLConnector(AnnotationRouteAPI, "visibleUserId");
   const isCompareMode = compareWithUserId !== undefined;
 
   // global server state (react query)
@@ -30,15 +31,15 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {
-    navigate({ to: ".", search: (prev) => ({ ...prev, visibleUserId: event.target.value as number }) });
+    setVisibleUserId(event.target.value as number);
   };
 
   // init: set current user as the visible user if not already set
   useEffect(() => {
     if (user && annotatorUserIds.data && !isCompareMode && !visibleUserId) {
-      navigate({ to: ".", search: (prev) => ({ ...prev, visibleUserId: user.id }) });
+      setVisibleUserId(user.id);
     }
-  }, [navigate, user, annotatorUserIds.data, isCompareMode, visibleUserId]);
+  }, [user, annotatorUserIds.data, isCompareMode, visibleUserId, setVisibleUserId]);
 
   // render
   const effectiveVisibleUserId = visibleUserId ?? user?.id;

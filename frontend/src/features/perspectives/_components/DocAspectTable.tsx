@@ -1,4 +1,3 @@
-import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { SdocRenderer } from "@core/source-document";
@@ -7,6 +6,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
+import { PerspectivesQueryOptions } from "../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../_api/useGetDocVisualization";
 
 interface DocAspectTableProps {

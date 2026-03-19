@@ -1,6 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { useAuth } from "@core/auth";
 import { UserRenderer } from "@core/user";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Divider, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
@@ -14,8 +15,7 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   const { user } = useAuth();
 
   // global client state (URL search params)
-  const navigate = AnnotationRouteAPI.useNavigate();
-  const { compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const [compareWithUserId, setCompareWithUserId] = useURLConnector(AnnotationRouteAPI, "compareWithUserId");
 
   // global server state (react query)
   const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
@@ -25,9 +25,9 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   const handleChange = (event: SelectChangeEvent<number>) => {
     const value = event.target.value;
     if (value === -1) {
-      navigate({ to: ".", search: (prev) => ({ ...prev, compareWithUserId: undefined }) });
+      setCompareWithUserId(undefined);
     } else {
-      navigate({ to: ".", search: (prev) => ({ ...prev, compareWithUserId: event.target.value as number }) });
+      setCompareWithUserId(event.target.value as number);
     }
   };
 

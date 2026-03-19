@@ -1,4 +1,5 @@
 import { LogicalOperator } from "@api/models/LogicalOperator";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo, useState } from "react";
 import { FilterOperators } from "../filterUtils";
@@ -33,19 +34,16 @@ export const URLFilterDialog = memo(
     anchorOrigin,
     transformOrigin,
   }: URLFilterDialogProps & URLFilterDialogViewProps) => {
-    const search = routeApi.useSearch() as Record<string, unknown>;
-    const navigate = routeApi.useNavigate() as (options: {
-      search: (prev: Record<string, unknown>) => Record<string, unknown>;
-      replace?: boolean;
-    }) => unknown;
+    const [serializedFilter, setSerializedFilter] = useURLConnector(routeApi, filterSearchParam);
+    const [expertModeValue, setExpertModeValue] = useURLConnector(routeApi, expertModeSearchParam);
     const column2Info = useAppSelector(column2InfoSelector);
 
     const filter = useMemo(
-      () => deserializeFilterFromSearchParam(search[filterSearchParam], filterName),
-      [filterName, filterSearchParam, search],
+      () => deserializeFilterFromSearchParam(serializedFilter, filterName),
+      [filterName, serializedFilter],
     );
 
-    const expertMode = search[expertModeSearchParam] === true || search[expertModeSearchParam] === "true";
+    const expertMode = expertModeValue === true || expertModeValue === "true";
 
     const [editableFilter, setEditableFilter] = useState(filter);
 
@@ -54,14 +52,8 @@ export const URLFilterDialog = memo(
     }, [defaultFilterExpression, filter]);
 
     const handleFinishFilterEdit = useCallback(() => {
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          [filterSearchParam]: serializeFilterToSearchParam(editableFilter),
-        }),
-        replace: true,
-      });
-    }, [editableFilter, filterSearchParam, navigate]);
+      setSerializedFilter(serializeFilterToSearchParam(editableFilter));
+    }, [editableFilter, setSerializedFilter]);
 
     const handleResetEditFilter = useCallback(() => {
       setEditableFilter((prev) => resetFilter(prev));
@@ -69,15 +61,9 @@ export const URLFilterDialog = memo(
 
     const handleChangeExpertMode = useCallback(
       (nextExpertMode: boolean) => {
-        navigate({
-          search: (prev) => ({
-            ...prev,
-            [expertModeSearchParam]: nextExpertMode,
-          }),
-          replace: true,
-        });
+        setExpertModeValue(nextExpertMode);
       },
-      [expertModeSearchParam, navigate],
+      [setExpertModeValue],
     );
 
     const handleAddFilter = useCallback((filterId: string) => {

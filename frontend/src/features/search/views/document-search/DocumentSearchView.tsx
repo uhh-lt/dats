@@ -12,6 +12,7 @@ import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder"
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -35,9 +36,9 @@ const filterName = "root";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, searchFilter, filterExpertMode, selectedFolderId, sortingModel, fetchSize } =
-    DocumentSearchRouteAPI.useSearch();
-  const navigate = DocumentSearchRouteAPI.useNavigate();
+  const { searchQuery, filterExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
+  const [searchFilter, setSearchFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
+  const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -53,15 +54,9 @@ export function DocumentSearchView() {
 
   const updateFilterInUrl = useCallback(
     (nextFilter: MyFilter) => {
-      navigate({
-        search: (prev) => ({
-          ...prev,
-          [FILTER_PARAM]: serializeFilterToSearchParam(nextFilter),
-        }),
-        replace: true,
-      });
+      setSearchFilter(serializeFilterToSearchParam(nextFilter));
     },
-    [navigate],
+    [setSearchFilter],
   );
 
   // filter
@@ -99,12 +94,9 @@ export function DocumentSearchView() {
   );
   const handleSelectedFolderIdChange = useCallback(
     (folderId: number) => {
-      navigate({
-        search: (prev) => ({ ...prev, selectedFolderId: folderId }),
-        replace: true,
-      });
+      setSelectedFolderId(folderId);
     },
-    [navigate],
+    [setSelectedFolderId],
   );
   const handleToggleShowFolders = useCallback(() => dispatch(SearchActions.onToggleShowFolders()), [dispatch]);
 

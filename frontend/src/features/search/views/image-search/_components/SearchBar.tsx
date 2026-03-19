@@ -1,6 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { useURLConnector } from "@hooks/useURLConnector";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { Button, CircularProgress, Dialog, DialogContent, IconButton, InputBase, Paper, Tooltip } from "@mui/material";
@@ -20,8 +21,7 @@ interface SearchBarProps {
 
 export function SearchBar({ placeholder }: SearchBarProps) {
   // global client state (url search)
-  const { searchQuery } = ImageSearchRouteAPI.useSearch();
-  const navigate = ImageSearchRouteAPI.useNavigate();
+  const [searchQuery, setSearchQuery] = useURLConnector(ImageSearchRouteAPI, "searchQuery");
 
   // global client state (redux)
   const dispatch = useAppDispatch();
@@ -29,12 +29,12 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   // react hook form
   const { register, handleSubmit, reset } = useForm<SearchFormValues>({
     values: {
-      query: searchQuery,
+      query: searchQuery ?? "",
     },
   });
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    navigate({ search: (prev) => ({ ...prev, searchQuery: data.query }) });
+    setSearchQuery(data.query);
     dispatch(ImageSearchActions.clearSelectedDocuments());
     reset({
       query: data.query,
@@ -46,7 +46,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch: MouseEventHandler<HTMLButtonElement> = () => {
-    navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
+    setSearchQuery("");
     dispatch(ImageSearchActions.onClearSearch());
     reset({
       query: "",
@@ -55,7 +55,7 @@ export function SearchBar({ placeholder }: SearchBarProps) {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === "Backspace" && typeof searchQuery === "number") {
-      navigate({ search: (prev) => ({ ...prev, searchQuery: "" }) });
+      setSearchQuery("");
       dispatch(ImageSearchActions.clearSelectedDocuments());
       reset({
         query: "",

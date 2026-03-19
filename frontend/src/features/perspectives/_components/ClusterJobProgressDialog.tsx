@@ -1,7 +1,7 @@
-import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { JobStatus } from "@api/models/JobStatus";
 import { Dialog } from "@mui/material";
 import { memo } from "react";
+import { PerspectivesQueryOptions } from "../_api/perspectivesQueryOptions";
 import { ClusterJobProgressCard } from "./ClusterJobProgressCard";
 
 interface ClusterJobProgressDialog {
