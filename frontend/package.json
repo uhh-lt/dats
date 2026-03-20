@@ -39,6 +39,7 @@
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.166.7",
     "@tanstack/react-virtual": "^3.13.22",
+    "@tanstack/zod-adapter": "^1.166.9",
     "@xyflow/react": "^12.10.1",
     "d3": "^7.9.0",
     "dayjs": "^1.11.20",
