@@ -4,14 +4,14 @@ import { createInitialFilterState, filterReducer, MyFilterExpression, resetProje
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const defaultFilterExpression: MyFilterExpression = {
+export const defaultBBoxFilterExpression: MyFilterExpression = {
   id: crypto.randomUUID(),
   column: BBoxColumns.BB_SOURCE_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };
 
-const initialState = createInitialFilterState(defaultFilterExpression);
+const initialState = createInitialFilterState(defaultBBoxFilterExpression);
 
 const bboxFilterSlice = createSlice({
   name: "bboxFilter",
@@ -20,7 +20,12 @@ const bboxFilterSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'bboxFilter' state.");
-      resetProjectFilterState({ state, defaultFilterExpression, projectId: action.payload, sliceName: "bboxFilter" });
+      resetProjectFilterState({
+        state,
+        defaultFilterExpression: defaultBBoxFilterExpression,
+        projectId: action.payload,
+        sliceName: "bboxFilter",
+      });
     });
   },
 });

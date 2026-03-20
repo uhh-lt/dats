@@ -5,14 +5,14 @@ import { createInitialFilterState, filterReducer, resetProjectFilterState } from
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 
-const defaultFilterExpression: MyFilterExpression = {
+export const defaultSdocFilterExpression: MyFilterExpression = {
   id: crypto.randomUUID(),
   column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };
 
-const initialState = createInitialFilterState(defaultFilterExpression);
+const initialState = createInitialFilterState(defaultSdocFilterExpression);
 
 const documentTableFilterSlice = createSlice({
   name: "documentTableFilter",
@@ -23,7 +23,7 @@ const documentTableFilterSlice = createSlice({
       console.log("Project changed! Resetting 'documentTableFilter' state.");
       resetProjectFilterState({
         state,
-        defaultFilterExpression,
+        defaultFilterExpression: defaultSdocFilterExpression,
         sliceName: "documentTableFilter",
         projectId: action.payload,
       });

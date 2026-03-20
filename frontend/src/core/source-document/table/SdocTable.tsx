@@ -5,277 +5,276 @@ import { SdocColumns } from "@api/models/SdocColumns";
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
 import {
-  FilterTableProps,
-  FilterTableToolbarLeft,
+  FILTER_EXPERT_MODE_PARAM,
+  FILTER_PARAM,
+  FilterTable,
+  FilterTableContainerProps,
+  FilterTableToolbarProps,
   FilterTableToolbarRight,
   MyFilter,
+  ReduxFilterDialogProps,
+  ReduxFilterTableToolbarLeft,
+  ReduxFilterTableToolbarProps,
+  URLFilterDialogProps,
+  URLFilterTableToolbarLeft,
+  URLFilterTableToolbarProps,
   createEmptyFilter,
-  useRenderFilterToolbars,
+  deserializeFilterFromSearchParam,
 } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
-import { MRT_ColumnDef, MRT_RowVirtualizer, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { MRT_ColumnDef } from "material-react-table";
+import { memo, useMemo, useState } from "react";
 import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
-import { SdocTableFilterActions } from "./sdocTableFilterSlice";
+import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
 
 const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
-// this defines which filter slice is used
+/**
+ * Component for rendering a filter table for source documents.
+ * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component.
+ * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
+ *
+ * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
+ * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
+ * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
+ */
+const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSearchHit>>({
+  projectId,
+  filter,
+  rowSelectionModel,
+  onRowSelectionChange,
+  sortingModel,
+  onSortingChange,
+  columnVisibilityModel,
+  onColumnVisibilityChange,
+  fetchSize,
+  onFetchSizeChange,
+  positionToolbarAlertBanner = "top",
+  renderTopRightToolbar = FilterTableToolbarRight,
+  renderTopLeftToolbar,
+  renderBottomToolbar,
+  toolbarExtraProps,
+}: FilterTableContainerProps<ElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
+  const [searchQuery, setSearchQuery] = useState<string | undefined>("");
+
+  const tableInfo = useInitDocumentTableFilterSlice({ projectId });
+  const columns = useMemo(() => {
+    if (!tableInfo) return [];
+
+    const result = tableInfo.map((column) => {
+      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
+        id: column.column,
+        header: column.label,
+        enableSorting: column.sortable,
+      };
+      switch (column.column) {
+        case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
+          } as MRT_ColumnDef<ElasticSearchHit>;
+        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
+          return {
+            ...colDef,
+            flex: 2,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
+          } as MRT_ColumnDef<ElasticSearchHit>;
+        case SdocColumns.SD_TAG_ID_LIST:
+          return {
+            ...colDef,
+            flex: 2,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
+          } as MRT_ColumnDef<ElasticSearchHit>;
+        case SdocColumns.SD_USER_ID_LIST:
+          return {
+            ...colDef,
+            flex: 2,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
+          } as MRT_ColumnDef<ElasticSearchHit>;
+        case SdocColumns.SD_CODE_ID_LIST:
+          return null;
+        case SdocColumns.SD_SPAN_ANNOTATIONS:
+          return null;
+        default:
+          if (!isNaN(parseInt(column.column))) {
+            return {
+              ...colDef,
+              flex: 2,
+              Cell: ({ row }) => (
+                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
+              ),
+            } as MRT_ColumnDef<ElasticSearchHit>;
+          }
+          return {
+            ...colDef,
+            Cell: () => <i>Cannot render column {column.column}</i>,
+          } as MRT_ColumnDef<ElasticSearchHit>;
+      }
+    });
+
+    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
+  }, [tableInfo]);
+
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
+    queryKey: [QueryKey.SDOC_TABLE, projectId, searchQuery, filter, sortingModel, fetchSize],
+    queryFn: ({ pageParam }) =>
+      SearchService.searchSdocs({
+        searchQuery: searchQuery || "",
+        projectId: projectId!,
+        folderId: null,
+        highlight: true,
+        expertMode: false,
+        requestBody: {
+          filter: filter as MyFilter<SdocColumns>,
+          sorts: sortingModel.map((sort) => ({
+            column: sort.id as SdocColumns,
+            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+          })),
+        },
+        pageNumber: pageParam as number,
+        pageSize: fetchSize,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (_lastGroup, groups) => groups.length,
+    refetchOnWindowFocus: false,
+  });
+
+  const renderDetailPanel = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length === 0) return undefined;
+
+    return ({ row }: { row: { original: ElasticSearchHit } }) =>
+      row.original.highlights ? (
+        <Box className="search-result-highlight">
+          {row.original.highlights.map((highlight, index) => (
+            <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
+              {parse(highlight)}
+            </Typography>
+          ))}
+        </Box>
+      ) : null;
+  }, [searchQuery]);
+
+  return (
+    <FilterTable
+      name="documents"
+      columns={columns}
+      data={data}
+      fetchNextPage={fetchNextPage}
+      flatMapData={flatMapData}
+      isLoading={isLoading || columns.length === 0}
+      isError={isError}
+      isFetching={isFetching}
+      rowSelectionModel={rowSelectionModel}
+      onRowSelectionChange={onRowSelectionChange}
+      sortingModel={sortingModel}
+      onSortingChange={onSortingChange}
+      columnVisibilityModel={columnVisibilityModel}
+      onColumnVisibilityChange={onColumnVisibilityChange}
+      onFetchSizeChange={onFetchSizeChange}
+      positionToolbarAlertBanner={positionToolbarAlertBanner}
+      renderTopRightToolbar={renderTopRightToolbar}
+      renderTopLeftToolbar={renderTopLeftToolbar}
+      renderBottomToolbar={renderBottomToolbar}
+      toolbarExtraProps={toolbarExtraProps}
+      tableState={{ globalFilter: searchQuery }}
+      tableOptions={{
+        enableGlobalFilter: true,
+        onGlobalFilterChange: setSearchQuery,
+        renderDetailPanel,
+      }}
+    />
+  );
+};
+
+// configs for redux filter table
 const filterStateSelector = (state: RootState) => state.documentTableFilter;
 const filterActions = SdocTableFilterActions;
 
-export const SdocTable = memo(
+/**
+ * Redux-based filter table for source documents.
+ * The filter state is stored under state.documentTableFilter.filter[filterName].
+ *
+ * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
+ */
+export const SdocReduxFilterTable = memo(
   ({
-    projectId,
     filterName,
-    rowSelectionModel,
-    onRowSelectionChange,
-    sortingModel,
-    onSortingChange,
-    columnVisibilityModel,
-    onColumnVisibilityChange,
-    fetchSize,
-    onFetchSizeChange,
-    positionToolbarAlertBanner = "top",
-    renderTopRightToolbar = FilterTableToolbarRight,
-    renderTopLeftToolbar = FilterTableToolbarLeft,
-    renderBottomToolbar,
-  }: FilterTableProps<ElasticSearchHit>) => {
-    // local st ate
-    const [searchQuery, setSearchQuery] = useState<string | undefined>("");
-
-    // filtering
+    ...tableProps
+  }: Omit<
+    FilterTableContainerProps<ElasticSearchHit, ReduxFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
+    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
+  > &
+    Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
     const filter =
       useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
-    // virtualization
-    const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+    return (
+      <SdocFilterTable
+        {...tableProps}
+        filter={filter as MyFilter<SdocColumns>}
+        renderTopLeftToolbar={ReduxFilterTableToolbarLeft}
+        toolbarExtraProps={{
+          filterName,
+          filterStateSelector,
+          filterActions,
+        }}
+      />
+    );
+  },
+);
 
-    // table columns
-    const tableInfo = useInitDocumentTableFilterSlice({ projectId });
-    const columns = useMemo(() => {
-      if (!tableInfo) return [];
+// backward compatible export name
+export const SdocTable = SdocReduxFilterTable;
 
-      const result = tableInfo.map((column) => {
-        const colDef: MRT_ColumnDef<ElasticSearchHit> = {
-          id: column.column,
-          header: column.label,
-          enableSorting: column.sortable,
-        };
-        switch (column.column) {
-          case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
-            return {
-              ...colDef,
-              Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-            } as MRT_ColumnDef<ElasticSearchHit>;
-          case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
-            return {
-              ...colDef,
-              flex: 2,
-              Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
-            } as MRT_ColumnDef<ElasticSearchHit>;
-          case SdocColumns.SD_TAG_ID_LIST:
-            return {
-              ...colDef,
-              flex: 2,
-              Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-            } as MRT_ColumnDef<ElasticSearchHit>;
-          case SdocColumns.SD_USER_ID_LIST:
-            return {
-              ...colDef,
-              flex: 2,
-              Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-            } as MRT_ColumnDef<ElasticSearchHit>;
-          case SdocColumns.SD_CODE_ID_LIST:
-            return null;
-          case SdocColumns.SD_SPAN_ANNOTATIONS:
-            return null;
-          default:
-            // render metadata
-            if (!isNaN(parseInt(column.column))) {
-              return {
-                ...colDef,
-                flex: 2,
-                Cell: ({ row }) => (
-                  <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
-                ),
-              } as MRT_ColumnDef<ElasticSearchHit>;
-            } else {
-              return {
-                ...colDef,
-                Cell: () => <i>Cannot render column {column.column}</i>,
-              } as MRT_ColumnDef<ElasticSearchHit>;
-            }
-        }
-      });
-      // unwanted columns are set to null, so we filter those out
-      return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
-    }, [tableInfo]);
+// configs for URL filter table
+const column2InfoSelector = (state: RootState) => state.documentTableFilter.column2Info;
+const defaultFilterExpression = defaultSdocFilterExpression;
+const urlFilterName = "root";
 
-    // table data
-    const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
-      queryKey: [
-        QueryKey.SDOC_TABLE,
-        projectId,
-        searchQuery, // refetch when searchQuery changes
-        filter, // refetch when columnFilters changes
-        sortingModel, // refetch when sorting changes
-        fetchSize,
-      ],
-      queryFn: ({ pageParam }) =>
-        SearchService.searchSdocs({
-          searchQuery: searchQuery || "",
-          projectId: projectId!,
-          folderId: null, // search in all folders / project
-          highlight: true,
-          expertMode: false,
-          requestBody: {
-            filter: filter as MyFilter<SdocColumns>,
-            sorts: sortingModel.map((sort) => ({
-              column: sort.id as SdocColumns,
-              direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-            })),
-          },
-          pageNumber: pageParam as number,
-          pageSize: fetchSize,
-        }),
-      initialPageParam: 0,
-      getNextPageParam: (_lastGroup, groups) => {
-        return groups.length;
-      },
-      refetchOnWindowFocus: false,
-    });
-
-    // infinite scrolling
-    const tableContainerRef = useRef<HTMLDivElement>(null);
-    const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
-      tableContainerRef,
-      data,
-      isFetching,
-      fetchNextPage,
-      flatMapData,
-    });
-
-    // infinite scrolling reset:
-    // scroll to top of table when sorting or filters change
-    useEffect(() => {
-      try {
-        rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-      } catch (error) {
-        console.error(error);
-      }
-    }, [projectId, sortingModel]);
-
-    const handleTableScroll = useCallback(
-      (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
-      [fetchMoreOnScroll],
+/**
+ * URL-based filter table for source documents.
+ * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
+ *
+ * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
+ */
+export const SdocURLFilterTable = memo(
+  ({
+    routeApi,
+    filterSearchParam = FILTER_PARAM,
+    expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
+    ...tableProps
+  }: Omit<
+    FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
+    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
+  > &
+    Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
+    const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
+    const filter = useMemo(
+      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SdocColumns>,
+      [serializedFilter],
     );
 
-    // fetch all
-    const handleFetchAll = useCallback(() => {
-      onFetchSizeChange(totalResults);
-    }, [onFetchSizeChange, totalResults]);
-
-    // rendering
-    const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } =
-      useRenderFilterToolbars({
-        name: "documents",
-        flatData,
-        totalFetched,
-        totalResults,
-        handleFetchAll,
-        renderTopRightToolbar,
-        renderTopLeftToolbar,
-        renderBottomToolbar,
-        filterStateSelector,
-        filterActions,
-        filterName,
-        rowSelectionModel,
-        tableContainerRef,
-      });
-
-    const renderDetailPanel = useMemo(() => {
-      if (!searchQuery || searchQuery.trim().length === 0) return undefined;
-
-      return ({ row }: { row: { original: ElasticSearchHit } }) =>
-        row.original.highlights ? (
-          <Box className="search-result-highlight">
-            {row.original.highlights.map((highlight, index) => (
-              <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
-                {parse(highlight)}
-              </Typography>
-            ))}
-          </Box>
-        ) : null;
-    }, [searchQuery]);
-
-    // table
-    const table = useMaterialReactTable<ElasticSearchHit>({
-      data: flatData,
-      columns: columns,
-      getRowId: (row) => `${row.id}`,
-      // state
-      state: {
-        globalFilter: searchQuery,
-        rowSelection: rowSelectionModel,
-        sorting: sortingModel,
-        columnVisibility: columnVisibilityModel,
-        isLoading: isLoading || columns.length === 0,
-        showAlertBanner: isError,
-        showProgressBars: isFetching,
-      },
-      // search query
-      manualFiltering: true, // turn of client-side filtering
-      enableGlobalFilter: true,
-      onGlobalFilterChange: setSearchQuery,
-      // selection
-      enableRowSelection: true,
-      onRowSelectionChange,
-      // virtualization
-      enableRowVirtualization: true,
-      rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
-      rowVirtualizerOptions: { overscan: 4 },
-      // filtering
-      enableColumnFilters: false,
-      // pagination
-      enablePagination: false,
-      // sorting
-      manualSorting: true,
-      onSortingChange,
-      // column visiblility
-      onColumnVisibilityChange,
-      // detail (highlights)
-      renderDetailPanel,
-      // mui components
-      muiTablePaperProps: {
-        elevation: 0,
-        style: { height: "100%", display: "flex", flexDirection: "column" },
-      },
-      muiTableContainerProps: {
-        ref: tableContainerRef,
-        onScroll: handleTableScroll,
-        style: { flexGrow: 1 },
-      },
-      muiToolbarAlertBannerProps: isError
-        ? {
-            color: "error",
-            children: "Error loading data",
-          }
-        : undefined,
-      // toolbar
-      positionToolbarAlertBanner,
-      renderTopToolbarCustomActions: renderTopLeftToolbarContent,
-      renderToolbarInternalActions: renderTopRightToolbarContent,
-      renderBottomToolbarCustomActions: renderBottomToolbarContent,
-    });
-
-    return <MaterialReactTable table={table} />;
+    return (
+      <SdocFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={URLFilterTableToolbarLeft}
+        toolbarExtraProps={{
+          filterName: urlFilterName,
+          routeApi,
+          defaultFilterExpression,
+          column2InfoSelector,
+          filterSearchParam,
+          expertModeSearchParam,
+        }}
+      />
+    );
   },
 );

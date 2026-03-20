@@ -10,7 +10,7 @@ import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/mat
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";
-import { SentenceAnnotationTable } from "../table";
+import { SentenceAnnotationReduxFilterTable } from "../table";
 
 const filterName = "selectSentenceAnnotationDialog";
 
@@ -120,7 +120,7 @@ function SelectSentenceAnnotationsDialogContent({
   );
 
   return (
-    <SentenceAnnotationTable
+    <SentenceAnnotationReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}

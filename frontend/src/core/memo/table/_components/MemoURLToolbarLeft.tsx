@@ -1,27 +1,33 @@
 import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { FilterTableToolbarProps, ReduxFilterDialog } from "@core/filter";
+import { URLFilterDialog, URLFilterTableToolbarProps } from "@core/filter";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
 import { MemoDeleteButton } from "../../MemoDeleteButton";
 import { MemoStarButton } from "../../MemoStarButton";
 
-export function MemoToolbarLeft({
+export function MemoURLToolbarLeft({
   anchor,
   selectedData,
   filterName,
-  filterStateSelector,
-  filterActions,
-}: FilterTableToolbarProps<ElasticSearchHit>) {
+  routeApi,
+  defaultFilterExpression,
+  column2InfoSelector,
+  filterSearchParam,
+  expertModeSearchParam,
+}: URLFilterTableToolbarProps<ElasticSearchHit>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <ReduxFilterDialog
+      <URLFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}
-        filterStateSelector={filterStateSelector}
-        filterActions={filterActions}
+        routeApi={routeApi}
+        defaultFilterExpression={defaultFilterExpression}
+        column2InfoSelector={column2InfoSelector}
+        filterSearchParam={filterSearchParam}
+        expertModeSearchParam={expertModeSearchParam}
       />
       {selectedMemoIds.length > 0 && (
         <>
