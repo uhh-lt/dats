@@ -7,7 +7,7 @@ import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FilterTableToolbarProps } from "@core/filter";
-import { SEATFilterActions, SentenceAnnotationTable } from "@core/sentence-annotation";
+import { SEATFilterActions, SentenceAnnotationReduxFilterTable } from "@core/sentence-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, CircularProgress, Dialog, ListItemIcon, Menu, MenuItem } from "@mui/material";
@@ -297,7 +297,7 @@ function SelectSentenceAnnotationsDialogContent({
   );
 
   return (
-    <SentenceAnnotationTable
+    <SentenceAnnotationReduxFilterTable
       projectId={projectId}
       filterName={filterNameSentAnno}
       rowSelectionModel={rowSelectionModel}

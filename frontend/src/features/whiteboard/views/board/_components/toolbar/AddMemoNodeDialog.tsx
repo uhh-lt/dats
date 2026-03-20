@@ -3,7 +3,7 @@ import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FilterTableToolbarProps } from "@core/filter";
-import { MemoTable } from "@core/memo";
+import { MemoReduxFilterTable } from "@core/memo";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
@@ -111,7 +111,7 @@ function AddMemoNodeDialogContent({
   );
 
   return (
-    <MemoTable
+    <MemoReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}

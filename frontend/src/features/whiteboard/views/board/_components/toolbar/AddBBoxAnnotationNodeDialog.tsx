@@ -2,7 +2,7 @@ import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
-import { BBoxAnnotationTable } from "@core/bbox-annotation";
+import { BBoxAnnotationReduxFilterTable } from "@core/bbox-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
@@ -120,7 +120,7 @@ const AddBBoxAnnotationNodeDialogContent = memo(function AddBBoxAnnotationNodeDi
   );
 
   return (
-    <BBoxAnnotationTable
+    <BBoxAnnotationReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}

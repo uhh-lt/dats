@@ -3,7 +3,7 @@ import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FilterTableToolbarProps } from "@core/filter";
-import { SdocTable } from "@core/source-document";
+import { SdocReduxFilterTable } from "@core/source-document";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
@@ -110,7 +110,7 @@ function AddDocumentNodeDialogContent({
   );
 
   return (
-    <SdocTable
+    <SdocReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}

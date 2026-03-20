@@ -4,7 +4,7 @@ import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import { SpanColumns } from "@api/models/SpanColumns";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FilterTableToolbarProps } from "@core/filter";
-import { SpanAnnotationTable } from "@core/span-annotation";
+import { SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
@@ -116,7 +116,7 @@ function AddSpanAnnotationNodeDialogContent({
   );
 
   return (
-    <SpanAnnotationTable
+    <SpanAnnotationReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}
