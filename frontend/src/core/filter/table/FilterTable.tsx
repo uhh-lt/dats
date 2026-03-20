@@ -45,11 +45,36 @@ interface TablePage {
   total_results: number;
 }
 
+type FilterTableInternalMRTOptionKeys =
+  | "getRowId"
+  | "columns"
+  | "data"
+  | "enableColumnFilters"
+  | "enablePagination"
+  | "enableRowSelection"
+  | "enableRowVirtualization"
+  | "manualFiltering"
+  | "manualSorting"
+  | "muiTableContainerProps"
+  | "muiTablePaperProps"
+  | "muiToolbarAlertBannerProps"
+  | "onColumnVisibilityChange"
+  | "onRowSelectionChange"
+  | "onSortingChange"
+  | "positionToolbarAlertBanner"
+  | "renderBottomToolbar"
+  | "renderBottomToolbarCustomActions"
+  | "renderToolbarInternalActions"
+  | "renderTopToolbarCustomActions"
+  | "rowVirtualizerInstanceRef";
+
+type FilterTableMRTOptions<T extends TableRowWithId> = Omit<MRT_TableOptions<T>, FilterTableInternalMRTOptionKeys>;
+
 export interface FilterTableProps<
   T extends TableRowWithId,
   TToolbarProps extends FilterTableToolbarProps<T>,
   TPage extends TablePage,
-> {
+> extends FilterTableMRTOptions<T> {
   // data info
   name: string;
   // column info
@@ -138,6 +163,7 @@ export function FilterTable<
   renderBottomToolbar,
   toolbarExtraProps,
   errorMessage = "Error loading data",
+  ...mrtOptions
 }: FilterTableProps<T, TToolbarProps, TPage>) {
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -185,10 +211,12 @@ export function FilterTable<
     });
 
   const table = useMaterialReactTable<T>({
+    ...mrtOptions,
     data: flatData,
     columns,
     getRowId: (row) => `${row.id}`,
     state: {
+      ...(mrtOptions.state || {}),
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       columnVisibility: columnVisibilityModel,

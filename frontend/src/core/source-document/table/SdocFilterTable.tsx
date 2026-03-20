@@ -183,12 +183,10 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
-      tableState={{ globalFilter: searchQuery }}
-      tableOptions={{
-        enableGlobalFilter: true,
-        onGlobalFilterChange: setSearchQuery,
-        renderDetailPanel,
-      }}
+      state={{ globalFilter: searchQuery }}
+      enableGlobalFilter
+      onGlobalFilterChange={setSearchQuery}
+      renderDetailPanel={renderDetailPanel}
     />
   );
 };

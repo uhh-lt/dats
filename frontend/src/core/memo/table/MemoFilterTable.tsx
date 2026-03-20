@@ -172,18 +172,15 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
-      tableState={{
+      state={{
         globalFilter: searchQuery,
         showGlobalFilter: true,
       }}
-      tableOptions={{
-        autoResetAll: false,
-        enableGlobalFilter: true,
-        onGlobalFilterChange: setSearchQuery,
-        manualSorting: false,
-        enableColumnResizing: true,
-        columnResizeMode: "onEnd",
-      }}
+      autoResetAll={false}
+      enableGlobalFilter
+      onGlobalFilterChange={setSearchQuery}
+      enableColumnResizing
+      columnResizeMode="onEnd"
     />
   );
 };
