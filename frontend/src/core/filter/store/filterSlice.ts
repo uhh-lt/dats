@@ -14,6 +14,7 @@ import {
   finishFilterEdit,
   startFilterEdit,
 } from "./_utils/filterLogic";
+import { LogicalOperator } from "@api/models/LogicalOperator";
 
 export interface FilterState {
   // project state:
@@ -104,7 +105,7 @@ export const filterReducer = {
   },
   changeFilterLogicalOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: import("@api/models/LogicalOperator").LogicalOperator }>,
+    action: PayloadAction<{ filterId: string; operator: LogicalOperator }>,
   ) => {
     state.editableFilter = changeEditableFilterLogicalOperator(
       state.editableFilter,

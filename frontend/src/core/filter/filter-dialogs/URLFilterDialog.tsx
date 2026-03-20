@@ -1,8 +1,9 @@
 import { LogicalOperator } from "@api/models/LogicalOperator";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo, useState } from "react";
-import { FilterOperators } from "../filterUtils";
+import { ColumnInfo, FilterOperators, MyFilterExpression } from "../filterUtils";
 import {
   FILTER_EXPERT_MODE_PARAM,
   FILTER_PARAM,
@@ -18,8 +19,16 @@ import {
   serializeFilterToSearchParam,
   withDefaultFilterExpression,
 } from "../store";
-import { FilterDialog } from "./_components/FilterDialog";
-import { URLFilterDialogProps, URLFilterDialogViewProps } from "./URLFilterDialogProps";
+import { FilterDialog, FilterDialogProps } from "./_components/FilterDialog";
+
+export interface URLFilterDialogProps {
+  filterName: string;
+  routeApi: any;
+  defaultFilterExpression: MyFilterExpression;
+  column2InfoSelector: (state: RootState) => Record<string, ColumnInfo>;
+  filterSearchParam?: string;
+  expertModeSearchParam?: string;
+}
 
 export const URLFilterDialog = memo(
   ({
@@ -33,20 +42,23 @@ export const URLFilterDialog = memo(
     buttonProps,
     anchorOrigin,
     transformOrigin,
-  }: URLFilterDialogProps & URLFilterDialogViewProps) => {
-    const [serializedFilter, setSerializedFilter] = useURLConnector(routeApi, filterSearchParam);
-    const [expertModeValue, setExpertModeValue] = useURLConnector(routeApi, expertModeSearchParam);
+  }: URLFilterDialogProps &
+    Pick<FilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
     const column2Info = useAppSelector(column2InfoSelector);
 
+    // filter state management
+    const [serializedFilter, setSerializedFilter] = useURLConnector(routeApi, filterSearchParam);
     const filter = useMemo(
       () => deserializeFilterFromSearchParam(serializedFilter, filterName),
       [filterName, serializedFilter],
     );
-
-    const expertMode = expertModeValue === true || expertModeValue === "true";
-
     const [editableFilter, setEditableFilter] = useState(filter);
 
+    // expert mode state management
+    const [expertModeValue, setExpertModeValue] = useURLConnector(routeApi, expertModeSearchParam);
+    const expertMode = expertModeValue === true || expertModeValue === "true";
+
+    // filter actions
     const handleStartFilterEdit = useCallback(() => {
       setEditableFilter(withDefaultFilterExpression(filter, defaultFilterExpression));
     }, [defaultFilterExpression, filter]);

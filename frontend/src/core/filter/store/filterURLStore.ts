@@ -1,4 +1,5 @@
-import { MyFilter, MyFilterExpression, createEmptyFilter } from "../filterUtils";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import { ColumnInfo, FilterOperators, MyFilter, MyFilterExpression, createEmptyFilter } from "../filterUtils";
 import {
   addDefaultFilterExpressionToEditableFilter,
   addDefaultFilterToEditableFilter,
@@ -6,10 +7,9 @@ import {
   changeEditableFilterLogicalOperator,
   changeEditableFilterOperator,
   changeEditableFilterValue,
-  cloneFilter,
   createClearedFilter,
   deleteFilterFromEditableFilter,
-  startFilterEdit,
+  startFilterEdit
 } from "./_utils/filterLogic";
 
 export const FILTER_PARAM = "searchFilter";
@@ -87,7 +87,7 @@ export const deleteFilterItem = (editableFilter: MyFilter, filterId: string): My
 export const changeFilterLogicalOperator = (
   editableFilter: MyFilter,
   filterId: string,
-  operator: import("@api/models/LogicalOperator").LogicalOperator,
+  operator: LogicalOperator,
 ): MyFilter => {
   return changeEditableFilterLogicalOperator(editableFilter, filterId, operator);
 };
@@ -96,7 +96,7 @@ export const changeFilterColumn = (
   editableFilter: MyFilter,
   filterId: string,
   columnValue: string,
-  column2Info: Record<string, import("../filterUtils").ColumnInfo>,
+  column2Info: Record<string, ColumnInfo>,
 ): MyFilter => {
   return changeEditableFilterColumn(editableFilter, filterId, columnValue, column2Info);
 };
@@ -104,7 +104,7 @@ export const changeFilterColumn = (
 export const changeFilterOperator = (
   editableFilter: MyFilter,
   filterId: string,
-  operator: import("../filterUtils").FilterOperators,
+  operator: FilterOperators,
 ): MyFilter => {
   return changeEditableFilterOperator(editableFilter, filterId, operator);
 };
@@ -116,5 +116,3 @@ export const changeFilterValue = (
 ): MyFilter => {
   return changeEditableFilterValue(editableFilter, filterId, value);
 };
-
-export const cloneUrlFilter = cloneFilter;

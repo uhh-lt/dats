@@ -1,7 +1,15 @@
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
 import { FilterDialog, FilterDialogProps } from "./_components/FilterDialog";
-import { ReduxFilterDialogProps } from "./ReduxFilterDialogProps";
+
+import { RootState } from "@store/store";
+import { FilterActions, FilterState } from "../store";
+
+export interface ReduxFilterDialogProps {
+  filterName: string;
+  filterStateSelector: (state: RootState) => FilterState;
+  filterActions: FilterActions;
+}
 
 export const ReduxFilterDialog = memo(
   ({
@@ -9,10 +17,11 @@ export const ReduxFilterDialog = memo(
     buttonProps,
     anchorOrigin,
     transformOrigin,
-    ...filterProps
+    filterStateSelector,
+    filterName,
+    filterActions,
   }: ReduxFilterDialogProps &
     Pick<FilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-    const { filterStateSelector, filterName, filterActions } = filterProps;
     const filter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
     const editableFilter = useAppSelector((state) => filterStateSelector(state).editableFilter);
     const column2Info = useAppSelector((state) => filterStateSelector(state).column2Info);

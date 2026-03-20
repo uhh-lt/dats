@@ -1,1 +1,1 @@
-export * from "./FilterTableProps";
+export * from "./FilterTable";

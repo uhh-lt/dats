@@ -2,23 +2,23 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { MRT_RowSelectionState, MRT_TableInstance } from "material-react-table";
 import { useCallback } from "react";
 import { TableRowWithId } from "../_types/TableRowWithId";
-import { ReduxFilterDialogProps } from "../filter-dialogs";
 import { FilterTableToolbarProps } from "./FilterTableToolbarProps";
 
-interface UseRenderFilterToolbarsProps<T extends TableRowWithId> extends ReduxFilterDialogProps {
+interface UseRenderFilterToolbarsProps<T extends TableRowWithId, TToolbarProps extends FilterTableToolbarProps<T>> {
   name: string;
   flatData: T[];
   totalFetched: number;
   totalResults: number;
   handleFetchAll: () => void;
-  renderTopRightToolbar: (props: FilterTableToolbarProps<T>) => React.ReactNode;
-  renderTopLeftToolbar: (props: FilterTableToolbarProps<T>) => React.ReactNode;
-  renderBottomToolbar?: (props: FilterTableToolbarProps<T>) => React.ReactNode;
+  renderTopRightToolbar: (props: TToolbarProps) => React.ReactNode;
+  renderTopLeftToolbar: (props: TToolbarProps) => React.ReactNode;
+  renderBottomToolbar?: (props: TToolbarProps) => React.ReactNode;
+  toolbarExtraProps: Omit<TToolbarProps, keyof FilterTableToolbarProps<T>>;
   rowSelectionModel: MRT_RowSelectionState;
   tableContainerRef: React.RefObject<HTMLElement | null>;
 }
 
-export const useRenderFilterToolbars = <T extends TableRowWithId>({
+export const useRenderFilterToolbars = <T extends TableRowWithId, TToolbarProps extends FilterTableToolbarProps<T>>({
   name,
   flatData,
   totalFetched,
@@ -27,32 +27,30 @@ export const useRenderFilterToolbars = <T extends TableRowWithId>({
   renderTopRightToolbar,
   renderTopLeftToolbar,
   renderBottomToolbar,
-  filterStateSelector,
-  filterActions,
-  filterName,
+  toolbarExtraProps,
   rowSelectionModel,
   tableContainerRef,
-}: UseRenderFilterToolbarsProps<T>) => {
-  // rendering
-  const renderTopLeftToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<T> }) =>
-      renderTopLeftToolbar({
-        table: props.table,
+}: UseRenderFilterToolbarsProps<T, TToolbarProps>) => {
+  const getToolbarProps = useCallback(
+    (table: MRT_TableInstance<T>) =>
+      ({
+        ...toolbarExtraProps,
+        table,
         selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
         anchor: tableContainerRef,
-        filterStateSelector,
-        filterActions,
-        filterName,
-      }),
-    [
-      renderTopLeftToolbar,
-      flatData,
-      tableContainerRef,
-      filterStateSelector,
-      filterActions,
-      filterName,
-      rowSelectionModel,
-    ],
+      }) as TToolbarProps,
+    [toolbarExtraProps, flatData, rowSelectionModel, tableContainerRef],
+  );
+
+  // rendering
+  const renderTopLeftToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<T> }) => renderTopLeftToolbar(getToolbarProps(props.table)),
+    [renderTopLeftToolbar, getToolbarProps],
+  );
+
+  const renderTopRightToolbarContent = useCallback(
+    (props: { table: MRT_TableInstance<T> }) => renderTopRightToolbar(getToolbarProps(props.table)),
+    [renderTopRightToolbar, getToolbarProps],
   );
 
   const renderBottomToolbarContent = useCallback(
@@ -65,51 +63,10 @@ export const useRenderFilterToolbars = <T extends TableRowWithId>({
           Fetch All
         </Button>
         <Box sx={{ flexGrow: 1 }} />
-        {renderBottomToolbar &&
-          renderBottomToolbar({
-            table: props.table,
-            selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
-            anchor: tableContainerRef,
-            filterStateSelector,
-            filterActions,
-            filterName,
-          })}
+        {renderBottomToolbar && renderBottomToolbar(getToolbarProps(props.table))}
       </Stack>
     ),
-    [
-      totalFetched,
-      totalResults,
-      name,
-      handleFetchAll,
-      renderBottomToolbar,
-      flatData,
-      tableContainerRef,
-      filterStateSelector,
-      filterActions,
-      filterName,
-      rowSelectionModel,
-    ],
-  );
-
-  const renderTopRightToolbarContent = useCallback(
-    (props: { table: MRT_TableInstance<T> }) =>
-      renderTopRightToolbar({
-        table: props.table,
-        selectedData: flatData.filter((row) => rowSelectionModel[row.id]),
-        anchor: tableContainerRef,
-        filterStateSelector,
-        filterActions,
-        filterName,
-      }),
-    [
-      renderTopRightToolbar,
-      flatData,
-      tableContainerRef,
-      filterStateSelector,
-      filterActions,
-      filterName,
-      rowSelectionModel,
-    ],
+    [totalFetched, totalResults, name, handleFetchAll, renderBottomToolbar, getToolbarProps],
   );
 
   return {
