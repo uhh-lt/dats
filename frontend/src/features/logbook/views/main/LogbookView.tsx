@@ -1,5 +1,5 @@
 import { ContentContentLayout } from "@components/content-layouts";
-import { MemoTable } from "@core/memo";
+import { MemoReduxFilterTable } from "@core/memo";
 import { useReduxConnector } from "@store/storeHooks";
 import { getRouteApi } from "@tanstack/react-router";
 import { LogbookActions } from "../../store/logbookSlice";
@@ -32,7 +32,7 @@ export function LogbookView() {
   return (
     <ContentContentLayout
       leftContent={
-        <MemoTable
+        <MemoReduxFilterTable
           projectId={projectId}
           filterName={filterName}
           rowSelectionModel={rowSelectionModel}

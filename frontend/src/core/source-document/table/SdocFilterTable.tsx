@@ -1,7 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { MemoColumns } from "@api/models/MemoColumns";
 import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
+import { SdocColumns } from "@api/models/SdocColumns";
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
 import {
@@ -10,33 +10,34 @@ import {
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  FilterTableToolbarRight,
   MyFilter,
   ReduxFilterDialogProps,
+  ReduxFilterTableToolbarLeft,
   ReduxFilterTableToolbarProps,
   URLFilterDialogProps,
+  URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
   deserializeFilterFromSearchParam,
 } from "@core/filter";
+import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useURLConnector } from "@hooks/useURLConnector";
-import { Stack } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useMemo, useState } from "react";
-import { MemoRenderer } from "../renderer";
-import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
-import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
-import { MemoToolbarRight } from "./_components/MemoToolbarRight";
-import { MemoURLToolbarLeft } from "./_components/MemoURLToolbarLeft";
-import { useInitMemoFilterSlice } from "./_hooks/useInitMemoFilterSlice";
-import { MemoFilterActions, defaultMemoFilterExpression } from "./memoFilterSlice";
+import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
+import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
+import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
 
 const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
 
 /**
- * Component for rendering a filter table for memos.
+ * Component for rendering a filter table for source documents.
  * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component.
  * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
  *
@@ -44,7 +45,7 @@ const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
  * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
  * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
  */
-const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSearchHit>>({
+const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSearchHit>>({
   projectId,
   filter,
   rowSelectionModel,
@@ -55,51 +56,62 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   onColumnVisibilityChange,
   fetchSize,
   onFetchSizeChange,
-  positionToolbarAlertBanner = "head-overlay",
-  renderTopRightToolbar,
+  positionToolbarAlertBanner = "top",
+  renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
-}: FilterTableContainerProps<ElasticSearchHit, TToolbarProps, MyFilter<MemoColumns>>) => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
+}: FilterTableContainerProps<ElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
+  const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
-  const tableInfo = useInitMemoFilterSlice({ projectId });
+  const tableInfo = useInitDocumentTableFilterSlice({ projectId });
   const columns = useMemo(() => {
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchHit> = {
         id: column.column,
-        accessorFn: () => null,
         header: column.label,
         enableSorting: column.sortable,
       };
-
       switch (column.column) {
-        case MemoColumns.M_TITLE:
+        case SdocColumns.SD_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
-            size: 100,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case MemoColumns.M_CONTENT:
+        case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
-            size: 360,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
+            flex: 2,
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case MemoColumns.M_STARRED:
+        case SdocColumns.SD_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
+            flex: 2,
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchHit>;
-        case MemoColumns.M_USER_ID:
+        case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
+            flex: 2,
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
           } as MRT_ColumnDef<ElasticSearchHit>;
+        case SdocColumns.SD_CODE_ID_LIST:
+          return null;
+        case SdocColumns.SD_SPAN_ANNOTATIONS:
+          return null;
         default:
+          if (!isNaN(parseInt(column.column))) {
+            return {
+              ...colDef,
+              flex: 2,
+              Cell: ({ row }) => (
+                <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
+              ),
+            } as MRT_ColumnDef<ElasticSearchHit>;
+          }
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
@@ -107,28 +119,22 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
       }
     });
 
-    const attachedToCell = {
-      id: "attached_to",
-      header: "Attached To",
-      enableSorting: false,
-      accessorFn: () => null,
-      Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-    } as MRT_ColumnDef<ElasticSearchHit>;
-
-    return [...result, attachedToCell];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
   }, [tableInfo]);
 
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
-    queryKey: [QueryKey.MEMO_TABLE, projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize],
+    queryKey: [QueryKey.SDOC_TABLE, projectId, searchQuery, filter, sortingModel, fetchSize],
     queryFn: ({ pageParam }) =>
-      SearchService.searchMemos({
+      SearchService.searchSdocs({
         searchQuery: searchQuery || "",
-        searchContent: isSearchContent,
         projectId: projectId!,
+        folderId: null,
+        highlight: true,
+        expertMode: false,
         requestBody: {
-          filter: filter as MyFilter<MemoColumns>,
+          filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as MemoColumns,
+            column: sort.id as SdocColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },
@@ -140,19 +146,24 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     refetchOnWindowFocus: false,
   });
 
-  const renderMemoTopRightToolbar = (props: TToolbarProps) => (
-    <Stack direction="row" spacing={1} alignItems="center">
-      <MemoTableOptionsMenu
-        isSearchContent={isSearchContent}
-        onChangeIsSearchContent={(newValue) => setIsSearchContent(newValue)}
-      />
-      {renderTopRightToolbar ? renderTopRightToolbar(props) : <MemoToolbarRight {...props} />}
-    </Stack>
-  );
+  const renderDetailPanel = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length === 0) return undefined;
+
+    return ({ row }: { row: { original: ElasticSearchHit } }) =>
+      row.original.highlights ? (
+        <Box className="search-result-highlight">
+          {row.original.highlights.map((highlight, index) => (
+            <Typography key={`sdoc-${row.original.id}-highlight-${index}`} m={0.5}>
+              {parse(highlight)}
+            </Typography>
+          ))}
+        </Box>
+      ) : null;
+  }, [searchQuery]);
 
   return (
     <FilterTable
-      name="memos"
+      name="documents"
       columns={columns}
       data={data}
       fetchNextPage={fetchNextPage}
@@ -168,42 +179,36 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
       onColumnVisibilityChange={onColumnVisibilityChange}
       onFetchSizeChange={onFetchSizeChange}
       positionToolbarAlertBanner={positionToolbarAlertBanner}
-      renderTopRightToolbar={renderMemoTopRightToolbar}
+      renderTopRightToolbar={renderTopRightToolbar}
       renderTopLeftToolbar={renderTopLeftToolbar}
       renderBottomToolbar={renderBottomToolbar}
       toolbarExtraProps={toolbarExtraProps}
-      tableState={{
-        globalFilter: searchQuery,
-        showGlobalFilter: true,
-      }}
+      tableState={{ globalFilter: searchQuery }}
       tableOptions={{
-        autoResetAll: false,
         enableGlobalFilter: true,
         onGlobalFilterChange: setSearchQuery,
-        manualSorting: false,
-        enableColumnResizing: true,
-        columnResizeMode: "onEnd",
+        renderDetailPanel,
       }}
     />
   );
 };
 
 // configs for redux filter table
-const filterStateSelector = (state: RootState) => state.memoFilter;
-const filterActions = MemoFilterActions;
+const filterStateSelector = (state: RootState) => state.documentTableFilter;
+const filterActions = SdocTableFilterActions;
 
 /**
- * Redux-based filter table for memos.
- * The filter state is stored under state.memoFilter.filter[filterName].
+ * Redux-based filter table for source documents.
+ * The filter state is stored under state.documentTableFilter.filter[filterName].
  *
  * @param filterName used to identify the filter state in the redux store, so that multiple tables can be used without conflicts.
  */
-export const MemoReduxFilterTable = memo(
+export const SdocReduxFilterTable = memo(
   ({
     filterName,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, ReduxFilterTableToolbarProps<ElasticSearchHit>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<ElasticSearchHit, ReduxFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
@@ -211,10 +216,10 @@ export const MemoReduxFilterTable = memo(
       useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
     return (
-      <MemoFilterTable
+      <SdocFilterTable
         {...tableProps}
-        filter={filter as MyFilter<MemoColumns>}
-        renderTopLeftToolbar={MemoReduxToolbarLeft}
+        filter={filter as MyFilter<SdocColumns>}
+        renderTopLeftToolbar={ReduxFilterTableToolbarLeft}
         toolbarExtraProps={{
           filterName,
           filterStateSelector,
@@ -225,42 +230,39 @@ export const MemoReduxFilterTable = memo(
   },
 );
 
-// backward compatible export name
-export const MemoTable = MemoReduxFilterTable;
-
 // configs for URL filter table
-const column2InfoSelector = (state: RootState) => state.memoFilter.column2Info;
-const defaultFilterExpression = defaultMemoFilterExpression;
+const column2InfoSelector = (state: RootState) => state.documentTableFilter.column2Info;
+const defaultFilterExpression = defaultSdocFilterExpression;
 const urlFilterName = "root";
 
 /**
- * URL-based filter table for memos.
+ * URL-based filter table for source documents.
  * The filter state is synced with the URL, so it can be shared via URL and is preserved on page reload.
  *
  * @param routeApi used to read and write the URL search params, it can be obtained via useRouteApi().
  */
-export const MemoURLFilterTable = memo(
+export const SdocURLFilterTable = memo(
   ({
     routeApi,
     filterSearchParam = FILTER_PARAM,
     expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
     const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
     const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<MemoColumns>,
+      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SdocColumns>,
       [serializedFilter],
     );
 
     return (
-      <MemoFilterTable
+      <SdocFilterTable
         {...tableProps}
         filter={filter}
-        renderTopLeftToolbar={MemoURLToolbarLeft}
+        renderTopLeftToolbar={URLFilterTableToolbarLeft}
         toolbarExtraProps={{
           filterName: urlFilterName,
           routeApi,

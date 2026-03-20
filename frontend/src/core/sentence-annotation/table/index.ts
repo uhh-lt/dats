@@ -1,3 +1,3 @@
 export * from "./seatFilterSlice";
-export * from "./SentenceAnnotationTable";
+export * from "./SentenceAnnotationFilterTable";
 export * from "./SentenceAnnotationTableSimple";

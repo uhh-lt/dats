@@ -1,3 +1,3 @@
-export * from "./BBoxAnnotationTable";
+export * from "./BBoxAnnotationFilterTable";
 export * from "./BBoxAnnotationTableSimple";
 export * from "./bboxFilterSlice";

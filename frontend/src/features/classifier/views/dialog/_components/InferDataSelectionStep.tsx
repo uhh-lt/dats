@@ -1,6 +1,6 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocTable } from "@core/source-document";
+import { SdocReduxFilterTable } from "@core/source-document";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";
 import Stack from "@mui/material/Stack/Stack";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -105,7 +105,7 @@ function DocumentSelector({ projectId, metadata, rowSelectionModel, onRowSelecti
   );
 
   return (
-    <SdocTable
+    <SdocReduxFilterTable
       projectId={projectId}
       filterName={filterName}
       rowSelectionModel={rowSelectionModel}

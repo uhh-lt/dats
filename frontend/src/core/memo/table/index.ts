@@ -1,2 +1,2 @@
 export * from "./memoFilterSlice";
-export * from "./MemoTable";
+export * from "./MemoFilterTable";
