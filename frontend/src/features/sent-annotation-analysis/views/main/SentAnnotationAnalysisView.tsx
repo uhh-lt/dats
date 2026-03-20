@@ -1,14 +1,12 @@
 import { ContentLayout } from "@components/content-layouts";
 import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
 import { Box } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
 import { SentAnnotationAnalysisTable } from "./_components/SentAnnotationAnalysisTable";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/sentence-annotations");
+import { SentAnnotationAnalysisRouteAPI } from "./_hooks/sentAnnotationAnalysisRouteAPI";
 
 export function SentAnnotationAnalysisView() {
   // global client state (react router)
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = SentAnnotationAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   return (
     <ContentLayout>

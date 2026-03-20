@@ -1,5 +1,5 @@
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
-import { FilterTableToolbarProps, ReduxFilterDialog } from "@core/filter";
+import { URLFilterDialog, URLFilterTableToolbarProps } from "@core/filter";
 import { Stack } from "@mui/material";
 import { BulkChangeSentAnnotationCodeButton } from "./BulkChangeSentAnnotationCodeButton";
 import { BulkDeleteSentAnnotationsButton } from "./BulkDeleteSentAnnotationsButton";
@@ -7,18 +7,24 @@ import { BulkDeleteSentAnnotationsButton } from "./BulkDeleteSentAnnotationsButt
 export function SentAnnotationAnalysisTableToolbarLeft({
   anchor,
   filterName,
-  filterActions,
-  filterStateSelector,
+  routeApi,
+  defaultFilterExpression,
+  column2InfoSelector,
+  filterSearchParam,
+  expertModeSearchParam,
   selectedData,
-}: FilterTableToolbarProps<SentenceAnnotationRow>) {
+}: URLFilterTableToolbarProps<SentenceAnnotationRow>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
-      <ReduxFilterDialog
+      <URLFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
         filterName={filterName}
-        filterActions={filterActions}
-        filterStateSelector={filterStateSelector}
+        routeApi={routeApi}
+        defaultFilterExpression={defaultFilterExpression}
+        column2InfoSelector={column2InfoSelector}
+        filterSearchParam={filterSearchParam}
+        expertModeSearchParam={expertModeSearchParam}
       />
       <BulkChangeSentAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteSentAnnotationsButton selectedData={selectedData} />

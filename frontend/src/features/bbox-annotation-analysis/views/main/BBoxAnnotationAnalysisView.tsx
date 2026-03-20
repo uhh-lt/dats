@@ -1,14 +1,12 @@
 import { ContentLayout } from "@components/content-layouts";
 import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { Box } from "@mui/material";
-import { getRouteApi } from "@tanstack/react-router";
 import { BBoxAnnotationAnalysisTable } from "./_components/BBoxAnnotationAnalysisTable";
-
-const routeApi = getRouteApi("/_auth/project/$projectId/analysis/bbox-annotations");
+import { BBoxAnnotationAnalysisRouteAPI } from "./_hooks/bboxAnnotationAnalysisRouteAPI";
 
 export function BBoxAnnotationAnalysisView() {
   // global client state (react router)
-  const projectId = routeApi.useParams({ select: (params) => params.projectId });
+  const projectId = BBoxAnnotationAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
 
   return (
     <ContentLayout>

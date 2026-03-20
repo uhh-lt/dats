@@ -1,10 +1,10 @@
-import { SpanAnnotationTable } from "@core/span-annotation";
+import { SpanAnnotationURLFilterTable } from "@core/span-annotation";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
+import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
 import { SpanAnnotationAnalysisTableToolbarRight } from "./SpanAnnotationAnalysisTableToolbarRight";
-
-const filterName = "spanAnnotationAnalysisTable";
 
 interface SpanAnnotationAnalysisProps {
   projectId: number;
@@ -16,23 +16,17 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
     (state) => state.spanAnnotationAnalysis.rowSelectionModel,
     SpanAnnotationsActions.onRowSelectionChange,
   );
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.spanAnnotationAnalysis.sortingModel,
-    SpanAnnotationsActions.onSortChange,
-  );
+  const [sortingModel, setSortingModel] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "sortingModel");
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
     SpanAnnotationsActions.onColumnVisibilityChange,
   );
-  const [fetchSize, setFetchSize] = useReduxConnector(
-    (state) => state.spanAnnotationAnalysis.fetchSize,
-    SpanAnnotationsActions.onFetchSizeChange,
-  );
+  const [fetchSize, setFetchSize] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "fetchSize");
 
   return (
-    <SpanAnnotationTable
+    <SpanAnnotationURLFilterTable
       projectId={projectId}
-      filterName={filterName}
+      routeApi={SpanAnnotationAnalysisRouteAPI}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}

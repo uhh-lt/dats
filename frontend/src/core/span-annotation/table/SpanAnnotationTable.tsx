@@ -251,10 +251,11 @@ export const SpanAnnotationURLFilterTable = memo(
     routeApi,
     filterSearchParam = FILTER_PARAM,
     expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
+    renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
   }: Omit<
     FilterTableContainerProps<SpanAnnotationRow, URLFilterTableToolbarProps<SpanAnnotationRow>, MyFilter<SpanColumns>>,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
+    "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
     const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
@@ -267,7 +268,7 @@ export const SpanAnnotationURLFilterTable = memo(
       <SpanAnnotationFilterTable
         {...tableProps}
         filter={filter}
-        renderTopLeftToolbar={URLFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName: urlFilterName,
           routeApi,

@@ -1,10 +1,10 @@
-import { BBoxAnnotationTable } from "@core/bbox-annotation";
+import { BBoxAnnotationURLFilterTable } from "@core/bbox-annotation";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
+import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
 import { BBoxAnnotationAnalysisTableToolbarRight } from "./toolbar/BBoxAnnotationAnalysisTableToolbarRight";
-
-const filterName = "bboxAnnotationAnalysisTable";
 
 interface BBoxAnnotationAnalysisTableProps {
   projectId: number;
@@ -16,23 +16,17 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
     (state) => state.bboxAnnotationAnalysis.rowSelectionModel,
     BBoxAnnotationsActions.onRowSelectionChange,
   );
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.bboxAnnotationAnalysis.sortingModel,
-    BBoxAnnotationsActions.onSortChange,
-  );
+  const [sortingModel, setSortingModel] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "sortingModel");
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.columnVisibilityModel,
     BBoxAnnotationsActions.onColumnVisibilityChange,
   );
-  const [fetchSize, setFetchSize] = useReduxConnector(
-    (state) => state.bboxAnnotationAnalysis.fetchSize,
-    BBoxAnnotationsActions.onFetchSizeChange,
-  );
+  const [fetchSize, setFetchSize] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "fetchSize");
 
   return (
-    <BBoxAnnotationTable
+    <BBoxAnnotationURLFilterTable
       projectId={projectId}
-      filterName={filterName}
+      routeApi={BBoxAnnotationAnalysisRouteAPI}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}

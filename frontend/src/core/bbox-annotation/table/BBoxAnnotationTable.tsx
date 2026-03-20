@@ -41,10 +41,10 @@ const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
  * Component for rendering a filter table for BBox annotations.
  * The filter state can be managed either via Redux or via URL search params, which is determined by the parent component (BBoxAnnotationReduxFilterTable or BBoxAnnotationURLFilterTable).
  * It defines the columns and how to fetch the data, while the actual filter state management is delegated to the parent component.
- * 
+ *
  * @param filter the filter state, which is either obtained from Redux or from URL search params, depending on the parent component
  * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
- * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL) 
+ * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
  */
 const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps<BBoxAnnotationRow>>({
   projectId,
@@ -256,10 +256,11 @@ export const BBoxAnnotationURLFilterTable = memo(
     routeApi,
     filterSearchParam = FILTER_PARAM,
     expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
+    renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
   }: Omit<
     FilterTableContainerProps<BBoxAnnotationRow, URLFilterTableToolbarProps<BBoxAnnotationRow>, MyFilter<BBoxColumns>>,
-    "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
+    "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
     const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
@@ -272,7 +273,7 @@ export const BBoxAnnotationURLFilterTable = memo(
       <BBoxAnnotationFilterTable
         {...tableProps}
         filter={filter}
-        renderTopLeftToolbar={URLFilterTableToolbarLeft}
+        renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
           filterName: urlFilterName,
           routeApi,

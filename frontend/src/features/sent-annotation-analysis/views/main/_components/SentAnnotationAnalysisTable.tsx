@@ -1,10 +1,10 @@
-import { SentenceAnnotationTable } from "@core/sentence-annotation";
+import { SentenceAnnotationURLFilterTable } from "@core/sentence-annotation";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
+import { SentAnnotationAnalysisRouteAPI } from "../_hooks/sentAnnotationAnalysisRouteAPI";
 import { SentAnnotationAnalysisTableToolbarLeft } from "./SentAnnotationAnalysisTableToolbarLeft";
 import { SentAnnotationAnalysisTableToolbarRight } from "./SentAnnotationAnalysisTableToolbarRight";
-
-const filterName = "sentAnnotationAnalysisTable";
 
 interface SentAnnotationAnalysisTableProps {
   projectId: number;
@@ -16,23 +16,17 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
     (state) => state.sentAnnotationAnalysis.rowSelectionModel,
     SentAnnotationsActions.onRowSelectionChange,
   );
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.sentAnnotationAnalysis.sortingModel,
-    SentAnnotationsActions.onSortChange,
-  );
+  const [sortingModel, setSortingModel] = useURLConnector(SentAnnotationAnalysisRouteAPI, "sortingModel");
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.sentAnnotationAnalysis.columnVisibilityModel,
     SentAnnotationsActions.onColumnVisibilityChange,
   );
-  const [fetchSize, setFetchSize] = useReduxConnector(
-    (state) => state.sentAnnotationAnalysis.fetchSize,
-    SentAnnotationsActions.onFetchSizeChange,
-  );
+  const [fetchSize, setFetchSize] = useURLConnector(SentAnnotationAnalysisRouteAPI, "fetchSize");
 
   return (
-    <SentenceAnnotationTable
+    <SentenceAnnotationURLFilterTable
       projectId={projectId}
-      filterName={filterName}
+      routeApi={SentAnnotationAnalysisRouteAPI}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
