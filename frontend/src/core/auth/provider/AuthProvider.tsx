@@ -9,90 +9,137 @@ import { UserService } from "@api/services/UserService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { AuthContext } from "../types/AuthContext";
-import { LoginStatus } from "../types/LoginStatus";
 
 // init once
 OpenAPI.BASE = "/api";
 OpenAPI.TOKEN = localStorage.getItem("dats-access") || undefined;
 
+const ACCESS_TOKEN_KEY = "dats-access";
+const ACCESS_TOKEN_EXPIRES_KEY = "dats-access-expires";
+const REFRESH_TOKEN_KEY = "dats-refresh-access";
+
+function readStoredDate(key: string): Date | undefined {
+  const value = localStorage.getItem(key);
+  return value ? new Date(value) : undefined;
+}
+
+function isAccessTokenExpired(expiresAt: Date | undefined): boolean {
+  if (expiresAt === undefined) {
+    return true;
+  }
+  return expiresAt.getTime() < Date.now();
+}
+
 interface AuthContextProps {
   children?: ReactNode;
 }
 
+/**
+ * Global authentication provider for the frontend.
+ *
+ * Responsibilities:
+ * - Persist and restore auth credentials (access token, refresh token, expiry) from localStorage.
+ * - Keep the generated API client (`OpenAPI.TOKEN`) in sync with the current access token.
+ * - Resolve the current session by fetching `/user/me` when an access token exists.
+ * - Proactively refresh access tokens shortly before expiry.
+ * - Perform local logout immediately and trigger best-effort server-side revoke.
+ *
+ * Exposed state contract:
+ * - `isAuthenticated`: current session is valid and user data is available.
+ *
+ * Usage:
+ * - Wrap the application in this provider.
+ * - Pass `useAuth()` output into TanStack Router context via `RouterProvider`.
+ * - Use route-level `beforeLoad` checks for access control.
+ *
+ * Rendering behavior:
+ * - While restoring/validating a persisted session, the provider renders a loading fallback.
+ * - Therefore, consumers inside the provider tree only see stable auth state.
+ */
 export const AuthProvider = ({ children }: AuthContextProps) => {
-  // state
-  const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dats-access") || undefined);
-  const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(() => {
-    const expiryString = localStorage.getItem("dats-access-expires");
-    return expiryString ? new Date(expiryString) : undefined;
-  });
+  // --- credential state ---
+  const [accessToken, setAccessToken] = useState<string | undefined>(
+    localStorage.getItem(ACCESS_TOKEN_KEY) || undefined,
+  );
+  const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(() =>
+    readStoredDate(ACCESS_TOKEN_EXPIRES_KEY),
+  );
   const [refreshToken, setRefreshToken] = useState<string | undefined>(
-    localStorage.getItem("dats-refresh-access") || undefined,
+    localStorage.getItem(REFRESH_TOKEN_KEY) || undefined,
   );
 
-  // fetch user data
-  const internalUser = useQuery<UserRead, Error>({
-    queryKey: [QueryKey.ME, accessToken],
-    queryFn: UserService.getMe,
-    retry: false,
-  });
-  const user = internalUser.data;
+  const clearLocalAuthData = useCallback((clearQueries: boolean) => {
+    OpenAPI.TOKEN = undefined;
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_EXPIRES_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    setAccessToken(undefined);
+    setRefreshToken(undefined);
+    setAccessTokenExpires(undefined);
+    if (clearQueries) {
+      queryClient.clear();
+    }
+  }, []);
 
-  // methods
   const updateAuthData = useCallback((authData: UserAuthorizationHeaderData) => {
-    localStorage.setItem("dats-access", authData.access_token);
+    localStorage.setItem(ACCESS_TOKEN_KEY, authData.access_token);
     OpenAPI.TOKEN = authData.access_token;
     setAccessToken(authData.access_token);
 
-    localStorage.setItem("dats-access-expires", authData.access_token_expires);
+    localStorage.setItem(ACCESS_TOKEN_EXPIRES_KEY, authData.access_token_expires);
     setAccessTokenExpires(new Date(authData.access_token_expires));
 
-    localStorage.setItem("dats-refresh-access", authData.refresh_token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, authData.refresh_token);
     setRefreshToken(authData.refresh_token);
   }, []);
 
+  // --- session resolution (/user/me) ---
+  const user = useQuery<UserRead, Error>({
+    queryKey: [QueryKey.ME, accessToken],
+    queryFn: UserService.getMe,
+    retry: false,
+    enabled: accessToken !== undefined && !isAccessTokenExpired(accessTokenExpires),
+  });
+  // Session validation error handling.
+  useEffect(() => {
+    if (user.isError) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      clearLocalAuthData(false);
+    }
+  }, [user.isError, clearLocalAuthData]);
+
+  // Logout action.
   const { mutate: logoutMutation } = useMutation({
     mutationFn: AuthenticationService.logout,
     retry: false,
-    onSettled(_data, error) {
-      if (error && !(error instanceof ApiError && error.status === 403)) {
-        // There's a bug, logout didn't work
-        console.error("Error while logging out:", error);
-        return;
-      }
-      OpenAPI.TOKEN = undefined;
-      localStorage.removeItem("dats-access");
-      localStorage.removeItem("dats-access-expires");
-      localStorage.removeItem("dats-refresh-access");
-      setAccessToken(undefined);
-      setRefreshToken(undefined);
-      setAccessTokenExpires(undefined);
-      queryClient.clear();
-    },
   });
-  const logout = useCallback(() => {
-    if (refreshToken === undefined) {
-      console.error("No refresh token to log out with");
-      return;
-    }
-    logoutMutation({ refreshToken });
-  }, [refreshToken, logoutMutation]);
 
+  const logout = useCallback(() => {
+    const refreshTokenToRevoke = refreshToken;
+
+    // Clear state
+    clearLocalAuthData(true);
+
+    if (refreshTokenToRevoke !== undefined) {
+      logoutMutation({ refreshToken: refreshTokenToRevoke });
+    }
+  }, [refreshToken, clearLocalAuthData, logoutMutation]);
+
+  // Refresh access token shortly before expiry.
   const { mutate: refreshAccessTokenMutation } = useMutation({
     mutationFn: AuthenticationService.refreshAccessToken,
     retry: false,
     onSuccess(data) {
       updateAuthData(data);
     },
-    onError(error, variables) {
+    onError(error) {
       if (error instanceof ApiError && error.status === 403) {
         // Refresh token expired, it's time to log out
-        logoutMutation({ refreshToken: variables.refreshToken });
+        logout();
       }
     },
   });
 
-  // refresh the access token when it's about to expire using the refresh token
   useEffect(() => {
     if (accessTokenExpires === undefined || refreshToken === undefined) {
       return;
@@ -108,24 +155,13 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
     return () => clearTimeout(handle);
   }, [accessTokenExpires, refreshToken, refreshAccessTokenMutation]);
 
-  let status;
-  const definitelyLoggedIn = user !== undefined;
-  const verifyingAccessToken = (internalUser.isLoading || internalUser.isFetching) && accessToken !== undefined;
-  if (definitelyLoggedIn) {
-    status = LoginStatus.LOGGED_IN;
-  } else if (verifyingAccessToken) {
-    status = LoginStatus.LOADING;
-  } else {
-    status = LoginStatus.LOGGED_OUT;
-  }
-
   return (
     <AuthContext.Provider
       value={{
         updateAuthData,
         logout,
-        user,
-        loginStatus: status,
+        user: user.data,
+        isAuthenticated: user.data !== undefined,
       }}
     >
       {children}

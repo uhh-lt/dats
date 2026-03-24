@@ -1,4 +1,3 @@
-import { LoginStatus } from "@core/auth";
 import { SideBar, TabBar, TabSynchronizer } from "@core/navigation";
 import { Box } from "@mui/material";
 // eslint-disable-next-line boundaries/element-types
@@ -10,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_auth")({
   beforeLoad: async ({ context, location }) => {
-    if (context.auth.loginStatus === LoginStatus.LOGGED_OUT) {
+    if (!context.auth.isAuthenticated) {
       throw redirect({
         to: "/login",
         search: {

@@ -14,6 +14,12 @@ function messageFromStringOrFunction(input: unknown, data: unknown, variables: u
   }
 }
 
+function renderRecordToString(record: Record<string, unknown>): string {
+  return Object.entries(record)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(", ");
+}
+
 export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, variables, _context, mutation) => {
@@ -26,7 +32,7 @@ export const queryClient = new QueryClient({
       const title = messageFromStringOrFunction(mutation.meta?.errorMessage, error, variables);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {
-        text = error.message + (error.body ? ": " + error.body : "");
+        text = error.message + (error.body ? ": " + renderRecordToString(error.body) : "");
       }
       store.dispatch(
         SnackbarActions.openSnackbar({

@@ -1,6 +1,6 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { LinkListItemButton, LinkMenuItem } from "@components/links";
-import { LoginStatus, useAuth } from "@core/auth";
+import { useAuth } from "@core/auth";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
@@ -37,7 +37,7 @@ interface SideBarProps {
 }
 
 export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
-  const { loginStatus, logout, user } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const location = useLocation();
   const openProjectSettingsDialog = useOpenDialog("projectSettings");
   const tabNavigate = useTabNavigate();
@@ -535,7 +535,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             </ListItem>
           )}
 
-          {loginStatus === LoginStatus.LOGGED_IN && user && (
+          {isAuthenticated && user && (
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip
                 title={user.first_name + " " + user.last_name}

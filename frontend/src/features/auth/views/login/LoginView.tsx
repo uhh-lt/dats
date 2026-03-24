@@ -3,7 +3,7 @@ import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
-import { handleOIDCLogin, LoginStatus, useAuth } from "@core/auth";
+import { handleOIDCLogin, useAuth } from "@core/auth";
 import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
@@ -34,7 +34,7 @@ export function LoginView() {
   });
   const { redirect } = routeApi.useSearch();
   const navigate = useNavigate();
-  const { updateAuthData, loginStatus } = useAuth();
+  const { updateAuthData } = useAuth();
 
   // get info about the instance, is OIDC enabled?
   const instanceInfo = GeneralHooks.useGetInstanceInfo();
@@ -145,7 +145,7 @@ export function LoginView() {
                     variant="contained"
                     color="primary"
                     type="submit"
-                    loading={loginStatus === LoginStatus.LOADING || loginIsPending}
+                    loading={loginIsPending}
                     loadingPosition="start"
                     startIcon={<LoginIcon />}
                   >

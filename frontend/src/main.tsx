@@ -14,6 +14,7 @@ import "@styles/layout.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { persistStore } from "redux-persist";
@@ -47,5 +48,10 @@ root.render(
 
 export function App() {
   const auth = useAuth();
+
+  useEffect(() => {
+    void router.invalidate();
+  }, [auth.user?.id]);
+
   return <RouterProvider router={router} context={{ auth, queryClient }} />;
 }

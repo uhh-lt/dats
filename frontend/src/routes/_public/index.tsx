@@ -1,9 +1,8 @@
-import { LoginStatus } from "@core/auth";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_public/")({
   beforeLoad: ({ context }) => {
-    if (context.auth.loginStatus === LoginStatus.LOGGED_IN) {
+    if (context.auth.isAuthenticated) {
       throw redirect({
         to: "/projects",
       });
