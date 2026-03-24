@@ -8,6 +8,8 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { restrictToFirstScrollableAncestor, restrictToHorizontalAxis } from "@dnd-kit/modifiers";
+import { horizontalListSortingStrategy, SortableContext } from "@dnd-kit/sortable";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box } from "@mui/material";
@@ -36,6 +38,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
   const activeTabIndex = useMemo(() => {
     return tabs.findIndex((tab) => tab.id === location.pathname);
   }, [tabs, location.pathname]);
+  const sortableTabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs]);
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [activeDragTabId, setActiveDragTabId] = useState<string | null>(null);
@@ -106,6 +109,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        modifiers={[restrictToHorizontalAxis, restrictToFirstScrollableAncestor]}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
@@ -133,16 +137,18 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
             className="hide-scrollbar"
             onScroll={updateScrollButtonVisibility}
           >
-            {tabs.map((tab, index) => (
-              <DraggableTab
-                key={tab.id}
-                tab={tab}
-                index={index}
-                isActive={tab.id === location.pathname}
-                onTabClick={() => navigate({ to: tab.href })}
-                onCloseClick={() => tabManager.closeTab(tab.id)}
-              />
-            ))}
+            <SortableContext items={sortableTabIds} strategy={horizontalListSortingStrategy}>
+              {tabs.map((tab, index) => (
+                <DraggableTab
+                  key={tab.id}
+                  tab={tab}
+                  index={index}
+                  isActive={tab.id === location.pathname}
+                  onTabClick={() => navigate({ to: tab.href })}
+                  onCloseClick={() => tabManager.closeTab(tab.id)}
+                />
+              ))}
+            </SortableContext>
           </div>
         </Box>
         <DragOverlay>

@@ -17,6 +17,7 @@ export const DragCloneRenderer = memo(({ tab, isActive }: DragCloneRendererProps
         width: "auto",
         minWidth: "100px",
         boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
+        pointerEvents: "none",
       }}
     >
       <StyledTab

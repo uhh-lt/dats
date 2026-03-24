@@ -1,4 +1,5 @@
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import CloseIcon from "@mui/icons-material/Close";
 import { memo, MouseEventHandler, useCallback } from "react";
 import { TabData } from "../../../_types/TabData";
@@ -14,27 +15,14 @@ interface DraggableTabProps {
 }
 
 export const DraggableTab = memo(({ tab, index, isActive, onTabClick, onCloseClick }: DraggableTabProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setDraggableNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
   });
-  const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: tab.id });
-
-  const setNodeRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      setDraggableNodeRef(node);
-      setDroppableNodeRef(node);
-    },
-    [setDraggableNodeRef, setDroppableNodeRef],
-  );
 
   const dragStyle = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0 : 1,
   };
 
   const handleCloseClick: MouseEventHandler = useCallback(
@@ -58,7 +46,7 @@ export const DraggableTab = memo(({ tab, index, isActive, onTabClick, onCloseCli
         label={
           <TabContent>
             <TabTitle tab={tab} />
-            <CloseButton size="small" onClick={handleCloseClick}>
+            <CloseButton size="small" onPointerDown={(event) => event.stopPropagation()} onClick={handleCloseClick}>
               <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
             </CloseButton>
           </TabContent>
