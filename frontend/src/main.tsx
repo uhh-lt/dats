@@ -21,6 +21,12 @@ import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 import "./styles/index.css";
 
+declare global {
+  interface Window {
+    __datsHideBootSplash?: () => void;
+  }
+}
+
 const persistor = persistStore(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);
@@ -48,6 +54,10 @@ root.render(
 
 export function App() {
   const auth = useAuth();
+
+  useEffect(() => {
+    window.__datsHideBootSplash?.();
+  }, []);
 
   useEffect(() => {
     void router.invalidate();

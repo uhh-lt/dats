@@ -3,7 +3,7 @@ export const QueryKey = {
   // the logged-in user (by access token)
   ME: "me",
 
-  // managed by GeneralHooks
+  // managed by features/auth/_api/authQueryOptions
   // the instance info (no parameters)
   INSTANCE_INFO: "instanceInfo",
   // the available models (no parameters)

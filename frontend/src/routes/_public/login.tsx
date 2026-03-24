@@ -1,4 +1,5 @@
-import { LoginView } from "@features/auth";
+import { LoginView, loginViewLoader } from "@features/auth";
+import { CircularProgress } from "@mui/material";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
@@ -14,5 +15,11 @@ export const Route = createFileRoute("/_public/login")({
       throw redirect({ to: search.redirect });
     }
   },
+  loader: ({ context }) =>
+    loginViewLoader({
+      queryClient: context.queryClient,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  errorComponent: ({ error }) => <div>Failed to load instance information: {(error as Error).message}</div>,
   component: LoginView,
 });
