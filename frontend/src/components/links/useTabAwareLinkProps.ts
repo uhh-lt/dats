@@ -1,6 +1,7 @@
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useRouter } from "@tanstack/react-router";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useMemo } from "react";
 
 function getProjectIdFromPathname(pathname: string): number | null {
@@ -22,7 +23,13 @@ type TabAwareLinkInput = {
   mask?: unknown;
   from?: unknown;
   href?: string;
+  target?: string;
+  onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
 };
+
+function isModifiedEvent(event: ReactMouseEvent<HTMLAnchorElement>): boolean {
+  return event.metaKey || event.altKey || event.ctrlKey || event.shiftKey;
+}
 
 export function useTabAwareLinkProps<T extends TabAwareLinkInput>(props: T): T {
   const router = useRouter();
@@ -55,20 +62,26 @@ export function useTabAwareLinkProps<T extends TabAwareLinkInput>(props: T): T {
       return props;
     }
 
-    const {
-      to: _to,
-      params: _params,
-      search: _search,
-      hash: _hash,
-      state: _state,
-      mask: _mask,
-      from: _from,
-      ...rest
-    } = props;
-
     return {
-      ...(rest as Omit<T, "to" | "params" | "search" | "hash" | "state" | "mask" | "from">),
-      href: existingTab.href,
+      ...props,
+      onClick: (event: ReactMouseEvent<HTMLAnchorElement>) => {
+        props.onClick?.(event);
+
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        if (props.target && props.target !== "_self") {
+          return;
+        }
+
+        if (event.button !== 0 || isModifiedEvent(event)) {
+          return;
+        }
+
+        event.preventDefault();
+        void router.navigate({ to: existingTab.href as never });
+      },
     } as T;
   }, [props, router, tabsByProject]);
 }

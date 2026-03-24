@@ -243,31 +243,23 @@ export function AnnotationView() {
             <Container sx={{ py: 2 }} maxWidth="xl">
               <Card raised>
                 <CardContent>
-                  {sdocId ? (
+                  {boxNode && (
                     <>
-                      {boxNode ? (
-                        <>
-                          <EditableTypography
-                            value={sdoc.name}
-                            onChange={handleUpdateName}
-                            variant="h4"
-                            whiteColor={false}
-                            stackProps={{
-                              width: "100%",
-                              flexGrow: 1,
-                              mb: 2,
-                            }}
-                          />
-                          {isCompareMode
-                            ? comparatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]
-                            : annotatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]}
-                        </>
-                      ) : (
-                        <div>Loading...</div>
-                      )}
+                      <EditableTypography
+                        value={sdoc.name}
+                        onChange={handleUpdateName}
+                        variant="h4"
+                        whiteColor={false}
+                        stackProps={{
+                          width: "100%",
+                          flexGrow: 1,
+                          mb: 2,
+                        }}
+                      />
+                      {isCompareMode
+                        ? comparatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]
+                        : annotatorComponent(sdocData, boxNode)[sdoc.doctype][annotationMode]}
                     </>
-                  ) : (
-                    <div>Please double-click a document in Search to view it here :)</div>
                   )}
                 </CardContent>
               </Card>

@@ -43,14 +43,14 @@ function AnalysisView() {
           color={cardColor}
         />
         <LinkCard
-          to="/project/$projectId/analysis/span-annotations"
+          to="/project/$projectId/analysis/sentence-annotations"
           params={{ projectId }}
           title={"Sentence Annotation Table"}
           description={"View, search, edit sentence annotations in a table."}
           color={cardColor}
         />
         <LinkCard
-          to="/project/$projectId/analysis/span-annotations"
+          to="/project/$projectId/analysis/bbox-annotations"
           params={{ projectId }}
           title={"Bounding-Box Annotation Table"}
           description={"View, search, edit bbox annotations in a table."}
