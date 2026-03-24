@@ -5,9 +5,92 @@
     <link rel="icon" type="image/svg+xml" href="/DATS.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DATS</title>
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f7fb;
+        opacity: 1;
+        transition: opacity 180ms ease;
+      }
+
+      #boot-splash.boot-splash--hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .boot-splash__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        padding: 24px;
+        text-align: center;
+        font-family:
+          "Segoe UI",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        color: #1f2937;
+      }
+
+      .boot-splash__logo {
+        width: 72px;
+        height: 72px;
+      }
+
+      .boot-splash__spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 3px solid #d4def0;
+        border-top-color: #185cc9;
+        animation: boot-spin 0.9s linear infinite;
+      }
+
+      .boot-splash__text {
+        margin: 0;
+        font-size: 0.95rem;
+        letter-spacing: 0.01em;
+      }
+
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-splash" role="status" aria-live="polite" aria-label="Application is loading">
+      <div class="boot-splash__content">
+        <img class="boot-splash__logo" src="/DATS.svg" alt="DATS logo" />
+        <div class="boot-splash__spinner" aria-hidden="true"></div>
+        <p class="boot-splash__text">Loading DATS...</p>
+      </div>
+    </div>
     <div id="root"></div>
+    <script>
+      window.__datsHideBootSplash = function () {
+        const splash = document.getElementById("boot-splash");
+        if (!splash || splash.dataset.hidden === "true") {
+          return;
+        }
+
+        splash.dataset.hidden = "true";
+        splash.classList.add("boot-splash--hidden");
+
+        window.setTimeout(function () {
+          splash.remove();
+        }, 220);
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
