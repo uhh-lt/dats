@@ -1,17 +1,28 @@
 import { useAppDispatch } from "@store/storeHooks";
-import { useMatches, useParams, useRouterState } from "@tanstack/react-router";
+import { useParams, useRouterState } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 import { useEffect } from "react";
 import { TabActions } from "../tabSlice";
 
 export function TabSynchronizer() {
   const dispatch = useAppDispatch();
-  const location = useRouterState({ select: (state) => state.location });
 
   const params = useParams({ strict: false }) as { projectId?: string | number };
-  const matches = useMatches();
+  const { status, matches, location } = useRouterState({
+    select: (state) => ({
+      status: state.status,
+      matches: state.matches,
+      location: state.location,
+    }),
+  });
 
   useEffect(() => {
+    // DEFENSE #1: If the router is navigating or pending, DO NOTHING.
+    // Only run when the router has completely settled on a stable state.
+    if (status !== "idle") {
+      return;
+    }
+
     // 1. Bail early if there's no valid projectId in the route parameters
     if (!params.projectId) return;
 
@@ -44,7 +55,7 @@ export function TabSynchronizer() {
         },
       }),
     );
-  }, [dispatch, location.href, location.pathname, matches, params.projectId]);
+  }, [dispatch, location.href, location.pathname, matches, params.projectId, status]);
 
   return null;
 }
