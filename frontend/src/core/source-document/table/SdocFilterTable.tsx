@@ -28,7 +28,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
@@ -55,6 +55,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   onColumnVisibilityChange,
   fetchSize,
   onFetchSizeChange,
+  onSearchParameterChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar = FilterTableToolbarRight,
   renderTopLeftToolbar,
@@ -144,6 +145,13 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    onRowSelectionChange?.({});
+    onFetchSizeChange?.(20);
+    onSearchParameterChange?.();
+  }, [searchQuery, filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
 
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;

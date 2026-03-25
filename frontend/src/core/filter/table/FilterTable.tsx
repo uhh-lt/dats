@@ -33,6 +33,8 @@ export interface FilterTableContainerProps<
   // fetch size
   fetchSize: number;
   onFetchSizeChange: React.Dispatch<React.SetStateAction<number>>;
+  // optional parent callback for additional resets tied to search-parameter changes
+  onSearchParameterChange?: () => void;
   // components
   positionToolbarAlertBanner?: MRT_TableOptions<T>["positionToolbarAlertBanner"];
   renderTopLeftToolbar: (props: TToolbarProps) => React.ReactNode;

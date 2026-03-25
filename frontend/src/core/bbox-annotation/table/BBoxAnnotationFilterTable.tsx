@@ -33,7 +33,7 @@ import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
 
@@ -59,6 +59,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   onColumnVisibilityChange,
   fetchSize,
   onFetchSizeChange,
+  onSearchParameterChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar,
   renderTopLeftToolbar,
@@ -174,6 +175,13 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
     getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    onRowSelectionChange?.({});
+    onFetchSizeChange?.(20);
+    onSearchParameterChange?.();
+  }, [filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
 
   return (
     <FilterTable

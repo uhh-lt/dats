@@ -1,10 +1,8 @@
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { BBoxAnnotationLocalFilterTable } from "@core/bbox-annotation";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter, useFilterURLConnector } from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { MRT_SortingState, MRT_Updater } from "material-react-table";
-import { useCallback } from "react";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
@@ -38,33 +36,13 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
     BBoxColumns,
   );
 
-  // handler to reset state that depend on search parameters when filter change
-  const onFilterChange = useCallback(
-    (nextFilter: MyFilter<BBoxColumns>) => {
-      setFilter(nextFilter);
-      // reset state that depend on search parameters
-      setRowSelectionModel({});
-      setFetchSize(20);
-    },
-    [setFilter, setFetchSize, setRowSelectionModel],
-  );
-
-  const onSortingChange = useCallback(
-    (updaterOrValue: MRT_Updater<MRT_SortingState>) => {
-      setSortingModel(updaterOrValue);
-      // reset state that depend on search parameters
-      setRowSelectionModel({});
-    },
-    [setSortingModel, setRowSelectionModel],
-  );
-
   return (
     <BBoxAnnotationLocalFilterTable
       projectId={projectId}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
-      onSortingChange={onSortingChange}
+      onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={BBoxAnnotationAnalysisTableToolbarLeft}
@@ -75,7 +53,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
-      onFilterChange={onFilterChange}
+      onFilterChange={setFilter}
       onExpertModeChange={setExpertMode}
     />
   );

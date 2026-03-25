@@ -34,7 +34,7 @@ import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions, defaultSEATFilterExpression } from "./seatFilterSlice";
@@ -61,6 +61,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   onColumnVisibilityChange,
   fetchSize,
   onFetchSizeChange,
+  onSearchParameterChange,
   positionToolbarAlertBanner = "top",
   renderTopRightToolbar,
   renderTopLeftToolbar,
@@ -172,6 +173,13 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
     getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    onRowSelectionChange?.({});
+    onFetchSizeChange?.(20);
+    onSearchParameterChange?.();
+  }, [filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
 
   return (
     <FilterTable

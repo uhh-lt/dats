@@ -1,10 +1,8 @@
 import { SpanColumns } from "@api/models/SpanColumns";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter, useFilterURLConnector } from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "@core/filter";
 import { SpanAnnotationLocalFilterTable } from "@core/span-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { MRT_SortingState, MRT_Updater } from "material-react-table";
-import { useCallback } from "react";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
@@ -38,33 +36,13 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
     SpanColumns,
   );
 
-  // handler to reset state that depend on search parameters when filter change
-  const onFilterChange = useCallback(
-    (nextFilter: MyFilter<SpanColumns>) => {
-      setFilter(nextFilter);
-      // reset state that depend on search parameters
-      setRowSelectionModel({});
-      setFetchSize(20);
-    },
-    [setFetchSize, setFilter, setRowSelectionModel],
-  );
-
-  const onSortingChange = useCallback(
-    (updaterOrValue: MRT_Updater<MRT_SortingState>) => {
-      setSortingModel(updaterOrValue);
-      // reset state that depend on search parameters
-      setRowSelectionModel({});
-    },
-    [setSortingModel, setRowSelectionModel],
-  );
-
   return (
     <SpanAnnotationLocalFilterTable
       projectId={projectId}
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
-      onSortingChange={onSortingChange}
+      onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={SpanAnnotationAnalysisTableToolbarLeft}
@@ -75,7 +53,7 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
-      onFilterChange={onFilterChange}
+      onFilterChange={setFilter}
       onExpertModeChange={setExpertMode}
     />
   );

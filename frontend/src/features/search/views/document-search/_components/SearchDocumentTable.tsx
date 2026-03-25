@@ -85,6 +85,7 @@ interface DocumentTableProps {
   isLoading: boolean;
   onFetchNextPage: () => void;
   onSearchResultsChange?: (sdocIds: number[]) => void;
+  onSearchParameterChange?: () => void;
 }
 
 export function SearchDocumentTable({
@@ -95,10 +96,12 @@ export function SearchDocumentTable({
   isLoading,
   onFetchNextPage,
   onSearchResultsChange,
+  onSearchParameterChange,
 }: DocumentTableProps) {
-  const { searchFilter } = DocumentSearchRouteAPI.useSearch();
+  const { searchFilter, selectedFolderId, filterExpertMode } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
+  const [, setFetchSize] = useURLConnector(DocumentSearchRouteAPI, "fetchSize");
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
@@ -240,6 +243,22 @@ export function SearchDocumentTable({
 
   // search
   const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    setRowSelectionModel({});
+    setFetchSize(20);
+    onSearchParameterChange?.();
+  }, [
+    selectedFolderId,
+    searchQuery,
+    filter,
+    filterExpertMode,
+    sortingModel,
+    setRowSelectionModel,
+    setFetchSize,
+    onSearchParameterChange,
+  ]);
 
   // this is a custom version of the useTransformInfiniteData hook
   const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {

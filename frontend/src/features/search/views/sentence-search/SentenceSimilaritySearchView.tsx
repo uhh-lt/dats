@@ -10,7 +10,7 @@ import { TagExplorer } from "@core/tag";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
@@ -20,7 +20,6 @@ import {
   addTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
-import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
 import { sentenceSimilaritySearchQueryOptions } from "./_api/sentenceSimilaritySearchQueryOptions";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
@@ -38,11 +37,6 @@ export function SentenceSimilaritySearchView() {
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
-
-  // clear stale selection whenever the search query changes (from SearchBar or cross-feature navigation)
-  useEffect(() => {
-    dispatch(SentenceSearchActions.onClearRowSelection());
-  }, [searchQuery, dispatch]);
 
   // filter
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));

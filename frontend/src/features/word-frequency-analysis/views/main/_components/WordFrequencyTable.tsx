@@ -44,10 +44,20 @@ interface WordFrequencyTableProps {
   isLoading: boolean;
   onFetchNextPage: () => void;
   filter: MyFilter<WordFrequencyColumns>;
+  onSearchParameterChange?: () => void;
 }
 
 export const WordFrequencyTable = memo(
-  ({ projectId, searchData, isError, isFetching, isLoading, onFetchNextPage, filter }: WordFrequencyTableProps) => {
+  ({
+    projectId,
+    searchData,
+    isError,
+    isFetching,
+    isLoading,
+    onFetchNextPage,
+    filter,
+    onSearchParameterChange,
+  }: WordFrequencyTableProps) => {
     // global client state (redux)
     const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
       (state) => state.wordFrequency.rowSelectionModel,
@@ -56,6 +66,12 @@ export const WordFrequencyTable = memo(
 
     // global client state (URL)
     const [sortingModel, setSortingModel] = useURLConnector(WordFrequencyRouteAPI, "sortingModel");
+
+    // resetting search-parameter-dependant state
+    useEffect(() => {
+      setRowSelectionModel({});
+      onSearchParameterChange?.();
+    }, [filter, sortingModel, setRowSelectionModel, onSearchParameterChange]);
 
     const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
       (state) => state.wordFrequency.columnVisibilityModel,

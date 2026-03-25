@@ -23,7 +23,7 @@ import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { MemoRenderer } from "../renderer";
 import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
 import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
@@ -54,6 +54,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   onColumnVisibilityChange,
   fetchSize,
   onFetchSizeChange,
+  onSearchParameterChange,
   positionToolbarAlertBanner = "head-overlay",
   renderTopRightToolbar,
   renderTopLeftToolbar,
@@ -138,6 +139,21 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     getNextPageParam: (_lastGroup, groups) => groups.length,
     refetchOnWindowFocus: false,
   });
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    onRowSelectionChange?.({});
+    onFetchSizeChange?.(20);
+    onSearchParameterChange?.();
+  }, [
+    searchQuery,
+    filter,
+    sortingModel,
+    isSearchContent,
+    onRowSelectionChange,
+    onFetchSizeChange,
+    onSearchParameterChange,
+  ]);
 
   const renderMemoTopRightToolbar = (props: TToolbarProps) => (
     <Stack direction="row" spacing={1} alignItems="center">
