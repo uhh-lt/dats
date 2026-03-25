@@ -98,7 +98,7 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
         borderBottom: "1px solid",
         borderColor: "primary.dark",
         bgcolor: (theme) => theme.palette.primary.main,
-        height: 48.5,
+        height: 49,
         position: "relative",
       }}
     >

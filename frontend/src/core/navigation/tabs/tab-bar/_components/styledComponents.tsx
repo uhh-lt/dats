@@ -1,10 +1,10 @@
 import { Box, IconButton, styled, Tab } from "@mui/material";
 
 export const StyledTab = styled(Tab)(({ theme }) => ({
-  minHeight: "42px",
+  minHeight: "40px",
   minWidth: "100px",
   maxWidth: "240px",
-  padding: "8px 8px 10px 8px",
+  padding: "8px 8px 8px 8px",
   fontSize: theme.typography.body2.fontSize,
   borderRight: `1px solid ${theme.palette.divider}`,
   borderTop: `1px solid ${theme.palette.divider}`,
