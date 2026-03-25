@@ -1,4 +1,5 @@
-import { ColumnInfo } from "@core/filter";
+import { queryClient } from "@api/queryClient";
+import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -140,15 +141,20 @@ const searchSlice = createSlice({
     },
   },
   extraReducers(builder) {
-    builder.addCase(ProjectActions.changeProject, (state) => {
+    builder.addCase(ProjectActions.changeProject, (state, action) => {
       console.log("Project changed! Resetting 'search' state.");
       state.selectedDocumentId = initialState.selectedDocumentId;
       state.expandedTagIds = initialState.expandedTagIds;
       state.scrollPosition = initialState.scrollPosition;
       state.expandedFolderIds = initialState.expandedFolderIds;
       state.folderSelectionType = initialState.folderSelectionType;
-      state.column2Info = initialState.column2Info;
       resetProjectTableState(state);
+      // reset column info
+      const projectId = action.payload;
+      state.column2Info = initialState.column2Info;
+      if (projectId) {
+        queryClient.removeQueries({ queryKey: tableInfoQueryKey("search", projectId) });
+      }
     });
   },
 });

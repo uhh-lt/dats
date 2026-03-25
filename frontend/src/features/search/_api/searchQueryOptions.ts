@@ -3,9 +3,7 @@ import { FolderRead } from "@api/models/FolderRead";
 import { FolderType } from "@api/models/FolderType";
 import { FolderService } from "@api/services/FolderService";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
-import { SearchService } from "@api/services/SearchService";
 import { TagService } from "@api/services/TagService";
-import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { queryOptions } from "@tanstack/react-query";
 
 export const projectMetadataListQueryOptions = (projectId: number) =>
@@ -39,17 +37,4 @@ export const projectFoldersQueryOptions = (projectId: number, folderType: Folder
       );
     },
     staleTime: 1000 * 60 * 5,
-  });
-
-export const searchTableInfoQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: tableInfoQueryKey("search", projectId),
-    queryFn: async () => {
-      const result = await SearchService.searchSdocInfo({ projectId });
-      return result.map((info) => ({
-        ...info,
-        column: info.column.toString(),
-      })) as ColumnInfo[];
-    },
-    staleTime: Infinity,
   });

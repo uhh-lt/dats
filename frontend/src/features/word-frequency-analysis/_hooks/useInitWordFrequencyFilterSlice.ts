@@ -1,15 +1,15 @@
-import { SearchService } from "@api/services/SearchService";
+import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { useAppDispatch } from "@store/storeHooks";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { SearchActions } from "../store/documentSearchSlice";
+import { WordFrequencyActions } from "../store/wordFrequencySlice";
 
-const searchTableInfoQueryOptions = (projectId: number, callback?: (data: ColumnInfo[]) => void) =>
+const wordFrequencyTableInfoQueryOptions = (projectId: number, callback?: (columnInfo: ColumnInfo[]) => void) =>
   queryOptions({
-    queryKey: tableInfoQueryKey("search", projectId),
+    queryKey: tableInfoQueryKey("wordFrequency", projectId),
     queryFn: async () => {
-      const result = await SearchService.searchSdocInfo({ projectId });
+      const result = await WordFrequencyService.wordFrequencyAnalysisInfo({ projectId });
       const columnInfo = result.map((info) => ({
         ...info,
         column: info.column.toString(),
@@ -20,12 +20,12 @@ const searchTableInfoQueryOptions = (projectId: number, callback?: (data: Column
     staleTime: Infinity,
   });
 
-export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) => {
+export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: number }) => {
   const dispatch = useAppDispatch();
-  const initializeSearchFilterSlice = useCallback(
+  const initializeWordFrequencyFilterSlice = useCallback(
     (columnInfo: ColumnInfo[]) => {
       dispatch(
-        SearchActions.init({
+        WordFrequencyActions.init({
           columnInfoMap: columnInfo.reduce(
             (acc, info) => {
               acc[info.column] = info;
@@ -39,6 +39,8 @@ export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) =
     [dispatch],
   );
 
-  const { data: columnData } = useQuery(searchTableInfoQueryOptions(projectId, initializeSearchFilterSlice));
+  const { data: columnData } = useQuery(
+    wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencyFilterSlice),
+  );
   return columnData;
 };

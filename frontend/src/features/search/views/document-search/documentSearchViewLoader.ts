@@ -1,7 +1,7 @@
 import { SdocColumns } from "@api/models/SdocColumns";
 import { MyFilter, deserializeFilterFromSearchParam } from "@core/filter";
 import { QueryClient } from "@tanstack/react-query";
-import { projectMetadataListQueryOptions, searchTableInfoQueryOptions } from "../../_api/searchQueryOptions";
+import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 
 interface DocumentSearchViewLoaderArgs {
@@ -29,7 +29,6 @@ export async function documentSearchViewLoader({
 
   await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
-    queryClient.ensureQueryData(searchTableInfoQueryOptions(projectId)),
     queryClient.prefetchInfiniteQuery(
       documentSearchQueryOptions({
         projectId,

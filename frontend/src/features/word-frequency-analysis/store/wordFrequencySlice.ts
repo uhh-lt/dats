@@ -1,4 +1,5 @@
-import { ColumnInfo } from "@core/filter";
+import { queryClient } from "@api/queryClient";
+import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TableState, initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -33,18 +34,17 @@ const WordFrequencySlice = createSlice({
         }
       }, {});
     },
-    // preserve legacy behavior from onFinishFilterEdit after URL-state migration:
-    // when filter criteria change, reset state that depends on result-set identity
-    onURLFilterChange: (state) => {
-      state.rowSelectionModel = initialTableState.rowSelectionModel;
-      state.fetchSize = initialTableState.fetchSize;
-    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(ProjectActions.changeProject, (state) => {
+      .addCase(ProjectActions.changeProject, (state, action) => {
         resetProjectTableState(state);
+        // reset column info
+        const projectId = action.payload;
         state.column2Info = initialState.column2Info;
+        if (projectId) {
+          queryClient.removeQueries({ queryKey: tableInfoQueryKey("wordFrequency", projectId) });
+        }
       })
       .addDefaultCase(() => {});
   },

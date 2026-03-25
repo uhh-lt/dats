@@ -7,7 +7,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { ColumnInfo, FILTER_PARAM, URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
+import { FILTER_PARAM, URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -164,7 +164,7 @@ export function SearchDocumentTable({
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
-  const tableInfo = useInitSearchFilterSlice({ projectId }) as ColumnInfo[] | undefined;
+  const tableInfo = useInitSearchFilterSlice({ projectId });
   const columns = useMemo(() => {
     if (!tableInfo || !user) return [];
 

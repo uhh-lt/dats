@@ -36,7 +36,12 @@ export const tableReducer = {
   // query
   onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
     state.searchQuery = action.payload;
-    // reset variables that depend on search parameters
+    // reset variables that depend on search parameters (onSearchParamsChange)
+    state.rowSelectionModel = initialTableState.rowSelectionModel;
+    state.fetchSize = initialTableState.fetchSize;
+  },
+  // when filter criteria change, reset table states that are related to the current data
+  onSearchParamsChange: (state: Draft<TableState>) => {
     state.rowSelectionModel = initialTableState.rowSelectionModel;
     state.fetchSize = initialTableState.fetchSize;
   },

@@ -1,7 +1,7 @@
 import { SdocColumns } from "@api/models/SdocColumns";
 import { deserializeFilterFromSearchParam, MyFilter } from "@core/filter";
 import { QueryClient } from "@tanstack/react-query";
-import { projectMetadataListQueryOptions, searchTableInfoQueryOptions } from "../../_api/searchQueryOptions";
+import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { imageSimilaritySearchQueryOptions } from "./_api/imageSimilaritySearchQueryOptions";
 
 interface ImageSimilaritySearchViewLoaderArgs {
@@ -27,7 +27,6 @@ export async function imageSimilaritySearchViewLoader({
 
   await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
-    queryClient.ensureQueryData(searchTableInfoQueryOptions(projectId)),
     queryClient.ensureQueryData(
       imageSimilaritySearchQueryOptions({
         projectId,

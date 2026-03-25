@@ -30,6 +30,7 @@ export const FilterDialog = memo(
     filter,
     expertMode,
     onChangeExpertMode,
+    onResetEditFilter,
     buttonProps,
     filterName = "root",
     anchorOrigin = {
@@ -56,10 +57,6 @@ export const FilterDialog = memo(
       dialog.close();
       props.onFinishFilterEdit();
     }, [props, dialog]);
-
-    const handleRemoveAll = useCallback(() => {
-      props.onResetEditFilter();
-    }, [props]);
 
     const handleExpertModeChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +121,7 @@ export const FilterDialog = memo(
               sx={{ ml: 0.25 }}
             />
             <Box flexGrow={1} />
-            <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll} sx={{ mr: 3 }}>
+            <Button startIcon={<DeleteForeverIcon />} onClick={onResetEditFilter} sx={{ mr: 3 }}>
               Remove All
             </Button>
             <Button startIcon={<DoneIcon />} onClick={handleApplyChanges} variant="contained" color="success">

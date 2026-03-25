@@ -3,7 +3,7 @@ import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { WordFrequencyResult } from "@api/models/WordFrequencyResult";
 import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { ContentContentLayout } from "@components/content-layouts";
-import { ColumnInfo, MyFilter, URLFilterDialog } from "@core/filter";
+import { MyFilter, URLFilterDialog } from "@core/filter";
 import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Stack, Typography } from "@mui/material";
@@ -20,6 +20,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useInitWordFrequencyFilterSlice } from "../../../_hooks/useInitWordFrequencyFilterSlice";
 import { WordFrequencyActions } from "../../../store/wordFrequencySlice";
 import { WordFrequencyRouteAPI } from "../_hooks/wordFrequencyRouteAPI";
 import { WordCloud } from "./WordCloud";
@@ -33,10 +34,10 @@ const defaultFilterExpression = {
   operator: StringOperator.STRING_CONTAINS,
   value: "",
 };
+const column2InfoSelector = (state: RootState) => state.wordFrequency.column2Info;
 
 interface WordFrequencyTableProps {
   projectId: number;
-  tableInfo: ColumnInfo[];
   searchData: InfiniteData<WordFrequencyResult>;
   isError: boolean;
   isFetching: boolean;
@@ -46,16 +47,7 @@ interface WordFrequencyTableProps {
 }
 
 export const WordFrequencyTable = memo(
-  ({
-    projectId,
-    tableInfo,
-    searchData,
-    isError,
-    isFetching,
-    isLoading,
-    onFetchNextPage,
-    filter,
-  }: WordFrequencyTableProps) => {
+  ({ projectId, searchData, isError, isFetching, isLoading, onFetchNextPage, filter }: WordFrequencyTableProps) => {
     // global client state (redux)
     const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
       (state) => state.wordFrequency.rowSelectionModel,
@@ -74,6 +66,7 @@ export const WordFrequencyTable = memo(
     const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
     // table columns
+    const tableInfo = useInitWordFrequencyFilterSlice({ projectId });
     const columns: MRT_ColumnDef<WordFrequencyStat>[] = useMemo(() => {
       if (!tableInfo) return [];
 
@@ -165,7 +158,7 @@ export const WordFrequencyTable = memo(
             filterName={filterName}
             routeApi={WordFrequencyRouteAPI}
             defaultFilterExpression={defaultFilterExpression}
-            column2InfoSelector={(state: RootState) => state.wordFrequency.column2Info}
+            column2InfoSelector={column2InfoSelector}
           />
         </Stack>
       ),
