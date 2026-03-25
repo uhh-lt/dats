@@ -18,8 +18,8 @@ function PublicRouteLayout() {
           left: 0,
         }}
       >
-        <img src="/logo1.png" alt="Logo 1" height={68}></img>
-        <img src="/logo2.png" alt="Logo 2" height={68}></img>
+        <img src="/logo1.png" alt="Logo 1" height={68} loading="eager" decoding="async" fetchPriority="high" />
+        <img src="/logo2.png" alt="Logo 2" height={68} loading="eager" decoding="async" fetchPriority="high" />
       </Stack>
       <Outlet />
     </>
