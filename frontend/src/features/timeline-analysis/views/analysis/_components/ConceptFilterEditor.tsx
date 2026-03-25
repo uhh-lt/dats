@@ -1,71 +1,88 @@
-import { FilterRenderer } from "@core/filter";
+import { LogicalOperator } from "@api/models/LogicalOperator";
+import {
+  ColumnInfo,
+  FilterOperators,
+  FilterRenderer,
+  MyFilter,
+  MyFilterExpression,
+  addDefaultFilter,
+  addDefaultFilterExpression,
+  changeFilterColumn,
+  changeFilterLogicalOperator,
+  changeFilterOperator,
+  changeFilterValue,
+  deleteFilterItem,
+} from "@core/filter";
 import { Box, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useCallback } from "react";
-import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
+import { Dispatch, SetStateAction, useCallback } from "react";
 
-export function ConceptFilterEditor() {
-  const dispatch = useAppDispatch();
-  const filter = useAppSelector((state) => state.timelineAnalysis.editableFilter);
-  const column2Info = useAppSelector((state) => state.timelineAnalysis.column2Info);
+interface ConceptFilterEditorProps {
+  editableFilter: MyFilter;
+  column2Info: Record<string, ColumnInfo>;
+  defaultFilterExpression: MyFilterExpression;
+  setEditableFilter: Dispatch<SetStateAction<MyFilter>>;
+}
 
+export function ConceptFilterEditor({
+  editableFilter,
+  column2Info,
+  defaultFilterExpression,
+  setEditableFilter,
+}: ConceptFilterEditorProps) {
   const handleAddFilter = useCallback(
     (filterId: string) => {
-      dispatch(TimelineAnalysisActions.addDefaultFilter({ filterId }));
+      setEditableFilter((prev) => addDefaultFilter(prev, filterId));
     },
-    [dispatch],
+    [setEditableFilter],
   );
 
   const handleAddFilterExpression = useCallback(
     (filterId: string) => {
-      dispatch(TimelineAnalysisActions.addDefaultFilterExpression({ filterId, addEnd: true }));
+      setEditableFilter((prev) => addDefaultFilterExpression(prev, filterId, defaultFilterExpression));
     },
-    [dispatch],
+    [defaultFilterExpression, setEditableFilter],
   );
 
   const handleDeleteFilter = useCallback(
     (filterId: string) => {
-      dispatch(TimelineAnalysisActions.deleteFilter({ filterId }));
+      setEditableFilter((prev) => deleteFilterItem(prev, filterId));
     },
-    [dispatch],
+    [setEditableFilter],
   );
 
   const handleLogicalOperatorChange = useCallback(
-    (
-      filterId: string,
-      operator: Parameters<typeof TimelineAnalysisActions.changeFilterLogicalOperator>[0]["operator"],
-    ) => {
-      dispatch(TimelineAnalysisActions.changeFilterLogicalOperator({ filterId, operator }));
+    (filterId: string, operator: LogicalOperator) => {
+      setEditableFilter((prev) => changeFilterLogicalOperator(prev, filterId, operator));
     },
-    [dispatch],
+    [setEditableFilter],
   );
 
   const handleColumnChange = useCallback(
     (filterId: string, columnValue: string) => {
-      dispatch(TimelineAnalysisActions.changeFilterColumn({ filterId, columnValue }));
+      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, column2Info));
     },
-    [dispatch],
+    [column2Info, setEditableFilter],
   );
 
   const handleOperatorChange = useCallback(
-    (filterId: string, operator: Parameters<typeof TimelineAnalysisActions.changeFilterOperator>[0]["operator"]) => {
-      dispatch(TimelineAnalysisActions.changeFilterOperator({ filterId, operator }));
+    (filterId: string, operator: FilterOperators) => {
+      setEditableFilter((prev) => changeFilterOperator(prev, filterId, operator));
     },
-    [dispatch],
+    [setEditableFilter],
   );
 
   const handleValueChange = useCallback(
-    (filterId: string, value: Parameters<typeof TimelineAnalysisActions.changeFilterValue>[0]["value"]) => {
-      dispatch(TimelineAnalysisActions.changeFilterValue({ filterId, value }));
+    (filterId: string, value: string | number | boolean | string[]) => {
+      setEditableFilter((prev) => changeFilterValue(prev, filterId, value));
     },
-    [dispatch],
+    [setEditableFilter],
   );
 
   return (
     <Box>
       <Typography>Filter:</Typography>
       <FilterRenderer
-        editableFilter={filter}
+        editableFilter={editableFilter}
         column2Info={column2Info}
         onAddFilter={handleAddFilter}
         onAddFilterExpression={handleAddFilterExpression}

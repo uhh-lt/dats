@@ -1,28 +1,39 @@
 import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
+import { MyFilter, withDefaultFilterExpression } from "@core/filter";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { ConceptFilterEditor } from "./ConceptFilterEditor";
 
 interface ConceptEditorProps {
-  onUpdate: (concept: TimelineAnalysisConcept) => void;
-  onCancel: (concept: TimelineAnalysisConcept) => void;
+  onUpdate: (concept: TimelineAnalysisConcept, filter: MyFilter) => void;
+  onCancel: () => void;
 }
 
 export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
   // global client state (redux)
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
   const conceptEditorOpen = useAppSelector((state) => state.timelineAnalysis.conceptEditorOpen);
+  const defaultFilterExpression = useAppSelector((state) => state.timelineAnalysis.defaultFilterExpression);
+  const column2Info = useAppSelector((state) => state.timelineAnalysis.column2Info);
+
+  // local state for transient filter edits while dialog is open
+  const [editableFilter, setEditableFilter] = useState<MyFilter>(() =>
+    withDefaultFilterExpression(
+      { ...currentConcept.ta_specific_filter.filter, id: currentConcept.id },
+      defaultFilterExpression,
+    ),
+  );
 
   // event handling
   const handleClose = () => {
-    onCancel(currentConcept);
+    onCancel();
   };
 
   // use react hook form
@@ -37,12 +48,18 @@ export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
   useEffect(() => {
     if (conceptEditorOpen) {
       reset(currentConcept);
+      setEditableFilter(
+        withDefaultFilterExpression(
+          { ...currentConcept.ta_specific_filter.filter, id: currentConcept.id },
+          defaultFilterExpression,
+        ),
+      );
     }
-  }, [conceptEditorOpen, currentConcept, reset]);
+  }, [conceptEditorOpen, currentConcept, defaultFilterExpression, reset]);
 
   // form handling
   const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
-    onUpdate(data);
+    onUpdate(data, editableFilter);
   };
   const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
 
@@ -104,7 +121,12 @@ export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
               },
             }}
           />
-          <ConceptFilterEditor />
+          <ConceptFilterEditor
+            editableFilter={editableFilter}
+            column2Info={column2Info}
+            defaultFilterExpression={defaultFilterExpression}
+            setEditableFilter={setEditableFilter}
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

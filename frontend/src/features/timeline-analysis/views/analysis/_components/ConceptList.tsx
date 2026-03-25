@@ -1,4 +1,3 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
 import { LogicalOperator } from "@api/models/LogicalOperator";
 import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
@@ -12,7 +11,7 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
-import { useAppDispatch, useAppStore } from "@store/storeHooks";
+import { useAppDispatch } from "@store/storeHooks";
 import { useUpdateTimelineAnalysis } from "../../../_api/timelineAnalysisQueryOptions";
 import { TimelineAnalysisActions } from "../../../store/timelineAnalysisSlice";
 import { ConceptEditor } from "./ConceptEditor";
@@ -62,31 +61,30 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
     const concept = timelineAnalysis.concepts.find((c) => c.id === conceptId);
     if (concept) {
       dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
-      dispatch(
-        TimelineAnalysisActions.onStartFilterEdit({
-          filterId: conceptId,
-          filter: { ...concept.ta_specific_filter.filter, id: conceptId },
-        }),
-      );
     }
   };
 
-  const store = useAppStore();
-  const handleApplyConceptChanges = (concept: TimelineAnalysisConcept) => {
+  const handleApplyConceptChanges = (concept: TimelineAnalysisConcept, updatedFilter: MyFilter) => {
     const index = timelineAnalysis.concepts.findIndex((c) => c.id === concept.id);
     if (index === -1) {
       console.error(`Concept ${concept.id} not found`);
     } else {
-      const updatedFilter = store.getState().timelineAnalysis.editableFilter as MyFilter<BBoxColumns>;
       const updatedConcepts = [...timelineAnalysis.concepts];
       updatedConcepts[index] = {
         ...concept,
         ta_specific_filter: {
           ...concept.ta_specific_filter,
-          filter: updatedFilter,
+          filter: updatedFilter as never,
         },
-      };
-      console.log(updatedConcepts[index]);
+      } as TimelineAnalysisConcept;
+
+      dispatch(
+        TimelineAnalysisActions.onChangeFilter({
+          filterName: concept.id,
+          filter: updatedFilter,
+        }),
+      );
+
       updateTimelineAnalysisMutation.mutate({
         timelineAnalysisId: timelineAnalysis.id,
         requestBody: {
@@ -94,7 +92,6 @@ export function ConceptList({ timelineAnalysis }: ConceptListProps) {
         },
       });
     }
-    dispatch(TimelineAnalysisActions.onFinishFilterEdit());
     dispatch(TimelineAnalysisActions.onFinishConceptEdit());
   };
 
