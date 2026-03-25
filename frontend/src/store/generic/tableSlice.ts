@@ -9,7 +9,6 @@ import {
 } from "material-react-table";
 
 export interface TableState {
-  searchQuery?: string;
   rowSelectionModel: MRT_RowSelectionState;
   sortingModel: MRT_SortingState;
   columnVisibilityModel: MRT_VisibilityState;
@@ -21,7 +20,6 @@ export interface TableState {
 
 export const initialTableState: TableState = {
   // project state:
-  searchQuery: "",
   rowSelectionModel: {},
   sortingModel: [],
   columnVisibilityModel: {},
@@ -33,13 +31,6 @@ export const initialTableState: TableState = {
 };
 
 export const tableReducer = {
-  // query
-  onSearchQueryChange: (state: Draft<TableState>, action: PayloadAction<string | undefined>) => {
-    state.searchQuery = action.payload;
-    // reset variables that depend on search parameters (onSearchParamsChange)
-    state.rowSelectionModel = initialTableState.rowSelectionModel;
-    state.fetchSize = initialTableState.fetchSize;
-  },
   // when filter criteria change, reset table states that are related to the current data
   onSearchParamsChange: (state: Draft<TableState>) => {
     state.rowSelectionModel = initialTableState.rowSelectionModel;
@@ -80,7 +71,6 @@ export const tableReducer = {
 
 // reset table state
 export const resetProjectTableState = (state: Draft<TableState>) => {
-  state.searchQuery = initialTableState.searchQuery;
   state.rowSelectionModel = initialTableState.rowSelectionModel;
   state.sortingModel = initialTableState.sortingModel;
   state.columnVisibilityModel = initialTableState.columnVisibilityModel;
