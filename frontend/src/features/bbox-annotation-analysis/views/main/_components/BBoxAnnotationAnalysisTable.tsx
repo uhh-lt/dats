@@ -1,15 +1,10 @@
 import { BBoxColumns } from "@api/models/BBoxColumns";
 import { BBoxAnnotationLocalFilterTable } from "@core/bbox-annotation";
-import {
-  deserializeFilterFromSearchParam,
-  FILTER_EXPERT_MODE_PARAM,
-  FILTER_PARAM,
-  MyFilter,
-  serializeFilterToSearchParam,
-} from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter, useFilterURLConnector } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { useCallback, useMemo } from "react";
+import { MRT_SortingState, MRT_Updater } from "material-react-table";
+import { useCallback } from "react";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
@@ -22,7 +17,7 @@ interface BBoxAnnotationAnalysisTableProps {
 }
 
 export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysisTableProps) {
-  // global client state (redux) connected to table state
+  // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.bboxAnnotationAnalysis.rowSelectionModel,
     BBoxAnnotationsActions.onRowSelectionChange,
@@ -36,19 +31,31 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
   const [sortingModel, setSortingModel] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [serializedFilter, setSerializedFilter] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, FILTER_PARAM);
-  const filter = useMemo(
-    () => deserializeFilterFromSearchParam(serializedFilter, filterName) as MyFilter<BBoxColumns>,
-    [serializedFilter],
+  const [filter, setFilter] = useFilterURLConnector(
+    BBoxAnnotationAnalysisRouteAPI,
+    filterName,
+    FILTER_PARAM,
+    BBoxColumns,
   );
-  const setFilter = useCallback(
-    (nextFilter: MyFilter) => {
-      setSerializedFilter(serializeFilterToSearchParam(nextFilter));
+
+  // handler to reset state that depend on search parameters when filter change
+  const onFilterChange = useCallback(
+    (nextFilter: MyFilter<BBoxColumns>) => {
+      setFilter(nextFilter);
       // reset state that depend on search parameters
       setRowSelectionModel({});
       setFetchSize(20);
     },
-    [setFetchSize, setRowSelectionModel, setSerializedFilter],
+    [setFilter, setFetchSize, setRowSelectionModel],
+  );
+
+  const onSortingChange = useCallback(
+    (updaterOrValue: MRT_Updater<MRT_SortingState>) => {
+      setSortingModel(updaterOrValue);
+      // reset state that depend on search parameters
+      setRowSelectionModel({});
+    },
+    [setSortingModel, setRowSelectionModel],
   );
 
   return (
@@ -57,7 +64,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
-      onSortingChange={setSortingModel}
+      onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={BBoxAnnotationAnalysisTableToolbarLeft}
@@ -68,7 +75,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
-      onFilterChange={setFilter}
+      onFilterChange={onFilterChange}
       onExpertModeChange={setExpertMode}
     />
   );

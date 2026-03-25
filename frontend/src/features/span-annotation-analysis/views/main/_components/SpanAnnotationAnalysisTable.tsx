@@ -1,15 +1,10 @@
 import { SpanColumns } from "@api/models/SpanColumns";
-import {
-  deserializeFilterFromSearchParam,
-  FILTER_EXPERT_MODE_PARAM,
-  FILTER_PARAM,
-  MyFilter,
-  serializeFilterToSearchParam,
-} from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter, useFilterURLConnector } from "@core/filter";
 import { SpanAnnotationLocalFilterTable } from "@core/span-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { useCallback, useMemo } from "react";
+import { MRT_SortingState, MRT_Updater } from "material-react-table";
+import { useCallback } from "react";
 import { SpanAnnotationsActions } from "../../../store/spanAnnotationAnalysisSlice";
 import { SpanAnnotationAnalysisRouteAPI } from "../_hooks/spanAnnotationAnalysisRouteAPI";
 import { SpanAnnotationAnalysisTableToolbarLeft } from "./SpanAnnotationAnalysisTableToolbarLeft";
@@ -22,31 +17,45 @@ interface SpanAnnotationAnalysisProps {
 }
 
 export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysisProps) {
-  // global client state (redux) connected to table state
+  // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.rowSelectionModel,
     SpanAnnotationsActions.onRowSelectionChange,
   );
-  const [sortingModel, setSortingModel] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "sortingModel");
   const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
     (state) => state.spanAnnotationAnalysis.columnVisibilityModel,
     SpanAnnotationsActions.onColumnVisibilityChange,
   );
+
+  // url state
+  const [sortingModel, setSortingModel] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(SpanAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [serializedFilter, setSerializedFilter] = useURLConnector(SpanAnnotationAnalysisRouteAPI, FILTER_PARAM);
-  const filter = useMemo(
-    () => deserializeFilterFromSearchParam(serializedFilter, filterName) as MyFilter<SpanColumns>,
-    [serializedFilter],
+  const [filter, setFilter] = useFilterURLConnector(
+    SpanAnnotationAnalysisRouteAPI,
+    filterName,
+    FILTER_PARAM,
+    SpanColumns,
   );
-  const setFilter = useCallback(
-    (nextFilter: MyFilter) => {
-      setSerializedFilter(serializeFilterToSearchParam(nextFilter));
+
+  // handler to reset state that depend on search parameters when filter change
+  const onFilterChange = useCallback(
+    (nextFilter: MyFilter<SpanColumns>) => {
+      setFilter(nextFilter);
       // reset state that depend on search parameters
       setRowSelectionModel({});
       setFetchSize(20);
     },
-    [setFetchSize, setRowSelectionModel, setSerializedFilter],
+    [setFetchSize, setFilter, setRowSelectionModel],
+  );
+
+  const onSortingChange = useCallback(
+    (updaterOrValue: MRT_Updater<MRT_SortingState>) => {
+      setSortingModel(updaterOrValue);
+      // reset state that depend on search parameters
+      setRowSelectionModel({});
+    },
+    [setSortingModel, setRowSelectionModel],
   );
 
   return (
@@ -55,7 +64,7 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
-      onSortingChange={setSortingModel}
+      onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={SpanAnnotationAnalysisTableToolbarLeft}
@@ -66,7 +75,7 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
-      onFilterChange={setFilter}
+      onFilterChange={onFilterChange}
       onExpertModeChange={setExpertMode}
     />
   );

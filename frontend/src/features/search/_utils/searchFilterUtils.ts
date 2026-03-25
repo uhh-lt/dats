@@ -13,13 +13,17 @@ import {
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
 
-const cloneFilter = <T = string>(filter: MyFilter<T>): MyFilter<T> => {
-  return JSON.parse(JSON.stringify(filter)) as MyFilter<T>;
+const cloneFilter = (filter: MyFilter<SdocColumns>): MyFilter<SdocColumns> => {
+  return JSON.parse(JSON.stringify(filter)) as MyFilter<SdocColumns>;
 };
 
-export const addKeywordFilter = (appliedFilter: MyFilter, keywordMetadataIds: number[], keyword: string): MyFilter => {
+export const addKeywordFilter = (
+  appliedFilter: MyFilter<SdocColumns>,
+  keywordMetadataIds: number[],
+  keyword: string,
+): MyFilter<SdocColumns> => {
   const nextFilter = cloneFilter(appliedFilter);
-  const filterItems: MyFilterExpression[] = keywordMetadataIds.map((keywordMetadataId) => {
+  const filterItems: MyFilterExpression<SdocColumns>[] = keywordMetadataIds.map((keywordMetadataId) => {
     return {
       id: crypto.randomUUID(),
       column: keywordMetadataId,
@@ -39,7 +43,7 @@ export const addKeywordFilter = (appliedFilter: MyFilter, keywordMetadataIds: nu
   return nextFilter;
 };
 
-export const addTagFilter = (appliedFilter: MyFilter, tagId: number | string): MyFilter => {
+export const addTagFilter = (appliedFilter: MyFilter<SdocColumns>, tagId: number | string): MyFilter<SdocColumns> => {
   const nextFilter = cloneFilter(appliedFilter);
   nextFilter.items = [
     ...nextFilter.items,
@@ -53,7 +57,11 @@ export const addTagFilter = (appliedFilter: MyFilter, tagId: number | string): M
   return nextFilter;
 };
 
-export const addSpanAnnotationFilter = (appliedFilter: MyFilter, codeId: number, spanText: string): MyFilter => {
+export const addSpanAnnotationFilter = (
+  appliedFilter: MyFilter<SdocColumns>,
+  codeId: number,
+  spanText: string,
+): MyFilter<SdocColumns> => {
   const nextFilter = cloneFilter(appliedFilter);
   nextFilter.items = [
     ...nextFilter.items,
@@ -68,11 +76,11 @@ export const addSpanAnnotationFilter = (appliedFilter: MyFilter, codeId: number,
 };
 
 export const addMetadataFilter = (
-  appliedFilter: MyFilter,
+  appliedFilter: MyFilter<SdocColumns>,
   metadata: SourceDocumentMetadataUpdate,
   projectMetadata: ProjectMetadataRead,
   column2Info: Record<string, ColumnInfo>,
-): MyFilter => {
+): MyFilter<SdocColumns> => {
   const filterOperator = column2Info[projectMetadata.id.toString()]?.operator;
   if (!filterOperator) {
     return appliedFilter;

@@ -1,15 +1,10 @@
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import {
-  deserializeFilterFromSearchParam,
-  FILTER_EXPERT_MODE_PARAM,
-  FILTER_PARAM,
-  MyFilter,
-  serializeFilterToSearchParam,
-} from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter, useFilterURLConnector } from "@core/filter";
 import { SentenceAnnotationLocalFilterTable } from "@core/sentence-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
-import { useCallback, useMemo } from "react";
+import { MRT_SortingState, MRT_Updater } from "material-react-table";
+import { useCallback } from "react";
 import { SentAnnotationsActions } from "../../../store/sentAnnotationAnalysisSlice";
 import { SentAnnotationAnalysisRouteAPI } from "../_hooks/sentAnnotationAnalysisRouteAPI";
 import { SentAnnotationAnalysisTableToolbarLeft } from "./SentAnnotationAnalysisTableToolbarLeft";
@@ -22,7 +17,7 @@ interface SentAnnotationAnalysisTableProps {
 }
 
 export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysisTableProps) {
-  // global client state (redux) connected to table state
+  // redux state
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.sentAnnotationAnalysis.rowSelectionModel,
     SentAnnotationsActions.onRowSelectionChange,
@@ -36,19 +31,31 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
   const [sortingModel, setSortingModel] = useURLConnector(SentAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(SentAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(SentAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [serializedFilter, setSerializedFilter] = useURLConnector(SentAnnotationAnalysisRouteAPI, FILTER_PARAM);
-  const filter = useMemo(
-    () => deserializeFilterFromSearchParam(serializedFilter, filterName) as MyFilter<SentAnnoColumns>,
-    [serializedFilter],
+  const [filter, setFilter] = useFilterURLConnector(
+    SentAnnotationAnalysisRouteAPI,
+    filterName,
+    FILTER_PARAM,
+    SentAnnoColumns,
   );
-  const setFilter = useCallback(
-    (nextFilter: MyFilter) => {
-      setSerializedFilter(serializeFilterToSearchParam(nextFilter));
+
+  // handler to reset state that depend on search parameters when filter change
+  const onFilterChange = useCallback(
+    (nextFilter: MyFilter<SentAnnoColumns>) => {
+      setFilter(nextFilter);
       // reset state that depend on search parameters
       setRowSelectionModel({});
       setFetchSize(20);
     },
-    [setFetchSize, setRowSelectionModel, setSerializedFilter],
+    [setFetchSize, setFilter, setRowSelectionModel],
+  );
+
+  const onSortingChange = useCallback(
+    (updaterOrValue: MRT_Updater<MRT_SortingState>) => {
+      setSortingModel(updaterOrValue);
+      // reset state that depend on search parameters
+      setRowSelectionModel({});
+    },
+    [setSortingModel, setRowSelectionModel],
   );
 
   return (
@@ -57,7 +64,7 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
       rowSelectionModel={rowSelectionModel}
       onRowSelectionChange={setRowSelectionModel}
       sortingModel={sortingModel}
-      onSortingChange={setSortingModel}
+      onSortingChange={onSortingChange}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={SentAnnotationAnalysisTableToolbarLeft}
@@ -68,7 +75,7 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}
-      onFilterChange={setFilter}
+      onFilterChange={onFilterChange}
       onExpertModeChange={setExpertMode}
     />
   );

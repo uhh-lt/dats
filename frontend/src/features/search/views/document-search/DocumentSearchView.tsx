@@ -7,7 +7,7 @@ import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadata
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM, MyFilter, deserializeFilterFromSearchParam, serializeFilterToSearchParam } from "@core/filter";
+import { FILTER_PARAM, useFilterURLConnector } from "@core/filter";
 import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
@@ -37,7 +37,7 @@ export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
   const { searchQuery, filterExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
-  const [searchFilter, setSearchFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
+  const [filter, setFilter] = useFilterURLConnector(DocumentSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
   const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
 
   // redux (global client state)
@@ -50,15 +50,6 @@ export function DocumentSearchView() {
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
 
-  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
-
-  const updateFilterInUrl = useCallback(
-    (nextFilter: MyFilter) => {
-      setSearchFilter(serializeFilterToSearchParam(nextFilter));
-    },
-    [setSearchFilter],
-  );
-
   // filter
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
 
@@ -70,21 +61,21 @@ export function DocumentSearchView() {
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      updateFilterInUrl(addSpanAnnotationFilter(filter, stat.code_id, stat.span_text));
+      setFilter((filter) => addSpanAnnotationFilter(filter, stat.code_id, stat.span_text));
     },
-    [filter, updateFilterInUrl],
+    [setFilter],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      updateFilterInUrl(addKeywordFilter(filter, keywordMetadataIds, keyword));
+      setFilter((filter) => addKeywordFilter(filter, keywordMetadataIds, keyword));
     },
-    [filter, keywordMetadataIds, updateFilterInUrl],
+    [keywordMetadataIds, setFilter],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
-      updateFilterInUrl(addTagFilter(filter, tagId));
+      setFilter((filter) => addTagFilter(filter, tagId));
     },
-    [filter, updateFilterInUrl],
+    [setFilter],
   );
 
   // folder explorer handlers
@@ -109,9 +100,9 @@ export function DocumentSearchView() {
   // metadata filter handler
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      updateFilterInUrl(addMetadataFilter(filter, metadata, projectMetadata, column2Info));
+      setFilter((filter) => addMetadataFilter(filter, metadata, projectMetadata, column2Info));
     },
-    [column2Info, filter, updateFilterInUrl],
+    [column2Info, setFilter],
   );
 
   // search results
@@ -126,7 +117,7 @@ export function DocumentSearchView() {
       projectId,
       selectedFolderId,
       searchQuery,
-      filter: filter as MyFilter<SdocColumns>,
+      filter: filter,
       expertMode: filterExpertMode,
       sortingModel,
       fetchSize,

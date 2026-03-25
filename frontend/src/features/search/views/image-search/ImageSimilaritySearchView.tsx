@@ -4,10 +4,9 @@ import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadata
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM, MyFilter, deserializeFilterFromSearchParam, serializeFilterToSearchParam } from "@core/filter";
+import { FILTER_PARAM, useFilterURLConnector } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
-import { useURLConnector } from "@hooks/useURLConnector";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -34,7 +33,7 @@ export function ImageSimilaritySearchView() {
   // router
   const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
   const { searchQuery, topK, threshold } = ImageSearchRouteAPI.useSearch();
-  const [searchFilter, setSearchFilter] = useURLConnector(ImageSearchRouteAPI, FILTER_PARAM);
+  const [filter, setFilter] = useFilterURLConnector(ImageSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);
@@ -57,36 +56,31 @@ export function ImageSimilaritySearchView() {
 
   // search
   useInitSearchFilterSlice({ projectId });
-  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      const nextFilter = addSpanAnnotationFilter(filter, stat.code_id, stat.span_text);
-      setSearchFilter(serializeFilterToSearchParam(nextFilter));
+      setFilter((currentFilter) => addSpanAnnotationFilter(currentFilter, stat.code_id, stat.span_text));
     },
-    [filter, setSearchFilter],
+    [setFilter],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      const nextFilter = addKeywordFilter(filter, keywordMetadataIds, keyword);
-      setSearchFilter(serializeFilterToSearchParam(nextFilter));
+      setFilter((currentFilter) => addKeywordFilter(currentFilter, keywordMetadataIds, keyword));
     },
-    [filter, keywordMetadataIds, setSearchFilter],
+    [keywordMetadataIds, setFilter],
   );
   const handleAddTagFilter = useCallback(
     (tagId: number) => {
-      const nextFilter = addTagFilter(filter, tagId);
-      setSearchFilter(serializeFilterToSearchParam(nextFilter));
+      setFilter((currentFilter) => addTagFilter(currentFilter, tagId));
     },
-    [filter, setSearchFilter],
+    [setFilter],
   );
   const handleAddMetadataFilter = useCallback(
     (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      const nextFilter = addMetadataFilter(filter, metadata, projectMetadata, column2Info);
-      setSearchFilter(serializeFilterToSearchParam(nextFilter));
+      setFilter((currentFilter) => addMetadataFilter(currentFilter, metadata, projectMetadata, column2Info));
     },
-    [column2Info, filter, setSearchFilter],
+    [column2Info, setFilter],
   );
 
   // tag explorer handlers
@@ -99,7 +93,7 @@ export function ImageSimilaritySearchView() {
     imageSimilaritySearchQueryOptions({
       projectId,
       searchQuery,
-      filter: filter as MyFilter<SdocColumns>,
+      filter,
       topK,
       threshold,
     }),

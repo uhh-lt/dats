@@ -377,7 +377,7 @@ const perspectivesSlice = createSlice({
       .addMatcher(
         (action) =>
           (action.type.startsWith("perspectives/onAdd") && action.type.toLowerCase().includes("filter")) || // add filter
-          (action.type.startsWith("perspectives/") && action.type.includes("onFinishFilterEdit")), // edit filter
+          (action.type.startsWith("perspectives/") && action.type.includes("onChangeFilter")), // edit filter
         (state) => {
           console.log("Perspectives search filters changed! Resetting search parameter dependent variables.");
           // reset variables that depend on search parameters
