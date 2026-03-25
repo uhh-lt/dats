@@ -9,9 +9,12 @@ import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
   FILTER_PARAM,
+  FilterDialogProps,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableToolbarLeft,
+  LocalFilterTableToolbarProps,
   MyFilter,
   ReduxFilterDialogProps,
   ReduxFilterTableToolbarLeft,
@@ -271,6 +274,49 @@ export const SpanAnnotationURLFilterTable = memo(
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,
+        }}
+      />
+    );
+  },
+);
+
+/**
+ * Local filter table for span annotations.
+ * The filter state is managed by the parent component and passed via props, so it is fully flexible and can be used in any context.
+ */
+export const SpanAnnotationLocalFilterTable = memo(
+  ({
+    filterName,
+    filter,
+    onFilterChange,
+    expertMode,
+    onExpertModeChange,
+    renderTopLeftToolbar = LocalFilterTableToolbarLeft,
+    ...tableProps
+  }: Omit<
+    FilterTableContainerProps<
+      SpanAnnotationRow,
+      LocalFilterTableToolbarProps<SpanAnnotationRow, SpanColumns>,
+      MyFilter<SpanColumns>
+    >,
+    "filter" | "toolbarExtraProps"
+  > &
+    Omit<FilterDialogProps<SpanColumns>, "column2Info" | "defaultFilterExpression">) => {
+    const column2Info = useAppSelector(column2InfoSelector);
+
+    return (
+      <SpanAnnotationFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={renderTopLeftToolbar}
+        toolbarExtraProps={{
+          filterName,
+          defaultFilterExpression,
+          column2Info,
+          filter,
+          onFilterChange,
+          expertMode,
+          onExpertModeChange,
         }}
       />
     );

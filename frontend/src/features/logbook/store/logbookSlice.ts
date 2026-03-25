@@ -32,7 +32,7 @@ const logbookSlice = createSlice({
           }
         }, {});
       })
-      .addCase(MemoFilterActions.onFinishFilterEdit, (state) => {
+      .addCase(MemoFilterActions.onChangeFilter, (state) => {
         // reset variables that depend on search parameters
         state.rowSelectionModel = initialTableState.rowSelectionModel;
         state.fetchSize = initialTableState.fetchSize;

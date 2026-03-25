@@ -36,11 +36,6 @@ const SentAnnotationsSlice = createSlice({
           { [SentAnnoColumns.SENT_ANNO_MEMO_CONTENT]: false },
         );
       })
-      .addCase(SEATFilterActions.onFinishFilterEdit, (state) => {
-        // reset variables that depend on search parameters
-        state.rowSelectionModel = initialTableState.rowSelectionModel;
-        state.fetchSize = initialTableState.fetchSize;
-      })
       .addDefaultCase(() => {});
   },
 });

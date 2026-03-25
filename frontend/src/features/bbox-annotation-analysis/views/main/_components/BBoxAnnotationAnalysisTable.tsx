@@ -44,7 +44,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
   const setFilter = useCallback(
     (nextFilter: MyFilter) => {
       setSerializedFilter(serializeFilterToSearchParam(nextFilter));
-       // reset state that depend on search parameters
+      // reset state that depend on search parameters
       setRowSelectionModel({});
       setFetchSize(20);
     },

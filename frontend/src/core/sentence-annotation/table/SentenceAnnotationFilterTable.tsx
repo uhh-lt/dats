@@ -9,9 +9,12 @@ import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
   FILTER_PARAM,
+  FilterDialogProps,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableToolbarLeft,
+  LocalFilterTableToolbarProps,
   MyFilter,
   ReduxFilterDialogProps,
   ReduxFilterTableToolbarLeft,
@@ -278,6 +281,49 @@ export const SentenceAnnotationURLFilterTable = memo(
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,
+        }}
+      />
+    );
+  },
+);
+
+/**
+ * Local filter table for sentence annotations.
+ * The filter state is managed by the parent component and passed via props, so it is fully flexible and can be used in any context.
+ */
+export const SentenceAnnotationLocalFilterTable = memo(
+  ({
+    filterName,
+    filter,
+    onFilterChange,
+    expertMode,
+    onExpertModeChange,
+    renderTopLeftToolbar = LocalFilterTableToolbarLeft,
+    ...tableProps
+  }: Omit<
+    FilterTableContainerProps<
+      SentenceAnnotationRow,
+      LocalFilterTableToolbarProps<SentenceAnnotationRow, SentAnnoColumns>,
+      MyFilter<SentAnnoColumns>
+    >,
+    "filter" | "toolbarExtraProps"
+  > &
+    Omit<FilterDialogProps<SentAnnoColumns>, "column2Info" | "defaultFilterExpression">) => {
+    const column2Info = useAppSelector(column2InfoSelector);
+
+    return (
+      <SentenceAnnotationFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={renderTopLeftToolbar}
+        toolbarExtraProps={{
+          filterName,
+          defaultFilterExpression,
+          column2Info,
+          filter,
+          onFilterChange,
+          expertMode,
+          onExpertModeChange,
         }}
       />
     );

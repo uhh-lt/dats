@@ -38,11 +38,6 @@ const SpanAnnotationsSlice = createSlice({
           },
         );
       })
-      .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
-        // reset variables that depend on search parameters
-        state.rowSelectionModel = initialTableState.rowSelectionModel;
-        state.fetchSize = initialTableState.fetchSize;
-      })
       .addDefaultCase(() => {});
   },
 });
