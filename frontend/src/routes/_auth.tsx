@@ -43,33 +43,31 @@ function AuthRouteLayout() {
   }, []);
 
   return (
-    <>
-      <Box sx={{ height: "100vh", display: "flex", flexDirection: "row", backgroundColor: "grey.200" }}>
-        <SideBar isExpanded={isExpanded} onToggle={handleToggleSidebar} projectId={projectId} />
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "row", backgroundColor: "grey.200" }}>
+      <SideBar isExpanded={isExpanded} onToggle={handleToggleSidebar} projectId={projectId} />
+      <Box
+        sx={{
+          height: "100%",
+          width: isExpanded ? "calc(100vw - 200px)" : "calc(100vw - 49px)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <TabSynchronizer />
+        {projectId && <TabBar projectId={projectId} />}
         <Box
+          component="main"
           sx={{
-            height: "100%",
-            width: isExpanded ? "calc(100vw - 200px)" : "calc(100vw - 49px)",
+            flexGrow: 1,
             display: "flex",
             flexDirection: "column",
+            flex: 1,
+            overflow: "auto",
           }}
         >
-          <TabSynchronizer />
-          {projectId && <TabBar projectId={projectId} />}
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              flexDirection: "column",
-              flex: 1,
-              overflow: "auto",
-            }}
-          >
-            <Outlet />
-          </Box>
+          <Outlet />
         </Box>
       </Box>
-    </>
+    </Box>
   );
 }
