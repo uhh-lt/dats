@@ -7,12 +7,13 @@ import { SdocColumns } from "@api/models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { StringOperator } from "@api/models/StringOperator";
 import {
+  createEmptyFilter,
   createInitialFilterState,
   filterOperator2FilterOperatorType,
   filterReducer,
   FilterState,
   getDefaultOperator,
-  getOrCreateFilter,
+  MyFilter,
   MyFilterExpression,
   resetProjectFilterState,
 } from "@core/filter";
@@ -20,6 +21,17 @@ import { getMetadataValue } from "@core/sdoc-metadata";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import * as d3 from "d3";
+
+const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
+  if (!state.filter[filterId]) {
+    if (filter) {
+      state.filter[filterId] = filter;
+    } else {
+      state.filter[filterId] = createEmptyFilter(filterId);
+    }
+  }
+  return state.filter[filterId];
+};
 
 interface ChatMessage {
   id: string;

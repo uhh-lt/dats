@@ -10,8 +10,6 @@ export function SentAnnotationAnalysisTableToolbarLeft({
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-  filterSearchParam,
-  expertModeSearchParam,
   selectedData,
 }: URLFilterTableToolbarProps<SentenceAnnotationRow>) {
   return (
@@ -23,8 +21,6 @@ export function SentAnnotationAnalysisTableToolbarLeft({
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}
-        filterSearchParam={filterSearchParam}
-        expertModeSearchParam={expertModeSearchParam}
       />
       <BulkChangeSentAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteSentAnnotationsButton selectedData={selectedData} />

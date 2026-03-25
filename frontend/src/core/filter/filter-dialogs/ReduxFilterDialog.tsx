@@ -1,8 +1,9 @@
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import { memo, useCallback } from "react";
-import { FilterDialog, FilterDialogProps } from "./_components/FilterDialog";
+import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
 import { RootState } from "@store/store";
+import { createEmptyFilter, MyFilter } from "../filterUtils";
 import { FilterActions, FilterState } from "../store";
 
 export interface ReduxFilterDialogProps {
@@ -21,106 +22,40 @@ export const ReduxFilterDialog = memo(
     filterName,
     filterActions,
   }: ReduxFilterDialogProps &
-    Pick<FilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-    const filter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
-    const editableFilter = useAppSelector((state) => filterStateSelector(state).editableFilter);
-    const column2Info = useAppSelector((state) => filterStateSelector(state).column2Info);
-    const expertMode = useAppSelector((state) => filterStateSelector(state).expertMode);
+    Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
     const dispatch = useAppDispatch();
 
-    const handleExpertModeChange = useCallback(
-      (expertMode: boolean) => {
-        dispatch(filterActions.onChangeFilterExpertMode({ expertMode }));
-      },
-      [dispatch, filterActions],
+    const column2Info = useAppSelector((state) => filterStateSelector(state).column2Info);
+    const defaultFilterExpression = useAppSelector((state) => filterStateSelector(state).defaultFilterExpression);
+
+    const [expertMode, setExpertMode] = useReduxConnector(
+      (state) => filterStateSelector(state).expertMode,
+      filterActions.onChangeFilterExpertMode,
     );
 
-    const handleStartFilterEdit = useCallback(
-      (nextFilterName: string) => {
-        dispatch(filterActions.onStartFilterEdit({ filterId: nextFilterName }));
+    const filter =
+      useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
+    const setFilter = useCallback(
+      (nextFilter: MyFilter) => {
+        dispatch(filterActions.onChangeFilter({ filterName, filter: nextFilter }));
       },
-      [dispatch, filterActions],
-    );
-
-    const handleFinishFilterEdit = useCallback(() => {
-      dispatch(filterActions.onFinishFilterEdit());
-    }, [dispatch, filterActions]);
-
-    const handleResetEditFilter = useCallback(() => {
-      dispatch(filterActions.resetEditFilter());
-    }, [dispatch, filterActions]);
-
-    const handleAddFilter = useCallback(
-      (filterId: string) => {
-        dispatch(filterActions.addDefaultFilter({ filterId }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleAddFilterExpression = useCallback(
-      (filterId: string) => {
-        dispatch(filterActions.addDefaultFilterExpression({ filterId, addEnd: true }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleDeleteFilter = useCallback(
-      (filterId: string) => {
-        dispatch(filterActions.deleteFilter({ filterId }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleChangeFilterLogicalOperator = useCallback(
-      (filterId: string, operator: Parameters<typeof filterActions.changeFilterLogicalOperator>[0]["operator"]) => {
-        dispatch(filterActions.changeFilterLogicalOperator({ filterId, operator }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleChangeFilterColumn = useCallback(
-      (filterId: string, columnValue: string) => {
-        dispatch(filterActions.changeFilterColumn({ filterId, columnValue }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleChangeFilterOperator = useCallback(
-      (filterId: string, operator: Parameters<typeof filterActions.changeFilterOperator>[0]["operator"]) => {
-        dispatch(filterActions.changeFilterOperator({ filterId, operator }));
-      },
-      [dispatch, filterActions],
-    );
-
-    const handleChangeFilterValue = useCallback(
-      (filterId: string, value: Parameters<typeof filterActions.changeFilterValue>[0]["value"]) => {
-        dispatch(filterActions.changeFilterValue({ filterId, value }));
-      },
-      [dispatch, filterActions],
+      [dispatch, filterActions, filterName],
     );
 
     return (
       <FilterDialog
         anchorEl={anchorEl}
+        buttonProps={buttonProps}
         anchorOrigin={anchorOrigin}
         transformOrigin={transformOrigin}
-        filter={filter}
+        // filter props
         filterName={filterName}
-        editableFilter={editableFilter}
-        column2Info={column2Info}
+        defaultFilterExpression={defaultFilterExpression}
+        filter={filter}
+        onFilterChange={setFilter}
         expertMode={expertMode}
-        onStartFilterEdit={handleStartFilterEdit}
-        onFinishFilterEdit={handleFinishFilterEdit}
-        onResetEditFilter={handleResetEditFilter}
-        onAddFilter={handleAddFilter}
-        onAddFilterExpression={handleAddFilterExpression}
-        onDeleteFilter={handleDeleteFilter}
-        onChangeFilterLogicalOperator={handleChangeFilterLogicalOperator}
-        onChangeFilterColumn={handleChangeFilterColumn}
-        onChangeFilterOperator={handleChangeFilterOperator}
-        onChangeFilterValue={handleChangeFilterValue}
-        onChangeExpertMode={handleExpertModeChange}
-        buttonProps={buttonProps}
+        onExpertModeChange={setExpertMode}
+        column2Info={column2Info}
       />
     );
   },

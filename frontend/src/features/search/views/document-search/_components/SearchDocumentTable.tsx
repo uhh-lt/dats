@@ -7,7 +7,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { FILTER_PARAM, URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
+import { URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -489,7 +489,6 @@ export function SearchDocumentTable({
           routeApi={DocumentSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
           column2InfoSelector={(state) => state.search.column2Info}
-          filterSearchParam={FILTER_PARAM}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

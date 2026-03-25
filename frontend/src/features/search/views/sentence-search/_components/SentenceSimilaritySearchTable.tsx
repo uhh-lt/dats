@@ -4,7 +4,7 @@ import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
-import { FILTER_PARAM, URLFilterDialog } from "@core/filter";
+import { URLFilterDialog } from "@core/filter";
 import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
@@ -254,7 +254,6 @@ export function SentenceSimilaritySearchTable({
           routeApi={SentenceSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
           column2InfoSelector={(state) => state.search.column2Info}
-          filterSearchParam={FILTER_PARAM}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         />

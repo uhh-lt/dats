@@ -8,7 +8,6 @@ import { SearchService } from "@api/services/SearchService";
 import { useAuth } from "@core/auth";
 import { CodeRenderer } from "@core/code";
 import {
-  FILTER_EXPERT_MODE_PARAM,
   FILTER_PARAM,
   FilterTable,
   FilterTableContainerProps,
@@ -252,8 +251,6 @@ const urlFilterName = "root";
 export const SentenceAnnotationURLFilterTable = memo(
   ({
     routeApi,
-    filterSearchParam = FILTER_PARAM,
-    expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
     renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
   }: Omit<
@@ -265,7 +262,7 @@ export const SentenceAnnotationURLFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
+    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
     const filter = useMemo(
       () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SentAnnoColumns>,
       [serializedFilter],
@@ -281,8 +278,6 @@ export const SentenceAnnotationURLFilterTable = memo(
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,
-          filterSearchParam,
-          expertModeSearchParam,
         }}
       />
     );

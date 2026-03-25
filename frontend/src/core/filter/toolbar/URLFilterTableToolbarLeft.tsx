@@ -9,8 +9,6 @@ export function URLFilterTableToolbarLeft<T extends TableRowWithId>({
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-  filterSearchParam,
-  expertModeSearchParam,
 }: URLFilterTableToolbarProps<T>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
@@ -21,8 +19,6 @@ export function URLFilterTableToolbarLeft<T extends TableRowWithId>({
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}
-        filterSearchParam={filterSearchParam}
-        expertModeSearchParam={expertModeSearchParam}
       />
     </Stack>
   );

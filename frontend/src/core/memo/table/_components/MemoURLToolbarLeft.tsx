@@ -12,8 +12,6 @@ export function MemoURLToolbarLeft({
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-  filterSearchParam,
-  expertModeSearchParam,
 }: URLFilterTableToolbarProps<ElasticSearchHit>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
@@ -26,8 +24,6 @@ export function MemoURLToolbarLeft({
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}
-        filterSearchParam={filterSearchParam}
-        expertModeSearchParam={expertModeSearchParam}
       />
       {selectedMemoIds.length > 0 && (
         <>

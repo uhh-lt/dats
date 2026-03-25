@@ -1,7 +1,7 @@
 import { SdocColumns } from "@api/models/SdocColumns";
 import { StringOperator } from "@api/models/StringOperator";
 import { DATSToolbar } from "@components/DATSToolbar";
-import { FILTER_PARAM, URLFilterDialog } from "@core/filter";
+import { URLFilterDialog } from "@core/filter";
 import { DeleteSdocsButton, SdocExportButton } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
 import { Box, Checkbox, Typography } from "@mui/material";
@@ -74,7 +74,6 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
         routeApi={ImageSearchRouteAPI}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={(state) => state.search.column2Info}
-        filterSearchParam={FILTER_PARAM}
       />
       <SearchBar placeholder="Search for images" />
       <ImageSimilaritySearchOptionsMenu />

@@ -53,7 +53,7 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
       setSelectedCodeId(codeId);
       if (method === TaskType.SENTENCE_ANNOTATION) {
         dispatch(
-          SEATFilterActions.setFilter({
+          SEATFilterActions.onChangeFilter({
             filterName: filterNameSentAnno,
             filter: {
               id: crypto.randomUUID(),
@@ -71,7 +71,7 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
         );
       } else if (method === TaskType.ANNOTATION) {
         dispatch(
-          SATFilterActions.setFilter({
+          SATFilterActions.onChangeFilter({
             filterName: filterNameSpanAnno,
             filter: {
               id: crypto.randomUUID(),

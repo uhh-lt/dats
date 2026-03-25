@@ -10,8 +10,6 @@ export function SpanAnnotationAnalysisTableToolbarLeft({
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-  filterSearchParam,
-  expertModeSearchParam,
   selectedData,
 }: URLFilterTableToolbarProps<SpanAnnotationRow>) {
   return (
@@ -23,8 +21,6 @@ export function SpanAnnotationAnalysisTableToolbarLeft({
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}
-        filterSearchParam={filterSearchParam}
-        expertModeSearchParam={expertModeSearchParam}
       />
       <BulkChangeSpanAnnotationCodeButton selectedData={selectedData} />
       <BulkDeleteSpanAnnotationsButton selectedData={selectedData} />

@@ -48,12 +48,6 @@ const searchSlice = createSlice({
   initialState,
   reducers: {
     ...tableReducer,
-    // override tableReducer's onSearchQueryChange to reset selected document and folder when search query changes
-    onSearchQueryChange: () => {
-      console.error(
-        "searchQuery is not stored in redux state! This action should not be dispatched. Please dispatch a navigation action to change the searchQuery in the url.",
-      );
-    },
     // initialize column info for URL-backed filter dialogs and column visibility for table
     init: (state, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
       state.column2Info = action.payload.columnInfoMap;

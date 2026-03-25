@@ -5,7 +5,6 @@ import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHi
 import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
 import {
-  FILTER_EXPERT_MODE_PARAM,
   FILTER_PARAM,
   FilterTable,
   FilterTableContainerProps,
@@ -236,15 +235,13 @@ const urlFilterName = "root";
 export const MemoURLFilterTable = memo(
   ({
     routeApi,
-    filterSearchParam = FILTER_PARAM,
-    expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
     ...tableProps
   }: Omit<
     FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
+    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
     const filter = useMemo(
       () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<MemoColumns>,
       [serializedFilter],
@@ -260,8 +257,6 @@ export const MemoURLFilterTable = memo(
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,
-          filterSearchParam,
-          expertModeSearchParam,
         }}
       />
     );

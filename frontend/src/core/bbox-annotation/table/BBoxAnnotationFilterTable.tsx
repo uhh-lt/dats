@@ -8,11 +8,15 @@ import { SearchService } from "@api/services/SearchService";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import {
-  FILTER_EXPERT_MODE_PARAM,
+  createEmptyFilter,
+  deserializeFilterFromSearchParam,
   FILTER_PARAM,
+  FilterDialogProps,
   FilterTable,
   FilterTableContainerProps,
   FilterTableToolbarProps,
+  LocalFilterTableToolbarLeft,
+  LocalFilterTableToolbarProps,
   MyFilter,
   ReduxFilterDialogProps,
   ReduxFilterTableToolbarLeft,
@@ -20,8 +24,6 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
-  createEmptyFilter,
-  deserializeFilterFromSearchParam,
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -254,8 +256,6 @@ const urlFilterName = "root"; // since the filter state is stored in the URL, we
 export const BBoxAnnotationURLFilterTable = memo(
   ({
     routeApi,
-    filterSearchParam = FILTER_PARAM,
-    expertModeSearchParam = FILTER_EXPERT_MODE_PARAM,
     renderTopLeftToolbar = URLFilterTableToolbarLeft,
     ...tableProps
   }: Omit<
@@ -263,7 +263,7 @@ export const BBoxAnnotationURLFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, filterSearchParam);
+    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
     const filter = useMemo(
       () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<BBoxColumns>,
       [serializedFilter],
@@ -279,8 +279,49 @@ export const BBoxAnnotationURLFilterTable = memo(
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,
-          filterSearchParam,
-          expertModeSearchParam,
+        }}
+      />
+    );
+  },
+);
+
+/**
+ * Local filter table for bbox annotations.
+ * The filter state is managed by the parent component and passed via props, so it is fully flexible and can be used in any context.
+ */
+export const BBoxAnnotationLocalFilterTable = memo(
+  ({
+    filterName,
+    filter,
+    onFilterChange,
+    expertMode,
+    onExpertModeChange,
+    renderTopLeftToolbar = LocalFilterTableToolbarLeft,
+    ...tableProps
+  }: Omit<
+    FilterTableContainerProps<
+      BBoxAnnotationRow,
+      LocalFilterTableToolbarProps<BBoxAnnotationRow, BBoxColumns>,
+      MyFilter<BBoxColumns>
+    >,
+    "filter" | "toolbarExtraProps"
+  > &
+    Omit<FilterDialogProps<BBoxColumns>, "column2Info" | "defaultFilterExpression">) => {
+    const column2Info = useAppSelector(column2InfoSelector);
+
+    return (
+      <BBoxAnnotationFilterTable
+        {...tableProps}
+        filter={filter}
+        renderTopLeftToolbar={renderTopLeftToolbar}
+        toolbarExtraProps={{
+          filterName,
+          defaultFilterExpression: defaultFilterExpression,
+          column2Info,
+          filter,
+          onFilterChange,
+          expertMode,
+          onExpertModeChange,
         }}
       />
     );
