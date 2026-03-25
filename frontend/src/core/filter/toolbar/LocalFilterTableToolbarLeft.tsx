@@ -3,7 +3,7 @@ import { TableRowWithId } from "../_types/TableRowWithId";
 import { FilterDialog } from "../filter-dialogs";
 import { LocalFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
-export function LocalFilterTableToolbarLeft<T extends TableRowWithId>({
+export function LocalFilterTableToolbarLeft<T extends TableRowWithId, U extends string = string>({
   anchor,
   filterName,
   filter,
@@ -12,7 +12,7 @@ export function LocalFilterTableToolbarLeft<T extends TableRowWithId>({
   onExpertModeChange,
   column2Info,
   defaultFilterExpression,
-}: LocalFilterTableToolbarProps<T>) {
+}: LocalFilterTableToolbarProps<T, U>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
       <FilterDialog

@@ -156,94 +156,95 @@ export interface FilterDialogProps<T extends string = string> {
   column2Info: Record<string, ColumnInfo>;
 }
 
-export const FilterDialog = memo(
-  ({
-    filterName,
-    defaultFilterExpression,
-    filter,
-    onFilterChange,
-    expertMode,
-    onExpertModeChange,
-    column2Info,
-    // ----
-    anchorEl,
-    buttonProps,
-    anchorOrigin,
-    transformOrigin,
-  }: FilterDialogProps &
-    Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) => {
-    const [editableFilter, setEditableFilter] = useState(filter);
+function FilterDialogInner<T extends string = string>({
+  filterName,
+  defaultFilterExpression,
+  filter,
+  onFilterChange,
+  expertMode,
+  onExpertModeChange,
+  column2Info,
+  // ----
+  anchorEl,
+  buttonProps,
+  anchorOrigin,
+  transformOrigin,
+}: FilterDialogProps<T> &
+  Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) {
+  const [editableFilter, setEditableFilter] = useState(filter);
+  const typedDefaultFilterExpression = defaultFilterExpression as MyFilterExpression<T>;
 
-    // filter actions
-    const handleStartFilterEdit = useCallback(() => {
-      setEditableFilter(withDefaultFilterExpression(filter, defaultFilterExpression));
-    }, [defaultFilterExpression, filter]);
+  // filter actions
+  const handleStartFilterEdit = useCallback(() => {
+    setEditableFilter(withDefaultFilterExpression<T>(filter, typedDefaultFilterExpression));
+  }, [filter, typedDefaultFilterExpression]);
 
-    const handleFinishFilterEdit = useCallback(() => {
-      onFilterChange(editableFilter);
-    }, [editableFilter, onFilterChange]);
+  const handleFinishFilterEdit = useCallback(() => {
+    onFilterChange(editableFilter);
+  }, [editableFilter, onFilterChange]);
 
-    const handleResetEditFilter = useCallback(() => {
-      setEditableFilter((prev) => resetFilter(prev));
-    }, []);
+  const handleResetEditFilter = useCallback(() => {
+    setEditableFilter((prev) => resetFilter(prev));
+  }, []);
 
-    const handleAddFilter = useCallback((filterId: string) => {
-      setEditableFilter((prev) => addDefaultFilter(prev, filterId));
-    }, []);
+  const handleAddFilter = useCallback((filterId: string) => {
+    setEditableFilter((prev) => addDefaultFilter(prev, filterId));
+  }, []);
 
-    const handleAddFilterExpression = useCallback(
-      (filterId: string) => {
-        setEditableFilter((prev) => addDefaultFilterExpression(prev, filterId, defaultFilterExpression));
-      },
-      [defaultFilterExpression],
-    );
+  const handleAddFilterExpression = useCallback(
+    (filterId: string) => {
+      setEditableFilter((prev) => addDefaultFilterExpression<T>(prev, filterId, typedDefaultFilterExpression));
+    },
+    [typedDefaultFilterExpression],
+  );
 
-    const handleDeleteFilter = useCallback((filterId: string) => {
-      setEditableFilter((prev) => deleteFilterItem(prev, filterId));
-    }, []);
+  const handleDeleteFilter = useCallback((filterId: string) => {
+    setEditableFilter((prev) => deleteFilterItem(prev, filterId));
+  }, []);
 
-    const handleChangeFilterLogicalOperator = useCallback((filterId: string, operator: LogicalOperator) => {
-      setEditableFilter((prev) => changeFilterLogicalOperator(prev, filterId, operator));
-    }, []);
+  const handleChangeFilterLogicalOperator = useCallback((filterId: string, operator: LogicalOperator) => {
+    setEditableFilter((prev) => changeFilterLogicalOperator(prev, filterId, operator));
+  }, []);
 
-    const handleChangeFilterColumn = useCallback(
-      (filterId: string, columnValue: string) => {
-        setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, column2Info));
-      },
-      [column2Info],
-    );
+  const handleChangeFilterColumn = useCallback(
+    (filterId: string, columnValue: string) => {
+      setEditableFilter((prev) => changeFilterColumn(prev, filterId, columnValue, column2Info));
+    },
+    [column2Info],
+  );
 
-    const handleChangeFilterOperator = useCallback((filterId: string, operator: FilterOperators) => {
-      setEditableFilter((prev) => changeFilterOperator(prev, filterId, operator));
-    }, []);
+  const handleChangeFilterOperator = useCallback((filterId: string, operator: FilterOperators) => {
+    setEditableFilter((prev) => changeFilterOperator(prev, filterId, operator));
+  }, []);
 
-    const handleChangeFilterValue = useCallback((filterId: string, value: string | number | boolean | string[]) => {
-      setEditableFilter((prev) => changeFilterValue(prev, filterId, value));
-    }, []);
+  const handleChangeFilterValue = useCallback((filterId: string, value: string | number | boolean | string[]) => {
+    setEditableFilter((prev) => changeFilterValue(prev, filterId, value));
+  }, []);
 
-    return (
-      <InternalFilterDialog
-        anchorEl={anchorEl}
-        buttonProps={buttonProps}
-        anchorOrigin={anchorOrigin}
-        transformOrigin={transformOrigin}
-        filter={filter}
-        filterName={filterName}
-        editableFilter={editableFilter}
-        expertMode={expertMode}
-        column2Info={column2Info}
-        onStartFilterEdit={handleStartFilterEdit}
-        onFinishFilterEdit={handleFinishFilterEdit}
-        onResetEditFilter={handleResetEditFilter}
-        onChangeExpertMode={onExpertModeChange}
-        onAddFilter={handleAddFilter}
-        onAddFilterExpression={handleAddFilterExpression}
-        onDeleteFilter={handleDeleteFilter}
-        onChangeFilterLogicalOperator={handleChangeFilterLogicalOperator}
-        onChangeFilterColumn={handleChangeFilterColumn}
-        onChangeFilterOperator={handleChangeFilterOperator}
-        onChangeFilterValue={handleChangeFilterValue}
-      />
-    );
-  },
-);
+  return (
+    <InternalFilterDialog
+      anchorEl={anchorEl}
+      buttonProps={buttonProps}
+      anchorOrigin={anchorOrigin}
+      transformOrigin={transformOrigin}
+      filter={filter}
+      filterName={filterName}
+      editableFilter={editableFilter}
+      expertMode={expertMode}
+      column2Info={column2Info}
+      onStartFilterEdit={handleStartFilterEdit}
+      onFinishFilterEdit={handleFinishFilterEdit}
+      onResetEditFilter={handleResetEditFilter}
+      onChangeExpertMode={onExpertModeChange}
+      onAddFilter={handleAddFilter}
+      onAddFilterExpression={handleAddFilterExpression}
+      onDeleteFilter={handleDeleteFilter}
+      onChangeFilterLogicalOperator={handleChangeFilterLogicalOperator}
+      onChangeFilterColumn={handleChangeFilterColumn}
+      onChangeFilterOperator={handleChangeFilterOperator}
+      onChangeFilterValue={handleChangeFilterValue}
+    />
+  );
+}
+
+export const FilterDialog = memo(FilterDialogInner) as typeof FilterDialogInner;

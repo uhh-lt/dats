@@ -9,7 +9,7 @@ import {
   changeEditableFilterValue,
   createClearedFilter,
   deleteFilterFromEditableFilter,
-  startFilterEdit
+  startFilterEdit,
 } from "./_utils/filterLogic";
 
 export const FILTER_PARAM = "searchFilter";
@@ -60,59 +60,73 @@ export const deserializeFilterFromSearchParam = (value: unknown, filterName: str
   return parsed;
 };
 
-export const withDefaultFilterExpression = (filter: MyFilter, defaultExpression: MyFilterExpression): MyFilter => {
-  return startFilterEdit(filter, defaultExpression);
+export const withDefaultFilterExpression = <T extends string = string>(
+  filter: MyFilter<T>,
+  defaultExpression: MyFilterExpression<T>,
+): MyFilter<T> => {
+  return startFilterEdit(filter, defaultExpression) as MyFilter<T>;
 };
 
-export const resetFilter = (filter: MyFilter): MyFilter => {
-  return createClearedFilter(filter.id);
+export const resetFilter = <T extends string = string>(filter: MyFilter<T>): MyFilter<T> => {
+  return createClearedFilter(filter.id) as MyFilter<T>;
 };
 
-export const addDefaultFilter = (editableFilter: MyFilter, filterId: string): MyFilter => {
-  return addDefaultFilterToEditableFilter(editableFilter, filterId);
-};
-
-export const addDefaultFilterExpression = (
-  editableFilter: MyFilter,
+export const addDefaultFilter = <T extends string = string>(
+  editableFilter: MyFilter<T>,
   filterId: string,
-  defaultFilterExpression: MyFilterExpression,
-): MyFilter => {
-  return addDefaultFilterExpressionToEditableFilter(editableFilter, filterId, defaultFilterExpression, true);
+): MyFilter<T> => {
+  return addDefaultFilterToEditableFilter(editableFilter, filterId) as MyFilter<T>;
 };
 
-export const deleteFilterItem = (editableFilter: MyFilter, filterId: string): MyFilter => {
-  return deleteFilterFromEditableFilter(editableFilter, filterId);
+export const addDefaultFilterExpression = <T extends string = string>(
+  editableFilter: MyFilter<T>,
+  filterId: string,
+  defaultFilterExpression: MyFilterExpression<T>,
+): MyFilter<T> => {
+  return addDefaultFilterExpressionToEditableFilter(
+    editableFilter,
+    filterId,
+    defaultFilterExpression,
+    true,
+  ) as MyFilter<T>;
 };
 
-export const changeFilterLogicalOperator = (
-  editableFilter: MyFilter,
+export const deleteFilterItem = <T extends string = string>(
+  editableFilter: MyFilter<T>,
+  filterId: string,
+): MyFilter<T> => {
+  return deleteFilterFromEditableFilter(editableFilter, filterId) as MyFilter<T>;
+};
+
+export const changeFilterLogicalOperator = <T extends string = string>(
+  editableFilter: MyFilter<T>,
   filterId: string,
   operator: LogicalOperator,
-): MyFilter => {
-  return changeEditableFilterLogicalOperator(editableFilter, filterId, operator);
+): MyFilter<T> => {
+  return changeEditableFilterLogicalOperator(editableFilter, filterId, operator) as MyFilter<T>;
 };
 
-export const changeFilterColumn = (
-  editableFilter: MyFilter,
+export const changeFilterColumn = <T extends string = string>(
+  editableFilter: MyFilter<T>,
   filterId: string,
   columnValue: string,
   column2Info: Record<string, ColumnInfo>,
-): MyFilter => {
-  return changeEditableFilterColumn(editableFilter, filterId, columnValue, column2Info);
+): MyFilter<T> => {
+  return changeEditableFilterColumn(editableFilter, filterId, columnValue, column2Info) as MyFilter<T>;
 };
 
-export const changeFilterOperator = (
-  editableFilter: MyFilter,
+export const changeFilterOperator = <T extends string = string>(
+  editableFilter: MyFilter<T>,
   filterId: string,
   operator: FilterOperators,
-): MyFilter => {
-  return changeEditableFilterOperator(editableFilter, filterId, operator);
+): MyFilter<T> => {
+  return changeEditableFilterOperator(editableFilter, filterId, operator) as MyFilter<T>;
 };
 
-export const changeFilterValue = (
-  editableFilter: MyFilter,
+export const changeFilterValue = <T extends string = string>(
+  editableFilter: MyFilter<T>,
   filterId: string,
   value: string | number | boolean | string[],
-): MyFilter => {
-  return changeEditableFilterValue(editableFilter, filterId, value);
+): MyFilter<T> => {
+  return changeEditableFilterValue(editableFilter, filterId, value) as MyFilter<T>;
 };
