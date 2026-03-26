@@ -4,7 +4,6 @@ import { WordFrequencyTableToolbarProps } from "./WordFrequencyTableToolbarProps
 
 export function WordFrequencyTableToolbarLeft({
   anchor,
-  filterName,
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
@@ -14,7 +13,6 @@ export function WordFrequencyTableToolbarLeft({
       <URLFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
-        filterName={filterName}
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}

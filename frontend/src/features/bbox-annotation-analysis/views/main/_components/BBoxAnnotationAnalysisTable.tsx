@@ -1,14 +1,11 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
 import { BBoxAnnotationLocalFilterTable } from "@core/bbox-annotation";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
 import { BBoxAnnotationsActions } from "../../../store/bboxAnnotationAnalysisSlice";
 import { BBoxAnnotationAnalysisRouteAPI } from "../_hooks/bboxAnnotationAnalysisRouteAPI";
 import { BBoxAnnotationAnalysisTableToolbarLeft } from "./toolbar/BBoxAnnotationAnalysisTableToolbarLeft";
 import { BBoxAnnotationAnalysisTableToolbarRight } from "./toolbar/BBoxAnnotationAnalysisTableToolbarRight";
-
-const filterName = "bboxAnnotationAnalysisFilter";
 
 interface BBoxAnnotationAnalysisTableProps {
   projectId: number;
@@ -29,12 +26,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
   const [sortingModel, setSortingModel] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [filter, setFilter] = useFilterURLConnector(
-    BBoxAnnotationAnalysisRouteAPI,
-    filterName,
-    FILTER_PARAM,
-    BBoxColumns,
-  );
+  const [filter, setFilter] = useURLConnector(BBoxAnnotationAnalysisRouteAPI, FILTER_PARAM);
 
   return (
     <BBoxAnnotationLocalFilterTable
@@ -49,7 +41,7 @@ export function BBoxAnnotationAnalysisTable({ projectId }: BBoxAnnotationAnalysi
       renderTopRightToolbar={BBoxAnnotationAnalysisTableToolbarRight}
       fetchSize={fetchSize}
       onFetchSizeChange={setFetchSize}
-      filterName={filterName}
+      filterName={"root"}
       positionToolbarAlertBanner="head-overlay"
       filter={filter}
       expertMode={expertMode}

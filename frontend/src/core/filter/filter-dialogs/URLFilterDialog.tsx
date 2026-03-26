@@ -4,13 +4,13 @@ import { useAppSelector } from "@store/storeHooks";
 import type { RouteApi } from "@tanstack/react-router";
 import type { AnyRouter, RouteTypesById } from "@tanstack/router-core";
 import { memo } from "react";
-import { ColumnInfo, MyFilterExpression } from "../filterUtils";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "../store";
+import { ColumnInfo, MyFilter, MyFilterExpression } from "../filterUtils";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "../store";
 import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
 // This ensures that the routeAPI passed to URLFilterDialog has the required search params for filter (FILTER_PARAM) and expert mode (FILTER_EXPERT_MODE_PARAM)
 type RouteApiWithFilterSearchParams<TId extends string, TRouter extends AnyRouter> = RouteApi<TId, TRouter> &
-  (RouteTypesById<TRouter, TId>["fullSearchSchema"] extends Record<typeof FILTER_PARAM, string | undefined> &
+  (RouteTypesById<TRouter, TId>["fullSearchSchema"] extends Record<typeof FILTER_PARAM, MyFilter | string | undefined> &
     Record<typeof FILTER_EXPERT_MODE_PARAM, boolean | undefined>
     ? unknown
     : never);
@@ -20,7 +20,6 @@ export interface URLFilterDialogProps<
   TRouter extends AnyRouter = AnyRouter,
   TFilter extends string = string,
 > {
-  filterName: string;
   routeApi: RouteApiWithFilterSearchParams<TId, TRouter>;
   filterColumnsEnum?: Record<string, TFilter>;
   defaultFilterExpression: MyFilterExpression<TFilter>;
@@ -28,9 +27,7 @@ export interface URLFilterDialogProps<
 }
 
 const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter, TFilter extends string = string>({
-  filterName,
   routeApi,
-  filterColumnsEnum,
   defaultFilterExpression,
   column2InfoSelector,
   //
@@ -43,7 +40,7 @@ const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter,
   const column2Info = useAppSelector(column2InfoSelector);
 
   const [expertMode, setExpertMode] = useURLConnector(routeApi, FILTER_EXPERT_MODE_PARAM);
-  const [filter, setFilter] = useFilterURLConnector(routeApi, filterName, FILTER_PARAM, filterColumnsEnum);
+  const [filter, setFilter] = useURLConnector(routeApi, FILTER_PARAM);
 
   return (
     <FilterDialog
@@ -51,7 +48,7 @@ const URLFilterDialogComponent = <TId extends string, TRouter extends AnyRouter,
       buttonProps={buttonProps}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}
-      filterName={filterName}
+      filterName={"root"}
       defaultFilterExpression={defaultFilterExpression}
       filter={filter}
       onFilterChange={setFilter}

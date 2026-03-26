@@ -15,7 +15,6 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarProps,
   createEmptyFilter,
-  deserializeFilterFromSearchParam,
 } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Stack } from "@mui/material";
@@ -241,7 +240,6 @@ export const MemoReduxFilterTable = memo(
 // configs for URL filter table
 const column2InfoSelector = (state: RootState) => state.memoFilter.column2Info;
 const defaultFilterExpression = defaultMemoFilterExpression;
-const urlFilterName = "root";
 
 /**
  * URL-based filter table for memos.
@@ -258,11 +256,7 @@ export const MemoURLFilterTable = memo(
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
-    const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<MemoColumns>,
-      [serializedFilter],
-    );
+    const [filter] = useURLConnector(routeApi, FILTER_PARAM);
 
     return (
       <MemoFilterTable
@@ -270,7 +264,6 @@ export const MemoURLFilterTable = memo(
         filter={filter}
         renderTopLeftToolbar={MemoURLToolbarLeft}
         toolbarExtraProps={{
-          filterName: urlFilterName,
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,

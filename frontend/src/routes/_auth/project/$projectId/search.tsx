@@ -1,4 +1,5 @@
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
+import { SdocColumns } from "@api/models/SdocColumns";
+import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { DocumentSearchView, documentSearchViewLoader } from "@features/search";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
@@ -8,7 +9,10 @@ import { z } from "zod";
 
 const documentSearchSchema = z.object({
   searchQuery: z.string().default(""),
-  [FILTER_PARAM]: z.string().default(""),
+  [FILTER_PARAM]: z
+    .custom<string | MyFilter<SdocColumns>>()
+    .default("")
+    .transform((value) => deserializeFilterFromSearchParam<SdocColumns>(value, "root")),
   [FILTER_EXPERT_MODE_PARAM]: z
     .union([z.boolean(), z.enum(["true", "false"])])
     .transform((value) => value === true || value === "true")

@@ -18,7 +18,6 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
-  deserializeFilterFromSearchParam,
 } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -239,7 +238,6 @@ export const SdocReduxFilterTable = memo(
 // configs for URL filter table
 const column2InfoSelector = (state: RootState) => state.documentTableFilter.column2Info;
 const defaultFilterExpression = defaultSdocFilterExpression;
-const urlFilterName = "root";
 
 /**
  * URL-based filter table for source documents.
@@ -256,11 +254,7 @@ export const SdocURLFilterTable = memo(
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
-    const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SdocColumns>,
-      [serializedFilter],
-    );
+    const [filter] = useURLConnector(routeApi, FILTER_PARAM);
 
     return (
       <SdocFilterTable
@@ -268,7 +262,6 @@ export const SdocURLFilterTable = memo(
         filter={filter}
         renderTopLeftToolbar={URLFilterTableToolbarLeft}
         toolbarExtraProps={{
-          filterName: urlFilterName,
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,

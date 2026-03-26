@@ -1,5 +1,4 @@
-import { SpanColumns } from "@api/models/SpanColumns";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
 import { SpanAnnotationLocalFilterTable } from "@core/span-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
@@ -29,12 +28,7 @@ export function SpanAnnotationAnalysisTable({ projectId }: SpanAnnotationAnalysi
   const [sortingModel, setSortingModel] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(SpanAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(SpanAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [filter, setFilter] = useFilterURLConnector(
-    SpanAnnotationAnalysisRouteAPI,
-    filterName,
-    FILTER_PARAM,
-    SpanColumns,
-  );
+  const [filter, setFilter] = useURLConnector(SpanAnnotationAnalysisRouteAPI, FILTER_PARAM);
 
   return (
     <SpanAnnotationLocalFilterTable

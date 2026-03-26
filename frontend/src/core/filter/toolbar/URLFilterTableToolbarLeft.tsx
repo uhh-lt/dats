@@ -5,7 +5,6 @@ import { URLFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
 export function URLFilterTableToolbarLeft<T extends MRT_RowData>({
   anchor,
-  filterName,
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
@@ -15,7 +14,6 @@ export function URLFilterTableToolbarLeft<T extends MRT_RowData>({
       <URLFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
-        filterName={filterName}
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}

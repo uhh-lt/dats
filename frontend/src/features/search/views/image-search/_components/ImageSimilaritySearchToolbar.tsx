@@ -13,7 +13,6 @@ import { ImageSearchRouteAPI } from "../_hooks/imageSearchRouteAPI";
 import { ImageSimilaritySearchOptionsMenu } from "./ImageSimilaritySearchOptionsMenu";
 import { SearchBar } from "./SearchBar";
 
-const filterName = "imageSimilaritySearch";
 const defaultFilterExpression = {
   id: "",
   column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
@@ -70,7 +69,6 @@ export function ImageSimilaritySearchToolbar({ searchResultDocumentIds }: ImageS
       <URLFilterDialog
         anchorEl={filterDialogAnchor}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        filterName={filterName}
         routeApi={ImageSearchRouteAPI}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={(state) => state.search.column2Info}

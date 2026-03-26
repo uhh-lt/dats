@@ -22,8 +22,7 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
-  createEmptyFilter,
-  deserializeFilterFromSearchParam,
+  createEmptyFilter
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -252,7 +251,6 @@ export const SentenceAnnotationReduxFilterTable = memo(
 // configs for URL filter table
 const column2InfoSelector = (state: RootState) => state.seatFilter.column2Info;
 const defaultFilterExpression = defaultSEATFilterExpression;
-const urlFilterName = "root";
 
 /**
  * URL-based filter table for sentence annotations.
@@ -274,11 +272,7 @@ export const SentenceAnnotationURLFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
-    const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SentAnnoColumns>,
-      [serializedFilter],
-    );
+    const [filter] = useURLConnector(routeApi, FILTER_PARAM);
 
     return (
       <SentenceAnnotationFilterTable
@@ -286,7 +280,6 @@ export const SentenceAnnotationURLFilterTable = memo(
         filter={filter}
         renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
-          filterName: urlFilterName,
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,

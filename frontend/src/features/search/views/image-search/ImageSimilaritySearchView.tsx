@@ -1,12 +1,12 @@
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_PARAM } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Box, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -27,13 +27,11 @@ import { ImageSimilaritySearchToolbar } from "./_components/ImageSimilaritySearc
 import { ImageSimilarityView } from "./_components/ImageSimilarityView";
 import { ImageSearchRouteAPI } from "./_hooks/imageSearchRouteAPI";
 
-const filterName = "imageSimilaritySearch";
-
 export function ImageSimilaritySearchView() {
   // router
   const projectId = ImageSearchRouteAPI.useParams({ select: (params) => params.projectId });
   const { searchQuery, topK, threshold } = ImageSearchRouteAPI.useSearch();
-  const [filter, setFilter] = useFilterURLConnector(ImageSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
+  const [filter, setFilter] = useURLConnector(ImageSearchRouteAPI, FILTER_PARAM);
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.imageSearch.selectedDocumentId);

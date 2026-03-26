@@ -23,7 +23,6 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
   createEmptyFilter,
-  deserializeFilterFromSearchParam,
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -249,7 +248,6 @@ export const SpanAnnotationReduxFilterTable = memo(
 // configs for URL filter table
 const column2InfoSelector = (state: RootState) => state.satFilter.column2Info;
 const defaultFilterExpression = defaultSATFilterExpression;
-const urlFilterName = "root";
 
 /**
  * URL-based filter table for span annotations.
@@ -267,11 +265,7 @@ export const SpanAnnotationURLFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
-    const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<SpanColumns>,
-      [serializedFilter],
-    );
+    const [filter] = useURLConnector(routeApi, FILTER_PARAM);
 
     return (
       <SpanAnnotationFilterTable
@@ -279,7 +273,6 @@ export const SpanAnnotationURLFilterTable = memo(
         filter={filter}
         renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
-          filterName: urlFilterName,
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,

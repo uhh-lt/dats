@@ -35,7 +35,6 @@ import { SentenceSearchRouteAPI } from "../_hooks/sentenceSearchRouteAPI";
 import { SearchBar } from "./SearchBar";
 import { SentenceSimilaritySearchOptionsMenu } from "./SentenceSimilaritySearchOptionsMenu";
 
-const filterName = "sentenceSimilaritySearch";
 const defaultFilterExpression = {
   id: "",
   column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
@@ -249,7 +248,6 @@ export function SentenceSimilaritySearchTable({
         <URLFilterDialog
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
-          filterName={filterName}
           routeApi={SentenceSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
           column2InfoSelector={(state) => state.search.column2Info}

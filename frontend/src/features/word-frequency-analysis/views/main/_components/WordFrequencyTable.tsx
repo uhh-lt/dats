@@ -19,7 +19,6 @@ import { WordFrequencyTableToolbarLeft } from "./WordFrequencyTableToolbarLeft";
 import { WordFrequencyTableToolbarProps } from "./WordFrequencyTableToolbarProps";
 import { WordFrequencyTableToolbarRight } from "./WordFrequencyTableToolbarRight";
 
-const filterName = "root";
 const flatMapData = (page: WordFrequencyResult) => page.word_frequencies;
 const defaultFilterExpression = {
   id: crypto.randomUUID(),
@@ -141,7 +140,6 @@ export const WordFrequencyTable = memo(
             renderTopRightToolbar={WordFrequencyTableToolbarRight}
             renderBottomToolbar={WordFrequencyTableToolbarBottom}
             toolbarExtraProps={{
-              filterName,
               routeApi: WordFrequencyRouteAPI,
               defaultFilterExpression,
               column2InfoSelector,

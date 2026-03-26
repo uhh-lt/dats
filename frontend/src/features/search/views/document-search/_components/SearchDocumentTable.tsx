@@ -7,7 +7,7 @@ import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
-import { URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
+import { URLFilterDialog } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
 import { OpenInTabsButton } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
@@ -58,7 +58,6 @@ import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
 import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
 
-const filterName = "root";
 const defaultFilterExpression = {
   id: "",
   column: SdocColumns.SD_SOURCE_DOCUMENT_NAME,
@@ -241,9 +240,6 @@ export function SearchDocumentTable({
     return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo, user]);
 
-  // search
-  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
-
   // resetting search-parameter-dependant state
   useEffect(() => {
     setRowSelectionModel({});
@@ -252,7 +248,7 @@ export function SearchDocumentTable({
   }, [
     selectedFolderId,
     searchQuery,
-    filter,
+    searchFilter,
     filterExpertMode,
     sortingModel,
     setRowSelectionModel,
@@ -421,7 +417,7 @@ export function SearchDocumentTable({
               backgroundColor: selectedDocumentId === row.original.id ? "lightgrey !important" : undefined,
             },
           },
-    renderEmptyRowsFallback: filter.items.length === 0 ? () => <NoDocumentsPlaceholder /> : undefined,
+    renderEmptyRowsFallback: searchFilter.items.length === 0 ? () => <NoDocumentsPlaceholder /> : undefined,
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -448,7 +444,7 @@ export function SearchDocumentTable({
     } catch (error) {
       console.error(error);
     }
-  }, [projectId, searchQuery, filter, sortingModel]);
+  }, [projectId, searchQuery, searchFilter, sortingModel]);
 
   // Track & restore scroll position
   const savedScrollPosition = useAppSelector((state) => state.search.scrollPosition);
@@ -504,7 +500,6 @@ export function SearchDocumentTable({
         <URLFilterDialog
           anchorEl={toolbarEl}
           buttonProps={{ size: "small" }}
-          filterName={filterName}
           routeApi={DocumentSearchRouteAPI}
           defaultFilterExpression={defaultFilterExpression}
           column2InfoSelector={(state) => state.search.column2Info}

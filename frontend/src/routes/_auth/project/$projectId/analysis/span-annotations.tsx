@@ -1,4 +1,5 @@
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
+import { SpanColumns } from "@api/models/SpanColumns";
+import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { SpanAnnotationAnalysisView } from "@features/span-annotation-analysis";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -6,7 +7,10 @@ import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const spanAnnotationAnalysisSearchSchema = z.object({
-  [FILTER_PARAM]: z.string().default(""),
+  [FILTER_PARAM]: z
+    .custom<string | MyFilter<SpanColumns>>()
+    .default("")
+    .transform((value) => deserializeFilterFromSearchParam<SpanColumns>(value, "root")),
   [FILTER_EXPERT_MODE_PARAM]: z
     .union([z.boolean(), z.enum(["true", "false"])])
     .transform((value) => value === true || value === "true")

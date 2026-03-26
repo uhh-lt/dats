@@ -1,12 +1,12 @@
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_PARAM } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
+import { useURLConnector } from "@hooks/useURLConnector";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -25,8 +25,6 @@ import { sentenceSimilaritySearchQueryOptions } from "./_api/sentenceSimilarityS
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 
-const filterName = "sentenceSimilaritySearch";
-
 export function SentenceSimilaritySearchView() {
   const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
 
@@ -38,7 +36,7 @@ export function SentenceSimilaritySearchView() {
 
   // sentence similarity search feature
   const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
-  const [filter, setFilter] = useFilterURLConnector(SentenceSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
+  const [filter, setFilter] = useURLConnector(SentenceSearchRouteAPI, FILTER_PARAM);
   const { data, isError, isFetching, isLoading } = useSuspenseQuery(
     sentenceSimilaritySearchQueryOptions({
       projectId,

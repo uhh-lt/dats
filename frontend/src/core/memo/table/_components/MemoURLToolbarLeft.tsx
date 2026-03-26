@@ -8,7 +8,6 @@ import { MemoStarButton } from "../../MemoStarButton";
 export function MemoURLToolbarLeft({
   anchor,
   selectedData,
-  filterName,
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
@@ -20,7 +19,6 @@ export function MemoURLToolbarLeft({
       <URLFilterDialog
         anchorEl={anchor.current}
         buttonProps={{ size: "small" }}
-        filterName={filterName}
         routeApi={routeApi}
         defaultFilterExpression={defaultFilterExpression}
         column2InfoSelector={column2InfoSelector}

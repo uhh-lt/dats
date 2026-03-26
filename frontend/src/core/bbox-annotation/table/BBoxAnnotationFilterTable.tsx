@@ -9,7 +9,6 @@ import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import {
   createEmptyFilter,
-  deserializeFilterFromSearchParam,
   FILTER_PARAM,
   FilterDialogProps,
   FilterTable,
@@ -254,7 +253,6 @@ export const BBoxAnnotationReduxFilterTable = memo(
 // configs for URL filter table
 const column2InfoSelector = (state: RootState) => state.bboxFilter.column2Info;
 const defaultFilterExpression = defaultBBoxFilterExpression;
-const urlFilterName = "root"; // since the filter state is stored in the URL, we can use a fixed filter name
 
 /**
  * URL-based filter table for bbox annotations.
@@ -272,11 +270,7 @@ export const BBoxAnnotationURLFilterTable = memo(
     "filter" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
-    const [serializedFilter] = useURLConnector(routeApi, FILTER_PARAM);
-    const filter = useMemo(
-      () => deserializeFilterFromSearchParam(serializedFilter, urlFilterName) as MyFilter<BBoxColumns>,
-      [serializedFilter],
-    );
+    const [filter] = useURLConnector(routeApi, FILTER_PARAM);
 
     return (
       <BBoxAnnotationFilterTable
@@ -284,7 +278,6 @@ export const BBoxAnnotationURLFilterTable = memo(
         filter={filter}
         renderTopLeftToolbar={renderTopLeftToolbar}
         toolbarExtraProps={{
-          filterName: urlFilterName,
           routeApi,
           defaultFilterExpression,
           column2InfoSelector,

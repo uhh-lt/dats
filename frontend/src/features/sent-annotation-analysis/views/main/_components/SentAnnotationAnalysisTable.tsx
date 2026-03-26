@@ -1,5 +1,4 @@
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_EXPERT_MODE_PARAM, FILTER_PARAM } from "@core/filter";
 import { SentenceAnnotationLocalFilterTable } from "@core/sentence-annotation";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { useReduxConnector } from "@store/storeHooks";
@@ -29,12 +28,7 @@ export function SentAnnotationAnalysisTable({ projectId }: SentAnnotationAnalysi
   const [sortingModel, setSortingModel] = useURLConnector(SentAnnotationAnalysisRouteAPI, "sortingModel");
   const [fetchSize, setFetchSize] = useURLConnector(SentAnnotationAnalysisRouteAPI, "fetchSize");
   const [expertMode, setExpertMode] = useURLConnector(SentAnnotationAnalysisRouteAPI, FILTER_EXPERT_MODE_PARAM);
-  const [filter, setFilter] = useFilterURLConnector(
-    SentAnnotationAnalysisRouteAPI,
-    filterName,
-    FILTER_PARAM,
-    SentAnnoColumns,
-  );
+  const [filter, setFilter] = useURLConnector(SentAnnotationAnalysisRouteAPI, FILTER_PARAM);
 
   return (
     <SentenceAnnotationLocalFilterTable

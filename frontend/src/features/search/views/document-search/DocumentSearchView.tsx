@@ -2,12 +2,11 @@ import { FolderHooks } from "@api/hooks/FolderHooks";
 import { FolderType } from "@api/models/FolderType";
 import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
-import { FILTER_PARAM, useFilterURLConnector } from "@core/filter";
+import { FILTER_PARAM } from "@core/filter";
 import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
@@ -31,13 +30,11 @@ import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 
-const filterName = "root";
-
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
   const { searchQuery, filterExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
-  const [filter, setFilter] = useFilterURLConnector(DocumentSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
+  const [filter, setFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
   const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
 
   // redux (global client state)
