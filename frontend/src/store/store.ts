@@ -15,6 +15,7 @@ import { classifierReducer } from "@features/classifier";
 import { cotaReducer } from "@features/concept-over-time-analysis";
 import { documentSamplerReducer } from "@features/document-sampler";
 import { duplicateFinderReducer } from "@features/duplicate-finder";
+import { healthReducer } from "@features/health";
 import { llmAssistantReducer } from "@features/llm-assistant";
 import { logbookReducer } from "@features/logbook";
 import { perspectivesReducer } from "@features/perspectives";
@@ -60,6 +61,7 @@ export const store = configureStore({
     ...documentSamplerReducer,
     ...perspectivesReducer,
     ...duplicateFinderReducer,
+    ...healthReducer,
     // dialog bus
     ...dialogBusReducer,
   },

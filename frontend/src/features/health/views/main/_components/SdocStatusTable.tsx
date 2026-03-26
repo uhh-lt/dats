@@ -1,35 +1,25 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
 import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { DocType } from "@api/models/DocType";
-import { Language } from "@api/models/Language";
-import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { SdocHealthResult } from "@api/models/SdocHealthResult";
 import { SDocStatus } from "@api/models/SDocStatus";
 import { SdocStatusRow } from "@api/models/SdocStatusRow";
-import { CardContainer } from "@components/CardContainer";
-import { DATSToolbar } from "@components/DATSToolbar";
-import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
+import { FilterTable } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import { Box, Button, Divider, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
+import { Tooltip } from "@mui/material";
+import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
-import {
-  MRT_ColumnDef,
-  MRT_LinearProgressBar,
-  MRT_RowSelectionState,
-  MRT_RowVirtualizer,
-  MRT_TableContainer,
-  MRT_ToggleDensePaddingButton,
-  MRT_ToolbarAlertBanner,
-  useMaterialReactTable,
-} from "material-react-table";
-import { ReactElement, UIEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MRT_ColumnDef } from "material-react-table";
+import { ReactElement, useCallback, useMemo } from "react";
 import { flatMapSdocHealthRows } from "../../../_api/healthQueryOptions";
+import { HealthActions } from "../../../store/healthSlice";
 import { HealthRouteAPI } from "../_hooks/healthRouteAPI";
+import { HealthTableToolbarLeft } from "./HealthTableToolbarLeft";
+import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
+import { HealthTableToolbarRight } from "./HealthTableToolbarRight";
 
 const sdocStatus2Icon: Record<SDocStatus, ReactElement> = {
   [SDocStatus["_-100"]]: <ErrorOutlineIcon sx={{ color: "error.main" }} />,
@@ -87,18 +77,30 @@ function SdocStatusTableContent({
   isLoading,
   onFetchNextPage,
   onRefetch,
-}: SdocStatusTableProps & { availableLLMs: string[] }) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+}: SdocStatusTableProps) {
+  // global client state (redux) connected to table state
+  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
+    (state) => state.health.rowSelectionModel,
+    HealthActions.onRowSelectionChange,
+  );
+  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
+    (state) => state.health.columnVisibilityModel,
+    HealthActions.onColumnVisibilityChange,
+  );
+  const [settings, setSettings] = useReduxConnector(
+    (state) => state.health.processingSettings,
+    HealthActions.onProcessingSettingsChange,
+  );
+
+  // url state for table query parameters
   const [sortingModel, setSortingModel] = useURLConnector(HealthRouteAPI, "sortingModel");
   const [, setFetchSize] = useURLConnector(HealthRouteAPI, "fetchSize");
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // computed
   const selectedRows = useMemo(() => {
     return Object.keys(rowSelectionModel)
       .filter((key) => rowSelectionModel[key])
-      .map((key) => parseInt(key))
+      .map((key) => parseInt(key, 10))
       .filter((id) => !isNaN(id));
   }, [rowSelectionModel]);
 
@@ -112,15 +114,6 @@ function SdocStatusTableContent({
     });
   }, [doctype, projectId, retryDocProcessingJobs, selectedRows]);
 
-  const [settings, setSettings] = useState<ProcessingSettings>({
-    model: availableLLMs[0],
-    extract_images: true,
-    pages_per_chunk: 10,
-    keyword_deduplication_threshold: 0.5,
-    keyword_max_ngram_size: 2,
-    keyword_number: 5,
-    language: Language.AUTO,
-  });
   const { mutate: recomputeDocProcessingJobs, isPending: isRecomputePending } =
     DocProcessingHooks.useRecomputeDocProcessingJobs();
   const handleRecompute = useCallback(
@@ -184,163 +177,41 @@ function SdocStatusTableContent({
     return result;
   }, [tableColumnInfo]);
 
-  // infinite scrolling
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
-    tableContainerRef,
-    data: searchData,
-    isFetching,
-    fetchNextPage: onFetchNextPage,
-    flatMapData: flatMapSdocHealthRows,
-  });
-
-  // infinite scrolling reset:
-  // scroll to top of table when sorting changes
-  useEffect(() => {
-    try {
-      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [projectId, sortingModel]);
-
-  // Table event handlers
-  const handleTableScroll: UIEventHandler<HTMLDivElement> = useCallback(
-    (event) => fetchMoreOnScroll(event.target as HTMLDivElement),
-    [fetchMoreOnScroll],
-  );
-
-  // fetch all
-  const handleFetchAll = useCallback(() => {
-    setFetchSize(totalResults);
-  }, [setFetchSize, totalResults]);
-
-  // table
-  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
-  const table = useMaterialReactTable<SdocStatusRow>({
-    data: flatData,
-    columns: columns,
-    getRowId: (row) => `${row.sdoc_id}`,
-    // state
-    state: {
-      rowSelection: rowSelectionModel,
-      sorting: sortingModel,
-      isLoading: isLoading || columns.length === 0,
-      showAlertBanner: isError,
-      showProgressBars: isFetching,
-    },
-    // selection
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelectionModel,
-    // virtualization
-    enableRowVirtualization: true,
-    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
-    rowVirtualizerOptions: { overscan: 4 },
-    // filtering
-    manualFiltering: true,
-    enableColumnFilters: false,
-    // pagination
-    enablePagination: false,
-    // sorting
-    manualSorting: true,
-    onSortingChange: setSortingModel,
-    // column resizing
-    enableColumnResizing: true,
-    columnResizeMode: "onEnd",
-    // column visibility
-    enableHiding: false,
-    // mui components
-    muiTableContainerProps: {
-      ref: tableContainerRef, //get access to the table container element
-    },
-    muiToolbarAlertBannerProps: isError
-      ? {
-          color: "error",
-          children: "Error loading data",
-        }
-      : undefined,
-  });
-
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <DATSToolbar variant="dense">
-        {selectedRows.length > 0 && (
-          <>
-            <Tooltip
-              title={
-                <>
-                  <Typography>Retry failed steps:</Typography>
-                  This action runs all <u>failed processing steps</u> again for the selected documents (if any)
-                </>
-              }
-              placement="top-start"
-            >
-              <span>
-                <Button onClick={() => handleRetry()} loading={isRetryPending}>
-                  Retry
-                </Button>
-              </span>
-            </Tooltip>
-            <Tooltip
-              title={
-                <>
-                  <Typography>Recompute step:</Typography>
-                  After selecting a step, this action <u>recomputes</u> it for the selected documents
-                </>
-              }
-              placement="top-start"
-            >
-              <span>
-                <Button onClick={(e) => setAnchorEl(e.currentTarget)} loading={isRecomputePending}>
-                  Recompute
-                </Button>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={() => setAnchorEl(null)}
-                  anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                >
-                  {tableColumnInfo.map((step) => (
-                    <MenuItem key={step} onClick={() => handleRecompute(step)}>
-                      {step}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </span>
-            </Tooltip>
-            <ProcessingSettingsButton
-              settings={settings}
-              onChangeSettings={setSettings}
-              availableLLMs={availableLLMs}
-            />
-          </>
-        )}
-        <Box sx={{ flexGrow: 1 }} />
-        <MRT_ToggleDensePaddingButton table={table} />
-        <MRT_LinearProgressBar isTopToolbar={true} table={table} />
-        <Tooltip title="Refresh table">
-          <span>
-            <IconButton loading={isFetching || isLoading} onClick={onRefetch}>
-              <RefreshIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </DATSToolbar>
-      <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
-      <CardContainer sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <MRT_TableContainer table={table} style={{ flexGrow: 1 }} onScroll={handleTableScroll} />
-        <Box sx={{ p: 1 }}>
-          <Divider />
-          <Stack direction={"row"} spacing={1} alignItems="center" width="100%">
-            <Typography>
-              Fetched {totalFetched} of {totalResults} total documents.
-            </Typography>
-            <Button size="small" onClick={handleFetchAll}>
-              Fetch All
-            </Button>
-          </Stack>
-        </Box>
-      </CardContainer>
-    </Box>
+    <FilterTable<SdocStatusRow, HealthTableToolbarProps, SdocHealthResult>
+      name="documents"
+      columns={columns}
+      getRowId={(row) => `${row.sdoc_id}`}
+      data={searchData}
+      fetchNextPage={onFetchNextPage}
+      flatMapData={flatMapSdocHealthRows}
+      isLoading={isLoading || columns.length === 0}
+      isError={isError}
+      isFetching={isFetching}
+      onFetchSizeChange={setFetchSize}
+      rowSelectionModel={rowSelectionModel}
+      onRowSelectionChange={setRowSelectionModel}
+      sortingModel={sortingModel}
+      onSortingChange={setSortingModel}
+      columnVisibilityModel={columnVisibilityModel}
+      onColumnVisibilityChange={setColumnVisibilityModel}
+      renderTopLeftToolbar={HealthTableToolbarLeft}
+      renderTopRightToolbar={HealthTableToolbarRight}
+      toolbarExtraProps={{
+        selectedRows,
+        tableColumnInfo,
+        settings,
+        onChangeSettings: setSettings,
+        isRetryPending,
+        isRecomputePending,
+        onRetry: handleRetry,
+        onRecompute: handleRecompute,
+        onRefetch,
+        isRefreshing: isFetching || isLoading,
+      }}
+      enableColumnResizing
+      columnResizeMode="onEnd"
+      // enableHiding={false}
+    />
   );
 }

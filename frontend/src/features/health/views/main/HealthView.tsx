@@ -3,9 +3,11 @@ import { ContentLayout } from "@components/content-layouts";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
+import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { SyntheticEvent, useCallback } from "react";
+import { SyntheticEvent, useCallback, useEffect } from "react";
 import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
+import { HealthActions } from "../../store/healthSlice";
 import { SdocStatusTable } from "./_components/SdocStatusTable";
 import { HealthRouteAPI } from "./_hooks/healthRouteAPI";
 
@@ -22,6 +24,12 @@ export function HealthView() {
       fetchSize,
     }),
   );
+
+  // resetting search-parameter-dependant state
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(HealthActions.onSearchParamsChange());
+  }, [projectId, tab, sortingModel, dispatch]);
 
   const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const handleTabChange = useCallback(
