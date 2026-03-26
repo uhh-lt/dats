@@ -151,7 +151,7 @@ export function ProjectMetadataEditMenu({ projectMetadata }: ProjectMetadataEdit
           <ListItemButton onClick={() => setIsTypeMenuOpen(true)}>
             <ListItemText>Type</ListItemText>
             <Box sx={{ textAlign: "right", color: "text.secondary", display: "flex", alignItems: "center", gap: 1 }}>
-              {MetaTypeIcons[metatype]}
+              {getIconComponent(MetaTypeIcons[metatype])}
               {metatype}
             </Box>
           </ListItemButton>
