@@ -10,7 +10,7 @@ import { TagExplorer } from "@core/tag";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
@@ -20,6 +20,7 @@ import {
   addTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
+import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
 import { sentenceSimilaritySearchQueryOptions } from "./_api/sentenceSimilaritySearchQueryOptions";
 import { SentenceSimilaritySearchTable } from "./_components/SentenceSimilaritySearchTable";
 import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
@@ -27,26 +28,40 @@ import { SentenceSearchRouteAPI } from "./_hooks/sentenceSearchRouteAPI";
 const filterName = "sentenceSimilaritySearch";
 
 export function SentenceSimilaritySearchView() {
-  // router
   const projectId = SentenceSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
-  const [filter, setFilter] = useFilterURLConnector(SentenceSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
 
   // redux (global client state)
+  const dispatch = useAppDispatch();
   const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
   const expandedTagIds = useAppSelector((state) => state.search.expandedTagIds);
   const column2Info = useAppSelector((state) => state.search.column2Info);
-  const dispatch = useAppDispatch();
 
-  // filter
+  // sentence similarity search feature
+  const { searchQuery, topK, threshold } = SentenceSearchRouteAPI.useSearch();
+  const [filter, setFilter] = useFilterURLConnector(SentenceSearchRouteAPI, filterName, FILTER_PARAM, SdocColumns);
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(
+    sentenceSimilaritySearchQueryOptions({
+      projectId,
+      searchQuery,
+      filter,
+      topK,
+      threshold,
+    }),
+  );
+  const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    dispatch(SentenceSearchActions.onSearchParamsChange());
+  }, [projectId, searchQuery, filter, topK, threshold, dispatch]);
+
+  // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
 
-  // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
     return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
   }, [projectMetadata]);
 
-  // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
       setFilter((currentFilter) => addSpanAnnotationFilter(currentFilter, stat.code_id, stat.span_text));
@@ -78,22 +93,8 @@ export function SentenceSimilaritySearchView() {
     [dispatch],
   );
 
-  // search
-  const { data, isError, isFetching } = useSuspenseQuery(
-    sentenceSimilaritySearchQueryOptions({
-      projectId,
-      searchQuery,
-      filter,
-      topK,
-      threshold,
-    }),
-  );
-  const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
-
-  // vertical sidebar percentage
-  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
-
   // render
+  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
   return (
     <SidebarContentSidebarLayout
       leftSidebar={
@@ -124,7 +125,7 @@ export function SentenceSimilaritySearchView() {
         <SentenceSimilaritySearchTable
           projectId={projectId}
           data={data}
-          isLoading={false}
+          isLoading={isLoading}
           isFetching={isFetching}
           isError={isError}
         />

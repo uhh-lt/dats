@@ -27,8 +27,6 @@ const wordFrequencySearchSchema = z.object({
     ]),
 });
 
-const wordFrequencyPageSize = 20;
-
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-frequency")({
   staticData: {
     tab: true,
@@ -46,7 +44,6 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
       projectId: params.projectId,
       searchFilter: deps.searchFilter,
       sortingModel: deps.sortingModel,
-      pageSize: wordFrequencyPageSize,
     }),
   pendingComponent: () => <CircularProgress />,
   errorComponent: ({ error }) => <div>Failed to load word frequency analysis: {(error as Error).message}</div>,

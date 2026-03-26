@@ -48,35 +48,19 @@ interface WordFrequencyTableProps {
 }
 
 export const WordFrequencyTable = memo(
-  ({
-    projectId,
-    searchData,
-    isError,
-    isFetching,
-    isLoading,
-    onFetchNextPage,
-    filter,
-    onSearchParameterChange,
-  }: WordFrequencyTableProps) => {
-    // global client state (redux)
+  ({ projectId, searchData, isError, isFetching, isLoading, onFetchNextPage, filter }: WordFrequencyTableProps) => {
+    // redux table state
     const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
       (state) => state.wordFrequency.rowSelectionModel,
       WordFrequencyActions.onRowSelectionChange,
     );
-
-    // global client state (URL)
-    const [sortingModel, setSortingModel] = useURLConnector(WordFrequencyRouteAPI, "sortingModel");
-
-    // resetting search-parameter-dependant state
-    useEffect(() => {
-      setRowSelectionModel({});
-      onSearchParameterChange?.();
-    }, [filter, sortingModel, setRowSelectionModel, onSearchParameterChange]);
-
     const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
       (state) => state.wordFrequency.columnVisibilityModel,
       WordFrequencyActions.onColumnVisibilityChange,
     );
+
+    // url table state
+    const [sortingModel, setSortingModel] = useURLConnector(WordFrequencyRouteAPI, "sortingModel");
 
     // virtualization
     const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);

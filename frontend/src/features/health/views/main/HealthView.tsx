@@ -52,7 +52,7 @@ export function HealthView() {
                 searchData={healthTableQuery.data}
                 isError={healthTableQuery.isError}
                 isFetching={healthTableQuery.isFetching}
-                isLoading={false}
+                isLoading={healthTableQuery.isLoading}
                 onFetchNextPage={() => {
                   void healthTableQuery.fetchNextPage();
                 }}

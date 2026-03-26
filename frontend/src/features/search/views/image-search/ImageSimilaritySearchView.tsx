@@ -89,7 +89,7 @@ export function ImageSimilaritySearchView() {
     [dispatch],
   );
 
-  const { data, isError, isFetching } = useSuspenseQuery(
+  const { data, isError, isFetching, isLoading } = useSuspenseQuery(
     imageSimilaritySearchQueryOptions({
       projectId,
       searchQuery,
@@ -137,7 +137,7 @@ export function ImageSimilaritySearchView() {
           <ImageSimilarityView
             projectId={projectId}
             data={data}
-            isLoading={false}
+            isLoading={isLoading}
             isFetching={isFetching}
             isError={isError}
             boxProps={{

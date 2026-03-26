@@ -34,6 +34,12 @@ export type HandleCreateAnalysis<T extends AnalysisDashboardRow = AnalysisDashbo
   createOption?: AnalysisCreateOption,
 ) => MRT_TableOptions<T>["onCreatingRowSave"];
 
+/**
+ * A custom hook that returns a Material React Table instance configured for an analysis dashboard.
+ * It handles common functionalities such as loading state, error handling, row actions (create, update, duplicate, delete).
+ * By default, it includes columns for ID, Name, and Last Modified date, but additional columns (additionalColumns) can be passed in as props.
+ * It also provides a button to create new analyses, which can optionally show a menu of creation options (analysisCreateOptions).
+ */
 export interface UseAnaylsisDashboardTableProps<T extends AnalysisDashboardRow> {
   analysisName: string;
   data: T[];

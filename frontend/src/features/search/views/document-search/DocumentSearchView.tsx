@@ -242,7 +242,7 @@ export function DocumentSearchView() {
             searchData={documentSearchQuery.data}
             isError={documentSearchQuery.isError}
             isFetching={documentSearchQuery.isFetching}
-            isLoading={false}
+            isLoading={documentSearchQuery.isLoading}
             onFetchNextPage={() => {
               void documentSearchQuery.fetchNextPage();
             }}

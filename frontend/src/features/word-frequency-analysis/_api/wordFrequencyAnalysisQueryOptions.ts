@@ -5,21 +5,21 @@ import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { MyFilter } from "@core/filter";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 
+const fetchSize = 50;
+
 interface WordFrequencyTableQueryOptionsArgs {
   projectId: number;
   filter: MyFilter<WordFrequencyColumns>;
   sortingModel: { id: string; desc: boolean }[];
-  pageSize: number;
 }
 
 export const wordFrequencyTableQueryOptions = ({
   projectId,
   filter,
   sortingModel,
-  pageSize,
 }: WordFrequencyTableQueryOptionsArgs) =>
   infiniteQueryOptions({
-    queryKey: [QueryKey.WORD_FREQUENCY_TABLE, projectId, filter, sortingModel, pageSize],
+    queryKey: [QueryKey.WORD_FREQUENCY_TABLE, projectId, filter, sortingModel],
     queryFn: ({ pageParam }) =>
       WordFrequencyService.wordFrequencyAnalysis({
         projectId,
@@ -31,7 +31,7 @@ export const wordFrequencyTableQueryOptions = ({
           })),
         },
         page: pageParam,
-        pageSize,
+        pageSize: fetchSize,
       }),
     initialPageParam: 0,
     getNextPageParam: (_lastGroup, groups) => groups.length,

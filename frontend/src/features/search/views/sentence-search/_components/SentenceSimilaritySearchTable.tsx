@@ -4,7 +4,7 @@ import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
-import { URLFilterDialog, deserializeFilterFromSearchParam } from "@core/filter";
+import { URLFilterDialog } from "@core/filter";
 import { useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
@@ -27,7 +27,7 @@ import {
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
@@ -49,7 +49,6 @@ interface SentenceSimilaritySearchTableProps {
   isLoading: boolean;
   isFetching: boolean;
   isError: boolean;
-  onSearchParameterChange?: () => void;
 }
 
 export function SentenceSimilaritySearchTable({
@@ -58,16 +57,13 @@ export function SentenceSimilaritySearchTable({
   isLoading,
   isFetching,
   isError,
-  onSearchParameterChange,
 }: SentenceSimilaritySearchTableProps) {
   const tabNavigate = useTabNavigate();
-  const { searchQuery, topK, threshold, searchFilter } = SentenceSearchRouteAPI.useSearch();
 
   // global client state (react router)
   const { user } = useAuth();
 
   // global client state (redux)
-
   const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
     (state) => state.sentenceSearch.rowSelectionModel,
     SentenceSearchActions.onRowSelectionChange,
@@ -176,14 +172,6 @@ export function SentenceSimilaritySearchTable({
       (column) => column !== null,
     ) as MRT_ColumnDef<SimSearchSentenceHit>[];
   }, [tableInfo, user]);
-
-  const filter = useMemo(() => deserializeFilterFromSearchParam(searchFilter, filterName), [searchFilter]);
-
-  // resetting search-parameter-dependant state
-  useEffect(() => {
-    setRowSelectionModel({});
-    onSearchParameterChange?.();
-  }, [searchQuery, filter, topK, threshold, sortingModel, setRowSelectionModel, onSearchParameterChange]);
 
   // table
   const table = useMaterialReactTable<SimSearchSentenceHit>({
