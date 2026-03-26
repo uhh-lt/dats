@@ -99,6 +99,9 @@ const searchSlice = createSlice({
     },
     // folder selection type
     onFolderSelectionChange: (state, action: PayloadAction<FolderSelection>) => {
+      if (state.folderSelectionType === action.payload) {
+        return;
+      }
       state.folderSelectionType = action.payload;
     },
     // tag explorer

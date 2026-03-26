@@ -33,8 +33,12 @@ export const initialTableState: TableState = {
 export const tableReducer = {
   // when filter criteria change, reset table states that are related to the current data
   onSearchParamsChange: (state: Draft<TableState>) => {
-    state.rowSelectionModel = initialTableState.rowSelectionModel;
-    state.fetchSize = initialTableState.fetchSize;
+    if (Object.keys(state.rowSelectionModel).length > 0) {
+      state.rowSelectionModel = initialTableState.rowSelectionModel;
+    }
+    if (state.fetchSize !== initialTableState.fetchSize) {
+      state.fetchSize = initialTableState.fetchSize;
+    }
   },
   // selection
   onRowSelectionChange: (state: Draft<TableState>, action: PayloadAction<MRT_RowSelectionState>) => {

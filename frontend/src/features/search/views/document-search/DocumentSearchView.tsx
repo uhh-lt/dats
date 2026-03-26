@@ -16,7 +16,7 @@ import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
@@ -25,7 +25,7 @@ import {
   addSpanAnnotationFilter,
   addTagFilter,
 } from "../../_utils/searchFilterUtils";
-import { SearchActions } from "../../store/documentSearchSlice";
+import { FolderSelection, SearchActions } from "../../store/documentSearchSlice";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
@@ -47,15 +47,36 @@ export function DocumentSearchView() {
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
 
-  // filter
-  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
+  // document search feature
+  const [sdocIds, setSdocIds] = useState<number[]>([]);
+  const handleSearchResultsChange = useCallback((sdocIds: number[]) => {
+    console.log("Search results changed", sdocIds);
+    setSdocIds(sdocIds);
+  }, []);
 
-  // computed (local client state)
+  const documentSearchQuery = useSuspenseInfiniteQuery(
+    documentSearchQueryOptions({
+      projectId,
+      selectedFolderId,
+      searchQuery,
+      filter: filter,
+      expertMode: filterExpertMode,
+      sortingModel,
+      fetchSize,
+    }),
+  );
+
+  // resetting search-parameter-dependant state
+  useEffect(() => {
+    dispatch(SearchActions.onSearchParamsChange());
+    dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
+  }, [projectId, selectedFolderId, searchQuery, filterExpertMode, sortingModel, dispatch]);
+
+  // filtering feature
+  const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
   const keywordMetadataIds = useMemo(() => {
     return projectMetadata.filter((m) => m.key === "keywords").map((m) => m.id);
   }, [projectMetadata]);
-
-  // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
       setFilter((filter) => addSpanAnnotationFilter(filter, stat.code_id, stat.span_text));
@@ -73,6 +94,12 @@ export function DocumentSearchView() {
       setFilter((filter) => addTagFilter(filter, tagId));
     },
     [setFilter],
+  );
+  const handleAddMetadataFilter = useCallback(
+    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
+      setFilter((filter) => addMetadataFilter(filter, metadata, projectMetadata, column2Info));
+    },
+    [column2Info, setFilter],
   );
 
   // folder explorer handlers
@@ -93,36 +120,6 @@ export function DocumentSearchView() {
     (ids: string[]) => dispatch(SearchActions.setExpandedTagIds(ids)),
     [dispatch],
   );
-
-  // metadata filter handler
-  const handleAddMetadataFilter = useCallback(
-    (metadata: SourceDocumentMetadataUpdate, projectMetadata: ProjectMetadataRead) => {
-      setFilter((filter) => addMetadataFilter(filter, metadata, projectMetadata, column2Info));
-    },
-    [column2Info, setFilter],
-  );
-
-  // search results
-  const [sdocIds, setSdocIds] = useState<number[]>([]);
-  const handleSearchResultsChange = useCallback((sdocIds: number[]) => {
-    console.log("Search results changed", sdocIds);
-    setSdocIds(sdocIds);
-  }, []);
-
-  const documentSearchQuery = useSuspenseInfiniteQuery(
-    documentSearchQueryOptions({
-      projectId,
-      selectedFolderId,
-      searchQuery,
-      filter: filter,
-      expertMode: filterExpertMode,
-      sortingModel,
-      fetchSize,
-    }),
-  );
-
-  // vertical sidebar percentage
-  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
 
   // folder handler
   const { mutate: moveFoldersMutation } = FolderHooks.useMoveFolders();
@@ -205,6 +202,7 @@ export function DocumentSearchView() {
   }, []);
 
   // render
+  const { percentage, handleResize } = useLayoutPercentage("search-vertical-sidebar");
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragOver={handleDragMove}>
       <SidebarContentSidebarLayout

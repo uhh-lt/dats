@@ -84,7 +84,6 @@ interface DocumentTableProps {
   isLoading: boolean;
   onFetchNextPage: () => void;
   onSearchResultsChange?: (sdocIds: number[]) => void;
-  onSearchParameterChange?: () => void;
 }
 
 export function SearchDocumentTable({
@@ -95,12 +94,10 @@ export function SearchDocumentTable({
   isLoading,
   onFetchNextPage,
   onSearchResultsChange,
-  onSearchParameterChange,
 }: DocumentTableProps) {
-  const { searchFilter, selectedFolderId, filterExpertMode } = DocumentSearchRouteAPI.useSearch();
+  const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
-  const [, setFetchSize] = useURLConnector(DocumentSearchRouteAPI, "fetchSize");
   const navigate = DocumentSearchRouteAPI.useNavigate();
 
   // global client state (react router)
@@ -240,22 +237,6 @@ export function SearchDocumentTable({
     return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo, user]);
 
-  // resetting search-parameter-dependant state
-  useEffect(() => {
-    setRowSelectionModel({});
-    setFetchSize(20);
-    onSearchParameterChange?.();
-  }, [
-    selectedFolderId,
-    searchQuery,
-    searchFilter,
-    filterExpertMode,
-    sortingModel,
-    setRowSelectionModel,
-    setFetchSize,
-    onSearchParameterChange,
-  ]);
-
   // this is a custom version of the useTransformInfiniteData hook
   const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {
     // the backend may send a folder multiple times (e.g. in page 1, and in page 2, if the folder has many documents)
@@ -300,8 +281,6 @@ export function SearchDocumentTable({
     };
   }, [showFolders, searchData]);
   const totalResults = searchData?.pages?.[0]?.total_results ?? 0;
-
-  // lengthData: showFolders ? lengthDataChildren : lengthData,
 
   useEffect(() => {
     // if show folders, the documents are nested (inside folders)

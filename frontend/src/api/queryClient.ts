@@ -14,10 +14,21 @@ function messageFromStringOrFunction(input: unknown, data: unknown, variables: u
   }
 }
 
-function renderRecordToString(record: Record<string, unknown>): string {
-  return Object.entries(record)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(", ");
+function renderApiErrorBody(body: unknown): string {
+  if (typeof body === "string") {
+    return body;
+  }
+
+  try {
+    const serialized = JSON.stringify(body);
+    if (serialized !== undefined) {
+      return serialized;
+    }
+  } catch {
+    // Fall back to String below when JSON serialization fails (e.g. BigInt or circular values).
+  }
+
+  return String(body);
 }
 
 export const queryClient = new QueryClient({
@@ -32,7 +43,11 @@ export const queryClient = new QueryClient({
       const title = messageFromStringOrFunction(mutation.meta?.errorMessage, error, variables);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {
-        text = error.message + (error.body ? ": " + renderRecordToString(error.body) : "");
+        if (error.body === undefined) {
+          text = error.message;
+        } else {
+          text = `${error.message}: ${renderApiErrorBody(error.body)}`;
+        }
       }
       store.dispatch(
         SnackbarActions.openSnackbar({
