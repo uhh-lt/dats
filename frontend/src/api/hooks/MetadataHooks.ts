@@ -31,7 +31,7 @@ const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: Us
     },
     staleTime: 1000 * 60 * 5,
     select,
-    enabled: !!projectId && enabled,
+    enabled: !!projectId && (enabled ?? true),
   });
 };
 

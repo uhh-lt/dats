@@ -29,7 +29,7 @@ const useProjectCodesQuery = <T = CodeMap>({ select, enabled }: UseProjectCodesQ
     },
     staleTime: 1000 * 60 * 5,
     select,
-    enabled: !!projectId && enabled,
+    enabled: !!projectId && (enabled ?? true),
   });
 };
 

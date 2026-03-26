@@ -22,7 +22,7 @@ const useProjectUsersQuery = <T = UserRead[]>({ select, enabled }: UseProjectUse
       }),
     staleTime: 1000 * 60 * 5,
     select,
-    enabled: !!projectId && enabled,
+    enabled: !!projectId && (enabled ?? true),
   });
 };
 

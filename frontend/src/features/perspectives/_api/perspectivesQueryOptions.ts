@@ -39,7 +39,7 @@ const useProjectAspectsQuery = <T = AspectMap>({ select, enabled }: UseProjectAs
   return useQuery({
     ...projectAspectsQueryOptions(projectId!),
     select,
-    enabled: !!projectId && enabled,
+    enabled: !!projectId && (enabled ?? true),
   });
 };
 

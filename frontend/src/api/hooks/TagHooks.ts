@@ -23,7 +23,7 @@ const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQ
       }),
     staleTime: 1000 * 60 * 5,
     select,
-    enabled: !!projectId && enabled,
+    enabled: !!projectId && (enabled ?? true),
   });
 };
 
