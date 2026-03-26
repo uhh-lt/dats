@@ -10,11 +10,10 @@ import { SdocStatusTable } from "./_components/SdocStatusTable";
 import { HealthRouteAPI } from "./_hooks/healthRouteAPI";
 
 export function HealthView() {
+  // search health (sdoc status) feature
   const projectId = HealthRouteAPI.useParams({ select: (params) => params.projectId });
   const { sortingModel, fetchSize } = HealthRouteAPI.useSearch();
   const [tab, setTab] = useURLConnector(HealthRouteAPI, "doctype");
-
-  const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const healthTableQuery = useSuspenseInfiniteQuery(
     sdocHealthTableQueryOptions({
       projectId,
@@ -24,6 +23,7 @@ export function HealthView() {
     }),
   );
 
+  const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const handleTabChange = useCallback(
     (_event: SyntheticEvent, newValue: DocType): void => {
       setTab(newValue);

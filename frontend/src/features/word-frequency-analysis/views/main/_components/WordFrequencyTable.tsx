@@ -20,7 +20,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
-import { useInitWordFrequencyFilterSlice } from "../../../_hooks/useInitWordFrequencyFilterSlice";
+import { useInitWordFrequencySlice } from "../../../_hooks/useInitWordFrequencySlice";
 import { WordFrequencyActions } from "../../../store/wordFrequencySlice";
 import { WordFrequencyRouteAPI } from "../_hooks/wordFrequencyRouteAPI";
 import { WordCloud } from "./WordCloud";
@@ -66,7 +66,7 @@ export const WordFrequencyTable = memo(
     const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
     // table columns
-    const tableInfo = useInitWordFrequencyFilterSlice({ projectId });
+    const tableInfo = useInitWordFrequencySlice({ projectId });
     const columns: MRT_ColumnDef<WordFrequencyStat>[] = useMemo(() => {
       if (!tableInfo) return [];
 

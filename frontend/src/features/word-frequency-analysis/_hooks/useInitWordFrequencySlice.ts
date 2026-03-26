@@ -20,9 +20,9 @@ const wordFrequencyTableInfoQueryOptions = (projectId: number, callback?: (colum
     staleTime: Infinity,
   });
 
-export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: number }) => {
+export const useInitWordFrequencySlice = ({ projectId }: { projectId: number }) => {
   const dispatch = useAppDispatch();
-  const initializeWordFrequencyFilterSlice = useCallback(
+  const initializeWordFrequencySlice = useCallback(
     (columnInfo: ColumnInfo[]) => {
       dispatch(
         WordFrequencyActions.init({
@@ -40,7 +40,7 @@ export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: numb
   );
 
   const { data: columnData } = useQuery(
-    wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencyFilterSlice),
+    wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencySlice),
   );
   return columnData;
 };
