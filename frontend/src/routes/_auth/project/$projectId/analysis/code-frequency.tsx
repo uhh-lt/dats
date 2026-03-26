@@ -6,8 +6,8 @@ import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const codeFrequencySearchSchema = z.object({
-  selectedCode: z.number().optional(),
-  selectedUserIds: z.array(z.number()).default([]),
+  selectedCode: z.coerce.number().optional(),
+  selectedUserIds: z.array(z.coerce.number()).default([]),
   selectedDocTypes: z.array(z.nativeEnum(DocType)).default([]),
 });
 

@@ -6,9 +6,9 @@ import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const annotationSearchSchema = z.object({
-  visibleUserId: z.number().optional(),
-  selectedAnnotationId: z.number().optional(),
-  compareWithUserId: z.number().optional(),
+  visibleUserId: z.coerce.number().optional(),
+  selectedAnnotationId: z.coerce.number().optional(),
+  compareWithUserId: z.coerce.number().optional(),
   explorerTab: z.enum(["code", "annotation"]).default("code"),
 });
 

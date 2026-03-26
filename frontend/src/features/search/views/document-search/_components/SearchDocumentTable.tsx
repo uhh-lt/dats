@@ -9,7 +9,7 @@ import { Draggable } from "@components/drag-and-drop";
 import { useAuth } from "@core/auth";
 import { URLFilterDialog } from "@core/filter";
 import { FolderActionMenuButton, FolderRenderer } from "@core/folder";
-import { OpenInTabsButton } from "@core/navigation";
+import { OpenInTabsButton, useTabNavigate } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import {
   DeleteSdocsButton,
@@ -98,7 +98,7 @@ export function SearchDocumentTable({
   const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
-  const navigate = DocumentSearchRouteAPI.useNavigate();
+  const navigate = useTabNavigate();
 
   // global client state (react router)
   const { user } = useAuth();
@@ -386,7 +386,6 @@ export function SearchDocumentTable({
                 navigate({
                   to: "/project/$projectId/annotation/$sdocId",
                   params: { projectId, sdocId: row.original.id },
-                  search: { visibleUserId: undefined, compareWithUserId: undefined, selectedAnnotationId: undefined },
                 });
               } else {
                 dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.id));

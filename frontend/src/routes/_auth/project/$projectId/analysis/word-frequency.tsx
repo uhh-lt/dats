@@ -29,7 +29,7 @@ const wordFrequencySearchSchema = z.object({
         desc: true,
       },
     ]),
-  fetchSize: z.number().default(50),
+  fetchSize: z.coerce.number().default(50),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-frequency")({
