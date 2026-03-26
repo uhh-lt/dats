@@ -1,5 +1,5 @@
 import { queryClient } from "@api/queryClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 import { ProjectCreate } from "@api/models/ProjectCreate";
@@ -8,6 +8,13 @@ import { SDocStatus } from "@api/models/SDocStatus";
 import { ProjectService } from "@api/services/ProjectService";
 
 // PROJECT QUERIES
+export const userProjectsQueryOptions = () =>
+  queryOptions({
+    queryKey: [QueryKey.USER_PROJECTS],
+    queryFn: () => ProjectService.getUserProjects(),
+    staleTime: 1000 * 60 * 5,
+  });
+
 interface UseProjectsQueryParams<T> {
   select?: (data: ProjectRead[]) => T;
   enabled?: boolean;
@@ -15,9 +22,7 @@ interface UseProjectsQueryParams<T> {
 
 const useProjectsQuery = <T = ProjectRead[]>({ select, enabled }: UseProjectsQueryParams<T>) =>
   useQuery({
-    queryKey: [QueryKey.USER_PROJECTS],
-    queryFn: () => ProjectService.getUserProjects(),
-    staleTime: 1000 * 60 * 5,
+    ...userProjectsQueryOptions(),
     select,
     enabled,
   });

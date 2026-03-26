@@ -4,10 +4,20 @@ import { TagRead } from "@api/models/TagRead";
 import { queryClient } from "@api/queryClient";
 import { TagService } from "@api/services/TagService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 // TAG QUERIES
+export const projectTagsQueryOptions = (projectId: number | undefined) =>
+  queryOptions({
+    queryKey: [QueryKey.PROJECT_TAGS, projectId],
+    queryFn: () =>
+      TagService.getByProject({
+        projId: projectId!,
+      }),
+    staleTime: 1000 * 60 * 5,
+  });
+
 interface UseProjectTagsQueryParams<T> {
   select?: (data: TagRead[]) => T;
   enabled?: boolean;
@@ -16,12 +26,7 @@ interface UseProjectTagsQueryParams<T> {
 const useProjectTagsQuery = <T = TagRead[]>({ select, enabled }: UseProjectTagsQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_TAGS, projectId],
-    queryFn: () =>
-      TagService.getByProject({
-        projId: projectId!,
-      }),
-    staleTime: 1000 * 60 * 5,
+    ...projectTagsQueryOptions(projectId),
     select,
     enabled: !!projectId && (enabled ?? true),
   });

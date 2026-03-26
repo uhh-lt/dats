@@ -1,7 +1,7 @@
+import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
 import { Box, Card, CardActionArea, CardContent, Container, Grid2, Typography } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { userProjectsQueryOptions } from "../../_api/projectsOverviewQueryOptions";
 import { ProjectCard } from "./_components/ProjectCard";
 import { ProjectCreationDialog } from "./_components/ProjectCreationDialog";
 

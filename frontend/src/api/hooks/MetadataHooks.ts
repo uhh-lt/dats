@@ -4,21 +4,15 @@ import { queryClient } from "@api/queryClient";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQueries, useQuery, UseQueryResult } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 // PROJECT METADATA QUERIES
 
 export type ProjectMetadataMap = Record<number, ProjectMetadataRead>;
 
-interface UseProjectMetaadataQueryParams<T> {
-  select?: (data: ProjectMetadataMap) => T;
-  enabled?: boolean;
-}
-
-const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: UseProjectMetaadataQueryParams<T>) => {
-  const projectId = useAppSelector((state) => state.project.projectId);
-  return useQuery({
+export const projectMetadataQueryOptions = (projectId: number | undefined) =>
+  queryOptions({
     queryKey: [QueryKey.PROJECT_METADATAS, projectId],
     queryFn: async () => {
       const metadata = await ProjectMetadataService.getByProject({
@@ -30,6 +24,17 @@ const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: Us
       }, {} as ProjectMetadataMap);
     },
     staleTime: 1000 * 60 * 5,
+  });
+
+interface UseProjectMetaadataQueryParams<T> {
+  select?: (data: ProjectMetadataMap) => T;
+  enabled?: boolean;
+}
+
+const useProjectMetadataQuery = <T = ProjectMetadataMap>({ select, enabled }: UseProjectMetaadataQueryParams<T>) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  return useQuery({
+    ...projectMetadataQueryOptions(projectId),
     select,
     enabled: !!projectId && (enabled ?? true),
   });

@@ -1,5 +1,5 @@
+import { userProjectsQueryOptions } from "@api/hooks/ProjectHooks";
 import { QueryClient } from "@tanstack/react-query";
-import { userProjectsQueryOptions } from "../../_api/projectsOverviewQueryOptions";
 
 interface ProjectsViewLoaderArgs {
   queryClient: QueryClient;

@@ -3,12 +3,28 @@ import { FolderType } from "@api/models/FolderType";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { useAppSelector } from "@store/storeHooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 // Folder QUERIES
 
 export type FolderMap = Record<number, FolderRead>;
+
+export const projectFoldersQueryOptions = (projectId: number | undefined, folderType: FolderType) =>
+  queryOptions({
+    queryKey: [QueryKey.PROJECT_FOLDERS, projectId, folderType],
+    queryFn: async () => {
+      const folders = await FolderService.getFoldersByProjectAndType({
+        projectId: projectId!,
+        folderType,
+      });
+      return folders.reduce((acc, folder) => {
+        acc[folder.id] = folder;
+        return acc;
+      }, {} as FolderMap);
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
 interface UseProjectFoldersQueryParams<T> {
   select?: (data: FolderMap) => T;
@@ -19,18 +35,7 @@ interface UseProjectFoldersQueryParams<T> {
 const useProjectFoldersQuery = <T = FolderMap>({ select, folderType, enabled }: UseProjectFoldersQueryParams<T>) => {
   const projectId = useAppSelector((state) => state.project.projectId);
   return useQuery({
-    queryKey: [QueryKey.PROJECT_FOLDERS, projectId, folderType],
-    queryFn: async () => {
-      const folders = await FolderService.getFoldersByProjectAndType({
-        projectId: projectId!,
-        folderType: folderType,
-      });
-      return folders.reduce((acc, folder) => {
-        acc[folder.id] = folder;
-        return acc;
-      }, {} as FolderMap);
-    },
-    staleTime: 1000 * 60 * 5,
+    ...projectFoldersQueryOptions(projectId, folderType),
     select,
     enabled: !!projectId && (enabled ?? true),
   });
