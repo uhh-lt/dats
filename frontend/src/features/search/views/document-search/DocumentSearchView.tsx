@@ -118,7 +118,7 @@ export function DocumentSearchView() {
   useEffect(() => {
     dispatch(SearchActions.onSearchParamsChange());
     dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
-  }, [projectId, selectedFolderId, searchQuery, filterExpertMode, sortingModel, dispatch]);
+  }, [projectId, selectedFolderId, searchQuery, filter, filterExpertMode, sortingModel, dispatch]);
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
