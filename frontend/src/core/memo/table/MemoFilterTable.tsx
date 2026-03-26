@@ -169,6 +169,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     <FilterTable
       name="memos"
       columns={columns}
+      getRowId={(row) => `${row.id}`}
       data={data}
       fetchNextPage={fetchNextPage}
       flatMapData={flatMapData}

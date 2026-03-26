@@ -1,10 +1,8 @@
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { ContentLayout } from "@components/content-layouts";
-import { MyFilter, deserializeFilterFromSearchParam } from "@core/filter";
 import { Box } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
 import { WordFrequencyActions } from "../../store/wordFrequencySlice";
 import { WordFrequencyTable } from "./_components/WordFrequencyTable";
@@ -13,16 +11,14 @@ import { WordFrequencyRouteAPI } from "./_hooks/wordFrequencyRouteAPI";
 export function WordFrequencyView() {
   // search word frequency feature
   const projectId = WordFrequencyRouteAPI.useParams({ select: (params) => params.projectId });
-  const { sortingModel, searchFilter } = WordFrequencyRouteAPI.useSearch();
-  const filter = useMemo(
-    () => deserializeFilterFromSearchParam(searchFilter, "root") as MyFilter<WordFrequencyColumns>,
-    [searchFilter],
-  );
+  const { sortingModel, searchFilter: filter, fetchSize } = WordFrequencyRouteAPI.useSearch();
+
   const wordFrequencyQuery = useSuspenseInfiniteQuery(
     wordFrequencyTableQueryOptions({
       projectId,
       filter,
       sortingModel,
+      fetchSize,
     }),
   );
 

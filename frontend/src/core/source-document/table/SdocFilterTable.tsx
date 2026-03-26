@@ -172,6 +172,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     <FilterTable
       name="documents"
       columns={columns}
+      getRowId={(row) => `${row.id}`}
       data={data}
       fetchNextPage={fetchNextPage}
       flatMapData={flatMapData}

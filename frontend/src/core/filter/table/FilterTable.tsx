@@ -2,6 +2,7 @@ import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
 import { InfiniteData } from "@tanstack/react-query";
 import {
   MRT_ColumnDef,
+  MRT_RowData,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
@@ -11,11 +12,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useRef, type UIEvent } from "react";
-import { TableRowWithId } from "../_types/TableRowWithId";
 import { FilterTableToolbarProps, FilterTableToolbarRight, useRenderFilterToolbars } from "../toolbar";
 
 export interface FilterTableContainerProps<
-  T extends TableRowWithId,
+  T extends MRT_RowData,
   TToolbarProps extends FilterTableToolbarProps<T> = FilterTableToolbarProps<T>,
   TFilter = unknown,
 > {
@@ -70,10 +70,10 @@ type FilterTableInternalMRTOptionKeys =
   | "renderTopToolbarCustomActions"
   | "rowVirtualizerInstanceRef";
 
-type FilterTableMRTOptions<T extends TableRowWithId> = Omit<MRT_TableOptions<T>, FilterTableInternalMRTOptionKeys>;
+type FilterTableMRTOptions<T extends MRT_RowData> = Omit<MRT_TableOptions<T>, FilterTableInternalMRTOptionKeys>;
 
 export interface FilterTableProps<
-  T extends TableRowWithId,
+  T extends MRT_RowData,
   TToolbarProps extends FilterTableToolbarProps<T>,
   TPage extends TablePage,
 > extends FilterTableMRTOptions<T> {
@@ -81,6 +81,7 @@ export interface FilterTableProps<
   name: string;
   // column info
   columns: MRT_ColumnDef<T>[];
+  getRowId: NonNullable<MRT_TableOptions<T>["getRowId"]>;
   // data fetching
   data: InfiniteData<TPage> | undefined;
   fetchNextPage: () => void;
@@ -134,7 +135,7 @@ export interface FilterTableProps<
  * @param errorMessage the error message to display when there is an error loading the data
  */
 export function FilterTable<
-  T extends TableRowWithId,
+  T extends MRT_RowData,
   TToolbarProps extends FilterTableToolbarProps<T>,
   TPage extends TablePage,
 >({
@@ -142,6 +143,7 @@ export function FilterTable<
   name,
   // column info
   columns,
+  getRowId,
   // data fetching
   data,
   fetchNextPage,
@@ -198,17 +200,15 @@ export function FilterTable<
   }, [onFetchSizeChange, totalResults]);
 
   const { renderTopLeftToolbarContent, renderTopRightToolbarContent, renderBottomToolbarContent } =
-    useRenderFilterToolbars({
+    useRenderFilterToolbars<T, TToolbarProps>({
       name,
-      flatData,
       totalFetched,
       totalResults,
       handleFetchAll,
       renderTopRightToolbar,
-      renderTopLeftToolbar: renderTopLeftToolbar || (() => null),
+      renderTopLeftToolbar,
       renderBottomToolbar,
       toolbarExtraProps: toolbarExtraProps || ({} as Omit<TToolbarProps, keyof FilterTableToolbarProps<T>>),
-      rowSelectionModel,
       tableContainerRef,
     });
 
@@ -216,7 +216,7 @@ export function FilterTable<
     ...mrtOptions,
     data: flatData,
     columns,
-    getRowId: (row) => `${row.id}`,
+    getRowId,
     state: {
       ...(mrtOptions.state || {}),
       rowSelection: rowSelectionModel,

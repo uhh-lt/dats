@@ -1,13 +1,14 @@
 import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
-import { deserializeFilterFromSearchParam } from "@core/filter";
+import { MyFilter } from "@core/filter";
 import { QueryClient } from "@tanstack/react-query";
 import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
 
 interface WordFrequencyViewLoaderArgs {
   queryClient: QueryClient;
   projectId: number;
-  searchFilter: string;
+  searchFilter: MyFilter<WordFrequencyColumns>;
   sortingModel: { id: string; desc: boolean }[];
+  fetchSize: number;
 }
 
 export async function wordFrequencyViewLoader({
@@ -15,15 +16,15 @@ export async function wordFrequencyViewLoader({
   projectId,
   searchFilter,
   sortingModel,
+  fetchSize,
 }: WordFrequencyViewLoaderArgs) {
-  const filter = deserializeFilterFromSearchParam<WordFrequencyColumns>(searchFilter, "root");
-
   await Promise.all([
     queryClient.prefetchInfiniteQuery(
       wordFrequencyTableQueryOptions({
         projectId,
-        filter,
+        filter: searchFilter,
         sortingModel,
+        fetchSize,
       }),
     ),
   ]);

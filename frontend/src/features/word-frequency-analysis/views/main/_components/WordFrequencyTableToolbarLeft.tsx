@@ -1,15 +1,14 @@
+import { URLFilterDialog } from "@core/filter";
 import { Stack } from "@mui/material";
-import { MRT_RowData } from "material-react-table";
-import { URLFilterDialog } from "../filter-dialogs";
-import { URLFilterTableToolbarProps } from "./FilterTableToolbarProps";
+import { WordFrequencyTableToolbarProps } from "./WordFrequencyTableToolbarProps";
 
-export function URLFilterTableToolbarLeft<T extends MRT_RowData>({
+export function WordFrequencyTableToolbarLeft({
   anchor,
   filterName,
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-}: URLFilterTableToolbarProps<T>) {
+}: WordFrequencyTableToolbarProps) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" sx={{ minHeight: "40px" }}>
       <URLFilterDialog

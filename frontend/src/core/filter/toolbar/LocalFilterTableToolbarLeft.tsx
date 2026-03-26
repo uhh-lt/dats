@@ -1,9 +1,9 @@
 import { Stack } from "@mui/material";
-import { TableRowWithId } from "../_types/TableRowWithId";
+import { MRT_RowData } from "material-react-table";
 import { FilterDialog } from "../filter-dialogs";
 import { LocalFilterTableToolbarProps } from "./FilterTableToolbarProps";
 
-export function LocalFilterTableToolbarLeft<T extends TableRowWithId, U extends string = string>({
+export function LocalFilterTableToolbarLeft<T extends MRT_RowData, U extends string = string>({
   anchor,
   filterName,
   filter,

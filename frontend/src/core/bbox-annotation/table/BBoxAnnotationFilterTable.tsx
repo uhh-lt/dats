@@ -187,6 +187,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
     <FilterTable
       name="bbox annotations"
       columns={columns}
+      getRowId={(row) => `${row.id}`}
       data={data}
       fetchNextPage={fetchNextPage}
       flatMapData={flatMapData}

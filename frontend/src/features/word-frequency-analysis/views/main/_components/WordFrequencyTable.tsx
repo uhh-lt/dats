@@ -3,28 +3,21 @@ import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { WordFrequencyResult } from "@api/models/WordFrequencyResult";
 import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { ContentContentLayout } from "@components/content-layouts";
-import { MyFilter, URLFilterDialog } from "@core/filter";
-import { useTableInfiniteScroll } from "@hooks/useTableInfiniteScroll";
+import { FilterTable, MyFilter } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
-import { Stack, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
-import {
-  MRT_ColumnDef,
-  MRT_RowVirtualizer,
-  MRT_ShowHideColumnsButton,
-  MRT_TableInstance,
-  MRT_ToggleDensePaddingButton,
-  MaterialReactTable,
-  useMaterialReactTable,
-} from "material-react-table";
-import { memo, useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { MRT_ColumnDef } from "material-react-table";
+import { memo, useMemo } from "react";
 import { useInitWordFrequencySlice } from "../../../_hooks/useInitWordFrequencySlice";
 import { WordFrequencyActions } from "../../../store/wordFrequencySlice";
 import { WordFrequencyRouteAPI } from "../_hooks/wordFrequencyRouteAPI";
 import { WordCloud } from "./WordCloud";
-import { WordFrequencyExportButton } from "./WordFrequencyExportButton";
+import { WordFrequencyTableToolbarBottom } from "./WordFrequencyTableToolbarBottom";
+import { WordFrequencyTableToolbarLeft } from "./WordFrequencyTableToolbarLeft";
+import { WordFrequencyTableToolbarProps } from "./WordFrequencyTableToolbarProps";
+import { WordFrequencyTableToolbarRight } from "./WordFrequencyTableToolbarRight";
 
 const filterName = "root";
 const flatMapData = (page: WordFrequencyResult) => page.word_frequencies;
@@ -44,7 +37,6 @@ interface WordFrequencyTableProps {
   isLoading: boolean;
   onFetchNextPage: () => void;
   filter: MyFilter<WordFrequencyColumns>;
-  onSearchParameterChange?: () => void;
 }
 
 export const WordFrequencyTable = memo(
@@ -61,9 +53,7 @@ export const WordFrequencyTable = memo(
 
     // url table state
     const [sortingModel, setSortingModel] = useURLConnector(WordFrequencyRouteAPI, "sortingModel");
-
-    // virtualization
-    const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+    const [, onFetchSizeChange] = useURLConnector(WordFrequencyRouteAPI, "fetchSize");
 
     // table columns
     const tableInfo = useInitWordFrequencySlice({ projectId });
@@ -122,140 +112,56 @@ export const WordFrequencyTable = memo(
       return result.filter((column) => column !== null) as MRT_ColumnDef<WordFrequencyStat>[];
     }, [tableInfo]);
 
-    // infinite scrolling
-    const tableContainerRef = useRef<HTMLDivElement>(null);
-    const { flatData, totalResults, totalFetched, fetchMoreOnScroll } = useTableInfiniteScroll({
-      tableContainerRef,
-      data: searchData,
-      isFetching,
-      fetchNextPage: onFetchNextPage,
-      flatMapData,
-    });
-
-    // infinite scrolling reset:
-    // scroll to top of table when sorting changes
-    useEffect(() => {
-      try {
-        rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-      } catch (error) {
-        console.error(error);
-      }
-    }, [projectId, sortingModel]);
-
-    // Table event handlers
-    const handleTableScroll = useCallback(
-      (event: UIEvent<HTMLDivElement>) => fetchMoreOnScroll(event.target as HTMLDivElement),
-      [fetchMoreOnScroll],
-    );
-
-    // render
-    const renderTopLeftToolbarContent = useCallback(
-      () => (
-        <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-          <URLFilterDialog
-            anchorEl={tableContainerRef.current}
-            buttonProps={{ size: "small" }}
-            filterName={filterName}
-            routeApi={WordFrequencyRouteAPI}
-            defaultFilterExpression={defaultFilterExpression}
-            column2InfoSelector={column2InfoSelector}
-          />
-        </Stack>
-      ),
-      [],
-    );
-    const renderBottomToolbarContent = useCallback(
-      () => (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-          <Typography>
-            Fetched {totalFetched} of {totalResults} unique words (from {searchData?.pages?.[0]?.sdocs_total ?? 0}{" "}
-            documents with {searchData?.pages?.[0]?.words_total ?? 0} words).
-          </Typography>
-        </Stack>
-      ),
-      [totalFetched, totalResults, searchData],
-    );
-    const renderTopRightToolbarContent = useCallback(
-      ({ table }: { table: MRT_TableInstance<WordFrequencyStat> }) => (
-        <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-          <MRT_ShowHideColumnsButton table={table} />
-          <MRT_ToggleDensePaddingButton table={table} />
-          <WordFrequencyExportButton filter={filter} />
-        </Stack>
-      ),
-      [filter],
-    );
-
-    // table
-    const table = useMaterialReactTable<WordFrequencyStat>({
-      data: flatData,
-      columns: columns,
-      getRowId: (row) => row.word,
-      // state
-      state: {
-        rowSelection: rowSelectionModel,
-        sorting: sortingModel,
-        columnVisibility: columnVisibilityModel,
-        isLoading: isLoading || columns.length === 0,
-        showAlertBanner: isError,
-        showProgressBars: isFetching,
-      },
-      // selection
-      enableRowSelection: true,
-      onRowSelectionChange: setRowSelectionModel,
-      // virtualization
-      enableRowVirtualization: true,
-      rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
-      rowVirtualizerOptions: { overscan: 4 },
-      // filtering
-      manualFiltering: true,
-      enableColumnFilters: false,
-      // pagination
-      enablePagination: false,
-      // sorting
-      manualSorting: true,
-      onSortingChange: setSortingModel,
-      // column visiblility
-      onColumnVisibilityChange: setColumnVisibilityModel,
-      // mui components
-      muiTablePaperProps: {
-        elevation: 4,
-        style: { height: "100%", display: "flex", flexDirection: "column" },
-      },
-      muiTableContainerProps: {
-        ref: tableContainerRef, //get access to the table container element
-        onScroll: handleTableScroll,
-        style: { flexGrow: 1 },
-      },
-      muiToolbarAlertBannerProps: isError
-        ? {
-            color: "error",
-            children: "Error loading data",
-          }
-        : undefined,
-      muiTopToolbarProps: {
-        sx: {
-          px: 2,
-          py: 0,
-          minHeight: 48,
-        },
-      },
-      // toolbar
-      positionToolbarAlertBanner: "head-overlay",
-      renderTopToolbarCustomActions: renderTopLeftToolbarContent,
-      renderToolbarInternalActions: renderTopRightToolbarContent,
-      renderBottomToolbarCustomActions: renderBottomToolbarContent,
-    });
+    const flatData = useMemo(() => searchData.pages.flatMap(flatMapData), [searchData]);
+    const sdocsTotal = searchData.pages[0]?.sdocs_total ?? 0;
+    const wordsTotal = searchData.pages[0]?.words_total ?? 0;
 
     return (
-      <>
-        <ContentContentLayout
-          leftContent={<MaterialReactTable table={table} />}
-          rightContent={
-            <WordCloud width={800} height={600} words={flatData.filter((word) => rowSelectionModel[word.word])} />
-          }
-        />
-      </>
+      <ContentContentLayout
+        leftContent={
+          <FilterTable<WordFrequencyStat, WordFrequencyTableToolbarProps, WordFrequencyResult>
+            name="unique words"
+            columns={columns}
+            getRowId={(row) => row.word}
+            data={searchData}
+            fetchNextPage={onFetchNextPage}
+            flatMapData={flatMapData}
+            isLoading={isLoading || columns.length === 0}
+            isError={isError}
+            isFetching={isFetching}
+            rowSelectionModel={rowSelectionModel}
+            onRowSelectionChange={setRowSelectionModel}
+            sortingModel={sortingModel}
+            onSortingChange={setSortingModel}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityChange={setColumnVisibilityModel}
+            onFetchSizeChange={onFetchSizeChange}
+            positionToolbarAlertBanner="head-overlay"
+            renderTopLeftToolbar={WordFrequencyTableToolbarLeft}
+            renderTopRightToolbar={WordFrequencyTableToolbarRight}
+            renderBottomToolbar={WordFrequencyTableToolbarBottom}
+            toolbarExtraProps={{
+              filterName,
+              routeApi: WordFrequencyRouteAPI,
+              defaultFilterExpression,
+              column2InfoSelector,
+              filter,
+              sdocsTotal,
+              wordsTotal,
+            }}
+            muiTopToolbarProps={{
+              sx: {
+                px: 2,
+                py: 0,
+                minHeight: 48,
+              },
+            }}
+          />
+        }
+        rightContent={
+          <WordCloud width={800} height={600} words={flatData.filter((word) => rowSelectionModel[word.word])} />
+        }
+      />
     );
   },
 );

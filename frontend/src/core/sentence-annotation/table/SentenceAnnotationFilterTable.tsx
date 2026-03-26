@@ -185,6 +185,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
     <FilterTable
       name="sentence annotations"
       columns={columns}
+      getRowId={(row) => `${row.id}`}
       data={data}
       fetchNextPage={fetchNextPage}
       flatMapData={flatMapData}

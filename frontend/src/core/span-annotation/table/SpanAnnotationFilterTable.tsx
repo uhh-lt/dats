@@ -182,6 +182,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
     <FilterTable
       name="span annotations"
       columns={columns}
+      getRowId={(row) => `${row.id}`}
       data={data}
       fetchNextPage={fetchNextPage}
       flatMapData={flatMapData}
