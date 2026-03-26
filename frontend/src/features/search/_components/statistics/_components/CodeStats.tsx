@@ -5,7 +5,7 @@ import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { RefObject, useMemo } from "react";
+import { useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
 
 interface CodeStatsProps {
@@ -13,7 +13,7 @@ interface CodeStatsProps {
   codeId: number;
   sdocIds?: number[];
   handleClick: (stat: SpanEntityStat) => void;
-  parentRef: RefObject<HTMLDivElement | null>;
+  parentElement: HTMLDivElement | null;
   filterBy: string;
 }
 
@@ -48,16 +48,16 @@ interface CodeStatsWithDataProps {
   codeStats: SpanEntityStat[];
 
   handleClick: (stat: SpanEntityStat) => void;
-  parentRef: RefObject<HTMLDivElement | null>;
+  parentElement: HTMLDivElement | null;
   filterBy: string;
 }
 
-function CodeStatsWithData({ codeStats, handleClick, parentRef, filterBy }: CodeStatsWithDataProps) {
+function CodeStatsWithData({ codeStats, handleClick, parentElement, filterBy }: CodeStatsWithDataProps) {
   const filteredCodeStats = useFilterStats(codeStats, filterBy);
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: filteredCodeStats.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => parentElement,
     estimateSize: () => 35,
   });
 

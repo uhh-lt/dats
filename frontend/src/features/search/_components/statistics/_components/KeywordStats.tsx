@@ -4,7 +4,7 @@ import { StatsDisplayButton } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
 import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { RefObject, useMemo } from "react";
+import { useMemo } from "react";
 import { useFilterStats } from "../_hooks/useFilterStats";
 
 interface KeywordStatsProps {
@@ -12,7 +12,7 @@ interface KeywordStatsProps {
   sdocIds?: number[];
   projectId: number;
   handleClick: (keyword: string) => void;
-  parentRef: RefObject<HTMLDivElement | null>;
+  parentElement: HTMLDivElement | null;
   filterBy: string;
 }
 
@@ -51,17 +51,17 @@ function KeywordStatsContent({ projectId, sdocIds, ...props }: KeywordStatsProps
 interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
   handleClick: (keyword: string) => void;
-  parentRef: React.RefObject<HTMLDivElement | null>;
+  parentElement: HTMLDivElement | null;
   filterBy: string;
 }
 
-function KeywordStatsWithData({ keywordStats, handleClick, parentRef, filterBy }: KeywordStatsContentProps) {
+function KeywordStatsWithData({ keywordStats, handleClick, parentElement, filterBy }: KeywordStatsContentProps) {
   const filteredKeywordStats = useFilterStats(keywordStats, filterBy);
 
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: filteredKeywordStats.length || 0,
-    getScrollElement: () => parentRef?.current,
+    getScrollElement: () => parentElement,
     estimateSize: () => 35,
   });
 

@@ -7,7 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { TabContext } from "@mui/lab";
 import { Box, BoxProps, IconButton, Stack, Tab, Tabs, TextField, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ChangeEvent, SyntheticEvent, useCallback, useRef, useState } from "react";
+import { ChangeEvent, SyntheticEvent, useCallback, useState } from "react";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { CodeStats } from "./_components/CodeStats";
 import { DocumentTagStats } from "./_components/DocumentTagStats";
@@ -58,7 +58,7 @@ export function SearchStatistics({
   };
 
   // The scrollable element for the lists
-  const parentRef = useRef<HTMLDivElement>(null);
+  const [parentElement, setParentElement] = useState<HTMLDivElement | null>(null);
 
   return (
     <Box {...(props as BoxProps)} className={`myFlexContainer ${props.className}`}>
@@ -106,13 +106,13 @@ export function SearchStatistics({
           </Stack>
         </Box>
 
-        <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
+        <Box ref={setParentElement} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             sdocIds={sdocIds}
             currentTab={tab}
             projectId={projectId}
             handleClick={handleKeywordClick}
-            parentRef={parentRef}
+            parentElement={parentElement}
             filterBy={filterStatsBy}
           />
           <DocumentTagStats
@@ -120,7 +120,7 @@ export function SearchStatistics({
             currentTab={tab}
             projectId={projectId}
             handleClick={handleTagClick}
-            parentRef={parentRef}
+            parentElement={parentElement}
             filterBy={filterStatsBy}
           />
           {projectCodes.data?.map((code) => (
@@ -130,7 +130,7 @@ export function SearchStatistics({
               key={code.id}
               codeId={code.id}
               handleClick={handleCodeClick}
-              parentRef={parentRef}
+              parentElement={parentElement}
               filterBy={filterStatsBy}
             />
           ))}

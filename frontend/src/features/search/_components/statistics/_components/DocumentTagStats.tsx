@@ -3,17 +3,17 @@ import { TagHooks } from "@api/hooks/TagHooks";
 import { TagStat } from "@api/models/TagStat";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
 import { TabPanel } from "@mui/lab";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { RefObject, useMemo } from "react";
-import { useFilterStats } from "../_hooks/useFilterStats";
 import { useAppSelector } from "@store/storeHooks";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo } from "react";
+import { useFilterStats } from "../_hooks/useFilterStats";
 
 interface DocumentTagStatsProps {
   currentTab: string;
   projectId: number;
   sdocIds?: number[];
   handleClick: (tagId: number) => void;
-  parentRef: RefObject<HTMLDivElement | null>;
+  parentElement: HTMLDivElement | null;
   filterBy: string;
 }
 
@@ -52,7 +52,7 @@ function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
 function DocumentTagStatsWithData({
   tagStats,
   handleClick,
-  parentRef,
+  parentElement,
   filterBy,
 }: DocumentTagStatsProps & { tagStats: TagStat[] }) {
   const filteredTagStats = useFilterStats(tagStats, filterBy);
@@ -60,7 +60,7 @@ function DocumentTagStatsWithData({
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: filteredTagStats.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => parentElement,
     estimateSize: () => 35,
   });
 
