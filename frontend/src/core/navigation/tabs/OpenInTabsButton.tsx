@@ -14,7 +14,7 @@ export const OpenInTabsButton = memo(({ sdocIds, projectId }: { sdocIds: number[
       const pathname = `/project/${projectId}/annotation/${sdocId}`;
       return {
         id: pathname,
-        href: pathname,
+        route: { to: pathname },
         label: `Document ${sdocId}`,
         icon: Icon.ANNOTATION,
       };

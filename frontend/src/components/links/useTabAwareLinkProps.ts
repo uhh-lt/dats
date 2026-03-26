@@ -1,3 +1,4 @@
+import { toTabNavigateArgs } from "@core/navigation";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useRouter } from "@tanstack/react-router";
@@ -47,7 +48,7 @@ export function useTabAwareLinkProps<T extends TabAwareLinkInput>(props: T): T {
 
     let targetLocation: { pathname: string };
     try {
-      targetLocation = router.buildLocation(props as never);
+      targetLocation = router.buildLocation(props as Parameters<typeof router.buildLocation>[0]);
     } catch {
       return props;
     }
@@ -80,7 +81,7 @@ export function useTabAwareLinkProps<T extends TabAwareLinkInput>(props: T): T {
         }
 
         event.preventDefault();
-        void router.navigate({ to: existingTab.href as never });
+        void router.navigate(toTabNavigateArgs(existingTab.route) as Parameters<typeof router.navigate>[0]);
       },
     } as T;
   }, [props, router, tabsByProject]);

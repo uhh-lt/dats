@@ -2,6 +2,7 @@ import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { RegisteredRouter, useNavigate, useParams, useRouter, ValidateNavigateOptions } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { toTabNavigateArgs } from "./utils/TabRouteTargetUtils";
 
 type StrictNavigateArgs<TOptions> = ValidateNavigateOptions<RegisteredRouter, TOptions>;
 
@@ -18,7 +19,7 @@ type RelaxedNavigateArgs<TOptions> =
  * tab-aware restore semantics:
  *
  * - If navigating to a project route that already has an open tab and no explicit
- *   `search` is provided, it restores the tab's stored `href` (including prior search state).
+ *   `search` is provided, it restores the tab's stored route state.
  * - If `search` is explicitly provided, it uses that navigation target directly.
  * - If navigation is outside a project context, it behaves like normal `useNavigate`.
  *
@@ -56,10 +57,14 @@ export const useTabNavigate = () => {
       }
 
       const existingTab = tabsByProject[targetProjectId]?.tabsById[builtLocation.pathname];
-      const hasExplicitSearch = "search" in navigateArgs && navigateArgs.search !== undefined;
+      const hasExplicitSearch =
+        navigateArgs &&
+        typeof navigateArgs === "object" &&
+        "search" in navigateArgs &&
+        (navigateArgs as { search?: unknown }).search !== undefined;
 
       if (existingTab && !hasExplicitSearch) {
-        navigate({ to: existingTab.href });
+        void router.navigate(toTabNavigateArgs(existingTab.route) as Parameters<typeof router.navigate>[0]);
         return;
       }
 

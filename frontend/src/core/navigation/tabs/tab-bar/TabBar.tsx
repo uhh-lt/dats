@@ -18,6 +18,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { selectProjectTabs, TabActions } from "../../tabSlice";
 import { useTabManager } from "../hooks/useTabManager";
+import { toTabNavigateArgs } from "../utils/TabRouteTargetUtils";
 import { DragCloneRenderer } from "./_components/DragCloneRenderer";
 import { DraggableTab } from "./_components/DraggableTab";
 import { TabMenuButton } from "./_components/TabMenuButton";
@@ -144,7 +145,9 @@ export const TabBar = memo(({ projectId }: TabBarProps) => {
                   tab={tab}
                   index={index}
                   isActive={tab.id === location.pathname}
-                  onTabClick={() => navigate({ to: tab.href })}
+                  onTabClick={() => {
+                    navigate(toTabNavigateArgs(tab.route) as Parameters<typeof navigate>[0]);
+                  }}
                   onCloseClick={() => tabManager.closeTab(tab.id)}
                 />
               ))}

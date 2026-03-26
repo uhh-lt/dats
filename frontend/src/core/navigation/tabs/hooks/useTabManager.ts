@@ -1,7 +1,9 @@
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
+import { TabData } from "../../_types/TabData";
 import { selectProjectTabState, TabActions } from "../../tabSlice";
+import { toTabNavigateArgs } from "../utils/TabRouteTargetUtils";
 
 type Direction = "left" | "right";
 
@@ -14,6 +16,13 @@ export function useTabManager(projectId: number) {
 
   const currentIndex = useMemo(() => tabOrder.indexOf(currentPathname), [tabOrder, currentPathname]);
 
+  const navigateToTab = useCallback(
+    (tab: TabData) => {
+      navigate(toTabNavigateArgs(tab.route) as Parameters<typeof navigate>[0]);
+    },
+    [navigate],
+  );
+
   const closeTab = useCallback(
     (tabIdToRemove: string) => {
       const isActiveTab = currentPathname === tabIdToRemove;
@@ -25,7 +34,7 @@ export function useTabManager(projectId: number) {
         const fallbackTabId = leftCandidate ?? rightCandidate;
 
         if (fallbackTabId && tabsById[fallbackTabId]) {
-          navigate({ to: tabsById[fallbackTabId].href });
+          navigateToTab(tabsById[fallbackTabId]);
         } else {
           navigate({ to: `/project/${projectId}/search` });
         }
@@ -33,7 +42,7 @@ export function useTabManager(projectId: number) {
 
       dispatch(TabActions.removeTab({ projectId, tabId: tabIdToRemove }));
     },
-    [currentPathname, dispatch, navigate, projectId, tabOrder, tabsById],
+    [currentPathname, dispatch, navigate, navigateToTab, projectId, tabOrder, tabsById],
   );
 
   const goToAdjacentTab = useCallback(
@@ -48,10 +57,10 @@ export function useTabManager(projectId: number) {
       const nextTab = tabsById[nextTabId];
 
       if (nextTab) {
-        navigate({ to: nextTab.href });
+        navigateToTab(nextTab);
       }
     },
-    [currentIndex, navigate, tabOrder, tabsById],
+    [currentIndex, navigateToTab, tabOrder, tabsById],
   );
 
   const closeActiveTab = useCallback(() => {
@@ -77,12 +86,12 @@ export function useTabManager(projectId: number) {
       const activeWillClose = idsToClose.includes(currentPathname);
 
       if (activeWillClose && tabsById[fromTabId]) {
-        navigate({ to: tabsById[fromTabId].href });
+        navigateToTab(tabsById[fromTabId]);
       }
 
       dispatch(TabActions.closeTabsToRight({ projectId, fromTabId }));
     },
-    [currentPathname, dispatch, navigate, projectId, tabOrder, tabsById],
+    [currentPathname, dispatch, navigateToTab, projectId, tabOrder, tabsById],
   );
 
   return {

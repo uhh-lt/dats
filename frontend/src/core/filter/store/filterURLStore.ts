@@ -44,11 +44,13 @@ export const deserializeFilterFromSearchParam = <T extends string = string>(
   value: unknown,
   filterName: string,
 ): MyFilter<T> => {
-  if (typeof value !== "string" || value.length === 0) {
-    return createEmptyFilter(filterName) as MyFilter<T>;
-  }
+  const parsed =
+    isValidFilter(value)
+      ? value
+      : typeof value === "string" && value.length > 0
+        ? tryParseFilter(value)
+        : undefined;
 
-  const parsed = tryParseFilter(value);
   if (!parsed) {
     return createEmptyFilter(filterName) as MyFilter<T>;
   }

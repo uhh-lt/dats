@@ -1,6 +1,7 @@
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { ProjectTabState, TabData } from "./_types/TabData";
+import { normalizeTabRoute } from "./tabs/utils/TabRouteTargetUtils";
 
 export interface TabState {
   tabsByProject: Record<number, ProjectTabState>;
@@ -29,13 +30,22 @@ const initialState: TabState = {
   tabsByProject: {},
 };
 
+const normalizeTabData = (tabInput: TabData): TabData => {
+  const route = normalizeTabRoute(tabInput.route);
+
+  return {
+    ...tabInput,
+    route,
+  };
+};
+
 const tabSlice = createSlice({
   name: "tabs",
   initialState,
   reducers: {
     addOrUpdateTab: (state, action: PayloadAction<{ projectId: number; tab: TabData }>) => {
       const projectState = getOrCreateProjectTabState(state, action.payload.projectId);
-      const { tab } = action.payload;
+      const tab = normalizeTabData(action.payload.tab);
       const exists = Boolean(projectState.tabsById[tab.id]);
 
       projectState.tabsById[tab.id] = tab;
@@ -45,7 +55,8 @@ const tabSlice = createSlice({
     },
     addOrUpdateTabs: (state, action: PayloadAction<{ projectId: number; tabs: TabData[] }>) => {
       const projectState = getOrCreateProjectTabState(state, action.payload.projectId);
-      action.payload.tabs.forEach((tab) => {
+      action.payload.tabs.forEach((tabInput) => {
+        const tab = normalizeTabData(tabInput);
         const exists = Boolean(projectState.tabsById[tab.id]);
         projectState.tabsById[tab.id] = tab;
         if (!exists) {

@@ -98,7 +98,8 @@ export function SearchDocumentTable({
   const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
   const [sortingModel, setSortingModel] = useURLConnector(DocumentSearchRouteAPI, "sortingModel");
-  const navigate = useTabNavigate();
+  const navigate = DocumentSearchRouteAPI.useNavigate();
+  const tabNavigate = useTabNavigate();
 
   // global client state (react router)
   const { user } = useAuth();
@@ -383,7 +384,7 @@ export function SearchDocumentTable({
         : {
             onClick: (event) => {
               if (event.detail >= 2) {
-                navigate({
+                tabNavigate({
                   to: "/project/$projectId/annotation/$sdocId",
                   params: { projectId, sdocId: row.original.id },
                 });

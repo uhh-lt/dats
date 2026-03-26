@@ -2,7 +2,12 @@ import { useAppDispatch } from "@store/storeHooks";
 import { useParams, useRouterState } from "@tanstack/react-router";
 import { Icon } from "@utils/icons/iconUtils";
 import { useEffect } from "react";
+import { TabRouteSearch, TabRouteState } from "../_types/TabData";
 import { TabActions } from "../tabSlice";
+
+function isRouteSearchCandidate(value: unknown): value is TabRouteSearch {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 export function TabSynchronizer() {
   const dispatch = useAppDispatch();
@@ -44,18 +49,25 @@ export function TabSynchronizer() {
     );
 
     // 4. Sync the tab data to your Redux store
+    const route: TabRouteState = {
+      to: location.pathname,
+      ...(isRouteSearchCandidate(location.search) ? { search: location.search } : {}),
+      ...(location.hash ? { hash: location.hash } : {}),
+      ...(matchedTabRoute.params ? { params: matchedTabRoute.params as Record<string, unknown> } : {}),
+    };
+
     dispatch(
       TabActions.addOrUpdateTab({
         projectId,
         tab: {
           id: location.pathname,
-          href: location.href,
+          route,
           label: label ?? "Project",
           icon: staticData.icon ?? Icon.PROJECT,
         },
       }),
     );
-  }, [dispatch, location.href, location.pathname, matches, params.projectId, status]);
+  }, [dispatch, location.hash, location.href, location.pathname, location.search, matches, params.projectId, status]);
 
   return null;
 }
