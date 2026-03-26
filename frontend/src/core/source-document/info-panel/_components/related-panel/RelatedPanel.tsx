@@ -36,17 +36,21 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
   // check if we are in annotation view
   const projectId = useAppSelector((state) => state.project.projectId);
   const tabNavigate = useTabNavigate();
+  const relatedIds = relatedSdocIds.data ?? [];
+  const currentIndex = relatedIds.findIndex((id) => id === sdocId);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < relatedIds.length - 1;
 
   // Navigation handler for prev, next, and open
   const handleNavigate = (direction: "prev" | "next" | "open") => {
-    if (!relatedSdocIds.data || !projectId) return;
-    const relatedIds = relatedSdocIds.data;
-    const currentIndex = relatedIds.findIndex((id) => id === sdocId);
+    if (!projectId) return;
     let targetId: number | undefined;
     if (direction === "prev") {
-      targetId = currentIndex > 0 ? relatedIds[currentIndex - 1] : relatedIds[relatedIds.length - 1];
+      if (!hasPrev) return;
+      targetId = relatedIds[currentIndex - 1];
     } else if (direction === "next") {
-      targetId = currentIndex < relatedIds.length - 1 ? relatedIds[currentIndex + 1] : relatedIds[0];
+      if (!hasNext) return;
+      targetId = relatedIds[currentIndex + 1];
     } else if (direction === "open") {
       targetId = sdocId;
     }
@@ -69,11 +73,11 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
         className="myFlexFitContentContainer"
         pb={1}
       >
-        <Button startIcon={<ArrowBackIcon />} onClick={() => handleNavigate("prev")}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => handleNavigate("prev")} disabled={!hasPrev}>
           Prev
         </Button>
         <Button onClick={() => handleNavigate("open")}>Open this document</Button>
-        <Button endIcon={<ArrowForwardIcon />} onClick={() => handleNavigate("next")}>
+        <Button endIcon={<ArrowForwardIcon />} onClick={() => handleNavigate("next")} disabled={!hasNext}>
           Next
         </Button>
       </Stack>

@@ -1,6 +1,5 @@
 import { FolderType } from "@api/models/FolderType";
 import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
-import { PaginatedSDocHits } from "@api/models/PaginatedSDocHits";
 import { SdocColumns } from "@api/models/SdocColumns";
 import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
@@ -34,7 +33,6 @@ import { useURLConnectorDebounced } from "@hooks/useURLConnectorDebounced";
 import { Box, Button, Divider, Stack, Typography } from "@mui/material";
 import { selectSelectedIds, selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { InfiniteData } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -78,22 +76,26 @@ const rowSelection = (fs: FolderSelection) => (row: MRT_Row<HierarchicalElasticS
 
 interface DocumentTableProps {
   projectId: number;
-  searchData: InfiniteData<PaginatedSDocHits, unknown> | undefined;
+  flatData: HierarchicalElasticSearchHit[];
+  totalFetchedSdocs: number;
+  totalFetchedFolders: number;
+  totalResults: number;
   isError: boolean;
   isFetching: boolean;
   isLoading: boolean;
   onFetchNextPage: () => void;
-  onSearchResultsChange?: (sdocIds: number[]) => void;
 }
 
 export function SearchDocumentTable({
   projectId,
-  searchData,
+  flatData,
+  totalFetchedSdocs,
+  totalFetchedFolders,
+  totalResults,
   isError,
   isFetching,
   isLoading,
   onFetchNextPage,
-  onSearchResultsChange,
 }: DocumentTableProps) {
   const { searchFilter } = DocumentSearchRouteAPI.useSearch();
   const [searchQuery, setSearchQuery] = useURLConnectorDebounced(DocumentSearchRouteAPI, "searchQuery");
@@ -237,60 +239,6 @@ export function SearchDocumentTable({
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo, user]);
-
-  // this is a custom version of the useTransformInfiniteData hook
-  const { flatData, totalFetchedSdocs, totalFetchedFolders } = useMemo(() => {
-    // the backend may send a folder multiple times (e.g. in page 1, and in page 2, if the folder has many documents)
-    // this is why we need to merge results here!
-    if (!searchData || searchData.pages.length === 0)
-      return { flatData: [], totalFetchedSdocs: 0, totalFetchedFolders: 0 };
-
-    // if we do not want to show folders, we simply show all sub_rows
-    if (!showFolders) {
-      const flatData = searchData.pages.flatMap((page) =>
-        page.hits.reduce((acc, hit) => {
-          acc.push(...hit.sub_rows);
-          return acc;
-        }, [] as HierarchicalElasticSearchHit[]),
-      );
-      return { flatData, totalFetchedSdocs: flatData.length, totalFetchedFolders: 0 };
-    }
-
-    // if showFolders is true, we need to merge the sub_rows
-    const hits: Record<number, HierarchicalElasticSearchHit> = {};
-    const sortedHitIds: number[] = [];
-    searchData.pages.forEach((page) => {
-      page.hits.forEach((hit) => {
-        // do the merging here!
-        if (hits[hit.id]) {
-          hits[hit.id].sub_rows.push(...hit.sub_rows);
-        } else {
-          hits[hit.id] = JSON.parse(JSON.stringify(hit)); // deep clone to avoid mutating the original hit
-        }
-
-        // keep track of the order
-        if (!sortedHitIds.includes(hit.id)) {
-          sortedHitIds.push(hit.id);
-        }
-      });
-    });
-    const flatData = sortedHitIds.map((id) => hits[id]);
-    return {
-      flatData,
-      totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
-      totalFetchedFolders: flatData.length,
-    };
-  }, [showFolders, searchData]);
-  const totalResults = searchData?.pages?.[0]?.total_results ?? 0;
-
-  useEffect(() => {
-    // if show folders, the documents are nested (inside folders)
-    if (showFolders) {
-      onSearchResultsChange?.(flatData.flatMap((folder) => folder.sub_rows.map((sdoc) => sdoc.id)));
-    } else {
-      onSearchResultsChange?.(flatData.map((sdoc) => sdoc.id));
-    }
-  }, [onSearchResultsChange, flatData, showFolders]);
 
   // table
   const table = useMaterialReactTable<HierarchicalElasticSearchHit>({

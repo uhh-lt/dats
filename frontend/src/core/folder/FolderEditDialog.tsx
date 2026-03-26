@@ -11,7 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useDialog } from "@store/global/dialogBusSlice";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { FolderRenderer } from "./FolderRenderer";
 
@@ -20,7 +20,12 @@ export function FolderEditDialog() {
 
   // folders for selection as parent
   const folders = FolderHooks.useGetAllFolders();
-  const folderTree = useWithLevel(folders.data || []);
+  const parentFolders = useMemo(() => {
+    if (!folders.data || !dialogData?.folder) return [];
+
+    return folders.data.filter((folder) => folder.id !== dialogData.folder.id);
+  }, [dialogData, folders.data]);
+  const folderTree = useWithLevel(parentFolders);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

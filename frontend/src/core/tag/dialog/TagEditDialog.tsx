@@ -11,7 +11,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";
 import { useDialog } from "@store/global/dialogBusSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { TagRenderer } from "../TagRenderer";
 
@@ -20,7 +20,12 @@ export function TagEditDialog() {
 
   // tags for selection as parent
   const tags = TagHooks.useGetAllTags();
-  const tagTree = useWithLevel(tags.data || []);
+  const parentTags = useMemo(() => {
+    if (!tags.data || !dialogData?.tag) return [];
+
+    return tags.data.filter((tag) => tag.id !== dialogData.tag.id);
+  }, [dialogData, tags.data]);
+  const tagTree = useWithLevel(parentTags);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();

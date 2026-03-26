@@ -47,13 +47,6 @@ export function DocumentSearchView() {
   const column2Info = useAppSelector((state) => state.search.column2Info);
   const dispatch = useAppDispatch();
 
-  // document search feature
-  const [sdocIds, setSdocIds] = useState<number[]>([]);
-  const handleSearchResultsChange = useCallback((sdocIds: number[]) => {
-    console.log("Search results changed", sdocIds);
-    setSdocIds(sdocIds);
-  }, []);
-
   const documentSearchQuery = useSuspenseInfiniteQuery(
     documentSearchQueryOptions({
       projectId,
@@ -65,6 +58,61 @@ export function DocumentSearchView() {
       fetchSize,
     }),
   );
+
+  const { flatData, totalFetchedSdocs, totalFetchedFolders, totalResults, sdocIds } = useMemo(() => {
+    const searchData = documentSearchQuery.data;
+    const totalResults = searchData?.pages?.[0]?.total_results ?? 0;
+    if (!searchData || searchData.pages.length === 0) {
+      return {
+        flatData: [] as HierarchicalElasticSearchHit[],
+        totalFetchedSdocs: 0,
+        totalFetchedFolders: 0,
+        totalResults,
+        sdocIds: [] as number[],
+      };
+    }
+
+    // Keep parity with SearchDocumentTable's flatData transformation logic.
+    if (!showFolders) {
+      const flatData = searchData.pages.flatMap((page) =>
+        page.hits.reduce((acc, hit) => {
+          acc.push(...hit.sub_rows);
+          return acc;
+        }, [] as HierarchicalElasticSearchHit[]),
+      );
+      return {
+        flatData,
+        totalFetchedSdocs: flatData.length,
+        totalFetchedFolders: 0,
+        totalResults,
+        sdocIds: flatData.map((sdoc) => sdoc.id),
+      };
+    }
+
+    const hits: Record<number, HierarchicalElasticSearchHit> = {};
+    const sortedHitIds: number[] = [];
+    searchData.pages.forEach((page) => {
+      page.hits.forEach((hit) => {
+        if (hits[hit.id]) {
+          hits[hit.id].sub_rows.push(...hit.sub_rows);
+        } else {
+          hits[hit.id] = JSON.parse(JSON.stringify(hit));
+        }
+        if (!sortedHitIds.includes(hit.id)) {
+          sortedHitIds.push(hit.id);
+        }
+      });
+    });
+
+    const flatData = sortedHitIds.map((id) => hits[id]);
+    return {
+      flatData,
+      totalFetchedSdocs: flatData.reduce((acc, hit) => acc + hit.sub_rows.length, 0),
+      totalFetchedFolders: flatData.length,
+      totalResults,
+      sdocIds: flatData.flatMap((folder) => folder.sub_rows.map((sdoc) => sdoc.id)),
+    };
+  }, [documentSearchQuery.data, showFolders]);
 
   // resetting search-parameter-dependant state
   useEffect(() => {
@@ -234,14 +282,16 @@ export function DocumentSearchView() {
         content={
           <SearchDocumentTable
             projectId={projectId}
-            searchData={documentSearchQuery.data}
+            flatData={flatData}
+            totalFetchedSdocs={totalFetchedSdocs}
+            totalFetchedFolders={totalFetchedFolders}
+            totalResults={totalResults}
             isError={documentSearchQuery.isError}
             isFetching={documentSearchQuery.isFetching}
             isLoading={documentSearchQuery.isLoading}
             onFetchNextPage={() => {
               void documentSearchQuery.fetchNextPage();
             }}
-            onSearchResultsChange={handleSearchResultsChange}
           />
         }
         rightSidebar={

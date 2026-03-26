@@ -33,12 +33,12 @@ export function TagMenu(props: TagMenuProps) {
   // global server state (react-query)
   const allTags = TagHooks.useGetAllTags();
   const tagCounts = TagHooks.useGetTagDocumentCounts(props.projectId, props.sdocIds);
-  const initialChecked: Map<number, CheckboxState> | undefined = useMemo(() => {
+  const initialChecked: Record<number, CheckboxState> | undefined = useMemo(() => {
     if (!tagCounts.data) return undefined;
 
     // Depending on the count, set the CheckboxState
     const maxTags = props.sdocIds.length;
-    return new Map(
+    return Object.fromEntries(
       Array.from(tagCounts.data).map(([docTagId, docTagCount]) => [
         docTagId,
         docTagCount === 0
@@ -53,10 +53,10 @@ export function TagMenu(props: TagMenuProps) {
   if (!allTags.data || !initialChecked) {
     return null;
   }
-  // Generate a unique key based on the selected sdocs
-  // When sdocIds change, React destroys the old component and mounts a fresh one
-  const componentKey = props.sdocIds.join("-");
-  return <TagMenuContent key={componentKey} tags={allTags.data} initialChecked={initialChecked} {...props} />;
+
+  // When the popover is opened again, react destroys the old content component and mounts a fresh one.
+  const popoverStateKey = props.anchorEl ? "open" : "closed";
+  return <TagMenuContent key={popoverStateKey} tags={allTags.data} initialChecked={initialChecked} {...props} />;
 }
 
 function TagMenuContent({
@@ -66,7 +66,7 @@ function TagMenuContent({
   popoverOrigin,
   tags,
   initialChecked,
-}: { tags: TagRead[]; initialChecked: Map<number, CheckboxState> } & TagMenuProps) {
+}: { tags: TagRead[]; initialChecked: Record<number, CheckboxState> } & TagMenuProps) {
   // menu state
   const open = Boolean(anchorEl);
   const handleClose = useCallback(() => {
@@ -74,18 +74,14 @@ function TagMenuContent({
   }, [setAnchorEl]);
 
   // checkbox state
-  const [checked, setChecked] = useState<Map<number, CheckboxState>>(() => new Map(initialChecked));
+  const [checked, setChecked] = useState<Record<number, CheckboxState>>(() => ({ ...initialChecked }));
   const hasChanged = useMemo(() => !isEqual(initialChecked, checked), [initialChecked, checked]);
+
   const handleCheck = (tagId: number) => () => {
-    setChecked(
-      (checked) =>
-        new Map(
-          checked.set(
-            tagId,
-            checked.get(tagId) === CheckboxState.CHECKED ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED,
-          ),
-        ),
-    );
+    setChecked((prevChecked) => ({
+      ...prevChecked,
+      [tagId]: prevChecked[tagId] === CheckboxState.CHECKED ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED,
+    }));
   };
 
   // filter feature
@@ -101,7 +97,13 @@ function TagMenuContent({
   const { mutate: addTagsMutation } = TagHooks.useBulkLinkTags();
   const { mutate: removeTagsMutation } = TagHooks.useBulkUnlinkTags();
   const handleClickTag = (tagId: number) => () => {
-    if (initialChecked.get(tagId) === CheckboxState.CHECKED) {
+    const isChecked = checked[tagId] === CheckboxState.CHECKED;
+    setChecked((prevChecked) => ({
+      ...prevChecked,
+      [tagId]: isChecked ? CheckboxState.NOT_CHECKED : CheckboxState.CHECKED,
+    }));
+
+    if (isChecked) {
       removeTagsMutation({
         requestBody: {
           source_document_ids: sdocIds,
@@ -121,15 +123,16 @@ function TagMenuContent({
 
   const { mutate: updateTagsMutation, isPending: isUpdatePending } = TagHooks.useBulkUpdateTags();
   const handleApplyTags = useCallback(() => {
+    const checkedEntries = Object.entries(checked);
     updateTagsMutation({
       requestBody: {
         sdoc_ids: sdocIds,
-        link_tag_ids: Array.from(checked)
+        link_tag_ids: checkedEntries
           .filter(([, state]) => state === CheckboxState.CHECKED)
-          .map(([tagId]) => tagId),
-        unlink_tag_ids: Array.from(checked)
+          .map(([tagId]) => Number(tagId)),
+        unlink_tag_ids: checkedEntries
           .filter(([, state]) => state === CheckboxState.NOT_CHECKED)
-          .map(([tagId]) => tagId),
+          .map(([tagId]) => Number(tagId)),
       },
     });
     handleClose();
@@ -201,8 +204,8 @@ function TagMenuContent({
                   <Checkbox
                     edge="end"
                     onChange={handleCheck(tag.id)}
-                    checked={checked.get(tag.id) === CheckboxState.CHECKED}
-                    indeterminate={checked.get(tag.id) === CheckboxState.INDETERMINATE}
+                    checked={checked[tag.id] === CheckboxState.CHECKED}
+                    indeterminate={checked[tag.id] === CheckboxState.INDETERMINATE}
                     tabIndex={-1}
                     disableRipple
                     slotProps={{

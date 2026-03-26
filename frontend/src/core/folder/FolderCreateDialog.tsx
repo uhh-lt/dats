@@ -38,9 +38,9 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
 
   // reset form when dialog opens
   useEffect(() => {
-    if (isFolderCreateDialogOpen && data?.folderName) {
+    if (isFolderCreateDialogOpen) {
       reset({
-        name: data.folderName || "",
+        name: data?.folderName || "",
         folder_type: FolderType.NORMAL,
         parent_id: -1,
         project_id: projectId,
