@@ -20,6 +20,5 @@ export const Route = createFileRoute("/_public/login")({
       queryClient: context.queryClient,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load instance information: {(error as Error).message}</div>,
   component: LoginView,
 });

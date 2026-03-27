@@ -19,6 +19,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/concept
       cotaId: params.cotaId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load COTA: {(error as Error).message}</div>,
   component: CotaView,
 });

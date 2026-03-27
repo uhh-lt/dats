@@ -44,6 +44,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/imagesearch")({
       threshold: deps.threshold,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load image search: {(error as Error).message}</div>,
   component: ImageSimilaritySearchView,
 });

@@ -53,6 +53,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/word-fr
       fetchSize: deps.fetchSize,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load word frequency analysis: {(error as Error).message}</div>,
   component: WordFrequencyView,
 });

@@ -20,6 +20,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/analysis/timelin
       analysisId: params.analysisId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load timeline analysis: {(error as Error).message}</div>,
   component: TimelineAnalysisView,
 });

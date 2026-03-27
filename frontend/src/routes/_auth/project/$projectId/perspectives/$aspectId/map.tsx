@@ -17,6 +17,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/perspectives/$as
       aspectId: params.aspectId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load perspective map: {(error as Error).message}</div>,
   component: PerspectivesMapView,
 });

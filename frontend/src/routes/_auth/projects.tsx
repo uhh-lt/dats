@@ -8,6 +8,5 @@ export const Route = createFileRoute("/_auth/projects")({
       queryClient: context.queryClient,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load projects: {(error as Error).message}</div>,
   component: ProjectsView,
 });

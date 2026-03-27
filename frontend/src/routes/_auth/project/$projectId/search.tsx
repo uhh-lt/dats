@@ -56,6 +56,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
       fetchSize: deps.fetchSize,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load document search: {(error as Error).message}</div>,
   component: DocumentSearchView,
 });

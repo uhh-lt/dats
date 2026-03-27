@@ -1,11 +1,20 @@
-import { SideBar, TabBar, TabSynchronizer } from "@core/navigation";
-import { Box, LinearProgress } from "@mui/material";
+import { LinkButton } from "@components/links";
+import { Box, Button, Container, LinearProgress, Typography } from "@mui/material";
 // eslint-disable-next-line boundaries/element-types
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-// eslint-disable-next-line boundaries/element-types
+
+import { RouteErrorPanel } from "@components/error";
+import { SideBar, TabBar, TabSynchronizer } from "@core/navigation";
 import { useDebounce } from "@hooks/useDebounce";
 import { ProjectActions } from "@store/global/projectSlice";
-import { createFileRoute, Outlet, redirect, useParams, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  type ErrorComponentProps,
+  Outlet,
+  redirect,
+  useParams,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_auth")({
@@ -21,25 +30,19 @@ export const Route = createFileRoute("/_auth")({
     }
   },
   component: AuthRouteLayout,
+  errorComponent: AuthRouteErrorBoundary,
+  notFoundComponent: AuthRouteNotFound,
 });
 
-function AuthRouteLayout() {
-  const { projectId } = useParams({ strict: false });
-  const isRouteTransitioning = useRouterState({ select: (state) => state.status === "pending" });
-  const isRouteTransitioningDebounced = useDebounce(isRouteTransitioning, 300);
-
-  // project id updater: sets current project id in the global state
-  // global client state
-  const currentProjectId = useAppSelector((state) => state.project.projectId);
-  const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    if (currentProjectId !== projectId) {
-      dispatch(ProjectActions.changeProject(projectId));
-    }
-  }, [currentProjectId, dispatch, projectId]);
-
-  // sidebar state
+export function AuthRouteFrame({
+  children,
+  projectId,
+  showRouteProgress = false,
+}: {
+  children: React.ReactNode;
+  projectId?: number;
+  showRouteProgress?: boolean;
+}) {
   const [isExpanded, setSidebarExpanded] = useState(false);
   const handleToggleSidebar = useCallback(() => {
     setSidebarExpanded((prev) => !prev);
@@ -56,7 +59,7 @@ function AuthRouteLayout() {
         boxSizing: "border-box",
       }}
     >
-      {isRouteTransitioningDebounced && (
+      {showRouteProgress && (
         <Box
           sx={{
             position: "absolute",
@@ -92,10 +95,98 @@ function AuthRouteLayout() {
               overflow: "auto",
             }}
           >
-            <Outlet />
+            {children}
           </Box>
         </Box>
       </Box>
     </Box>
+  );
+}
+
+function AuthRouteLayout() {
+  const { projectId } = useParams({ strict: false });
+  const isRouteTransitioning = useRouterState({ select: (state) => state.status === "pending" });
+  const isRouteTransitioningDebounced = useDebounce(isRouteTransitioning, 300);
+
+  // project id updater: sets current project id in the global state
+  // global client state
+  const currentProjectId = useAppSelector((state) => state.project.projectId);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (currentProjectId !== projectId) {
+      dispatch(ProjectActions.changeProject(projectId));
+    }
+  }, [currentProjectId, dispatch, projectId]);
+
+  return (
+    <AuthRouteFrame projectId={projectId} showRouteProgress={isRouteTransitioningDebounced}>
+      <Outlet />
+    </AuthRouteFrame>
+  );
+}
+
+function AuthRouteErrorBoundary({ error, reset }: ErrorComponentProps) {
+  const { projectId } = useParams({ strict: false });
+
+  return (
+    <AuthRouteFrame projectId={projectId}>
+      <Box sx={{ minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center" }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+          <RouteErrorPanel
+            title="The requested workspace view failed to load"
+            description="Navigation is still available. You can retry this route or continue with another project page."
+            error={error}
+            actions={
+              <>
+                <Button variant="contained" color="secondary" onClick={reset}>
+                  Retry route
+                </Button>
+                <LinkButton to="/projects" variant="outlined" color="secondary">
+                  Open projects
+                </LinkButton>
+              </>
+            }
+          />
+        </Container>
+      </Box>
+    </AuthRouteFrame>
+  );
+}
+
+function AuthRouteNotFound() {
+  const { projectId } = useParams({ strict: false });
+
+  return (
+    <AuthRouteFrame projectId={projectId}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+        <Box
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 3,
+            p: { xs: 3, md: 4 },
+            bgcolor: "background.paper",
+          }}
+        >
+          <Typography variant="h4" gutterBottom>
+            Page not found in this workspace
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            The requested route does not exist for the current project.
+          </Typography>
+          <Box display="flex" gap={1.5} flexWrap="wrap">
+            <LinkButton to="/projects" variant="contained" color="secondary">
+              Return to projects
+            </LinkButton>
+            {projectId && (
+              <LinkButton to="/project/$projectId/search" params={{ projectId }} variant="outlined" color="secondary">
+                Open project search
+              </LinkButton>
+            )}
+          </Box>
+        </Box>
+      </Container>
+    </AuthRouteFrame>
   );
 }

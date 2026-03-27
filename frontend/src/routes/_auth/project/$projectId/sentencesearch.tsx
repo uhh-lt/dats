@@ -44,6 +44,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")
       threshold: deps.threshold,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load sentence search: {(error as Error).message}</div>,
   component: SentenceSimilaritySearchView,
 });

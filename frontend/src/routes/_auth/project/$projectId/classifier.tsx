@@ -15,6 +15,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
       projectId: params.projectId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load classifier data: {(error as Error).message}</div>,
   component: ClassifierView,
 });

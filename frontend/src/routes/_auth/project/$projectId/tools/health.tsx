@@ -40,6 +40,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/health")({
       fetchSize: deps.fetchSize,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load health view: {(error as Error).message}</div>,
   component: HealthView,
 });

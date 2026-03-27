@@ -20,6 +20,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/whiteboard/$whit
       whiteboardId: params.whiteboardId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load whiteboard: {(error as Error).message}</div>,
   component: WhiteboardView,
 });

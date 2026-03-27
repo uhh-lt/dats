@@ -15,6 +15,5 @@ export const Route = createFileRoute("/_auth/project/$projectId/tools/ml-automat
       projectId: params.projectId,
     }),
   pendingComponent: () => <CircularProgress />,
-  errorComponent: ({ error }) => <div>Failed to load ML automations: {(error as Error).message}</div>,
   component: MlAutomationView,
 });
