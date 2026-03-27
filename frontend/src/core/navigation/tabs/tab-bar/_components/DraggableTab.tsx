@@ -46,7 +46,13 @@ export const DraggableTab = memo(({ tab, index, isActive, onTabClick, onCloseCli
         label={
           <TabContent>
             <TabTitle tab={tab} />
-            <CloseButton size="small" onPointerDown={(event) => event.stopPropagation()} onClick={handleCloseClick}>
+            <CloseButton
+              as="span"
+              size="small"
+              tabIndex={-1}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={handleCloseClick}
+            >
               <CloseIcon fontSize="small" sx={{ fontSize: 16 }} />
             </CloseButton>
           </TabContent>

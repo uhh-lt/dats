@@ -1,5 +1,5 @@
 import { TagRead } from "@api/models/TagRead";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { ChartDataPoint } from "../_types/ChartDataPoint";
 
@@ -92,7 +92,10 @@ const computeValueRepresentation = (state: DocumentSamplerState) => {
   });
 };
 
-export const selectIsValuesOutdated = (state: RootState) =>
-  state.documentSampler.oldValues !== computeValueRepresentation(state.documentSampler);
+const selectDocumentSamplerState = (state: RootState) => state.documentSampler;
+
+export const selectIsValuesOutdated = createSelector([selectDocumentSamplerState], (documentSamplerState) => {
+  return documentSamplerState.oldValues !== computeValueRepresentation(documentSamplerState);
+});
 
 export const documentSamplerReducer = { [documentSamplerSlice.name]: documentSamplerSlice.reducer };

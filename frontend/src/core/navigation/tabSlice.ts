@@ -1,4 +1,4 @@
-import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { Draft, PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { ProjectTabState, TabData } from "./_types/TabData";
 import { normalizeTabRoute } from "./tabs/utils/TabRouteTargetUtils";
@@ -28,6 +28,11 @@ const moveItem = <T>(arr: T[], from: number, to: number): T[] => {
 
 const initialState: TabState = {
   tabsByProject: {},
+};
+
+const EMPTY_PROJECT_TAB_STATE: ProjectTabState = {
+  tabsById: {},
+  tabOrder: [],
 };
 
 const normalizeTabData = (tabInput: TabData): TabData => {
@@ -102,20 +107,16 @@ const tabSlice = createSlice({
   },
 });
 
-const getDefaultProjectTabState = (): ProjectTabState => createProjectTabState();
-
 export const selectProjectTabState =
   (projectId: number) =>
   (state: RootState): ProjectTabState => {
-    return state.tabs.tabsByProject[projectId] ?? getDefaultProjectTabState();
+    return state.tabs.tabsByProject[projectId] ?? EMPTY_PROJECT_TAB_STATE;
   };
 
-export const selectProjectTabs =
-  (projectId: number) =>
-  (state: RootState): TabData[] => {
-    const projectState = selectProjectTabState(projectId)(state);
-    return projectState.tabOrder.map((id) => projectState.tabsById[id]).filter(Boolean);
-  };
+export const selectProjectTabs = (projectId: number) =>
+  createSelector([selectProjectTabState(projectId)], (projectState): TabData[] => {
+    return projectState.tabOrder.map((id) => projectState.tabsById[id]).filter((tab): tab is TabData => Boolean(tab));
+  });
 
 export const TabActions = tabSlice.actions;
 export const tabReducer = { [tabSlice.name]: tabSlice.reducer };
