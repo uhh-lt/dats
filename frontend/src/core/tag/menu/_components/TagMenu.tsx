@@ -55,8 +55,8 @@ export function TagMenu(props: TagMenuProps) {
   }
 
   // When the popover is opened again, react destroys the old content component and mounts a fresh one.
-  const popoverStateKey = props.anchorEl ? "open" : "closed";
-  return <TagMenuContent key={popoverStateKey} tags={allTags.data} initialChecked={initialChecked} {...props} />;
+  const componentKey = props.anchorEl ? "open" : "closed";
+  return <TagMenuContent key={componentKey} tags={allTags.data} initialChecked={initialChecked} {...props} />;
 }
 
 function TagMenuContent({

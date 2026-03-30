@@ -79,9 +79,8 @@ export function FolderActionMenu(props: FolderMenuProps) {
   if (!allFoldersWithRoot || !initialChecked) {
     return null;
   }
-  // Generate a unique key based on the selected folders
-  // When folderIds change, React destroys the old component and mounts a fresh one
-  const componentKey = props.folderIds.join("-");
+  // When the popover is opened again, react destroys the old content component and mounts a fresh one.
+  const componentKey = props.anchorEl ? "open" : "closed";
   return (
     <FolderMenuContent key={componentKey} folders={allFoldersWithRoot} initialChecked={initialChecked} {...props} />
   );

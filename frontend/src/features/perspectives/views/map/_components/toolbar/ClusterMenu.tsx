@@ -1,4 +1,3 @@
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
@@ -21,6 +20,7 @@ import { CheckboxState } from "@utils/CheckboxState";
 import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 
 interface ClusterMenuProps {
@@ -79,9 +79,9 @@ export function ClusterMenu(props: ClusterMenuProps) {
   if (!vis.data || !initialChecked || vis.data.clusters.length === 0) {
     return null;
   }
-  // Generate a unique key based on the selected sdocs
-  // When sdocIds change, React destroys the old component and mounts a fresh one
-  const componentKey = props.sdocIds.join("-");
+
+  // When the popover is opened again, react destroys the old content component and mounts a fresh one.
+  const componentKey = props.anchorEl ? "open" : "closed";
   return (
     <ClusterMenuContent key={componentKey} clusters={vis.data.clusters} initialChecked={initialChecked} {...props} />
   );
