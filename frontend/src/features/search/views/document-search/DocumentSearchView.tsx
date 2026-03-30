@@ -11,12 +11,13 @@ import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder"
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Stack } from "@mui/material";
 import { selectSelectedRows } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
@@ -25,7 +26,7 @@ import {
   addSpanAnnotationFilter,
   addTagFilter,
 } from "../../_utils/searchFilterUtils";
-import { FolderSelection, SearchActions } from "../../store/documentSearchSlice";
+import { SearchActions } from "../../store/documentSearchSlice";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
 import { SearchDocumentTable } from "./_components/SearchDocumentTable";
 import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
@@ -115,10 +116,10 @@ export function DocumentSearchView() {
   }, [documentSearchQuery.data, showFolders]);
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
-    dispatch(SearchActions.onSearchParamsChange());
-    dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
-  }, [projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel, dispatch]);
+  useResetTableStateOnSearch(
+    [projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel],
+    SearchActions,
+  );
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));

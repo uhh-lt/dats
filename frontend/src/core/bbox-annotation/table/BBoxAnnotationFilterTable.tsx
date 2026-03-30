@@ -27,12 +27,13 @@ import {
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocTagsRenderer } from "@core/source-document";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
 
@@ -176,11 +177,12 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   });
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
+  const resetState = useCallback(() => {
     onRowSelectionChange?.({});
     onFetchSizeChange?.(20);
     onSearchParameterChange?.();
-  }, [filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  useResetStateOnSearch([filter, sortingModel], resetState);
 
   return (
     <FilterTable

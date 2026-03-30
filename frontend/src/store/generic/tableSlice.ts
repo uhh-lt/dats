@@ -1,4 +1,4 @@
-import { Draft, PayloadAction, createSelector } from "@reduxjs/toolkit";
+import { CaseReducerActions, Draft, PayloadAction, createSelector } from "@reduxjs/toolkit";
 import {
   MRT_ColumnSizingState,
   MRT_DensityState,
@@ -95,3 +95,6 @@ export const selectSelectedIds = createSelector([selectRowSelectionModel], (rowS
     .map((key) => parseInt(key))
     .filter((id) => !isNaN(id));
 });
+
+export type TableReducer = typeof tableReducer;
+export type TableActions = CaseReducerActions<TableReducer, string>;

@@ -16,13 +16,14 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
 } from "@core/filter";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { MemoRenderer } from "../renderer";
 import { MemoReduxToolbarLeft } from "./_components/MemoReduxToolbarLeft";
 import { MemoTableOptionsMenu } from "./_components/MemoTableOptionsMenu";
@@ -140,19 +141,12 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   });
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
+  const resetState = useCallback(() => {
     onRowSelectionChange?.({});
     onFetchSizeChange?.(20);
     onSearchParameterChange?.();
-  }, [
-    searchQuery,
-    filter,
-    sortingModel,
-    isSearchContent,
-    onRowSelectionChange,
-    onFetchSizeChange,
-    onSearchParameterChange,
-  ]);
+  }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  useResetStateOnSearch([searchQuery, filter, sortingModel, isSearchContent], resetState);
 
   const renderMemoTopRightToolbar = (props: TToolbarProps) => (
     <Stack direction="row" spacing={1} alignItems="center">

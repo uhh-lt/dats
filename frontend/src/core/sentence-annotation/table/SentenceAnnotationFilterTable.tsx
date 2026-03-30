@@ -22,18 +22,19 @@ import {
   URLFilterDialogProps,
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
-  createEmptyFilter
+  createEmptyFilter,
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions, defaultSEATFilterExpression } from "./seatFilterSlice";
@@ -174,11 +175,12 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   });
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
+  const resetState = useCallback(() => {
     onRowSelectionChange?.({});
     onFetchSizeChange?.(20);
     onSearchParameterChange?.();
-  }, [filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  useResetStateOnSearch([filter, sortingModel], resetState);
 
   return (
     <FilterTable

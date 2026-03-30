@@ -65,6 +65,11 @@ const searchSlice = createSlice({
         }
       }, {});
     },
+    // overwrite onSearchParamsChange to add folder reset
+    onSearchParamsChange: (state) => {
+      tableReducer.onSearchParamsChange(state);
+      state.folderSelectionType = FolderSelection.UNKNOWN;
+    },
     // document selection
     onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
       // toggle

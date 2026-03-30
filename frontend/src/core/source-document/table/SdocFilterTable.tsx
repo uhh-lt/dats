@@ -20,6 +20,7 @@ import {
   createEmptyFilter,
 } from "@core/filter";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
@@ -27,7 +28,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
@@ -146,11 +147,12 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   });
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
+  const resetState = useCallback(() => {
     onRowSelectionChange?.({});
     onFetchSizeChange?.(20);
     onSearchParameterChange?.();
-  }, [searchQuery, filter, sortingModel, onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  }, [onRowSelectionChange, onFetchSizeChange, onSearchParameterChange]);
+  useResetStateOnSearch([filter, sortingModel], resetState);
 
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;

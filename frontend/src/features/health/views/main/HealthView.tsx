@@ -1,11 +1,11 @@
 import { DocType } from "@api/models/DocType";
 import { ContentLayout } from "@components/content-layouts";
+import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
-import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { SyntheticEvent, useCallback, useEffect } from "react";
+import { SyntheticEvent, useCallback } from "react";
 import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
 import { HealthActions } from "../../store/healthSlice";
 import { SdocStatusTable } from "./_components/SdocStatusTable";
@@ -26,10 +26,7 @@ export function HealthView() {
   );
 
   // resetting search-parameter-dependant state
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(HealthActions.onSearchParamsChange());
-  }, [projectId, tab, sortingModel, dispatch]);
+  useResetTableStateOnSearch([projectId, tab, sortingModel], HealthActions);
 
   const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const handleTabChange = useCallback(

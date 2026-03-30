@@ -6,11 +6,12 @@ import { PercentageResizablePanel, useLayoutPercentage } from "@components/resiz
 import { FILTER_PARAM } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
+import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { SearchStatistics } from "../../_components/statistics/SearchStatistics";
 import {
@@ -49,9 +50,7 @@ export function SentenceSimilaritySearchView() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // resetting search-parameter-dependant state
-  useEffect(() => {
-    dispatch(SentenceSearchActions.onSearchParamsChange());
-  }, [projectId, searchQuery, filter, topK, threshold, dispatch]);
+  useResetTableStateOnSearch([projectId, searchQuery, filter, topK, threshold], SentenceSearchActions);
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
