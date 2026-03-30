@@ -121,6 +121,16 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       return;
     }
 
+    // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
+    if (user?.id !== visibleUserId) {
+      openSnackbar({
+        severity: "warning",
+        text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+      });
+      selection.empty();
+      return;
+    }
+
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement;
     let selectionEndElement = selection?.focusNode?.parentElement;
