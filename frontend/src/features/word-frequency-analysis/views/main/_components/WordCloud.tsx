@@ -515,11 +515,11 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
 
           <TextField
             select
-            label="Max Rotation Angle"
+            label="Rotation Angle"
             size="small"
             value={rotationLimit}
             onChange={(event) => setRotationLimit(Number(event.target.value) as RotationOption)}
-            helperText="Upper angle bound used for rotation (from 0° up to this value)"
+            helperText="Angle used for rotation"
             fullWidth
           >
             {ROTATION_OPTIONS.map((angle) => (
@@ -535,7 +535,7 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
             size="small"
             value={rotations}
             onChange={(event) => setRotations(Number(event.target.value) as RotationsType)}
-            helperText="Splits the 0° to max-angle range into evenly distributed word angles"
+            helperText="Evenly splits the [-angle, angle] range. For example, with angle=60 and rotations=3, words will be rotated at -60°, 0° and 60°."
             fullWidth
           >
             {ROTATIONS_OPTIONS.map((rotationCount) => (
