@@ -33,7 +33,7 @@ import { DocumentSearchRouteAPI } from "./_hooks/documentSearchRouteAPI";
 export function DocumentSearchView() {
   // router
   const projectId = DocumentSearchRouteAPI.useParams({ select: (params) => params.projectId });
-  const { searchQuery, filterExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
+  const { searchQuery, searchExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
   const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
 
@@ -53,7 +53,7 @@ export function DocumentSearchView() {
       selectedFolderId,
       searchQuery,
       filter: filter,
-      expertMode: filterExpertMode,
+      expertMode: searchExpertMode,
       sortingModel,
       fetchSize,
     }),
@@ -118,7 +118,7 @@ export function DocumentSearchView() {
   useEffect(() => {
     dispatch(SearchActions.onSearchParamsChange());
     dispatch(SearchActions.onFolderSelectionChange(FolderSelection.UNKNOWN));
-  }, [projectId, selectedFolderId, searchQuery, filter, filterExpertMode, sortingModel, dispatch]);
+  }, [projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel, dispatch]);
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));

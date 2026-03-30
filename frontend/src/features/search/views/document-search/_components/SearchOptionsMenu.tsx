@@ -1,4 +1,3 @@
-import { FILTER_EXPERT_MODE_PARAM } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
 import HelpIcon from "@mui/icons-material/Help";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
@@ -12,7 +11,7 @@ export function SearchOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (url)
-  const [expertMode, setExpertMode] = useURLConnector(DocumentSearchRouteAPI, FILTER_EXPERT_MODE_PARAM);
+  const [expertMode, setExpertMode] = useURLConnector(DocumentSearchRouteAPI, "searchExpertMode");
 
   return (
     <>
