@@ -8,9 +8,10 @@ import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog } from "@core/notification";
-import { useAppSelector } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { Annotation } from "../_types/Annotation";
+import { AnnoActions } from "../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { SVGBBox } from "./SVGBBox";
 import { SVGBBoxText } from "./SVGBBoxText";
@@ -18,6 +19,10 @@ import { SVGBBoxText } from "./SVGBBoxText";
 interface ImageAnnotatorProps {
   sdocData: SourceDocumentDataRead;
 }
+
+const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationRead => {
+  return "x_min" in annotation;
+};
 
 export function ImageAnnotator(props: ImageAnnotatorProps) {
   const heightMetadata = MetadataHooks.useGetSdocMetadataByKey(props.sdocData.id, "height");
@@ -47,6 +52,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // global client state (redux)
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+  const dispatch = useAppDispatch();
 
   // global server state (react query)
   const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
@@ -254,6 +260,27 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     setSelectedBbox(null); // reset selected bounding box
   };
 
+  const onCodeSelectorDuplicateCode = (annotationToDuplicate: Annotation, codeId: number) => {
+    if (!isBboxAnnotation(annotationToDuplicate)) {
+      return;
+    }
+    createMutation.mutate(
+      {
+        code_id: codeId,
+        sdoc_id: annotationToDuplicate.sdoc_id,
+        x_min: annotationToDuplicate.x_min,
+        x_max: annotationToDuplicate.x_max,
+        y_min: annotationToDuplicate.y_min,
+        y_max: annotationToDuplicate.y_max,
+      },
+      {
+        onSuccess: () => {
+          dispatch(AnnoActions.moveCodeToTop(codeId));
+        },
+      },
+    );
+  };
+
   return (
     <>
       <Toolbar variant="dense" disableGutters>
@@ -282,6 +309,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
         onEdit={onCodeSelectorEditCode}
         onDelete={onCodeSelectorDeleteCode}
         onClose={onCodeSelectorClose}
+        onDuplicate={onCodeSelectorDuplicateCode}
       />
       <svg
         ref={svgRef}

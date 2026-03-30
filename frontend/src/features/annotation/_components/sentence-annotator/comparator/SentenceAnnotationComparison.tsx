@@ -21,6 +21,10 @@ interface SentenceAnnotationComparisonProps {
   virtualizerScrollElement: HTMLDivElement;
 }
 
+const isSentenceAnnotation = (annotation: Annotation): annotation is SentenceAnnotationRead => {
+  return "sentence_id_start" in annotation;
+};
+
 export const SentenceAnnotationComparison = memo(
   ({ sdocData, virtualizerScrollElement, ...props }: SentenceAnnotationComparisonProps & BoxProps) => {
     // auth state
@@ -81,6 +85,26 @@ export const SentenceAnnotationComparison = memo(
               // if we use an existing code to annotate, we move it to the top
               dispatch(AnnoActions.moveCodeToTop(codeId));
             }
+          },
+        },
+      );
+    };
+    const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, codeId: number) => {
+      if (!isSentenceAnnotation(annotation)) {
+        return;
+      }
+      createMutation.mutate(
+        {
+          requestBody: {
+            code_id: codeId,
+            sdoc_id: annotation.sdoc_id,
+            sentence_id_start: annotation.sentence_id_start,
+            sentence_id_end: annotation.sentence_id_end,
+          },
+        },
+        {
+          onSuccess: () => {
+            dispatch(AnnoActions.moveCodeToTop(codeId));
           },
         },
       );
@@ -293,6 +317,7 @@ export const SentenceAnnotationComparison = memo(
           onClose={handleCodeSelectorClose}
           onEdit={handleCodeSelectorEditCode}
           onDelete={handleCodeSelectorDeleteAnnotation}
+          onDuplicate={handleCodeSelectorDuplicateAnnotation}
         />
         <Box {...props}>
           <div

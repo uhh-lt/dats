@@ -29,11 +29,11 @@ const filter = createFilterOptions<ICodeFilterWithLevel>();
 
 interface AnnotationMenuProps {
   ref: React.Ref<AnnotationMenuHandle>;
-  onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
-  onAdd?: (codeId: number, isNewCode: boolean) => void;
-  onEdit?: (annotationToEdit: Annotation, codeId: number) => void;
-  onDelete?: (annotationToDelete: Annotation) => void;
-  onDuplicate?: (annotationToDuplicate: Annotation, codeId: number) => void;
+  onClose: (reason?: "backdropClick" | "escapeKeyDown") => void;
+  onAdd: (codeId: number, isNewCode: boolean) => void;
+  onEdit: (annotationToEdit: Annotation, codeId: number) => void;
+  onDelete: (annotationToDelete: Annotation) => void;
+  onDuplicate: (annotationToDuplicate: Annotation, codeId: number) => void;
 }
 
 export interface AnnotationMenuHandle {
@@ -61,7 +61,6 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
   // computed
   const codes = useComputeCodesForSelection();
   const codeTree = useWithLevel(codes, codes[0]?.parent_id ?? null);
-  console.log(codeTree);
   const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
     return codeTree.map((c) => ({
       ...c,
@@ -90,7 +89,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     setIsPopoverOpen(false);
     setIsAutoCompleteOpen(false);
     setAutoCompleteValue(null);
-    if (onClose) onClose(reason);
+    onClose(reason);
   };
 
   // effects
@@ -133,7 +132,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
   };
 
   const handleDelete = (annotation: Annotation) => {
-    if (onDelete) onDelete(annotation);
+    onDelete(annotation);
     closeAnnotationMenu();
   };
 
@@ -147,12 +146,12 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
   const submit = (code: CodeRead, isNewCode: boolean) => {
     // when the user selected an annotation to edit, we were editing
     if (editingAnnotation !== undefined) {
-      if (onEdit) onEdit(editingAnnotation, code.id);
+      onEdit(editingAnnotation, code.id);
       // otherwise, we opened this to add a new code
     } else if (duplicatingAnnotation !== undefined) {
-      if (onDuplicate) onDuplicate(duplicatingAnnotation, code.id);
+      onDuplicate(duplicatingAnnotation, code.id);
     } else {
-      if (onAdd) onAdd(code.id, isNewCode);
+      onAdd(code.id, isNewCode);
     }
     closeAnnotationMenu();
   };
