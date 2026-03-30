@@ -5,7 +5,8 @@ import { ClassifierModel } from "@api/models/ClassifierModel";
 import { TagRead } from "@api/models/TagRead";
 import { Typography } from "@mui/material";
 import { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { BarShapeProps } from "recharts";
+import { Bar, BarChart, CartesianGrid, Rectangle, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface ClassifierDatum extends ClassifierData {
   name: string;
@@ -95,11 +96,13 @@ function ClassifierDataPlotContent({
         <YAxis dataKey="num_examples" />
         <CartesianGrid stroke="#eee" />
         <Tooltip />
-        <Bar dataKey="num_examples">
-          {data.map((datum) => (
-            <Cell key={`cell-${datum.class_id}`} fill={datum.color} />
-          ))}
-        </Bar>
+        <Bar
+          dataKey="num_examples"
+          shape={(props: BarShapeProps) => {
+            const payload = props.payload as ClassifierDatum | undefined;
+            return <Rectangle {...props} fill={payload?.color || "#8884d8"} />;
+          }}
+        />
       </BarChart>
     </ResponsiveContainer>
   );

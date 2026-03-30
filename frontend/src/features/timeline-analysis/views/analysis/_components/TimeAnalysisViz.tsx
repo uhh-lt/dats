@@ -6,16 +6,16 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import { Box, CardContent, CardHeader, CircularProgress, IconButton, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ReactNode, useMemo } from "react";
+import type { BarShapeProps, DotProps } from "recharts";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Tooltip as ChartTooltip,
   Dot,
-  DotProps,
   Line,
   LineChart,
+  Rectangle,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -102,16 +102,19 @@ export function TimelineAnalysisViz({ timelineAnalysis }: TimelineAnalysisVizPro
                 dataKey={concept.name}
                 fill={concept.color}
                 onClick={(data) => handleClick(data.payload.date, concept.name)}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    stroke={provenanceConcept === concept.name && entry.date === provenanceDate ? "black" : undefined}
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                  />
-                ))}
-              </Bar>
+                shape={(props: BarShapeProps) => {
+                  const payload = props.payload as TimelineAnalysisCount | undefined;
+                  const isSelected = provenanceConcept === concept.name && payload?.date === provenanceDate;
+                  return (
+                    <Rectangle
+                      {...props}
+                      stroke={isSelected ? "black" : undefined}
+                      strokeWidth={2}
+                      style={{ cursor: "pointer" }}
+                    />
+                  );
+                }}
+              />
             ))}
           </BarChart>
         </ResponsiveContainer>

@@ -2,15 +2,17 @@ import { CardContainer } from "@components/CardContainer";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useMemo } from "react";
+import type { BarShapeProps, PieSectorShapeProps } from "recharts";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Tooltip as ChartTooltip,
   Pie,
   PieChart,
+  Rectangle,
   ResponsiveContainer,
+  Sector,
   XAxis,
   YAxis,
 } from "recharts";
@@ -70,6 +72,13 @@ export const ClusterDistributionPlot = memo(({ aspectId, height, showPieChart }:
     return Object.values(counts);
   }, [vis.data]);
 
+  const getClusterColor = (index: number) => {
+    if (colorScheme.length === 0) {
+      return "#8884d8";
+    }
+    return colorScheme[index % colorScheme.length];
+  };
+
   return (
     <Card variant="outlined" sx={{ bgcolor: "grey.300", borderColor: "grey.500" }}>
       {vis.isSuccess && chartData.length > 0 ? (
@@ -85,17 +94,12 @@ export const ClusterDistributionPlot = memo(({ aspectId, height, showPieChart }:
                 cy="50%"
                 fill="#8884d8"
                 label={renderCustomizedLabel}
-              >
-                {chartData.map((clusterFrequency) => (
-                  <Cell
-                    key={`clustercell-${clusterFrequency.clusterId}`}
-                    fill={colorScheme[clusterFrequency.index % colorScheme.length]}
-                    stroke={undefined}
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                  />
-                ))}
-              </Pie>
+                shape={(props: PieSectorShapeProps) => {
+                  const payload = props.payload as Data | undefined;
+                  const colorIndex = payload?.index ?? props.index;
+                  return <Sector {...props} fill={getClusterColor(colorIndex)} style={{ cursor: "pointer" }} />;
+                }}
+              />
             </PieChart>
           ) : (
             <BarChart data={chartData} className={`cluster-frequency-chart-${aspectId}`}>
@@ -103,17 +107,15 @@ export const ClusterDistributionPlot = memo(({ aspectId, height, showPieChart }:
               <YAxis dataKey={(data) => data.count} interval={"preserveEnd"} domain={[0.5, "auto"]} allowDataOverflow />
               <CartesianGrid stroke="#eee" />
               <ChartTooltip />
-              <Bar dataKey={(data) => data.count} fill="black">
-                {chartData.map((clusterFrequency) => (
-                  <Cell
-                    key={`clustercell-${clusterFrequency.clusterId}`}
-                    fill={colorScheme[clusterFrequency.index % colorScheme.length]}
-                    stroke={undefined}
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                  />
-                ))}
-              </Bar>
+              <Bar
+                dataKey={(data) => data.count}
+                fill="black"
+                shape={(props: BarShapeProps) => {
+                  const payload = props.payload as Data | undefined;
+                  const colorIndex = payload?.index ?? props.index;
+                  return <Rectangle {...props} fill={getClusterColor(colorIndex)} style={{ cursor: "pointer" }} />;
+                }}
+              />
             </BarChart>
           )}
         </ResponsiveContainer>

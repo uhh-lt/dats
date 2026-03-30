@@ -111,3 +111,9 @@ code {
 .dnd-dragging-invalid {
   cursor: no-drop !important;
 }
+
+/* RECHARTS STYLES */
+/* Remove outline for mouse clicks */
+.recharts-wrapper *:focus {
+  outline: none !important;
+}

@@ -7,17 +7,18 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { Dispatch, SetStateAction, useMemo, useReducer, useState } from "react";
-import type { TooltipContentProps } from "recharts";
+import type { BarShapeProps, PieSectorShapeProps, TooltipContentProps } from "recharts";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Tooltip as ChartTooltip,
   Legend,
   Pie,
   PieChart,
+  Rectangle,
   ResponsiveContainer,
+  Sector,
   XAxis,
   YAxis,
 } from "recharts";
@@ -84,6 +85,13 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
     setSelectedCode(codeFrequency.code_id);
   };
 
+  const getCodeColor = (codeId: number | undefined) => {
+    if (codeId === undefined) {
+      return "red";
+    }
+    return codeId2Code.get(codeId)?.color || "red";
+  };
+
   return (
     <>
       <Card variant="outlined">
@@ -123,21 +131,28 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
                     fill="#8884d8"
                     label={renderCustomizedLabel}
                     onClick={(data) => handleClick(data.payload as CodeFrequency)}
-                  >
-                    {chartData.data.map((entry) => (
-                      <Cell
-                        key={`codecell-${entry.code_id}`}
-                        fill={codeId2Code.get(entry.code_id)?.color || "red"}
-                        stroke={selectedData?.model.data.id === entry.code_id ? "black" : undefined}
-                        strokeWidth={2}
-                        style={{ cursor: "pointer" }}
-                      />
-                    ))}
-                  </Pie>
+                    shape={(props: PieSectorShapeProps) => {
+                      const codeFrequency = props.payload as CodeFrequency | undefined;
+                      const codeId = codeFrequency?.code_id;
+                      return (
+                        <Sector
+                          {...props}
+                          fill={getCodeColor(codeId)}
+                          stroke={selectedData?.model.data.id === codeId ? "black" : undefined}
+                          strokeWidth={2}
+                          style={{ cursor: "pointer" }}
+                        />
+                      );
+                    }}
+                  />
                   <Legend />
                 </PieChart>
               ) : (
-                <BarChart data={chartData.data} className={`code-frequency-chart-${data.model.data.name}`}>
+                <BarChart
+                  data={chartData.data}
+                  className={`code-frequency-chart-${data.model.data.name}`}
+                 
+                >
                   <XAxis
                     dataKey={(codeFrequency) => codeId2Code.get(codeFrequency.code_id)?.name || "Error: Code not found"}
                     interval={0}
@@ -158,17 +173,20 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
                     dataKey={(codeFrequency) => codeFrequency.total_count}
                     fill="#8884d8"
                     onClick={(data) => handleClick(data.payload as CodeFrequency)}
-                  >
-                    {chartData.data.map((codeFrequency) => (
-                      <Cell
-                        key={`codecell-${codeFrequency.code_id}`}
-                        fill={codeId2Code.get(codeFrequency.code_id)?.color || "red"}
-                        stroke={selectedData?.model.data.id === codeFrequency.code_id ? "black" : undefined}
-                        strokeWidth={2}
-                        style={{ cursor: "pointer" }}
-                      />
-                    ))}
-                  </Bar>
+                    shape={(props: BarShapeProps) => {
+                      const codeFrequency = props.payload as CodeFrequency | undefined;
+                      const codeId = codeFrequency?.code_id;
+                      return (
+                        <Rectangle
+                          {...props}
+                          fill={getCodeColor(codeId)}
+                          stroke={selectedData?.model.data.id === codeId ? "black" : undefined}
+                          strokeWidth={2}
+                          style={{ cursor: "pointer" }}
+                        />
+                      );
+                    }}
+                  />
                 </BarChart>
               )}
             </ResponsiveContainer>
