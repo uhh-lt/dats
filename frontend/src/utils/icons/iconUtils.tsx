@@ -45,6 +45,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import NotesIcon from "@mui/icons-material/Notes";
 import NumbersIcon from "@mui/icons-material/Numbers";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import ScaleIcon from "@mui/icons-material/Scale";
@@ -164,6 +165,7 @@ export enum Icon {
   // CRUD
   CREATE = "create",
   ADD = "add",
+  OPEN = "open",
   EDIT = "edit",
   DELETE = "delete",
   DUPLICATE = "duplicate",
@@ -288,6 +290,7 @@ const iconMap: Record<Icon, IconFactory> = {
   // CRUD
   [Icon.CREATE]: (iconProps) => <AddIcon {...iconProps} />,
   [Icon.ADD]: (iconProps) => <AddCircleIcon {...iconProps} />,
+  [Icon.OPEN]: (iconProps) => <OpenInNewIcon {...iconProps} />,
   [Icon.EDIT]: (iconProps) => <EditIcon {...iconProps} />,
   [Icon.DELETE]: (iconProps) => <DeleteIcon {...iconProps} />,
   [Icon.DUPLICATE]: (iconProps) => <FileCopyIcon {...iconProps} />,

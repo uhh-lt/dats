@@ -197,6 +197,13 @@ export const useAnalysisDashboardTable = <T extends AnalysisDashboardRow>(props:
     displayColumnDefOptions: { "mrt-row-actions": { size: 150 } },
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "0.5rem" }}>
+        <Tooltip title="Open">
+          <span>
+            <IconButton onClick={() => props.onOpenAnalysis(row.original)}>
+              <>{getIconComponent(Icon.OPEN)}</>
+            </IconButton>
+          </span>
+        </Tooltip>
         <Tooltip title="Edit">
           <IconButton
             onClick={(event) => {
