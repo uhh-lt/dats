@@ -124,6 +124,7 @@ export function AnnotationExplorer<T extends AnnotationRead>({
                             position: "absolute",
                             top: 0,
                             left: 0,
+                            zIndex: isSelected ? 2 : 1,
                             transform: `translateY(${virtualItem.start}px)`,
                           }}
                         >
