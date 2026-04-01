@@ -287,11 +287,7 @@ class CRUDBBoxAnnotation(
 
         # delete the bbox annotations
         query.delete()
-
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
 
         return ids
 

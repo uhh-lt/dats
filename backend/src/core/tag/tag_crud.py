@@ -193,7 +193,7 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
         )
 
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
-        db.commit()
+        db.flush()
 
         return len(new_rows)
 
@@ -225,8 +225,8 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
             # Add the count of deleted rows from this batch
             total_deleted_count += result.rowcount
 
-        # 4. Commit all batched deletions
-        db.commit()
+        # 4. Flush all batched deletions
+        db.flush()
 
         return total_deleted_count
 

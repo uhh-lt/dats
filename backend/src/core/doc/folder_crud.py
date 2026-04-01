@@ -83,8 +83,8 @@ class CRUDFolder(CRUDBase[FolderORM, FolderCreate, FolderUpdate]):
                 .values(update_payload)
             )
             db.execute(stmt)
-        # Commit all batched updates at once
-        db.commit()
+        # Flush all batched updates at once
+        db.flush()
 
         # 3. Retrieve and Return Updated Folders
         return self.read_by_ids(db=db, ids=folder_ids)

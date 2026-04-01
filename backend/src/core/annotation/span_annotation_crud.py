@@ -56,7 +56,7 @@ class CRUDSpanAnnotation(
         db_obj = self.model(**dto_obj_data)
         db_obj.span_text_id = span_text_orm.id
         db.add(db_obj)
-        db.commit()
+        db.flush()
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=adoc.id)
@@ -92,7 +92,7 @@ class CRUDSpanAnnotation(
         if manual_commit:
             db.flush()
         else:
-            db.commit()
+            db.flush()
 
         # update all affected annotation documents' timestamp
         adoc_ids = list(
@@ -337,7 +337,7 @@ class CRUDSpanAnnotation(
 
         # delete the sdocs
         query.delete()
-        db.commit()
+        db.flush()
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=adoc_id)
@@ -375,7 +375,7 @@ class CRUDSpanAnnotation(
     ) -> SpanAnnotationORM:
         db_obj = self.read(db=db, id=span_id)
         db_obj.span_groups = []
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
         return db_obj
 
@@ -386,7 +386,7 @@ class CRUDSpanAnnotation(
         group_db_obj = crud_span_group.read(db=db, id=group_id)
         span_db_obj.span_groups.append(group_db_obj)
         db.add(span_db_obj)
-        db.commit()
+        db.flush()
         db.refresh(span_db_obj)
         return span_db_obj
 
@@ -394,7 +394,7 @@ class CRUDSpanAnnotation(
         self, db: Session, span_id: int, group_id: int
     ) -> SpanAnnotationORM:
         span_db_obj = self.read(db=db, id=span_id)
-        db.commit()
+        db.flush()
         db.refresh(span_db_obj)
         return span_db_obj
 
