@@ -78,14 +78,14 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
         )
         db.execute(query)
 
-        db.commit()
+        db.flush()
 
     ### OTHER OPERATIONS ###
 
     def revoke(self, db: Session, token: RefreshTokenORM) -> RefreshTokenORM:
         token.revoked_at = datetime.now(UTC)
         db.add(token)
-        db.commit()
+        db.flush()
         db.refresh(token)
         return token
 

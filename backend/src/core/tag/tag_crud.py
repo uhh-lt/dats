@@ -148,7 +148,7 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
         )
 
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
-        db.commit()
+        db.flush()
 
         return len(new_rows)
 
@@ -170,7 +170,7 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
             )
             .returning(SourceDocumentTagLinkTable.source_document_id)
         ).fetchall()
-        db.commit()
+        db.flush()
 
         return len(del_rows)
 

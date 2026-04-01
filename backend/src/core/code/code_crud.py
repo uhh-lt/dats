@@ -19,7 +19,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
-        db.commit()
+        db.flush()
 
         return db_obj
 
@@ -124,7 +124,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         for code in codes:
             code.enabled = update_dto.enabled
         db.add_all(codes)
-        db.commit()
+        db.flush()
         return codes[0]
 
     ### OTHER OPERATIONS ###

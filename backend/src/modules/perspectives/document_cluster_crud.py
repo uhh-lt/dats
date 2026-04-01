@@ -91,7 +91,7 @@ class CRUDDocumentCluster(
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
 
         return db_obj
@@ -119,7 +119,7 @@ class CRUDDocumentCluster(
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        db.flush()
         return db_objects
 
     ### OTHER OPERATIONS ###
@@ -158,7 +158,7 @@ class CRUDDocumentCluster(
 
         try:
             db.execute(stmt)
-            db.commit()
+            db.flush()
         except Exception:
             db.rollback()
             raise  # Re-raise the database exception (e.g., IntegrityError)
@@ -195,7 +195,7 @@ class CRUDDocumentCluster(
             .execution_options(synchronize_session=False)
         )
         results = db.execute(stmt)
-        db.commit()
+        db.flush()
 
         return results.rowcount if results.rowcount is not None else 0
 
@@ -233,7 +233,7 @@ class CRUDDocumentCluster(
             .execution_options(synchronize_session=False)
         )
         results = db.execute(stmt)
-        db.commit()
+        db.flush()
 
         return results.rowcount if results.rowcount is not None else 0
 

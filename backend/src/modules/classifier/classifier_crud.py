@@ -38,7 +38,7 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
         if manual_commit:
             db.flush()
         else:
-            db.commit()
+            db.flush()
         db.refresh(classifier)
         return classifier
 
@@ -140,7 +140,7 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
             ClassifierEvaluationORM(**create_dto.model_dump())
         )
         db.add(classifier)
-        db.commit()
+        db.flush()
         db.refresh(classifier)
         return classifier
 

@@ -280,7 +280,7 @@ class CRUDSentenceAnnotation(
 
         # delete the sentence annotations
         query.delete()
-        db.commit()
+        db.flush()
 
         return ids
 

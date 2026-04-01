@@ -149,7 +149,7 @@ class CRUDDocumentAspect(
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        db.commit()
+        db.flush()
         return db_objects
 
 

@@ -48,6 +48,10 @@ async def get_db_session() -> AsyncGenerator[Session, None]:
     session = SQLRepo().session_maker()
     try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         if session is not None:
             session.close()

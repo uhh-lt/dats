@@ -38,7 +38,7 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         dto_obj_data = jsonable_encoder(create_dto)
         db_obj = self.model(id=id, **dto_obj_data)
         db.add(db_obj)
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
         return db_obj
 

@@ -35,7 +35,7 @@ class CRUDSourceDocumentJobStatus(
         )
         q.delete()
         db.add_all(db_objs)
-        db.commit()
+        db.flush()
         return db_objs
 
 

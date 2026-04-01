@@ -56,7 +56,7 @@ class CRUDAnnotationDocument(
 
         # delete the adocs
         query.delete()
-        db.commit()
+        db.flush()
 
         return ids
 

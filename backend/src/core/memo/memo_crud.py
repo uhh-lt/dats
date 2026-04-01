@@ -40,7 +40,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
 
         return db_obj
@@ -205,7 +205,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
         # delete the memos
         query.delete()
-        db.commit()
+        db.flush()
 
         return ids
 
