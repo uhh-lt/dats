@@ -79,7 +79,7 @@ class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdat
         )
 
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
-        db.commit()
+        db.flush()
 
         return len(new_rows)
 
