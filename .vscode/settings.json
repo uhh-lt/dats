@@ -3,6 +3,7 @@
   "files.exclude": {
     "airflow": true,
     "backend": true,
+    "benchmarks": true,
     "ray": true,
     "frontend": true
   },

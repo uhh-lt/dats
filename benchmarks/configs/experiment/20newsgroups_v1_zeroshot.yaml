@@ -1,0 +1,24 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: 20newsgroups
+
+experiment_name: document_classification
+# run_name: llama32_3b_20newsgroups_zeroshot_v1
+
+max_examples: 120
+
+prompt_template: document_classification_v1.j2
+prompt_variables:
+  labels:
+    - alt.atheism
+    - comp.graphics
+    - sci.space
+    - talk.politics.mideast
+
+schema: newsgroups20_schema.NewsgroupClassificationSchemaV1
+prediction_label_field: category
+
+metrics:
+  - classification_macro_metrics
+
+temperature: 0.0

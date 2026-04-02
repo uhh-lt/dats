@@ -1,0 +1,4 @@
+*
+!.gitignore
+!README.md
+!20newsgroups_dataset_creation.py
