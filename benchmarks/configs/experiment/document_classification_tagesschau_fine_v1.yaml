@@ -1,0 +1,52 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: tagesschau-fine
+
+experiment_name: document_classification_fine
+# run_name: llama32_3b_tagesschau_fine_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_single_label_v1_de.j2
+prompt_variables:
+  labels:
+    - inland/deutschlandtrend
+    - inland/gesellschaft
+    - inland/innenpolitik
+    - inland/mittendrin
+    - ausland/afrika
+    - ausland/amerika
+    - ausland/asien
+    - ausland/europa
+    - ausland/ozeanien
+    - wirtschaft/boerse
+    - wirtschaft/finanzen
+    - wirtschaft/konjunktur
+    - wirtschaft/technologie
+    - wirtschaft/unternehmen
+    - wirtschaft/verbraucher
+    - wirtschaft/weltwirtschaft
+    - wissen/forschung
+    - wissen/gesundheit
+    - wissen/klima
+    - wissen/technologie
+
+system_prompt_template: document_classification_system_de.j2
+system_prompt_variables:
+  project_name: Tagesschau
+  project_description: Eine Analyse der Themen in Deutschland basierend auf den Nachrichten und Artikeln der Tagesschau.
+
+schema: document_classification_schema.TagesschauFineClassificationSchemaV1
+prediction_label_field: category
+
+metrics:
+  - classification_macro_metrics
+  - classification_weighted_metrics
+
+artifacts:
+  - classification_confusion_matrix
+  - classification_report
+
+temperature: 0.0

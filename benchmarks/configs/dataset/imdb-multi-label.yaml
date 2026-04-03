@@ -1,0 +1,4 @@
+name: imdb-multi-label
+path: imdb/imdb_cleaned.parquet
+text_column: description
+label_column: expanded-genres

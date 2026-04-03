@@ -1,0 +1,36 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: bbc-coarse
+
+experiment_name: document_classification_coarse
+# run_name: llama32_3b_bbc_coarse_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_single_label_v1_en.j2
+prompt_variables:
+  labels:
+    - uk - News about the United Kingdom, including politics and domestic topics.
+    - world - News about regions outside of the UK.
+    - sport - News about all kinds of sports.
+    - misc - Other news such as business, education, entertainment, health, science, and technology.
+
+system_prompt_template: document_classification_system_en.j2
+system_prompt_variables:
+  project_name: BBC
+  project_description: An analysis of topics discussed in the United Kingdom based on BBC news and articles.
+
+schema: document_classification_schema.BBCCoarseClassificationSchemaV1
+prediction_label_field: category
+
+metrics:
+  - classification_macro_metrics
+  - classification_weighted_metrics
+
+artifacts:
+  - classification_confusion_matrix
+  - classification_report
+
+temperature: 0.0

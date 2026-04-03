@@ -3,10 +3,10 @@ You are a strict document classifier.
 Task:
 Classify the given document into exactly one of the allowed categories.
 
-Allowed categories:
+Allowed categories and definitions:
 {% for label in labels -%}
 - {{ label }}
-{% endfor -%}
+{% endfor %}
 
 Rules:
 1. Return only valid JSON.

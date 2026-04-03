@@ -1,8 +1,14 @@
-from evaluation.base import BaseMetricWrapper
-from evaluation.classification import StandardClassificationMetrics
+from evaluation.classification_metrics import (
+    MultiLabelClassificationMetrics,
+    StandardClassificationMetrics,
+    WeightedClassificationMetrics,
+)
+from evaluation.metric_base import BaseMetricWrapper
 
 METRIC_REGISTRY: dict[str, type[BaseMetricWrapper]] = {
     "classification_macro_metrics": StandardClassificationMetrics,
+    "classification_weighted_metrics": WeightedClassificationMetrics,
+    "multilabel_weighted_metrics": MultiLabelClassificationMetrics,
 }
 
 

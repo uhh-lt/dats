@@ -3,6 +3,7 @@ import logging
 from importlib import import_module
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
@@ -11,8 +12,9 @@ from pydantic import BaseModel, ValidationError
 from core.docker_manager import managed_vllm_container
 from core.llm_client import run_batch_inference
 from core.logger import log_experiment_to_mlflow
-from evaluation.metrics_utils import extract_labels
-from evaluation.registry import get_metric_evaluators
+from evaluation.artifact_registry import get_artifact_builders
+from evaluation.eval_utils import extract_labels
+from evaluation.metric_registry import get_metric_evaluators
 from schemas.config_schema import RunConfig
 
 logger = logging.getLogger(__name__)
@@ -52,6 +54,18 @@ def _render_prompts(
         prompts.append(template.render(**row_context))
 
     return prompts
+
+
+def _render_system_prompt(
+    template_path: Path,
+    template_variables: dict[str, Any],
+) -> str:
+    env = Environment(
+        loader=FileSystemLoader(str(template_path.parent)),
+        autoescape=False,
+    )
+    template = env.get_template(template_path.name)
+    return template.render(**template_variables)
 
 
 def _parse_responses(
@@ -97,12 +111,25 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     logger.info("Dataset loaded with %d rows", len(df))
 
     if experiment_config.max_examples:
-        df = df.head(experiment_config.max_examples).copy()
-        logger.info(
-            "Applying max_examples=%d -> %d rows",
-            experiment_config.max_examples,
-            len(df),
-        )
+        target_size = min(len(df), experiment_config.max_examples)
+        if experiment_config.sample_randomly:
+            df = df.sample(
+                n=target_size,
+                random_state=experiment_config.sample_random_state,
+            ).copy()
+            logger.info(
+                "Applying max_examples=%d with random sampling (seed=%d) -> %d rows",
+                experiment_config.max_examples,
+                experiment_config.sample_random_state,
+                len(df),
+            )
+        else:
+            df = df.head(target_size).copy()
+            logger.info(
+                "Applying max_examples=%d -> %d rows",
+                experiment_config.max_examples,
+                len(df),
+            )
 
     true_labels = df[dataset_config.label_column].astype(str).tolist()
 
@@ -119,7 +146,20 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
 
     print("Example rendered prompts:")
     for i, prompt in enumerate(prompts[:3], start=1):
-        print(f"Prompt {i}:\n{prompt}\n{'-' * 40}")
+        print(f"Prompt {i}:\n{prompt}\n{'-' * 60}")
+
+    system_prompt: str | None = None
+    if experiment_config.system_prompt_template:
+        logger.info(
+            "Rendering system prompt using template %s",
+            experiment_config.system_prompt_template,
+        )
+        system_prompt = _render_system_prompt(
+            template_path=experiment_config.system_prompt_template,
+            template_variables=experiment_config.system_prompt_variables,
+        )
+
+        print(f"Rendered system prompt:\n{system_prompt}\n{'-' * 60}")
 
     schema_class = _load_schema(experiment_config.schema_ref)
     logger.info("Loaded output schema %s", experiment_config.schema_ref)
@@ -134,6 +174,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
         raw_responses = asyncio.run(
             run_batch_inference(
                 prompts=prompts,
+                system_prompt=system_prompt,
                 schema=schema_class,
                 model_alias=model_config.alias,
                 base_url=base_url,
@@ -172,20 +213,43 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     predicted_labels = extract_labels(
         parsed_objects, experiment_config.prediction_label_field
     )
-    results_df = df.copy()
-    results_df["prompt"] = prompts
-    results_df["raw_llm_response"] = raw_responses
-    results_df["predicted_label"] = predicted_labels
-    results_df["schema_valid"] = valid_flags
-    results_df["parse_error"] = [
-        parse_errors.get(i, "") for i in range(len(results_df))
-    ]
+
+    results_df = pd.DataFrame(
+        {
+            "text": df[dataset_config.text_column].tolist(),
+            "prompt": prompts,
+            "raw_llm_response": raw_responses,
+            "gold_label": df[dataset_config.label_column].tolist(),
+            "predicted_label": predicted_labels,
+            "parse_error": [parse_errors.get(i, "") for i in range(len(df))],
+        }
+    )
+
+    generated_artifact_paths: list[Path] = []
+    if experiment_config.artifacts:
+        logger.info("Building artifacts: %s", experiment_config.artifacts)
+        artifact_builders = get_artifact_builders(
+            artifact_names=experiment_config.artifacts,
+            label_field=experiment_config.prediction_label_field,
+        )
+        # Use a temporary random prefix; final run-name-based filenames are assigned in logger.
+        artifact_prefix = uuid4().hex
+        for builder in artifact_builders:
+            generated_artifact_paths.extend(
+                builder.build(
+                    predictions=parsed_objects,
+                    references=true_labels,
+                    output_dir=run_config.output_dir,
+                    artifact_prefix=artifact_prefix,
+                )
+            )
 
     logger.info("Logging artifacts and metrics to local outputs and MLflow")
     tracking_info = log_experiment_to_mlflow(
         run_config=run_config,
         metrics=all_metrics,
         results_df=results_df,
+        additional_artifact_paths=generated_artifact_paths,
     )
 
     return {

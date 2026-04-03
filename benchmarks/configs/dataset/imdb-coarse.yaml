@@ -1,0 +1,4 @@
+name: imdb-coarse
+path: imdb/imdb_cleaned.parquet
+text_column: description
+label_column: genre

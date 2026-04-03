@@ -2,6 +2,7 @@ import asyncio
 from typing import Any
 
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 from tqdm.asyncio import tqdm_asyncio
 
@@ -9,13 +10,19 @@ from tqdm.asyncio import tqdm_asyncio
 async def _fetch_completion(
     client: AsyncOpenAI,
     prompt: str,
+    system_prompt: str | None,
     schema: type[BaseModel],
     model_alias: str,
     temperature: float,
 ) -> str:
+    messages: list[ChatCompletionMessageParam] = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
     response = await client.chat.completions.create(
         model=model_alias,
-        messages=[{"role": "user", "content": prompt}],
+        messages=messages,
         temperature=temperature,
         response_format={
             "type": "json_schema",
@@ -33,6 +40,7 @@ async def _fetch_completion(
 
 async def run_batch_inference(
     prompts: list[str],
+    system_prompt: str | None,
     schema: type[BaseModel],
     model_alias: str,
     base_url: str,
@@ -44,13 +52,14 @@ async def run_batch_inference(
     semaphore = asyncio.Semaphore(concurrency)
 
     # Show the schema that is used for all following responses for better visibility in logs
-    print(f"Using response schema:\n{schema.model_json_schema()}\n{'=' * 60}")
+    print(f"Using response schema:\n{schema.model_json_schema()}\n{'-' * 60}")
 
     async def _run_one(prompt: str) -> str:
         async with semaphore:
             return await _fetch_completion(
                 client=client,
                 prompt=prompt,
+                system_prompt=system_prompt,
                 schema=schema,
                 model_alias=model_alias,
                 temperature=temperature,

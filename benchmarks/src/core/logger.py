@@ -61,10 +61,50 @@ def _write_local_artifacts(
     return csv_path, metrics_path, config_path
 
 
+def _artifact_suffix_from_generated_name(artifact_path: Path) -> str:
+    name = artifact_path.name
+    if "_" not in name:
+        return name
+    return name.split("_", 1)[1]
+
+
+def _rename_additional_artifacts_for_run(
+    artifact_paths: list[Path],
+    *,
+    run_name: str,
+    timestamp: str,
+) -> list[Path]:
+    slug_run_name = _slugify(run_name)
+    renamed_paths: list[Path] = []
+
+    for artifact_path in artifact_paths:
+        if not artifact_path.exists():
+            continue
+
+        suffix = _artifact_suffix_from_generated_name(artifact_path)
+        target_path = artifact_path.with_name(f"{slug_run_name}_{timestamp}_{suffix}")
+
+        # Avoid overwriting if the target already exists from another artifact.
+        collision_index = 1
+        while target_path.exists() and target_path != artifact_path:
+            target_path = artifact_path.with_name(
+                f"{slug_run_name}_{timestamp}_{collision_index}_{suffix}"
+            )
+            collision_index += 1
+
+        if target_path != artifact_path:
+            artifact_path = artifact_path.rename(target_path)
+
+        renamed_paths.append(artifact_path)
+
+    return renamed_paths
+
+
 def log_experiment_to_mlflow(
     run_config: RunConfig,
     metrics: dict[str, float],
     results_df: pd.DataFrame,
+    additional_artifact_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     config = run_config.model_dump(mode="json")
     output_dir: Path = run_config.output_dir
@@ -79,10 +119,12 @@ def log_experiment_to_mlflow(
         "local_details_csv": None,
         "local_metrics_json": None,
         "local_config_json": None,
+        "local_additional_artifacts": [],
         "effective_run_name": None,
         "mlflow_logged": False,
         "mlflow_run_id": None,
     }
+    artifact_paths = additional_artifact_paths or []
 
     try:
         logger.info(
@@ -119,15 +161,27 @@ def log_experiment_to_mlflow(
                 results_df=results_df,
             )
 
+            artifact_paths = _rename_additional_artifacts_for_run(
+                artifact_paths,
+                run_name=effective_run_name,
+                timestamp=timestamp,
+            )
+
             mlflow.log_params(flat_params)
             mlflow.log_metrics(metric_values)
             mlflow.log_artifact(str(csv_path))
             mlflow.log_artifact(str(metrics_path))
             mlflow.log_artifact(str(config_path))
+            for artifact_path in artifact_paths:
+                if artifact_path.exists():
+                    mlflow.log_artifact(str(artifact_path))
 
             tracking_info["local_details_csv"] = str(csv_path)
             tracking_info["local_metrics_json"] = str(metrics_path)
             tracking_info["local_config_json"] = str(config_path)
+            tracking_info["local_additional_artifacts"] = [
+                str(path) for path in artifact_paths if path.exists()
+            ]
             tracking_info["effective_run_name"] = effective_run_name
             tracking_info["mlflow_logged"] = True
             tracking_info["mlflow_run_id"] = run.info.run_id
@@ -147,9 +201,17 @@ def log_experiment_to_mlflow(
             config=config,
             results_df=results_df,
         )
+        artifact_paths = _rename_additional_artifacts_for_run(
+            artifact_paths,
+            run_name=effective_run_name,
+            timestamp=timestamp,
+        )
         tracking_info["local_details_csv"] = str(csv_path)
         tracking_info["local_metrics_json"] = str(metrics_path)
         tracking_info["local_config_json"] = str(config_path)
+        tracking_info["local_additional_artifacts"] = [
+            str(path) for path in artifact_paths if path.exists()
+        ]
         tracking_info["effective_run_name"] = effective_run_name
         tracking_info["mlflow_error"] = str(exc)
         logger.exception("MLflow logging failed: %s", exc)

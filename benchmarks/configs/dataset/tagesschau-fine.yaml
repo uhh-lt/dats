@@ -1,0 +1,4 @@
+name: tagesschau-fine
+path: tagesschau/tagesschau_cleaned.parquet
+text_column: article
+label_column: tag

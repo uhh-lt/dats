@@ -9,5 +9,6 @@ src/.env
 # Generated benchmark artifacts
 outputs/*.csv
 outputs/*.json
+outputs/*.png
 data/**/*.csv
 run_experiment.log

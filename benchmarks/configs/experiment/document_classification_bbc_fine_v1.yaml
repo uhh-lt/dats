@@ -1,0 +1,58 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: bbc-fine
+
+experiment_name: document_classification_fine
+# run_name: llama32_3b_bbc_fine_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_single_label_v1_en.j2
+prompt_variables:
+  labels:
+    - uk/england
+    - uk/scotland
+    - uk/wales
+    - uk/northern-ireland
+    - uk/politics
+    - world/africa
+    - world/asia
+    - world/australia
+    - world/europe
+    - world/latin-america
+    - world/middle-east
+    - world/us
+    - sport/athletics
+    - sport/boxing
+    - sport/cricket
+    - sport/football
+    - sport/formula1
+    - sport/rugby
+    - sport/tennis
+    - misc/business
+    - misc/education
+    - misc/election
+    - misc/entertainment
+    - misc/health
+    - misc/science
+    - misc/technology
+
+system_prompt_template: document_classification_system_en.j2
+system_prompt_variables:
+  project_name: BBC
+  project_description: An analysis of topics discussed in the United Kingdom based on BBC news and articles.
+
+schema: document_classification_schema.BBCFineClassificationSchemaV1
+prediction_label_field: category
+
+metrics:
+  - classification_macro_metrics
+  - classification_weighted_metrics
+
+artifacts:
+  - classification_confusion_matrix
+  - classification_report
+
+temperature: 0.0

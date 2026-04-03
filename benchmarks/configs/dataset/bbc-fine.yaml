@@ -1,0 +1,4 @@
+name: bbc-fine
+path: bbc/bbc_cleaned.parquet
+text_column: content
+label_column: tag
