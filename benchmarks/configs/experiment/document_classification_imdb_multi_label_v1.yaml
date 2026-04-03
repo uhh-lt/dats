@@ -44,7 +44,6 @@ system_prompt_variables:
   project_description: An analysis of movie genres based on IMDb movie descriptions.
 
 schema: document_classification_schema.IMDBMultiLabelClassificationSchemaV1
-prediction_label_field: categories
 
 metrics:
   - multilabel_weighted_metrics

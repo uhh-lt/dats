@@ -1,9 +1,14 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from schemas.answer_schema import (
+    MultiLabelClassificationSchema,
+    SingleLabelClassificationSchema,
+)
 
 
-class NewsgroupClassificationSchemaV1(BaseModel):
+class NewsgroupClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Short explanation of why this category was selected."
     )
@@ -15,7 +20,7 @@ class NewsgroupClassificationSchemaV1(BaseModel):
     ] = Field(description="The predicted category for the input document.")
 
 
-class TagesschauCoarseClassificationSchemaV1(BaseModel):
+class TagesschauCoarseClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Nutze dieses Feld, um in 1-2 Sätzen zu analysieren, welche der erlaubten Kategorien am besten zum Dokument passt. Beende die Analyse mit einem kurzen Fazit, z.B. 'Daher ist die Kategorie XYZ am besten geeignet.'"
     )
@@ -27,7 +32,7 @@ class TagesschauCoarseClassificationSchemaV1(BaseModel):
     ] = Field(description="Die vorhergesagte Kategorie für das Eingabedokument.")
 
 
-class TagesschauFineClassificationSchemaV1(BaseModel):
+class TagesschauFineClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Nutze dieses Feld, um in 1-2 Sätzen zu analysieren, welche der erlaubten Kategorien am besten zum Dokument passt. Beende die Analyse mit einem kurzen Fazit, z.B. 'Daher ist die Kategorie XYZ am besten geeignet.'"
     )
@@ -55,7 +60,7 @@ class TagesschauFineClassificationSchemaV1(BaseModel):
     ] = Field(description="Die vorhergesagte Kategorie für das Eingabedokument.")
 
 
-class BBCCoarseClassificationSchemaV1(BaseModel):
+class BBCCoarseClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Short explanation of why this category was selected."
     )
@@ -67,7 +72,7 @@ class BBCCoarseClassificationSchemaV1(BaseModel):
     ] = Field(description="The predicted category for the input document.")
 
 
-class BBCFineClassificationSchemaV1(BaseModel):
+class BBCFineClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Short explanation of why this category was selected."
     )
@@ -101,7 +106,7 @@ class BBCFineClassificationSchemaV1(BaseModel):
     ] = Field(description="The predicted category for the input document.")
 
 
-class IMDBCoarseClassificationSchemaV1(BaseModel):
+class IMDBCoarseClassificationSchemaV1(SingleLabelClassificationSchema):
     reasoning: str = Field(
         description="Short explanation of why this category was selected."
     )
@@ -125,7 +130,7 @@ class IMDBCoarseClassificationSchemaV1(BaseModel):
     ] = Field(description="The predicted category for the input document.")
 
 
-class IMDBMultiLabelClassificationSchemaV1(BaseModel):
+class IMDBMultiLabelClassificationSchemaV1(MultiLabelClassificationSchema):
     reasoning: str = Field(
         description="Short explanation of why these categories were selected."
     )

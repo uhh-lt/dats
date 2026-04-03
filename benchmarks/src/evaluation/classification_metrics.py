@@ -1,31 +1,37 @@
-from typing import Any, cast
+from typing import Any
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from evaluation.eval_utils import (
-    assert_no_none_and_equal_length,
     extract_labels,
     extract_multilabels,
 )
 from evaluation.metric_base import BaseMetricWrapper
+from schemas.answer_schema import (
+    BaseAnswerSchema,
+    MultiLabelClassificationSchema,
+    SingleLabelClassificationSchema,
+)
 
 
-class StandardClassificationMetrics(BaseMetricWrapper):
+class StandardClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationSchema]):
     def compute(
-        self, predictions: list[Any], references: list[Any]
+        self,
+        predictions: list[BaseAnswerSchema | None],
+        references: list[Any],
     ) -> dict[str, float]:
-        pred_labels = extract_labels(
-            predictions, label_field=self.label_field, normalize=True
+        filtered_predictions, filtered_references = self.discard_none_predictions(
+            predictions,
+            references,
         )
-        ref_labels = extract_labels(
-            references, label_field=self.label_field, normalize=True
-        )
-        assert_no_none_and_equal_length(
-            pred_labels,
-            ref_labels,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_labels = [
+            prediction.get_prediction().strip().lower()
+            for prediction in typed_predictions
+        ]
+        ref_labels = extract_labels(filtered_references, normalize=True)
 
         if len(pred_labels) == 0:
             return {
@@ -51,21 +57,23 @@ class StandardClassificationMetrics(BaseMetricWrapper):
         }
 
 
-class WeightedClassificationMetrics(BaseMetricWrapper):
+class WeightedClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationSchema]):
     def compute(
-        self, predictions: list[Any], references: list[Any]
+        self,
+        predictions: list[BaseAnswerSchema | None],
+        references: list[Any],
     ) -> dict[str, float]:
-        pred_labels = extract_labels(
-            predictions, label_field=self.label_field, normalize=True
+        filtered_predictions, filtered_references = self.discard_none_predictions(
+            predictions,
+            references,
         )
-        ref_labels = extract_labels(
-            references, label_field=self.label_field, normalize=True
-        )
-        assert_no_none_and_equal_length(
-            pred_labels,
-            ref_labels,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_labels = [
+            prediction.get_prediction().strip().lower()
+            for prediction in typed_predictions
+        ]
+        ref_labels = extract_labels(filtered_references, normalize=True)
 
         if len(pred_labels) == 0:
             return {
@@ -80,7 +88,7 @@ class WeightedClassificationMetrics(BaseMetricWrapper):
             ref_labels,
             pred_labels,
             average="weighted",
-            zero_division=cast(Any, 0),
+            zero_division=0,
         )
 
         return {
@@ -91,25 +99,29 @@ class WeightedClassificationMetrics(BaseMetricWrapper):
         }
 
 
-class MultiLabelClassificationMetrics(BaseMetricWrapper):
+class MultiLabelClassificationMetrics(
+    BaseMetricWrapper[MultiLabelClassificationSchema]
+):
     def compute(
-        self, predictions: list[Any], references: list[Any]
+        self,
+        predictions: list[BaseAnswerSchema | None],
+        references: list[Any],
     ) -> dict[str, float]:
-        pred_labels = extract_multilabels(
+        filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
-            label_field=self.label_field,
-            normalize=True,
-        )
-        ref_labels = extract_multilabels(
             references,
-            label_field=self.label_field,
-            normalize=True,
         )
-        assert_no_none_and_equal_length(
-            pred_labels,
-            ref_labels,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_labels = [
+            [
+                label.strip().lower()
+                for label in prediction.get_prediction()
+                if label.strip()
+            ]
+            for prediction in typed_predictions
+        ]
+        ref_labels = extract_multilabels(filtered_references, normalize=True)
 
         if len(pred_labels) == 0:
             return {
@@ -144,7 +156,7 @@ class MultiLabelClassificationMetrics(BaseMetricWrapper):
             y_true,
             y_pred,
             average="weighted",
-            zero_division=cast(Any, 0),
+            zero_division=0,
         )
         subset_accuracy = accuracy_score(y_true, y_pred)
 

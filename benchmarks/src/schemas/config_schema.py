@@ -1,13 +1,14 @@
 import os
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional, TypeAlias
 
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from evaluation.artifact_registry import ARTIFACT_REGISTRY
 from evaluation.metric_registry import METRIC_REGISTRY
+from schemas.answer_schema import BaseAnswerSchema
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PROMPT_TEMPLATE_DIR = PROJECT_ROOT / "src" / "prompts"
@@ -40,11 +41,19 @@ class ModelConfig(BaseModel):
     gpu_memory_utilization: float = Field(ge=0.0, le=1.0)
 
 
-class DatasetConfig(BaseModel):
+def _read_dataset_columns(path: Path) -> set[str]:
+    if path.suffix == ".csv":
+        return set(pd.read_csv(path, nrows=0).columns)
+    if path.suffix == ".parquet":
+        return set(pd.read_parquet(path).columns)
+    raise ValueError(f"Unsupported dataset format: {path.suffix}")
+
+
+class DatasetConfigBase(BaseModel):
+    """Base dataset config. Subclasses define which columns are exposed to prompt templates."""
+
     name: str = Field(min_length=1)
     path: Path
-    text_column: str = Field(min_length=1)
-    label_column: str = Field(min_length=1)
 
     @field_validator("path", mode="before")
     @classmethod
@@ -61,14 +70,56 @@ class DatasetConfig(BaseModel):
             raise ValueError(f"File not found: {v}")
         return v
 
+    def get_prompt_column_mapping(self) -> Dict[str, str]:
+        raise NotImplementedError
+
+    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
+        raise NotImplementedError
+
+    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+        raise NotImplementedError
+
+    def build_prompt_row_context(self, row: dict[str, Any]) -> dict[str, Any]:
+        prompt_column_mapping = self.get_prompt_column_mapping()
+        context: dict[str, Any] = {}
+        for prompt_name, dataset_column in prompt_column_mapping.items():
+            if dataset_column not in row:
+                raise ValueError(
+                    f"Dataset column '{dataset_column}' configured for prompt variable '{prompt_name}' "
+                    f"is missing in row data."
+                )
+            value = row[dataset_column]
+            context[prompt_name] = value.item() if hasattr(value, "item") else value
+        return context
+
+
+class DocumentClassificationConfig(DatasetConfigBase):
+    """Document classification dataset.
+
+    Makes the `text` prompt variable available, mapped from `text_column`.
+    """
+
+    dataset_type: Literal["document_classification"]
+    text_column: str = Field(min_length=1)
+    label_column: str = Field(min_length=1)
+
+    def get_prompt_column_mapping(self) -> Dict[str, str]:
+        return {
+            "text": self.text_column,
+        }
+
+    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
+        return df[self.label_column].astype(str).tolist()
+
+    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+        return {
+            "text": df[self.text_column].tolist(),
+            "gold_label": df[self.label_column].tolist(),
+        }
+
     @model_validator(mode="after")
-    def validate_dataset_columns(self) -> "DatasetConfig":
-        if self.path.suffix == ".csv":
-            dataset_columns = set(pd.read_csv(self.path, nrows=0).columns)
-        elif self.path.suffix == ".parquet":
-            dataset_columns = set(pd.read_parquet(self.path).columns)
-        else:
-            raise ValueError(f"Unsupported dataset format: {self.path.suffix}")
+    def validate_dataset_columns(self) -> "DocumentClassificationConfig":
+        dataset_columns = _read_dataset_columns(self.path)
 
         if self.text_column not in dataset_columns:
             raise ValueError(
@@ -78,7 +129,72 @@ class DatasetConfig(BaseModel):
             raise ValueError(
                 f"label_column '{self.label_column}' not found in dataset {self.path}."
             )
+        for prompt_name, dataset_column in self.get_prompt_column_mapping().items():
+            if dataset_column not in dataset_columns:
+                raise ValueError(
+                    f"prompt_column_mapping['{prompt_name}'] references missing dataset column "
+                    f"'{dataset_column}' in {self.path}."
+                )
         return self
+
+
+class QADatasetConfig(DatasetConfigBase):
+    """Extractive QA dataset.
+
+    Makes `context` and `question` prompt variables available, mapped from
+    `context_column` and `question_column`.
+    """
+
+    dataset_type: Literal["extractive_qa"]
+    context_column: str = Field(min_length=1)
+    question_column: str = Field(min_length=1)
+    references_column: str = Field(min_length=1)
+
+    def get_prompt_column_mapping(self) -> Dict[str, str]:
+        return {
+            "context": self.context_column,
+            "question": self.question_column,
+        }
+
+    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
+        return df[self.references_column].tolist()
+
+    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+        return {
+            "context": df[self.context_column].tolist(),
+            "question": df[self.question_column].tolist(),
+            "gold_reference": df[self.references_column].tolist(),
+        }
+
+    @model_validator(mode="after")
+    def validate_dataset_columns(self) -> "QADatasetConfig":
+        dataset_columns = _read_dataset_columns(self.path)
+
+        if self.context_column not in dataset_columns:
+            raise ValueError(
+                f"context_column '{self.context_column}' not found in dataset {self.path}."
+            )
+        if self.question_column not in dataset_columns:
+            raise ValueError(
+                f"question_column '{self.question_column}' not found in dataset {self.path}."
+            )
+        if self.references_column not in dataset_columns:
+            raise ValueError(
+                f"references_column '{self.references_column}' not found in dataset {self.path}."
+            )
+        for prompt_name, dataset_column in self.get_prompt_column_mapping().items():
+            if dataset_column not in dataset_columns:
+                raise ValueError(
+                    f"prompt_column_mapping['{prompt_name}'] references missing dataset column "
+                    f"'{dataset_column}' in {self.path}."
+                )
+        return self
+
+
+DatasetConfig: TypeAlias = Annotated[
+    DocumentClassificationConfig | QADatasetConfig,
+    Field(discriminator="dataset_type"),
+]
 
 
 class ExperimentConfig(BaseModel):
@@ -94,12 +210,11 @@ class ExperimentConfig(BaseModel):
     sample_random_state: int = 42
     # input config
     prompt_template: Path
-    prompt_variables: Dict[str, Any]
+    prompt_variables: Dict[str, Any] = Field(default_factory=dict)
     system_prompt_template: Path | None = None
     system_prompt_variables: Dict[str, Any] = Field(default_factory=dict)
     # output config
     schema_ref: str = Field(alias="schema")
-    prediction_label_field: str
     # evaluation config
     metrics: List[str] = Field(min_length=1)
     artifacts: List[str] = Field(default_factory=list)
@@ -185,9 +300,9 @@ class ExperimentConfig(BaseModel):
         if not issubclass(schema_class, BaseModel):
             raise TypeError(f"schema '{v}' must resolve to a pydantic BaseModel class.")
 
-        if self.prediction_label_field not in schema_class.model_fields:
-            raise ValueError(
-                f"prediction_label_field '{self.prediction_label_field}' not found in schema '{v}'."
+        if not issubclass(schema_class, BaseAnswerSchema):
+            raise TypeError(
+                f"schema '{v}' must inherit from BaseAnswerSchema and implement get_prediction()."
             )
 
         return self

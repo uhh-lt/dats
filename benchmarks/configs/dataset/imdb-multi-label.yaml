@@ -1,4 +1,5 @@
 name: imdb-multi-label
+dataset_type: document_classification
 path: imdb/imdb_cleaned.parquet
 text_column: description
 label_column: expanded-genres

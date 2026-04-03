@@ -1,0 +1,12 @@
+Please extract a short answer to the following question from the context.
+
+Context: {{ context }}
+
+Question: {{ question }}
+
+Output rules:
+1. Return only valid JSON.
+2. JSON must contain keys "reasoning" and "answer".
+3. Keep "reasoning" concise.
+4. If the question cannot be answered from the context, set "answer" to "{{ no_answer_label }}".
+5. The value in "answer" must be verbatim from the context, unless it is "{{ no_answer_label }}".

@@ -6,12 +6,14 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 from tqdm.asyncio import tqdm_asyncio
 
+from schemas.answer_schema import BaseAnswerSchema
+
 
 async def _fetch_completion(
     client: AsyncOpenAI,
     prompt: str,
     system_prompt: str | None,
-    schema: type[BaseModel],
+    schema: type[BaseAnswerSchema],
     model_alias: str,
     temperature: float,
 ) -> str:
@@ -41,7 +43,7 @@ async def _fetch_completion(
 async def run_batch_inference(
     prompts: list[str],
     system_prompt: str | None,
-    schema: type[BaseModel],
+    schema: type[BaseAnswerSchema],
     model_alias: str,
     base_url: str,
     api_key: str,

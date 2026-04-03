@@ -7,20 +7,23 @@ from uuid import uuid4
 
 import pandas as pd
 from jinja2 import Environment, FileSystemLoader
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from core.docker_manager import managed_vllm_container
 from core.llm_client import run_batch_inference
 from core.logger import log_experiment_to_mlflow
 from evaluation.artifact_registry import get_artifact_builders
-from evaluation.eval_utils import extract_labels
 from evaluation.metric_registry import get_metric_evaluators
-from schemas.config_schema import RunConfig
+from schemas.answer_schema import BaseAnswerSchema
+from schemas.config_schema import (
+    DatasetConfig,
+    RunConfig,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def _load_schema(schema_ref: str) -> type[BaseModel]:
+def _load_schema(schema_ref: str) -> type[BaseAnswerSchema]:
     schema_module_name, schema_class_name = schema_ref.rsplit(".", 1)
     import_name = (
         schema_module_name
@@ -29,6 +32,12 @@ def _load_schema(schema_ref: str) -> type[BaseModel]:
     )
     module = import_module(import_name)
     schema_class = getattr(module, schema_class_name)
+
+    if not issubclass(schema_class, BaseAnswerSchema):
+        raise TypeError(
+            f"Schema '{schema_ref}' must inherit from BaseAnswerSchema and implement get_prediction()."
+        )
+
     return schema_class
 
 
@@ -36,7 +45,7 @@ def _render_prompts(
     df: pd.DataFrame,
     template_dir: Path,
     template_name: str,
-    text_column: str,
+    dataset_config: DatasetConfig,
     prompt_variables: dict[str, Any],
 ) -> list[str]:
     env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=False)
@@ -44,13 +53,9 @@ def _render_prompts(
 
     prompts: list[str] = []
     for _, row in df.iterrows():
-        row_context: dict[str, Any] = {
-            str(key): value.item() if hasattr(value, "item") else value
-            for key, value in row.to_dict().items()
-        }
+        row_data = {str(key): value for key, value in row.to_dict().items()}
+        row_context = dataset_config.build_prompt_row_context(row_data)
         row_context.update(prompt_variables)
-        # Canonical template variable for the source text comes from dataset.text_column.
-        row_context["text"] = row_context[text_column]
         prompts.append(template.render(**row_context))
 
     return prompts
@@ -70,9 +75,9 @@ def _render_system_prompt(
 
 def _parse_responses(
     raw_responses: list[str],
-    schema_class: type[BaseModel],
-) -> tuple[list[BaseModel | None], list[bool], dict[int, str]]:
-    parsed_objects: list[BaseModel | None] = []
+    schema_class: type[BaseAnswerSchema],
+) -> tuple[list[BaseAnswerSchema | None], list[bool], dict[int, str]]:
+    parsed_objects: list[BaseAnswerSchema | None] = []
     valid_flags: list[bool] = []
     parse_errors: dict[int, str] = {}
 
@@ -131,7 +136,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
                 len(df),
             )
 
-    true_labels = df[dataset_config.label_column].astype(str).tolist()
+    true_labels = dataset_config.get_true_labels(df)
 
     logger.info(
         "Rendering prompts using template %s", experiment_config.prompt_template
@@ -140,7 +145,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
         df=df,
         template_dir=experiment_config.prompt_template.parent,
         template_name=experiment_config.prompt_template.name,
-        text_column=dataset_config.text_column,
+        dataset_config=dataset_config,
         prompt_variables=experiment_config.prompt_variables,
     )
 
@@ -194,10 +199,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
         )
 
     logger.info("Computing metrics: %s", experiment_config.metrics)
-    evaluators = get_metric_evaluators(
-        metric_names=experiment_config.metrics,
-        label_field=experiment_config.prediction_label_field,
-    )
+    evaluators = get_metric_evaluators(metric_names=experiment_config.metrics)
 
     all_metrics: dict[str, float] = {}
     for evaluator in evaluators:
@@ -210,27 +212,25 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
         else 1.0 - (sum(1 for flag in valid_flags if flag) / len(valid_flags))
     )
 
-    predicted_labels = extract_labels(
-        parsed_objects, experiment_config.prediction_label_field
-    )
-
-    results_df = pd.DataFrame(
+    results_data = dataset_config.log_dataset(df)
+    results_data.update(
         {
-            "text": df[dataset_config.text_column].tolist(),
+            "predicted_label": [
+                parsed_object.get_prediction() if parsed_object is not None else None
+                for parsed_object in parsed_objects
+            ],
             "prompt": prompts,
             "raw_llm_response": raw_responses,
-            "gold_label": df[dataset_config.label_column].tolist(),
-            "predicted_label": predicted_labels,
             "parse_error": [parse_errors.get(i, "") for i in range(len(df))],
         }
     )
+    results_df = pd.DataFrame(results_data)
 
     generated_artifact_paths: list[Path] = []
     if experiment_config.artifacts:
         logger.info("Building artifacts: %s", experiment_config.artifacts)
         artifact_builders = get_artifact_builders(
             artifact_names=experiment_config.artifacts,
-            label_field=experiment_config.prediction_label_field,
         )
         # Use a temporary random prefix; final run-name-based filenames are assigned in logger.
         artifact_prefix = uuid4().hex

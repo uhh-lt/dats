@@ -14,9 +14,13 @@ from sklearn.preprocessing import MultiLabelBinarizer
 
 from evaluation.artifact_base import BaseArtifactBuilder
 from evaluation.eval_utils import (
-    assert_no_none_and_equal_length,
     extract_labels,
     extract_multilabels,
+)
+from schemas.answer_schema import (
+    BaseAnswerSchema,
+    MultiLabelClassificationSchema,
+    SingleLabelClassificationSchema,
 )
 
 
@@ -24,27 +28,27 @@ def _slugify(value: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]+", "_", value).strip("_")
 
 
-class SingleLabelConfusionMatrixArtifacts(BaseArtifactBuilder):
+class SingleLabelConfusionMatrixArtifacts(
+    BaseArtifactBuilder[SingleLabelClassificationSchema]
+):
     def build(
         self,
-        predictions: list[Any],
+        predictions: list[BaseAnswerSchema | None],
         references: list[Any],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
-        pred_labels = extract_labels(
+        filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
-            label_field=self.label_field,
-            normalize=True,
+            references,
         )
-        ref_labels = extract_labels(
-            references, label_field=self.label_field, normalize=True
-        )
-        assert_no_none_and_equal_length(
-            pred_labels,
-            ref_labels,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_labels = [
+            prediction.get_prediction().strip().lower()
+            for prediction in typed_predictions
+        ]
+        ref_labels = extract_labels(filtered_references, normalize=True)
 
         if len(pred_labels) == 0:
             return []
@@ -75,29 +79,27 @@ class SingleLabelConfusionMatrixArtifacts(BaseArtifactBuilder):
         return [csv_path, png_path]
 
 
-class SingleLabelClassificationReportArtifacts(BaseArtifactBuilder):
+class SingleLabelClassificationReportArtifacts(
+    BaseArtifactBuilder[SingleLabelClassificationSchema]
+):
     def build(
         self,
-        predictions: list[Any],
+        predictions: list[BaseAnswerSchema | None],
         references: list[Any],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
-        pred_labels = extract_labels(
+        filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
-            label_field=self.label_field,
-            normalize=True,
-        )
-        ref_labels = extract_labels(
             references,
-            label_field=self.label_field,
-            normalize=True,
         )
-        assert_no_none_and_equal_length(
-            pred_labels,
-            ref_labels,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_labels = [
+            prediction.get_prediction().strip().lower()
+            for prediction in typed_predictions
+        ]
+        ref_labels = extract_labels(filtered_references, normalize=True)
 
         if len(pred_labels) == 0:
             return []
@@ -120,29 +122,31 @@ class SingleLabelClassificationReportArtifacts(BaseArtifactBuilder):
         return [csv_path]
 
 
-class MultiLabelConfusionMatrixArtifacts(BaseArtifactBuilder):
+class MultiLabelConfusionMatrixArtifacts(
+    BaseArtifactBuilder[MultiLabelClassificationSchema]
+):
     def build(
         self,
-        predictions: list[Any],
+        predictions: list[BaseAnswerSchema | None],
         references: list[Any],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
-        pred_label_lists = extract_multilabels(
+        filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
-            label_field=self.label_field,
-            normalize=True,
-        )
-        ref_label_lists = extract_multilabels(
             references,
-            label_field=self.label_field,
-            normalize=True,
         )
-        assert_no_none_and_equal_length(
-            pred_label_lists,
-            ref_label_lists,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_label_lists = [
+            [
+                label.strip().lower()
+                for label in prediction.get_prediction()
+                if label.strip()
+            ]
+            for prediction in typed_predictions
+        ]
+        ref_label_lists = extract_multilabels(filtered_references, normalize=True)
 
         if len(pred_label_lists) == 0:
             return []
@@ -197,29 +201,31 @@ class MultiLabelConfusionMatrixArtifacts(BaseArtifactBuilder):
         return artifact_paths
 
 
-class MultiLabelClassificationReportArtifacts(BaseArtifactBuilder):
+class MultiLabelClassificationReportArtifacts(
+    BaseArtifactBuilder[MultiLabelClassificationSchema]
+):
     def build(
         self,
-        predictions: list[Any],
+        predictions: list[BaseAnswerSchema | None],
         references: list[Any],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
-        pred_label_lists = extract_multilabels(
+        filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
-            label_field=self.label_field,
-            normalize=True,
-        )
-        ref_label_lists = extract_multilabels(
             references,
-            label_field=self.label_field,
-            normalize=True,
         )
-        assert_no_none_and_equal_length(
-            pred_label_lists,
-            ref_label_lists,
-            context=self.__class__.__name__,
-        )
+        typed_predictions = self.require_answer_schema(filtered_predictions)
+
+        pred_label_lists = [
+            [
+                label.strip().lower()
+                for label in prediction.get_prediction()
+                if label.strip()
+            ]
+            for prediction in typed_predictions
+        ]
+        ref_label_lists = extract_multilabels(filtered_references, normalize=True)
 
         if len(pred_label_lists) == 0:
             return []

@@ -1,21 +1,25 @@
+from typing import Any
+
 from evaluation.classification_metrics import (
     MultiLabelClassificationMetrics,
     StandardClassificationMetrics,
     WeightedClassificationMetrics,
 )
+from evaluation.extractive_qa_metrics import ExtractiveQASquad2Metrics
 from evaluation.metric_base import BaseMetricWrapper
 
-METRIC_REGISTRY: dict[str, type[BaseMetricWrapper]] = {
+METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any]]] = {
     "classification_macro_metrics": StandardClassificationMetrics,
     "classification_weighted_metrics": WeightedClassificationMetrics,
     "multilabel_weighted_metrics": MultiLabelClassificationMetrics,
+    "extractive_qa_squad2_metrics": ExtractiveQASquad2Metrics,
 }
 
 
 def get_metric_evaluators(
-    metric_names: list[str], label_field: str = "label"
-) -> list[BaseMetricWrapper]:
-    evaluators: list[BaseMetricWrapper] = []
+    metric_names: list[str],
+) -> list[BaseMetricWrapper[Any]]:
+    evaluators: list[BaseMetricWrapper[Any]] = []
     unknown_metrics: list[str] = []
 
     for name in metric_names:
@@ -23,7 +27,7 @@ def get_metric_evaluators(
         if metric_class is None:
             unknown_metrics.append(name)
             continue
-        evaluators.append(metric_class(label_field=label_field))
+        evaluators.append(metric_class())
 
     if unknown_metrics:
         names = ", ".join(unknown_metrics)

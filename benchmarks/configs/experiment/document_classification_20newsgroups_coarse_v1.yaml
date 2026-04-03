@@ -16,7 +16,6 @@ prompt_variables:
     - talk.politics.mideast
 
 schema: newsgroups20_schema.NewsgroupClassificationSchemaV1
-prediction_label_field: category
 
 metrics:
   - classification_macro_metrics

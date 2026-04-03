@@ -1,0 +1,4 @@
+*
+!.gitignore
+!README.md
+!squad_dataset_creation.py

@@ -1,4 +1,5 @@
 name: tagesschau-coarse
+dataset_type: document_classification
 path: tagesschau/tagesschau_cleaned.parquet
 text_column: article
 label_column: main_tag
