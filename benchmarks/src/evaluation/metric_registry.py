@@ -10,7 +10,7 @@ from evaluation.metric_base import BaseMetricWrapper
 from evaluation.span_classification_metrics import SpanClassificationMetrics
 from evaluation.template_filling_metrics import TemplateFillingMUC4Metrics
 
-METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any]]] = {
+METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any, Any]]] = {
     "classification_macro_metrics": StandardClassificationMetrics,
     "classification_weighted_metrics": WeightedClassificationMetrics,
     "multilabel_weighted_metrics": MultiLabelClassificationMetrics,
@@ -22,8 +22,8 @@ METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any]]] = {
 
 def get_metric_evaluators(
     metric_names: list[str],
-) -> list[BaseMetricWrapper[Any]]:
-    evaluators: list[BaseMetricWrapper[Any]] = []
+) -> list[BaseMetricWrapper[Any, Any]]:
+    evaluators: list[BaseMetricWrapper[Any, Any]] = []
     unknown_metrics: list[str] = []
 
     for name in metric_names:

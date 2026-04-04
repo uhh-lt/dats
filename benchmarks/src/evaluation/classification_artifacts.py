@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Any
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,14 +13,15 @@ from sklearn.metrics import (
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from evaluation.artifact_base import BaseArtifactBuilder
-from evaluation.eval_utils import (
-    extract_labels,
-    extract_multilabels,
-)
 from schemas.answer_schema import (
     BaseAnswerSchema,
     MultiLabelClassificationSchema,
     SingleLabelClassificationSchema,
+)
+from schemas.reference_schema import (
+    BaseReferenceSchema,
+    MultiLabelReference,
+    SingleLabelReference,
 )
 
 
@@ -29,12 +30,12 @@ def _slugify(value: str) -> str:
 
 
 class SingleLabelConfusionMatrixArtifacts(
-    BaseArtifactBuilder[SingleLabelClassificationSchema]
+    BaseArtifactBuilder[SingleLabelClassificationSchema, SingleLabelReference]
 ):
     def build(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
@@ -43,12 +44,13 @@ class SingleLabelConfusionMatrixArtifacts(
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_labels = [
             prediction.get_prediction().strip().lower()
             for prediction in typed_predictions
         ]
-        ref_labels = extract_labels(filtered_references, normalize=True)
+        ref_labels = [reference.label.strip().lower() for reference in typed_references]
 
         if len(pred_labels) == 0:
             return []
@@ -80,12 +82,12 @@ class SingleLabelConfusionMatrixArtifacts(
 
 
 class SingleLabelClassificationReportArtifacts(
-    BaseArtifactBuilder[SingleLabelClassificationSchema]
+    BaseArtifactBuilder[SingleLabelClassificationSchema, SingleLabelReference]
 ):
     def build(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
@@ -94,12 +96,13 @@ class SingleLabelClassificationReportArtifacts(
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_labels = [
             prediction.get_prediction().strip().lower()
             for prediction in typed_predictions
         ]
-        ref_labels = extract_labels(filtered_references, normalize=True)
+        ref_labels = [reference.label.strip().lower() for reference in typed_references]
 
         if len(pred_labels) == 0:
             return []
@@ -123,12 +126,12 @@ class SingleLabelClassificationReportArtifacts(
 
 
 class MultiLabelConfusionMatrixArtifacts(
-    BaseArtifactBuilder[MultiLabelClassificationSchema]
+    BaseArtifactBuilder[MultiLabelClassificationSchema, MultiLabelReference]
 ):
     def build(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
@@ -137,6 +140,7 @@ class MultiLabelConfusionMatrixArtifacts(
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_label_lists = [
             [
@@ -146,7 +150,10 @@ class MultiLabelConfusionMatrixArtifacts(
             ]
             for prediction in typed_predictions
         ]
-        ref_label_lists = extract_multilabels(filtered_references, normalize=True)
+        ref_label_lists = [
+            [label.strip().lower() for label in typed_reference.labels if label.strip()]
+            for typed_reference in typed_references
+        ]
 
         if len(pred_label_lists) == 0:
             return []
@@ -202,12 +209,12 @@ class MultiLabelConfusionMatrixArtifacts(
 
 
 class MultiLabelClassificationReportArtifacts(
-    BaseArtifactBuilder[MultiLabelClassificationSchema]
+    BaseArtifactBuilder[MultiLabelClassificationSchema, MultiLabelReference]
 ):
     def build(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
         output_dir: Path,
         artifact_prefix: str,
     ) -> list[Path]:
@@ -216,6 +223,7 @@ class MultiLabelClassificationReportArtifacts(
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_label_lists = [
             [
@@ -225,7 +233,10 @@ class MultiLabelClassificationReportArtifacts(
             ]
             for prediction in typed_predictions
         ]
-        ref_label_lists = extract_multilabels(filtered_references, normalize=True)
+        ref_label_lists = [
+            [label.strip().lower() for label in typed_reference.labels if label.strip()]
+            for typed_reference in typed_references
+        ]
 
         if len(pred_label_lists) == 0:
             return []

@@ -1,5 +1,5 @@
 name: bbc-coarse
-dataset_type: document_classification
+dataset_type: document_classification_single_label
 path: bbc/bbc_cleaned.parquet
 text_column: content
 label_column: main_tag

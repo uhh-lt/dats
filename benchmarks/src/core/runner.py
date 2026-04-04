@@ -2,7 +2,7 @@ import asyncio
 import logging
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 from uuid import uuid4
 
 import pandas as pd
@@ -19,6 +19,7 @@ from schemas.config_schema import (
     DatasetConfig,
     RunConfig,
 )
+from schemas.reference_schema import BaseReferenceSchema
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
                 len(df),
             )
 
-    true_labels = dataset_config.get_true_labels(df)
+    references = dataset_config.get_references(df)
 
     logger.info(
         "Rendering prompts using template %s", experiment_config.prompt_template
@@ -204,7 +205,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     all_metrics: dict[str, float] = {}
     for evaluator in evaluators:
         all_metrics.update(
-            evaluator.compute(predictions=parsed_responses, references=true_labels)
+            evaluator.compute(predictions=parsed_responses, references=references)
         )
     all_metrics["parse_error_rate"] = (
         0.0
@@ -216,7 +217,9 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     results_data.update(
         {
             "predicted_label": [
-                parsed_response.get_prediction() if parsed_response is not None else None
+                parsed_response.get_prediction()
+                if parsed_response is not None
+                else None
                 for parsed_response in parsed_responses
             ],
             "prompt": prompts,
@@ -238,7 +241,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
             generated_artifact_paths.extend(
                 builder.build(
                     predictions=parsed_responses,
-                    references=true_labels,
+                    references=references,
                     output_dir=run_config.output_dir,
                     artifact_prefix=artifact_prefix,
                 )

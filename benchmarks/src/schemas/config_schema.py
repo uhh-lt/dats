@@ -1,7 +1,7 @@
 import os
 from importlib import import_module
 from pathlib import Path
-from typing import Annotated, Any, Literal, Optional, TypeAlias
+from typing import Annotated, Any, Literal, Optional, Sequence, TypeAlias
 
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -9,6 +9,14 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from evaluation.artifact_registry import ARTIFACT_REGISTRY
 from evaluation.metric_registry import METRIC_REGISTRY
 from schemas.answer_schema import BaseAnswerSchema
+from schemas.reference_schema import (
+    BaseReferenceSchema,
+    ExtractiveQAReference,
+    MUC4Reference,
+    MultiLabelReference,
+    SingleLabelReference,
+    SpanClassificationReference,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PROMPT_TEMPLATE_DIR = PROJECT_ROOT / "src" / "prompts"
@@ -73,7 +81,7 @@ class DatasetConfigBase(BaseModel):
     def get_prompt_column_mapping(self) -> dict[str, str]:
         raise NotImplementedError
 
-    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
+    def get_references(self, df: pd.DataFrame) -> Sequence[BaseReferenceSchema]:
         raise NotImplementedError
 
     def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
@@ -93,13 +101,13 @@ class DatasetConfigBase(BaseModel):
         return context
 
 
-class DocumentClassificationConfig(DatasetConfigBase):
+class DocumentClassificationSingleLabelConfig(DatasetConfigBase):
     """Document classification dataset.
 
     Makes the `text` prompt variable available, mapped from `text_column`.
     """
 
-    dataset_type: Literal["document_classification"]
+    dataset_type: Literal["document_classification_single_label"]
     text_column: str = Field(min_length=1)
     label_column: str = Field(min_length=1)
 
@@ -108,8 +116,15 @@ class DocumentClassificationConfig(DatasetConfigBase):
             "text": self.text_column,
         }
 
-    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
-        return df[self.label_column].astype(str).tolist()
+    def get_references(self, df: pd.DataFrame) -> Sequence[SingleLabelReference]:
+        references: list[SingleLabelReference] = []
+
+        for raw_value in df[self.label_column].tolist():
+            value = raw_value.tolist() if hasattr(raw_value, "tolist") else raw_value
+
+            references.append(SingleLabelReference(label=str(value).strip()))
+
+        return references
 
     def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
@@ -118,7 +133,66 @@ class DocumentClassificationConfig(DatasetConfigBase):
         }
 
     @model_validator(mode="after")
-    def validate_dataset_columns(self) -> "DocumentClassificationConfig":
+    def validate_dataset_columns(self) -> "DocumentClassificationSingleLabelConfig":
+        dataset_columns = _read_dataset_columns(self.path)
+
+        if self.text_column not in dataset_columns:
+            raise ValueError(
+                f"text_column '{self.text_column}' not found in dataset {self.path}."
+            )
+        if self.label_column not in dataset_columns:
+            raise ValueError(
+                f"label_column '{self.label_column}' not found in dataset {self.path}."
+            )
+        for prompt_name, dataset_column in self.get_prompt_column_mapping().items():
+            if dataset_column not in dataset_columns:
+                raise ValueError(
+                    f"prompt_column_mapping['{prompt_name}'] references missing dataset column "
+                    f"'{dataset_column}' in {self.path}."
+                )
+        return self
+
+
+class DocumentClassificationMultiLabelConfig(DatasetConfigBase):
+    """Multi-label document classification dataset.
+
+    Makes the `text` prompt variable available, mapped from `text_column`.
+    """
+
+    dataset_type: Literal["document_classification_multi_label"]
+    text_column: str = Field(min_length=1)
+    label_column: str = Field(min_length=1)
+
+    def get_prompt_column_mapping(self) -> dict[str, str]:
+        return {
+            "text": self.text_column,
+        }
+
+    def get_references(self, df: pd.DataFrame) -> Sequence[MultiLabelReference]:
+        references: list[MultiLabelReference] = []
+
+        for raw_value in df[self.label_column].tolist():
+            value = raw_value.tolist() if hasattr(raw_value, "tolist") else raw_value
+
+            if isinstance(value, str):
+                labels = [item.strip() for item in value.split(",") if item.strip()]
+            elif isinstance(value, (list, tuple, set)):
+                labels = [str(item).strip() for item in value if str(item).strip()]
+            else:
+                labels = [str(value).strip()] if str(value).strip() else []
+
+            references.append(MultiLabelReference(labels=labels))
+
+        return references
+
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
+        return {
+            "text": df[self.text_column].tolist(),
+            "gold_label": df[self.label_column].tolist(),
+        }
+
+    @model_validator(mode="after")
+    def validate_dataset_columns(self) -> "DocumentClassificationMultiLabelConfig":
         dataset_columns = _read_dataset_columns(self.path)
 
         if self.text_column not in dataset_columns:
@@ -156,8 +230,11 @@ class QADatasetConfig(DatasetConfigBase):
             "question": self.question_column,
         }
 
-    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
-        return df[self.references_column].tolist()
+    def get_references(self, df: pd.DataFrame) -> Sequence[ExtractiveQAReference]:
+        return [
+            ExtractiveQAReference.create_from_reference(reference)
+            for reference in df[self.references_column].tolist()
+        ]
 
     def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
@@ -284,8 +361,8 @@ class SpanClassificationConfig(DatasetConfigBase):
             ],
         }
 
-    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
-        references: list[dict[str, Any]] = []
+    def get_references(self, df: pd.DataFrame) -> Sequence[SpanClassificationReference]:
+        references: list[SpanClassificationReference] = []
 
         for _, row in df.iterrows():
             row_data = {str(key): value for key, value in row.to_dict().items()}
@@ -309,21 +386,21 @@ class SpanClassificationConfig(DatasetConfigBase):
                 )
 
             references.append(
-                {
-                    "tokens": tokens,
-                    "tag_ids": tag_ids,
-                    "id2label": self.id2label,
-                }
+                SpanClassificationReference(
+                    tokens=tokens,
+                    tag_ids=tag_ids,
+                    id2label=self.id2label,
+                )
             )
 
         return references
 
     def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
-        references = self.get_true_labels(df)
+        references = self.get_references(df)
         return {
-            "tokens": [reference["tokens"] for reference in references],
+            "tokens": [reference.tokens for reference in references],
             "gold_tags": [
-                [reference["id2label"][label_id] for label_id in reference["tag_ids"]]
+                [reference.id2label[label_id] for label_id in reference.tag_ids]
                 for reference in references
             ],
         }
@@ -397,19 +474,25 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
             "context": self.context_column,
         }
 
-    def get_true_labels(self, df: pd.DataFrame) -> list[dict[str, list[str]]]:
-        references: list[dict[str, list[str]]] = []
+    def get_references(self, df: pd.DataFrame) -> Sequence[MUC4Reference]:
+        references: list[MUC4Reference] = []
 
         for _, row in df.iterrows():
             row_data = {str(key): value for key, value in row.to_dict().items()}
-            references.append(self._build_reference_from_row(row_data))
+            references.append(
+                MUC4Reference.create_from_reference(
+                    self._build_reference_from_row(row_data)
+                )
+            )
 
         return references
 
     def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
             "context": df[self.context_column].tolist(),
-            "gold_reference": self.get_true_labels(df),
+            "gold_reference": [
+                reference.model_dump() for reference in self.get_references(df)
+            ],
         }
 
     @model_validator(mode="after")
@@ -441,7 +524,8 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
 
 
 DatasetConfig: TypeAlias = Annotated[
-    DocumentClassificationConfig
+    DocumentClassificationSingleLabelConfig
+    | DocumentClassificationMultiLabelConfig
     | QADatasetConfig
     | SpanClassificationConfig
     | TemplateFillingDatasetConfig,

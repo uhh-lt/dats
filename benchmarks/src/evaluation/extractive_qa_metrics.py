@@ -1,33 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import evaluate
-from pydantic import BaseModel, Field, model_validator
 
 from evaluation.metric_base import BaseMetricWrapper
 from schemas.answer_schema import BaseAnswerSchema, ExtractiveQASchema
-from schemas.reference_schema import BaseReferenceSchema
+from schemas.reference_schema import BaseReferenceSchema, ExtractiveQAReference
 
 _NO_ANSWER_MARKERS = ("not answerable", "nicht beantwortbar")
-
-
-class SquadReferenceAnswers(BaseModel):
-    text: list[str] = Field(default_factory=list)
-    answer_start: list[int] = Field(default_factory=list)
-
-    @model_validator(mode="after")
-    def validate_lengths(self) -> "SquadReferenceAnswers":
-        if len(self.text) != len(self.answer_start):
-            raise ValueError(
-                "answers.text and answers.answer_start must have equal length."
-            )
-        return self
-
-
-class SquadReferenceAnswer(BaseReferenceSchema):
-    id: str = Field(min_length=1)
-    answers: SquadReferenceAnswers
 
 
 def _is_no_answer(answer: str) -> bool:
@@ -37,7 +18,9 @@ def _is_no_answer(answer: str) -> bool:
     return normalized in _NO_ANSWER_MARKERS
 
 
-class ExtractiveQASquad2Metrics(BaseMetricWrapper[ExtractiveQASchema]):
+class ExtractiveQASquad2Metrics(
+    BaseMetricWrapper[ExtractiveQASchema, ExtractiveQAReference]
+):
     def __init__(self) -> None:
         super().__init__()
         self.metric = evaluate.load("squad_v2")
@@ -45,13 +28,14 @@ class ExtractiveQASquad2Metrics(BaseMetricWrapper[ExtractiveQASchema]):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         if len(typed_predictions) == 0:
             raise ValueError("predictions and references must not be empty.")
@@ -59,20 +43,19 @@ class ExtractiveQASquad2Metrics(BaseMetricWrapper[ExtractiveQASchema]):
         evaluation_predictions: list[dict[str, Any]] = []
         evaluation_references: list[dict[str, Any]] = []
 
-        for parsed_object, reference in zip(typed_predictions, filtered_references):
+        for parsed_object, reference in zip(typed_predictions, typed_references):
             answer = parsed_object.get_prediction()
-            reference_payload = SquadReferenceAnswer.create_from_reference(reference)
 
             no_answer_probability = 1.0 if _is_no_answer(answer) else 0.0
 
             evaluation_predictions.append(
                 {
-                    "id": reference_payload.id,
+                    "id": reference.id,
                     "prediction_text": "" if no_answer_probability == 1.0 else answer,
                     "no_answer_probability": no_answer_probability,
                 }
             )
-            evaluation_references.append(reference_payload.model_dump())
+            evaluation_references.append(reference.model_dump())
 
         results = self.metric.compute(
             predictions=evaluation_predictions,

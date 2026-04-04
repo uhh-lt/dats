@@ -9,7 +9,7 @@ from evaluation.classification_artifacts import (
 )
 from evaluation.span_classification_artifacts import SpanClassificationReportArtifacts
 
-ARTIFACT_REGISTRY: dict[str, type[BaseArtifactBuilder[Any]]] = {
+ARTIFACT_REGISTRY: dict[str, type[BaseArtifactBuilder[Any, Any]]] = {
     "classification_confusion_matrix": SingleLabelConfusionMatrixArtifacts,
     "classification_report": SingleLabelClassificationReportArtifacts,
     "multilabel_confusion_matrices": MultiLabelConfusionMatrixArtifacts,
@@ -20,8 +20,8 @@ ARTIFACT_REGISTRY: dict[str, type[BaseArtifactBuilder[Any]]] = {
 
 def get_artifact_builders(
     artifact_names: list[str],
-) -> list[BaseArtifactBuilder[Any]]:
-    builders: list[BaseArtifactBuilder[Any]] = []
+) -> list[BaseArtifactBuilder[Any, Any]]:
+    builders: list[BaseArtifactBuilder[Any, Any]] = []
     unknown_artifacts: list[str] = []
 
     for name in artifact_names:

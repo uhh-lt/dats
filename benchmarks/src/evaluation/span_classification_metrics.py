@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Sequence, cast
 
 from seqeval.metrics import accuracy_score, classification_report, f1_score
 
@@ -10,19 +10,23 @@ from evaluation.span_classification_utils import (
     spans_to_tag_ids,
 )
 from schemas.answer_schema import BaseAnswerSchema, SpanClassificationSchema
+from schemas.reference_schema import BaseReferenceSchema, SpanClassificationReference
 
 
-class SpanClassificationMetrics(BaseMetricWrapper[SpanClassificationSchema]):
+class SpanClassificationMetrics(
+    BaseMetricWrapper[SpanClassificationSchema, SpanClassificationReference]
+):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         if len(typed_predictions) == 0:
             return {
@@ -35,7 +39,7 @@ class SpanClassificationMetrics(BaseMetricWrapper[SpanClassificationSchema]):
         gold_label_sequences: list[list[str]] = []
         predicted_label_sequences: list[list[str]] = []
 
-        for prediction, reference in zip(typed_predictions, filtered_references):
+        for prediction, reference in zip(typed_predictions, typed_references):
             tokens, gold_tag_ids, id2label, label2id = parse_span_reference(reference)
 
             predicted_tag_ids = spans_to_tag_ids(

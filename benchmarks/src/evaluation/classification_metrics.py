@@ -1,37 +1,41 @@
-from typing import Any
+from typing import Sequence
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.preprocessing import MultiLabelBinarizer
 
-from evaluation.eval_utils import (
-    extract_labels,
-    extract_multilabels,
-)
 from evaluation.metric_base import BaseMetricWrapper
 from schemas.answer_schema import (
     BaseAnswerSchema,
     MultiLabelClassificationSchema,
     SingleLabelClassificationSchema,
 )
+from schemas.reference_schema import (
+    BaseReferenceSchema,
+    MultiLabelReference,
+    SingleLabelReference,
+)
 
 
-class StandardClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationSchema]):
+class StandardClassificationMetrics(
+    BaseMetricWrapper[SingleLabelClassificationSchema, SingleLabelReference]
+):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_labels = [
             prediction.get_prediction().strip().lower()
             for prediction in typed_predictions
         ]
-        ref_labels = extract_labels(filtered_references, normalize=True)
+        ref_labels = [reference.label.strip().lower() for reference in typed_references]
 
         if len(pred_labels) == 0:
             return {
@@ -57,23 +61,26 @@ class StandardClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationS
         }
 
 
-class WeightedClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationSchema]):
+class WeightedClassificationMetrics(
+    BaseMetricWrapper[SingleLabelClassificationSchema, SingleLabelReference]
+):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_labels = [
             prediction.get_prediction().strip().lower()
             for prediction in typed_predictions
         ]
-        ref_labels = extract_labels(filtered_references, normalize=True)
+        ref_labels = [reference.label.strip().lower() for reference in typed_references]
 
         if len(pred_labels) == 0:
             return {
@@ -100,18 +107,19 @@ class WeightedClassificationMetrics(BaseMetricWrapper[SingleLabelClassificationS
 
 
 class MultiLabelClassificationMetrics(
-    BaseMetricWrapper[MultiLabelClassificationSchema]
+    BaseMetricWrapper[MultiLabelClassificationSchema, MultiLabelReference]
 ):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         pred_labels = [
             [
@@ -121,7 +129,10 @@ class MultiLabelClassificationMetrics(
             ]
             for prediction in typed_predictions
         ]
-        ref_labels = extract_multilabels(filtered_references, normalize=True)
+        ref_labels = [
+            [label.strip().lower() for label in reference.labels if label.strip()]
+            for reference in typed_references
+        ]
 
         if len(pred_labels) == 0:
             return {

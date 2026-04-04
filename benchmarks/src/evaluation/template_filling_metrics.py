@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar, cast, get_args, get_origin
+from typing import Any, Generic, Sequence, TypeVar
 
 import evaluate
-from pydantic import Field
 
 from evaluation.metric_base import BaseMetricWrapper
 from schemas.answer_schema import BaseAnswerSchema
-from schemas.reference_schema import BaseReferenceSchema
+from schemas.reference_schema import BaseReferenceSchema, MUC4Reference
 from schemas.template_filling_schema import TemplateFillingMUC4AnswerSchemaV1
 
 _NO_ANSWER_MARKERS = {
@@ -50,38 +49,13 @@ ReferenceSchemaT = TypeVar("ReferenceSchemaT", bound=BaseReferenceSchema)
 
 
 class TemplateFillingMetrics(
-    BaseMetricWrapper[AnswerSchemaT],
+    BaseMetricWrapper[AnswerSchemaT, ReferenceSchemaT],
     Generic[AnswerSchemaT, ReferenceSchemaT],
 ):
     def __init__(self) -> None:
         super().__init__()
         self.metric = evaluate.load("squad_v2")
-        self.reference_schema_cls = self._resolve_reference_schema_type()
         self.slots = self._resolve_slots()
-
-    def _resolve_reference_schema_type(self) -> type[ReferenceSchemaT]:
-        for cls in type(self).mro():
-            for base in getattr(cls, "__orig_bases__", ()):  # pragma: no branch
-                if get_origin(base) is TemplateFillingMetrics:
-                    args = get_args(base)
-                    if len(args) != 2:
-                        continue
-
-                    _, reference_schema = args
-                    if not (
-                        isinstance(reference_schema, type)
-                        and issubclass(reference_schema, BaseReferenceSchema)
-                    ):
-                        raise TypeError(
-                            f"{type(self).__name__}: second generic argument must be a BaseReferenceAnswer subclass."
-                        )
-
-                    return cast(type[ReferenceSchemaT], reference_schema)
-
-        raise TypeError(
-            f"{type(self).__name__}: unable to resolve generic reference schema from "
-            "TemplateFillingMetrics[AnswerSchema, ReferenceSchema]."
-        )
 
     def _resolve_slots(self) -> list[str]:
         answer_fields = set(self.answer_schema_cls.model_fields.keys())
@@ -104,21 +78,19 @@ class TemplateFillingMetrics(
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         filtered_predictions, filtered_references = self.discard_none_predictions(
             predictions,
             references,
         )
         typed_predictions = self.require_answer_schema(filtered_predictions)
+        typed_references = self.require_reference_schema(filtered_references)
 
         if len(typed_predictions) == 0:
             raise ValueError("predictions and references must not be empty.")
 
-        reference_payloads = [
-            self.reference_schema_cls.create_from_reference(reference).model_dump()
-            for reference in filtered_references
-        ]
+        reference_payloads = [reference.model_dump() for reference in typed_references]
         prediction_payloads = [
             prediction.get_prediction() for prediction in typed_predictions
         ]
@@ -182,15 +154,6 @@ class TemplateFillingMetrics(
             "avg_f1": avg_f1,
             **slot_metrics,
         }
-
-
-class MUC4Reference(BaseReferenceSchema):
-    incident: list[str] = Field(default_factory=list)
-    perpetrator: list[str] = Field(default_factory=list)
-    group_perpetrator: list[str] = Field(default_factory=list)
-    victim: list[str] = Field(default_factory=list)
-    target: list[str] = Field(default_factory=list)
-    weapon: list[str] = Field(default_factory=list)
 
 
 class TemplateFillingMUC4Metrics(

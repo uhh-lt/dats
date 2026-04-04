@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from schemas.answer_schema import SpanPrediction
+from schemas.reference_schema import SpanClassificationReference
 
 
 def normalize_label_name(label: str) -> str:
@@ -66,24 +67,13 @@ def normalize_tag_ids(value: Any) -> list[int]:
 
 
 def parse_span_reference(
-    reference: Any,
+    reference: SpanClassificationReference,
 ) -> tuple[list[str], list[int], dict[int, str], dict[str, int]]:
-    payload = reference
-    if isinstance(reference, str):
-        payload = json.loads(reference)
-
-    if not isinstance(payload, dict):
-        raise TypeError("Span reference must be a dict or JSON object string.")
-
-    tokens = normalize_tokens(payload.get("tokens"))
-    tag_ids = normalize_tag_ids(payload.get("tag_ids"))
-
-    raw_id2label = payload.get("id2label")
-    if not isinstance(raw_id2label, dict):
-        raise TypeError("Span reference key 'id2label' must be a dict.")
-
-    id2label: dict[int, str] = {
-        int(label_id): str(label_name) for label_id, label_name in raw_id2label.items()
+    tokens = normalize_tokens(reference.tokens)
+    tag_ids = normalize_tag_ids(reference.tag_ids)
+    id2label = {
+        int(label_id): str(label_name)
+        for label_id, label_name in reference.id2label.items()
     }
 
     if 0 not in id2label:

@@ -1,41 +1,61 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, cast, get_args, get_origin
+from typing import Generic, Sequence, TypeVar, cast, get_args, get_origin
 
 from schemas.answer_schema import BaseAnswerSchema
+from schemas.reference_schema import BaseReferenceSchema
 
 logger = logging.getLogger(__name__)
 
-SchemaT = TypeVar("SchemaT", bound=BaseAnswerSchema)
+AnswerSchemaT = TypeVar("AnswerSchemaT", bound=BaseAnswerSchema)
+ReferenceSchemaT = TypeVar("ReferenceSchemaT", bound=BaseReferenceSchema)
 
 
-class BaseMetricWrapper(Generic[SchemaT], ABC):
+class BaseMetricWrapper(Generic[AnswerSchemaT, ReferenceSchemaT], ABC):
     def __init__(self) -> None:
-        self.answer_schema_cls = self._required_schema()
+        self.answer_schema_cls = self._required_answer_schema()
+        self.reference_schema_cls = self._required_reference_schema()
 
-    def _required_schema(self) -> type[SchemaT]:
+    def _required_answer_schema(self) -> type[AnswerSchemaT]:
         for cls in type(self).mro():
             for base in getattr(cls, "__orig_bases__", ()):
                 origin = get_origin(base)
                 if isinstance(origin, type) and issubclass(origin, BaseMetricWrapper):
                     args = get_args(base)
                     if (
-                        args
+                        len(args) == 2
                         and isinstance(args[0], type)
                         and issubclass(args[0], BaseAnswerSchema)
                     ):
-                        return cast(type[SchemaT], args[0])
+                        return cast(type[AnswerSchemaT], args[0])
 
         raise TypeError(
             f"{self.__class__.__name__}: unable to resolve required schema type from generic BaseMetricWrapper[...]."
         )
 
+    def _required_reference_schema(self) -> type[ReferenceSchemaT]:
+        for cls in type(self).mro():
+            for base in getattr(cls, "__orig_bases__", ()):
+                origin = get_origin(base)
+                if isinstance(origin, type) and issubclass(origin, BaseMetricWrapper):
+                    args = get_args(base)
+                    if (
+                        len(args) == 2
+                        and isinstance(args[1], type)
+                        and issubclass(args[1], BaseReferenceSchema)
+                    ):
+                        return cast(type[ReferenceSchemaT], args[1])
+
+        raise TypeError(
+            f"{self.__class__.__name__}: unable to resolve required reference schema type from generic BaseMetricWrapper[...]."
+        )
+
     def require_answer_schema(
         self,
         predictions: list[BaseAnswerSchema],
-    ) -> list[SchemaT]:
+    ) -> list[AnswerSchemaT]:
         context = self.__class__.__name__
-        typed_predictions: list[SchemaT] = []
+        typed_predictions: list[AnswerSchemaT] = []
         required_schema = self.answer_schema_cls
 
         for index, prediction in enumerate(predictions):
@@ -45,15 +65,31 @@ class BaseMetricWrapper(Generic[SchemaT], ABC):
                     f"got {type(prediction).__name__} at index {index}."
                 )
 
-            typed_predictions.append(cast(SchemaT, prediction))
+            typed_predictions.append(cast(AnswerSchemaT, prediction))
 
         return typed_predictions
+
+    def require_reference_schema(
+        self,
+        references: Sequence[BaseReferenceSchema],
+    ) -> list[ReferenceSchemaT]:
+        typed_references: list[ReferenceSchemaT] = []
+        required_schema = self.reference_schema_cls
+
+        for reference in references:
+            if isinstance(reference, required_schema):
+                typed_references.append(cast(ReferenceSchemaT, reference))
+                continue
+
+            typed_references.append(required_schema.create_from_reference(reference))
+
+        return typed_references
 
     def discard_none_predictions(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
-    ) -> tuple[list[BaseAnswerSchema], list[Any]]:
+        references: Sequence[BaseReferenceSchema],
+    ) -> tuple[list[BaseAnswerSchema], list[BaseReferenceSchema]]:
         context = self.__class__.__name__
         if len(predictions) != len(references):
             raise ValueError(
@@ -62,7 +98,7 @@ class BaseMetricWrapper(Generic[SchemaT], ABC):
             )
 
         filtered_predictions: list[BaseAnswerSchema] = []
-        filtered_references: list[Any] = []
+        filtered_references: list[BaseReferenceSchema] = []
         discarded_count = 0
 
         for prediction, reference in zip(predictions, references):
@@ -86,6 +122,6 @@ class BaseMetricWrapper(Generic[SchemaT], ABC):
     def compute(
         self,
         predictions: list[BaseAnswerSchema | None],
-        references: list[Any],
+        references: Sequence[BaseReferenceSchema],
     ) -> dict[str, float]:
         """Return metric names and values for a prediction/reference pair list."""
