@@ -1,0 +1,11 @@
+name: muc4
+dataset_type: template_filling
+path: muc/muc.parquet
+context_column: doctext
+slot_columns:
+  incident: incident
+  perpetrator: perpetrator
+  group_perpetrator: group perpetrator
+  victim: victim
+  target: target
+  weapon: weapon

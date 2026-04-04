@@ -10,10 +10,14 @@ SchemaT = TypeVar("SchemaT", bound=BaseAnswerSchema)
 
 
 class BaseMetricWrapper(Generic[SchemaT], ABC):
+    def __init__(self) -> None:
+        self.answer_schema_cls = self._required_schema()
+
     def _required_schema(self) -> type[SchemaT]:
         for cls in type(self).mro():
             for base in getattr(cls, "__orig_bases__", ()):
-                if get_origin(base) is BaseMetricWrapper:
+                origin = get_origin(base)
+                if isinstance(origin, type) and issubclass(origin, BaseMetricWrapper):
                     args = get_args(base)
                     if (
                         args
@@ -32,7 +36,7 @@ class BaseMetricWrapper(Generic[SchemaT], ABC):
     ) -> list[SchemaT]:
         context = self.__class__.__name__
         typed_predictions: list[SchemaT] = []
-        required_schema = self._required_schema()
+        required_schema = self.answer_schema_cls
 
         for index, prediction in enumerate(predictions):
             if not isinstance(prediction, required_schema):

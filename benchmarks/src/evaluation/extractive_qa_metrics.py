@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from evaluation.metric_base import BaseMetricWrapper
 from schemas.answer_schema import BaseAnswerSchema, ExtractiveQASchema
+from schemas.reference_schema import BaseReferenceSchema
 
 _NO_ANSWER_MARKERS = ("not answerable", "nicht beantwortbar")
 
@@ -24,24 +25,9 @@ class SquadReferenceAnswers(BaseModel):
         return self
 
 
-class SquadReferenceAnswer(BaseModel):
+class SquadReferenceAnswer(BaseReferenceSchema):
     id: str = Field(min_length=1)
     answers: SquadReferenceAnswers
-
-
-def _parse_reference_payload(reference: Any) -> SquadReferenceAnswer:
-    if isinstance(reference, str):
-        return SquadReferenceAnswer.model_validate_json(reference)
-
-    if isinstance(reference, BaseModel):
-        return SquadReferenceAnswer.model_validate(reference.model_dump())
-
-    if isinstance(reference, dict):
-        return SquadReferenceAnswer.model_validate(reference)
-
-    raise TypeError(
-        "Reference must be a JSON string, dict, or pydantic model for SquadReferenceAnswer parsing."
-    )
 
 
 def _is_no_answer(answer: str) -> bool:
@@ -53,6 +39,7 @@ def _is_no_answer(answer: str) -> bool:
 
 class ExtractiveQASquad2Metrics(BaseMetricWrapper[ExtractiveQASchema]):
     def __init__(self) -> None:
+        super().__init__()
         self.metric = evaluate.load("squad_v2")
 
     def compute(
@@ -74,7 +61,7 @@ class ExtractiveQASquad2Metrics(BaseMetricWrapper[ExtractiveQASchema]):
 
         for parsed_object, reference in zip(typed_predictions, filtered_references):
             answer = parsed_object.get_prediction()
-            reference_payload = _parse_reference_payload(reference)
+            reference_payload = SquadReferenceAnswer.create_from_reference(reference)
 
             no_answer_probability = 1.0 if _is_no_answer(answer) else 0.0
 

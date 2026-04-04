@@ -7,12 +7,14 @@ from evaluation.classification_metrics import (
 )
 from evaluation.extractive_qa_metrics import ExtractiveQASquad2Metrics
 from evaluation.metric_base import BaseMetricWrapper
+from evaluation.template_filling_metrics import TemplateFillingMUC4Metrics
 
 METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any]]] = {
     "classification_macro_metrics": StandardClassificationMetrics,
     "classification_weighted_metrics": WeightedClassificationMetrics,
     "multilabel_weighted_metrics": MultiLabelClassificationMetrics,
     "extractive_qa_squad2_metrics": ExtractiveQASquad2Metrics,
+    "template_filling_muc4_metrics": TemplateFillingMUC4Metrics,
 }
 
 
