@@ -1,7 +1,7 @@
 import os
 from importlib import import_module
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Literal, Optional, TypeAlias
+from typing import Annotated, Any, Literal, Optional, TypeAlias
 
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -70,13 +70,13 @@ class DatasetConfigBase(BaseModel):
             raise ValueError(f"File not found: {v}")
         return v
 
-    def get_prompt_column_mapping(self) -> Dict[str, str]:
+    def get_prompt_column_mapping(self) -> dict[str, str]:
         raise NotImplementedError
 
     def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
         raise NotImplementedError
 
-    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         raise NotImplementedError
 
     def build_prompt_row_context(self, row: dict[str, Any]) -> dict[str, Any]:
@@ -103,7 +103,7 @@ class DocumentClassificationConfig(DatasetConfigBase):
     text_column: str = Field(min_length=1)
     label_column: str = Field(min_length=1)
 
-    def get_prompt_column_mapping(self) -> Dict[str, str]:
+    def get_prompt_column_mapping(self) -> dict[str, str]:
         return {
             "text": self.text_column,
         }
@@ -111,7 +111,7 @@ class DocumentClassificationConfig(DatasetConfigBase):
     def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
         return df[self.label_column].astype(str).tolist()
 
-    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
             "text": df[self.text_column].tolist(),
             "gold_label": df[self.label_column].tolist(),
@@ -150,7 +150,7 @@ class QADatasetConfig(DatasetConfigBase):
     question_column: str = Field(min_length=1)
     references_column: str = Field(min_length=1)
 
-    def get_prompt_column_mapping(self) -> Dict[str, str]:
+    def get_prompt_column_mapping(self) -> dict[str, str]:
         return {
             "context": self.context_column,
             "question": self.question_column,
@@ -159,7 +159,7 @@ class QADatasetConfig(DatasetConfigBase):
     def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
         return df[self.references_column].tolist()
 
-    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
             "context": df[self.context_column].tolist(),
             "question": df[self.question_column].tolist(),
@@ -191,6 +191,161 @@ class QADatasetConfig(DatasetConfigBase):
         return self
 
 
+class SpanClassificationConfig(DatasetConfigBase):
+    """Span classification dataset.
+
+    Exposes a joined `text` prompt variable from token sequences and a `labels`
+    variable derived from `id2label` (excluding the `O` label with id 0).
+    """
+
+    dataset_type: Literal["span_classification"]
+    tokens_column: str = Field(min_length=1)
+    tags_column: str = Field(min_length=1)
+    id2label: dict[int, str] = Field(min_length=1)
+
+    @field_validator("id2label", mode="before")
+    @classmethod
+    def normalize_id2label(cls, v: Any) -> dict[int, str]:
+        if not isinstance(v, dict):
+            raise TypeError("id2label must be a dictionary.")
+
+        normalized: dict[int, str] = {}
+        for label_id, label_name in v.items():
+            parsed_id = int(label_id)
+            parsed_label = str(label_name).strip()
+            if not parsed_label:
+                raise ValueError("id2label values must be non-empty strings.")
+            normalized[parsed_id] = parsed_label
+
+        return normalized
+
+    @staticmethod
+    def _normalize_tokens(value: Any) -> list[str]:
+        if value is None:
+            return []
+
+        if hasattr(value, "tolist"):
+            converted = value.tolist()
+            if converted is not value:
+                return SpanClassificationConfig._normalize_tokens(converted)
+
+        if isinstance(value, str):
+            return [token for token in value.split() if token]
+
+        if isinstance(value, (list, tuple)):
+            return [str(token) for token in value]
+
+        return [str(value)]
+
+    @staticmethod
+    def _normalize_tag_ids(value: Any) -> list[int]:
+        if value is None:
+            return []
+
+        if hasattr(value, "tolist"):
+            converted = value.tolist()
+            if converted is not value:
+                return SpanClassificationConfig._normalize_tag_ids(converted)
+
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return []
+
+            if stripped.startswith("[") and stripped.endswith("]"):
+                stripped = stripped[1:-1]
+
+            return [int(item.strip()) for item in stripped.split(",") if item.strip()]
+
+        if isinstance(value, (list, tuple)):
+            return [int(item) for item in value]
+
+        return [int(value)]
+
+    def get_prompt_column_mapping(self) -> dict[str, str]:
+        return {
+            "text": self.tokens_column,
+        }
+
+    def build_prompt_row_context(self, row: dict[str, Any]) -> dict[str, Any]:
+        if self.tokens_column not in row:
+            raise ValueError(
+                f"Dataset column '{self.tokens_column}' configured for prompt variable 'text' "
+                "is missing in row data."
+            )
+
+        tokens = self._normalize_tokens(row[self.tokens_column])
+        return {
+            "text": " ".join(tokens).strip(),
+            "labels": [
+                self.id2label[label_id]
+                for label_id in sorted(self.id2label.keys())
+                if label_id != 0
+            ],
+        }
+
+    def get_true_labels(self, df: pd.DataFrame) -> list[Any]:
+        references: list[dict[str, Any]] = []
+
+        for _, row in df.iterrows():
+            row_data = {str(key): value for key, value in row.to_dict().items()}
+
+            tokens = self._normalize_tokens(row_data[self.tokens_column])
+            tag_ids = self._normalize_tag_ids(row_data[self.tags_column])
+
+            if len(tokens) != len(tag_ids):
+                raise ValueError(
+                    "Span classification requires token and tag sequence lengths to match. "
+                    f"Got tokens={len(tokens)} and tags={len(tag_ids)}."
+                )
+
+            unknown_label_ids = [
+                label_id for label_id in tag_ids if label_id not in self.id2label
+            ]
+            if unknown_label_ids:
+                raise ValueError(
+                    "Found unknown tag id(s) in dataset row: "
+                    + ", ".join(str(item) for item in sorted(set(unknown_label_ids)))
+                )
+
+            references.append(
+                {
+                    "tokens": tokens,
+                    "tag_ids": tag_ids,
+                    "id2label": self.id2label,
+                }
+            )
+
+        return references
+
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
+        references = self.get_true_labels(df)
+        return {
+            "tokens": [reference["tokens"] for reference in references],
+            "gold_tags": [
+                [reference["id2label"][label_id] for label_id in reference["tag_ids"]]
+                for reference in references
+            ],
+        }
+
+    @model_validator(mode="after")
+    def validate_dataset_columns(self) -> "SpanClassificationConfig":
+        dataset_columns = _read_dataset_columns(self.path)
+
+        if self.tokens_column not in dataset_columns:
+            raise ValueError(
+                f"tokens_column '{self.tokens_column}' not found in dataset {self.path}."
+            )
+        if self.tags_column not in dataset_columns:
+            raise ValueError(
+                f"tags_column '{self.tags_column}' not found in dataset {self.path}."
+            )
+        if 0 not in self.id2label:
+            raise ValueError("id2label must contain label id 0 for the 'O' class.")
+
+        return self
+
+
 class TemplateFillingDatasetConfig(DatasetConfigBase):
     """Template filling dataset.
 
@@ -200,7 +355,7 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
 
     dataset_type: Literal["template_filling"]
     context_column: str = Field(min_length=1)
-    slot_columns: Dict[str, str] = Field(min_length=1)
+    slot_columns: dict[str, str] = Field(min_length=1)
 
     @staticmethod
     def _normalize_slot_values(value: Any) -> list[str]:
@@ -237,7 +392,7 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
             for slot, column in self.slot_columns.items()
         }
 
-    def get_prompt_column_mapping(self) -> Dict[str, str]:
+    def get_prompt_column_mapping(self) -> dict[str, str]:
         return {
             "context": self.context_column,
         }
@@ -251,7 +406,7 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
 
         return references
 
-    def log_dataset(self, df: pd.DataFrame) -> Dict[str, list[Any]]:
+    def log_dataset(self, df: pd.DataFrame) -> dict[str, list[Any]]:
         return {
             "context": df[self.context_column].tolist(),
             "gold_reference": self.get_true_labels(df),
@@ -286,7 +441,10 @@ class TemplateFillingDatasetConfig(DatasetConfigBase):
 
 
 DatasetConfig: TypeAlias = Annotated[
-    DocumentClassificationConfig | QADatasetConfig | TemplateFillingDatasetConfig,
+    DocumentClassificationConfig
+    | QADatasetConfig
+    | SpanClassificationConfig
+    | TemplateFillingDatasetConfig,
     Field(discriminator="dataset_type"),
 ]
 
@@ -304,14 +462,14 @@ class ExperimentConfig(BaseModel):
     sample_random_state: int = 42
     # input config
     prompt_template: Path
-    prompt_variables: Dict[str, Any] = Field(default_factory=dict)
+    prompt_variables: dict[str, Any] = Field(default_factory=dict)
     system_prompt_template: Path | None = None
-    system_prompt_variables: Dict[str, Any] = Field(default_factory=dict)
+    system_prompt_variables: dict[str, Any] = Field(default_factory=dict)
     # output config
     schema_ref: str = Field(alias="schema")
     # evaluation config
-    metrics: List[str] = Field(min_length=1)
-    artifacts: List[str] = Field(default_factory=list)
+    metrics: list[str] = Field(min_length=1)
+    artifacts: list[str] = Field(default_factory=list)
 
     @field_validator("prompt_template", mode="before")
     @classmethod
@@ -352,7 +510,7 @@ class ExperimentConfig(BaseModel):
 
     @field_validator("metrics")
     @classmethod
-    def validate_metrics(cls, values: List[str]) -> List[str]:
+    def validate_metrics(cls, values: list[str]) -> list[str]:
         for metric in values:
             if not isinstance(metric, str) or not metric.strip():
                 raise ValueError("All entries in 'metrics' must be non-empty strings.")
@@ -364,7 +522,7 @@ class ExperimentConfig(BaseModel):
 
     @field_validator("artifacts")
     @classmethod
-    def validate_artifacts(cls, values: List[str]) -> List[str]:
+    def validate_artifacts(cls, values: list[str]) -> list[str]:
         for artifact in values:
             if not isinstance(artifact, str) or not artifact.strip():
                 raise ValueError(

@@ -7,12 +7,14 @@ from evaluation.classification_artifacts import (
     SingleLabelClassificationReportArtifacts,
     SingleLabelConfusionMatrixArtifacts,
 )
+from evaluation.span_classification_artifacts import SpanClassificationReportArtifacts
 
 ARTIFACT_REGISTRY: dict[str, type[BaseArtifactBuilder[Any]]] = {
     "classification_confusion_matrix": SingleLabelConfusionMatrixArtifacts,
     "classification_report": SingleLabelClassificationReportArtifacts,
     "multilabel_confusion_matrices": MultiLabelConfusionMatrixArtifacts,
     "multilabel_classification_report": MultiLabelClassificationReportArtifacts,
+    "span_classification_report": SpanClassificationReportArtifacts,
 }
 
 

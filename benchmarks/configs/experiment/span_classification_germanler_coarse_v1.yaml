@@ -1,0 +1,28 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: german-ler-coarse
+
+experiment_name: span_classification
+# run_name: llama32_3b_germanler_coarse_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: span_classification_v1_de.j2
+prompt_variables:
+  examples: |
+    {"category": "person", "text": "Angela Merkel"}
+    {"category": "gesetz", "text": "Artikel 5"}
+
+system_prompt_template: span_classification_system_de.j2
+
+schema: span_classification_schema.GermanLERCoarseSpanClassificationSchemaV1
+
+metrics:
+  - span_classification_metrics
+
+artifacts:
+  - span_classification_report
+
+temperature: 0.0

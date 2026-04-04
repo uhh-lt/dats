@@ -189,7 +189,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
             )
         )
 
-    parsed_objects, valid_flags, parse_errors = _parse_responses(
+    parsed_responses, valid_flags, parse_errors = _parse_responses(
         raw_responses, schema_class
     )
 
@@ -204,7 +204,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     all_metrics: dict[str, float] = {}
     for evaluator in evaluators:
         all_metrics.update(
-            evaluator.compute(predictions=parsed_objects, references=true_labels)
+            evaluator.compute(predictions=parsed_responses, references=true_labels)
         )
     all_metrics["parse_error_rate"] = (
         0.0
@@ -216,8 +216,8 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
     results_data.update(
         {
             "predicted_label": [
-                parsed_object.get_prediction() if parsed_object is not None else None
-                for parsed_object in parsed_objects
+                parsed_response.get_prediction() if parsed_response is not None else None
+                for parsed_response in parsed_responses
             ],
             "prompt": prompts,
             "raw_llm_response": raw_responses,
@@ -237,7 +237,7 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
         for builder in artifact_builders:
             generated_artifact_paths.extend(
                 builder.build(
-                    predictions=parsed_objects,
+                    predictions=parsed_responses,
                     references=true_labels,
                     output_dir=run_config.output_dir,
                     artifact_prefix=artifact_prefix,

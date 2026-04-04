@@ -1,0 +1,14 @@
+name: german-ler-coarse
+dataset_type: span_classification
+path: german-ler/german_ler_test.parquet
+tokens_column: tokens
+tags_column: ner_tags
+id2label:
+  0: O
+  1: person
+  2: ort
+  3: organisation
+  4: norm
+  5: gesetz
+  6: rechtsprechung
+  7: literatur

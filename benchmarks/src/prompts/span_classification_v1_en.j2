@@ -1,0 +1,26 @@
+Here is a list of categories that I would like to extract from the text.
+The categories are:
+{{ labels | join('\n') }}
+
+Please extract all fitting spans (if any) from the following text:
+{{ text }}
+
+{% if examples %}Examples:
+{{ examples }}
+
+{% endif %}Return exactly a JSON object with this structure:
+{
+  "predictions": [
+    {
+      "category": "<category>",
+      "text": "<extracted text>"
+    }
+  ]
+}
+
+Use an empty list if no matching span exists:
+{
+  "predictions": []
+}
+
+Important: The extracted text must be copied verbatim from the input text.

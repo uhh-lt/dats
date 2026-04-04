@@ -46,3 +46,34 @@ class ExtractiveQASchema(BaseAnswerSchema):
 
     def get_prediction(self) -> str:
         return self.answer
+
+
+class SpanPrediction(BaseModel):
+    category: str = Field(
+        min_length=1,
+        description="Predicted category label for the extracted text span.",
+    )
+    text: str = Field(
+        min_length=1,
+        description="Text span extracted verbatim from the input text.",
+    )
+
+
+class SpanClassificationSchema(BaseAnswerSchema):
+    predictions: list[SpanPrediction] = Field(
+        default_factory=list,
+        description=(
+            "List of extracted spans. Each item must include 'category' and 'text'."
+        ),
+    )
+
+    def get_prediction(self) -> dict[str, list[dict[str, str]]]:
+        return {
+            "predictions": [
+                {
+                    "category": prediction.category,
+                    "text": prediction.text,
+                }
+                for prediction in self.predictions
+            ]
+        }
