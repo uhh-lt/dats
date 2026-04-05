@@ -9,8 +9,14 @@ from evaluation.span_classification_utils import (
     parse_span_reference,
     spans_to_tag_ids,
 )
-from schemas.answer_schema import BaseAnswerSchema, SpanClassificationSchema
-from schemas.reference_schema import BaseReferenceSchema, SpanClassificationReference
+from schemas.prediction.prediction_schema import (
+    BaseAnswerSchema,
+    SpanClassificationSchema,
+)
+from schemas.reference.reference_schema import (
+    BaseReferenceSchema,
+    SpanClassificationReference,
+)
 
 
 class SpanClassificationMetrics(

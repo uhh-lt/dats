@@ -4,12 +4,12 @@ from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from evaluation.metric_base import BaseMetricWrapper
-from schemas.answer_schema import (
+from schemas.prediction.prediction_schema import (
     BaseAnswerSchema,
     MultiLabelClassificationSchema,
     SingleLabelClassificationSchema,
 )
-from schemas.reference_schema import (
+from schemas.reference.reference_schema import (
     BaseReferenceSchema,
     MultiLabelReference,
     SingleLabelReference,

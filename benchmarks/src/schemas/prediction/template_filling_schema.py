@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from schemas.answer_schema import BaseAnswerSchema
+from schemas.prediction.prediction_schema import BaseAnswerSchema
 
 
 class TemplateFillingMUC4AnswerSchemaV1(BaseAnswerSchema):

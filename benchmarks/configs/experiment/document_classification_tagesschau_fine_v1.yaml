@@ -38,7 +38,7 @@ system_prompt_variables:
   project_name: Tagesschau
   project_description: Eine Analyse der Themen in Deutschland basierend auf den Nachrichten und Artikeln der Tagesschau.
 
-schema: document_classification_schema.TagesschauFineClassificationSchemaV1
+answer_schema: document_classification_schema.TagesschauFineClassificationSchemaV1
 
 metrics:
   - classification_macro_metrics

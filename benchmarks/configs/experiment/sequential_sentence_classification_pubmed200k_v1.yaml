@@ -29,7 +29,7 @@ system_prompt_variables:
     - >-
       conclusions - Summarizes the key findings of the research and draw inferences from those findings. They provide closure to the abstract, summarizing the overall contribution of the research.
 
-schema: sequential_sentence_classification_schema.Pubmed200KSequentialSentenceClassificationSchemaV1
+answer_schema: sequential_sentence_classification_schema.Pubmed200KSequentialSentenceClassificationSchemaV1
 
 metrics:
   - sequential_sentence_classification_metrics

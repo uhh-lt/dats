@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from schemas.answer_schema import SpanPrediction
-from schemas.reference_schema import SpanClassificationReference
+from schemas.prediction.prediction_schema import SpanPrediction
+from schemas.reference.reference_schema import SpanClassificationReference
 
 
 def normalize_label_name(label: str) -> str:

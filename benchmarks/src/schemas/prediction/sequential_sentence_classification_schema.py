@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from schemas.answer_schema import (
+from schemas.prediction.prediction_schema import (
     SequentialSentenceAnnotation,
     SequentialSentenceClassificationSchema,
 )

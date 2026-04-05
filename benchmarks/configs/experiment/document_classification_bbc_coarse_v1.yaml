@@ -22,7 +22,7 @@ system_prompt_variables:
   project_name: BBC
   project_description: An analysis of topics discussed in the United Kingdom based on BBC news and articles.
 
-schema: document_classification_schema.BBCCoarseClassificationSchemaV1
+answer_schema: document_classification_schema.BBCCoarseClassificationSchemaV1
 
 metrics:
   - classification_macro_metrics

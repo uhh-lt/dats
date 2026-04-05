@@ -39,7 +39,7 @@ system_prompt_variables:
     - >-
       other - A comment that does not fit any of the previous definitions.
 
-schema: sequential_sentence_classification_schema.CoarseDiscourseSequentialSentenceClassificationSchemaV1
+answer_schema: sequential_sentence_classification_schema.CoarseDiscourseSequentialSentenceClassificationSchemaV1
 
 metrics:
   - sequential_sentence_classification_metrics

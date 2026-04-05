@@ -15,7 +15,7 @@ prompt_variables:
     - sci.space
     - talk.politics.mideast
 
-schema: newsgroups20_schema.NewsgroupClassificationSchemaV1
+answer_schema: newsgroups20_schema.NewsgroupClassificationSchemaV1
 
 metrics:
   - classification_macro_metrics

@@ -5,8 +5,14 @@ from typing import Any, Sequence
 import evaluate
 
 from evaluation.metric_base import BaseMetricWrapper
-from schemas.answer_schema import BaseAnswerSchema, ExtractiveQASchema
-from schemas.reference_schema import BaseReferenceSchema, ExtractiveQAReference
+from schemas.prediction.prediction_schema import (
+    BaseAnswerSchema,
+    ExtractiveQASchema,
+)
+from schemas.reference.reference_schema import (
+    BaseReferenceSchema,
+    ExtractiveQAReference,
+)
 
 _NO_ANSWER_MARKERS = ("not answerable", "nicht beantwortbar")
 

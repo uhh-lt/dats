@@ -9,7 +9,7 @@ prompt_template: template_filling_muc4_v1_en.j2
 
 system_prompt_template: template_filling_system_en.j2
 
-schema: template_filling_schema.TemplateFillingMUC4AnswerSchemaV1
+answer_schema: template_filling_schema.TemplateFillingMUC4AnswerSchemaV1
 
 metrics:
   - template_filling_muc4_metrics

@@ -11,11 +11,11 @@ from evaluation.sequential_sentence_classification_utils import (
     build_label_sequences,
     to_bio_format,
 )
-from schemas.answer_schema import (
+from schemas.prediction.prediction_schema import (
     BaseAnswerSchema,
     SequentialSentenceClassificationSchema,
 )
-from schemas.reference_schema import (
+from schemas.reference.reference_schema import (
     BaseReferenceSchema,
     SequentialSentenceClassificationReference,
 )

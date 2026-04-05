@@ -35,7 +35,7 @@ system_prompt_variables:
     - >-
       joy - A feeling of happiness, contentment, or pleasure. It can manifest as amusement or love.
 
-schema: sequential_sentence_classification_schema.DailyDialogSequentialSentenceClassificationSchemaV1
+answer_schema: sequential_sentence_classification_schema.DailyDialogSequentialSentenceClassificationSchemaV1
 
 metrics:
   - sequential_sentence_classification_metrics

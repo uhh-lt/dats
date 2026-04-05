@@ -13,7 +13,7 @@ prompt_template: extractive_qa_squad1_v1_en.j2
 
 system_prompt_template: extractive_qa_system_en.j2
 
-schema: extractive_qa_schema.ExtractiveQAAnswerSchemaV1
+answer_schema: extractive_qa_schema.ExtractiveQAAnswerSchemaV1
 
 metrics:
   - extractive_qa_squad2_metrics

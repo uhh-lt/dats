@@ -5,9 +5,9 @@ from typing import Any, Generic, Sequence, TypeVar
 import evaluate
 
 from evaluation.metric_base import BaseMetricWrapper
-from schemas.answer_schema import BaseAnswerSchema
-from schemas.reference_schema import BaseReferenceSchema, MUC4Reference
-from schemas.template_filling_schema import TemplateFillingMUC4AnswerSchemaV1
+from schemas.prediction.prediction_schema import BaseAnswerSchema
+from schemas.prediction.template_filling_schema import TemplateFillingMUC4AnswerSchemaV1
+from schemas.reference.reference_schema import BaseReferenceSchema, MUC4Reference
 
 _NO_ANSWER_MARKERS = {
     "",

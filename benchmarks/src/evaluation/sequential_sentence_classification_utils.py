@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from schemas.answer_schema import SequentialSentenceClassificationSchema
-from schemas.reference_schema import SequentialSentenceClassificationReference
+from schemas.prediction.prediction_schema import SequentialSentenceClassificationSchema
+from schemas.reference.reference_schema import SequentialSentenceClassificationReference
 
 
 def _normalize_label(label: str) -> str:

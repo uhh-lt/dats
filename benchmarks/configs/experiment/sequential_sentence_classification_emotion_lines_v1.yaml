@@ -35,7 +35,7 @@ system_prompt_variables:
     - >-
       neutral - A state of emotional balance or equilibrium, where no particular emotion is dominant.
 
-schema: sequential_sentence_classification_schema.EmotionLinesSequentialSentenceClassificationSchemaV1
+answer_schema: sequential_sentence_classification_schema.EmotionLinesSequentialSentenceClassificationSchemaV1
 
 metrics:
   - sequential_sentence_classification_metrics

@@ -9,7 +9,8 @@ import docker
 import requests
 from docker.types import DeviceRequest
 
-from schemas.config_schema import ModelConfig, VllmBackendConfig
+from schemas.config.backend_schema import VllmBackendConfig
+from schemas.config.model_schema import ModelConfig
 
 logger = logging.getLogger(__name__)
 

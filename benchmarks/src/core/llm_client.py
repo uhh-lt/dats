@@ -6,7 +6,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 from tqdm.asyncio import tqdm_asyncio
 
-from schemas.answer_schema import BaseAnswerSchema
+from schemas.prediction.prediction_schema import BaseAnswerSchema
 
 
 async def _fetch_completion(

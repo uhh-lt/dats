@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 
 from core.runner import run_experiment
-from schemas.config_schema import RunConfig
+from schemas.config.run_schema import RunConfig
 
 logging.basicConfig(
     level=logging.INFO,

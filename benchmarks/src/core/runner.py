@@ -1,8 +1,7 @@
 import asyncio
 import logging
-from importlib import import_module
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 from uuid import uuid4
 
 import pandas as pd
@@ -14,32 +13,16 @@ from core.llm_client import run_batch_inference
 from core.logger import log_experiment_to_mlflow
 from evaluation.artifact_registry import get_artifact_builders
 from evaluation.metric_registry import get_metric_evaluators
-from schemas.answer_schema import BaseAnswerSchema
-from schemas.config_schema import (
-    DatasetConfig,
-    RunConfig,
-)
-from schemas.reference_schema import BaseReferenceSchema
+from schemas.config.dataset_schema import DatasetConfig
+from schemas.config.run_schema import RunConfig
+from schemas.prediction.prediction_schema import BaseAnswerSchema
+from schemas.prediction.schema_resolver import resolve_answer_schema
 
 logger = logging.getLogger(__name__)
 
 
-def _load_schema(schema_ref: str) -> type[BaseAnswerSchema]:
-    schema_module_name, schema_class_name = schema_ref.rsplit(".", 1)
-    import_name = (
-        schema_module_name
-        if schema_module_name.startswith("schemas.")
-        else f"schemas.{schema_module_name}"
-    )
-    module = import_module(import_name)
-    schema_class = getattr(module, schema_class_name)
-
-    if not issubclass(schema_class, BaseAnswerSchema):
-        raise TypeError(
-            f"Schema '{schema_ref}' must inherit from BaseAnswerSchema and implement get_prediction()."
-        )
-
-    return schema_class
+def _load_answer_schema(answer_schema: str) -> type[BaseAnswerSchema]:
+    return resolve_answer_schema(answer_schema)
 
 
 def _render_prompts(
@@ -167,8 +150,8 @@ def run_experiment(run_config: RunConfig) -> dict[str, Any]:
 
         print(f"Rendered system prompt:\n{system_prompt}\n{'-' * 60}")
 
-    schema_class = _load_schema(experiment_config.schema_ref)
-    logger.info("Loaded output schema %s", experiment_config.schema_ref)
+    schema_class = _load_answer_schema(experiment_config.answer_schema)
+    logger.info("Loaded output schema %s", experiment_config.answer_schema)
 
     logger.info("Starting vLLM Docker container for model %s", model_config.name)
     with managed_vllm_container(

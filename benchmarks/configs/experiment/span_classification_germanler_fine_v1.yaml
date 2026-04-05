@@ -17,7 +17,7 @@ prompt_variables:
 
 system_prompt_template: span_classification_system_de.j2
 
-schema: span_classification_schema.GermanLERFineSpanClassificationSchemaV1
+answer_schema: span_classification_schema.GermanLERFineSpanClassificationSchemaV1
 
 metrics:
   - span_classification_metrics

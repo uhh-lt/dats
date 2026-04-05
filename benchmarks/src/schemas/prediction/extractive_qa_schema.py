@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from schemas.answer_schema import ExtractiveQASchema
+from schemas.prediction.prediction_schema import ExtractiveQASchema
 
 
 class ExtractiveQAAnswerSchemaV1(ExtractiveQASchema):

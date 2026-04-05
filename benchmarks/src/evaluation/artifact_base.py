@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, Sequence, TypeVar, cast, get_args, get_origin
 
-from schemas.answer_schema import BaseAnswerSchema
-from schemas.reference_schema import BaseReferenceSchema
+from schemas.prediction.prediction_schema import BaseAnswerSchema
+from schemas.reference.reference_schema import BaseReferenceSchema
 
 logger = logging.getLogger(__name__)
 

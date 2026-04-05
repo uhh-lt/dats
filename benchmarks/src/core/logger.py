@@ -8,7 +8,7 @@ from typing import Any
 import mlflow
 import pandas as pd
 
-from schemas.config_schema import RunConfig
+from schemas.config.run_schema import RunConfig
 
 logger = logging.getLogger(__name__)
 

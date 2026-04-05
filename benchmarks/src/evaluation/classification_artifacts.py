@@ -13,12 +13,12 @@ from sklearn.metrics import (
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from evaluation.artifact_base import BaseArtifactBuilder
-from schemas.answer_schema import (
+from schemas.prediction.prediction_schema import (
     BaseAnswerSchema,
     MultiLabelClassificationSchema,
     SingleLabelClassificationSchema,
 )
-from schemas.reference_schema import (
+from schemas.reference.reference_schema import (
     BaseReferenceSchema,
     MultiLabelReference,
     SingleLabelReference,
