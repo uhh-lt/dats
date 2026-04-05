@@ -1,0 +1,46 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: daily-dialog
+
+experiment_name: sequential_sentence_classification
+# run_name: llama32_3b_daily_dialog_zeroshot_v1
+
+max_examples: 500
+
+prompt_template: sequential_sentence_classification_v1_en.j2
+prompt_variables:
+  input_name: dialog
+  unit_name: utterance
+
+system_prompt_template: sequential_sentence_classification_system_v1_en.j2
+system_prompt_variables:
+  annotation_target: utterances in written dialogs
+  project_name: Emotion Analysis of Daily Dialogs
+  project_details: analyzing basic emotions of written dialogs on common topics. The dialogs reflect our daily communication way.
+  annotation_guidelines:
+    - >-
+      fear - A feeling of apprehension or dread in response to a perceived threat or danger. It can range from mild anxiety to intense terror.
+    - >-
+      disgust - A feeling of revulsion or aversion, often triggered by something perceived as unpleasant, unsanitary, or morally offensive.
+    - >-
+      neutral - A state of emotional balance or equilibrium, where no particular emotion is dominant.
+    - >-
+      excited - A state of heightened arousal and positive anticipation. It often involves feelings of enthusiasm, eagerness, and energy.
+    - >-
+      anger - A feeling of intense displeasure or hostility, often triggered by a perceived wrong or injustice. It can manifest as irritation, frustration, rage, or fury.
+    - >-
+      surprise - A brief emotional state in response to an unexpected event. It can be positive, negative, or neutral, depending on the nature of the surprise.
+    - >-
+      sadness - A feeling of sorrow, grief, or disappointment. It can range from mild melancholy to intense despair.
+    - >-
+      joy - A feeling of happiness, contentment, or pleasure. It can manifest as amusement or love.
+
+schema: sequential_sentence_classification_schema.DailyDialogSequentialSentenceClassificationSchemaV1
+
+metrics:
+  - sequential_sentence_classification_metrics
+
+artifacts:
+  - sequential_sentence_classification_report
+
+temperature: 0.0

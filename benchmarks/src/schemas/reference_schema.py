@@ -65,6 +65,21 @@ class SpanClassificationReference(BaseReferenceSchema):
         return self
 
 
+class SequentialSentenceClassificationReference(BaseReferenceSchema):
+    sentences: list[str] = Field(min_length=1)
+    labels: list[str] = Field(min_length=1)
+    unwanted_labels: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_lengths(self) -> "SequentialSentenceClassificationReference":
+        if len(self.sentences) != len(self.labels):
+            raise ValueError(
+                "Sequential sentence classification requires sentence and label sequence lengths to match. "
+                f"Got sentences={len(self.sentences)} and labels={len(self.labels)}."
+            )
+        return self
+
+
 class MUC4Reference(BaseReferenceSchema):
     incident: list[str] = Field(default_factory=list)
     perpetrator: list[str] = Field(default_factory=list)

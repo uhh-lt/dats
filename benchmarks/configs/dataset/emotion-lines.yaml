@@ -1,0 +1,7 @@
+name: emotion-lines
+dataset_type: sequential_sentence_classification
+path: emotion_lines/friends_test.parquet
+sentences_column: sentences
+labels_column: labels
+unwanted_labels:
+  - non-neutral

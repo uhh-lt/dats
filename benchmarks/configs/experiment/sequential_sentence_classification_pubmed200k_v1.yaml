@@ -1,0 +1,40 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: pubmed200k
+
+experiment_name: sequential_sentence_classification
+# run_name: llama32_3b_pubmed200k_zeroshot_v1
+
+max_examples: 500
+
+prompt_template: sequential_sentence_classification_v1_en.j2
+prompt_variables:
+  input_name: document
+  unit_name: sentence
+
+system_prompt_template: sequential_sentence_classification_system_v1_en.j2
+system_prompt_variables:
+  annotation_target: sentences of PubMed abstracts
+  project_name: Rethorical Roles Analysis of PubMed Abstracts
+  project_details: analyzing the rhetorical roles of sentences in abstracts of randomized controlled trials. The abstracts are collected from PubMed.
+  annotation_guidelines:
+    - >-
+      background - Provides context or previous knowledge relevant to the research topic. Think of it as setting the stage for the study.
+    - >-
+      methods - Describes the procedures and techniques used in the research. This includes the study design, data collection, and analysis methods.
+    - >-
+      objective - States the main goal or purpose of the research. What question is this work trying to answer?
+    - >-
+      results - Presents the findings or outcomes of the research. This often includes statistical data, tables, and figures.
+    - >-
+      conclusions - Summarizes the key findings of the research and draw inferences from those findings. They provide closure to the abstract, summarizing the overall contribution of the research.
+
+schema: sequential_sentence_classification_schema.Pubmed200KSequentialSentenceClassificationSchemaV1
+
+metrics:
+  - sequential_sentence_classification_metrics
+
+artifacts:
+  - sequential_sentence_classification_report
+
+temperature: 0.0

@@ -7,6 +7,9 @@ from evaluation.classification_metrics import (
 )
 from evaluation.extractive_qa_metrics import ExtractiveQASquad2Metrics
 from evaluation.metric_base import BaseMetricWrapper
+from evaluation.sequential_sentence_classification_metrics import (
+    SequentialSentenceClassificationMetrics,
+)
 from evaluation.span_classification_metrics import SpanClassificationMetrics
 from evaluation.template_filling_metrics import TemplateFillingMUC4Metrics
 
@@ -17,6 +20,7 @@ METRIC_REGISTRY: dict[str, type[BaseMetricWrapper[Any, Any]]] = {
     "extractive_qa_squad2_metrics": ExtractiveQASquad2Metrics,
     "template_filling_muc4_metrics": TemplateFillingMUC4Metrics,
     "span_classification_metrics": SpanClassificationMetrics,
+    "sequential_sentence_classification_metrics": SequentialSentenceClassificationMetrics,
 }
 
 

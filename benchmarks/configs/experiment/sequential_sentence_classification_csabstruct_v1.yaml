@@ -1,0 +1,40 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: csabstruct
+
+experiment_name: sequential_sentence_classification
+# run_name: llama32_3b_csabstruct_zeroshot_v1
+
+max_examples: 500
+
+prompt_template: sequential_sentence_classification_v1_en.j2
+prompt_variables:
+  input_name: document
+  unit_name: sentence
+
+system_prompt_template: sequential_sentence_classification_system_v1_en.j2
+system_prompt_variables:
+  annotation_target: sentences of computer science abstracts
+  project_name: Rethorical Roles Analysis of CS Abstracts
+  project_details: analyzing the rhetorical roles of sentences in computer science abstracts. The abstracts are collected from the Semantic Scholar corpus.
+  annotation_guidelines:
+    - >-
+      background - Provides context or previous knowledge relevant to the research topic. Think of it as setting the stage for the study.
+    - >-
+      method - Describes the procedures and techniques used in the research. This includes the study design, data collection, and analysis methods.
+    - >-
+      objective - States the main goal or purpose of the research. What question is this work trying to answer?
+    - >-
+      other - Any sentence that does not fit into the above categories. This could be discussion, analysis, limitations, or concluding remarks.
+    - >-
+      result - Presents the findings or outcomes of the research. This often includes statistical data, tables, and figures.
+
+schema: sequential_sentence_classification_schema.CSABStructSequentialSentenceClassificationSchemaV1
+
+metrics:
+  - sequential_sentence_classification_metrics
+
+artifacts:
+  - sequential_sentence_classification_report
+
+temperature: 0.0

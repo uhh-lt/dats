@@ -77,3 +77,37 @@ class SpanClassificationSchema(BaseAnswerSchema):
                 for prediction in self.predictions
             ]
         }
+
+
+class SequentialSentenceAnnotation(BaseModel):
+    text_id: int = Field(
+        ge=1,
+        description="1-based sentence id that maps to the numbered sentence in the prompt.",
+    )
+    category: str = Field(
+        min_length=1,
+        description="Predicted category label for the referenced sentence.",
+    )
+    reason: str | None = Field(
+        default=None,
+        description="Optional rationale for the predicted category.",
+    )
+
+
+class SequentialSentenceClassificationSchema(BaseAnswerSchema):
+    annotations: list[SequentialSentenceAnnotation] = Field(
+        default_factory=list,
+        description="Per-sentence predictions identified by text_id.",
+    )
+
+    def get_prediction(self) -> dict[str, list[dict[str, str | int | None]]]:
+        return {
+            "annotations": [
+                {
+                    "text_id": annotation.text_id,
+                    "category": annotation.category,
+                    "reason": annotation.reason,
+                }
+                for annotation in self.annotations
+            ]
+        }
