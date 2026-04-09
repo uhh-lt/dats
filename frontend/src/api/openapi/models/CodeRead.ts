@@ -14,7 +14,7 @@ export type CodeRead = {
   /**
    * Description of the Code
    */
-  description: string;
+  description?: string;
   /**
    * Parent of the Code
    */
