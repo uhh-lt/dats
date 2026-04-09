@@ -94,6 +94,8 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
     dispatch(CRUDDialogActions.openProjectSettings());
   }, [dispatch]);
 
+  const selectedColor = "rgba(0, 0, 0, 0.5)";
+
   return (
     <Drawer
       variant="permanent"
@@ -154,14 +156,14 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
         {isInProject && (
           <List sx={{ py: 0 }}>
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Search (⌘⇧S)" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Search in Corpus (⌘⇧S)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   onClick={handleSearchMenuClick}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("search") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("search") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -205,33 +207,6 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Perspectives (⌘M)" placement="right" arrow disableHoverListener={isExpanded}>
-                <ListItemButton
-                  component={Link}
-                  to={`/project/${projectId}/perspectives`}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: isExpanded ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor: isActive("/perspectives") ? "rgba(0, 0, 0, 0.08)" : "transparent",
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: isExpanded ? 3 : "auto",
-                      justifyContent: "center",
-                      color: "primary.contrastText",
-                    }}
-                  >
-                    {getIconComponent(Icon.PERSPECTIVES)}
-                  </ListItemIcon>
-                  {isExpanded && <ListItemText>Perspectives</ListItemText>}
-                </ListItemButton>
-              </Tooltip>
-            </ListItem>
-
-            <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
@@ -240,7 +215,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/annotation") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/annotation") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -263,6 +238,33 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
+              <Tooltip title="Perspectives (⌘M)" placement="right" arrow disableHoverListener={isExpanded}>
+                <ListItemButton
+                  component={Link}
+                  to={`/project/${projectId}/perspectives`}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: isExpanded ? "initial" : "center",
+                    px: 2.5,
+                    bgcolor: isActive("/perspectives") ? selectedColor : "transparent",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: isExpanded ? 3 : "auto",
+                      justifyContent: "center",
+                      color: "primary.contrastText",
+                    }}
+                  >
+                    {getIconComponent(Icon.PERSPECTIVES)}
+                  </ListItemIcon>
+                  {isExpanded && <ListItemText>Perspectives</ListItemText>}
+                </ListItemButton>
+              </Tooltip>
+            </ListItem>
+
+            <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Analysis (⌘⇧Y)" placement="right" arrow disableHoverListener={isExpanded}>
                 <ListItemButton
                   component={Link}
@@ -271,7 +273,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/analysis") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/analysis") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -302,7 +304,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/classifier") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/classifier") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -333,7 +335,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/whiteboard") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/whiteboard") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -364,7 +366,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/logbook") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/logbook") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -394,7 +396,7 @@ function SideBar({ isExpanded, onToggle, loginStatus, user, handleLogout, isInPr
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/tools") ? "rgba(0, 0, 0, 0.08)" : "transparent",
+                    bgcolor: isActive("/tools") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
