@@ -205,6 +205,7 @@ function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
+      type: "DELETE",
       onAccept: () => {
         deleteMutation.mutate({ spanAnnotationToDelete: annotation as SpanAnnotationRead });
       },

@@ -2,6 +2,7 @@ import eventBus from "../../EventBus.ts";
 
 export interface ConfirmationEvent {
   text: string;
+  type?: "DELETE" | "CONFIRM";
   onAccept: () => void;
   onReject?: () => void;
 }

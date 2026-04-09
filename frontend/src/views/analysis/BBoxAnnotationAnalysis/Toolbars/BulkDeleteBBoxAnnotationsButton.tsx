@@ -19,6 +19,7 @@ function BulkDeleteBBoxAnnotationsButton({ selectedData }: BulkDeleteBBoxAnnotat
       text: `Do you really want to delete ${selectedData.length} bbox annotation${
         selectedData.length > 1 ? "s" : ""
       }? This action cannot be undone!`,
+      type: "DELETE",
       onAccept: () => {
         deleteBulkMutation.mutate(
           { requestBody: selectedData.map((row) => row.id) },

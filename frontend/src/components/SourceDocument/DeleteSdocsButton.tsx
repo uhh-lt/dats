@@ -30,6 +30,7 @@ function DeleteSdocsButton({ sdocIds, navigateTo, ...props }: DeleteSdocsButtonP
       text: `Do you really want to delete document(s) ${sdocIds.join(
         ", ",
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
+      type: "DELETE",
       onAccept: () => {
         deleteDocuments(
           {

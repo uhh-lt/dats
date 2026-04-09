@@ -91,6 +91,7 @@ function TagEditDialog() {
     if (tag) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the tag "${tag.name}"? This action cannot be undone!`,
+        type: "DELETE",
         onAccept: () => {
           deleteTagMutation(
             { tagId: tag.id },

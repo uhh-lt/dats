@@ -28,6 +28,7 @@ function DeleteSdocsMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteSd
     if (!sdocId) return;
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete document(s) ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
+      type: "DELETE",
       onAccept: () => {
         deleteDocuments(
           {

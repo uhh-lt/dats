@@ -95,6 +95,7 @@ function MetadataEditMenu({ projectMetadata }: MetadataEditMenuProps) {
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete the ProjectMetadata ${projectMetadata.id}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
+      type: "DELETE",
       onAccept: () => {
         const mutation = deleteMutation.mutate;
         mutation({
