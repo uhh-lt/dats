@@ -1,17 +1,16 @@
-import DeleteIcon from "@mui/icons-material/Delete";
-import { LoadingButton, TabContext } from "@mui/lab";
+import { TabContext } from "@mui/lab";
 import TabPanel from "@mui/lab/TabPanel";
-import { AppBar, Box, Dialog, DialogActions, DialogContent, Divider, Tabs } from "@mui/material";
+import { AppBar, Dialog, DialogContent, Tabs } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import React, { memo, useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { useDialogMaximize } from "../../hooks/useDialogMaximize.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 import DATSDialogHeader from "../MUI/DATSDialogHeader.tsx";
 import ProjectCodes from "./tabs/ProjectCodes.tsx";
+import ProjectDangerZone from "./tabs/ProjectDangerZone.tsx";
 import ProjectDetails from "./tabs/ProjectDetails.tsx";
 import ProjectImport from "./tabs/ProjectImport.tsx";
 import ProjectTags from "./tabs/ProjectTags.tsx";
@@ -36,25 +35,6 @@ function ProjectSettingsDialog() {
   const handleChangeTab = useCallback((_event: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
   }, []);
-
-  const navigate = useNavigate();
-  const { mutate: deleteProject, isPending } = ProjectHooks.useDeleteProject();
-  const handleClickRemoveProject = useCallback(() => {
-    if (project.data) {
-      ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to delete the project "${project.data.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
-        type: "DELETE",
-        onAccept: () => {
-          deleteProject(
-            { projId: project.data.id },
-            {
-              onSuccess: () => navigate(`/projects`),
-            },
-          );
-        },
-      });
-    }
-  }, [project.data, deleteProject, navigate]);
 
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
@@ -87,6 +67,7 @@ function ProjectSettingsDialog() {
             <Tab label="Codes" value="3" />
             <Tab label="Tags" value="4" />
             <Tab label="Import" value="5" />
+            <Tab label="Danger Zone" value="6" />
           </Tabs>
         </AppBar>
         {project.isLoading && <DialogContent>Loading project...</DialogContent>}
@@ -108,24 +89,11 @@ function ProjectSettingsDialog() {
             <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectImport project={project.data} />
             </TabPanel>
+            <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectDangerZone project={project.data} />
+            </TabPanel>
           </React.Fragment>
         )}
-        <Divider />
-        <DialogActions>
-          <LoadingButton
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            sx={{ mr: 1 }}
-            onClick={handleClickRemoveProject}
-            disabled={!project.isSuccess}
-            loading={isPending}
-            loadingPosition="start"
-          >
-            Delete Project
-          </LoadingButton>
-          <Box sx={{ flexGrow: 1 }} />
-        </DialogActions>
       </TabContext>
     </Dialog>
   );
