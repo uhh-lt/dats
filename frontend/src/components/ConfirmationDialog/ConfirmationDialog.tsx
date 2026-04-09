@@ -1,3 +1,4 @@
+import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { memo, useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus.ts";
@@ -41,6 +42,9 @@ function ConfirmationDialog() {
     if (confirmationEventData?.onAccept) confirmationEventData.onAccept();
   }, [confirmationEventData, handleClose]);
 
+  const cancelText = "Cancel";
+  const confirmText = confirmationEventData?.type == "DELETE" ? "Delete" : "Confirm";
+
   return (
     <Dialog open={dialog.isOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       {confirmationEventData && (
@@ -50,9 +54,15 @@ function ConfirmationDialog() {
             <DialogContentText id="alert-dialog-description">{confirmationEventData.text}</DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleReject}>Cancel</Button>
-            <Button onClick={handleAccept} autoFocus>
-              Confirm
+            <Button onClick={handleReject}>{cancelText}</Button>
+            <Button
+              onClick={handleAccept}
+              autoFocus
+              variant="contained"
+              startIcon={confirmationEventData.type == "DELETE" ? <DeleteIcon /> : null}
+              color={confirmationEventData.type == "DELETE" ? "error" : "primary"}
+            >
+              {confirmText}
             </Button>
           </DialogActions>
         </>

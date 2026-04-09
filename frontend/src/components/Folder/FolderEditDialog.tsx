@@ -85,6 +85,7 @@ function FolderEditDialog() {
     if (folder) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the folder "${folder.name}"? This will delete ALL contained documents, their annotations, memos, etc. This action cannot be undone!`,
+        type: "DELETE",
         onAccept: () => {
           deleteFolderMutation(
             { folderId: folder.id },

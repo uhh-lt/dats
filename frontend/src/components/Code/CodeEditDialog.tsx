@@ -128,6 +128,7 @@ function CodeEditDialog() {
     if (code && !code.is_system) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
+        type: "DELETE",
         onAccept: () => {
           deleteCodeMutation(
             { codeId: code.id },

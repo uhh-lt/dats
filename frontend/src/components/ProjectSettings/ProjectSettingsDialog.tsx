@@ -43,6 +43,7 @@ function ProjectSettingsDialog() {
     if (project.data) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to delete the project "${project.data.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
+        type: "DELETE",
         onAccept: () => {
           deleteProject(
             { projId: project.data.id },

@@ -21,6 +21,7 @@ function SpanAnnotationDeleteMenuItem({
 
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotationId}? You can reassign it later!`,
+      type: "DELETE",
       onAccept: () => {
         deleteMutation.mutate({ spanAnnotationToDelete: annotationId });
       },

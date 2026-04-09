@@ -19,6 +19,7 @@ function BulkDeleteSentAnnotationsButton({ selectedData }: BulkDeleteSentAnnotat
       text: `Do you really want to delete ${selectedData.length} sentence annotation${
         selectedData.length > 1 ? "s" : ""
       }? This action cannot be undone!`,
+      type: "DELETE",
       onAccept: () => {
         deleteBulkMutation.mutate(
           { requestBody: selectedData.map((row) => row.id) },
