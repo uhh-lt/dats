@@ -179,7 +179,6 @@ function CodeCreateDialog() {
           <FormTextMultiline
             name="description"
             control={control}
-            rules={{ required: "Description is required" }}
             textFieldProps={{
               label: "Description",
               error: Boolean(errors.description),
