@@ -34,6 +34,7 @@ import NoDocumentsPlaceholder from "../../../components/DocumentUpload/NoDocumen
 import ExportSdocsButton from "../../../components/Export/ExportSdocsButton.tsx";
 import ReduxFilterDialog from "../../../components/FilterDialog/ReduxFilterDialog.tsx";
 import { MyFilter } from "../../../components/FilterDialog/filterUtils.ts";
+import FolderToggleVisibilityButton from "../../../components/Folder/FolderExplorer/FolderToggleVisibilityButton.tsx";
 import FolderMenuButton from "../../../components/Folder/FolderMenu/FolderMenuButton.tsx";
 import FolderRenderer from "../../../components/Folder/FolderRenderer.tsx";
 import LLMAssistanceButton from "../../../components/LLMDialog/LLMAssistanceButton.tsx";
@@ -418,8 +419,12 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
     muiTableBodyRowProps: ({ row }) =>
       row.original.is_folder
         ? {
-            onClick: () => {
-              dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
+            onClick: (event) => {
+              if (event.detail >= 2) {
+                navigate(`/project/${projectId}/annotation/${row.original.id}`);
+              } else {
+                dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
+              }
             },
             sx: {
               backgroundColor: selectedSdocFolderId === row.original.id ? "lightgrey !important" : undefined,
@@ -527,6 +532,7 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         <MRT_GlobalFilterTextField table={table} />
         <SearchOptionsMenu />
         <DocumentUploadButton />
+        <FolderToggleVisibilityButton />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
         <ExportSdocsButton sdocIds={selectedSdocIds} />

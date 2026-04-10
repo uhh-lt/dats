@@ -1,29 +1,29 @@
-import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import React, { memo, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 
-function FolderToggleVisibilityMenuItem({ onClick, ...props }: MenuItemProps) {
+function FolderToggleVisibilityButton() {
   // redux (global client state)
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const dispatch = useAppDispatch();
 
-  const handleClick: React.MouseEventHandler<HTMLLIElement> = useCallback(
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
       event.stopPropagation();
-      if (onClick) onClick(event);
       dispatch(SearchActions.onToggleShowFolders());
     },
-    [dispatch, onClick],
+    [dispatch],
   );
 
   return (
-    <MenuItem onClick={handleClick} {...props}>
-      <ListItemIcon>{getIconComponent(showFolders ? Icon.FOLDER : Icon.FOLDER_OFF)}</ListItemIcon>
-      <ListItemText>Show/hide folders</ListItemText>
-    </MenuItem>
+    <Tooltip title="Show/hide folders">
+      <span>
+        <IconButton onClick={handleClick}>{getIconComponent(showFolders ? Icon.FOLDER : Icon.FOLDER_OFF)}</IconButton>
+      </span>
+    </Tooltip>
   );
 }
 
-export default memo(FolderToggleVisibilityMenuItem);
+export default memo(FolderToggleVisibilityButton);

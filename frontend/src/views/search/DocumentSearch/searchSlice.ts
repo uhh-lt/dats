@@ -63,7 +63,7 @@ const initialState: FilterState & TableState & SearchState = {
   expandedTagIds: [],
   expandedFolderIds: [],
   selectedFolderId: -1, // the root folder is -1
-  showFolders: true,
+  showFolders: false,
   scrollPosition: 0,
   folderSelectionType: FolderSelection.UNKNOWN,
   // app state:

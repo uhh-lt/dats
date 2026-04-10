@@ -21,6 +21,7 @@ import ExploreIcon from "@mui/icons-material/Explore";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import FilterIcon from "@mui/icons-material/Filter";
 import FolderIcon from "@mui/icons-material/Folder";
+import FolderOffIcon from "@mui/icons-material/FolderOff";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
 import HomeIcon from "@mui/icons-material/Home";
@@ -67,6 +68,7 @@ export enum Icon {
   SENTENCE_ANNOTATION = "sentence_annotation",
   BBOX_ANNOTATION = "bbox_annotation",
   FOLDER = "folder",
+  FOLDER_OFF = "folder_off",
 
   // Document types
   TEXT_DOCUMENT = "text_document",
@@ -183,6 +185,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION]: (iconProps) => <FilterIcon {...iconProps} />,
   [Icon.FOLDER]: (iconProps) => <FolderIcon {...iconProps} />,
+  [Icon.FOLDER_OFF]: (iconProps) => <FolderOffIcon {...iconProps} />,
 
   // Document types
   [Icon.TEXT_DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
