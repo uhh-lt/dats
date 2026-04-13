@@ -436,7 +436,7 @@ wheels = [
 
 [[package]]
 name = "dats-backend"
-version = "1.8.6"
+version = "1.9.0"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },

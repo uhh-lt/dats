@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.8.6" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "1.9.0" },
   "paths": {
     "/analysis/code_frequencies": {
       "post": {
@@ -1956,6 +1956,49 @@
         }
       }
     },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/job/ml": {
       "post": {
         "tags": ["job"],
@@ -2067,49 +2110,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/duplicate_finder": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start DuplicateFinder job",
-        "operationId": "start_duplicate_finder_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/duplicate_finder/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get DuplicateFinder job",
-        "operationId": "get_duplicate_finder_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -8193,7 +8193,12 @@
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
-          "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the Code",
+            "default": ""
+          },
           "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Parent Id",
@@ -8209,7 +8214,7 @@
           "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
         },
         "type": "object",
-        "required": ["name", "description", "project_id", "is_system"],
+        "required": ["name", "project_id", "is_system"],
         "title": "CodeCreate"
       },
       "CodeFrequency": {
@@ -8277,7 +8282,12 @@
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
-          "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Description of the Code",
+            "default": ""
+          },
           "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
             "title": "Parent Id",
@@ -8312,7 +8322,7 @@
           }
         },
         "type": "object",
-        "required": ["name", "color", "description", "id", "project_id", "created", "updated", "is_system", "memo_ids"],
+        "required": ["name", "color", "id", "project_id", "created", "updated", "is_system", "memo_ids"],
         "title": "CodeRead"
       },
       "CodeUpdate": {
