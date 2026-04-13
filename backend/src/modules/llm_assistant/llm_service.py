@@ -649,6 +649,10 @@ class LLMAssistantService(metaclass=SingletonMeta):
                     code_id = x.code_id
                     span_text = x.text
 
+                    # filter out empty suggestions
+                    if len(span_text.strip()) == 0:
+                        continue
+
                     # check if the code_id is valid
                     if code_id not in project_codes:
                         continue

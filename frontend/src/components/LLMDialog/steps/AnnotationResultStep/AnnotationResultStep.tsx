@@ -48,7 +48,7 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
   }, [jobResult]);
 
   // local state to manage tabs
-  const [tab, setTab] = useState<string>(jobResult.results[0].sdoc_id.toString());
+  const [tab, setTab] = useState<string>(jobResult.results.length > 0 ? jobResult.results[0].sdoc_id.toString() : "");
   const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
   }, []);
@@ -136,17 +136,24 @@ function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJo
   return (
     <>
       <DialogContent>
-        <LLMUtterance>
-          <Typography>
-            Here are the results! My suggestions are highlighted in the documents. Now, you can decide what to do with
-            them. You can click on an annotation and either:
-          </Typography>
-          <ul style={{ margin: 0 }}>
-            <li>Delete my suggestion</li>
-            <li>Change the code of my annotated text passage</li>
-          </ul>
-          <Typography>Remember to look through all the documents.</Typography>
-        </LLMUtterance>
+        {jobResult.results.length === 0 ? (
+          <LLMUtterance>
+            <Typography>No Results :( An error has occured!</Typography>
+          </LLMUtterance>
+        ) : (
+          <LLMUtterance>
+            <Typography>
+              Here are the results! My suggestions are highlighted in the documents. Now, you can decide what to do with
+              them. You can click on an annotation and either:
+            </Typography>
+            <ul style={{ margin: 0 }}>
+              <li>Delete my suggestion</li>
+              <li>Change the code of my annotated text passage</li>
+            </ul>
+            <Typography>Remember to look through all the documents.</Typography>
+          </LLMUtterance>
+        )}
+
         <TabContext value={tab}>
           <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
             <TabList onChange={handleChangeTab}>{tabs}</TabList>
