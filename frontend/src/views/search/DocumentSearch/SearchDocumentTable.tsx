@@ -421,7 +421,14 @@ function SearchDocumentTable({ projectId, onSearchResultsChange }: DocumentTable
         ? {
             onClick: (event) => {
               if (event.detail >= 2) {
-                navigate(`/project/${projectId}/annotation/${row.original.id}`);
+                let doc = row.original;
+                while (doc.is_folder && doc.sub_rows.length > 0) {
+                  // this is a simple DFS to find the first proper document (not a folder)
+                  doc = doc.sub_rows[0];
+                }
+                if (!doc.is_folder) {
+                  navigate(`/project/${projectId}/annotation/${doc.id}`);
+                }
               } else {
                 dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));
               }
