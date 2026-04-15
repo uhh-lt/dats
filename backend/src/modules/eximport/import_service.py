@@ -37,14 +37,12 @@ from modules.eximport.timeline_analysis.import_timeline_analysis import (
 )
 from modules.eximport.user.import_users import import_users_to_proj
 from modules.eximport.whiteboards.import_whiteboards import import_whiteboards_to_proj
-from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 
 
 class ImportService(metaclass=SingletonMeta):
     def __new__(cls):
         cls.fsr: FilesystemRepo = FilesystemRepo()
-        cls.sqlr: SQLRepo = SQLRepo()
         cls.import_method_for_job_type: dict[ImportJobType, Callable[..., None]] = {
             ImportJobType.TAGS: cls._import_tags_to_proj,
             ImportJobType.CODES: cls._import_codes_to_proj,
@@ -67,34 +65,33 @@ class ImportService(metaclass=SingletonMeta):
         with zipfile.ZipFile(path_to_zip_file, "r") as zip_ref:
             zip_ref.extractall(unzip_target)
 
-    def handle_import_job(self, payload: ImportJobInput) -> None:
-        with self.sqlr.db_session() as db:
-            # Check project exists
-            crud_project.exists(
-                db=db,
-                id=payload.project_id,
-                raise_error=True,
+    def handle_import_job(self, db: Session, payload: ImportJobInput) -> None:
+        # Check project exists
+        crud_project.exists(
+            db=db,
+            id=payload.project_id,
+            raise_error=True,
+        )
+
+        # Check if the file exists
+        if not self.fsr._temp_file_exists(filename=payload.file_name):
+            raise ImportJobPreparationError(
+                cause=Exception(f"The file {payload.file_name} does not exist!")
             )
 
-            # Check if the file exists
-            if not self.fsr._temp_file_exists(filename=payload.file_name):
-                raise ImportJobPreparationError(
-                    cause=Exception(f"The file {payload.file_name} does not exist!")
-                )
+        # get the import method based on the jobtype
+        import_method = self.import_method_for_job_type.get(
+            payload.import_job_type, None
+        )
+        if import_method is None:
+            raise UnsupportedImportJobTypeError(payload.import_job_type)
 
-            # get the import method based on the jobtype
-            import_method = self.import_method_for_job_type.get(
-                payload.import_job_type, None
-            )
-            if import_method is None:
-                raise UnsupportedImportJobTypeError(payload.import_job_type)
-
-            # execute the import_method with the provided specific parameters
-            import_method(
-                self=self,
-                db=db,
-                payload=payload,
-            )
+        # execute the import_method with the provided specific parameters
+        import_method(
+            self=self,
+            db=db,
+            payload=payload,
+        )
 
     def _import_codes_to_proj(
         self,
