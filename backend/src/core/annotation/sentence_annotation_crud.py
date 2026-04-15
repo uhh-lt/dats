@@ -247,7 +247,10 @@ class CRUDSentenceAnnotation(
         return sentence_annos
 
     def delete_by_sdoc(
-        self, db: Session, *, sdoc_id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        sdoc_id: int,
     ) -> int:
         # 1. find all affected annotation ids
         anno_ids = (
@@ -260,7 +263,8 @@ class CRUDSentenceAnnotation(
 
         # 2. delete the annotations
         num_deletions = self.remove_multi(
-            db=db, ids=anno_ids, manual_commit=manual_commit
+            db=db,
+            ids=anno_ids,
         )
 
         return num_deletions

@@ -69,7 +69,6 @@ class CRUDSourceDocumentMetadata(
         project_id: int,
         sdoc_id: int,
         doctype: DocType,
-        manual_commit: bool = False,
     ) -> list[SourceDocumentMetadataORM]:
         from core.metadata.project_metadata_crud import crud_project_meta
 
@@ -92,7 +91,8 @@ class CRUDSourceDocumentMetadata(
             )
 
         return self.create_multi(
-            db=db, create_dtos=create_dtos, manual_commit=manual_commit
+            db=db,
+            create_dtos=create_dtos,
         )
 
     ### READ OPERATIONS ###
@@ -254,7 +254,6 @@ class CRUDSourceDocumentMetadata(
         doctype: DocType,
         keys: list[str],
         values: list,
-        manual_commit: bool = False,
     ) -> list[SourceDocumentMetadataORM]:
         assert len(keys) == len(values), "keys and values must have the same length"
 
@@ -293,7 +292,6 @@ class CRUDSourceDocumentMetadata(
             db=db,
             ids=sdoc_metadata_ids,
             update_dtos=update_dtos,
-            manual_commit=manual_commit,
         )
 
     ### DELETE OPERATIONS ###

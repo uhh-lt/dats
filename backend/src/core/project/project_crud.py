@@ -20,7 +20,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.append(user_db_obj)
         db.add(proj_db_obj)
-        db.commit()
+        db.flush()
 
         return user_db_obj
 
@@ -32,7 +32,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.remove(user_db_obj)
         db.add(proj_db_obj)
-        db.commit()
+        db.flush()
 
         return user_db_obj
 

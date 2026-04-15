@@ -26,19 +26,16 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
         create_dto: ClassifierCreate,
         codes: list[CodeORM],
         tags: list[TagORM],
-        manual_commit: bool = False,
     ) -> ClassifierORM:
         classifier = super().create(
-            db, create_dto=create_dto, manual_commit=manual_commit
+            db,
+            create_dto=create_dto,
         )
         if len(codes) > 0:
             classifier.codes = codes
         if len(tags) > 0:
             classifier.tags = tags
-        if manual_commit:
-            db.flush()
-        else:
-            db.flush()
+        db.flush()
         db.refresh(classifier)
         return classifier
 

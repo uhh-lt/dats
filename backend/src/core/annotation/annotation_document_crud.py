@@ -37,13 +37,15 @@ class CRUDAnnotationDocument(
     ### UPDATE OPERATIONS ###
 
     def update_timestamp(
-        self, db: Session, *, id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        id: int,
     ) -> AnnotationDocumentORM | None:
         self.update(
             db=db,
             id=id,
             update_dto=AnnotationDocumentUpdate(updated=datetime.datetime.now()),
-            manual_commit=manual_commit,
         )
 
     ### DELETE OPERATIONS ###
@@ -63,7 +65,11 @@ class CRUDAnnotationDocument(
     ### OTHER OPERATIONS ###
 
     def exists_or_create(
-        self, db: Session, *, user_id: int, sdoc_id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        sdoc_id: int,
     ) -> AnnotationDocumentORM:
         db_obj = (
             db.query(self.model)
@@ -78,7 +84,6 @@ class CRUDAnnotationDocument(
                 create_dto=AnnotationDocumentCreate(
                     user_id=user_id, source_document_id=sdoc_id
                 ),
-                manual_commit=manual_commit,
             )
         return db_obj
 

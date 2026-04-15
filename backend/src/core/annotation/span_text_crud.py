@@ -28,7 +28,6 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
         db: Session,
         *,
         create_dtos: list[SpanTextCreate],
-        manual_commit: bool = False,
     ) -> list[SpanTextORM]:
         # When importing multiple large documents with similar content in parallel, it can happen that
         #  the unique constraint on the text field is violated due to the non-atomic check for
@@ -52,7 +51,8 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
 
         if len(dtos_to_create) > 0:
             newly_created_span_texts = super().create_multi(
-                db=db, create_dtos=dtos_to_create, manual_commit=manual_commit
+                db=db,
+                create_dtos=dtos_to_create,
             )
             for orm in newly_created_span_texts:
                 text_to_db_obj_map[orm.text] = orm
