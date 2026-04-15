@@ -35,7 +35,7 @@ class ImageCaptionJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ImageCaptionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -68,7 +68,7 @@ def handle_image_caption_job(
     )
     raw_html = f"<html><body><p>{caption}</p></body></html>"
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Store caption in the database
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,

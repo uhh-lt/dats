@@ -33,7 +33,7 @@ class ObjectDetectionJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ObjectDetectionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -76,7 +76,6 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
             db=trans,
             user_id=SYSTEM_USER_ID,
             sdoc_id=payload.sdoc_id,
-            manual_commit=True,
         )
 
         # convert to BBoxAnnotationCreate
@@ -99,10 +98,8 @@ def handle_object_detection_job(payload: ObjectDetectionJobInput, job: Job) -> N
         crud_bbox_anno.delete_by_adoc(
             db=trans,
             adoc_id=adoc.id,
-            manual_commit=True,
         )
         crud_bbox_anno.create_multi(
             db=trans,
             create_dtos=create_dtos,
-            manual_commit=True,
         )

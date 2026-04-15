@@ -24,7 +24,7 @@ class ImageMetadataExtractionJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ImageMetadataExtractionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -54,7 +54,7 @@ def handle_image_metadata_extraction_job(
         format = str(img.format)
         mode = str(img.mode)
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Store image metadata in db
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,

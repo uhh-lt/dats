@@ -17,6 +17,6 @@ sqlr = SQLRepo()
 def perspectives_job(payload: PerspectivesJobInput, job: Job) -> None:
     from modules.perspectives.perspectives_service import PerspectivesService
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         ps = PerspectivesService(job=job)
         ps.handle_perspectives_job(db=db, payload=payload)

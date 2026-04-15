@@ -24,7 +24,7 @@ class TextExtractionJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextExtractionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
             id=payload.sdoc_id,
@@ -53,7 +53,7 @@ def handle_text_extraction_job(
     text = " ".join([str(r["text"]) for r in results])
 
     # Store text in sdoc data
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         crud_sdoc_data.update(
             db=db,
             id=payload.sdoc_id,

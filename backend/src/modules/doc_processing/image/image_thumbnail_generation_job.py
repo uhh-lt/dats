@@ -48,7 +48,7 @@ def generate_thumbnails(image_path: Path):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ImageThumbnailJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -73,7 +73,7 @@ def handle_image_thumbnail_job(payload: ImageThumbnailJobInput, job: Job) -> Non
     generate_thumbnails(payload.filepath)
 
     # Store link to webp image in DB
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )

@@ -43,7 +43,7 @@ class TranscriptionJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TranscriptionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -72,7 +72,7 @@ def handle_transcription_job(
     # convert audio file to uncompessed PCM format
     pcm_bytes = convert_to_pcm(payload.filepath)
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # generate transcription using ray
         transcription = generate_automatic_transcription(
             payload=payload, audio_bytes=pcm_bytes

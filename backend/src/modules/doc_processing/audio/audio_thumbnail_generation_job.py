@@ -21,7 +21,7 @@ class AudioThumbnailJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> AudioThumbnailJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -54,7 +54,7 @@ def handle_audio_thumbnail_job(payload: AudioThumbnailJobInput, job: Job) -> Non
     print(webp_filename)
 
     # Store link to webp image in DB
-    # with sqlr.db_session() as db:
+    # with sqlr.transaction() as db:
     #     sdoc = SourceDocumentRead.model_validate(
     #         crud_sdoc.read(db=db, id=payload.sdoc_id)
     #     )

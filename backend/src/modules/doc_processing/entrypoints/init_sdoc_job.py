@@ -37,7 +37,7 @@ class SdocInitJobOutput(JobOutputBase):
     output_type=SdocInitJobOutput,
 )
 def handle_init_sdoc_job(payload: SdocInitJobInput, job: Job) -> SdocInitJobOutput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # create sdoc (& optionally the corresponding folder)
         logger.info(f"Persisting SourceDocument for {payload.filepath.name}...")
         create_dto = SourceDocumentCreate(

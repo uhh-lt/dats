@@ -40,7 +40,7 @@ def cota_refinement(payload: COTARefinementJobInput, job: Job) -> None:
         current_step=0,
     )
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Make sure the cota exists!
         db_obj = crud_cota.read(db=db, id=payload.cota_id)
         cota = COTARead.model_validate(db_obj)

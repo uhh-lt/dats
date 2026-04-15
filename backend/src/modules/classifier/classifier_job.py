@@ -24,7 +24,7 @@ def handle_classifier_job(
 ) -> ClassifierJobOutput:
     from modules.classifier.classifier_service import ClassifierService
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         result = ClassifierService().handle_classifier_job(
             db=db,
             job=job,

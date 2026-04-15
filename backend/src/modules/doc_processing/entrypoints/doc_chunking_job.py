@@ -63,7 +63,7 @@ def handle_pdf_chunking_job(
     # create folder if necessary
     folder_id = None
     if len(chunks) > 1:
-        with sqlr.db_session() as db:
+        with sqlr.transaction() as db:
             folder = crud_folder.create(
                 db,
                 create_dto=FolderCreate(
