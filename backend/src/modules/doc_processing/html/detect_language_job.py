@@ -35,7 +35,7 @@ class TextLanguageDetectionJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextLanguageDetectionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
             id=payload.sdoc_id,
@@ -84,7 +84,7 @@ def handle_text_language_detection_job(
                 detected_language=glotlid_output.best_match.lang_code
             )
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Store language in db
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,

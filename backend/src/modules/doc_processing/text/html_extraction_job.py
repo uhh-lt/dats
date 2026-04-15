@@ -38,7 +38,7 @@ class ExtractHTMLJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> ExtractHTMLJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
             id=payload.sdoc_id,
@@ -85,7 +85,7 @@ def handle_extract_html_job(
     raw_html = clean_html(doc_html)
 
     # Store HTML in sdoc data
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         crud_sdoc_data.update(
             db=db,
             id=payload.sdoc_id,

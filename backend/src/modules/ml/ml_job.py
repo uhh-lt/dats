@@ -33,7 +33,7 @@ sqlr = SQLRepo()
 def ml_job(payload: MLJobInput, job: Job) -> None:
     start_time = datetime.now()
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         match payload.ml_job_type:
             case MLJobType.QUOTATION_ATTRIBUTION:
                 from modules.ml.quote_service import QuoteService

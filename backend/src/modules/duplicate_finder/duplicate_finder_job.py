@@ -51,7 +51,7 @@ def find_duplicates_job(
     job.update(status_message="Fetching word frequencies from database")
     logger.info("Fetching word frequencies from database")
     t0 = time.time()
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         if payload.tag_id is not None:
             result = crud_word_frequency.read_by_project_and_doctype_and_tag(
                 db,

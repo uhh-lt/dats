@@ -48,7 +48,7 @@ class SpacyJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> SpacyJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
             id=payload.sdoc_id,
@@ -97,7 +97,6 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             db=trans,
             user_id=SYSTEM_USER_ID,
             sdoc_id=payload.sdoc_id,
-            manual_commit=True,
         )
 
         # tokens & offsets & sentences
@@ -123,22 +122,26 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
             doctype=payload.doctype,
             keys=["keywords"],
             values=[keywords],
-            manual_commit=True,
         )
         crud_word_frequency.delete_by_sdoc_id(
-            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
+            db=trans,
+            sdoc_id=payload.sdoc_id,
         )
         crud_word_frequency.create_multi(
-            db=trans, create_dtos=word_frequencies, manual_commit=True
+            db=trans,
+            create_dtos=word_frequencies,
         )
         crud_span_anno.delete_by_sdoc(
-            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
+            db=trans,
+            sdoc_id=payload.sdoc_id,
         )
         crud_sentence_anno.delete_by_sdoc(
-            db=trans, sdoc_id=payload.sdoc_id, manual_commit=True
+            db=trans,
+            sdoc_id=payload.sdoc_id,
         )
         crud_span_anno.create_multi(
-            trans, create_dtos=span_annotations, manual_commit=True
+            trans,
+            create_dtos=span_annotations,
         )
 
         if payload.doctype in {DocType.text, DocType.image}:
@@ -151,7 +154,6 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
                     sentence_starts=sdoc_data["sentence_starts"],
                     sentence_ends=sdoc_data["sentence_ends"],
                 ),
-                manual_commit=True,
             )
         else:
             # if coming from audio or video pipeline, we are only interested in sentence splitting (tokenization already done by whisper)
@@ -165,7 +167,6 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
                     sentence_starts=sdoc_data["sentence_starts"],
                     sentence_ends=sdoc_data["sentence_ends"],
                 ),
-                manual_commit=True,
             )
 
     return SpacyJobOutput(

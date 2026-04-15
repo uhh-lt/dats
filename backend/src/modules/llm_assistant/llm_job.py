@@ -24,7 +24,7 @@ def llm_assistant(
 ) -> LLMJobOutput:
     from modules.llm_assistant.llm_service import LLMAssistantService
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         result = LLMAssistantService().handle_llm_job(
             db=db,
             job=job,
