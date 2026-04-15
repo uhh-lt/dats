@@ -548,7 +548,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
             )
             return
 
-        with SQLRepo().db_session() as db:
+        with SQLRepo().transaction() as db:
             try:
                 sdoc = crud_sdoc.read_by_filename(
                     db=db,

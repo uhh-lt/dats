@@ -48,7 +48,7 @@ def handle_crawler_job(payload: CrawlerJobInput, job: Job) -> CrawlerJobOutput:
     if len(payload.urls) == 0:
         raise NoDataToCrawlError("Number of provided URLs must be at least one!")
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         crud_project.exists(
             db=db,
             id=payload.project_id,

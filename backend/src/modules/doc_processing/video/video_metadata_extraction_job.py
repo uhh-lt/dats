@@ -37,7 +37,7 @@ class VideoMetadataExtractionJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> VideoMetadataExtractionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -75,7 +75,7 @@ def handle_video_metadata_extraction_job(
         if k in EXPECTED_METADATA:
             metadata[k] = str(v)
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Store video metadata in db
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,

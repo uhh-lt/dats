@@ -23,7 +23,7 @@ class TextHTMLMappingJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> TextHTMLMappingJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc_data = crud_sdoc_data.read(
             db=db,
             id=payload.sdoc_id,
@@ -88,7 +88,7 @@ def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> 
         current_position = html_end
     new_html += payload.raw_html[current_position:]
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # update source document data in db
         crud_sdoc_data.update(
             db=db,

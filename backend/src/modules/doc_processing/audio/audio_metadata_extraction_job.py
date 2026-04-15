@@ -33,7 +33,7 @@ class AudioMetadataExtractionJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> AudioMetadataExtractionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -65,7 +65,7 @@ def handle_audio_metadata_extraction_job(
         elif k in EXPECTED_METADATA:
             audio_metadata[k] = str(v)
 
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         # Store audio_metadata in db
         crud_sdoc_meta.update_multi_with_doctype(
             db=db,

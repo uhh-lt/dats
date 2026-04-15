@@ -27,7 +27,7 @@ class VideoThumbnailJobInput(SdocProcessingJobInput):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> VideoThumbnailJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
@@ -68,7 +68,7 @@ def handle_video_thumbnail_job(payload: VideoThumbnailJobInput, job: Job) -> Non
         )
 
     # Store link to thumbnail in DB
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )

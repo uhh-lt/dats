@@ -28,7 +28,7 @@ class VideoAudioExtractionJobOutput(JobOutputBase):
 def enrich_for_recompute(
     payload: SdocProcessingJobInput,
 ) -> VideoAudioExtractionJobInput:
-    with sqlr.db_session() as db:
+    with sqlr.transaction() as db:
         sdoc = SourceDocumentRead.model_validate(
             crud_sdoc.read(db=db, id=payload.sdoc_id)
         )
