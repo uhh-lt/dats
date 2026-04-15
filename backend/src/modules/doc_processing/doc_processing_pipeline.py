@@ -129,7 +129,7 @@ sqlr = SQLRepo()
 
 def handle_job_started(jobtype: JobType, input: JobInputBase):
     if isinstance(input, SdocProcessingJobInput):
-        with sqlr.db_session() as db:
+        with sqlr.transaction() as db:
             crud_sdoc.update(
                 db,
                 id=input.sdoc_id,
@@ -141,7 +141,7 @@ def handle_job_started(jobtype: JobType, input: JobInputBase):
 
 def handle_job_error(job_type: JobType, input: JobInputBase):
     if isinstance(input, SdocProcessingJobInput):
-        with sqlr.db_session() as db:
+        with sqlr.transaction() as db:
             crud_sdoc.update(
                 db,
                 id=input.sdoc_id,
@@ -155,7 +155,7 @@ def handle_job_finished(
     job_type: JobType, input: JobInputBase, output: JobOutputBase | None
 ):
     if isinstance(input, SdocProcessingJobInput):
-        with sqlr.db_session() as db:
+        with sqlr.transaction() as db:
             crud_sdoc.update(
                 db,
                 id=input.sdoc_id,

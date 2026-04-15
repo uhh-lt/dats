@@ -100,7 +100,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
         if not startup_in_progress:
             from repos.db.sql_repo import SQLRepo
 
-            with SQLRepo().db_session() as db:
+            with SQLRepo().transaction() as db:
                 __create_system_user__(db=db)
                 __create_demo_user__(db=db)
                 __create_assistant_users__(db=db)
