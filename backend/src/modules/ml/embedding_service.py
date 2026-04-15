@@ -11,7 +11,6 @@ from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.document_embedding_dto import DocumentObjectIdentifier
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
-from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import SourceDocumentRead
 from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
@@ -21,7 +20,6 @@ from modules.ml.source_document_job_status_orm import (
     JobType,
     SourceDocumentJobStatusORM,
 )
-from repos.db.sql_repo import SQLRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.llm_repo import LLMRepo
 from repos.ray.dto.clip import ClipImageEmbeddingInput, ClipTextEmbeddingInput
@@ -47,12 +45,10 @@ class EmbeddingService(metaclass=SingletonMeta):
         )
         return encoded_query.numpy()
 
-    def encode_image(self, sdoc_id: int) -> np.ndarray:
-        with SQLRepo().db_session() as db:
-            sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
-            assert sdoc.doctype == DocType.image, (
-                f"SourceDocument with {sdoc_id=} is not an image!"
-            )
+    def encode_image(self, sdoc: SourceDocumentRead) -> np.ndarray:
+        assert sdoc.doctype == DocType.image, (
+            f"SourceDocument with {sdoc.id} is not an image!"
+        )
 
         image_fp = self.fsr.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
         image = load_image(image_fp)

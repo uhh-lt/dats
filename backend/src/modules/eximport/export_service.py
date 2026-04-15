@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Callable
 
+from sqlalchemy.orm import Session
+
 from common.singleton_meta import SingletonMeta
 from core.project.project_crud import crud_project
 from modules.eximport.bbox_annotations.export_bbox_annotations import (
@@ -79,36 +81,37 @@ class ExportService(metaclass=SingletonMeta):
 
         return super(ExportService, cls).__new__(cls)
 
-    def handle_export_job(self, payload: ExportJobInput) -> ExportJobOutput:
-        with self.sqlr.db_session() as db:
-            # Check project exists
-            crud_project.exists(
-                db=db,
-                id=payload.project_id,
-                raise_error=True,
-            )
+    def handle_export_job(
+        self, db: Session, payload: ExportJobInput
+    ) -> ExportJobOutput:
+        # Check project exists
+        crud_project.exists(
+            db=db,
+            id=payload.project_id,
+            raise_error=True,
+        )
 
-            # get the export method based on the jobtype
-            export_method = self.export_method_for_job_type.get(
-                payload.export_job_type, None
-            )
-            if export_method is None:
-                raise UnsupportedExportJobTypeError(payload.export_job_type)
+        # get the export method based on the jobtype
+        export_method = self.export_method_for_job_type.get(
+            payload.export_job_type, None
+        )
+        if export_method is None:
+            raise UnsupportedExportJobTypeError(payload.export_job_type)
 
-            # execute the export_method with the provided specific parameters
-            results_path = export_method(
-                db=db,
-                fsr=self.fsr,
-                project_id=payload.project_id,
-                **(
-                    payload.specific_export_job_parameters.model_dump(
-                        exclude={"export_job_type"}
-                    )
-                    if payload.specific_export_job_parameters
-                    else {}
-                ),
-            )
+        # execute the export_method with the provided specific parameters
+        results_path = export_method(
+            db=db,
+            fsr=self.fsr,
+            project_id=payload.project_id,
+            **(
+                payload.specific_export_job_parameters.model_dump(
+                    exclude={"export_job_type"}
+                )
+                if payload.specific_export_job_parameters
+                else {}
+            ),
+        )
 
-            return ExportJobOutput(
-                results_url=self.fsr.get_temp_file_url(results_path.name, relative=True)
-            )
+        return ExportJobOutput(
+            results_url=self.fsr.get_temp_file_url(results_path.name, relative=True)
+        )
