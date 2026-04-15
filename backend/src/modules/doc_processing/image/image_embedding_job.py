@@ -3,6 +3,8 @@ from loguru import logger
 from common.job_type import JobType
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.image_embedding_dto import ImageObjectIdentifier
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
 from modules.ml.embedding_service import EmbeddingService
 from repos.db.sql_repo import SQLRepo
@@ -34,8 +36,12 @@ def enrich_for_recompute(
     enricher=enrich_for_recompute,
 )
 def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> None:
-    # embed the image
-    embedding = emb.encode_image(sdoc_id=payload.sdoc_id).tolist()
+    with SQLRepo().transaction() as db:
+        sdoc = SourceDocumentRead.model_validate(
+            crud_sdoc.read(db=db, id=payload.sdoc_id)
+        )
+
+    embedding = emb.encode_image(sdoc=sdoc).tolist()
 
     # store the embeddings
     logger.debug(
