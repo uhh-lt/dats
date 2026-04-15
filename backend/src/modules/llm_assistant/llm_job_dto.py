@@ -48,7 +48,8 @@ class AnnotationParams(DocumentBasedTaskParams):
         description="IDs of the codes to use for the annotation"
     )
     delete_existing_annotations: bool = Field(
-        description="Delete existing annotations before creating new ones", default=True
+        description="Delete existing annotations before creating new ones",
+        default=False,
     )
 
 
@@ -58,7 +59,8 @@ class SentenceAnnotationParams(DocumentBasedTaskParams):
         description="IDs of the codes to use for the sentence annotation"
     )
     delete_existing_annotations: bool = Field(
-        description="Delete existing annotations before creating new ones", default=True
+        description="Delete existing annotations before creating new ones",
+        default=False,
     )
 
 
