@@ -25,7 +25,6 @@ from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
-from repos.db.sql_repo import SQLRepo
 
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):
@@ -57,26 +56,27 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
 
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
         try:
-            return super().create(db=db, create_dto=create_dto)
+            with db.begin_nested():  # create a database savepoint
+                return super().create(db=db, create_dto=create_dto)
+
         except IntegrityError as e:
             # Flo: return existing OH when UC constraint fails
             if isinstance(e.orig, UniqueViolation):
-                db.close()  # Flo: close the session because we have to start a new transaction
-                with SQLRepo().db_session() as sess:
-                    obj_id_key, obj_id_val = next(
-                        filter(
-                            lambda item: item[0] is not None and item[1] is not None,
-                            create_dto.model_dump().items(),
-                        ),
-                        (None, None),
+                obj_id_key, obj_id_val = next(
+                    filter(
+                        lambda item: item[0] is not None and item[1] is not None,
+                        create_dto.model_dump().items(),
+                    ),
+                    (None, None),
+                )
+
+                if obj_id_key is not None and obj_id_val is not None:
+                    return self.read_by_attached_object_id(
+                        db=db, obj_id_key=obj_id_key, obj_id_val=obj_id_val
                     )
-                    if obj_id_key is not None and obj_id_val is not None:
-                        return self.read_by_attached_object_id(
-                            db=sess, obj_id_key=obj_id_key, obj_id_val=obj_id_val
-                        )
-                    raise e
+                raise e
             else:
-                # Flo: re-raise Exception since it's not a UC Violation
+                # Flo: Re-raise Exception since it's not a UC Violation
                 raise e
 
     def read_by_attached_object_id(
