@@ -55,17 +55,20 @@ class CRUDBBoxAnnotation(
         db: Session,
         *,
         create_dtos: list[BBoxAnnotationCreateIntern],
-        manual_commit: bool = False,
     ) -> list[BBoxAnnotationORM]:
         # update all affected annotation documents' timestamp
         adoc_ids = list(
             set([create_dto.annotation_document_id for create_dto in create_dtos])
         )
         for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id, manual_commit=manual_commit)
+            crud_adoc.update_timestamp(
+                db=db,
+                id=adoc_id,
+            )
 
         return super().create_multi(
-            db=db, create_dtos=create_dtos, manual_commit=manual_commit
+            db=db,
+            create_dtos=create_dtos,
         )
 
     def create_bulk(
@@ -252,7 +255,10 @@ class CRUDBBoxAnnotation(
         return bbox_annos
 
     def delete_by_sdoc(
-        self, db: Session, *, sdoc_id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        sdoc_id: int,
     ) -> int:
         # 1. find all affected annotation ids
         anno_ids = (
@@ -265,13 +271,17 @@ class CRUDBBoxAnnotation(
 
         # 2. delete all by ids
         num_deletions = self.remove_multi(
-            db=db, ids=anno_ids, manual_commit=manual_commit
+            db=db,
+            ids=anno_ids,
         )
 
         return num_deletions
 
     def delete_by_adoc(
-        self, db: Session, *, adoc_id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        adoc_id: int,
     ) -> list[int]:
         # find all bbox annotations to be removed
         query = db.query(self.model).filter(

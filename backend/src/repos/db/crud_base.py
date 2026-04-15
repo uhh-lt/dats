@@ -94,15 +94,15 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return exists
 
     def create(
-        self, db: Session, *, create_dto: CreateDTOType, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        create_dto: CreateDTOType,
     ) -> ORMModelType:
         dto_obj_data = jsonable_encoder(create_dto)
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
         db.refresh(db_obj)
         return db_obj
 
@@ -111,14 +111,10 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db: Session,
         *,
         create_dtos: list[CreateDTOType],
-        manual_commit: bool = False,
     ) -> list[ORMModelType]:
         db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         db.add_all(db_objs)
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
         return db_objs
 
     def update(
@@ -127,7 +123,6 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         *,
         id: int,
         update_dto: UpdateDTOType,
-        manual_commit: bool = False,
     ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
 
@@ -137,10 +132,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
         db.refresh(db_obj)
 
         return db_obj
@@ -151,7 +143,6 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         *,
         ids: list[int],
         update_dtos: list[UpdateDTOType],
-        manual_commit: bool = False,
     ) -> list[ORMModelType]:
         if len(ids) != len(update_dtos):
             raise ValueError(
@@ -166,25 +157,25 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         db.add_all(db_objects)
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
         return db_objects
 
     def delete(
-        self, db: Session, *, id: int, manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        id: int,
     ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         db.delete(db_obj)
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        db.flush()
         return db_obj
 
     def remove_multi(
-        self, db: Session, *, ids: list[int], manual_commit: bool = False
+        self,
+        db: Session,
+        *,
+        ids: list[int],
     ) -> int:
         """
         Deletes objects by ID, processing in batches.
@@ -206,10 +197,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             result = db.execute(stmt)
             total_deleted_count += result.rowcount
 
-        # 4. Handle Commit/Flush
-        if manual_commit:
-            db.flush()
-        else:
-            db.commit()
+        # 4. Flush
+        db.flush()
 
         return total_deleted_count
