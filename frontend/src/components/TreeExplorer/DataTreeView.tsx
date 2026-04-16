@@ -10,6 +10,7 @@ import AbcIcon from "@mui/icons-material/Abc";
 import { Typography } from "@mui/material";
 import { SimpleTreeView } from "@mui/x-tree-view/SimpleTreeView";
 import { useCallback } from "react";
+import { Draggable } from "../DnD/Draggable.tsx";
 import Droppable from "../DnD/Droppable.tsx";
 import { ITree, NamedObjWithParent } from "./ITree.ts";
 
@@ -24,6 +25,7 @@ export interface DataTreeViewProps<T extends NamedObjWithParent> {
   parentIcon?: React.ElementType<SvgIconProps>;
   droppable?: boolean | ((node: ITree<T>) => boolean);
   droppableId?: (node: ITree<T>) => string;
+  draggable?: boolean;
 }
 
 const defaultNodeRenderer = <T extends NamedObjWithParent>(node: ITree<T>) => (
@@ -39,6 +41,7 @@ function DataTreeView<T extends NamedObjWithParent>({
   dataIcon,
   droppable,
   droppableId,
+  draggable = false,
   renderRoot = false,
   disableRootActions = false,
   rootIcon = FolderIcon,
@@ -52,13 +55,40 @@ function DataTreeView<T extends NamedObjWithParent>({
         // Use rootIcon for the root node if provided and isRoot is true
         const iconToUse = isRoot ? rootIcon : hasChildren ? parentIcon : dataIcon ? dataIcon : AbcIcon;
 
-        const label = (
+        const labelContent = (
           <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0 }}>
             <Box component={iconToUse} color={node.data.color} sx={{ mr: 1 }} />
             {renderNode(node)}
             {renderActions && !(isRoot && disableRootActions) ? renderActions(node) : undefined}
           </Box>
         );
+
+        // Wrap with droppable if needed
+        const droppableWrapped = (typeof droppable === "function" ? droppable(node) : droppable) ? (
+          <Droppable id={droppableId ? droppableId(node) : `folder-${node.data.id}`} Element="div">
+            {labelContent}
+          </Droppable>
+        ) : (
+          labelContent
+        );
+
+        // Wrap with draggable if needed
+        const label = draggable && !isRoot ? (
+          <Draggable
+            id={`tree-item-${node.data.id}`}
+            data={{
+              type: "tree-item",
+              id: node.data.id,
+              parentId: node.data.parent_id,
+            }}
+            Element="div"
+          >
+            {droppableWrapped}
+          </Draggable>
+        ) : (
+          droppableWrapped
+        );
+
         return (
           <TreeItem
             key={node.data.id}
@@ -67,22 +97,14 @@ function DataTreeView<T extends NamedObjWithParent>({
               expandIcon: ArrowRightIcon,
               collapseIcon: ArrowDropDownIcon,
             }}
-            label={
-              (typeof droppable === "function" ? droppable(node) : droppable) ? (
-                <Droppable id={droppableId ? droppableId(node) : `folder-${node.data.id}`} Element="div">
-                  {label}
-                </Droppable>
-              ) : (
-                label
-              )
-            }
+            label={label}
           >
             {hasChildren && <React.Fragment> {renderTree(node.children!, false)} </React.Fragment>}
           </TreeItem>
         );
       });
     },
-    [rootIcon, parentIcon, dataIcon, renderNode, renderActions, disableRootActions, droppable, droppableId],
+    [rootIcon, parentIcon, dataIcon, renderNode, renderActions, disableRootActions, droppable, droppableId, draggable],
   );
 
   return (
