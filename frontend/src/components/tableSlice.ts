@@ -7,7 +7,6 @@ import {
   MRT_SortingState,
   MRT_VisibilityState,
 } from "material-react-table";
-import { SdocColumns } from "../api/openapi/models/SdocColumns.ts";
 
 export interface TableState {
   searchQuery?: string;
@@ -24,7 +23,7 @@ export const initialTableState: TableState = {
   // project state:
   searchQuery: "",
   rowSelectionModel: {},
-  sortingModel: [{ id: SdocColumns.SD_SOURCE_DOCUMENT_NAME, desc: false }],
+  sortingModel: [],
   columnVisibilityModel: {},
   columnSizingModel: {},
   expandedModel: {},

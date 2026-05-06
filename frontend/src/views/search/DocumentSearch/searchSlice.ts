@@ -60,6 +60,7 @@ const initialState: FilterState & TableState & SearchState = {
   // project state:
   selectedDocumentId: undefined,
   selectedSdocFolderId: undefined,
+  sortingModel: [{ id: SdocColumns.SD_SOURCE_DOCUMENT_NAME, desc: false }],
   expandedTagIds: [],
   expandedFolderIds: [],
   selectedFolderId: -1, // the root folder is -1
