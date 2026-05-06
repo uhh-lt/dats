@@ -3,11 +3,12 @@ import { AppBar, Box, BoxProps, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Node } from "ts-tree-structure";
+import Tree, { Node } from "ts-tree-structure";
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import DataTreeView, { DataTreeViewProps } from "./DataTreeView.tsx";
 import { ITree, NamedObjWithParent } from "./ITree.ts";
 import TreeDataFilter from "./TreeDataFilter.tsx";
-import { filterTree, flatTree } from "./TreeUtils.ts";
+import { filterTree, flatTree, sortTreeByCustomOrder } from "./TreeUtils.ts";
 
 export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<DataTreeViewProps<T>, "data"> {
   dataTree: Node<ITree<T>>;
@@ -32,6 +33,10 @@ export interface TreeExplorerProps<T extends NamedObjWithParent> extends Omit<Da
   // dnd
   droppable?: boolean | ((node: ITree<T>) => boolean);
   droppableId?: (node: ITree<T>) => string;
+  // custom sort order
+  sortOrder?: number[];
+  onSortOrderChange?: (newSortOrder: number[]) => void;
+  draggableItems?: boolean;
 }
 
 function TreeExplorer<T extends NamedObjWithParent>({
@@ -57,16 +62,34 @@ function TreeExplorer<T extends NamedObjWithParent>({
   disableRootActions = false,
   droppable,
   droppableId,
+  sortOrder,
+  onSortOrderChange,
+  draggableItems = false,
   ...props
 }: TreeExplorerProps<T> & BoxProps) {
+  // apply custom sort order if provided
+  const sortedDataTree = useMemo(() => {
+    if (!sortOrder || sortOrder.length === 0) {
+      return dataTree;
+    }
+    
+    // Apply sorting to the tree model
+    const sortedModel = sortTreeByCustomOrder(dataTree.model, sortOrder);
+    
+    // Create a new tree with the sorted model
+    const tree = new Tree();
+    const newTree = tree.parse<ITree<T>>(sortedModel);
+    return newTree;
+  }, [dataTree, sortOrder]);
+
   // filter feature
   const { dataTree: filteredDataTree, nodesToExpand } = useMemo(
     () =>
       filterTree({
-        dataTree: dataTree,
+        dataTree: sortedDataTree,
         dataFilter: dataFilter,
       }),
-    [dataTree, dataFilter],
+    [sortedDataTree, dataFilter],
   );
 
   useEffect(() => {
@@ -114,7 +137,7 @@ function TreeExplorer<T extends NamedObjWithParent>({
   );
 
   // rendering
-  const wrapppedRenderActions = useCallback(
+  const wrappedRenderActions = useCallback(
     (node: ITree<T>) => (
       <>
         {showCheckboxes && (
@@ -129,6 +152,125 @@ function TreeExplorer<T extends NamedObjWithParent>({
       </>
     ),
     [handleCheckboxChange, isChecked, isIndeterminate, renderActions, showCheckboxes],
+  );
+
+  // drag and drop for reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    })
+  );
+
+  // Memoize flat data to avoid recalculating on every drag
+  const flatData = useMemo(() => {
+    return flatTree(sortedDataTree.model);
+  }, [sortedDataTree]);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      
+      if (!active || !over || !onSortOrderChange) return;
+      
+      // Validate drag data structure
+      const activeData = active.data.current;
+      const overData = over.data.current;
+      
+      if (!activeData || !overData) return;
+      if (typeof activeData !== "object" || typeof overData !== "object") return;
+      if (!("type" in activeData) || !("id" in activeData)) return;
+      if (!("type" in overData) || !("id" in overData)) return;
+      
+      // Only handle tree-item reordering
+      if (activeData.type !== "tree-item" || overData.type !== "tree-item") return;
+      
+      const draggedId = activeData.id as number;
+      const targetId = overData.id as number;
+      const draggedParentId = ("parentId" in activeData ? activeData.parentId : undefined) as number | null | undefined;
+      const targetParentId = ("parentId" in overData ? overData.parentId : undefined) as number | null | undefined;
+      
+      if (draggedId === targetId) return;
+      
+      // Only allow reordering items with the same parent
+      if (draggedParentId !== targetParentId) return;
+      
+      // Get all items with the same parent
+      const siblingIds = flatData
+        .filter((item) => item.parent_id === draggedParentId)
+        .map((item) => item.id);
+      
+      // Get current order: use sortOrder if available, otherwise sort by ID
+      // Include all siblings even if they're not in sortOrder yet
+      let currentOrder: number[];
+      if (sortOrder && sortOrder.length > 0) {
+        // Start with items from sortOrder that are siblings
+        const orderedSiblings = sortOrder.filter(id => siblingIds.includes(id));
+        // Add any siblings not in sortOrder (newly added items)
+        const newSiblings = siblingIds.filter(id => !sortOrder.includes(id));
+        newSiblings.sort((a, b) => a - b);
+        currentOrder = [...orderedSiblings, ...newSiblings];
+      } else {
+        currentOrder = [...siblingIds].sort((a, b) => a - b);
+      }
+      
+      // Remove dragged item and insert at new position
+      const draggedIndex = currentOrder.indexOf(draggedId);
+      const targetIndex = currentOrder.indexOf(targetId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      const newOrder = [...currentOrder];
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, draggedId);
+      
+      // Merge with other items not in the same parent
+      const otherIds = flatData
+        .filter((item) => item.parent_id !== draggedParentId)
+        .map((item) => item.id);
+      
+      // Combine the reordered siblings with other items
+      const finalOrder = [...newOrder, ...otherIds];
+      
+      onSortOrderChange(finalOrder);
+    },
+    [flatData, sortOrder, onSortOrderChange]
+  );
+
+  const treeViewContent = (
+    <DataTreeView
+      className="myFlexFillAllContainer"
+      // data
+      data={filteredDataTree.model}
+      // selection
+      multiSelect={false}
+      disableSelection={!onSelectedItemsChange && !selectedItems}
+      selectedItems={selectedItems?.toString() || ""}
+      onSelectedItemsChange={onSelectedItemsChange}
+      // expand / collapse
+      expandedItems={expandedItems}
+      onExpandedItemsChange={(event, itemIds) => {
+        event.stopPropagation();
+        onExpandedItemsChange(itemIds);
+      }}
+      // actions
+      onItemClick={onItemClick}
+      // renderers
+      renderActions={wrappedRenderActions}
+      renderNode={renderNode}
+      // root node rendering
+      renderRoot={renderRoot}
+      disableRootActions={disableRootActions}
+      // icons
+      rootIcon={rootIcon}
+      parentIcon={parentIcon}
+      dataIcon={dataIcon}
+      // dnd
+      droppable={droppable}
+      droppableId={droppableId}
+      draggable={draggableItems}
+    />
   );
 
   return (
@@ -160,37 +302,13 @@ function TreeExplorer<T extends NamedObjWithParent>({
           {filterActions}
         </TreeDataFilter>
       )}
-      <DataTreeView
-        className="myFlexFillAllContainer"
-        // data
-        data={filteredDataTree.model}
-        // selection
-        multiSelect={false}
-        disableSelection={!onSelectedItemsChange && !selectedItems}
-        selectedItems={selectedItems?.toString() || ""}
-        onSelectedItemsChange={onSelectedItemsChange}
-        // expand / collapse
-        expandedItems={expandedItems}
-        onExpandedItemsChange={(event, itemIds) => {
-          event.stopPropagation();
-          onExpandedItemsChange(itemIds);
-        }}
-        // actions
-        onItemClick={onItemClick}
-        // renderers
-        renderActions={wrapppedRenderActions}
-        renderNode={renderNode}
-        // root node rendering
-        renderRoot={renderRoot}
-        disableRootActions={disableRootActions}
-        // icons
-        rootIcon={rootIcon}
-        parentIcon={parentIcon}
-        dataIcon={dataIcon}
-        // dnd
-        droppable={droppable}
-        droppableId={droppableId}
-      />
+      {draggableItems ? (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {treeViewContent}
+        </DndContext>
+      ) : (
+        treeViewContent
+      )}
     </Box>
   );
 }
