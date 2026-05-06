@@ -44,7 +44,6 @@ class AspectBase(BaseModel):
     doc_modification_prompt: str | None = Field(
         default=None, description="Prompt for document modification"
     )
-    is_hierarchical: bool = Field(description="Whether the aspect is hierarchical")
     modality: DocType = Field(description="Modality of the documents of this aspect")
     pipeline_settings: PipelineSettings = Field(
         description="Pipeline settings for this aspect"

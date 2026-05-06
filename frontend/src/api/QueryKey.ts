@@ -118,6 +118,8 @@ export const QueryKey = {
   SDOC_CLUSTES: "sdocClusters",
   // Document Aspect content (by aspect id, sdoc id)
   SDOC_ASPECT_CONTENT: "sdocAspectContent",
+  // History of an Aspect (by aspect id)
+  ASPECT_HISTORY: "aspectHistory",
 
   // managed by SearchStatisticsHooks:
   FILTER_ENTITY_STATISTICS: "filterEntityStatistics",

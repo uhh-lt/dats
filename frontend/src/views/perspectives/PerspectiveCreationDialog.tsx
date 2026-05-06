@@ -132,7 +132,6 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
           name: data.name,
           doc_embedding_prompt: data.doc_embedding_prompt,
           doc_modification_prompt: data.doc_modification_prompt || null,
-          is_hierarchical: false,
           project_id: projectId,
           modality: selectedDocType,
           tag_id: tagId,

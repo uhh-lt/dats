@@ -26,9 +26,11 @@ from modules.ml.source_document_job_status_crud import crud_sdoc_job_status
 from modules.ml.tag_recommendation.tag_recommendation_crud import (
     crud_tag_recommendation_link,
 )
-from modules.perspectives.aspect_crud import crud_aspect
-from modules.perspectives.cluster_crud import crud_cluster
-from modules.perspectives.document_aspect_crud import crud_document_aspect
+from modules.perspectives.aspect.aspect_crud import crud_aspect
+from modules.perspectives.cluster.cluster_crud import crud_cluster
+from modules.perspectives.document_aspect.document_aspect_crud import (
+    crud_document_aspect,
+)
 from modules.timeline_analysis.timeline_analysis_crud import (
     crud_timeline_analysis,
 )

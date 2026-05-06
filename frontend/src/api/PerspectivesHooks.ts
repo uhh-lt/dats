@@ -142,6 +142,7 @@ const usePollPerspectivesJob = (
           queryKey: [QueryKey.DOCUMENT_VISUALIZATION, query.state.data.input.aspect_id],
         });
         queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, query.state.data.input.aspect_id] });
+        queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, query.state.data.input.aspect_id] });
       }
 
       switch (query.state.data.status) {
@@ -170,6 +171,7 @@ const useLabelDocs = () =>
     mutationFn: PerspectivesService.acceptLabel,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, variables.aspectId] });
     },
     meta: {
       successMessage: (data: number) => `Accepted cluster(s) for ${data} documents`,
@@ -181,6 +183,7 @@ const useUnlabelDocs = () =>
     mutationFn: PerspectivesService.revertLabel,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, variables.aspectId] });
     },
     meta: {
       successMessage: (data: number) => `Reverted cluster(s) for ${data} documents`,
@@ -225,6 +228,7 @@ const useUpdateClusterDetails = () =>
     mutationFn: PerspectivesService.updateClusterDetails,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, data.aspect_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, data.aspect_id] });
     },
     meta: {
       successMessage: (data: ClusterRead) => `Updated cluster ${data.name}`,
@@ -246,6 +250,35 @@ const useRAGChat = () =>
     onSuccess: (data) => {
       console.log(data);
     },
+  });
+
+// HISTORY (undo, redo)
+const useUndo = () =>
+  useMutation({
+    mutationFn: PerspectivesService.undoPerspectivesHistory,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, variables.aspectId] });
+    },
+  });
+
+const useRedo = () =>
+  useMutation({
+    mutationFn: PerspectivesService.redoPerspectivesHistory,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.DOCUMENT_VISUALIZATION, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.CLUSTER_SIMILARITIES, variables.aspectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ASPECT_HISTORY, variables.aspectId] });
+    },
+  });
+
+const useGetHistory = (aspectId: number | null | undefined) =>
+  useQuery({
+    queryKey: [QueryKey.ASPECT_HISTORY, aspectId],
+    queryFn: () => PerspectivesService.listPerspectivesHistory({ aspectId: aspectId! }),
+    enabled: !!aspectId,
+    staleTime: 1000 * 60 * 5,
   });
 
 const PerspectivesHooks = {
@@ -270,6 +303,10 @@ const PerspectivesHooks = {
   useUpdateClusterDetails,
   // chat
   useRAGChat,
+  // history
+  useUndo,
+  useRedo,
+  useGetHistory,
 };
 
 export default PerspectivesHooks;
