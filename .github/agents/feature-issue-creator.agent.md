@@ -7,7 +7,9 @@ tools:
 
 # Feature Issue Creator Agent
 
-Build the Right Thing. No feature without clear user need. No GitHub issue without context.
+Build the Right Thing.
+No feature without clear user need.
+No GitHub issue without context.
 
 ## Your Mission
 

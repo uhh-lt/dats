@@ -13,31 +13,38 @@ It follows a component-based architecture, organizing UI elements into reusable 
 Dependencies are listed in package.json and managed with npm.
 
 React for building user interfaces
+
 - (react) v18.3.1
 - context7: /reactjs/react.dev
 
-React Router for client-side routing
-- (react-router-dom) v6.26.2
+Tanstack Router for client-side routing
+
+- (@tanstack/react-router) v1.161.1
 
 Tanstack Query for data fetching and server state management
+
 - (@tanstack/react-query) v5.67.2
 - context7: /tanstack/query
 
 Redux Toolkit for global state management
+
 - (@reduxjs/toolkit) v2.2.8
 - context7: /reduxjs/redux-toolkit
 
 React Hook Form for form state management
+
 - (react-hook-form) v7.53.0
 - context7: /react-hook-form/documentation
 
 MUI for UI components, styling, theming, and icons
+
 - (@mui/material v6.4.6, @mui/icons-material v6.4.6, @mui/lab v6.0.0-beta.30)
 - docs: https://mui.com/material-ui/getting-started/
 - llms.txt: https://mui.com/material-ui/llms.txt
 - context7: /mui/material-ui
 
 Vite as the build tool and development server
+
 - (vite) v6.2.1
 - context7: /vitejs/vite
 
@@ -68,11 +75,13 @@ Vite as the build tool and development server
 ## Component Structure
 
 **Functional Components with Hooks**:
+
 - Use functional components exclusively; avoid class-based components
 - Leverage React hooks (`useState`, `useEffect`, `useCallback`, `useMemo`) for component logic
 - See [EditableTypography.tsx](../../frontend/src/components/EditableTypography.tsx) for a component with hooks and ref management
 
 **Type Safety**:
+
 - Define component props as interfaces with proper `extends` patterns for extending MUI component props
 - Example from [EditableTypography.tsx](../../frontend/src/components/EditableTypography.tsx#L17-L22):
   ```tsx
@@ -87,6 +96,7 @@ Vite as the build tool and development server
 - Use `Omit<>` and `Exclude<>` utilities to prevent prop conflicts when extending component types
 
 **Component Patterns**:
+
 - Prefer splitting complex components into smaller, focused sub-components
 - When a component needs both data fetching and UI, consider creating separate `WithData` and `WithoutData` variants
 - Use `React.memo()` for components that receive complex props to prevent unnecessary re-renders
@@ -96,7 +106,7 @@ Vite as the build tool and development server
 ### Tanstack Query: Use for ALL SERVER state (data from API, loading, errors)
 
 - Never call API service methods directly; wrap them in custom hooks
-- Group related queries in hook files (see [CodeHooks.ts](../../frontend/src/api/CodeHooks.ts), [SdocHooks.ts](../../frontend/src/api/SdocHooks.ts))
+- Group related queries in hook files (see [CodeHooks.ts](@api/hooks/SdocHooks.ts))
 - Centralize all query keys in [QueryKey.ts](../../frontend/src/api/QueryKey.ts) enum
 - Data Normalization with Record maps (Record<id, data>) for O(1) access
 
@@ -108,6 +118,7 @@ Vite as the build tool and development server
 ### React Hook Form: Use for FORM STATE (input values, validation state, form submission)
 
 **React Hook Form Integration**:
+
 - Use `useForm()` hook to manage form state and validation
 - Wrap form inputs with `Controller` from React Hook Form
 - See [FormText.tsx](../../frontend/src/components/FormInputs/FormText.tsx) for input wrapper pattern
@@ -117,6 +128,7 @@ Vite as the build tool and development server
   - `FormMenu`, `FormFreeSolo`, `FormChipList`
 
 **Validation**:
+
 - Define validation rules in `useForm()` hook via `rules` property in `Controller`
 - Display errors with `<ErrorMessage>` component from @hookform/error-message
 - Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L1-L2):
@@ -126,20 +138,24 @@ Vite as the build tool and development server
   ```
 
 **Form Reset**:
+
 - Use `useEffect()` to reset form when dialog opens with initial values
 - Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L63-L74)
 
 ### React Hooks: `useState()` for LOCAL CLIENT state
+
 - Use for truly local state that doesn't need to be shared (e.g., hover states, temporary UI states)
 
 ## Custom Hooks
 
 **Create Custom Hooks for Reusable Logic**:
+
 - Extract component logic into custom hooks when it's used in multiple components
 - Examples: [useDialog.ts](../../frontend/src/hooks/useDialog.ts) (dialog state management), [useDebounce.ts](../../frontend/src/utils/useDebounce.ts) (value debouncing)
 - File location: `/frontend/src/hooks` for component-generic hooks, `/frontend/src/utils` for utility hooks with type generics
 
 **Hook Design Patterns**:
+
 - Return objects with clear, descriptive names: `{ isOpen, open, close, toggle }`
 - Include optional callbacks: `{ onOpen?: () => void; onClose?: () => void }`
 - For complex logic with multiple related hooks, create composition (see [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts#L44-L92))
@@ -147,6 +163,7 @@ Vite as the build tool and development server
 ## TypeScript & Typing
 
 **Generics for Flexibility**:
+
 - Use generic types for hooks that work with multiple data types
 - Example from [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts#L2-L7):
   ```tsx
@@ -158,17 +175,20 @@ Vite as the build tool and development server
   ```
 
 **Generated API Types**:
+
 - API types are auto-generated from OpenAPI spec; use them consistently
 - Import models from `frontend/src/api/openapi/models/`
 - Type suffixes indicate operation: `Read` (GET), `Create` (POST), `Update` (PUT)
 
 **Avoid `any` Type**:
+
 - Never use `any`; use `unknown` if type is truly unknown, or define proper interface
 - Use `Record<>` for maps instead of object literals when type-safe
 
 ## Performance Optimization
 
 **Memoization**:
+
 - Use `useMemo()` for expensive computations, derived state, and filtered data lists
 - Use `useCallback()` for ALL callback functions passed as props (dependency injection)
 - Example from [CodeCreateDialog.tsx](../../frontend/src/components/Code/CodeCreateDialog.tsx#L42-L43):
@@ -179,34 +199,41 @@ Vite as the build tool and development server
   ```
 
 **Dependency Arrays**:
+
 - Be explicit about dependencies; never leave empty with actual dependencies
 - Use eslint-plugin-react-hooks to catch missing dependencies
 
 **Data Transformation**:
+
 - Transform API responses to lookup maps (Record) for O(1) access instead of find()
 - Cache transformed structures with `useMemo`
 
 **Infinite Scrolling**:
+
 - Use [useTableInfiniteScroll.ts](../../frontend/src/utils/useTableInfiniteScroll.ts) hook for paginated table data
 - Implements smart fetching trigger at 400px from table bottom
 
 ## Error Handling
 
 **Mutation Error Handling**:
+
 - Configure error handling in mutation `onError` callback or globally via `MutationCache`
 - Set custom messages in mutation `meta` property
 - Errors automatically display in global snackbar notification
 
 **Query Error States**:
+
 - Check `isError` and `error` properties from `useQuery()` result
 - Display error UI conditionally based on these states
 - Implement retry logic via Tanstack Query's built-in retry mechanism
 
 **Protected Routes**:
+
 - Use [RequireAuth.tsx](../../frontend/src/auth/RequireAuth.tsx) wrapper component for authentication
 - Redirects to login page and preserves redirect location for post-login navigation
 
 ## Imports
+
 - Use absolute imports from `/` root (configured in vite.config.ts)
 - Group imports: React/external libraries → local components → utilities
 - Keep imports organized and remove unused imports before committing
