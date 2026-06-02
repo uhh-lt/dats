@@ -9,7 +9,7 @@ function DATSLogo() {
           Discourse Analysis Tool Suite
         </Typography>
         <Typography component="div" align="left" ml="2px">
-          Developed by LT & HCDS
+          Developed by LT & HCDS & EKW
         </Typography>
       </Box>
     </Stack>
