@@ -6,7 +6,7 @@ from transformers import DetrFeatureExtractor, DetrForObjectDetection
 
 from config import build_ray_model_deployment_config, conf
 from dto.detr import DETRImageInput, DETRObjectDetectionOutput, ObjectBBox
-from utils import base64_to_image
+from utils import base64_to_image, init_glitchtip
 
 cc = conf.detr
 
@@ -22,6 +22,7 @@ logger = logging.getLogger("ray.serve")
 class DETRModel:
     def __init__(self):
         logger.debug(f"Loading DetrFeatureExtractor {MODEL} ...")
+        init_glitchtip()
         feature_extractor = DetrFeatureExtractor.from_pretrained(MODEL, device=DEVICE)
         assert isinstance(feature_extractor, DetrFeatureExtractor), (
             "Failed to load feature extractor"

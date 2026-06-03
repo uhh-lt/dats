@@ -5,6 +5,7 @@ from ray import serve
 
 from config import build_ray_model_deployment_config, conf
 from dto.coref import CorefJobInput, CorefJobOutput, CorefOutputDoc
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -12,6 +13,7 @@ logger = logging.getLogger("ray.serve")
 @serve.deployment(**build_ray_model_deployment_config("coref"))
 class CorefModel:
     def __init__(self):
+        init_glitchtip()
         self.model_ger = GerCoref(conf.coref.model_de)
 
     def predict(self, input: CorefJobInput) -> CorefJobOutput:

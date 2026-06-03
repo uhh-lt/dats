@@ -7,6 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.spacy import SpacyInput, SpacyPipelineOutput
 from models.spacy import SpacyModel
+from utils import init_glitchtip
 
 api = FastAPI()
 
@@ -17,6 +18,7 @@ logger = logging.getLogger("ray.serve")
 @serve.ingress(api)
 class SpacyApi:
     def __init__(self, spacy_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.spacy = spacy_model_handle
 
     @api.post("/pipeline", response_model=SpacyPipelineOutput)

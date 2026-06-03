@@ -1,8 +1,10 @@
 import base64
+import os
 from io import BytesIO
 from pathlib import Path
 
 import numpy as np
+import sentry_sdk
 from PIL import Image
 from scipy.io import wavfile
 
@@ -33,3 +35,15 @@ def write_bytes_to_file(file_bytes: bytes, fn: Path) -> Path:
     if not fn.exists():
         raise FileNotFoundError(f"File {fn} could not be saved!")
     return fn
+
+
+def init_glitchtip():
+    """Helper to ensure consistent config across deployments"""
+    dsn = os.environ.get("GLITCHTIP_DSN")
+    if dsn:
+        sentry_sdk.init(
+            dsn=dsn,
+            traces_sample_rate=0.01,
+            auto_session_tracking=False,
+            enable_logs=True,
+        )

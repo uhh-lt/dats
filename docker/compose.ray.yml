@@ -19,6 +19,7 @@ services:
     user: ${DOCKER_UID:-1000}:${DOCKER_GID:-100}
     environment:
       LOG_LEVEL: ${RAY_LOG_LEVEL?ray-log-level-required!}
+      GLITCHTIP_DSN: ${RAY_GLITCHTIP_DSN}
       SPACY_MODELS_DIR: /ray_cache/spacy_models
       HUGGINGFACE_HUB_CACHE: /ray_cache/hf_hub_cache
       HF_HOME: /ray_cache/hf_cache

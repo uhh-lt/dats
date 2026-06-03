@@ -7,6 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.glotlid import GlotLIDInput, GlotLIDOutput
 from models.glotlid import GlotLIDModel
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -17,6 +18,7 @@ api = FastAPI()
 @serve.ingress(api)
 class GlotLIDApi:
     def __init__(self, glotlid_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.glotlid = glotlid_model_handle
 
     @api.post("/lid", response_model=GlotLIDOutput)

@@ -7,6 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.quote import QuoteJobInput, QuoteJobOutput
 from models.quote import QuoteModel
+from utils import init_glitchtip
 
 api = FastAPI()
 
@@ -17,6 +18,7 @@ logger = logging.getLogger("ray.serve")
 @serve.ingress(api)
 class QuoteApi:
     def __init__(self, quote_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.quotect = quote_model_handle
 
     @api.post("/predict", response_model=QuoteJobOutput)

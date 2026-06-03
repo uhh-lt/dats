@@ -3,6 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
+import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import React from "react";
@@ -15,25 +16,31 @@ import { AuthProvider } from "./auth/AuthProvider.tsx";
 import "./index.css";
 import { theme } from "./plugins/ReactMUI.ts";
 import queryClient from "./plugins/ReactQueryClient.ts";
+import { initSentry } from "./plugins/Sentry.ts";
 import router from "./router/routes.tsx";
 import { store } from "./store/store.ts";
+
+initSentry();
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);
+
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Provider store={store}>
-        <PersistGate persistor={persistor}>
-          <AuthProvider>
-            <ThemeProvider theme={theme}>
-              <RouterProvider router={router} />
-            </ThemeProvider>
-          </AuthProvider>
-        </PersistGate>
-      </Provider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <Sentry.ErrorBoundary fallback={<p>An unexpected error has occurred. Please try again later.</p>}>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <PersistGate persistor={persistor}>
+            <AuthProvider>
+              <ThemeProvider theme={theme}>
+                <RouterProvider router={router} />
+              </ThemeProvider>
+            </AuthProvider>
+          </PersistGate>
+        </Provider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   </React.StrictMode>,
 );
