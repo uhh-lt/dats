@@ -6,6 +6,7 @@ from ray import serve
 
 from config import build_ray_model_deployment_config, conf
 from dto.glotlid import DetectedLanguage, GlotLIDInput, GlotLIDOutput
+from utils import init_glitchtip
 
 cc = conf.glotlid
 
@@ -22,6 +23,7 @@ class GlotLIDModel:
         # model_id: str = "cis-lmu/glotlid",
         # version: Literal["latest", "3", "2", "1"] = "latest",
     ) -> None:
+        init_glitchtip()
         model_path = hf_hub_download(
             repo_id=MODEL,
             filename="model.bin" if VERSION == "latest" else f"model_v{VERSION}.bin",

@@ -11,6 +11,7 @@ from dto.clip import (
     ClipTextEmbeddingInput,
 )
 from models.clip import ClipModel
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -21,6 +22,7 @@ api = FastAPI()
 @serve.ingress(api)
 class ClipApi:
     def __init__(self, clip_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.clip = clip_model_handle
 
     @api.post("/embedding/text", response_model=ClipEmbeddingOutput)

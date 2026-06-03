@@ -7,6 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.coref import CorefJobInput, CorefJobOutput
 from models.coref import CorefModel
+from utils import init_glitchtip
 
 api = FastAPI()
 
@@ -17,6 +18,7 @@ logger = logging.getLogger("ray.serve")
 @serve.ingress(api)
 class CorefApi:
     def __init__(self, coref_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.coref = coref_model_handle
 
     @api.post("/predict", response_model=CorefJobOutput)

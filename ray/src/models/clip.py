@@ -11,7 +11,7 @@ from dto.clip import (
     ClipImageEmbeddingInput,
     ClipTextEmbeddingInput,
 )
-from utils import base64_to_image
+from utils import base64_to_image, init_glitchtip
 
 cc = conf.clip
 
@@ -29,6 +29,7 @@ logger = logging.getLogger("ray.serve")
 class ClipModel:
     def __init__(self):
         logger.debug(f"Loading ClipModel {TEXT_MODEL} for text ...")
+        init_glitchtip()
         text_encoder = SentenceTransformer(TEXT_MODEL).to(TEXT_DEVICE)
         text_encoder.eval()
         self.text_encoder = text_encoder

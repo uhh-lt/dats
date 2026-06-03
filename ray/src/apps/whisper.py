@@ -7,7 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.whisper import WhisperTranscriptionOutput
 from models.whisper import WhisperModel
-from utils import bytes_to_wav_data
+from utils import bytes_to_wav_data, init_glitchtip
 
 api = FastAPI()
 
@@ -18,6 +18,7 @@ logger = logging.getLogger("ray.serve")
 @serve.ingress(api)
 class WhisperApi:
     def __init__(self, whisper_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.whisper = whisper_model_handle
 
     @api.post(

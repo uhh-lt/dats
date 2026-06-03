@@ -5,6 +5,7 @@ from ray import serve
 
 from config import build_ray_model_deployment_config, conf
 from dto.quote import QuoteJobInput, QuoteJobOutput, QuoteOutputDoc, QuoteTuple
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -12,6 +13,7 @@ logger = logging.getLogger("ray.serve")
 @serve.deployment(**build_ray_model_deployment_config("quote"))
 class QuoteModel:
     def __init__(self):
+        init_glitchtip()
         self.model = Quotect(
             model_name_or_path=conf.quote.model,
             generation_max_length=conf.quote.max_length,

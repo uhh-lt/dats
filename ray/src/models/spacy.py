@@ -6,6 +6,7 @@ from spacy.language import Language
 
 from config import build_ray_model_deployment_config, conf
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
+from utils import init_glitchtip
 
 cc = conf.spacy
 
@@ -22,7 +23,7 @@ logger = logging.getLogger("ray.serve")
 class SpacyModel:
     def __init__(self):
         logger.debug("Loading spaCy Models...")
-
+        init_glitchtip()
         if str(DEVICE).startswith("cuda"):
             import torch
 

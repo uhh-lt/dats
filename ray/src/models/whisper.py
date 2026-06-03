@@ -12,6 +12,7 @@ from dto.whisper import (
     WhisperTranscriptionOutput,
     WordTranscription,
 )
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -26,6 +27,7 @@ WHISPER_TRANSCRIBE_OPTIONS = cc.options
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
+        init_glitchtip()
         self.model = BatchedInferencePipeline(FasterWhisperModel(WHISPER_MODEL, DEVICE))
 
     def _get_uncompressed_audio(self, wav_data: np.ndarray) -> np.ndarray:

@@ -24,11 +24,24 @@ def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path):
     spec = srsly.read_yaml(generated_spec_fp)
     if not isinstance(spec, dict) or "applications" not in spec:
         raise ValueError("Invalid spec format: 'applications' key not found")
-
+    glitchtip_dsn = os.environ.get("GLITCHTIP_DSN")
     for app in spec["applications"]:
         name = app["import_path"].split(":")[0].split(".")[-1]
         app["name"] = name
         app["route_prefix"] = f"/{name}"
+
+        if glitchtip_dsn:
+            # Initialize runtime_env and env_vars dictionaries if they don't exist yet
+            if "runtime_env" not in app:
+                app["runtime_env"] = {}
+            if "env_vars" not in app["runtime_env"]:
+                app["runtime_env"]["env_vars"] = {}
+
+            app["runtime_env"]["env_vars"]["GLITCHTIP_DSN"] = glitchtip_dsn
+        else:
+            print(
+                f"Warning: GLITCHTIP_DSN not found in environment. Skipping injection for app: {name}"
+            )
 
     srsly.write_yaml(spec_out_fp, spec)
     print(f"Successfully renamed app names in {spec_out_fp}!")

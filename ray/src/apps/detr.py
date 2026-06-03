@@ -7,6 +7,7 @@ from ray.serve.handle import DeploymentHandle
 from config import build_ray_api_deployment_config
 from dto.detr import DETRImageInput, DETRObjectDetectionOutput
 from models.detr import DETRModel
+from utils import init_glitchtip
 
 logger = logging.getLogger("ray.serve")
 
@@ -17,6 +18,7 @@ api = FastAPI()
 @serve.ingress(api)
 class DETRApi:
     def __init__(self, detr_model_handle: DeploymentHandle) -> None:
+        init_glitchtip()
         self.detr = detr_model_handle
 
     @api.post("/object_detection", response_model=DETRObjectDetectionOutput)

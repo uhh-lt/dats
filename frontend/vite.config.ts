@@ -30,6 +30,12 @@ export default defineConfig(({ mode }) => {
             changeOrigin: true, // Required for virtual hosted sites
             rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /content from the path
           },
+          "/sentry-api": {
+            target: env.VITE_APP_GLITCHTIP,
+            changeOrigin: true,
+            secure: true,
+            rewrite: (path) => path.replace(/^\/sentry-api/, ""),
+          },
         },
       },
     };
