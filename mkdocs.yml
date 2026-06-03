@@ -9,6 +9,8 @@ theme:
     - navigation.expand # Automatically expands categories in the sidebar
     - navigation.indexes # Allows you to click the category name itself
     - toc.integrate # Moves the table of contents into the left sidebar
+extra_css:
+  - stylesheets/custom.css
 nav:
   - DATS:
       - Introduction: index.md
