@@ -1,6 +1,7 @@
 site_name: Discourse Analysis Tool Suite
 theme:
   name: material
+  logo: assets/dats-logo.svg
   features:
     - navigation.tabs # Moves top-level sections to a top navbar
     - navigation.tabs.sticky # Keeps the top navbar visible when scrolling
