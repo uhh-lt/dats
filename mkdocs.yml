@@ -9,11 +9,12 @@ theme:
     - navigation.indexes # Allows you to click the category name itself
     - toc.integrate # Moves the table of contents into the left sidebar
 nav:
-  - 1. Introduction: index.md
-  - 2. Getting Started: getting-started.md
-  - 3. Core Concepts: core-concepts.md
-  - 4. DATS Workspace: dats-workspace.md
-  - 5. Features & Views:
+  - DATS:
+      - Introduction: index.md
+      - Getting Started: getting-started.md
+      - Core Concepts: core-concepts.md
+      - DATS Workspace: dats-workspace.md
+  - Feature Guides:
       - feature-guides/index.md
       - Project View: feature-guides/project-view.md
       - Search View: feature-guides/search-view.md
@@ -37,11 +38,11 @@ nav:
           - Health View: feature-guides/tools/health-view.md
       - Document Upload: feature-guides/document-upload.md
       - Export & Import: feature-guides/export-import.md
-  - 6. Workflow Examples:
-      - workflow-examples/index.md
+  - Workflows:
+      - workflows/index.md
       - Workflow 1: workflows/workflow-a.md
       - Workflow 2: workflows/workflow-b.md
-  - 7. Technical Details:
+  - Technical Details:
       - technical-details/index.md
       - Preprocessing Pipeline: technical-details/preprocessing-pipeline.md
-  - 8. FAQ: faq.md
+  - FAQ: faq.md
