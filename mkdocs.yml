@@ -4,7 +4,7 @@ repo_url: https://github.com/uhh-lt/dats
 theme:
   name: material
   logo: assets/dats-logo.svg
-  favicon: assets/dats-logo.svg
+  favicon: assets/dats-favicon.svg
   features:
     - navigation.tabs # Moves top-level sections to a top navbar
     - navigation.tabs.sticky # Keeps the top navbar visible when scrolling
