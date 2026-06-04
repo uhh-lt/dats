@@ -11,7 +11,7 @@ This view is specifically designed for deep reading and qualitative coding. It a
 
 The center of the screen displays the actual content of your document. Just above the document is the Annotation Toolbar, which controls how you interact with the text or image.
 
-### Selecting Your Active User (Crucial Step\!)
+### Selecting Your Active User (Crucial Step!)
 
 Before you make a single annotation, look at the **User Dropdown** in the top toolbar.
 
@@ -36,7 +36,7 @@ If you are working in a team and want to check inter-coder reliability or simply
 
 * This splits the central viewer side-by-side.
 * You can view your annotations on the left and a colleague's on the right.
-* You can even "take over" or apply annotations from their side to yours\!
+* You can even "take over" or apply annotations from their side to yours!
 
 ### Rendering Settings & LLM Assistant
 
@@ -80,8 +80,10 @@ This tab displays your entire Codebook as a hierarchical tree.
 
 * **Managing Codes:** Use the toolbar here to create new top-level codes. You can right-click any code to edit its color, name, or description, or to add child codes.
 * **Hiding/Disabling:** Clicking the "Eye" icon next to a code hides all its annotations from the document viewer.
-  \!\!\! tip "Pro-Tip: Filtering the Context Menu"
-  If your Codebook is massive, the pop-up context menu in the main viewer can get overwhelming. **Click once on a top-level code in the Code Explorer.** Now, when you highlight text, the pop-up menu will *only* suggest that selected code and its specific children\! Click it again to remove the filter.
+
+!!! tip "Pro-Tip: Filtering the Context Menu"
+
+    If your Codebook is massive, the pop-up context menu in the main viewer can get overwhelming. **Click once on a top-level code in the Code Explorer.** Now, when you highlight text, the pop-up menu will *only* suggest that selected code and its specific children! Click it again to remove the filter.
 
 ### The Annotation Explorer
 
@@ -104,5 +106,5 @@ It is divided into four tabs:
 
 1. **INFO (Metadata):** View and edit the descriptive metadata (Author, Date, Source) for the document.
 2. **TAGS:** View and edit the structural tags assigned to this document (e.g., Domain: News).
-3. **RELATED:** *This is crucial for long files\!* If you uploaded a 300-page PDF, DATS split it into smaller documents. This tab lists all the other chunks of that original file. Use the **Next** and **Prev** buttons to easily flip to the next page of your book or article.
+3. **RELATED:** *This is crucial for long files!* If you uploaded a 300-page PDF, DATS split it into smaller documents. This tab lists all the other chunks of that original file. Use the **Next** and **Prev** buttons to easily flip to the next page of your book or article.
 4. **MEMOS:** View or create memos attached to the *document as a whole*.

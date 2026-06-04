@@ -27,7 +27,7 @@ By default, the tool displays a bar chart showing the frequencies of your **top-
 
 * **Hover for Details:** If you hover your mouse over any bar (or slice), a tooltip will appear displaying two important numbers:
   * **Count:** How many times this *exact* code was applied.
-  * **Total Count:** How many times this code *or any of its child codes* were applied. This is crucial for hierarchical codebooks\!
+  * **Total Count:** How many times this code *or any of its child codes* were applied. This is crucial for hierarchical codebooks!
 * **Pie Chart Toggle:** Prefer a different visualization? Click the small round button (usually a pie chart icon) at the top of the chart to toggle between a Bar Chart and a Pie Chart.
 * **Exporting:** Click the download icon at the top right of the chart to export it as a high-quality PNG file for your presentations or publications.
 
@@ -50,6 +50,6 @@ Whenever you click on a bar or slice in the center panel, the **Right Panel** dy
 * **Frequency per Document:** The list includes a "Count" column. This indicates if the exact same text span was tagged with the identical code multiple times *within the same document*.
 * **Sorting and Filtering:** Just like the main Search View, you can use the column headers to sort the list or search for specific words within the annotated text.
 
-\!\!\! tip "Jumping to Context"
+!!! tip "Jumping to Context"
 
-If you see an interesting text snippet in the right panel and want to read the full context, simply click on the **Document Name** in the list. DATS will open that document in a new tab, instantly scroll to the annotation, and highlight it for you\!
+    If you see an interesting text snippet in the right panel and want to read the full context, simply click on the **Document Name** in the list. DATS will open that document in a new tab, instantly scroll to the annotation, and highlight it for you!

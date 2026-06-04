@@ -22,7 +22,7 @@ The left panel is a comprehensive table listing every unique substantive word fo
 * **Default Sorting:** By default, the table is sorted by **frequency in descending order**, meaning the most commonly used words appear at the very top.
 * **Searching and Filtering:** Just like the annotation tables, you can use the column headers to search for specific words. For example, you can type a specific term to see exactly how many times it was used, or filter the list to only show words that appear more than 100 times.
 * **Selecting Words:** Next to each word is a checkbox. **You must select words in this table to build your word cloud.**
-  * *Tip:* You can use the master checkbox at the very top of the table header to select the top visible words all at once\!
+  * *Tip:* You can use the master checkbox at the very top of the table header to select the top visible words all at once!
 
 ## 3\. The Word Cloud Generator (Right Panel)
 

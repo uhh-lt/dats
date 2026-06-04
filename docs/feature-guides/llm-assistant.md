@@ -50,7 +50,7 @@ You must tell the AI *what* to look for.
 
 * A list of your project's Codes (or Tags/Metadata) will appear.
 * Use the checkboxes to select the specific categories you want the AI to apply.
-* *Note:* The AI relies heavily on the **Descriptions** you wrote for these codes in the Project Settings. The better your written description, the more accurate the AI's predictions will be\!
+* *Note:* The AI relies heavily on the **Descriptions** you wrote for these codes in the Project Settings. The better your written description, the more accurate the AI's predictions will be!
 
 ### Step 3: Select Approach
 
@@ -76,7 +76,7 @@ DATS automatically generates the complex instruction prompt that will be sent to
 
 ![LLM Assistant Step 5](../assets/llm-assistant-step5.png)
 
-Click **Start\!** The dialog will close, and the job will run asynchronously in the background. You are free to continue reading or analyzing other documents while the AI works.
+Click **Start!** The dialog will close, and the job will run asynchronously in the background. You are free to continue reading or analyzing other documents while the AI works.
 
 * To check the progress, simply click the Robot icon again to open the dialog and look at the **Previous LLM Jobs** list at the bottom of the welcome screen.
 
@@ -89,7 +89,7 @@ Because qualitative research requires human oversight, DATS **never** applies AI
 1. Once a job is finished, open the LLM Assistant dialog and click **View Results** next to the completed job.
 2. You will be presented with a review screen showing the document text with all of the AI's suggestions highlighted.
 3. **Human-in-the-Loop:** You can click on any AI suggestion to modify it. You can delete an incorrect suggestion or change its assigned code.
-4. Once you are satisfied with the AI's work, click **Apply Annotations\!**.
+4. Once you are satisfied with the AI's work, click **Apply Annotations!**.
 
 ![LLM Assistant Result](../assets/annotation-compare-view.png)
-*(Note: AI-generated annotations are saved under a special ZERO/FEW-SHOT ASSISTANT user profile, ensuring they are always distinguishable from your own manual coding in the analysis views\!)*
+*(Note: AI-generated annotations are saved under a special ZERO/FEW-SHOT ASSISTANT user profile, ensuring they are always distinguishable from your own manual coding in the analysis views!)*

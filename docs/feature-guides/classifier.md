@@ -2,7 +2,7 @@
 
 While the LLM Assistant is excellent for exploring concepts using zero-shot or few-shot prompts, qualitative research often requires highly specific, project-tailored automated coding. The **Classifier View** allows you to train your own custom Machine Learning models based entirely on your team's manual annotations.
 
-Unlike the LLM Assistant which relies on written descriptions, a custom Classifier learns directly from the data patterns in your manual coding. Once trained, these lightweight models require no prompts, execute very quickly, and can even be exported outside of DATS\!
+Unlike the LLM Assistant which relies on written descriptions, a custom Classifier learns directly from the data patterns in your manual coding. Once trained, these lightweight models require no prompts, execute very quickly, and can even be exported outside of DATS!
 
 ## 1\. Accessing the Classifier View
 
@@ -37,9 +37,9 @@ Next, choose the specific codes/tags the model should learn:
 * **Binary Classifier (1 Code):** If you select a single code, the model learns a simple "Yes/No" rule for that specific concept.
 * **Multi-Label Classifier (2-10 Codes):** If you select multiple codes, the model will decide which (if any) of these codes apply.
 
-\!\!\! tip "Multi-Label Rule of Thumb"
+!!! tip "Multi-Label Rule of Thumb"
 
-When training a multi-label classifier, the selected codes should ideally be **siblings** in your Codebook (e.g., training a model to differentiate between Emotion: Joy, Emotion: Anger, and Emotion: Sadness).
+    When training a multi-label classifier, the selected codes should ideally be **siblings** in your Codebook (e.g., training a model to differentiate between Emotion: Joy, Emotion: Anger, and Emotion: Sadness).
 
 ### Step 2: Select Training Data
 
@@ -79,11 +79,11 @@ Training metrics only tell half the story. You need to know how well your model 
 
 ## 4\. Applying the Model (INFER)
 
-Once you are satisfied with the EVAL scores, you can unleash your custom classifier on the rest of your un-coded corpus\!
+Once you are satisfied with the EVAL scores, you can unleash your custom classifier on the rest of your un-coded corpus!
 
 1. Find your model in the Top Panel and click **INFER**.
 2. A specialized Search View will open. Use the standard search bar and filters to isolate the exact documents you want the AI to analyze (e.g., filtering for documents from the year 2022 that have not been manually coded yet).
 3. **Handle Overlaps:** If the selected documents already contain some manual annotations, DATS will ask how you want to handle potential conflicts (e.g., overwrite them or skip them).
 4. Click **Start Inference**.
 
-The model will rapidly scan the selected documents and apply new annotations. You can review the general statistics of this job in the bottom progress panel, and then open the actual documents to read your newly automated, custom-coded text\!
+The model will rapidly scan the selected documents and apply new annotations. You can review the general statistics of this job in the bottom progress panel, and then open the actual documents to read your newly automated, custom-coded text!

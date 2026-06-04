@@ -39,11 +39,11 @@ The heart of the Timeline Analysis is your **Concepts**. Unlike the Code Frequen
 3. **Build your Query:** Just like the advanced filtering in the Search View, you define this concept by stacking logical expressions.
    * *Example:* You can define "Economic Crisis" as any document that contains the Tag Domain: Business **AND** contains the Keyword Inflation.
    * *Note:* The filter options available depend on whether you are running a Document timeline or an Annotation timeline.
-4. **Save:** Once saved, DATS will instantly calculate the timeline and visualize it on the right\!
+4. **Save:** Once saved, DATS will instantly calculate the timeline and visualize it on the right!
 
-\!\!\! tip "Multiple Concepts"
+!!! tip "Multiple Concepts"
 
-You can create and overlay multiple concepts on the same timeline. This is incredibly powerful for comparative analysis—for example, plotting the rise of "Climate Change" rhetoric against the decline of "Global Warming" terminology.
+    You can create and overlay multiple concepts on the same timeline. This is incredibly powerful for comparative analysis—for example, plotting the rise of "Climate Change" rhetoric against the decline of "Global Warming" terminology.
 
 ## 5\. The Timeline Chart (Top Right Panel)
 
@@ -61,6 +61,6 @@ DATS makes this seamless with the **Provenance View**, located directly beneath 
 
 * **Interactive Data Points:** Click on any data point (a dot on a line or a specific bar) in the timeline chart.
 * **View the Evidence:** The Provenance View instantly updates to display a list of all the exact documents (or annotations) that make up that specific data point for that specific time period.
-* **Jump to Source:** Just like in the Search View, you can click on any document in this Provenance list to open it in a new tab and read the full context\!
+* **Jump to Source:** Just like in the Search View, you can click on any document in this Provenance list to open it in a new tab and read the full context!
 
 *Click any point on the chart to instantly see the documents that caused that data point in the Provenance View.*

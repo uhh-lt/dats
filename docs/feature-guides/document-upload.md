@@ -32,13 +32,13 @@ Use this side for files you already have saved locally.
 DATS features an integrated web crawler. If you want to analyze online news articles, blogs, or other web pages, you don't need to save them as PDFs first.
 
 * **How to use:** Paste the URLs of the websites you want to upload into the text box (one URL per line).
-* Click **Upload URLs** (or **Start Crawler Job\!**). DATS will visit the websites, scrape the main text content (ignoring navigation menus and ads), download embedded media, and upload them as clean documents.
+* Click **Upload URLs** (or **Start Crawler Job!**). DATS will visit the websites, scrape the main text content (ignoring navigation menus and ads), download embedded media, and upload them as clean documents.
 
 ## 3\. Preprocessing Settings (The Cog Icon)
 
 Between the two upload panels, you will see a small **Settings (Cog) icon**. Clicking this reveals vital settings that dictate how DATS processes your newly uploaded data.
 
-*It is highly recommended to review these settings before initiating a large upload\!*
+*It is highly recommended to review these settings before initiating a large upload!*
 
 * **Language:** By default, this is set to Auto, meaning DATS will attempt to detect the language of the text. If your entire corpus is in a specific language (e.g., German), explicitly selecting de can improve processing accuracy.
 * **Pages per chunk:** *(Crucial for large texts)* Large files (like a 300-page book) cannot be processed by AI models all at once. DATS splits them into smaller "Documents" (grouped in a File-Folder). The default is 10 pages per chunk. You can adjust this based on your preferred reading and analysis size.

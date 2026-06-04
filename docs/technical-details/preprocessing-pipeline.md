@@ -28,7 +28,7 @@ This is the foundational flow of DATS. It processes standard formats like PDF, D
 2. **Chunking:** To ensure that subsequent Transformer-based language models can process the text within their token limits, large documents are split into smaller chunks (defaulting to 10-page segments).
 3. **Language Detection:** The text's language is automatically identified using the **GlotLID** model.
 4. **NLP & Entity Recognition:** For supported languages (English, German, Italian), the text is passed through **spaCy** pipelines. This handles tokenization, sentence segmentation, and Named Entity Recognition (NER), automatically identifying people, organizations, and locations.
-5. **Semantic Embeddings:** Finally, sentence embeddings are computed using a pre-trained multilingual **CLIP** encoder model (via the SentenceTransformers library). This mathematical representation of the text is what makes the cross-modal semantic search possible\!
+5. **Semantic Embeddings:** Finally, sentence embeddings are computed using a pre-trained multilingual **CLIP** encoder model (via the SentenceTransformers library). This mathematical representation of the text is what makes the cross-modal semantic search possible!
 
 ### 🖼️ 2\. The Image Flow
 
@@ -37,7 +37,7 @@ This flow converts visual content into a searchable, text-based format.
 1. **Object Detection:** A pre-trained **DETR (DEtection TRansformer)** model scans the image to identify and categorize objects (e.g., cars, people, buildings).
 2. **Semantic Embedding:** A global semantic image embedding is computed using the same **CLIP** encoder model used in the text flow.
 3. **Image Captioning:** An open-weight Large Language Model generates a concise, entity-aware description of the image.
-4. **Funnel to Text:** *Crucially, this generated caption is then passed directly into the Text Flow.* This means the image's description undergoes entity recognition and indexing, allowing you to find the image using standard text searches\!
+4. **Funnel to Text:** *Crucially, this generated caption is then passed directly into the Text Flow.* This means the image's description undergoes entity recognition and indexing, allowing you to find the image using standard text searches!
 
 ### 🎵 3\. The Audio Flow
 

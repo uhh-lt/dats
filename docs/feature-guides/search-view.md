@@ -73,8 +73,9 @@ It contains three views (switchable via the icon next to the view name):
 * **Tags:** Displays which tags are most prevalent in your current results.
 * **Codes:** Displays the most frequent annotation codes present in the results.
 * **Blue vs. Black Bars:** Next to each item are two bars. The blue bar shows how many documents in the *entire project* contain this item. The black bar shows how many documents *in your current search results* contain it.
-  \!\!\! tip "Instant Filtering"
-  Clicking on any Keyword, Tag, or Code in this statistics panel will instantly add it as a filter expression to your search\!
+
+!!! tip "Instant Filtering"
+    Clicking on any Keyword, Tag, or Code in this statistics panel will instantly add it as a filter expression to your search!
 
 ### Mode 2: Document Details (Document Selected)
 

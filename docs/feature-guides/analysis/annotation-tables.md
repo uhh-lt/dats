@@ -23,11 +23,11 @@ When you open an Annotation Table, you are presented with a comprehensive list o
 
 * **Customizing Columns:** Use the "Show/hide columns" button at the top right to select which metadata you want to see.
 * **Sorting and Searching:** Click on any column header to sort the table. You can use the global search bar, or use the **Filter** menu to create complex queries (e.g., "Show me all annotations made by *User A* using the code *Economic Crisis*").
-* **Filtering by Memos:** A highly useful feature for qualitative researchers is the "Memo Content" column. You can use this to filter the table to show *only* annotations where you or your team have written a specific interpretive memo\!
+* **Filtering by Memos:** A highly useful feature for qualitative researchers is the "Memo Content" column. You can use this to filter the table to show *only* annotations where you or your team have written a specific interpretive memo!
 
-\!\!\! tip "Cluttered Screen?"
+!!! tip "Cluttered Screen?"
 
-If the text snippets in the table are long and the screen feels overwhelming, remember to use the **Toggle density (=)** button in the toolbar to compress the rows and see more entries at once.
+    If the text snippets in the table are long and the screen feels overwhelming, remember to use the **Toggle density (=)** button in the toolbar to compress the rows and see more entries at once.
 
 ## 3\. Bulk Editing and Data Cleaning
 
@@ -37,7 +37,7 @@ If you realize you have been using a code incorrectly, or if you decide to merge
 
 1. **Search/Filter:** Use the table filters to isolate the specific annotations you want to change.
 2. **Select Multiple Rows:** Use the checkboxes on the left side of the table to select individual annotations, or use the master checkbox in the header to select all visible rows.
-3. **Bulk Edit:** Once annotations are selected, a **Pencil (Edit) icon** will appear at the top of the table (next to the filter button). Click it to instantly re-assign a new code to all selected annotations simultaneously\!
+3. **Bulk Edit:** Once annotations are selected, a **Pencil (Edit) icon** will appear at the top of the table (next to the filter button). Click it to instantly re-assign a new code to all selected annotations simultaneously!
 
 *Select multiple annotations to quickly re-assign them to a new code.*
 

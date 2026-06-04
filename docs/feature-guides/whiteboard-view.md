@@ -45,7 +45,7 @@ You can easily drag and drop (or import) your project's specific research object
 * **Annotations:** Pull specific highlighted text snippets directly onto the canvas. This is incredible for grouping quotes that support a specific theoretical argument.
 * **Tags:** Add tag nodes to visually group related documents.
 
-**Interactive Nodes:** When you place a DATS entity (like a Document or a Code) on the whiteboard, it isn't just a static picture. You can usually interact with it—for example, double-clicking a document node on the whiteboard can open that document for reading\!
+**Interactive Nodes:** When you place a DATS entity (like a Document or a Code) on the whiteboard, it isn't just a static picture. You can usually interact with it—for example, double-clicking a document node on the whiteboard can open that document for reading!
 
 ## 4\. Typical Use Cases for Discourse Analysis
 
