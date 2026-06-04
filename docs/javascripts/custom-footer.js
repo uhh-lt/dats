@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     logosContainer.style.display = "flex";
     logosContainer.style.gap = "24px";
     logosContainer.style.alignItems = "center";
+    logosContainer.style.padding = "16px";
 
     logosContainer.innerHTML = `
       <a href="https://www.uni-hamburg.de/" target="_blank" rel="noopener noreferrer" title="University of Hamburg">
@@ -27,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
     rightContainer.style.display = "flex";
     rightContainer.style.flexDirection = "column";
     rightContainer.style.alignItems = "flex-end"; // Aligns everything to the right edge
-    rightContainer.style.gap = "12px"; // Adds space between socials and copyright
 
     // 3. Move the existing MkDocs elements into our new Right Container
     // Appending them moves them safely without breaking their hover effects/links
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
     rightContainer.appendChild(copyrightDiv);
 
     // Remove MkDocs default padding/margins so it aligns perfectly in our column
-    copyrightDiv.style.padding = "0";
+    copyrightDiv.style.padding = "0px 16px 0px 0px";
     copyrightDiv.style.margin = "0";
 
     // 4. Update the main footer container to push the left and right sides apart
