@@ -1,7 +1,10 @@
 site_name: Discourse Analysis Tool Suite
+repo_name: uhh-lt/dats
+repo_url: https://github.com/uhh-lt/dats
 theme:
   name: material
   logo: assets/dats-logo.svg
+  favicon: assets/dats-logo.svg
   features:
     - navigation.tabs # Moves top-level sections to a top navbar
     - navigation.tabs.sticky # Keeps the top navbar visible when scrolling
@@ -10,6 +13,8 @@ theme:
     - navigation.indexes # Allows you to click the category name itself
     - navigation.footer # Previous/next links at the bottom of each page
     - toc.integrate # Moves the table of contents into the left sidebar
+  icon:
+    repo: fontawesome/brands/github
 copyright: Copyright &copy; 2026 HCDS, University of Hamburg
 extra:
   generator: false
