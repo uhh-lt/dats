@@ -17,6 +17,8 @@ theme:
     repo: fontawesome/brands/github
 markdown_extensions:
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 copyright: Copyright &copy; 2026 HCDS, University of Hamburg
 extra:
   generator: false

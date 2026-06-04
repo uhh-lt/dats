@@ -4,7 +4,7 @@ The Annotation View is the core qualitative workspace in DATS. Once you have use
 
 This view is specifically designed for deep reading and qualitative coding. It allows you to select text segments or image areas and link them to theoretical concepts from your Codebook.
 
-![Annotation View](assets/annotation-view.png)
+![Annotation View](../assets/annotation-view.png)
 *The Annotation View is optimized for deep reading and qualitative coding.*
 
 ## 1\. The Central Viewer & Top Toolbar
@@ -30,7 +30,7 @@ DATS supports different types of coding depending on your methodology and the do
 
 ### The Compare View
 
-![Annotation Compare View](assets/annotation-compare-view.png)
+![Annotation Compare View](../assets/annotation-compare-view.png)
 
 If you are working in a team and want to check inter-coder reliability or simply review a colleague's work, click the **Compare** icon in the toolbar.
 
