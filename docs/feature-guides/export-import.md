@@ -21,6 +21,8 @@ You can find this contextual export button in various places, including:
 
 ### Full Project Export ("Export All")
 
+![Project Export](../assets/project-details-export.png)
+
 If you need to back up your entire project—including all documents, annotations, codes, tags, users, and memos—you can generate a complete project archive.
 
 1. Click the **Settings icon** (the cog wheel) at the bottom of the main left navigation bar.
@@ -32,7 +34,9 @@ If you need to back up your entire project—including all documents, annotation
 
 ## 2\. Importing DATS Data
 
-*(Note: This section covers importing structured DATS data, such as project backups or codebooks. To upload raw files like PDFs or URLs for analysis, please refer to the [Document Import Dialog](http://docs.google.com/10_document_import.md) guide).*
+![Project Import](../assets/project-details-import.png)
+
+*(Note: This section covers importing structured DATS data, such as project backups or codebooks. To upload raw files like PDFs or URLs for analysis, please refer to the [Document Upload Dialog](document-upload.md) guide).*
 
 If you have an exported DATS ZIP file—perhaps a backup you previously created, or a specific Tag taxonomy sent to you by a colleague—you can easily merge it into your current workspace.
 

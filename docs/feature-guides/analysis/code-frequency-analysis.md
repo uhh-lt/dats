@@ -4,6 +4,8 @@ The **Code Frequency Analysis** tool bridges the gap between qualitative coding 
 
 It is an excellent way to get a bird's-eye view of your coding progress, identify dominant themes, or check the results of the automated SYSTEM USER entity extraction.
 
+![Code Frequency Analysis](../../assets/code-frequency-analysis.png)
+
 ## 1\. Configuring the Analysis (Left Panel)
 
 When you open the Code Frequency Analysis from the dashboard, you will see a settings panel on the left side of the screen.

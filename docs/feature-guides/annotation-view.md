@@ -4,6 +4,7 @@ The Annotation View is the core qualitative workspace in DATS. Once you have use
 
 This view is specifically designed for deep reading and qualitative coding. It allows you to select text segments or image areas and link them to theoretical concepts from your Codebook.
 
+![Annotation View](assets/annotation-view.png)
 *The Annotation View is optimized for deep reading and qualitative coding.*
 
 ## 1\. The Central Viewer & Top Toolbar
@@ -28,6 +29,8 @@ DATS supports different types of coding depending on your methodology and the do
 4. *(For Images)* **Bounding Box Annotation:** Automatically activated when viewing an image document, allowing you to draw rectangles over visual elements.
 
 ### The Compare View
+
+![Annotation Compare View](assets/annotation-compare-view.png)
 
 If you are working in a team and want to check inter-coder reliability or simply review a colleague's work, click the **Compare** icon in the toolbar.
 
@@ -68,7 +71,10 @@ The left side of the screen is dedicated to managing your taxonomy and tracking 
 
 *Manage your hierarchical codebook from the Left Sidebar.*
 
+
 ### The Code Explorer
+
+![Code Explorer](../assets/code-system.png)
 
 This tab displays your entire Codebook as a hierarchical tree.
 
@@ -79,6 +85,8 @@ This tab displays your entire Codebook as a hierarchical tree.
 
 ### The Annotation Explorer
 
+![Annotation Explorer](../assets/annotation-explorer.png)
+
 This tab acts as an index for the current document. It displays a list of "cards" for every single annotation you (or the active user) have made in this file.
 
 * **Navigation:** Clicking on any annotation card instantly scrolls the main viewer directly to that highlight.
@@ -87,6 +95,8 @@ This tab acts as an index for the current document. It displays a list of "cards
 ## 4\. The Right Sidebar: Context & Metadata
 
 The right sidebar is identical to the one found in the Search View. It provides vital context about the document you are currently reading.
+
+![Document Metadata](../assets/annotation-metadata.png)
 
 *The Right Sidebar provides document context and navigation.*
 

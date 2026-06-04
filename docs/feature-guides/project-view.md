@@ -8,6 +8,7 @@ This chapter covers how to create and manage your projects from the main dashboa
 
 When you first log in to DATS, or whenever you click the **Home** icon (the house symbol) in the main left navigation bar, you are brought to the Project Dashboard.
 
+![Project Dashboard](../assets/project-dashboard.png)
 *The Project Dashboard is your starting point in DATS.*
 
 ### Creating a New Project
@@ -37,9 +38,13 @@ The Settings dialog is divided into six tabs, allowing you to manage different a
 
 ### Details Tab
 
+![Project Dialog Details](../assets/project-details-export.png)
+
 This tab displays the basic information you provided when creating the project. You can edit the **Project Name** and **Description** here at any time.
 
 ### User Tab (Team Collaboration)
+
+![Project Dialog Users](../assets/project-details-user.png)
 
 DATS is built for collaborative research. Use this tab to manage who has access to your dataset.
 
@@ -62,9 +67,13 @@ Similar to the Codes tab, this section provides a global overview of your struct
 
 ### Import Tab
 
+![Project Dialog Import](../assets/project-details-import.png)
+
 If you have previously exported a DATS project (e.g., as a backup), you can use this tab to upload the exported file and restore the data into your current project environment.
 
 ### Danger Zone Tab
+
+![Project Dialog Dangerzone](../assets/project-details-dangerzone.png)
 
 As the name implies, this tab contains destructive actions.
 

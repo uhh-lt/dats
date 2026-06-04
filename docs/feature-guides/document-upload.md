@@ -1,22 +1,24 @@
-# Document Import & Preprocessing
+# Document Upload & Preprocessing
 
 Before you can annotate or analyze your data, you need to bring it into your DATS workspace. DATS handles a wide variety of data modalities, including text, images, audio, and video files, as well as live web pages.
 
 Every document brought into DATS runs through an automated machine-learning pipeline that extracts text, identifies entities, and generates semantic embeddings.
 
-## 1\. Accessing the Import Dialog
+## 1\. Accessing the Upload Dialog
 
-Because importing data adds it directly to your corpus, the import process is initiated from the **Search View**.
+Because uploading data adds it directly to your corpus, the upload process is initiated from the **Search View**.
 
 1. Navigate to the **Search View** (magnifying glass icon in the left navigation bar).
 2. Look at the top toolbar (just above the search results).
-3. Click the **Upload Documents** icon (usually depicted as a cloud with an up arrow). This opens the Document Import Dialog.
+3. Click the **Upload Documents** icon (usually depicted as a cloud with an up arrow). This opens the Document Upload Dialog.
 
-*The Document Import Dialog allows you to bring files and websites into your DATS project.*
+![Document Upload Dialog](../assets/upload-ui.png)
 
-## 2\. Importing Files vs. URLs
+*The Document Upload Dialog allows you to bring files and websites into your DATS project.*
 
-The import dialog is divided into two main sections, allowing you to ingest data from your local computer or directly from the web.
+## 2\. Uploading Files vs. URLs
+
+The upload dialog is divided into two main sections, allowing you to ingest data from your local computer or directly from the web.
 
 ### Upload Files (Left Panel)
 
@@ -25,12 +27,12 @@ Use this side for files you already have saved locally.
 * **Supported Formats:** PDF, DOCX, TXT, HTML, various image formats (PNG, JPG), audio (MP3, WAV), and video (MP4). You can also upload ZIP archives containing multiple files.
 * **How to use:** Simply drag and drop your files into the blue dashed box, or click the box to open your computer's file browser. Once selected, click the **Upload Files** button to begin processing.
 
-### Import URLs (Right Panel)
+### Upload URLs (Right Panel)
 
 DATS features an integrated web crawler. If you want to analyze online news articles, blogs, or other web pages, you don't need to save them as PDFs first.
 
-* **How to use:** Paste the URLs of the websites you want to import into the text box (one URL per line).
-* Click **Import URLs** (or **Start Crawler Job\!**). DATS will visit the websites, scrape the main text content (ignoring navigation menus and ads), download embedded media, and import them as clean documents.
+* **How to use:** Paste the URLs of the websites you want to upload into the text box (one URL per line).
+* Click **Upload URLs** (or **Start Crawler Job\!**). DATS will visit the websites, scrape the main text content (ignoring navigation menus and ads), download embedded media, and upload them as clean documents.
 
 ## 3\. Preprocessing Settings (The Cog Icon)
 
@@ -55,13 +57,13 @@ You will see a progress bar for each file. Depending on the size and modality of
 * **Text:** Cleaned, split into chunks, and run through Named Entity Recognition (finding people, organizations, locations).
 * **Embeddings:** Semantic vectors are calculated for text and images to power the cross-modal similarity search.
 
-*(For a deep dive into the technical architecture of this pipeline, refer to the [Technical Appendix: The Preprocessing Pipeline](http://docs.google.com/link-to-technical-appendix)).*
+*(For a deep dive into the technical architecture of this pipeline, refer to the [Technical Appendix: The Preprocessing Pipeline](../technical-details/preprocessing-pipeline.md)).*
 
 ## 5\. Monitoring Success: The Document Health View
 
 Occasionally, a preprocessing step might fail (e.g., a PDF might be corrupted, or a language detection model might stumble on a highly mixed-language text).
 
-You don't need to stare at the upload progress bar. You can close the import dialog and check on your documents later using the **Document Health View**.
+You don't need to stare at the upload progress bar. You can close the upload dialog and check on your documents later using the **Document Health View**.
 
 * Accessed via the left navigation bar under **Tools \> Document Health**, this view shows exactly which preprocessing steps succeeded or failed for every document, and allows you to retry them.
-* *(Learn more in the [Document Health View Guide](http://docs.google.com/link-to-health-view)).*
+* *(Learn more in the [Document Health View Guide](tools/health-view.md)).*

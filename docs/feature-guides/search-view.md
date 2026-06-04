@@ -2,6 +2,7 @@
 
 The Search View is the primary hub for exploring your dataset, managing your corpus, and finding the specific documents you want to analyze. It is the default view you see when opening a project and acts as the gateway to the rest of the DATS tools.
 
+![Search View](../assets/search-view.png)
 *The Search View provides a comprehensive overview of your corpus.*
 
 ## The Central Workspace: Searching and Filtering
@@ -16,6 +17,8 @@ The search bar at the top allows you to perform keyword searches across your ent
 * **Contextual Results:** When a search term is found, you can click the small arrow next to a document in the results table to expand it. DATS will display a text snippet highlighting exactly where your search term appears in context.
 
 ### Advanced Filtering
+
+![Search Filter Dialog](../assets/search-filter-dialog.png)
 
 For more complex queries, click the **Filter** button to the left of the search bar.
 
@@ -61,6 +64,7 @@ The right sidebar is dynamic. Its content changes completely depending on whethe
 
 When no specific document is clicked, the right sidebar acts as a powerful analytical tool for the *currently fetched search results*.
 
+![Search Statistics](../assets/search-statistics.png)
 *The statistics panel helps you refine your search.*
 
 It contains three views (switchable via the icon next to the view name):
@@ -76,6 +80,7 @@ It contains three views (switchable via the icon next to the view name):
 
 When you click once on a File-Folder or Document in the central table, the right sidebar switches to display specific details for that item.
 
+![Search View](../assets/metadata-system.png)
 *The document details panel.*
 
 It is divided into four tabs:

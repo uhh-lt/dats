@@ -6,9 +6,9 @@ Welcome to the DATS FAQ. Here you will find answers to the most common questions
 
 ## General & Data Privacy
 
-### Is my sensitive research data safe? Does DATS send my texts to OpenAI or Google?
+### Is my sensitive research data safe?
 
-**No.** DATS is built with a strict "privacy by design" philosophy, specifically to handle sensitive academic research data.
+**Yes!** DATS is built with a strict "privacy by design" philosophy, specifically to handle sensitive academic research data.
 
 Unlike commercial qualitative tools that rely on third-party cloud APIs (like ChatGPT or Google Cloud), **DATS executes all machine learning models locally on the host server**.
 

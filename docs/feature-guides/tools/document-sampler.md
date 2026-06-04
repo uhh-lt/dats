@@ -12,6 +12,7 @@ Like the other data preparation utilities, the Document Sampler is tucked away i
 2. Click on the **Tools** dropdown menu (the toolbox icon 🧰).
 3. Select **Document Sampler**.
 
+![Document Sampler View](../../assets/document-sampler.png)
 *The Document Sampler uses a 4-panel interface to build and verify your document subsets.*
 
 ## 2\. Defining the Sample (Left Panels)

@@ -16,6 +16,8 @@ The basic hierarchy in DATS starts with Projects and Documents.
 
 ## The Tag System
 
+![DATS Tag System](assets/tag-system.png)
+
 The Tag system is used exclusively for **organizing and categorizing entire Documents**.
 
 Tags act as colorful attributes that you can assign to documents to group them meaningfully. Because they apply to the *document level*, they are incredibly useful for managing your corpus, filtering search results, and defining specific subsets of data for analysis (e.g., creating a "Train" and "Test" set for machine learning).
@@ -24,6 +26,8 @@ Tags act as colorful attributes that you can assign to documents to group them m
 * **Multiple Assignments:** A single document can be assigned multiple different tags.
 
 ## The Code System
+
+![DATS Code System](assets/code-system.png)
 
 The Code system is the heart of your qualitative analysis. Unlike Tags, which apply to entire documents, Codes are used exclusively to **classify specific segments within a document**.
 
@@ -48,6 +52,8 @@ DATS supports several types of annotations depending on the document modality:
 
 ## The Metadata System
 
+![DATS Metadata System](assets/metadata-system.png)
+
 Metadata consists of arbitrary key-value pairs associated with a Document, providing descriptive, contextual, or statistical information.
 
 Metadata is crucial for advanced filtering and timeline analyses.
@@ -56,6 +62,8 @@ Metadata is crucial for advanced filtering and timeline analyses.
 * **Custom Metadata:** You can define custom metadata fields (text, lists, numbers, dates) to store additional information relevant to your project, such as Author, Publisher, or Journal.
 
 ## The Memo System
+
+![DATS Memo System](assets/memo-system.png)
 
 Memos are the omnipresent tool for capturing your interpretive thoughts, reflections, and sudden insights during the research process.
 

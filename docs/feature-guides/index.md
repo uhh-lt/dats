@@ -8,7 +8,7 @@ Whether you are exploring your corpus in the Search View, deeply coding text in 
 
 Use the navigation menu to explore detailed documentation on:
 
-* **Core Workspaces:** Search, Annotation, and Logbook views.
-* **Advanced AI Integration:** LLM Assistant, Custom Classifiers, and Perspectives.
-* **Analysis:** Quantitative tools like Code Frequency, Timeline Analysis, and COTA.
-* **Data Management:** Document Upload, Export/Import capabilities, and specialized utilities.
+* **Core Workspaces:** [Search](search-view.md), [Annotation](annotation-view.md), and [Logbook](logbook-view.md) views.
+* **Advanced AI Integration:** [LLM Assistant](llm-assistant.md), [Custom Classifiers](classifier.md), and [Perspectives](perspectives.md).
+* **Analysis:** Quantitative tools like [Code Frequency](analysis/code-frequency-analysis.md), [Timeline Analysis](analysis/timeline-analysis.md), and [Concept Over Time Analysis](analysis/concept-over-time-analysis.md).
+* **Data Management:** [Document Upload](document-upload.md), [Export/Import](export-import.md), and specialized utilities.

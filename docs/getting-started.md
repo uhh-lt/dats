@@ -18,6 +18,8 @@ The demo instance is for exploration and testing only. If you are ready to use D
 
 ## Registration & Login
 
+![DATS Login](assets/login-screen.png)
+
 Before you can start analyzing data, you need to create a user account.
 
 1. Open the DATS login screen (e.g., via the Demo Instance link above).
@@ -32,6 +34,8 @@ This brief walkthrough will guide you through the essential DATS workflow: setti
 
 ### Step 1: Create a Project
 
+![Project Dashboard](assets/project-dashboard.png)
+
 Everything in DATS happens inside a Project.
 
 1. In the top navigation bar, click the **Hamburger Menu** (three horizontal lines) in the top left corner.
@@ -39,18 +43,22 @@ Everything in DATS happens inside a Project.
 3. Click the large **Create new project** box.
 4. Give your project a name and a brief description, then click **Create Project**.
 
-### Step 2: Import Documents
+### Step 2: Upload Documents
+
+![Upload Dialog](assets/upload-ui.png)
 
 Let's add some data to your new project.
 
 1. In the Project Management view, find your newly created project and click the **Pencil icon** (Edit) in the bottom right corner of its card.
 2. Click on the **Documents** tab.
-3. You have two options for importing:
+3. You have two options for uploading:
    * **Upload Files:** Click the upload area or drag-and-drop a few files (PDF, text, or HTML) from your computer. Click **Upload Files**.
-   * **Import URLs:** Click the **Import URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job\!**.
+   * **Upload URLs:** Click the **Upload URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job\!**.
 4. A progress bar will appear. DATS is now running your data through its automated preprocessing pipeline (extracting text, detecting language, finding entities). Wait for it to complete.
 
 ### Step 3: Annotate your Data
+
+![Annotation View](assets/annotation-view.png)
 
 Now, let's manually code a piece of text.
 
@@ -63,6 +71,8 @@ Now, let's manually code a piece of text.
 7. Click anywhere outside the menu to confirm. You have just created your first Annotation\!
 
 ### Step 4: Analyze the Results
+
+![Code Frequency Analysis](assets/code-frequency-analysis.png)
 
 Let's see how DATS aggregates your coding work.
 
@@ -77,5 +87,6 @@ DATS is free, open-source software built with modern containerization (Docker). 
 
 To ensure sensitive research data remains entirely within your controlled environment, please refer to our GitHub repository for comprehensive technical deployment instructions:
 
-* [**GitHub Repository & Admin Guide**](https://github.com/uhh-lt/dats)
+* [**GitHub Repository**](https://github.com/uhh-lt/dats)
+* [**Admin Guide**](https://github.com/uhh-lt/dats/wiki/Admin-Guide)
 * *Requires: Machine with NVIDIA GPU, Docker with NVIDIA Container Toolkit.*

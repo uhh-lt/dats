@@ -18,6 +18,7 @@ You can switch between these tables depending on what aspect of your coding you 
 
 When you open an Annotation Table, you are presented with a comprehensive list of every annotation created in the project (including those made by the SYSTEM USER).
 
+![Span Annotation Table](../../assets/span-annotation-table.png)
 *The Annotation Table provides a bird's-eye view of all manual and automated coding.*
 
 * **Customizing Columns:** Use the "Show/hide columns" button at the top right to select which metadata you want to see.

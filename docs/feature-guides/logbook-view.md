@@ -4,6 +4,7 @@ While the Search and Annotation views are focused on exploring and coding your d
 
 Discourse analysis is a highly interpretive process. Throughout your research, you will likely create dozens or hundreds of Memos (digital "post-it" notes) attached to various documents, codes, and annotations. The Logbook View acts as a centralized dashboard to review all of these scattered thoughts and weave them together into a coherent research narrative.
 
+![Logbook View](../assets/logbook-view.png)
 *The Logbook View: Your central hub for project reflection and documentation.*
 
 ## The Left Panel: The Memo Explorer

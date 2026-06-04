@@ -21,6 +21,7 @@ nav:
       - feature-guides/index.md
       - Project View: feature-guides/project-view.md
       - Search View: feature-guides/search-view.md
+      - Semantic Search View: feature-guides/semantic-search-view.md
       - Annotation View: feature-guides/annotation-view.md
       - Logbook View: feature-guides/logbook-view.md
       - Whiteboard View: feature-guides/whiteboard-view.md

@@ -1,4 +1,4 @@
-# Technical Details (Under the Hood)
+# Technical Details
 
 DATS is built on a modern, highly scalable architecture designed to democratize advanced Natural Language Processing (NLP) and Artificial Intelligence for researchers in the digital humanities.
 
