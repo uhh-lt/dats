@@ -10,7 +10,7 @@
   <a href="#quick-start">Quick start</a> •
   <a href="#why-dats">Why DATS?</a> •
   <a href="https://dats.ltdemos.informatik.uni-hamburg.de">Demo</a> •
-  <a href="https://github.com/uhh-lt/dats/wiki/User-Guide">User Guide</a> •
+  <a href="https://uhh-lt.github.io/dats/">User Guide</a> •
   <a href="https://github.com/uhh-lt/dats/wiki/FAQ">FAQ</a> •
   <a href="https://github.com/uhh-lt/dats/wiki">Wiki</a> •
   <a href="https://www.dwise.uni-hamburg.de/">D-WISE</a>
@@ -30,15 +30,15 @@
 
 # Discourse Analysis Tool Suite (DATS)
 
-DATS is a machine-learning powered web application for multi-modal discourse analysis.
-It provides tools for the typical workflow of a discsourse analysis project including data collection, data management, exploration, annotation, qualitative & quantitative analysis, interpratation and reflection.
+DATS is a machine-learning-powered web application for multi-modal discourse analysis.
+It provides tools for the typical workflow of a discourse analysis project, including data collection, data management, exploration, annotation, qualitative & quantitative analysis, interpretation, and reflection.
 See the [Features](#features) section to learn more about the various functionalities.
 
 ## Why DATS?
 
 - Multi-modal: Support for 📝 text, 🖼 image, 🎵audio, and 🎞 video documents
 - Multi-lingual: Support for 🇺🇸 english, 🇩🇪 german, 🇮🇹 italian and more
-- ⚙️ Extensive pre-processing (e.g. automatic transcriptions, entity identification, keyword extraction, ...) ease data mangement
+- ⚙️ Extensive pre-processing (e.g., automatic transcriptions, entity identification, keyword extraction, ...) eases data management
 - 🤖 AI Assistance: state-of-the-art machine-learning and large language models assist with time-consuming tasks
 - 👥 Collaborate with your team in shared projects
 - 📥 Export data to continue your project with other tools
@@ -73,7 +73,7 @@ git clone https://github.com/uhh-lt/dats.git
 ./bin/setup-folders.sh
 ```
 
-#### 3. Start docker containers
+#### 3. Start Docker containers
 
 ```bash
 docker compose -f compose.vllm.yml up -d
@@ -105,7 +105,7 @@ Please contact the House of Computing and Data Science (HCDS) [here](https://www
 
 ## Further reading
 
-- **User Guide**: If you want to use DATS, we recommend to start looking at the [Features](#features) below and playing around with the tool. If you have questions, you may find help in the [User Guide](https://github.com/uhh-lt/dats/wiki/User-Guide) or in the [FAQ](https://github.com/uhh-lt/dats/wiki/FAQ). If you encounter problems or bugs, please leave us some [feedback](#feedback).
+- **User Guide**: If you want to use DATS, we recommend starting by looking at the [Features](#features) below and playing around with the tool. If you have questions, you may find help in the [User Guide](https://uhh-lt.github.io/dats/). If you encounter problems or bugs, please leave us some [feedback](#feedback).
 - **Admin Guide**: See the [quick start](#quick-start) guide above. For more information on how to configure DATS on a server, please see the [Admin Guide](https://github.com/uhh-lt/dats/wiki/Admin-Guide).
 - **Developer Guide**: DATS is open source software. If you want to contribute to the project, please start with the [Developer Guide](https://github.com/uhh-lt/dats/wiki/Developer-Guide).
 
@@ -161,7 +161,7 @@ This flexible system keeps you in control of your data and ensures you can quick
 DATS offers an AI Assistant that can help you streamline your data management tasks.
 The AI Assistant can suggest tags and extract metadata for your documents, making it even easier to organize data.
 
-Read more about LLM Assistance in our publlication [Exploring Large Language Models for Qualitative Data Analysis](https://aclanthology.org/2024.nlp4dh-1.41/).
+Read more about LLM Assistance in our publication [Exploring Large Language Models for Qualitative Data Analysis](https://aclanthology.org/2024.nlp4dh-1.41/).
 
 ## Exploration
 
@@ -169,7 +169,7 @@ DATS makes exploring your data easy and intuitive.
 Its similarity search allows you to quickly find related documents, even across different modalities.
 
 Found an interesting article? DATS can instantly find others like it.
-Discovered a key image? DATS can locate similar images, or even text documents that relate to the same concept.
+Discovered a key image? DATS can locate similar images or even text documents that relate to the same concept.
 This cross-modal capability unlocks new ways to explore connections within your data.
 This feature may help you to uncover hidden connections between documents and gain a deeper understanding of your data.
 
@@ -202,8 +202,8 @@ Read more about the Sentence Annotation feature in our publication [Semi-automat
 
 ## Analysis
 
-DATS offers various tools for qualitative and quantitative analysis including Word- and Code-Frequency, or timeline analyses.
-The more-advanced Concept-over-time analysis is explained below.
+DATS offers various tools for qualitative and quantitative analysis, including Word- and Code-Frequency, or timeline analyses.
+The more advanced Concept-over-time analysis is explained below.
 
 ### Concept-over-time Analysis
 
