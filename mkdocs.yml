@@ -60,8 +60,8 @@ nav:
       - Export & Import: feature-guides/export-import.md
   - Workflows:
       - workflows/index.md
-      - Workflow 1: workflows/workflow-a.md
-      - Workflow 2: workflows/workflow-b.md
+      - Frame Analysis: workflows/workflow-frame-analysis.md
+      - Tracking Word Sense Evolution: workflows/workflow-tracking-word-senses.md
   - Technical Details:
       - technical-details/index.md
       - Preprocessing Pipeline: technical-details/preprocessing-pipeline.md
