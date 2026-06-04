@@ -27,6 +27,8 @@ extra:
       link: https://www.linkedin.com/company/hcds-uhh
 extra_css:
   - stylesheets/custom.css
+extra_javascript:
+  - javascripts/custom-footer.js
 nav:
   - Home: index.md
   - Getting Started:
