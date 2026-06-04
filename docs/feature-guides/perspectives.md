@@ -8,6 +8,8 @@ To solve this, DATS includes the **Perspectives View**, an interactive, AI-power
 
 ## 1\. The Perspectives Overview (Creating a Lens)
 
+![Perspectives Project Dashboard](../assets/perspectives-project-dashboard.png)
+
 You can access this tool by clicking the **Perspectives icon** (the map/compass symbol 🗺️) in the main left navigation bar.
 
 This opens the Perspectives Overview. Here, you will see a list of all Perspectives previously created by you or your team. You can open an existing one, or create a brand new one.
@@ -24,6 +26,9 @@ Once you click start, DATS processes the documents and generates the clusters.
 
 ## 2\. The Perspective Dashboard
 
+![Perspectives Dashboard](../assets/perspectives-dashboard.png)
+*Review high-level statistics and cluster summaries on the Dashboard.*
+
 Once the processing is complete (or when you open an existing Perspective from the Overview), you are taken to the **Perspective Dashboard**.
 
 This view provides a high-level, statistical summary of the AI's clustering results before you dive into the deep visual mapping.
@@ -32,9 +37,13 @@ This view provides a high-level, statistical summary of the AI's clustering resu
 * **The Cluster List:** A comprehensive list of all the AI-generated clusters, including their automatically assigned names.
 * **Cluster Detail Dialog:** If you click on any specific cluster in the list, a detailed dialog opens. This dialog provides a deeper dive into that specific group, showing the most frequent keywords, representative documents, and dominant entities within that cluster.
 
-*Review high-level statistics and cluster summaries on the Dashboard.*
+![Perspectives Detail Dialog](../assets/perspectives-cluster-details.png)
+*The Cluster Detail Dialog provides a deeper dive into the AI-generated groups.*
 
 ## 3\. The Interactive Map View
+
+![Perspectives Map](../assets/perspectives-map.png)
+*Use the Map View to visually explore and manually refine the AI's clustering.*
 
 From the Dashboard, you can launch the **Map View**. This is the core exploratory workspace where you interact with the data visually and provide your "human-in-the-loop" feedback.
 
@@ -60,8 +69,6 @@ As you navigate the map and select different clusters, the right sidebar dynamic
 
 * **Details:** Displays AI-generated names, keywords, and entity statistics for the currently selected area of the map.
 * **Similarity Matrix:** A visual tool showing the relationships and overlaps between different clusters.
-
-*Use the Map View to visually explore and manually refine the AI's clustering.*
 
 ## 4\. Fine-Tuning the Model
 

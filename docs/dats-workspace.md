@@ -6,6 +6,8 @@ Understanding the basic layout of the DATS workspace will help you navigate your
 
 ## The Main Layout Structure
 
+![DATS UI Layout](assets/search-view.png)
+
 The DATS workspace is divided into three primary structural components:
 
 1. **The Left Navigation Bar:** Your main menu for accessing all DATS features.
@@ -22,18 +24,18 @@ The bar is divided into a top section for core research features, and a bottom s
 
 * 🔍 **Search:** The gateway to your corpus. Explore folders, filter documents, manage tags, and search for keywords or semantic concepts.
 * 📝 **Annotation:** The dedicated view for applying codes to specific text passages or image bounding boxes.
+* 🗺️ **Perspectives:** Open the semantic clustering tool to discover latent similarities and group documents together.
 * 📊 **Analysis:** A dashboard containing quantitative tools like Code Frequency, Word Frequency, and Timeline Analyses.
 * 🧠 **Classifier Training:** Access the interface to train, evaluate, and apply custom Machine Learning classifiers based on your manual annotations.
-* 🗺️ **Perspectives:** Open the semantic clustering tool to discover latent similarities and group documents together.
 * 🖼️ **Whiteboard:** Open the visual, Miro-like canvas to map out relationships, organize codes, and synthesize your interpretations.
 * 📓 **Logbook:** Access the project Logbook and the unified Memo Explorer to review your research notes.
-
-**Tools & Settings (Bottom Section):**
-
 * 🧰 **Tools:** A dropdown menu containing utility features:
   * *Document Health:* Check the status of your documents' preprocessing pipeline (e.g., if text extraction or entity recognition succeeded or failed).
   * *Duplicate Finder:* Identify and manage duplicate documents within your corpus.
   * *Document Sampler:* A utility for creating specific subsets of your data.
+
+**Settings (Bottom Section):**
+
 * 🏠 **Home / Projects:** Return to the main project selection screen.
 * 📖 **Guide:** A quick link out to this official user documentation.
 * ⚙️ **Project Settings (Cog Icon):** Manage project details, add/remove users, edit the codebook and tags globally, and handle import/export functions.

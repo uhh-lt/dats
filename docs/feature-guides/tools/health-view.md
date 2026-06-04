@@ -12,6 +12,7 @@ You do not need to wait in the Import Dialog to see if your documents processed 
 2. Click on the **Tools** dropdown menu (the toolbox icon 🧰).
 3. Select **Document Health**.
 
+![Document Health View](../../assets/document-health-view.png)
 *The Document Health View gives you a granular look at the preprocessing status of your corpus.*
 
 ## 2\. Navigating the Status Table

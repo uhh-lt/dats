@@ -1,5 +1,7 @@
 # Introduction
 
+![DATS Banner](assets/dats-banner.png)
+
 ## What is DATS?
 
 The Discourse Analysis Tool Suite (DATS) is a machine-learning-powered web application designed specifically for multi-modal discourse analysis.

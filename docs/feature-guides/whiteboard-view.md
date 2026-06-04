@@ -8,6 +8,9 @@ To support this hermeneutic phase of interpretation, DATS includes the **Whitebo
 
 ## 1\. The Whiteboard Dashboard
 
+![Whiteboard Dashboard](../assets/whiteboard-dashboard.png)
+*Manage your visual workspaces from the Whiteboard Dashboard.*
+
 You can access the Whiteboard feature by clicking the **Whiteboard icon** (the framed picture symbol 🖼️) in the main left navigation bar.
 
 This opens the Whiteboard Dashboard, which manages all the canvases created within your current project.
@@ -16,9 +19,11 @@ This opens the Whiteboard Dashboard, which manages all the canvases created with
 * **Create New:** Click the **Create new whiteboard** button to generate a fresh, blank canvas for a new brainstorming session or mapping task.
 * **Open:** Double-click any whiteboard card to open it in a new tab in your top tab bar.
 
-*Manage your visual workspaces from the Whiteboard Dashboard.*
 
 ## 2\. The Canvas and Basic Tools
+
+![Whiteboard View](../assets/whiteboard-view.png)
+*Use standard diagramming tools to map out your initial thoughts.*
 
 When you open a whiteboard, you are presented with a limitless grid. The interface is designed to be highly intuitive for anyone who has used digital drawing or diagramming tools.
 
@@ -28,9 +33,8 @@ When you open a whiteboard, you are presented with a limitless grid. The interfa
   * **Shapes:** Draw rectangles, circles, and custom polygons.
   * **Connections:** Draw arrows and lines to link different objects together, representing relationships, flows, or conflicts.
 
-*Use standard diagramming tools to map out your initial thoughts.*
 
-## 3\. Integrating DATS Entities (The "Magic" Feature)
+## 3\. Integrating DATS Entities
 
 What makes the DATS Whiteboard much more powerful than a standard drawing tool is its deep integration with your corpus. You are not just drawing abstract boxes; you are interacting with your actual data.
 
@@ -43,8 +47,6 @@ You can easily drag and drop (or import) your project's specific research object
 
 **Interactive Nodes:** When you place a DATS entity (like a Document or a Code) on the whiteboard, it isn't just a static picture. You can usually interact with it—for example, double-clicking a document node on the whiteboard can open that document for reading\!
 
-*Drag and drop actual codes, documents, and annotations onto the canvas to build evidence-based diagrams.*
-
 ## 4\. Typical Use Cases for Discourse Analysis
 
 Because the canvas is entirely free-form, you can use it however it best suits your methodology. Some common uses include:
@@ -53,3 +55,12 @@ Because the canvas is entirely free-form, you can use it however it best suits y
 2. **Actor-Network Maps:** Placing entities (Organizations, Politicians) on the board and drawing arrows between them to map out who is influencing whom in a specific debate.
 3. **Narrative Timelines:** Creating a custom, visual timeline of key events by placing specific document nodes in chronological order and surrounding them with interpretive post-it notes.
 4. **Sampling Maps:** Visually separating your corpus into "Train" and "Test" groups for machine learning, or defining specific sub-corpora for comparative case studies.
+
+![Whiteboard Use Case - Taxonomy Mapping](../assets/whiteboard-usecase-codes.png)
+*Use the whiteboard to visually plan out your code taxonomy before applying it to the text.*
+
+![Whiteboard Use Case - Actor Network](../assets/whiteboard-usecase-entity-network.png)
+*Use the whiteboard to map out complex relationships between actors in your corpus.*
+
+![Whiteboard Use Case - Image Mapping](../assets/whiteboard-usecase-bildmap.png)
+*The whiteboard can also be used to visually organize non-textual data, like images or videos.*

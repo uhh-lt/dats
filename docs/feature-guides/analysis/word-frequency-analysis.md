@@ -6,12 +6,14 @@ Because DATS automatically filters out standard "stop words" (like "the," "and,"
 
 ## 1\. The Split-View Layout
 
+![Word Frequency Analysis](../../assets/word-frequency.png)
+*The Word Frequency tool combines raw statistical data with dynamic visualization.*
+
 When you open the Word Frequency Analysis from the Analysis Dashboard, you are presented with a straightforward split-screen interface:
 
 * **Left Side (Data Table):** The raw statistical data showing exact word counts.
 * **Right Side (Word Cloud):** The dynamic visual representation of your selected words.
 
-*The Word Frequency tool combines raw statistical data with dynamic visualization.*
 
 ## 2\. The Data Table (Left Panel)
 

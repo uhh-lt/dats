@@ -14,6 +14,8 @@ This opens a split-screen dashboard:
 * **Top Panel (Trained Classifiers):** A list of all models previously trained in this project, showing their name, type, targeted codes, and creation date. Here you can expand a model to view its stats, run an Evaluation, or trigger an Inference job.
 * **Bottom Panel (Job Progress):** A queue displaying currently running training/inference jobs and a history of previous jobs.
 
+![Classifier View](../assets/classifier-view.png)
+
 *Manage your custom machine learning models and monitor training jobs from the Classifier Dashboard.*
 
 ## 2\. Training a New Classifier (TRAIN)
@@ -21,6 +23,8 @@ This opens a split-screen dashboard:
 To build a new model, click the **Train** button. You will be guided through a four-step configuration wizard.
 
 ### Step 1: Select Type & Codes
+
+![Classifier Code Selection](../assets/classifier-training-codeselection.png)
 
 First, decide what kind of classifier you are building:
 
@@ -39,6 +43,8 @@ When training a multi-label classifier, the selected codes should ideally be **s
 
 ### Step 2: Select Training Data
 
+![Classifier Data Selection](../assets/classifier-training-dataselection.png)
+
 You must tell the model which manual annotations to learn from.
 
 1. **Select Tags:** Choose which subset of documents to use. *(Best Practice: Do not use your whole corpus. Create a "Train" tag and assign it to \~80% of your coded documents, reserving the other 20% for testing).*
@@ -52,7 +58,11 @@ You must tell the model which manual annotations to learn from.
 
 ### Step 4: Run & View Results
 
+![Classifier Waiting](../assets/classifier-training-waiting.png)
+
 Click **Start Training**. This is a computationally intensive process and may take some time depending on your dataset size. Monitor the progress in the bottom panel.
+
+![Classifier Results](../assets/classifier-training-results.png)
 
 Once finished, you can view the **Training Loss** (showing how the model improved across its learning epochs) and initial **Eval Metrics** (how well it performed on the training data itself).
 

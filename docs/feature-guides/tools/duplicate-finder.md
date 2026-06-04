@@ -12,6 +12,7 @@ You can find this utility tucked away in the Tools menu, as it is generally used
 2. Click on the **Tools** dropdown menu (the toolbox icon 🧰).
 3. Select **Duplicate Finder**.
 
+![Duplicate Finder View](../../assets/duplicate-finder.png)
 *Use the Duplicate Finder to keep your corpus clean and prevent skewed analysis results.*
 
 ## 2\. Configuring the Search

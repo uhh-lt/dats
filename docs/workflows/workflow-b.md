@@ -1,3 +1,0 @@
-# Example Workflow B
-
-TODO

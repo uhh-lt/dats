@@ -1,4 +1,4 @@
-# Under the Hood: The Preprocessing Pipeline
+# Preprocessing Pipeline
 
 When you import documents into DATS, they don't just sit on a hard drive. To enable complex semantic searches, automated AI assistance, and high-speed filtering, every file runs through a sophisticated, automated machine-learning pipeline.
 
@@ -11,6 +11,8 @@ This chapter provides a technical overview of the models and architecture poweri
 The preprocessing pipeline is built as a distributed job system using the **RQ (Redis Queue)** framework.
 
 When you upload a batch of files, DATS automatically detects their modalities and schedules a series of actions (a "flow"). These steps are executed asynchronously and in parallel by background workers. Depending on the task, DATS intelligently routes the job to either CPU-powered or GPU-powered workers (managed via **Ray** and **vLLM** for efficient model serving).
+
+![DATS Preprocessing Pipeline](../assets/preprocessing-pipeline.png)
 
 *The multimodal preprocessing pipeline routes files through specific AI models based on their data type.*
 

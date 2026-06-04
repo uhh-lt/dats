@@ -8,13 +8,14 @@ To address this, DATS includes the **Concept-over-Time Analysis (COTA)**. COTA i
 
 ## 1\. The COTA Interface
 
+![Concept-over-Time Analysis](../../assets/concept-over-time-analysis-covid.png)
+*The COTA interface manages the iterative "human-in-the-loop" refinement process.*
+
 Because COTA involves iterative machine learning, its interface is slightly more complex than the standard timeline. It is divided into three main areas:
 
 * **Top Left (Controls):** Where you initiate iterations and adjust model parameters.
 * **Bottom Left (Concepts):** Where you define the qualitative descriptions of the themes you are tracking.
 * **Right Side (Exploration):** A dynamic panel that switches between a **Graph View** (showing the timeline) and a **Data View** (where you interact with the AI's predictions).
-
-*The COTA interface manages the iterative "human-in-the-loop" refinement process.*
 
 ## 2\. Defining Your Concepts
 
