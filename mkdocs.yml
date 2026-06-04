@@ -8,7 +8,18 @@ theme:
     - navigation.sections # Groups sidebar items into distinct blocks
     - navigation.expand # Automatically expands categories in the sidebar
     - navigation.indexes # Allows you to click the category name itself
+    - navigation.footer # Previous/next links at the bottom of each page
     - toc.integrate # Moves the table of contents into the left sidebar
+copyright: Copyright &copy; 2026 HCDS, University of Hamburg
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/uhh-lt/dats
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/u/uhhlt
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/hcds-uhh
 extra_css:
   - stylesheets/custom.css
 nav:
