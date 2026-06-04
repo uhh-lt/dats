@@ -53,7 +53,7 @@ nav:
           - Code Frequency: feature-guides/analysis/code-frequency-analysis.md
           - Concept Over Time Analysis: feature-guides/analysis/concept-over-time-analysis.md
           - Timeline Analysis: feature-guides/analysis/timeline-analysis.md
-          - Word Frequency: feature-guides/analysis/word-frequency.md
+          - Word Frequency: feature-guides/analysis/word-frequency-analysis.md
       - LLM Assistant: feature-guides/llm-assistant.md
       - Perspectives: feature-guides/perspectives.md
       - Classifier: feature-guides/classifier.md
