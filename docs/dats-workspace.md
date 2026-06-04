@@ -59,9 +59,9 @@ The center of your screen is where the actual work happens—reading documents, 
 
 To help you manage complex information, the central workspace is highly flexible. Depending on what you are doing (like reading a document in the Annotation view), DATS will split the workspace into a main central area surrounded by smaller side panels (like the Code Explorer on the left, or Metadata/Memos on the right).
 
-\!\!\! tip "Resizing your Workspace"
+!!! tip "Resizing your Workspace"
 
-All these components of the window are separated from each other by blue dividing lines. **If you click on a blue line and drag it, you can resize the views.** This is incredibly useful if you need to make a document wider for easier reading, or expand a sidebar to read a long memo.
+    All these components of the window are separated from each other by blue dividing lines. **If you click on a blue line and drag it, you can resize the views.** This is incredibly useful if you need to make a document wider for easier reading, or expand a sidebar to read a long memo.
 
 ## Managing Your User Profile
 

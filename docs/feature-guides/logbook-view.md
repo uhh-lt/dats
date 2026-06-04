@@ -28,9 +28,9 @@ As your project grows, finding a specific note can become challenging. Use the t
   * *Only* memos attached to specific Codes (perfect for reviewing how your definition of a concept has evolved).
   * *Only* memos attached to Annotations (useful for reviewing specific textual interpretations).
 
-\!\!\! tip "Team Collaboration"
+!!! tip "Team Collaboration"
 
-Remember that memos are visible project-wide\! The Memo Explorer is an excellent way to review notes left by your colleagues, identify emerging patterns in the team's analysis, and address any methodological uncertainties that have been flagged.
+    Remember that memos are visible project-wide! The Memo Explorer is an excellent way to review notes left by your colleagues, identify emerging patterns in the team's analysis, and address any methodological uncertainties that have been flagged.
 
 ## The Right Panel: The Project Logbook
 
@@ -46,6 +46,6 @@ The Logbook is designed to be a flexible space for high-level documentation. Whi
 2. **Document Methodological Decisions:** Record *why* certain codes were merged, why specific tags were created, or how you resolved disagreements in the team's coding strategy. This is vital for maintaining an audit trail and ensuring research transparency.
 3. **Draft Initial Syntheses:** As you review memos on the left, use the Logbook on the right to start drafting your initial findings, hypotheses, and overarching interpretations.
 
-\!\!\! note "A Living Document"
+!!! note "A Living Document"
 
-The Project Logbook is persistent and shared across your team. It auto-saves your progress and acts as the "living memory" of your discourse analysis project, making it much easier to write your final report or publication down the line.
+    The Project Logbook is persistent and shared across your team. It auto-saves your progress and acts as the "living memory" of your discourse analysis project, making it much easier to write your final report or publication down the line.

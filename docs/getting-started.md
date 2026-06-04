@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to DATS\! The best way to understand how the Discourse Analysis Tool Suite can support your research is to jump in and try it out.
+Welcome to DATS! The best way to understand how the Discourse Analysis Tool Suite can support your research is to jump in and try it out.
 
 Because DATS is a server-based web application, you do not need to install any software on your computer to use it. All you need is a modern web browser.
 
@@ -53,7 +53,7 @@ Let's add some data to your new project.
 2. Click on the **Documents** tab.
 3. You have two options for uploading:
    * **Upload Files:** Click the upload area or drag-and-drop a few files (PDF, text, or HTML) from your computer. Click **Upload Files**.
-   * **Upload URLs:** Click the **Upload URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job\!**.
+   * **Upload URLs:** Click the **Upload URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job!**.
 4. A progress bar will appear. DATS is now running your data through its automated preprocessing pipeline (extracting text, detecting language, finding entities). Wait for it to complete.
 
 ### Step 3: Annotate your Data
@@ -68,7 +68,7 @@ Now, let's manually code a piece of text.
 4. Check the top right of the toolbar to ensure your user profile is selected.
 5. **Highlight a piece of text:** Click and drag your mouse over a word or sentence in the document.
 6. A context menu will pop up. Type a name for a new code (e.g., "Important Theme") and click **Add** to create it on the fly, or select an existing code from the dropdown.
-7. Click anywhere outside the menu to confirm. You have just created your first Annotation\!
+7. Click anywhere outside the menu to confirm. You have just created your first Annotation!
 
 ### Step 4: Analyze the Results
 
@@ -79,7 +79,7 @@ Let's see how DATS aggregates your coding work.
 1. Click the **Analysis** icon (the chart symbol) in the main left sidebar.
 2. Open the **Code Frequency Analysis** tool.
 3. In the left-hand settings panel, select your **User** profile and set the Modality to **Text**.
-4. DATS will instantly generate a bar chart showing how many times you have applied your code(s). You can click on any bar to see a detailed list of exactly which text passages were annotated with that code\!
+4. DATS will instantly generate a bar chart showing how many times you have applied your code(s). You can click on any bar to see a detailed list of exactly which text passages were annotated with that code!
 
 ## Self-Hosting & Installation (For Admins)
 

@@ -51,6 +51,6 @@ Use **Recompute** when you want to force DATS to re-run a step that has *already
 * Clicking **Recompute** opens a small dropdown menu allowing you to select a *specific* pipeline step (e.g., text\_spacy). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
 * *Use Case:* You have updated the global project settings or you want to force the system to re-evaluate the named entities in a document.
 
-\!\!\! tip "Selecting Multiple Documents"
+!!! tip "Selecting Multiple Documents"
 
-If you had a large upload batch with multiple failures, use the master checkbox at the very top left of the table header to select all visible documents at once, then hit **Retry** to process the queue in bulk\!
+    If you had a large upload batch with multiple failures, use the master checkbox at the very top left of the table header to select all visible documents at once, then hit **Retry** to process the queue in bulk!

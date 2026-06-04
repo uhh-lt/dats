@@ -45,4 +45,4 @@ However, DATS provides a streamlined "one-click" workflow to make this process m
 4. Review the selections briefly to ensure you are happy with them.
 5. Click the **Delete selected documents** button.
 
-The redundant files will be permanently removed from your project, leaving you with a perfectly clean corpus ready for rigorous discourse analysis\!
+The redundant files will be permanently removed from your project, leaving you with a perfectly clean corpus ready for rigorous discourse analysis!

@@ -76,7 +76,7 @@ The true power of the Perspectives tool lies in its ability to learn from your m
 
 Once you have provided feedback using the left sidebar tools—by correcting misclassifications, merging groups, and accepting representative documents—you can trigger a model refinement.
 
-DATS will take your manual adjustments and execute a rapid "few-shot fine-tuning" of the underlying embedding model. The map will then reload. Because the AI now understands your specific research intent much better, the new clusters will appear significantly more distinct, coherent, and aligned with your theoretical framework\!
+DATS will take your manual adjustments and execute a rapid "few-shot fine-tuning" of the underlying embedding model. The map will then reload. Because the AI now understands your specific research intent much better, the new clusters will appear significantly more distinct, coherent, and aligned with your theoretical framework!
 
 ## 5\. Exporting to DATS (Closing the Loop)
 
@@ -86,4 +86,4 @@ Once you are fully satisfied with your thematic or sentiment-based map, you can 
 
 1. Click the Export button.
 2. The system will convert your cluster names into structural DATS Tags and assign them to the corresponding documents.
-3. You can now return to the standard **Search View**, filter your corpus by these newly discovered topics, and begin your deep-dive manual coding or Timeline Analysis\!
+3. You can now return to the standard **Search View**, filter your corpus by these newly discovered topics, and begin your deep-dive manual coding or Timeline Analysis!

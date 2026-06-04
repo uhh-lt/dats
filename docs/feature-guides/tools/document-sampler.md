@@ -56,4 +56,4 @@ Once you are satisfied with the charts and the table, you need to save the sampl
 2. Select an existing tag from the dropdown menu (e.g., a tag you created called Sample\_Set\_A or Training\_Data).
 3. Click the **Apply tag to documents** button.
 
-The selected documents are now officially tagged. You can return to the main **Search View**, filter by your new sample tag, and begin your focused manual annotation\!
+The selected documents are now officially tagged. You can return to the main **Search View**, filter by your new sample tag, and begin your focused manual annotation!

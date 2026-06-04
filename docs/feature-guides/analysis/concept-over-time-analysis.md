@@ -59,8 +59,8 @@ Once you are satisfied with the AI's accuracy (after several iterations), you ca
 *After iterative training, switch to the Graph View to see the chronological evolution of your abstract concepts.*
 
 * The Graph View displays a chronological timeline (similar to the standard Timeline tool), plotting the frequency of sentences the AI has classified under your concepts.
-* This allows you to visualize the historical ebb and flow of complex, abstract discursive themes that would be impossible to track using simple keywords alone\!
+* This allows you to visualize the historical ebb and flow of complex, abstract discursive themes that would be impossible to track using simple keywords alone!
 
-\!\!\! tip "COTA vs. Standard Timeline"
+!!! tip "COTA vs. Standard Timeline"
 
-Use the **Standard Timeline** when you know *exactly* what words or metadata you are looking for. Use **COTA** when you are tracking a nuanced narrative or theme where the vocabulary might change, but the underlying meaning remains the same.
+    Use the **Standard Timeline** when you know *exactly* what words or metadata you are looking for. Use **COTA** when you are tracking a nuanced narrative or theme where the vocabulary might change, but the underlying meaning remains the same.

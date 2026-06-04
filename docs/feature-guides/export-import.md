@@ -49,4 +49,4 @@ If you have an exported DATS ZIP file—perhaps a backup you previously created,
 
 *Select the correct data type before importing a DATS backup file.*
 
-DATS will process the archive and populate your current project with the imported data\!
+DATS will process the archive and populate your current project with the imported data!

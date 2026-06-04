@@ -48,11 +48,11 @@ Occasionally, a PDF might be corrupted or a web scraper might be blocked. You do
 
 ### How do I report a bug or request a new feature?
 
-DATS is an actively developed, open-source project, and we highly value user feedback\!
+DATS is an actively developed, open-source project, and we highly value user feedback!
 
 * **To report a bug or request a feature:** Please open an issue on our [official GitHub Repository](https://github.com/uhh-lt/dats/issues).
 * **For general feedback:** You can contact the lead developers directly [here](https://www.inf.uni-hamburg.de/en/inst/ab/lt/people/tim-fischer.html).
 
 ## \[Placeholder: Future Questions\]
 
-*(This space is reserved for future questions regarding specific methodological workflows, advanced error codes, or user management. To be expanded as new materials and user feedback are gathered\!)*
+*(This space is reserved for future questions regarding specific methodological workflows, advanced error codes, or user management. To be expanded as new materials and user feedback are gathered!)*
