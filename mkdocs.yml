@@ -23,12 +23,12 @@ extra:
 extra_css:
   - stylesheets/custom.css
 nav:
-  - DATS:
-      - Introduction: index.md
-      - Getting Started: getting-started.md
+  - Home: index.md
+  - Getting Started:
+      - getting-started.md
       - Core Concepts: core-concepts.md
       - DATS Workspace: dats-workspace.md
-  - Feature Guides:
+  - Reference:
       - feature-guides/index.md
       - Project View: feature-guides/project-view.md
       - Search View: feature-guides/search-view.md
