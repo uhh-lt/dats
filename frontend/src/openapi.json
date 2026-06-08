@@ -5661,7 +5661,7 @@
         }
       }
     },
-    "/tag/sdoc_counts": {
+    "/tag/sdoc_counts/{project_id}": {
       "post": {
         "tags": ["tag"],
         "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
@@ -5670,7 +5670,7 @@
         "parameters": [
           {
             "name": "project_id",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           }

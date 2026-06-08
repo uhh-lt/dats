@@ -233,8 +233,8 @@ export class TagService {
   }): CancelablePromise<Record<string, number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/tag/sdoc_counts",
-      query: {
+      url: "/tag/sdoc_counts/{project_id}",
+      path: {
         project_id: projectId,
       },
       body: requestBody,
