@@ -283,7 +283,7 @@ def get_sdoc_ids_by_tag_id(
 )
 async def get_sdoc_counts(
     *,
-    db: Session = Depends(get_db_session), 
+    db: Session = Depends(get_db_session),
     project_id: int,
     sdoc_ids: list[int],
     authz_user: AuthzUser = Depends(),
