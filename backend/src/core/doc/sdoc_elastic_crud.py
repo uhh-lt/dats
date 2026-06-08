@@ -117,19 +117,22 @@ class CRUDElasticSdoc(
         exact: bool = False,
         ascending: bool = False,
     ) -> NgramResponse:
-        """Fetch ngrams from a specific source document."""
+        """Fetch ngrams aggregated across all documents in the project's Elasticsearch index."""
         index = self.index.get_index_name(proj_id)
-        if ngrams == Ngrams.UNIGRAM:
-            field = "content.unigrams"
-        elif ngrams == Ngrams.BIGRAM:
-            field = "content.bigrams"
-        elif ngrams == Ngrams.TRIGRAM:
-            field = "content.trigrams"
+        match ngrams:
+            case Ngrams.UNIGRAM:
+                field = "content.unigrams"
+            case Ngrams.BIGRAM:
+                field = "content.bigrams"
+            case Ngrams.TRIGRAM:
+                field = "content.trigrams"
+            case _:
+                raise ValueError(f"Invalid ngrams value: {ngrams}")  # pyright: ignore[reportUnreachable]
 
         if not client.indices.exists(index=index):
             raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
         # TODO warning: ascending order is not accurate https://www.elastic.co/docs/reference/aggregations/search-aggregations-bucket-terms-aggregation#_ordering_by_the_term_value
-        query = {
+        body = {
             "size": 0,  # number of documents returned, we only want aggs so we don't return any
             "aggs": {
                 "global_shingles": {
@@ -146,7 +149,7 @@ class CRUDElasticSdoc(
         }
         search_res = client.search(
             index=index,
-            body=query,
+            body=body,
         )
 
         if search_res["hits"]["total"]["value"] == 0:

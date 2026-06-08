@@ -28,14 +28,6 @@ def kwic_search(
         window=window,
     )
 
-    # STOPWORDS = {"the", "is", "in", "and", "to", "a"}
-    # def normalize_tokens(words: list[str]) -> list[str]:
-    #     return [
-    #         w.strip(string.punctuation).lower()
-    #         for w in words
-    #         if w.strip(string.punctuation).lower() not in STOPWORDS
-    #     ]
-
     # KWIC snippets
     rows = []
     idx = (-1, -2, -3) if direction == Direction.LEFT else (0, 1, 2)
@@ -43,15 +35,15 @@ def kwic_search(
         filename = hit["_source"]["filename"]
         for frag in hit.get("highlight", {}).get("content", []):
             for snip in _get_kwic_from_highlight(frag, window):
-                textString = getattr(snip, direction.value)
+                text_string = getattr(snip, direction.value)
                 snip.filename = filename
                 rows.append(
                     {
                         "snippet": snip,
-                        "text": " ".join(textString),
-                        "text1": textString[idx[0]] if len(textString) >= 1 else "",
-                        "text2": textString[idx[1]] if len(textString) >= 2 else "",
-                        "text3": textString[idx[2]] if len(textString) >= 3 else "",
+                        "text": " ".join(text_string),
+                        "text1": text_string[idx[0]] if len(text_string) >= 1 else "",
+                        "text2": text_string[idx[1]] if len(text_string) >= 2 else "",
+                        "text3": text_string[idx[2]] if len(text_string) >= 3 else "",
                     }
                 )
 

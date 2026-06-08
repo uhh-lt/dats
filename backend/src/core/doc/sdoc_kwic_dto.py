@@ -3,19 +3,17 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-class Ngrams(Enum):
+class Ngrams(str, Enum):
     UNIGRAM = "1"
     BIGRAM = "2"
     TRIGRAM = "3"
 
 
-class Direction(Enum):
+class Direction(str, Enum):
     LEFT = "left"
     RIGHT = "right"
 
 
-# TODO define ENUM here and use it in the endpoint ngram
-# TODO use enum for direction in kwic analysis
 class KwicSnippet(BaseModel):
     filename: str = Field(description="The filename of the Document.", default="")
     left: list[str] = Field(description="The text before the keyword.")

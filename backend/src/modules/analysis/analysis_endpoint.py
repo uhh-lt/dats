@@ -134,7 +134,6 @@ def search_sdocs_kwic(
     search_query: str,
     window: int = 5,
     direction: Direction = Direction.LEFT,
-    # fuzziness: int = 0,
     page_number: int = 1,
     page_size: int = 10,
     authz_user: AuthzUser = Depends(),
@@ -157,7 +156,7 @@ def search_sdocs_kwic(
     response_model=NgramResponse,
     summary="Returns most frequent ngrams in a project",
 )
-def search_sdocs_unigrams(
+def search_sdocs_ngrams(
     *,
     project_id: int,
     search_query: str = "",
