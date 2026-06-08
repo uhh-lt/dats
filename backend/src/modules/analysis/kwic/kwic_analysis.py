@@ -1,12 +1,76 @@
-import pandas as pd
+from typing import Any, Dict
 
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
-from core.doc.sdoc_kwic_dto import (
+import pandas as pd
+from elasticsearch import Elasticsearch
+
+from core.doc.sdoc_elastic_index import SdocIndex
+from modules.analysis.kwic.kwic_dto import (
     Direction,
     KwicSnippet,
     PaginatedElasticSearchKwicSnippets,
 )
 from repos.elastic.elastic_repo import ElasticSearchRepo
+
+
+def __search_sdocs_for_kwic(
+    client: Elasticsearch,
+    proj_id: int,
+    query: str,
+    window: int = 5,
+) -> Dict[str, Any]:
+    """
+    KWIC search using ES highlighting + match_phrase query.
+    Snippets are sorted lexicographically by frequency of closest → 2nd → 3rd word
+    """
+
+    index = SdocIndex().get_index_name(proj_id)
+    if not client.indices.exists(index=index):
+        raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
+
+    return client.search(
+        index=index,
+        query={"match_phrase": {"content": query}},
+        _source=["filename"],
+        highlight={
+            "fields": {
+                "content": {
+                    "type": "fvh",
+                    "fragment_size": window * 20,
+                    "number_of_fragments": 9999,
+                    "no_match_size": 0,
+                    "pre_tags": ["<em>"],
+                    "post_tags": ["</em>"],
+                }
+            }
+        },
+        size=9999,
+    )
+
+
+def _get_kwic_from_highlight(snippet: str, window: int = 5):
+    results = []
+
+    # tokenization
+    words = snippet.split(" ")
+    keyword_indices = []
+    for i, w in enumerate(words):
+        if "<em>" in w:
+            words[i] = w[4:-5]
+            keyword_indices.append(i)
+
+    # build snippet
+    for idx in keyword_indices:
+        left_idx = max(0, idx - window)
+        right_idx = min(len(words), idx + window + 1)
+        results.append(
+            KwicSnippet(
+                left=words[left_idx:idx],
+                keyword=words[idx],
+                right=words[idx + 1 : right_idx],
+            )
+        )
+
+    return results
 
 
 def kwic_search(
@@ -21,7 +85,7 @@ def kwic_search(
     KWIC search using ES highlighting + match_phrase query.
     Snippets are sorted lexicographically by frequency of closest → 2nd → 3rd word
     """
-    search_res = crud_elastic_sdoc.search_sdocs_for_kwic(
+    search_res = __search_sdocs_for_kwic(
         client=ElasticSearchRepo().client,
         proj_id=proj_id,
         query=query,
@@ -68,29 +132,3 @@ def kwic_search(
         total_results=df.shape[0],
         snippets=paginated_snippets,
     )
-
-
-def _get_kwic_from_highlight(snippet: str, window: int = 5):
-    results = []
-
-    # tokenization
-    words = snippet.split(" ")
-    keyword_indices = []
-    for i, w in enumerate(words):
-        if "<em>" in w:
-            words[i] = w[4:-5]
-            keyword_indices.append(i)
-
-    # build snippet
-    for idx in keyword_indices:
-        left_idx = max(0, idx - window)
-        right_idx = min(len(words), idx + window + 1)
-        results.append(
-            KwicSnippet(
-                left=words[left_idx:idx],
-                keyword=words[idx],
-                right=words[idx + 1 : right_idx],
-            )
-        )
-
-    return results

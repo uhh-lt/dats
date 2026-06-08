@@ -4,13 +4,6 @@ from sqlalchemy.orm import Session
 from common.dependencies import get_current_user, get_db_session
 from common.doc_type import DocType
 from core.auth.authz_user import AuthzUser
-from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
-from core.doc.sdoc_kwic_dto import (
-    Direction,
-    NgramResponse,
-    Ngrams,
-    PaginatedElasticSearchKwicSnippets,
-)
 from modules.analysis.analysis_dto import (
     CodeFrequency,
     CodeOccurrence,
@@ -24,7 +17,10 @@ from modules.analysis.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
 from modules.analysis.document_sampler import document_sampler_by_tags
-from modules.analysis.kwic_analysis import kwic_search
+from modules.analysis.kwic.kwic_analysis import kwic_search
+from modules.analysis.kwic.kwic_dto import Direction, PaginatedElasticSearchKwicSnippets
+from modules.analysis.ngram.ngram_analysis import fetch_ngrams
+from modules.analysis.ngram.ngram_dto import NgramResponse, Ngrams
 from repos.elastic.elastic_repo import ElasticSearchRepo
 
 router = APIRouter(
@@ -167,7 +163,7 @@ def search_sdocs_ngrams(
     authz_user: AuthzUser = Depends(),
 ) -> NgramResponse:
     authz_user.assert_in_project(project_id)
-    return crud_elastic_sdoc.fetch_ngrams(
+    return fetch_ngrams(
         client=ElasticSearchRepo().client,
         proj_id=project_id,
         term=search_query,
