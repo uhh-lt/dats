@@ -258,7 +258,7 @@ testdata = [
 ]
 
 
-@pytest.mark.parametrize("payload", testdata)
+@pytest.mark.parametrize("unlink_ids, link_ids, expected_count", testdata)
 def test_update_tags_batch_parametrize(
     db_session,
     client,
@@ -266,7 +266,9 @@ def test_update_tags_batch_parametrize(
     source_document_factory,
     tag_factory,
     test_user,
-    payload,
+    unlink_ids,
+    link_ids,
+    expected_count,
 ) -> None:
     project = project_factory.create(creating_user_id=test_user.id)
     sdoc = source_document_factory.create(
@@ -286,13 +288,13 @@ def test_update_tags_batch_parametrize(
 
     payload = {
         "sdoc_ids": [sdoc.id],
-        "unlink_tag_ids": [t1.id for i in payload[0] if i == 1],
-        "link_tag_ids": [t2.id for i in payload[1] if i == 2],
+        "unlink_tag_ids": [t1.id for i in unlink_ids if i == 1],
+        "link_tag_ids": [t2.id for i in link_ids if i == 2],
     }
 
     resp = client.patch("/tag/bulk/update", json=payload)
     assert resp.status_code == 200
-    assert resp.json() == 2
+    assert resp.json() == expected_count
 
 
 def test_update_tags_batch(
@@ -720,7 +722,7 @@ def test_get_sdoc_counts(
     crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc2.id], tag_ids=[t2.id])
 
     payload = [sdoc1.id, sdoc2.id]
-    resp = client.post("/tag/sdoc_counts", json=payload)
+    resp = client.post(f"/tag/sdoc_counts/{project.id}", json=payload)
 
     assert resp.status_code == 200, resp.json()
     data = resp.json()
@@ -731,7 +733,7 @@ def test_get_sdoc_counts(
 def test_get_sdoc_counts_if_not_exsist(client: TestClient) -> None:
     payload = [9000, 3000]
 
-    resp = client.post("/tag/sdoc_counts", json=payload)
+    resp = client.post("/tag/sdoc_counts/9999", json=payload)
 
     assert resp.status_code == 403, resp.text
 
