@@ -3382,6 +3382,35 @@
         }
       }
     },
+    "/search_annotate/auto_annotate": {
+      "post": {
+        "tags": ["search_annotate"],
+        "summary": "Returns the character & token-level positions needed for creating SpanAnnotations.",
+        "operationId": "auto_annotate",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string", "title": "Query" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedSpanAnnotationHits" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/search/sdoc_info": {
       "post": {
         "tags": ["search"],
@@ -10356,6 +10385,24 @@
         "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "total_results"],
         "title": "PaginatedSDocHits"
       },
+      "PaginatedSpanAnnotationHits": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of SpanAnnotation hits. Used for pagination."
+          },
+          "hits": {
+            "items": { "$ref": "#/components/schemas/SpanAnnotationHit" },
+            "type": "array",
+            "title": "Hits",
+            "description": "The SpanAnnotation hits matching the search query."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "hits"],
+        "title": "PaginatedSpanAnnotationHits"
+      },
       "PerspectivesClusterSimilarities": {
         "properties": {
           "aspect_id": {
@@ -12011,6 +12058,23 @@
           "updated"
         ],
         "title": "SpanAnnotationDeleted"
+      },
+      "SpanAnnotationHit": {
+        "properties": {
+          "span_dto": {
+            "$ref": "#/components/schemas/SpanAnnotationCreate",
+            "description": "The DTO needed to create the SpanAnnotation."
+          },
+          "before_context": {
+            "type": "string",
+            "title": "Before Context",
+            "description": "The context before the span."
+          },
+          "after_context": { "type": "string", "title": "After Context", "description": "The context after the span." }
+        },
+        "type": "object",
+        "required": ["span_dto", "before_context", "after_context"],
+        "title": "SpanAnnotationHit"
       },
       "SpanAnnotationNodeData": {
         "properties": {
