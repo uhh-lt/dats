@@ -1,5 +1,3 @@
-# backend/test/factories_plain/tag_factory.py
-
 from sqlalchemy.orm import Session
 
 from core.tag.tag_crud import crud_tag
