@@ -1,3 +1,5 @@
+import re
+
 from elasticsearch import Elasticsearch
 
 from core.doc.sdoc_elastic_index import SdocIndex
@@ -31,6 +33,7 @@ def fetch_ngrams(
 
     if not client.indices.exists(index=index):
         raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
+    safe_term = re.escape(term)
     # TODO warning: ascending order is not accurate https://www.elastic.co/docs/reference/aggregations/search-aggregations-bucket-terms-aggregation#_ordering_by_the_term_value
     body = {
         "size": 0,  # number of documents returned, we only want aggs so we don't return any
@@ -39,9 +42,9 @@ def fetch_ngrams(
                 "terms": {
                     "field": field,
                     "size": limit,  # number of ngrams to return
-                    "include": f"(.*[^A-Za-z0-9_])?{term}([^A-Za-z0-9_].*)?"
+                    "include": f"(.*[^A-Za-z0-9_])?{safe_term}([^A-Za-z0-9_].*)?"
                     if exact
-                    else f".*{term}.*",
+                    else f".*{safe_term}.*",
                     "order": {"_count": "asc" if ascending else "desc"},
                 }
             }
