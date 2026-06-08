@@ -128,10 +128,10 @@ def search_sdocs_kwic(
     *,
     project_id: int,
     search_query: str,
-    window: int = 5,
-    direction: Direction = Direction.LEFT,
-    page_number: int = 1,
-    page_size: int = 10,
+    window: int,
+    direction: Direction,
+    page_number: int,
+    page_size: int,
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedElasticSearchKwicSnippets:
     authz_user.assert_in_project(project_id)
@@ -155,11 +155,11 @@ def search_sdocs_kwic(
 def search_sdocs_ngrams(
     *,
     project_id: int,
-    search_query: str = "",
-    limit: int = 20,
-    exact: bool = False,
-    ngrams: Ngrams = Ngrams.BIGRAM,
-    ascending: bool = False,
+    search_query: str,
+    limit: int,
+    exact: bool,
+    ngrams: Ngrams,
+    ascending: bool,
     authz_user: AuthzUser = Depends(),
 ) -> NgramResponse:
     authz_user.assert_in_project(project_id)

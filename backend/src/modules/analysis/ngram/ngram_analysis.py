@@ -11,11 +11,11 @@ from modules.analysis.ngram.ngram_dto import (
 def fetch_ngrams(
     client: Elasticsearch,
     proj_id: int,
-    term: str = "",
-    limit: int = 20,
-    ngrams: Ngrams = Ngrams.BIGRAM,
-    exact: bool = False,
-    ascending: bool = False,
+    term: str,
+    limit: int,
+    ngrams: Ngrams,
+    exact: bool,
+    ascending: bool,
 ) -> NgramResponse:
     """Fetch ngrams aggregated across all documents in the project's Elasticsearch index."""
     index = SdocIndex().get_index_name(proj_id)

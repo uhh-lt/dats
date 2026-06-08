@@ -16,7 +16,7 @@ def __search_sdocs_for_kwic(
     client: Elasticsearch,
     proj_id: int,
     query: str,
-    window: int = 5,
+    window: int,
 ) -> Dict[str, Any]:
     """
     KWIC search using ES highlighting + match_phrase query.
@@ -47,7 +47,7 @@ def __search_sdocs_for_kwic(
     )
 
 
-def _get_kwic_from_highlight(snippet: str, window: int = 5):
+def _get_kwic_from_highlight(snippet: str, window: int):
     results = []
 
     # tokenization
@@ -76,10 +76,10 @@ def _get_kwic_from_highlight(snippet: str, window: int = 5):
 def kwic_search(
     proj_id: int,
     query: str,
-    window: int = 5,
+    window: int,
+    direction: Direction = Direction.LEFT,
     limit: int | None = None,
     skip: int | None = None,
-    direction: Direction = Direction.LEFT,
 ) -> PaginatedElasticSearchKwicSnippets:
     """
     KWIC search using ES highlighting + match_phrase query.
