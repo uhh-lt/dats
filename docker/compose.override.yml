@@ -20,7 +20,7 @@ services:
 
   weaviateapp:
     # https://github.com/Shah91n/WeaviateCluster
-    image: weaviateclusterapp:latest
+    image: uhhlt/weaviateclusterapp:latest
     ports:
       - "${WEAVIATEAPP_EXPOSED?weaviateapp-exposed-required!}:8501"
     extra_hosts:
