@@ -2,7 +2,12 @@ name: publish-docs
 on:
   push:
     branches:
-      - mkdocs
+      - main
+    # Ensure docs are published when changes are made to documentation files or the workflow itself
+    paths:
+      - "docs/**"
+      - ".github/workflows/publish_docs.yml"
+      - "mkdocs.yml"
 permissions:
   contents: write
 jobs:
