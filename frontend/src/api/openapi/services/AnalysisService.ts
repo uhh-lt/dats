@@ -133,17 +133,17 @@ export class AnalysisService {
   public static searchSdocsKwic({
     projectId,
     searchQuery,
-    window = 5,
-    direction = "left",
-    pageNumber = 1,
-    pageSize = 10,
+    window,
+    direction,
+    pageNumber,
+    pageSize,
   }: {
     projectId: number;
     searchQuery: string;
-    window?: number;
-    direction?: Direction;
-    pageNumber?: number;
-    pageSize?: number;
+    window: number;
+    direction: Direction;
+    pageNumber: number;
+    pageSize: number;
   }): CancelablePromise<PaginatedElasticSearchKwicSnippets> {
     return __request(OpenAPI, {
       method: "POST",
@@ -166,20 +166,20 @@ export class AnalysisService {
    * @returns NgramResponse Successful Response
    * @throws ApiError
    */
-  public static searchSdocsUnigrams({
+  public static searchSdocsNgrams({
     projectId,
-    searchQuery = "",
-    limit = 20,
-    exact = false,
-    ngrams = "2",
-    ascending = false,
+    searchQuery,
+    limit,
+    exact,
+    ngrams,
+    ascending,
   }: {
     projectId: number;
-    searchQuery?: string;
-    limit?: number;
-    exact?: boolean;
-    ngrams?: Ngrams;
-    ascending?: boolean;
+    searchQuery: string;
+    limit: number;
+    exact: boolean;
+    ngrams: Ngrams;
+    ascending: boolean;
   }): CancelablePromise<NgramResponse> {
     return __request(OpenAPI, {
       method: "POST",

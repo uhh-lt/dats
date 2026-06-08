@@ -179,6 +179,100 @@
         }
       }
     },
+    "/analysis/kwic": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns KWIC search results. Sorting direction is to the left or right.",
+        "operationId": "search_sdocs_kwic",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          { "name": "window", "in": "query", "required": true, "schema": { "type": "integer", "title": "Window" } },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/Direction" }
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Number" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Page Size" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchKwicSnippets" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/ngrams": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns most frequent ngrams in a project",
+        "operationId": "search_sdocs_ngrams",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "search_query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Search Query" }
+          },
+          { "name": "limit", "in": "query", "required": true, "schema": { "type": "integer", "title": "Limit" } },
+          { "name": "exact", "in": "query", "required": true, "schema": { "type": "boolean", "title": "Exact" } },
+          { "name": "ngrams", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Ngrams" } },
+          {
+            "name": "ascending",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Ascending" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NgramResponse" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/annoscaling/suggest": {
       "post": {
         "tags": ["annoscaling"],
@@ -8613,6 +8707,7 @@
         "enum": ["umap", "pca", "tsne"],
         "title": "DimensionalityReductionAlgorithm"
       },
+      "Direction": { "type": "string", "enum": ["left", "right"], "title": "Direction" },
       "DocTagRecommendationParams": {
         "properties": {
           "ml_job_type": { "type": "string", "const": "TAG_RECOMMENDATION", "title": "Ml Job Type" },
@@ -9662,6 +9757,32 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
+      "KwicSnippet": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "The filename of the Document.",
+            "default": ""
+          },
+          "left": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Left",
+            "description": "The text before the keyword."
+          },
+          "keyword": { "type": "string", "title": "Keyword", "description": "The matched keyword." },
+          "right": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Right",
+            "description": "The text after the keyword."
+          }
+        },
+        "type": "object",
+        "required": ["left", "keyword", "right"],
+        "title": "KwicSnippet"
+      },
       "LLMJobInput-Input": {
         "properties": {
           "project_id": {
@@ -10243,6 +10364,39 @@
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "MlJobRead"
       },
+      "Ngram": {
+        "properties": {
+          "key": { "type": "string", "title": "Key", "description": "The ngram string." },
+          "frequency": { "type": "integer", "title": "Frequency", "description": "The frequency of the ngram." }
+        },
+        "type": "object",
+        "required": ["key", "frequency"],
+        "title": "Ngram"
+      },
+      "NgramResponse": {
+        "properties": {
+          "current_frequency": {
+            "type": "integer",
+            "title": "Current Frequency",
+            "description": "The current frequency of ngrams found."
+          },
+          "total_frequency": {
+            "type": "integer",
+            "title": "Total Frequency",
+            "description": "The total frequency of ngrams found."
+          },
+          "ngrams": {
+            "items": { "$ref": "#/components/schemas/Ngram" },
+            "type": "array",
+            "title": "Ngrams",
+            "description": "The list of ngrams found in the document."
+          }
+        },
+        "type": "object",
+        "required": ["current_frequency", "total_frequency", "ngrams"],
+        "title": "NgramResponse"
+      },
+      "Ngrams": { "type": "string", "enum": ["1", "2", "3"], "title": "Ngrams" },
       "NoteNodeData": {
         "properties": {
           "text": { "type": "string", "title": "Text", "description": "Text of the text" },
@@ -10313,6 +10467,24 @@
         "type": "object",
         "required": ["hits", "total_results"],
         "title": "PaginatedElasticSearchHits"
+      },
+      "PaginatedElasticSearchKwicSnippets": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of KWIC snippets. Used for pagination."
+          },
+          "snippets": {
+            "items": { "$ref": "#/components/schemas/KwicSnippet" },
+            "type": "array",
+            "title": "Snippets",
+            "description": "The KWIC snippets for the matched keyword(s)."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "snippets"],
+        "title": "PaginatedElasticSearchKwicSnippets"
       },
       "PaginatedSDocHits": {
         "properties": {
