@@ -277,7 +277,7 @@ def get_sdoc_ids_by_tag_id(
 
 
 @router.post(
-    "/sdoc_counts",
+    "/sdoc_counts/{project_id}",
     response_model=dict[int, int],
     summary="Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
 )
