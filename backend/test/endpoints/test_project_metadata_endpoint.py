@@ -30,7 +30,7 @@ def test_create_new_metadata(
     assert resp.status_code == 200
 
 
-def test_create_new_metadata_if_not_exsists(client: TestClient):
+def test_create_new_metadata_if_not_existss(client: TestClient):
     payload = ProjectMetadataCreate(
         project_id=99999,
         key="test_forbidden",
@@ -66,7 +66,7 @@ def test_get_by_id(
     assert resp.status_code == 200
 
 
-def test_get_by_id_if_not_exsists(client: TestClient):
+def test_get_by_id_if_not_existss(client: TestClient):
     resp = client.get("/projmeta/99999")
 
     assert resp.status_code == 403
@@ -105,7 +105,7 @@ def test_get_by_project(
     assert resp.status_code == 200
 
 
-def test_get_by_project_if_not_exsists(client: TestClient):
+def test_get_by_project_if_not_existss(client: TestClient):
     resp = client.get("/projmeta/project/777777")
 
     assert resp.status_code == 403
@@ -185,14 +185,14 @@ def test_update_by_id(
     assert resp.status_code == 200
 
 
-def test_update_by_id_if_not_exsist(
+def test_update_by_id_if_not_exists(
     client: TestClient,
 ):
     payload = ProjectMetadataUpdate(description="Updated", key="new_key")
-    non_exsist_id = 99999
+    non_exists_id = 99999
 
     resp = client.patch(
-        f"/projmeta/{non_exsist_id}", json=payload.model_dump(exclude_none=True)
+        f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
     )
     assert resp.status_code == 403
 
@@ -223,14 +223,14 @@ def test_update_read_only(
     assert resp.status_code == 200
 
 
-def test_update_read_only_if_not_exsists(
+def test_update_read_only_if_not_existss(
     client: TestClient,
 ):
     payload = ProjectMetadataUpdate(key="Key of the ProjectMetadata")
 
-    non_exsist_id = 99999
+    non_exists_id = 99999
     resp = client.patch(
-        f"/projmeta/{non_exsist_id}", json=payload.model_dump(exclude_none=True)
+        f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
     )
     assert resp.status_code == 403
 
@@ -259,10 +259,10 @@ def test_delete_by_id(
     assert resp.status_code == 200
 
 
-def test_delete_by_id_if_not_exsists(
+def test_delete_by_id_if_not_existss(
     client: TestClient,
 ):
-    non_exsist_id = 99999
-    resp = client.delete(f"/projmeta/{non_exsist_id}")
+    non_exists_id = 99999
+    resp = client.delete(f"/projmeta/{non_exists_id}")
 
     assert resp.status_code == 403

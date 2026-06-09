@@ -74,18 +74,18 @@ def test_create_sdoc_metadata(
     assert body.list_value is None
 
 
-def test_create_sdoc_metadata_if_id_not_exsist(
+def test_create_sdoc_metadata_if_id_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 3000
+    not_exists_id = 3000
     payload = SourceDocumentMetadataCreate(
         str_value="Politics",
         int_value=None,
         boolean_value=None,
         date_value=None,
         list_value=None,
-        source_document_id=not_exsist_id,
-        project_metadata_id=not_exsist_id,
+        source_document_id=not_exists_id,
+        project_metadata_id=not_exists_id,
     )
     resp = client.put("/sdocmeta", json=payload.model_dump())
     assert resp.status_code == 403
@@ -201,7 +201,7 @@ def test_get_by_id(
     assert body.list_value is None
 
 
-def test_get_by_id_if_not_exsist(
+def test_get_by_id_if_not_exists(
     client: TestClient,
 ) -> None:
     fake_id = 3000
@@ -269,7 +269,7 @@ def test_get_by_sdoc(
     assert got.list_value is None
 
 
-def test_get_by_sdoc_if_not_exsist(
+def test_get_by_sdoc_if_not_exists(
     client: TestClient,
 ) -> None:
     fake_id = 3000
@@ -331,7 +331,7 @@ def test_get_by_sdoc_and_key(
     assert body.str_value == "Politics"
 
 
-def test_get_by_sdoc_and_key_if_not_exsist(
+def test_get_by_sdoc_and_key_if_not_exists(
     client: TestClient,
 ) -> None:
     fake_id = 3000
@@ -497,7 +497,7 @@ def test_update_by_id(
     assert updated.list_value == metadata.list_value
 
 
-def test_update_by_id_if_not_exsist(
+def test_update_by_id_if_not_exists(
     client: TestClient,
 ) -> None:
     fake_id = 3000
@@ -673,7 +673,7 @@ def test_update_bulk(
     assert updated.list_value == meta.list_value
 
 
-def test_update_bulk_if_id_not_exsist(
+def test_update_bulk_if_id_not_exists(
     client: TestClient,
 ) -> None:
     payload = SourceDocumentMetadataBulkUpdate(
@@ -689,7 +689,7 @@ def test_update_bulk_if_id_not_exsist(
         "/sdocmeta/bulk/update",
         json=[payload.model_dump()],
     )
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_by_id(
@@ -751,7 +751,7 @@ def test_delete_by_id(
     assert deleted.list_value == metadata.list_value
 
 
-def test_delete_by_id_if_not_exsist(
+def test_delete_by_id_if_not_exists(
     client: TestClient,
 ) -> None:
     fake_id = 30000

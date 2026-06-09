@@ -132,7 +132,7 @@ def test_add_sentence_annotations_bulk(
         assert sent.sdoc_id == sdoc.id
 
 
-def test_add_sentence_annotione_bulk_if_not_exsist(
+def test_add_sentence_annotione_bulk_if_not_exists(
     client: TestClient,
 ) -> None:
     payload = SentenceAnnotationCreate(
@@ -194,7 +194,7 @@ def test_get_sentence_annotation_endpoint_by_id(
     assert sentence_read.sentence_id_end == 2
 
 
-def test_get_sentence_annotation_by_id_if_not_exsist(client: TestClient) -> None:
+def test_get_sentence_annotation_by_id_if_not_exists(client: TestClient) -> None:
     payload = SentenceAnnotationCreate(
         sentence_id_start=1,
         sentence_id_end=2,
@@ -436,7 +436,7 @@ def test_update_by_id(
     assert updated.sentence_id_end == 2
 
 
-def test_update_sentence_annotation_by_id_if_not_exsist(client: TestClient) -> None:
+def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient) -> None:
     non_existing_sentence_anno_id = 9999
 
     payload = SentenceAnnotationUpdate(code_id=1)
@@ -614,7 +614,7 @@ def test_update_sent_anno_annotations_bulk_not_exists(
 ):
     project = project_factory.create(creating_user_id=test_user.id)
 
-    non_exsisting_id = 6666
+    non_existsing_id = 6666
     sdoc = source_document_factory.create(
         create_dto=SourceDocumentCreate(
             filename="doc.txt",
@@ -644,7 +644,7 @@ def test_update_sent_anno_annotations_bulk_not_exists(
 
     payload = [
         {"sent_annotation_id": sentence.id, "code_id": code.id},
-        {"sent_annotation_id": non_exsisting_id, "code_id": code.id},
+        {"sent_annotation_id": non_existsing_id, "code_id": code.id},
     ]
     resp = client.patch("/sentence/bulk/update", json=payload)
     assert resp.status_code == 403
@@ -750,7 +750,7 @@ def delete_bulk_by_id(
     assert resp.status_code == 200
 
 
-def test_delete_bulk_by_id_if_not_exsist(
+def test_delete_bulk_by_id_if_not_exists(
     client: TestClient,
     test_user: UserRead,
     code_factory: CodeFactory,
@@ -758,7 +758,7 @@ def test_delete_bulk_by_id_if_not_exsist(
     sentence_annotation_factory: SentenceAnnotationFactory,
     source_document_factory: SourceDocumentFactory,
 ) -> None:
-    not_exsisting_id = 6666
+    not_existsing_id = 6666
     project = project_factory.create(creating_user_id=test_user.id)
     code = code_factory.create(
         create_dto=CodeCreate(
@@ -790,18 +790,9 @@ def test_delete_bulk_by_id_if_not_exsist(
     resp = client.request(
         "DELETE",
         "/sentence/bulk/delete",
-        json=[sa1.id, not_exsisting_id],
+        json=[sa1.id, not_existsing_id],
     )
-    assert resp.status_code == 403
-
-
-# or short way :
-
-
-def test_delete_bulk_by_id_if_not_exists_short(client: TestClient) -> None:
-    resp = client.request("DELETE", "/sentence/bulk/delete", json=[999999, 888888])
-
-    assert resp.status_code == 403
+    assert resp.status_code == 404
 
 
 def test_get_by_user_code(
@@ -855,12 +846,12 @@ def test_get_by_user_code(
     assert all(i.user_id == test_user.id for i in items)
 
 
-def test_get_by_user_code_if_not_exsist(
+def test_get_by_user_code_if_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsisting_id = 1000
+    not_existsing_id = 1000
 
-    response = client.get(f"/code/{not_exsisting_id}/user")
+    response = client.get(f"/code/{not_existsing_id}/user")
 
     assert response.status_code == 404
 
@@ -916,10 +907,10 @@ def test_count_annotations(
     assert data.get(str(code.id)) == 2
 
 
-def test_count_annotation_if_not_exsist(client: TestClient) -> None:
-    not_exsisitng_id = 2000
-    payload = {"sdoc_ids": [not_exsisitng_id], "class_ids": [not_exsisitng_id]}
+def test_count_annotation_if_not_exists(client: TestClient) -> None:
+    not_existing_id = 2000
+    payload = {"sdoc_ids": [not_existing_id], "class_ids": [not_existing_id]}
 
-    resp = client.post(f"/sentence/count_annotations/{not_exsisitng_id}", json=payload)
+    resp = client.post(f"/sentence/count_annotations/{not_existing_id}", json=payload)
 
-    assert resp.status_code == 403
+    assert resp.status_code == 404

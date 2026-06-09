@@ -102,7 +102,7 @@ def test_delete_me(
     assert deleted_user.id == test_user.id
 
 
-def test_delete_me_if_not_exsist(
+def test_delete_me_if_not_exists(
     client: TestClient,
 ) -> None:
     # delete me! Should work the first time

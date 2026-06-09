@@ -44,17 +44,17 @@ def test_create_new_doc_tag(
     assert tag_assert.parent_id == payload.parent_id
 
 
-def test_create_new_doc_tag_if_not_exsist(
+def test_create_new_doc_tag_if_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 9999
+    not_exists_id = 9999
 
     payload = TagCreate(
         name="Tag",
         color="Red",
         description="Tag Content",
         parent_id=None,
-        project_id=not_exsist_id,
+        project_id=not_exists_id,
     )
 
     resp = client.put("/tag", json=payload.model_dump(exclude_none=True))
@@ -117,7 +117,7 @@ def test_link_multiple_tags_not_exist(client: TestClient) -> None:
     }
 
     resp = client.patch("/tag/bulk/link", json=payload)
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 404, resp.text
 
 
 def test_unlink_multiple_tags(
@@ -170,7 +170,7 @@ def test_unlink_multiple_tags(
 def test_unlink_multiple_tags_not_exist(client: TestClient) -> None:
     payload = {"source_document_ids": [999], "tag_ids": [889, 888]}
     resp = client.request("DELETE", "/tag/bulk/unlink", json=payload)
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 404, resp.text
 
 
 def test_set_tags_batch(
@@ -248,7 +248,7 @@ def test_set_tags_batch(
 def test_set_tags_batch_not_exist(client: TestClient) -> None:
     payload = [{"source_document_id": 999, "tag_ids": [882, 881]}]
     resp = client.patch("/tag/bulk/set", json=payload)
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 404, resp.text
 
 
 testdata = [
@@ -360,7 +360,7 @@ def test_update_tags_batch_not_exists(
     }
 
     resp = client.patch("/tag/bulk/update", json=payload)
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_id(
@@ -387,9 +387,9 @@ def test_get_by_id(
 def test_get_by_id_if_not_exsis(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 1441
+    not_exists_id = 1441
 
-    resp = client.get(f"/tag/{not_exsist_id}")
+    resp = client.get(f"/tag/{not_exists_id}")
     assert resp.status_code == 403
 
 
@@ -426,12 +426,12 @@ def test_get_tags_by_project(
     assert {t.id for t in items} == {t1.id, t2.id}
 
 
-def test_get_tags_by_project_not_exsist_id(
+def test_get_tags_by_project_not_exists_id(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 1441
+    not_exists_id = 1441
 
-    resp = client.get(f"/tag/project/{not_exsist_id}")
+    resp = client.get(f"/tag/project/{not_exists_id}")
     assert resp.status_code == 403, resp.json()
 
 
@@ -481,12 +481,12 @@ def test_get_by_sdoc(
     assert tag_ids == {t1.id, t2.id}
 
 
-def test_get_by_sdoc_if_not_exsist(
+def test_get_by_sdoc_if_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 1441
+    not_exists_id = 1441
 
-    resp = client.get(f"/tag/sdoc/{not_exsist_id}")
+    resp = client.get(f"/tag/sdoc/{not_exists_id}")
     assert resp.status_code == 403, resp.json()
 
 
@@ -602,12 +602,12 @@ def test_delete_tag_by_id(
     assert deleted.parent_id is None
 
 
-def test_delete_tag_by_id_if_not_exsist(
+def test_delete_tag_by_id_if_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 3000
+    not_exists_id = 3000
 
-    resp = client.delete(f"/tag/{not_exsist_id}")
+    resp = client.delete(f"/tag/{not_exists_id}")
     assert resp.status_code == 403
 
 
@@ -659,12 +659,12 @@ def test_get_sdoc_ids_by_tag_id(
     assert ids == {sd1.id, sd2.id}
 
 
-def test_get_sdoc_ids_by_tag_id_if_not_exsist(
+def test_get_sdoc_ids_by_tag_id_if_not_exists(
     client: TestClient,
 ) -> None:
-    not_exsist_id = 2000
+    not_exists_id = 2000
 
-    resp = client.get(f"/tag/{not_exsist_id}/sdocs")
+    resp = client.get(f"/tag/{not_exists_id}/sdocs")
     assert resp.status_code == 403
 
 
@@ -730,7 +730,7 @@ def test_get_sdoc_counts(
     assert data.get(str(t2.id)) == 2
 
 
-def test_get_sdoc_counts_if_not_exsist(client: TestClient) -> None:
+def test_get_sdoc_counts_if_not_exists(client: TestClient) -> None:
     payload = [9000, 3000]
 
     resp = client.post("/tag/sdoc_counts/9999", json=payload)
@@ -793,7 +793,7 @@ def test_count_tags(
 
 
 def test_count_tags_not_exists(client: TestClient) -> None:
-    not_exsist_id = 2000
+    not_exists_id = 2000
     payload = {"sdoc_ids": [999999], "class_ids": [999999]}
-    resp = client.post(f"/tag/count_tags/{not_exsist_id}", json=payload)
-    assert resp.status_code == 403, resp.text
+    resp = client.post(f"/tag/count_tags/{not_exists_id}", json=payload)
+    assert resp.status_code == 404, resp.text

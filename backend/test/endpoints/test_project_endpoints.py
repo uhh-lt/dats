@@ -26,7 +26,7 @@ def test_create_new_project(client):
     # TODO Test more!
 
 
-def test_create_new_project_if_not_exsists(client):
+def test_create_new_project_if_not_existss(client):
     payload = {
         "title": "My First Test Project",
         "description": "Testing create endpoint",
