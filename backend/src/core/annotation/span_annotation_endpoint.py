@@ -91,7 +91,7 @@ def get_by_id(
 
 
 @router.get(
-    "/sdoc/{sdoc_id}/user/{user_id}}",
+    "/sdoc/{sdoc_id}/user/{user_id}",
     response_model=list[SpanAnnotationRead],
     summary="Returns all SpanAnnotations of the User for the SourceDocument",
 )
