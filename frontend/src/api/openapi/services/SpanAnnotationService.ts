@@ -126,7 +126,7 @@ export class SpanAnnotationService {
   }): CancelablePromise<Array<SpanAnnotationRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/span/sdoc/{sdoc_id}/user/{user_id}}",
+      url: "/span/sdoc/{sdoc_id}/user/{user_id}",
       path: {
         sdoc_id: sdocId,
         user_id: userId,
