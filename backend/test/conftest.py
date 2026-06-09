@@ -1,3 +1,7 @@
+import os
+
+os.environ["DATS_BACKEND_MODE"] = "test"
+
 from typing import Any, Generator
 
 import pytest
@@ -29,26 +33,7 @@ from repos.redis_repo import RedisRepo
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
 def setup_env_variables() -> None:
-    import os
-
-    shared_fs = os.getenv("SHARED_FILESYSTEM_ROOT_TEST", None)
-    postgres = os.getenv("POSTGRES_DB", None)
-    es_prefix = os.getenv("ES_INDEX_PREFIX", None)
-    weaviate_postfix = os.getenv("WEAVIATE_COLLECTION_POSTFIX", None)
-
-    assert shared_fs is not None, "Please set SHARED_FILESYSTEM_ROOT_TEST env variable"
-    assert postgres is not None, "Please set POSTGRES_DB env variable"
-    assert es_prefix is not None, "Please set ES_INDEX_PREFIX env variable"
-    assert weaviate_postfix is not None, (
-        "Please set WEAVIATE_COLLECTION_POSTFIX env variable"
-    )
-
-    # setup databases
-    os.environ["SHARED_FILESYSTEM_ROOT"] = shared_fs
-    os.environ["POSTGRES_DB"] = postgres + "test"
-    os.environ["ES_INDEX_PREFIX"] = es_prefix + "test"
-    os.environ["WEAVIATE_COLLECTION_POSTFIX"] = weaviate_postfix + "test"
-    os.environ["REDIS_INDEX"] = "9"
+    os.environ["DATS_BACKEND_MODE"] = "test"
 
     # setup worker config
     os.environ["RQ_WORKERS_CPU"] = "1"
@@ -334,12 +319,16 @@ def app(db_session: Session, test_user: UserORM) -> FastAPI:
     from rq.exceptions import NoSuchJobError
 
     exception_handler(
-        http_status_code=lambda exc: 409
-        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-        else 500,
-        extract_message=lambda exc: str(exc.orig.pgerror).split("\n")[1]
-        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-        else str(exc),
+        http_status_code=lambda exc: (
+            409
+            if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+            else 500
+        ),
+        extract_message=lambda exc: (
+            str(exc.orig.pgerror).split("\n")[1]
+            if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+            else str(exc)
+        ),
     )(IntegrityError)
 
     exception_handler(404)(NoSuchJobError)

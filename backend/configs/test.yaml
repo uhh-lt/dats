@@ -45,7 +45,7 @@ ray:
   port: ${oc.env:RAY_PORT, 13130}
 
 filesystem:
-  root_directory: docker/backend_repo
+  root_directory: backend/test/test_repo
   content_server:
     https: False
     host: 127.0.0.1
@@ -55,13 +55,13 @@ filesystem:
 weaviate:
   host: localhost
   port: ${oc.env:WEAVIATE_PORT, 13132}
-  collection_postfix: ${oc.env:WEAVIATE_COLLECTION_POSTFIX,""}
+  collection_postfix: test
   grpc_port: ${oc.env:WEAVIATE_GRPC_PORT, 13134}
 
 postgres:
   host: localhost
   port: ${oc.env:POSTGRES_PORT, 13122}
-  db: ${oc.env:POSTGRES_DB, dats}
+  db: datstest
   user: ${oc.env:POSTGRES_USER, datsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dats123}
   batch_size: 1000
@@ -85,7 +85,7 @@ redis:
   host: localhost
   port: ${oc.env:REDIS_PORT, 13124}
   password: ${oc.env:REDIS_PASSWORD, dats123}
-  rq_idx: ${oc.env:REDIS_INDEX, 10}
+  rq_idx: 9
 
 logging:
   max_file_size: 500 # MB
@@ -94,7 +94,7 @@ logging:
 elasticsearch:
   host: 127.0.0.1
   port: ${oc.env:ES_PORT, 13125}
-  index_prefix: ${oc.env:ES_INDEX_PREFIX, dats}
+  index_prefix: datstest
   use_ssl: False
   verify_certs: False
   sniff_on_start: False
