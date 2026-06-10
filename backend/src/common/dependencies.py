@@ -16,7 +16,7 @@ from repos.db.sql_repo import SQLRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 
 # instantiate here to so that it is reusable for consecutive calls
-reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_url)
+reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.auth.jwt.token_url)
 
 
 async def skip_limit_params(

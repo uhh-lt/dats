@@ -21,9 +21,9 @@ from sqlalchemy.orm import Session
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
-    UUID_NAMESPACE = os.environ.get("UUID_NAMESPACE", None)
+    UUID_NAMESPACE = os.environ.get("API_UUID_NAMESPACE", None)
     if UUID_NAMESPACE is None:
-        logger.error("UUID_NAMESPACE environment variable is not set!")
+        logger.error("API_UUID_NAMESPACE environment variable is not set!")
         exit()
     progress_indicator_dir = f"/tmp/{UUID_NAMESPACE}"
     progress_indicator_file = f"{progress_indicator_dir}/DATS_START_UP_IN_PROGRESS"
@@ -75,9 +75,9 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
     # noinspection PyUnresolvedReferences
     try:
-        import config
+        from config import conf
 
-        config.verify_config()
+        logger.info(f"Version: {conf.api.version}")
 
         # start and init services
         __init_repos__(
@@ -193,10 +193,10 @@ def __create_system_user__(db: Session) -> None:
     if not crud_user.exists(db=db, id=1):
         # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
         create_dto = UserCreate(
-            email=str(conf.system_user.email),
-            first_name=str(conf.system_user.first_name),
-            last_name=str(conf.system_user.last_name),
-            password=str(conf.system_user.password),
+            email=conf.system_user.email,
+            first_name=conf.system_user.first_name,
+            last_name=conf.system_user.last_name,
+            password=conf.system_user.password,
         )
         crud_user.create(db=db, create_dto=create_dto)
 
@@ -208,10 +208,10 @@ def __create_demo_user__(db: Session) -> None:
 
     if not crud_user.exists(db=db, id=2):
         create_dto = UserCreate(
-            email=str(conf.demo_user.email),
-            first_name=str(conf.demo_user.first_name),
-            last_name=str(conf.demo_user.last_name),
-            password=str(conf.demo_user.password),
+            email=conf.demo_user.email,
+            first_name=conf.demo_user.first_name,
+            last_name=conf.demo_user.last_name,
+            password=conf.demo_user.password,
         )
         crud_user.create(db=db, create_dto=create_dto)
 
@@ -229,10 +229,10 @@ def __create_assistant_users__(db: Session) -> None:
         if not crud_user.exists(db=db, id=user_id):
             create_dto = UserCreate(
                 email=f"assistant-{last_name.lower()}@"
-                + str(conf.assistant_user.email.split("@")[1]),
-                first_name=str(conf.assistant_user.first_name),
+                + conf.assistant_user.email.split("@")[1],
+                first_name=conf.assistant_user.first_name,
                 last_name=last_name,
-                password=str(conf.assistant_user.password),
+                password=conf.assistant_user.password,
             )
             crud_user.create_with_id(db=db, create_dto=create_dto, id=user_id)
 

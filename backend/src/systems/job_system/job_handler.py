@@ -21,7 +21,7 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
 
             cuda_device = find_unused_cuda_device()
             with torch.cuda.device(cuda_device):
-                set_cuda_memory_limit(conf.job.gpu_memory_limit)
+                set_cuda_memory_limit(conf.rq.gpu_memory_limit)
                 output = handler(payload=payload, job=job)
         else:
             output = handler(payload=payload, job=job)

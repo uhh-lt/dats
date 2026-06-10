@@ -18,8 +18,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
     def create(self, db: Session, user_id: int) -> RefreshTokenORM:
         dto = RefreshTokenCreate(
             token=genereate_refresh_token(),
-            expires_at=datetime.now(UTC)
-            + timedelta(seconds=int(conf.api.auth.jwt.refresh_ttl)),
+            expires_at=datetime.now(UTC) + timedelta(seconds=conf.auth.jwt.refresh_ttl),
             user_id=user_id,
         )
         return super().create(db, create_dto=dto)
@@ -65,7 +64,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
 
     def delete_old_refresh_tokens(self, db: Session, user_id: int):
         remove_tokens_older_than = datetime.now(UTC) - timedelta(
-            seconds=int(conf.api.auth.jwt.refresh_ttl) * 3
+            seconds=conf.auth.jwt.refresh_ttl * 3
         )
         query = delete(RefreshTokenORM).filter(
             and_(

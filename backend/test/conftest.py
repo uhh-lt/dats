@@ -1,6 +1,20 @@
 import os
 
-os.environ["DATS_BACKEND_MODE"] = "test"
+# ---------------------------------------------------------------------------
+# SETUP TEST ENVIRONMENT
+# ---------------------------------------------------------------------------
+
+# Use databases different from production / development for testing:
+os.environ["FILESYSTEM_ROOT_DIRECTORY"] = "backend/test/test_repo"
+os.environ["WEAVIATE_COLLECTION_POSTFIX"] = "test"
+os.environ["POSTGRES_DB"] = "datstest"
+os.environ["REDIS_INDEX"] = "9"
+os.environ["ES_INDEX_PREFIX"] = "datstest"
+
+# Use one worker per type for testing:
+os.environ["RQ_WORKERS_CPU"] = "1"
+os.environ["RQ_WORKERS_API"] = "1"
+os.environ["RQ_WORKERS_GPU"] = "1"
 
 from typing import Any, Generator
 
@@ -29,23 +43,10 @@ from repos.redis_repo import RedisRepo
 
 
 # ---------------------------------------------------------------------------
-# SETUP ENVIRONMENT
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="session", autouse=True)
-def setup_env_variables() -> None:
-    os.environ["DATS_BACKEND_MODE"] = "test"
-
-    # setup worker config
-    os.environ["RQ_WORKERS_CPU"] = "1"
-    os.environ["RQ_WORKERS_API"] = "1"
-    os.environ["RQ_WORKERS_GPU"] = "1"
-
-
-# ---------------------------------------------------------------------------
 # START WORKERS
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session", autouse=True)
-def start_workers(setup_env_variables) -> Generator[None, Any, Any]:
+def start_workers() -> Generator[None, Any, Any]:
     import multiprocessing as mp
     import sys
     import time
@@ -90,7 +91,7 @@ def start_workers(setup_env_variables) -> Generator[None, Any, Any]:
 # INIT REPOS
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function", autouse=True)
-def setup_repos(setup_env_variables) -> None:
+def setup_repos() -> None:
     from repos.db.sql_repo import SQLRepo
     from repos.elastic.elastic_repo import ElasticSearchRepo
     from repos.filesystem_repo import FilesystemRepo

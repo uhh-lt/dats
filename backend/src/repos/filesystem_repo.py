@@ -100,7 +100,7 @@ class ErroneousArchiveException(Exception):
 
 class FilesystemRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        root_dir = Path(conf.filesystem.root_directory)
+        root_dir = conf.filesystem.root_directory
         logger.info(f"Using root directory {root_dir}")
         cls.root_dir = root_dir
         cls.temp_files_root = root_dir.joinpath("temporary_files")

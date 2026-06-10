@@ -33,7 +33,7 @@ target_metadata = ORMBase.metadata
 
 
 host = conf.postgres.host
-port = int(conf.postgres.port)
+port = conf.postgres.port
 db = conf.postgres.db
 user = conf.postgres.user
 password = conf.postgres.password

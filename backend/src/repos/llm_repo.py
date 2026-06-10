@@ -40,8 +40,11 @@ class LLMRepo(metaclass=SingletonMeta):
         cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
         try:
-            for model_type in ("llm", "vlm", "emb"):
-                settings = conf.vllm[model_type]
+            for model_type, settings in (
+                ("llm", conf.vllm.llm),
+                ("vlm", conf.vllm.vlm),
+                ("emb", conf.vllm.emb),
+            ):
                 conn = OpenAI(
                     base_url=f"http://{settings.host}:{settings.port}/v1",
                     api_key="no-key-needed-for-vllm",

@@ -242,11 +242,11 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 available_approaches: dict[ApproachType, bool] = {
                     ApproachType.LLM_ZERO_SHOT: True,
                     ApproachType.LLM_FEW_SHOT: min_labeled_sentences
-                    >= lac.sentence_annotation.few_shot_threshold,
+                    >= lac.few_shot_threshold,
                 }
 
                 # 4.4 determine the recommended approach based on thresholds
-                if min_labeled_sentences < lac.sentence_annotation.few_shot_threshold:
+                if min_labeled_sentences < lac.few_shot_threshold:
                     recommended_approach = ApproachType.LLM_ZERO_SHOT
                 else:
                     recommended_approach = ApproachType.LLM_FEW_SHOT

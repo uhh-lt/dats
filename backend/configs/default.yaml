@@ -1,0 +1,144 @@
+api:
+  port: ${oc.env:API_PORT, 13120}
+  max_upload_file_size: ${oc.env:API_MAX_UPLOAD_FILE_SIZE, 104857600} # 100 MB in bytes
+  production_mode: ${oc.env:API_PRODUCTION_MODE, 0}
+  is_stable: ${oc.env:API_IS_STABLE, False}
+  uuid_namespace: ${oc.env:API_UUID_NAMESPACE, ""}
+  hf_hub_token: ${oc.env:API_HF_HUB_TOKEN, ""}
+
+auth:
+  jwt:
+    token_url: /authentication/login
+    access_ttl: ${oc.env:AUTH_JWT_ACCESS_TTL, 10800} # 3h in seconds
+    refresh_ttl: ${oc.env:AUTH_JWT_REFRESH_TTL, 2592000} # 30 days in seconds
+    algo: ${oc.env:AUTH_JWT_ALGO, "HS256"}
+    secret: ${oc.env:AUTH_JWT_SECRET, ""}
+  session:
+    secret: ${oc.env:AUTH_SESSION_SECRET, ""}
+  oidc:
+    enabled: ${oc.env:AUTH_OIDC_ENABLED, False}
+    name: ${oc.env:AUTH_OIDC_PROVIDER_NAME, False}
+    client_id: ${oc.env:AUTH_OIDC_CLIENT_ID, ""}
+    client_secret: ${oc.env:AUTH_OIDC_CLIENT_SECRET, ""}
+    server_metadata_url: ${oc.env:AUTH_OIDC_SERVER_METADATA_URL, "http://authentik-server:9000/.well-known/openid-configuration"}
+
+logging:
+  max_file_size: ${oc.env:LOG_MAX_FILE_SIZE, 500} # MB
+  level: ${oc.env:LOG_LEVEL, debug}
+
+system_user:
+  first_name: ${oc.env:SYSTEM_USER_FIRST_NAME, "SYSTEM"}
+  last_name: ${oc.env:SYSTEM_USER_LAST_NAME, "USER"}
+  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dats.org"}
+  password: ${oc.env:SYSTEM_USER_PASSWORD, "12SYSTEM34"}
+
+demo_user:
+  first_name: ${oc.env:DEMO_USER_FIRST_NAME, "DEMO"}
+  last_name: ${oc.env:DEMO_USER_LAST_NAME, "USER"}
+  email: ${oc.env:DEMO_USER_EMAIL, "demo@example.org"}
+  password: ${oc.env:DEMO_USER_PASSWORD, "demo"}
+
+assistant_user:
+  first_name: ${oc.env:ASSISTANT_USER_FIRST_NAME, "ASSISTANT"}
+  last_name: ${oc.env:ASSISTANT_USER_LAST_NAME, "USER"}
+  email: ${oc.env:ASSISTANT_USER_EMAIL, "assistant@dats.org"}
+  password: ${oc.env:ASSISTANT_USER_PASSWORD, "12ASSISTANT34"}
+
+filesystem:
+  root_directory: ${oc.env:FILESYSTEM_ROOT_DIRECTORY, "docker/backend_repo"}
+  content_server:
+    https: ${oc.env:CONTENT_SERVER_HTTPS, False}
+    host: ${oc.env:CONTENT_SERVER_HOST, "127.0.0.1"}
+    port: ${oc.env:CONTENT_SERVER_PORT, 13121}
+    context_path: ${oc.env:CONTENT_SERVER_CONTEXT_PATH, "/"}
+
+ray:
+  protocol: ${oc.env:RAY_PROTOCOL, "http"}
+  host: ${oc.env:RAY_HOST, "localhost"}
+  port: ${oc.env:RAY_PORT, 13130}
+
+weaviate:
+  host: ${oc.env:WEAVIATE_HOST, "localhost"}
+  port: ${oc.env:WEAVIATE_PORT, 13132}
+  collection_postfix: ${oc.env:WEAVIATE_COLLECTION_POSTFIX,""}
+  grpc_port: ${oc.env:WEAVIATE_GRPC_PORT, 13134}
+
+postgres:
+  host: ${oc.env:POSTGRES_HOST, "localhost"}
+  port: ${oc.env:POSTGRES_PORT, 13122}
+  db: ${oc.env:POSTGRES_DB, "dats"}
+  user: ${oc.env:POSTGRES_USER, "datsuser"}
+  password: ${oc.env:POSTGRES_PASSWORD, "dats123"}
+  batch_size: ${oc.env:POSTGRES_BATCH_SIZE, 1000}
+  pool:
+    pool_size: ${oc.env:POSTGRES_POOL_SIZE, 32}
+    max_overflow: ${oc.env:POSTGRES_MAX_OVERFLOW, 16}
+
+redis:
+  host: ${oc.env:REDIS_HOST, "localhost"}
+  port: ${oc.env:REDIS_PORT, 13124}
+  password: ${oc.env:REDIS_PASSWORD, "dats123"}
+  rq_idx: ${oc.env:REDIS_INDEX, 10}
+
+elasticsearch:
+  host: ${oc.env:ES_HOST, "127.0.0.1"}
+  port: ${oc.env:ES_PORT, 13125}
+  index_prefix: ${oc.env:ES_INDEX_PREFIX, "dats"}
+  use_ssl: ${oc.env:ES_USE_SSL, False}
+  verify_certs: ${oc.env:ES_VERIFY_CERTS, False}
+  sniff_on_start: ${oc.env:ES_SNIFF_ON_START, False}
+  sniff_on_connection_fail: ${oc.env:ES_SNIFF_ON_CONNECTION_FAIL, False}
+  sniffer_timeout: ${oc.env:ES_SNIFFER_TIMEOUT, 120}
+
+vllm:
+  llm:
+    host: ${oc.env:VLLM_LLM_HOST, "localhost"}
+    port: ${oc.env:VLLM_LLM_PORT, 13133}
+    model: ${oc.env:VLLM_LLM_MODEL, "gemma-3-27b"}
+  vlm:
+    host: ${oc.env:VLLM_VLM_HOST, "localhost"}
+    port: ${oc.env:VLLM_VLM_PORT, 13133}
+    model: ${oc.env:VLLM_VLM_MODEL, "gemma-3-27b"}
+  emb:
+    host: ${oc.env:VLLM_EMB_HOST, "localhost"}
+    port: ${oc.env:VLLM_EMB_PORT, 13137}
+    model: ${oc.env:VLLM_EMB_MODEL, "snowflake-arctic-embed2:568m"}
+
+docling:
+  host: ${oc.env:DOCLING_HOST, "localhost"}
+  port: ${oc.env:DOCLING_PORT, 13139}
+
+rq:
+  gpu_memory_limit: ${oc.env:RQ_GPU_MEMORY_LIMIT_GB, 20}
+
+llm_assistant:
+  few_shot_threshold: ${oc.env:LLM_ASSISTANT_FEW_SHOT_THRESHOLD, 4}
+
+cota:
+  model: ${oc.env:COTA_MODEL, "paraphrase-multilingual-mpnet-base-v2"}
+  batch_size: ${oc.env:COTA_BATCH_SIZE, 16}
+
+promptembedder:
+  text:
+    model: ${oc.env:PROMPT_EMBEDDER_TEXT_MODEL, "intfloat/multilingual-e5-large-instruct"}
+    max_seq_length: ${oc.env:PROMPT_EMBEDDER_TEXT_MAX_SEQ_LENGTH, 512}
+    batch_size: ${oc.env:PROMPT_EMBEDDER_TEXT_BATCH_SIZE, 8}
+  image:
+    model: ${oc.env:PROMPT_EMBEDDER_IMAGE_MODEL, "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct"}
+    max_seq_length: ${oc.env:PROMPT_EMBEDDER_IMAGE_MAX_SEQ_LENGTH, 2048}
+    batch_size: ${oc.env:PROMPT_EMBEDDER_IMAGE_BATCH_SIZE, 8}
+
+chunking:
+  characters_per_page: ${oc.env:CHUNKING_CHARACTERS_PER_PAGE, 2000}
+
+mail:
+  enabled: ${oc.env:MAIL_ENABLED, False}
+  mail: ${oc.env:MAIL_FROM, "dats@uni-hamburg.de"}
+  user: ${oc.env:MAIL_USERNAME, "user"}
+  password: ${oc.env:MAIL_PASSWORD, "pass"}
+  server: ${oc.env:MAIL_SERVER, "exchange.uni-hamburg.de"}
+  port: ${oc.env:MAIL_PORT, 587}
+  starttls: ${oc.env:MAIL_STARTTLS, True}
+  ssl_tls: ${oc.env:MAIL_SSL_TLS, False}
+  use_credentials: ${oc.env:MAIL_USE_CREDENTIALS, True}
+  validate_certs: ${oc.env:MAIL_VALIDATE_CERTS, True}

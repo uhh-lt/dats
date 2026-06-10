@@ -4,40 +4,43 @@ x-dats-common: &dats-common
     context: ../backend
     dockerfile: Dockerfile
   user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
+  env_file:
+    - .env.backend
   environment: &dats-common-env
-    DATS_BACKEND_MODE: production
-    JWT_SECRET: ${JWT_SECRET:?jwt-secret-required!}
-    SESSION_SECRET: ${SESSION_SECRET:?session-secret-required!}
-    UUID_NAMESPACE: ${UUID_NAMESPACE:?uuid-namespace-required!}
-    SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
-    SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
+    API_HF_HUB_TOKEN: ${HF_HUB_TOKEN?hf-hub-token-required!}
+    API_UUID_NAMESPACE: ${API_UUID_NAMESPACE:?api-uuid-namespace-required!}
+    AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?auth-jwt-secret-required!}
+    AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?auth-session-secret-required!}
+    # DB Connections
+    WEAVIATE_HOST: weaviate
+    WEAVIATE_PORT: 8080
+    WEAVIATE_GRPC_PORT: 50051
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
     POSTGRES_DB: ${POSTGRES_DB?postgres-db-required!}
     POSTGRES_USER: ${POSTGRES_USER?postgres-user-required!}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?postgres-password-required!}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REDIS_INDEX: 10
     REDIS_PASSWORD: ${REDIS_PASSWORD?redis-password-required!}
+    ES_HOST: elasticsearch
+    ES_PORT: 9200
+    # Service Connections
     VLLM_LLM_HOST: ${VLLM_LLM_HOST?vllm-llm-host-required!}
-    VLLM_VLM_HOST: ${VLLM_VLM_HOST?vllm-vlm-host-required!}
-    VLLM_EMB_HOST: ${VLLM_EMB_HOST?vllm-emb-host-required!}
     VLLM_LLM_PORT: ${VLLM_LLM_PORT?vllm-llm-port-required!}
+    VLLM_VLM_HOST: ${VLLM_VLM_HOST?vllm-vlm-host-required!}
     VLLM_VLM_PORT: ${VLLM_VLM_PORT?vllm-vlm-port-required!}
+    VLLM_EMB_HOST: ${VLLM_EMB_HOST?vllm-emb-host-required!}
     VLLM_EMB_PORT: ${VLLM_EMB_PORT?vllm-emb-port-required!}
-    VLLM_LLM_MODEL: ${VLLM_LLM_MODEL?vllm-llm-model-required!}
-    VLLM_VLM_MODEL: ${VLLM_VLM_MODEL?vllm-vlm-model-required!}
-    VLLM_EMB_MODEL: ${VLLM_EMB_MODEL?vllm-emb-model-required!}
     DOCLING_HOST: ${DOCLING_HOST?docling-host-required!}
     DOCLING_PORT: ${DOCLING_PORT?docling-port-required!}
     RAY_HOST: ${RAY_HOST?ray-host-required!}
     RAY_PORT: ${RAY_PORT?ray-port-required!}
-    OIDC_ENABLED: ${OIDC_ENABLED?oidc-enabled-required!}
-    OIDC_PROVIDER_NAME: ${OIDC_PROVIDER_NAME?oidc-provider-name-required!}
-    OIDC_CLIENT_ID: ${OIDC_CLIENT_ID?oidc-client-id-required!}
-    OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET?oidc-client-secret-required!}
-    OIDC_SERVER_METADATA_URL: ${OIDC_SERVER_METADATA_URL?oidc-server-metadata-url-required!}
-    IS_STABLE: ${IS_STABLE?is-stable-required!}
+    # Cache dirs
     NUMBA_CACHE_DIR: /cache/numba_cache
     MPLCONFIGDIR: /cache/matplotlib
     HUGGINGFACE_HUB_CACHE: /cache/hf_hub_cache
-    HF_HUB_TOKEN: ${HF_HUB_TOKEN?hf-hub-token-required!}
     HF_HOME: /cache/hf_cache
     TORCH_HOME: /cache/torch_cache
     TORCHINDUCTOR_CACHE_DIR: /cache/torch_inductor_cache
@@ -166,8 +169,8 @@ services:
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
       RQ_WORKERS_API: ${RQ_WORKERS_API?rq-workers-api-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
-      POSTGRES_POOL_SIZE: ${RQ_POSTGRES_POOL_SIZE?rq-postgres-pool-size-required!}
-      POSTGRES_MAX_OVERFLOW: ${RQ_POSTGRES_MAX_OVERFLOW?rq-postgres-max-overflow-required!}
+      POSTGRES_POOL_SIZE: 1
+      POSTGRES_MAX_OVERFLOW: 1
     volumes:
       - ./backend_repo:/tmp/dats
       - ./rq_cpu_cache:/cache
@@ -186,8 +189,8 @@ services:
       <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
-      POSTGRES_POOL_SIZE: ${RQ_POSTGRES_POOL_SIZE?rq-postgres-pool-size-required!}
-      POSTGRES_MAX_OVERFLOW: ${RQ_POSTGRES_MAX_OVERFLOW?rq-postgres-max-overflow-required!}
+      POSTGRES_POOL_SIZE: 1
+      POSTGRES_MAX_OVERFLOW: 1
     volumes:
       - ./backend_repo:/tmp/dats
       - ./rq_gpu_cache:/cache
@@ -233,9 +236,6 @@ services:
     environment:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
-      LOG_LEVEL: ${API_LOG_LEVEL?api-log-level-required!}
-      POSTGRES_POOL_SIZE: ${BACKEND_POSTGRES_POOL_SIZE?backend-postgres-pool-size-required!}
-      POSTGRES_MAX_OVERFLOW: ${BACKEND_POSTGRES_MAX_OVERFLOW?backend-postgres-max-overflow-required!}
     volumes:
       - ./backend_repo:/tmp/dats
       - ./api_cache:/cache
