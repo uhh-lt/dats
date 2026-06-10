@@ -58,14 +58,14 @@ class CRUDProjectMetadata(
     ) -> list[ProjectMetadataORM]:
         created: list[ProjectMetadataORM] = []
 
-        for project_metadata in conf.project_metadata.values():
+        for project_metadata in conf.project_metadata:
             create_dto = ProjectMetadataCreate(
                 project_id=proj_id,
-                key=project_metadata["key"],
-                metatype=project_metadata["metatype"],
-                read_only=project_metadata["read_only"],
-                doctype=project_metadata["doctype"],
-                description=project_metadata["description"],
+                key=project_metadata.key,
+                metatype=project_metadata.metatype,
+                read_only=project_metadata.read_only,
+                doctype=project_metadata.doctype,
+                description=project_metadata.description,
             )
             db_obj = self.create(db=db, create_dto=create_dto)
             created.append(db_obj)

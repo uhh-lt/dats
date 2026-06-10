@@ -66,7 +66,7 @@ jobs:
         working-directory: docker
         run: |
           source .env
-          docker compose run -e DATS_BACKEND_MODE=test --user $(id -u):$(id -g) dats-backend-api /dats_code/.venv/bin/python -m pytest /dats_code/test
+          docker compose ru --user $(id -u):$(id -g) dats-backend-api /dats_code/.venv/bin/python -m pytest /dats_code/test
       - name: Check 2 - Database migrates without errors database
         working-directory: docker
         run: |

@@ -109,6 +109,7 @@ known-first-party = [
     "common",
     "core",
     "config",
+    "config_schema",
     "main",
     "migrations",
     "modules",

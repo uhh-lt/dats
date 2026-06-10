@@ -15,8 +15,6 @@ from modules.llm_assistant.llm_job_dto import (
 from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
 from repos.llm_repo import LLMMessage
 
-sent_anno_conf = conf.llm_assistant.sentence_annotation
-
 
 class LLMParsedSentenceAnnotationResult(BaseModel):
     sent_id: int
@@ -211,11 +209,11 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
             # select configured number of examples
             if example_ids is None:
                 for code_id, annotations in code_id2sentence_annotations.items():
-                    assert len(annotations) >= sent_anno_conf.few_shot_threshold, (
-                        f"Code {code_id} has less than {sent_anno_conf.few_shot_threshold} annotations!"
+                    assert len(annotations) >= conf.llm_assistant.few_shot_threshold, (
+                        f"Code {code_id} has less than {conf.llm_assistant.few_shot_threshold} annotations!"
                     )
                     code_id2sentence_annotations[code_id] = random.sample(
-                        annotations, sent_anno_conf.few_shot_threshold
+                        annotations, conf.llm_assistant.few_shot_threshold
                     )
 
             # find corrsponding sdoc datas

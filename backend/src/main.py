@@ -15,11 +15,6 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.main import run
 
-from common.exception_handler import exception_handler, exception_handlers
-from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.llm_repo import LLMRepo
-from utils.import_utils import import_by_suffix
-
 #####################################################################################################################
 #                                               READ BEFORE CHANGING                                                #
 #####################################################################################################################
@@ -37,10 +32,16 @@ if not STARTUP_DONE:
     startup(reset_data=RESET_DATA, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
+# Import DATS internal models
+
 from rq.exceptions import NoSuchJobError
 
+from common.exception_handler import exception_handler, exception_handlers
 from config import conf
+from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
+from repos.llm_repo import LLMRepo
+from utils.import_utils import import_by_suffix
 
 # import all jobs dynamically
 import_by_suffix("_job.py")
@@ -107,7 +108,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Middleware required for Oauth2
 # see https://docs.authlib.org/en/latest/client/fastapi.html
-app.add_middleware(SessionMiddleware, secret_key=conf.api.auth.session.secret)
+app.add_middleware(SessionMiddleware, secret_key=conf.auth.session.secret)
 
 
 # import & register all endpoints dynamically
@@ -119,12 +120,16 @@ for em in endpoint_modules:
 
 # register all exception handlers in fastAPI
 exception_handler(
-    http_status_code=lambda exc: 409
-    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-    else 500,
-    extract_message=lambda exc: str(exc.orig.pgerror).split("\n")[1]
-    if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
-    else str(exc),
+    http_status_code=lambda exc: (
+        409
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else 500
+    ),
+    extract_message=lambda exc: (
+        str(exc.orig.pgerror).split("\n")[1]
+        if isinstance(exc, IntegrityError) and isinstance(exc.orig, UniqueViolation)
+        else str(exc)
+    ),
 )(IntegrityError)
 
 exception_handler(404)(NoSuchJobError)
@@ -135,7 +140,7 @@ for ex_class, handler_func in exception_handlers:
 
 def main() -> None:
     # read port from config
-    port = int(conf.api.port)
+    port = conf.api.port
     assert port is not None and isinstance(port, int) and port > 0, (
         "The API port has to be a positive integer! E.g. 8081"
     )

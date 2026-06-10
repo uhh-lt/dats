@@ -1,9 +1,8 @@
-from typing import Any
-
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from config import conf
+from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_orm import CodeORM
 from repos.db.crud_base import CRUDBase
@@ -29,17 +28,17 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         created: list[CodeORM] = []
 
         def __create_recursively(
-            code_dict: dict[str, dict[str, Any]], parent_code_id: int | None = None
+            code_list: list[SystemCodeConfig], parent_code_id: int | None = None
         ):
-            for code_name in code_dict.keys():
+            for system_code in code_list:
                 create_dto = CodeCreate(
-                    name=str(code_name),
+                    name=system_code.name,
                     color=get_next_color(),
-                    description=code_dict[code_name]["desc"],
+                    description=system_code.desc,
                     project_id=proj_id,
                     parent_id=parent_code_id,
                     is_system=True,
-                    enabled=code_dict[code_name].get("enabled", True),
+                    enabled=system_code.enabled,
                 )
 
                 existing_code_id = self.read_id_by_name_and_project(
@@ -53,9 +52,9 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     existing_code_id = db_code.id
                     created.append(db_code)
 
-                if "children" in code_dict[code_name]:
+                if len(system_code.children) > 0:
                     __create_recursively(
-                        code_dict[code_name]["children"],
+                        system_code.children,
                         parent_code_id=existing_code_id,
                     )
 

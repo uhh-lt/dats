@@ -18,15 +18,15 @@ class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.mail_repo = MailRepo()
 
-        cls.is_enabled = conf.api.auth.oidc.enabled == "True"
+        cls.is_enabled = conf.auth.oidc.enabled == "True"
         cls.oauth = OAuth()
 
         # Create Authentik OAuth client
         cls.oauth.register(
             name="authentik",
-            client_id=conf.api.auth.oidc.client_id,
-            client_secret=conf.api.auth.oidc.client_secret,
-            server_metadata_url=conf.api.auth.oidc.server_metadata_url,
+            client_id=conf.auth.oidc.client_id,
+            client_secret=conf.auth.oidc.client_secret,
+            server_metadata_url=conf.auth.oidc.server_metadata_url,
             client_kwargs={
                 "scope": "openid email profile",
                 "code_challenge_method": "S256",

@@ -15,9 +15,9 @@ def heartbeat():
 @router.get("/info", response_model=InstanceInfo)
 def info():
     return InstanceInfo(
-        is_oidc_enabled=conf.api.auth.oidc.enabled == "True",
-        oidc_provider_name=conf.api.auth.oidc.name,
-        is_stable=conf.api.is_stable == "True",
+        is_oidc_enabled=conf.auth.oidc.enabled,
+        oidc_provider_name=conf.auth.oidc.name,
+        is_stable=conf.api.is_stable,
     )
 
 

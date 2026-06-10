@@ -10,9 +10,9 @@ from core.user.user_orm import UserORM
 
 __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
-__algo = conf.api.auth.jwt.algo
-__access_ttl = int(conf.api.auth.jwt.access_ttl)
-__jwt_secret = conf.api.auth.jwt.secret
+__algo = conf.auth.jwt.algo
+__access_ttl = conf.auth.jwt.access_ttl
+__jwt_secret = conf.auth.jwt.secret
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

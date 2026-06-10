@@ -50,17 +50,17 @@ cp frontend/.env.example frontend/.env
 # setup docker .env file
 sed -i "s/COMPOSE_PROJECT_NAME=demo/COMPOSE_PROJECT_NAME=${PROJECT_NAME}/" docker/.env
 sed -i "s/131/${PORT_PREFIX}/g" docker/.env
-sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" docker/.env
-sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" docker/.env
-sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" docker/.env
+sed -i "s/AUTH_JWT_SECRET=/AUTH_JWT_SECRET=${JWT_SECRET}/" docker/.env
+sed -i "s/AUTH_SESSION_SECRET=/AUTH_SESSION_SECRET=${SESSION_SECRET}/" docker/.env
+sed -i "s/API_UUID_NAMESPACE=/API_UUID_NAMESPACE=${UUID_NAMESPACE}/" docker/.env
 sed -i "s/DOCKER_UID=121/DOCKER_UID=$(id -u)/" docker/.env
 sed -i "s/DOCKER_GID=126/DOCKER_GID=$(id -g)/" docker/.env
 
 # setup backend .env file
 sed -i "s/131/${PORT_PREFIX}/g" backend/.env
-sed -i "s/JWT_SECRET=/JWT_SECRET=${JWT_SECRET}/" backend/.env
-sed -i "s/SESSION_SECRET=/SESSION_SECRET=${SESSION_SECRET}/" backend/.env
-sed -i "s/UUID_NAMESPACE=/UUID_NAMESPACE=${UUID_NAMESPACE}/" backend/.env
+sed -i "s/AUTH_JWT_SECRET=/AUTH_JWT_SECRET=${JWT_SECRET}/" backend/.env
+sed -i "s/AUTH_SESSION_SECRET=/AUTH_SESSION_SECRET=${SESSION_SECRET}/" backend/.env
+sed -i "s/API_UUID_NAMESPACE=/API_UUID_NAMESPACE=${API_UUID_NAMESPACE}/" backend/.env
 
 # setup ray .env file
 SPACY_MODELS_DIR="$(pwd)/docker/ray_cache/spacy_models"
