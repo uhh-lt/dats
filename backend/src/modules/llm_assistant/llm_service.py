@@ -676,22 +676,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 db=db, ids=[anno.id for anno in previous_annotations]
             )
 
-        # Delete all existing span annotations for the sdocs
-        if task_parameters.delete_existing_annotations:
-            previous_annotations = crud_span_anno.read_by_user_sdocs_codes(
-                db=db,
-                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-                sdoc_ids=task_parameters.sdoc_ids,
-                code_ids=task_parameters.code_ids,
-            )
-
-            msg = f"Deleting {len(previous_annotations)} previous span annotations."
-            logger.info(msg)
-
-            crud_span_anno.remove_bulk(
-                db=db, ids=[anno.id for anno in previous_annotations]
-            )
-
         # automatic annotation
         annotation_id = 0
         result: list[AnnotationResult] = []
