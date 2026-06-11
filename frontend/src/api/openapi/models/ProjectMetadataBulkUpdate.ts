@@ -2,29 +2,20 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DocType } from "./DocType";
 import type { MetaType } from "./MetaType";
 export type ProjectMetadataBulkUpdate = {
   /**
    * Key of the ProjectMetadata
    */
-  key: string;
+  key?: string | null;
   /**
    * Type of the ProjectMetadata
    */
-  metatype: MetaType;
-  /**
-   * Flag that tells if the ProjectMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.
-   */
-  read_only?: boolean;
-  /**
-   * DOCTYPE of the SourceDocument this metadata refers to
-   */
-  doctype: DocType;
+  metatype?: MetaType | null;
   /**
    * Description of the ProjectMetadata
    */
-  description: string;
+  description?: string | null;
   /**
    * ID of the ProjectMetadata
    */
