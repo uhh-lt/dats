@@ -159,11 +159,11 @@ services:
   rq-cpu-worker:
     <<: *dats-common
     healthcheck:
-      test: "/dats_code/.venv/bin/python /dats_code/src/worker.py healthcheck"
+      test: "/dats/backend/.venv/bin/python /dats/backend/src/worker.py healthcheck"
       interval: 30s
       timeout: 10s
       retries: 5
-    command: /dats_code/src/rq_worker_entrypoint.sh cpu
+    command: /dats/backend/src/rq_worker_entrypoint.sh cpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
@@ -180,11 +180,11 @@ services:
   rq-gpu-worker:
     <<: *dats-common
     healthcheck:
-      test: "/dats_code/.venv/bin/python /dats_code/src/worker.py healthcheck"
+      test: "/dats/backend/.venv/bin/python /dats/backend/src/worker.py healthcheck"
       interval: 30s
       timeout: 10s
       retries: 5
-    command: /dats_code/src/rq_worker_entrypoint.sh gpu
+    command: /dats/backend/src/rq_worker_entrypoint.sh gpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
@@ -232,7 +232,7 @@ services:
       interval: 60s
       timeout: 10s
       retries: 5
-    command: /dats_code/src/backend_api_entrypoint.sh
+    command: /dats/backend/src/backend_api_entrypoint.sh
     environment:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}

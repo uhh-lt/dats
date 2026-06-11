@@ -28,12 +28,12 @@ ENV UV_LINK_MODE=copy
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LOCKED=1
 
-WORKDIR /dats_code
+WORKDIR /dats/backend
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --directory . --no-dev --no-editable --no-install-project --no-install-workspace --no-managed-python
-ENV PATH="/dats_code/.venv/bin:${PATH}"
+ENV PATH="/dats/backend/.venv/bin:${PATH}"
 
 # set up python env variables
 ENV PYTHONFAULTHANDLER=1
@@ -41,8 +41,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONHASHSEED=random
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV CUPY_CACHE_IN_MEMORY=1
-ENV PYTHONPATH=/dats_code/src
+ENV PYTHONPATH=/dats/backend/src
 
 # copy the actual dats source code into the image
-COPY . /dats_code
-WORKDIR /dats_code
+COPY . /dats/backend
+WORKDIR /dats/backend
