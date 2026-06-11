@@ -2,6 +2,7 @@
 
 /api_cache/*
 /backend_repo/*
+/test_repo/*
 /ray_cache/*
 /rq_cpu_cache/*
 /rq_gpu_cache/*

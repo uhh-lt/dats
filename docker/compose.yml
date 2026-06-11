@@ -172,7 +172,7 @@ services:
       POSTGRES_POOL_SIZE: 1
       POSTGRES_MAX_OVERFLOW: 1
     volumes:
-      - ./backend_repo:/tmp/dats
+      - ./backend_repo:/dats/docker/backend_repo
       - ./rq_cpu_cache:/cache
     profiles:
       - rq
@@ -192,7 +192,7 @@ services:
       POSTGRES_POOL_SIZE: 1
       POSTGRES_MAX_OVERFLOW: 1
     volumes:
-      - ./backend_repo:/tmp/dats
+      - ./backend_repo:/dats/docker/backend_repo
       - ./rq_gpu_cache:/cache
     deploy:
       resources:
@@ -237,7 +237,7 @@ services:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
     volumes:
-      - ./backend_repo:/tmp/dats
+      - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache
     depends_on:
       <<: *dats-common-depends-on

@@ -5,7 +5,7 @@ import os
 # ---------------------------------------------------------------------------
 
 # Use databases different from production / development for testing:
-os.environ["FILESYSTEM_ROOT_DIRECTORY"] = "backend/test/test_repo"
+os.environ["FILESYSTEM_ROOT_DIRECTORY"] = "docker/test_repo"
 os.environ["WEAVIATE_COLLECTION_POSTFIX"] = "test"
 os.environ["POSTGRES_DB"] = "datstest"
 os.environ["REDIS_INDEX"] = "9"

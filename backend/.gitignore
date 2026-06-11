@@ -5,4 +5,3 @@ __pycache__/
 .venv/
 
 .env
-test/test_repo
