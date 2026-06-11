@@ -26,21 +26,21 @@ class LLMAnnotationResults(BaseModel):
 lac = conf.llm_assistant
 
 EN_PROMPT_TEMPLATE = """
-You are an assistant that performs token-level Named Entity Recognition (NER).
+You are an assistant that performs word-level classification.
 
-Allowed tags:
-{tags}
+Allowed codes:
+{codes}
 
-Tag definitions:
-{tag_definitions}
+Code definitions:
+{code_definitions}
 
 Rules:
-- Return the original text with inline XML-style tags (e.g. <TAG>text</TAG>)
+- Return the original text with inline XML-style tags (e.g. <CODE>text</CODE>)
 - Do NOT add or remove characters outside of tags
 - Do NOT change whitespace or punctuation
-- Tags must not overlap or nest
-- Only use the allowed tags around the specific entities and not the entire sentence
-- If no entity is present, return the text unchanged
+- Codes must not overlap or nest
+- Only use the allowed codes around the specific entities and not the entire sentence
+- If no relevant text that fits the codes is present, return the text unchanged
 
 Lets think step by step.
 
@@ -50,21 +50,21 @@ Text:
 
 
 DE_PROMPT_TEMPLATE = """
-Du bist ein Assistent für tokenbasierte Named Entity Recognition (NER).
+Du bist ein Assistent für word-level Klassifizierung.
 
-Erlaubte Tags:
-{tags}
+Erlaubte Codes:
+{codes}
 
-Tag-Definitionen:
-{tag_definitions}
+Code-Definitionen:
+{code_definitions}
 
 Regeln:
-- Gib den Originaltext mit Inline-XML-Tags zurück (z. B. <TAG>Text</TAG>)
+- Gib den Originaltext mit Inline-XML-Tags zurück (z. B. <CODE>Text</CODE>)
 - Füge außerhalb der Tags keine Zeichen hinzu und entferne keine
 - Ändere keine Leerzeichen oder Satzzeichen
-- Tags dürfen sich nicht überlappen oder verschachtelt sein
-- Verwende nur die erlaubten Tags um die spezifischen Entitäten und nicht um den gesamten Satz
-- Wenn keine Entität vorhanden ist, gib den Text unverändert zurück
+- Annotationen dürfen sich nicht überlappen oder verschachtelt sein
+- Verwende nur die erlaubten Codes um die spezifischen Entitäten und nicht um den gesamten Satz
+- Wenn keine Textpassage passend zu den Codes ist, gib den Text unverändert zurück
 
 Lass uns Schritt für Schritt denken.
 
@@ -91,8 +91,8 @@ Ausgabe:
 """.strip()
 
 
-TAG_PATTERN = re.compile(
-    r"<(?P<tag>[A-Z_]+)>(?P<text>.*?)</(?P=tag)>",
+CODE_PATTERN = re.compile(
+    r"<(?P<code>[A-Z_]+)>(?P<text>.*?)</(?P=code)>",
     re.DOTALL,
 )
 
@@ -119,7 +119,7 @@ def _render_sentence_example_multi(
     sdoc: SourceDocumentDataORM,
     begin: int,
     end: int,
-    tag: str,
+    code: str,
 ) -> str:
     sent_offsets = _find_sentences_for_span(sdoc, begin, end)
     rendered_sentences = []
@@ -132,9 +132,9 @@ def _render_sentence_example_multi(
         rel_end = min(end, sent_end) - sent_start
         rendered = (
             sentence[:rel_begin]
-            + f"<{tag}>"
+            + f"<{code}>"
             + sentence[rel_begin:rel_end]
-            + f"</{tag}>"
+            + f"</{code}>"
             + sentence[rel_end:]
         )
         rendered_sentences.append(rendered)
@@ -181,11 +181,11 @@ class AnnotationPromptBuilder(PromptBuilder):
         example_ids: List[int] | None = None,
         params: AnnotationParams,
     ) -> str:
-        tags = ", ".join(
+        codes = ", ".join(
             self.codeids2code_dict[cid].name.upper() for cid in params.code_ids
         )
 
-        tag_definitions = "\n".join(
+        code_definitions = "\n".join(
             f"{self.codeids2code_dict[cid].name.upper()}: "
             f"{self.codeids2code_dict[cid].description}"
             for cid in params.code_ids
@@ -234,7 +234,7 @@ class AnnotationPromptBuilder(PromptBuilder):
             # build example text
             example_blocks = []
             for cid, annos in code_id2annos.items():
-                tag = self.codeids2code_dict[cid].name.upper()
+                code = self.codeids2code_dict[cid].name.upper()
 
                 rendered = []
                 for a in annos:
@@ -245,12 +245,12 @@ class AnnotationPromptBuilder(PromptBuilder):
                             sdoc=sdoc,
                             begin=a.begin,
                             end=a.end,
-                            tag=tag,
+                            code=code,
                         )
                     )
 
                 example_blocks.append(
-                    f"{tag} examples:\n" + "\n".join(f"- {r}" for r in rendered)
+                    f"{code} examples:\n" + "\n".join(f"- {r}" for r in rendered)
                 )
                 examples_block = "\n\nExamples:\n" + "\n\n".join(example_blocks)
         else:
@@ -260,7 +260,7 @@ class AnnotationPromptBuilder(PromptBuilder):
 
         return (
             self.prompt_templates[language].format(
-                tags=tags, tag_definitions=tag_definitions
+                codes=codes, code_definitions=code_definitions
             )
             + examples_block
         )
@@ -281,23 +281,23 @@ def parse_result(
     # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
     cursor = 0
 
-    for match in TAG_PATTERN.finditer(result):
+    for match in CODE_PATTERN.finditer(result):
         # 1. Grab the raw text before this match and add it to our clean string
         before = result[cursor : match.start()]
         clean_text += before
 
         entity_text = match.group("text")
-        tag = match.group("tag")
+        code = match.group("code")
 
         # 2. Calculate the offsets based on the CURRENT length of our clean string
         begin = len(clean_text)
         end = begin + len(entity_text)
 
-        # 3. Only append to spans if the tag is recognized
-        if tag.upper() in self.codename2id_dict:
+        # 3. Only append to spans if the code is recognized
+        if code.upper() in self.codename2id_dict:
             spans.append(
                 {
-                    "code_id": self.codename2id_dict[tag.upper()],
+                    "code_id": self.codename2id_dict[code.upper()],
                     "text": entity_text,
                     "begin": begin,
                     "end": end,
