@@ -12,6 +12,7 @@ done
 
 # repo stores all user-uploaded files
 mkdir -p ../docker/backend_repo
+mkdir -p ../docker/test_repo
 
 # cache directories
 mkdir -p ../docker/api_cache
