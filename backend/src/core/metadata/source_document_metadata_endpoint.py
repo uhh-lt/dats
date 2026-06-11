@@ -173,19 +173,3 @@ def get_all_values_by_project_metadata(
         db=db, proj_metadata_id=proj_metadata_id
     )
     return [SourceDocumentMetadataRead.model_validate(obj) for obj in db_objs]
-
-
-@router.get(
-    "/project/{project_id}/bulk",
-    response_model=list[SourceDocumentMetadataRead],
-    summary="Returns ALL SourceDocumentMetadata for ALL documents within a specific project.",
-)
-def get_all_sdoc_metadata_for_project(
-    *,
-    db: Session = Depends(get_db_session),
-    project_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> list[SourceDocumentMetadataRead]:
-    authz_user.assert_in_project(project_id)
-    db_objs = crud_sdoc_meta.read_by_project(db=db, proj_id=project_id)
-    return [SourceDocumentMetadataRead.model_validate(obj) for obj in db_objs]
