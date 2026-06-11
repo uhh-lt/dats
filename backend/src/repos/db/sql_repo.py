@@ -70,16 +70,6 @@ class SQLRepo(metaclass=SingletonMeta):
         return False
 
     @contextmanager
-    def db_session(self) -> Generator[Session, None, None]:
-        session = None
-        try:
-            session = self.session_maker()
-            yield session
-        finally:
-            if session is not None:
-                session.close()
-
-    @contextmanager
     def transaction(self) -> Generator[Session, None, None]:
         session = None
         try:

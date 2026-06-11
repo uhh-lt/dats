@@ -60,7 +60,7 @@ def test_update_project(db: Session, sql_repo: SQLRepo, project: ProjectORM) -> 
     with pytest.raises(IntegrityError):
         # Use a throwaway session that will become unusable due
         # to the exeption
-        with sql_repo.db_session() as db:
+        with sql_repo.transaction() as db:
             crud_project.update(
                 db=db, id=project.id, update_dto=ProjectUpdate(title=None)
             )
@@ -69,7 +69,7 @@ def test_update_project(db: Session, sql_repo: SQLRepo, project: ProjectORM) -> 
     with pytest.raises(IntegrityError):
         # Use a throwaway session that will become unusable due
         # to the exeption
-        with sql_repo.db_session() as db:
+        with sql_repo.transaction() as db:
             crud_project.update(
                 db=db, id=project.id, update_dto=ProjectUpdate(description=None)
             )
