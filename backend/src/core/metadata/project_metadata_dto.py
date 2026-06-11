@@ -38,7 +38,7 @@ class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
     )
 
 
-class ProjectMetadataBulkUpdate(ProjectMetadataBaseDTO, UpdateDTOBase):
+class ProjectMetadataBulkUpdate(ProjectMetadataUpdate):
     id: int = Field(description="ID of the ProjectMetadata")
 
 
