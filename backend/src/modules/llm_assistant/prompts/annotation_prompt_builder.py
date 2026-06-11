@@ -195,7 +195,7 @@ class AnnotationPromptBuilder(PromptBuilder):
 
         if self.is_fewshot:
             from core.annotation.span_annotation_crud import crud_span_anno
-            from core.doc.source_document_crud import crud_sdoc
+            from core.doc.source_document_data_crud import crud_sdoc_data
             from core.user.user_crud import SYSTEM_USER_IDS
 
             # fetch annotations
@@ -215,7 +215,7 @@ class AnnotationPromptBuilder(PromptBuilder):
                 code_id2annos[anno.code_id].append(anno)
 
             # sample examples
-            threshold = lac.span_annotation.few_shot_threshold
+            threshold = lac.few_shot_threshold
             if example_ids is None:
                 for cid, annos in code_id2annos.items():
                     assert len(annos) >= threshold, (
@@ -227,7 +227,7 @@ class AnnotationPromptBuilder(PromptBuilder):
             sdoc_ids = {a.sdoc_id for a in annotations}
             sdoc_id2data = {
                 d.id: d
-                for d in crud_sdoc.read_data_batch(db=self.db, ids=list(sdoc_ids))
+                for d in crud_sdoc_data.read_by_ids(db=self.db, ids=list(sdoc_ids))
                 if d is not None
             }
 
@@ -265,32 +265,36 @@ class AnnotationPromptBuilder(PromptBuilder):
             + examples_block
         )
 
-    def parse_result(
-        self,
-        result: LLMHighlightedAnnotationResult,
-    ):
-        """
-        Returns:
-        - clean_text: str
-        - spans: list of dicts with code_id, text, begin, end
-        """
-        clean_text = ""
-        spans = []
-        cursor = 0
-        clean_cursor = 0
-        highlighted = result.text
-        for match in TAG_PATTERN.finditer(highlighted):
-            before = highlighted[cursor : match.start()]
-            clean_text += before
-            clean_cursor += len(before)
 
-            entity_text = match.group("text")
-            tag = match.group("tag")
-            if tag.upper() not in self.codename2id_dict:
-                continue
-            begin = clean_cursor
-            end = begin + len(entity_text)
+def parse_result(
+    self,
+    result: str,
+):
+    """
+    Returns:
+    - clean_text: str
+    - spans: list of dicts with code_id, text, begin, end
+    """
+    clean_text = ""
+    spans = []
 
+    # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
+    cursor = 0
+
+    for match in TAG_PATTERN.finditer(result):
+        # 1. Grab the raw text before this match and add it to our clean string
+        before = result[cursor : match.start()]
+        clean_text += before
+
+        entity_text = match.group("text")
+        tag = match.group("tag")
+
+        # 2. Calculate the offsets based on the CURRENT length of our clean string
+        begin = len(clean_text)
+        end = begin + len(entity_text)
+
+        # 3. Only append to spans if the tag is recognized
+        if tag.upper() in self.codename2id_dict:
             spans.append(
                 {
                     "code_id": self.codename2id_dict[tag.upper()],
@@ -300,11 +304,12 @@ class AnnotationPromptBuilder(PromptBuilder):
                 }
             )
 
-            clean_text += entity_text
-            clean_cursor = end
-            cursor = match.end()
+        # 4. ALWAYS append the text and advance the original string cursor
+        clean_text += entity_text
+        cursor = match.end()
 
-        tail = highlighted[cursor:]
-        clean_text += tail
+    # 5. Append anything left over after the final match
+    tail = result[cursor:]
+    clean_text += tail
 
-        return clean_text, spans
+    return clean_text, spans
