@@ -22,22 +22,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from test.factories.bbox_annotation_factory import BBoxAnnotationFactory
-from test.factories.code_factory import CodeFactory
-from test.factories.folder_factory import FolderFactory
-from test.factories.memo_factory import MemoFactory
-from test.factories.project_factory import ProjectFactory
-from test.factories.project_metadata_factory import ProjectMetadataFactory
-from test.factories.sentence_annotation_factory import SentenceAnnotationFactory
-from test.factories.source_document_factory import SourceDocumentFactory
-from test.factories.source_document_metadata_factory import (
-    SourceDocumentMetadataFactory,
-)
-from test.factories.span_annotation_factory import SpanAnnotationFactory
-from test.factories.tag_factory import TagFactory
-from test.factories.user_factory import UserFactory
 
-from core.user.user_dto import UserRead
+from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from repos.redis_repo import RedisRepo
 
@@ -164,84 +150,21 @@ def setup_weaviate_collections(setup_repos) -> None:
 
 
 # ---------------------------------------------------------------------------
-# FACTORIES
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="function")
-def project_factory(db_session: Session) -> ProjectFactory:
-    return ProjectFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def user_factory(db_session: Session) -> UserFactory:
-    return UserFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def code_factory(db_session: Session) -> CodeFactory:
-    return CodeFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def tag_factory(db_session: Session) -> TagFactory:
-    return TagFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def span_annotation_factory(db_session: Session) -> SpanAnnotationFactory:
-    return SpanAnnotationFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def bbox_annotation_factory(db_session: Session) -> BBoxAnnotationFactory:
-    return BBoxAnnotationFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def project_metadata_factory(db_session: Session) -> ProjectMetadataFactory:
-    return ProjectMetadataFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def sentence_annotation_factory(db_session: Session) -> SentenceAnnotationFactory:
-    return SentenceAnnotationFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def memo_factory(db_session: Session) -> MemoFactory:
-    return MemoFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def source_document_factory(db_session: Session) -> SourceDocumentFactory:
-    return SourceDocumentFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def source_document_metadata_factory(
-    db_session: Session,
-) -> SourceDocumentMetadataFactory:
-    return SourceDocumentMetadataFactory(db_session=db_session)
-
-
-@pytest.fixture(scope="function")
-def folder_factory(db_session: Session) -> FolderFactory:
-    return FolderFactory(db_session=db_session)
-
-
-# ---------------------------------------------------------------------------
 # SYSTEM USERS
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function", autouse=True)
-def setup_users(user_factory: UserFactory) -> None:
+def setup_users(db_session) -> None:
     from config import conf
     from core.user.user_crud import (
         ASSISTANT_FEWSHOT_ID,
         ASSISTANT_TRAINED_ID,
         ASSISTANT_ZEROSHOT_ID,
+        crud_user,
     )
     from core.user.user_dto import UserCreate
 
-    user_factory.create(
+    crud_user.create(
+        db=db_session,
         create_dto=UserCreate(
             email=conf.system_user.email,
             first_name=conf.system_user.first_name,
@@ -259,33 +182,18 @@ def setup_users(user_factory: UserFactory) -> None:
     ]
 
     for uid, lname in assistants:
-        user_factory.create(
+        crud_user.create_with_id(
+            db=db_session,
             create_dto=UserCreate(
                 email=f"assistant-{lname.lower()}@{domain}",
                 first_name=conf.assistant_user.first_name,
                 last_name=lname,
                 password=conf.assistant_user.password,
             ),
-            user_id=uid,
+            id=uid,
         )
 
-
-# ---------------------------------------------------------------------------
-# TEST USER
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="function")
-def test_user(user_factory: UserFactory) -> UserRead:
-    from core.user.user_dto import UserCreate
-
-    user_db_obj = user_factory.create(
-        create_dto=UserCreate(
-            first_name="Test",
-            last_name="User",
-            email="testuser@dats.org",
-            password="MyTestPassword123",
-        ),
-    )
-    return UserRead.model_validate(user_db_obj)
+    db_session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -347,3 +255,52 @@ def app(db_session: Session, test_user: UserORM) -> FastAPI:
 def client(app):
     with TestClient(app) as c:
         yield c
+
+
+# ---------------------------------------------------------------------------
+# GENERIC TEST SETUP FIXTURES
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="function")
+def test_user(db_session) -> UserORM:
+    """Create a test user."""
+    from core.user.user_crud import crud_user
+    from core.user.user_dto import UserCreate
+
+    user = crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            first_name="Test",
+            last_name="User",
+            email="testuser@dats.org",
+            password="MyTestPassword123",
+        ),
+    )
+
+    db_session.commit()
+    db_session.refresh(user)
+
+    return user
+
+
+@pytest.fixture(scope="function")
+def test_project(db_session, test_user) -> ProjectORM:
+    """Create a project for the test user"""
+    from core.project.project_dto import ProjectCreate
+    from core.project.project_service import ProjectService
+
+    project_dto = ProjectCreate(
+        title="Simple Test Project",
+        description="A simple project for testing",
+    )
+
+    ps = ProjectService()
+    project = ps.create_project(
+        db=db_session,
+        create_dto=project_dto,
+        creating_user_id=test_user.id,
+    )
+
+    db_session.commit()
+    db_session.refresh(project)
+
+    return project

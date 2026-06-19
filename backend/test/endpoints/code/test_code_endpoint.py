@@ -1,19 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
-from test.factories.code_factory import CodeFactory
-from test.factories.project_factory import ProjectFactory
 
 from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
-from core.user.user_dto import UserRead
 
 
-def test_create_new_code(
-    client: TestClient, project_factory: ProjectFactory, test_user: UserRead
-):
-    project = project_factory.create(creating_user_id=test_user.id)
+def test_create_new_code(client: TestClient, test_project):
+    project = test_project
 
     payload = CodeCreate(
-        name="Neww Test",
+        name="New Test",
         color="Red",
         description="Hallo here is the new test",
         parent_id=None,
@@ -21,7 +16,6 @@ def test_create_new_code(
         project_id=project.id,
         is_system=False,
     )
-
     response = client.put("/code", json=payload.model_dump())
 
     assert response.status_code == 200
@@ -37,7 +31,6 @@ def test_create_new_code(
 
 def test_create_code_project_not_existing(
     client: TestClient,
-    test_user: UserRead,
 ):
     non_existing_project_id = 99999
     payload = CodeCreate(
@@ -56,22 +49,9 @@ def test_create_code_project_not_existing(
 
 def test_get_code(
     client: TestClient,
-    project_factory: ProjectFactory,
-    code_factory: CodeFactory,
-    test_user: UserRead,
+    project_with_code,
 ):
-    project = project_factory.create(creating_user_id=test_user.id)
-    code = code_factory.create(
-        create_dto=CodeCreate(
-            name="Test Code for Retrieval",
-            color="Red",
-            description="Hallo here is the new test",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=False,
-        )
-    )
+    code = project_with_code["code"]
 
     response = client.get(f"/code/{code.id}")
 
@@ -88,10 +68,7 @@ def test_get_code(
 
 def test_get_code_does_not_exist(
     client: TestClient,
-    project_factory: ProjectFactory,
-    test_user: UserRead,
 ):
-    project_factory.create(creating_user_id=test_user.id)
     non_existing_id = 999999999
 
     response = client.get(f"/code/{non_existing_id}")
@@ -109,61 +86,35 @@ testdata = [
 @pytest.mark.parametrize("payload", testdata)
 def test_update_code_parametrize(
     client: TestClient,
-    project_factory: ProjectFactory,
-    code_factory: CodeFactory,
-    test_user: UserRead,
+    project_with_code,
     payload: dict,
 ) -> None:
-    project = project_factory.create(creating_user_id=test_user.id)
-    code = code_factory.create(
-        CodeCreate(
-            name="current Code",
-            color="red",
-            description="initial desc",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=True,
-        )
-    )
+    code = project_with_code["code"]
+    project = project_with_code["project"]
 
     response = client.patch(f"/code/{code.id}", json=payload)
+
     assert response.status_code == 200
-
     updated = CodeRead.model_validate(response.json())
-
     assert updated.name == payload.get("name", code.name)
     assert updated.color == payload.get("color", code.color)
     assert updated.description == payload.get("description", code.description)
     assert updated.enabled == payload.get("enabled", code.enabled)
-
     assert updated.id == code.id
     assert updated.project_id == project.id
 
 
 def test_update_by_id_alt(
     client: TestClient,
-    project_factory: ProjectFactory,
-    code_factory: CodeFactory,
-    test_user: UserRead,
+    project_with_parent_and_child_code,
 ):
-    project = project_factory.create(creating_user_id=test_user.id)
-    code = code_factory.create(
-        CodeCreate(
-            name="current Code",
-            color="red",
-            description="here is current updated Code",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=True,
-        )
-    )
+    code = project_with_parent_and_child_code["code"]
+
     update = CodeUpdate(
         name="new Update Code",
         color="blue",
         description="here is the updated Code",
-        parent_id=1,
+        parent_id=None,
         enabled=False,
     )
     response = client.patch(f"/code/{code.id}", json=update.model_dump())
@@ -179,11 +130,8 @@ def test_update_by_id_alt(
 
 def test_update_by_id_not_existing(
     client: TestClient,
-    project_factory: ProjectFactory,
-    test_user: UserRead,
 ):
-    project_factory.create(creating_user_id=test_user.id)
-    non_existing_code_id = 999_999_999
+    non_existing_code_id = 999999999
     update = CodeUpdate(
         name="new Update Code",
         color="blue",
@@ -191,7 +139,6 @@ def test_update_by_id_not_existing(
         parent_id=None,
         enabled=False,
     )
-
     response = client.patch(
         f"/code/{non_existing_code_id}",
         json=update.model_dump(exclude_unset=True),
@@ -202,22 +149,9 @@ def test_update_by_id_not_existing(
 
 def test_delete_code(
     client: TestClient,
-    project_factory: ProjectFactory,
-    code_factory: CodeFactory,
-    test_user: UserRead,
+    project_with_code,
 ):
-    project = project_factory.create(creating_user_id=test_user.id)
-    code = code_factory.create(
-        create_dto=CodeCreate(
-            name="Test Code for Retrieval",
-            color="Red",
-            description="Hallo here is the new test",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=False,
-        )
-    )
+    code = project_with_code["code"]
 
     response = client.delete(f"/code/{code.id}")
 
@@ -234,12 +168,8 @@ def test_delete_code(
 
 def test_delete_code_not_existing(
     client: TestClient,
-    project_factory: ProjectFactory,
-    test_user: UserRead,
 ):
-    project_factory.create(creating_user_id=test_user.id)
-    non_existing_id = 999999999
-
+    non_existing_id = 99999999
     response = client.delete(f"/code/{non_existing_id}")
 
     assert response.status_code == 403
@@ -247,28 +177,13 @@ def test_delete_code_not_existing(
 
 def test_get_by_project(
     client: TestClient,
-    project_factory: ProjectFactory,
-    code_factory: CodeFactory,
-    test_user: UserRead,
+    project_with_code,
 ):
-    project = project_factory.create(creating_user_id=test_user.id)
-
-    EXPECTED_COUNT = 136
-
-    code_factory.create(
-        create_dto=CodeCreate(
-            name="Test Code",
-            color="Red",
-            description="Test code for project retrieval",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=False,
-        )
-    )
+    project = project_with_code["project"]
 
     response = client.get(f"/code/project/{project.id}")
 
+    EXPECTED_COUNT = 136
     assert response.status_code == 200
     codes_json = response.json()
     assert len(codes_json) == EXPECTED_COUNT
@@ -276,12 +191,8 @@ def test_get_by_project(
 
 def test_get_by_project_not_existing(
     client: TestClient,
-    project_factory: ProjectFactory,
-    test_user: UserRead,
 ):
-    project_factory.create(creating_user_id=test_user.id)
     non_existing_project_id = 999999
-
     response = client.get(f"/code/project/{non_existing_project_id}")
 
     assert response.status_code == 403
