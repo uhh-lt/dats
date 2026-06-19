@@ -4,6 +4,9 @@ repo_name: uhh-lt/dats
 repo_url: https://github.com/uhh-lt/dats
 theme:
   name: material
+  palette:
+    primary: blue
+    accent: blue
   logo: assets/dats-logo.svg
   favicon: assets/dats-favicon.svg
   features:
