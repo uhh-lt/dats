@@ -16,7 +16,6 @@ theme:
     - navigation.expand # Automatically expands categories in the sidebar
     - navigation.indexes # Allows you to click the category name itself
     - navigation.footer # Previous/next links at the bottom of each page
-    - toc.integrate # Moves the table of contents into the left sidebar
   icon:
     repo: fontawesome/brands/github
 markdown_extensions:
