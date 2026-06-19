@@ -16,6 +16,8 @@ If you are new to DATS and want to explore its features, we highly recommend usi
 
 The demo instance is for exploration and testing only. If you are ready to use DATS for a real, productive research project, we can provide a dedicated, secure production instance for your team. Please get in touch with us (or the House of Computing and Data Science \- HCDS) to request access for your research institute.
 
+<iframe src='https://lecture2go.uni-hamburg.de/o/iframe/?obj=73453'  title='Video: Let&#39;s get started with DATS - Discourse Analysis Tool Suite' frameborder='0' width='647' height='373' allowfullscreen></iframe>
+
 ## Registration & Login
 
 ![DATS Login](assets/login-screen.png)
@@ -24,7 +26,7 @@ Before you can start analyzing data, you need to create a user account.
 
 1. Open the DATS login screen (e.g., via the Demo Instance link above).
 2. Click **Create Account** in the bottom left corner.
-3. Fill out the registration form. *Note: Ensure you use a strong password (8 or more characters, containing a mix of letters, numbers, and symbols).*
+3. Fill out the registration form. _Note: Ensure you use a strong password (8 or more characters, containing a mix of letters, numbers, and symbols)._
 4. Click **Register** to finish. You will be redirected back to the login screen.
 5. Log in using your newly created email and password.
 
@@ -52,8 +54,8 @@ Let's add some data to your new project.
 1. In the Project Management view, find your newly created project and click the **Pencil icon** (Edit) in the bottom right corner of its card.
 2. Click on the **Documents** tab.
 3. You have two options for uploading:
-   * **Upload Files:** Click the upload area or drag-and-drop a few files (PDF, text, or HTML) from your computer. Click **Upload Files**.
-   * **Upload URLs:** Click the **Upload URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job!**.
+   - **Upload Files:** Click the upload area or drag-and-drop a few files (PDF, text, or HTML) from your computer. Click **Upload Files**.
+   - **Upload URLs:** Click the **Upload URLs** button, paste a link to a news article or webpage, and click **Start Crawler Job!**.
 4. A progress bar will appear. DATS is now running your data through its automated preprocessing pipeline (extracting text, detecting language, finding entities). Wait for it to complete.
 
 ### Step 3: Annotate your Data
@@ -87,6 +89,6 @@ DATS is free, open-source software built with modern containerization (Docker). 
 
 To ensure sensitive research data remains entirely within your controlled environment, please refer to our GitHub repository for comprehensive technical deployment instructions:
 
-* [**GitHub Repository**](https://github.com/uhh-lt/dats)
-* [**Admin Guide**](https://github.com/uhh-lt/dats/wiki/Admin-Guide)
-* *Requires: Machine with NVIDIA GPU, Docker with NVIDIA Container Toolkit.*
+- [**GitHub Repository**](https://github.com/uhh-lt/dats)
+- [**Admin Guide**](https://github.com/uhh-lt/dats/wiki/Admin-Guide)
+- _Requires: Machine with NVIDIA GPU, Docker with NVIDIA Container Toolkit._
