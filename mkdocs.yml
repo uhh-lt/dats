@@ -1,4 +1,5 @@
 site_name: Discourse Analysis Tool Suite
+site_url: https://dats.science
 repo_name: uhh-lt/dats
 repo_url: https://github.com/uhh-lt/dats
 theme:
