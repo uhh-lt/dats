@@ -17,6 +17,11 @@ from modules.analysis.count_metadata import (
     compute_num_sdocs_with_date_metadata,
 )
 from modules.analysis.document_sampler import document_sampler_by_tags
+from modules.analysis.kwic.kwic_analysis import kwic_search
+from modules.analysis.kwic.kwic_dto import Direction, PaginatedElasticSearchKwicSnippets
+from modules.analysis.ngram.ngram_analysis import fetch_ngrams
+from modules.analysis.ngram.ngram_dto import NgramResponse, Ngrams
+from repos.elastic.elastic_repo import ElasticSearchRepo
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]
@@ -111,4 +116,59 @@ def sample_sdocs_by_tags(
     authz_user.assert_in_project(project_id)
     return document_sampler_by_tags(
         db=db, project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
+    )
+
+
+@router.post(
+    "/kwic",
+    response_model=PaginatedElasticSearchKwicSnippets,
+    summary="Returns KWIC search results. Sorting direction is to the left or right.",
+)
+def search_sdocs_kwic(
+    *,
+    project_id: int,
+    search_query: str,
+    window: int,
+    direction: Direction,
+    page_number: int,
+    page_size: int,
+    authz_user: AuthzUser = Depends(),
+) -> PaginatedElasticSearchKwicSnippets:
+    authz_user.assert_in_project(project_id)
+    skip = ((page_number - 1) * page_size) if page_number and page_size else 0
+    limit = page_size
+    return kwic_search(
+        proj_id=project_id,
+        query=search_query,
+        window=window,
+        limit=limit,
+        skip=skip,
+        direction=direction,
+    )
+
+
+@router.post(
+    "/ngrams",
+    response_model=NgramResponse,
+    summary="Returns most frequent ngrams in a project",
+)
+def search_sdocs_ngrams(
+    *,
+    project_id: int,
+    search_query: str,
+    limit: int,
+    exact: bool,
+    ngrams: Ngrams,
+    ascending: bool,
+    authz_user: AuthzUser = Depends(),
+) -> NgramResponse:
+    authz_user.assert_in_project(project_id)
+    return fetch_ngrams(
+        client=ElasticSearchRepo().client,
+        proj_id=project_id,
+        term=search_query,
+        limit=limit,
+        ngrams=ngrams,
+        exact=exact,
+        ascending=ascending,
     )

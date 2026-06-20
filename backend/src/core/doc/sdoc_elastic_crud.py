@@ -52,7 +52,6 @@ class CRUDElasticSdoc(
         if sdoc_ids is not None:
             # the terms query has an allowed maximum of 65536 terms
             bool_must_query.append({"terms": {"sdoc_id": list(sdoc_ids)[:65536]}})
-
         return self.search(
             client=client,
             proj_id=proj_id,

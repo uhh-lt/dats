@@ -5,6 +5,10 @@
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
+import type { Direction } from "../models/Direction";
+import type { NgramResponse } from "../models/NgramResponse";
+import type { Ngrams } from "../models/Ngrams";
+import type { PaginatedElasticSearchKwicSnippets } from "../models/PaginatedElasticSearchKwicSnippets";
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -116,6 +120,78 @@ export class AnalysisService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns KWIC search results. Sorting direction is to the left or right.
+   * @returns PaginatedElasticSearchKwicSnippets Successful Response
+   * @throws ApiError
+   */
+  public static searchSdocsKwic({
+    projectId,
+    searchQuery,
+    window,
+    direction,
+    pageNumber,
+    pageSize,
+  }: {
+    projectId: number;
+    searchQuery: string;
+    window: number;
+    direction: Direction;
+    pageNumber: number;
+    pageSize: number;
+  }): CancelablePromise<PaginatedElasticSearchKwicSnippets> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/kwic",
+      query: {
+        project_id: projectId,
+        search_query: searchQuery,
+        window: window,
+        direction: direction,
+        page_number: pageNumber,
+        page_size: pageSize,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns most frequent ngrams in a project
+   * @returns NgramResponse Successful Response
+   * @throws ApiError
+   */
+  public static searchSdocsNgrams({
+    projectId,
+    searchQuery,
+    limit,
+    exact,
+    ngrams,
+    ascending,
+  }: {
+    projectId: number;
+    searchQuery: string;
+    limit: number;
+    exact: boolean;
+    ngrams: Ngrams;
+    ascending: boolean;
+  }): CancelablePromise<NgramResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/ngrams",
+      query: {
+        project_id: projectId,
+        search_query: searchQuery,
+        limit: limit,
+        exact: exact,
+        ngrams: ngrams,
+        ascending: ascending,
+      },
       errors: {
         422: `Validation Error`,
       },
