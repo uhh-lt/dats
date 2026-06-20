@@ -1,3 +1,5 @@
+from collections import Counter
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -6,10 +8,13 @@ from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import (
+    ProjectMetadataBulkUpdate,
     ProjectMetadataCreate,
     ProjectMetadataRead,
     ProjectMetadataUpdate,
 )
+from core.metadata.source_document_metadata_crud import crud_sdoc_meta
+from core.metadata.source_document_metadata_dto import MetadataFrequencyRead
 
 router = APIRouter(
     prefix="/projmeta",
@@ -90,6 +95,24 @@ def update_by_id(
     return ProjectMetadataRead.model_validate(db_obj)
 
 
+@router.patch(
+    "/bulk/update",
+    response_model=list[ProjectMetadataRead],
+    summary="Updates multiple project metadata at once.",
+)
+def update_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    metadatas: list[ProjectMetadataBulkUpdate],
+    authz_user: AuthzUser = Depends(),
+) -> list[ProjectMetadataRead]:
+    authz_user.assert_in_same_project_as_many(
+        Crud.PROJECT_METADATA, [m.id for m in metadatas]
+    )
+    db_objs = crud_project_meta.update_bulk(db=db, update_dtos=metadatas)
+    return [ProjectMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+
+
 @router.delete(
     "/{metadata_id}",
     response_model=ProjectMetadataRead,
@@ -105,3 +128,67 @@ def delete_by_id(
 
     db_obj = crud_project_meta.delete(db=db, id=metadata_id)
     return ProjectMetadataRead.model_validate(db_obj)
+
+
+@router.delete(
+    "/bulk/delete",
+    response_model=list[ProjectMetadataRead],
+    summary="Deletes all ProjectMetadata with the given IDs.",
+)
+def delete_bulk_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    metadata_ids: list[int],
+    authz_user: AuthzUser = Depends(),
+) -> list[ProjectMetadataRead]:
+    authz_user.assert_in_same_project_as_many(Crud.PROJECT_METADATA, metadata_ids)
+
+    db_objs = crud_project_meta.delete_bulk(db=db, ids=metadata_ids)
+    return [ProjectMetadataRead.model_validate(db_obj) for db_obj in db_objs]
+
+
+@router.get(
+    "/{proj_metadata_id}/frequencies",
+    response_model=list[MetadataFrequencyRead],
+    summary="Returns a frequency count of all values for a specific ProjectMetadata definition.",
+)
+def get_metadata_frequencies(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_metadata_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[MetadataFrequencyRead]:
+    authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, proj_metadata_id)
+
+    db_objs = crud_sdoc_meta.read_by_project_metadata(
+        db=db, proj_metadata_id=proj_metadata_id
+    )
+
+    # extract the non-null value from the database object
+    def extract_value(obj):
+        if obj.int_value is not None:
+            return obj.int_value
+        if obj.str_value is not None:
+            return obj.str_value
+        if obj.boolean_value is not None:
+            return obj.boolean_value
+        if obj.date_value is not None:
+            return obj.date_value.isoformat()
+        if obj.list_value is not None:
+            return str(
+                obj.list_value
+            )  # lists must be stringified to be hashable for counting
+        return None
+
+    # count frequencies
+    value_counts = Counter(extract_value(obj) for obj in db_objs)
+    total_count = sum(value_counts.values())
+
+    return [
+        MetadataFrequencyRead(
+            value=val,
+            count=count,
+            percentage=round((count / total_count), 2) if total_count > 0 else 0,
+        )
+        for val, count in value_counts.items()
+    ]

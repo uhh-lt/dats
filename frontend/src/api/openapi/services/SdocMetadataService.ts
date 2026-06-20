@@ -150,4 +150,46 @@ export class SdocMetadataService {
       },
     });
   }
+  /**
+   * Returns all SourceDocumentMetadata values for a specific ProjectMetadata definition.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllValuesByProjectMetadata({
+    projMetadataId,
+  }: {
+    projMetadataId: number;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/project-metadata/{proj_metadata_id}",
+      path: {
+        proj_metadata_id: projMetadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns ALL SourceDocumentMetadata for ALL documents within a specific project.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllSdocMetadataForProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/project/{project_id}/bulk",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

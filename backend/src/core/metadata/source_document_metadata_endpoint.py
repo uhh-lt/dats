@@ -155,3 +155,37 @@ def delete_by_id(
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT_METADATA, metadata_id)
     db_obj = crud_sdoc_meta.delete(db=db, id=metadata_id)
     return SourceDocumentMetadataRead.model_validate(db_obj)
+
+
+@router.get(
+    "/project-metadata/{proj_metadata_id}",
+    response_model=list[SourceDocumentMetadataRead],
+    summary="Returns all SourceDocumentMetadata values for a specific ProjectMetadata definition.",
+)
+def get_all_values_by_project_metadata(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_metadata_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[SourceDocumentMetadataRead]:
+    authz_user.assert_in_same_project_as(Crud.PROJECT_METADATA, proj_metadata_id)
+    db_objs = crud_sdoc_meta.read_by_project_metadata(
+        db=db, proj_metadata_id=proj_metadata_id
+    )
+    return [SourceDocumentMetadataRead.model_validate(obj) for obj in db_objs]
+
+
+@router.get(
+    "/project/{project_id}/bulk",
+    response_model=list[SourceDocumentMetadataRead],
+    summary="Returns ALL SourceDocumentMetadata for ALL documents within a specific project.",
+)
+def get_all_sdoc_metadata_for_project(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> list[SourceDocumentMetadataRead]:
+    authz_user.assert_in_project(project_id)
+    db_objs = crud_sdoc_meta.read_by_project(db=db, proj_id=project_id)
+    return [SourceDocumentMetadataRead.model_validate(obj) for obj in db_objs]

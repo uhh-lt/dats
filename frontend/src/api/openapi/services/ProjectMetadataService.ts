@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { MetadataFrequencyRead } from "../models/MetadataFrequencyRead";
+import type { ProjectMetadataBulkUpdate } from "../models/ProjectMetadataBulkUpdate";
 import type { ProjectMetadataCreate } from "../models/ProjectMetadataCreate";
 import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectMetadataUpdate } from "../models/ProjectMetadataUpdate";
@@ -99,6 +101,67 @@ export class ProjectMetadataService {
       url: "/projmeta/project/{proj_id}",
       path: {
         proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates multiple project metadata at once.
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateBulk({
+    requestBody,
+  }: {
+    requestBody: Array<ProjectMetadataBulkUpdate>;
+  }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/projmeta/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes all ProjectMetadata with the given IDs.
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteBulkById({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projmeta/bulk/delete",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns a frequency count of all values for a specific ProjectMetadata definition.
+   * @returns MetadataFrequencyRead Successful Response
+   * @throws ApiError
+   */
+  public static getMetadataFrequencies({
+    projMetadataId,
+  }: {
+    projMetadataId: number;
+  }): CancelablePromise<Array<MetadataFrequencyRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/projmeta/{proj_metadata_id}/frequencies",
+      path: {
+        proj_metadata_id: projMetadataId,
       },
       errors: {
         422: `Validation Error`,

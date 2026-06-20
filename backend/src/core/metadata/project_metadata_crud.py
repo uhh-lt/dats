@@ -5,6 +5,7 @@ from common.doc_type import DocType
 from common.meta_type import MetaType
 from config import conf
 from core.metadata.project_metadata_dto import (
+    ProjectMetadataBulkUpdate,
     ProjectMetadataCreate,
     ProjectMetadataUpdate,
 )
@@ -169,6 +170,29 @@ class CRUDProjectMetadata(
             metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
 
             return metadata_orm
+
+    def update_bulk(
+        self, db: Session, *, update_dtos: list[ProjectMetadataBulkUpdate]
+    ) -> list[ProjectMetadataORM]:
+        db_objs = []
+        for update_dto in update_dtos:
+            db_obj = self.update(
+                db=db,
+                metadata_id=update_dto.id,
+                update_dto=ProjectMetadataUpdate(
+                    **update_dto.model_dump(exclude={"id"})
+                ),
+            )
+            db_objs.append(db_obj)
+        return db_objs
+
+    ### DELETE OPERATIONS ###
+    def delete_bulk(self, db: Session, *, ids: list[int]) -> list[ProjectMetadataORM]:
+        db_objs = []
+        for id in ids:
+            db_obj = self.delete(db=db, id=id)
+            db_objs.append(db_obj)
+        return db_objs
 
     ### OTHER OPERATIONS ###
 
