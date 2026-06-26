@@ -4,12 +4,10 @@ from sqlalchemy.orm import Session
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.auth.validation import Validate
 from core.doc.source_document_crud import crud_sdoc
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataBulkUpdate,
-    SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
@@ -17,35 +15,6 @@ from core.metadata.source_document_metadata_dto import (
 router = APIRouter(
     prefix="/sdocmeta", dependencies=[Depends(get_current_user)], tags=["sdocMetadata"]
 )
-
-
-@router.put(
-    "",
-    response_model=SourceDocumentMetadataRead,
-    summary="Creates a new Metadata and returns it with the generated ID.",
-)
-def create_new_metadata(
-    *,
-    db: Session = Depends(get_db_session),
-    metadata: SourceDocumentMetadataCreate,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> SourceDocumentMetadataRead:
-    authz_user.assert_in_same_project_as(
-        Crud.PROJECT_METADATA, metadata.project_metadata_id
-    )
-    authz_user.assert_in_same_project_as(
-        Crud.SOURCE_DOCUMENT, metadata.source_document_id
-    )
-    validate.validate_objects_in_same_project(
-        [
-            (Crud.SOURCE_DOCUMENT, metadata.source_document_id),
-            (Crud.PROJECT_METADATA, metadata.project_metadata_id),
-        ]
-    )
-
-    db_metadata = crud_sdoc_meta.create(db=db, create_dto=metadata)
-    return SourceDocumentMetadataRead.model_validate(db_metadata)
 
 
 @router.get(

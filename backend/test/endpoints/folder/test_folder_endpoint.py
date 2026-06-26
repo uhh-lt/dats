@@ -18,7 +18,7 @@ def test_create_folder(client: TestClient, test_project):
     )
     response = client.post("/folder/", json=payload.model_dump())
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     folder = FolderRead.model_validate(response.json())
     assert folder.name == payload.name
     assert folder.folder_type == payload.folder_type
@@ -39,7 +39,7 @@ def test_create_folder_if_not_exists(client: TestClient):
     )
     response = client.put("/folder/", json=payload.model_dump())
 
-    assert response.status_code == 405
+    assert response.status_code == 405, response.text
 
 
 def test_get_folder_by_id(client: TestClient, project_with_folder):
@@ -47,7 +47,7 @@ def test_get_folder_by_id(client: TestClient, project_with_folder):
 
     response = client.get(f"/folder/{folder.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     folder_read = FolderRead.model_validate(response.json())
     assert folder_read.id == folder.id
     assert folder_read.name == folder.name
@@ -60,7 +60,7 @@ def test_get_folder_by_id_if_not_exists(client: TestClient):
     non_existing_folder_id = 999999
     response = client.get(f"/folder/{non_existing_folder_id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 testdata = [
@@ -78,7 +78,7 @@ def test_update_folder_parametrized(
 
     response = client.put(f"/folder/{folder.id}", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
     assert updated.name == payload.get("name", folder.name)
     assert updated.parent_id == payload.get("parent_id", folder.parent_id)
@@ -95,7 +95,7 @@ def test_update_folder(client: TestClient, project_with_folder):
     )
     response = client.put(f"/folder/{folder.id}", json=update.model_dump())
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     updated = FolderRead.model_validate(response.json())
     assert updated.name == update.name
     assert updated.parent_id == update.parent_id
@@ -109,7 +109,7 @@ def test_update_folder_if_not_exists(client: TestClient):
     )
     response = client.put(f"/folder/{non_existing_folder_id}", json=update.model_dump())
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 def test_delete_folder(client: TestClient, project_with_folder):
@@ -117,7 +117,7 @@ def test_delete_folder(client: TestClient, project_with_folder):
 
     response = client.delete(f"/folder/{folder.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     deleted = FolderRead.model_validate(response.json())
     assert deleted.id == folder.id
     assert deleted.name == folder.name
@@ -127,7 +127,7 @@ def test_delete_folder_if_not_exists(client: TestClient):
     non_existing_folder_id = 999999
     resp = client.delete(f"/folder/{non_existing_folder_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_folders_by_project_and_type(
@@ -140,7 +140,7 @@ def test_get_folders_by_project_and_type(
         f"/folder/project/{project.id}/folder/{FolderType.NORMAL.value}"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     folder_list = [FolderRead.model_validate(f) for f in response.json()]
     assert len(folder_list) == len(folders)
     assert set(f.id for f in folder_list) == set(f.id for f in folders)
@@ -153,4 +153,4 @@ def test_get_folders_by_project_and_type_if_not_exists(client: TestClient):
         f"/folder/project/{non_existing_project_id}/folder/{FolderType.NORMAL.value}"
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text

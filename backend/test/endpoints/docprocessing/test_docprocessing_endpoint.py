@@ -23,5 +23,5 @@ def test_upload_file_to_project(client: TestClient, test_project):
         files=files,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     assert response.json() == 1

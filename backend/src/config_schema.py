@@ -102,7 +102,7 @@ class OidcConfig(BaseModel):
     client_secret: str
     server_metadata_url: str
 
-    def model_validator(cls, values: Any) -> Any:
+    def model_validator(self, values: Any) -> Any:
         if not isinstance(values, dict):
             return values
 
@@ -206,7 +206,7 @@ class MailConfig(BaseModel):
     use_credentials: bool
     validate_certs: bool
 
-    def model_validator(cls, values: Any) -> Any:
+    def model_validator(self, values: Any) -> Any:
         if not isinstance(values, dict):
             return values
 

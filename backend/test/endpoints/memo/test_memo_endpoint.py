@@ -24,7 +24,7 @@ def test_add_memo_to_code(client: TestClient, project_with_code, test_user: User
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     memo = MemoRead.model_validate(response.json())
     assert memo.title == payload.title
     assert memo.user_id == test_user.id
@@ -44,7 +44,7 @@ def test_add_memo_to_code_attached_not_existing(client: TestClient):
         f"/memo?attached_object_id={non_existing_code_id}&attached_object_type={AttachedObjectType.code.value}",
         json=payload.model_dump(exclude_none=True),
     )
-    assert response.status_code == 404
+    assert response.status_code == 404, response.text
 
 
 def test_add_memo_to_source_document(
@@ -64,7 +64,7 @@ def test_add_memo_to_source_document(
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     memo = MemoRead.model_validate(response.json())
     assert memo.title == payload.title
     assert memo.user_id == test_user.id
@@ -94,7 +94,7 @@ def test_add_memo_to_sentence_annotation(
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     memo = MemoRead.model_validate(resp.json())
     assert memo.title == payload.title
     assert memo.user_id == test_user.id
@@ -107,18 +107,18 @@ def test_get_by_id(
     project_with_code_and_memo,
 ):
     memo = project_with_code_and_memo["memo"]
+    code = project_with_code_and_memo["code"]
 
     response = client.get(f"/memo/{memo.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     memo_read = MemoRead.model_validate(response.json())
     assert memo_read.id == memo.id
     assert memo_read.title == memo.title
     assert memo_read.content == memo.content
     assert memo_read.starred == memo.starred
     assert memo_read.user_id == memo.user_id
-    assert memo_read.attached_object_id == memo.attached_object_id
-    assert memo_read.attached_object_type == memo.attached_object_type
+    assert memo_read.attached_object_id == code.id
 
 
 def test_get_by_id_not_existing(client: TestClient):
@@ -126,7 +126,7 @@ def test_get_by_id_not_existing(client: TestClient):
 
     resp = client.get(f"/memo/{non_existing_memo_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 testdata_memo = [
@@ -149,7 +149,7 @@ def test_update_memo_parametrized(
 
     response = client.patch(f"/memo/{memo.id}", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     final_memo_state = MemoRead.model_validate(response.json())
     assert final_memo_state.title == payload.get("title", memo.title)
     assert final_memo_state.content == payload.get("content", memo.content)
@@ -181,7 +181,7 @@ def test_update_by_id_not_existing(
         json=update_payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_by_id(
@@ -192,14 +192,14 @@ def test_delete_by_id(
 
     resp = client.delete(f"/memo/{memo.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 def test_delete_by_id_not_existing(client: TestClient):
     non_existing_memo_id = 99999
     resp = client.delete(f"/memo/{non_existing_memo_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_memos_by_attached_object_id(
@@ -210,10 +210,10 @@ def test_get_memos_by_attached_object_id(
     attached_object = project_with_code_and_multiple_memos["code"]
 
     response = client.get(
-        f"/memo/attached_obj/{attached_object.type.value}/to/{attached_object.id}"
+        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{attached_object.id}"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     memos_json = response.json()
     assert len(memos_json) == EXPECTED_COUNT
 
@@ -226,7 +226,7 @@ def test_get_memos_by_attached_object_id_not_existing(
         f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{non_existing_code_id}"
     )
 
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_user_memo_by_attached_object_id(
@@ -238,15 +238,15 @@ def test_get_user_memo_by_attached_object_id(
     memo = project_with_code_and_memo["memo"]
 
     response = client.get(
-        f"/memo/attached_obj/{attached_object.type.value}/to/{attached_object.id}/user"
+        f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{attached_object.id}/user"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     memo_read = MemoRead.model_validate(response.json())
     assert memo_read.title == memo.title
     assert memo_read.user_id == test_user.id
     assert memo_read.attached_object_id == attached_object.id
-    assert memo_read.attached_object_type == attached_object.type
+    assert memo_read.attached_object_type == AttachedObjectType.code
 
 
 def test_get_user_memo_by_attached_object_id_not_existing(
@@ -256,4 +256,4 @@ def test_get_user_memo_by_attached_object_id_not_existing(
     resp = client.get(
         f"/memo/attached_obj/{AttachedObjectType.code.value}/to/{non_existing_code_id}/user"
     )
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text

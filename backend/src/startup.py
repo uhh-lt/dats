@@ -187,11 +187,13 @@ def __init_repos__(
 
 def __create_system_user__(db: Session) -> None:
     from config import conf
-    from core.user.user_crud import crud_user
+    from core.user.user_crud import (
+        SYSTEM_USER_ID,
+        crud_user,
+    )
     from core.user.user_dto import UserCreate
 
-    if not crud_user.exists(db=db, id=1):
-        # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
+    if not crud_user.exists(db=db, id=SYSTEM_USER_ID):
         create_dto = UserCreate(
             email=conf.system_user.email,
             first_name=conf.system_user.first_name,
@@ -203,10 +205,13 @@ def __create_system_user__(db: Session) -> None:
 
 def __create_demo_user__(db: Session) -> None:
     from config import conf
-    from core.user.user_crud import crud_user
+    from core.user.user_crud import (
+        DEMO_USER_ID,
+        crud_user,
+    )
     from core.user.user_dto import UserCreate
 
-    if not crud_user.exists(db=db, id=2):
+    if not crud_user.exists(db=db, id=DEMO_USER_ID):
         create_dto = UserCreate(
             email=conf.demo_user.email,
             first_name=conf.demo_user.first_name,
@@ -218,13 +223,18 @@ def __create_demo_user__(db: Session) -> None:
 
 def __create_assistant_users__(db: Session) -> None:
     from config import conf
-    from core.user.user_crud import crud_user
+    from core.user.user_crud import (
+        ASSISTANT_FEWSHOT_ID,
+        ASSISTANT_TRAINED_ID,
+        ASSISTANT_ZEROSHOT_ID,
+        crud_user,
+    )
     from core.user.user_dto import UserCreate
 
     for user_id, last_name in [
-        (9990, "ZeroShot"),
-        (9991, "FewShot"),
-        (9992, "Trained"),
+        (ASSISTANT_ZEROSHOT_ID, "ZeroShot"),
+        (ASSISTANT_FEWSHOT_ID, "FewShot"),
+        (ASSISTANT_TRAINED_ID, "Trained"),
     ]:
         if not crud_user.exists(db=db, id=user_id):
             create_dto = UserCreate(

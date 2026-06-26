@@ -16,13 +16,20 @@ os.environ["RQ_WORKERS_CPU"] = "1"
 os.environ["RQ_WORKERS_API"] = "1"
 os.environ["RQ_WORKERS_GPU"] = "1"
 
-from typing import Any, Generator
+from typing import Any, Generator, TypedDict
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from common.doc_type import DocType
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_data_crud import crud_sdoc_data
+from core.doc.source_document_data_dto import SourceDocumentDataCreate
+from core.doc.source_document_data_orm import SourceDocumentDataORM
+from core.doc.source_document_dto import SourceDocumentCreate
+from core.doc.source_document_orm import SourceDocumentORM
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 from repos.redis_repo import RedisRepo
@@ -173,6 +180,16 @@ def setup_users(db_session) -> None:
         ),
     )
 
+    crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            email=conf.demo_user.email,
+            first_name=conf.demo_user.first_name,
+            last_name=conf.demo_user.last_name,
+            password=conf.demo_user.password,
+        ),
+    )
+
     domain = conf.assistant_user.email.split("@")[1]
 
     assistants = [
@@ -304,3 +321,61 @@ def test_project(db_session, test_user) -> ProjectORM:
     db_session.refresh(project)
 
     return project
+
+
+class ProjectWithSdoc(TypedDict):
+    project: ProjectORM
+    source_document: SourceDocumentORM
+    source_document_data: SourceDocumentDataORM
+
+
+@pytest.fixture(scope="function")
+def project_with_sdoc(db_session, test_project, test_user) -> ProjectWithSdoc:
+    """Create a project for the test user with a source document."""
+    from repos.filesystem_repo import FilesystemRepo
+
+    sdoc = crud_sdoc.create(
+        db=db_session,
+        create_dto=SourceDocumentCreate(
+            filename="test_document.txt",
+            name="Test Document",
+            doctype=DocType.text,
+            project_id=test_project.id,
+            folder_id=None,
+        ),
+    )
+
+    file_path = FilesystemRepo()._get_dst_path_for_project_sdoc_file(
+        proj_id=test_project.id, filename=sdoc.filename
+    )
+    relative_file_path = os.path.relpath(file_path, FilesystemRepo().root_dir)
+    sdoc_data = crud_sdoc_data.create(
+        db=db_session,
+        create_dto=SourceDocumentDataCreate(
+            id=sdoc.id,
+            content="This is a test document. It has two sentences.",
+            repo_url=str(relative_file_path),
+            raw_html="<p>This is a test document. It has two sentences.</p>",
+            html="<p><sent>This is a test document.</sent> <sent>It has two sentences.</sent></p>",
+            token_starts=[0, 5, 8, 10, 15, 25, 28, 32, 36],
+            token_ends=[4, 7, 9, 14, 23, 27, 31, 35, 45],
+            sentence_starts=[0, 25],
+            sentence_ends=[24, 46],
+            token_time_starts=None,
+            token_time_ends=None,
+        ),
+    )
+
+    # Write a dummy file to the filesystem for the source document
+    with open(file_path, "w") as f:
+        f.write(sdoc_data.content)
+
+    db_session.commit()
+    db_session.refresh(test_project)
+    db_session.refresh(sdoc)
+
+    return {
+        "project": test_project,
+        "source_document": sdoc,
+        "source_document_data": sdoc_data,
+    }

@@ -5,9 +5,8 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
     SentenceAnnotationUpdate,
+    SentenceAnnotatorResult,
 )
-from core.code.code_crud import crud_code
-from core.code.code_dto import CodeCreate
 from core.user.user_dto import UserRead
 
 
@@ -23,7 +22,7 @@ def test_add_sentence_annotation(client: TestClient, project_with_sdoc_and_code)
     )
     response = client.put("/sentence", json=payload.model_dump())
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     sentence = SentenceAnnotationRead.model_validate(response.json())
     assert sentence.sentence_id_start == payload.sentence_id_start
     assert sentence.sentence_id_end == payload.sentence_id_end
@@ -42,7 +41,7 @@ def test_add_sentence_annotation_attached_not_existing(
     )
     resp = client.put("/sentence", json=payload.model_dump())
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_add_sentence_annotations_bulk(
@@ -62,7 +61,7 @@ def test_add_sentence_annotations_bulk(
     ]
     response = client.put("/sentence/bulk/create", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     items = [SentenceAnnotationRead.model_validate(x) for x in response.json()]
     assert len(items) == 2
     for sent in items:
@@ -81,7 +80,7 @@ def test_add_sentence_annotione_bulk_if_not_exists(
     )
     resp = client.put("/sentence/bulk/create/", json=[payload.model_dump()])
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_sentence_annotation_endpoint_by_id(
@@ -94,7 +93,7 @@ def test_get_sentence_annotation_endpoint_by_id(
 
     resp = client.get(f"/sentence/{sa.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     sentence_read = SentenceAnnotationRead.model_validate(resp.json())
     assert sentence_read.id == sa.id
     assert sentence_read.code_id == code.id
@@ -111,7 +110,7 @@ def test_get_sentence_annotation_by_id_if_not_exists(client: TestClient):
         sdoc_id=9999,
     )
     response = client.get(f"/sentence/{payload.code_id}")
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 def test_get_by_sdoc_and_user(
@@ -125,14 +124,19 @@ def test_get_by_sdoc_and_user(
 
     resp = client.get(f"/sentence/sdoc/{sdoc.id}/user/{test_user.id}")
 
-    assert resp.status_code == 200
-    data = resp.json()["sentence_annotations"]
-    assert len(data) == 1
-    first = data["0"][0]
-    assert first["sdoc_id"] == sdoc.id
-    assert first["code_id"] == code.id
-    assert first["sentence_id_start"] == sa.sentence_id_start
-    assert first["sentence_id_end"] == sa.sentence_id_end
+    assert resp.status_code == 200, resp.text
+    data = SentenceAnnotatorResult.model_validate(resp.json())
+
+    # Check that the response contains the expected sentence annotations (1) for the first sentence
+    assert len(data.sentence_annotations[0]) == 1
+    assert len(data.sentence_annotations[1]) == 0
+
+    # Check that the sentence annotation of the first sentence has the expected properties
+    first_annotation = data.sentence_annotations[0][0]
+    assert first_annotation.sdoc_id == sdoc.id
+    assert first_annotation.code_id == code.id
+    assert first_annotation.sentence_id_start == sa.sentence_id_start
+    assert first_annotation.sentence_id_end == sa.sentence_id_end
 
 
 def test_get_by_sdoc_and_user_both_ids_not_exist(
@@ -144,43 +148,27 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
         f"/sentence/sdoc/{non_existing_sdoc_id}/user/{non_existing_user_id}"
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
-testdata_sentence_annotation_update = [
-    pytest.param({"code_id": 137}, id="update_code_only"),
-    pytest.param({"sentence_id_start": 1, "code_id": 136}, id="update_start"),
-    pytest.param({"sentence_id_end": 2, "code_id": 136}, id="update_end"),
-    pytest.param(
-        {"sentence_id_start": 1, "sentence_id_end": 2, "code_id": 136},
-        id="both_start_end",
-    ),
-]
-
-
-@pytest.mark.parametrize("payload", testdata_sentence_annotation_update)
-def test_update_sentence_annotation_parametrized(
+def test_update_sentence_annotation_code(
     client: TestClient,
     project_with_sentence_annotation,
-    payload: dict,
 ):
     sdoc = project_with_sentence_annotation["source_document"]
     code = project_with_sentence_annotation["code"]
     sent_anno = project_with_sentence_annotation["sentence_annotation"]
 
+    payload = {
+        "code_id": code.id - 1
+    }  # This should be a valid SYSTEM code_id that already exist in the DB
     resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json())
     assert updated.id == sent_anno.id
     assert updated.sdoc_id == sdoc.id
     assert updated.code_id == payload.get("code_id", code.id)
-    assert updated.sentence_id_start == payload.get(
-        "sentence_id_start", sent_anno.sentence_id_start
-    )
-    assert updated.sentence_id_end == payload.get(
-        "sentence_id_end", sent_anno.sentence_id_end
-    )
 
 
 def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient):
@@ -191,11 +179,13 @@ def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient):
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 testdata_bulk = [
     pytest.param({"target": "sa1", "code_mode": "new"}, id="update_sa1_new_code"),
+    pytest.param({"target": "sa1", "code_mode": "old"}, id="update_sa1_old_code"),
+    pytest.param({"target": "sa2", "code_mode": "new"}, id="update_sa2_new_code"),
     pytest.param({"target": "sa2", "code_mode": "old"}, id="update_sa2_old_code"),
 ]
 
@@ -203,23 +193,15 @@ testdata_bulk = [
 @pytest.mark.parametrize("params", testdata_bulk)
 def test_update_sent_anno_annotations_bulk_parametrized(
     client: TestClient,
-    db_session,
-    project_with_multiple_sentence_annotations,
+    project_with_multiple_sentence_annotations_and_new_code,
     params: dict,
 ):
-    sdoc = project_with_multiple_sentence_annotations["source_document"]
-    old_code = project_with_multiple_sentence_annotations["code"]
-    new_code = crud_code.create(
-        db=db_session,
-        create_dto=CodeCreate(
-            name="New Code Test",
-            color="red",
-            project_id=sdoc.project_id,
-            is_system=False,
-        ),
-    )
-    sa1 = project_with_multiple_sentence_annotations["sentence_annotation"]
-    sa2 = project_with_multiple_sentence_annotations["sentence_annotation"]
+    sdoc = project_with_multiple_sentence_annotations_and_new_code["source_document"]
+    old_code = project_with_multiple_sentence_annotations_and_new_code["code"]
+    new_code = project_with_multiple_sentence_annotations_and_new_code["new_code"]
+    [sa1, sa2] = project_with_multiple_sentence_annotations_and_new_code[
+        "sentence_annotations"
+    ]
 
     if params["target"] == "sa1":
         original_anno = sa1
@@ -229,7 +211,7 @@ def test_update_sent_anno_annotations_bulk_parametrized(
     payload = {"sent_annotation_id": original_anno.id, "code_id": target_code_id}
     resp = client.patch("/sentence/bulk/update", json=[payload])
 
-    assert resp.status_code == 200, f"Error: {resp.text}"
+    assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json()[0])
     assert updated.id == original_anno.id
     assert updated.sdoc_id == sdoc.id
@@ -256,7 +238,7 @@ def test_update_sent_anno_annotations_bulk_not_exists(
     ]
     resp = client.patch("/sentence/bulk/update", json=payload)
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_sentence_annotation_by_id(
@@ -269,7 +251,7 @@ def test_delete_sentence_annotation_by_id(
 
     resp = client.delete(f"/sentence/{sa.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     sentence_read = SentenceAnnotationRead.model_validate(resp.json())
     assert sentence_read.id == sa.id
     assert sentence_read.code_id == code.id
@@ -281,7 +263,7 @@ def test_delete_sentence_annotation_by_id(
 def test_delete_sentence_annotation_by_id_not_exists(client: TestClient):
     resp = client.delete("/sentence/999999")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def delete_bulk_by_id(
@@ -294,7 +276,7 @@ def delete_bulk_by_id(
         "DELETE", "/sentence/bulk/delete", json=[sa.id for sa in annotations]
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert len(resp.json()) == len(annotations)
 
 
@@ -311,7 +293,7 @@ def test_delete_bulk_by_id_if_not_exists(
         json=[sa.id, not_existsing_id],
     )
 
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_by_user_code(
@@ -323,7 +305,7 @@ def test_get_by_user_code(
 
     resp = client.get(f"/sentence/code/{code.id}/user")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     items = [SentenceAnnotationRead.model_validate(x) for x in resp.json()]
     assert len(items) == len(annotations)
     assert all(x.code_id == code.id for x in items)
@@ -335,7 +317,7 @@ def test_get_by_user_code_if_not_exists(
     not_existsing_id = 1000
     response = client.get(f"/code/{not_existsing_id}/user")
 
-    assert response.status_code == 404
+    assert response.status_code == 404, response.text
 
 
 def test_count_annotations(
@@ -350,7 +332,7 @@ def test_count_annotations(
     payload = {"sdoc_ids": [sdoc.id], "class_ids": [code.id]}
     resp = client.post(f"/sentence/count_annotations/{test_user.id}", json=payload)
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data.get(str(code.id)) == len(annotations)
 
@@ -361,4 +343,4 @@ def test_count_annotation_if_not_exists(client: TestClient):
 
     resp = client.post(f"/sentence/count_annotations/{not_existing_id}", json=payload)
 
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text

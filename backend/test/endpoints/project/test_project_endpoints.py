@@ -8,7 +8,7 @@ def test_create_new_project(client):
     }
     response = client.put("/project", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     project = response.json()
     assert project["title"] == payload["title"]
     assert project["description"] == payload["description"]
@@ -17,7 +17,7 @@ def test_create_new_project(client):
 def test_delete_existing_project(client: TestClient, test_project):
     response = client.delete(f"/project/{test_project.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     project = response.json()
     assert project["id"] == test_project.id
     assert project["title"] == test_project.title
@@ -28,4 +28,4 @@ def test_delete_nonexistent_project(client: TestClient):
     project_id = 1234
     response = client.delete(f"/project/{project_id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text

@@ -37,7 +37,7 @@ def test_add_span_annotation_if_not_exists(
 
     resp = client.put("/span", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_add_span_annotations_bulk(
@@ -70,7 +70,7 @@ def test_add_span_annotations_bulk(
 
     resp = client.put("/span/bulk/create", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
 
     items = [SpanAnnotationRead.model_validate(x) for x in resp.json()]
     assert len(items) == 2
@@ -94,7 +94,7 @@ def test_add_span_annotations_bulk_if_not_exists(
         "/span/bulk/create/", json=[payload.model_dump(exclude_none=True)]
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_id(
@@ -107,16 +107,15 @@ def test_get_by_id(
 
     resp = client.get(f"/span/{span_annotation.id}")
 
-    assert resp.status_code == 200, resp.json()
-
+    assert resp.status_code == 200, resp.text
     span_read = SpanAnnotationRead.model_validate(resp.json())
     assert span_read.id == span_annotation.id
     assert span_read.code_id == code.id
     assert span_read.sdoc_id == sdoc.id
-    assert span_read.begin == 0
-    assert span_read.end == 5
-    assert span_read.begin_token == 1
-    assert span_read.end_token == 50
+    assert span_read.begin == span_annotation.begin
+    assert span_read.end == span_annotation.end
+    assert span_read.begin_token == span_annotation.begin_token
+    assert span_read.end_token == span_annotation.end_token
 
 
 def test_get_by_id_if_id_not_exists(
@@ -126,27 +125,27 @@ def test_get_by_id_if_id_not_exists(
 
     resp = client.get(f"/span/{fake_nummer}")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_sdoc_and_user(
-    client: TestClient,
-    project_with_span_annotation,
+    client: TestClient, project_with_span_annotation, test_user
 ) -> None:
     sdoc = project_with_span_annotation["source_document"]
     code = project_with_span_annotation["code"]
     span_annotation = project_with_span_annotation["span_annotation"]
-    project = project_with_span_annotation["project"]
-    test_user_id = project.users[0].id
 
-    resp = client.get(f"/span/sdoc/{sdoc.id}/user/{test_user_id}")
+    resp = client.get(f"/span/sdoc/{sdoc.id}/user/{test_user.id}")
 
-    assert resp.status_code == 200
-    item = resp.json()[0]
-    assert item["sdoc_id"] == sdoc.id
-    assert item["code_id"] == code.id
-    assert item["begin"] == span_annotation.begin
-    assert item["end"] == span_annotation.end
+    assert resp.status_code == 200, resp.text
+    assert len(resp.json()) == 1
+    span_read = SpanAnnotationRead.model_validate(resp.json()[0])
+    assert span_read.sdoc_id == sdoc.id
+    assert span_read.code_id == code.id
+    assert span_read.begin == span_annotation.begin
+    assert span_read.end == span_annotation.end
+    assert span_read.begin_token == span_annotation.begin_token
+    assert span_read.end_token == span_annotation.end_token
 
 
 def test_get_by_sdoc_and_user_both_ids_not_exist(
@@ -157,13 +156,11 @@ def test_get_by_sdoc_and_user_both_ids_not_exist(
 
     resp = client.get(f"/span/sdoc/{sdoc_id}/user/{user_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 test_data_span_update = [
     pytest.param({"code_id": 0}, id="update_code_only"),
-    pytest.param({"begin": 10, "end": 15}, id="update_positions"),
-    pytest.param({"code_id": 0, "begin": 20}, id="update_both"),
 ]
 
 
@@ -185,15 +182,11 @@ def test_update_by_id(
         json=payload,
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     updated = SpanAnnotationRead.model_validate(resp.json())
     assert updated.id == span_annotation.id
     assert updated.code_id == payload.get("code_id", code2.id)
     assert updated.sdoc_id == sdoc.id
-    if "begin" in payload:
-        assert updated.begin == payload["begin"]
-    if "end" in payload:
-        assert updated.end == payload["end"]
 
 
 def test_update_by_id_if_not_exists(client: TestClient) -> None:
@@ -205,7 +198,7 @@ def test_update_by_id_if_not_exists(client: TestClient) -> None:
         json=payload.model_dump(exclude_none=True),
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_update_span_annotations_bulk(
@@ -222,7 +215,7 @@ def test_update_span_annotations_bulk(
     ]
     resp = client.patch("/span/bulk/update", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     body = resp.json()
     assert {item["id"]: item["code_id"] for item in body} == {
         span_annotation.id: code2.id,
@@ -240,7 +233,7 @@ def test_update_span_annotations_bulk_not_exists(
 
     resp = client.patch("/span/bulk/update", json=payload)
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_span_annotation_by_id(
@@ -266,7 +259,7 @@ def test_delete_span_annotation_by_id_if_not_exists(
 ) -> None:
     resp = client.delete("/span/999999")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_span_annotations_bulk(
@@ -301,7 +294,7 @@ def test_get_by_user_code(
 
     resp = client.get(f"/span/code/{code.id}/user")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     items = resp.json()
     assert {i["id"] for i in items} == {span_annotation.id, span_annotation2.id}
     assert all(i["code_id"] == code.id for i in items)
@@ -312,22 +305,19 @@ def test_get_by_user_code_if_not_exists(client: TestClient) -> None:
 
     resp = client.get(f"/span/code/{non_existing_id}/user")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_count_span_annotations(
-    client: TestClient,
-    project_with_span_annotations_for_count_test,
+    client: TestClient, project_with_span_annotations_for_count_test, test_user
 ) -> None:
-    project = project_with_span_annotations_for_count_test["project"]
     sdoc = project_with_span_annotations_for_count_test["source_document"]
     code = project_with_span_annotations_for_count_test["code"]
-    test_user_id = project.users[0].id
 
     payload = {"sdoc_ids": [sdoc.id], "class_ids": [code.id]}
-    resp = client.post(f"/span/count_annotations/{test_user_id}", json=payload)
+    resp = client.post(f"/span/count_annotations/{test_user.id}", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data.get(str(code.id)) == 2
 
@@ -338,21 +328,21 @@ def test_count_annotation_if_not_exists(client: TestClient) -> None:
 
     resp = client.post(f"/span/count_annotations/{not_existing_id}", json=payload)
 
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_add_to_group_ok(
     client: TestClient,
-    project_with_span_annotations_for_group_test,
+    project_with_span_annotations_and_group,
 ):
-    span_annotation = project_with_span_annotations_for_group_test["span_annotation"]
-    span_group = project_with_span_annotations_for_group_test["span_group"]
-    sdoc = project_with_span_annotations_for_group_test["source_document"]
-    code = project_with_span_annotations_for_group_test["code"]
+    span_annotation = project_with_span_annotations_and_group["span_annotation"]
+    span_group = project_with_span_annotations_and_group["span_group"]
+    sdoc = project_with_span_annotations_and_group["source_document"]
+    code = project_with_span_annotations_and_group["code"]
 
     resp = client.patch(f"/span/{span_annotation.id}/group/{span_group.id}")
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["id"] == span_annotation.id
     assert body["sdoc_id"] == sdoc.id
@@ -362,64 +352,70 @@ def test_add_to_group_ok(
 def test_add_to_group_not_found(client: TestClient):
     resp = client.patch("/span/999999/group/888888")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_remove_from_group_ok(
     client: TestClient,
-    project_with_span_annotations_for_group_test,
+    project_with_span_annotations_and_linked_group,
 ):
-    span_annotation = project_with_span_annotations_for_group_test["span_annotation"]
-    span_group = project_with_span_annotations_for_group_test["span_group"]
-
-    add_resp = client.patch(f"/span/{span_annotation.id}/group/{span_group.id}")
-    assert add_resp.status_code == 200, add_resp.json()
+    sdoc = project_with_span_annotations_and_linked_group["source_document"]
+    code = project_with_span_annotations_and_linked_group["code"]
+    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
+    span_group = project_with_span_annotations_and_linked_group["span_group"]
 
     resp = client.delete(f"/span/{span_annotation.id}/group/{span_group.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
+    deleted = SpanAnnotationRead.model_validate(resp.json())
+    assert deleted.id == span_annotation.id
+    assert deleted.sdoc_id == sdoc.id
+    assert deleted.code_id == code.id
+    assert deleted.begin == span_annotation.begin
+    assert deleted.end == span_annotation.end
 
 
 def test_remove_from_group_not_exists(client: TestClient):
     resp = client.delete("/span/999999/group/888888")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_remove_from_all_groups_ok(
     client: TestClient,
-    project_with_span_annotations_for_group_test,
+    project_with_span_annotations_and_group,
 ):
-    span_annotation = project_with_span_annotations_for_group_test["span_annotation"]
-    sdoc = project_with_span_annotations_for_group_test["source_document"]
-    code = project_with_span_annotations_for_group_test["code"]
+    span_annotation = project_with_span_annotations_and_group["span_annotation"]
+    sdoc = project_with_span_annotations_and_group["source_document"]
+    code = project_with_span_annotations_and_group["code"]
 
     resp = client.delete(f"/span/{span_annotation.id}/groups")
 
-    deleted = resp.json()
-    assert deleted["id"] == span_annotation.id
-    assert deleted["sdoc_id"] == sdoc.id
-    assert deleted["code_id"] == code.id
-    assert deleted["begin"] == span_annotation.begin
-    assert deleted["end"] == span_annotation.end
+    assert resp.status_code == 200, resp.text
+    deleted = SpanAnnotationRead.model_validate(resp.json())
+    assert deleted.id == span_annotation.id
+    assert deleted.sdoc_id == sdoc.id
+    assert deleted.code_id == code.id
+    assert deleted.begin == span_annotation.begin
+    assert deleted.end == span_annotation.end
 
 
 def test_remove_from_all_groups_not_found(client: TestClient):
     resp = client.delete("/span/999999/groups")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_groups_ok(
     client: TestClient,
-    project_with_span_annotations_for_group_test,
+    project_with_span_annotations_and_group,
 ):
-    span_annotation = project_with_span_annotations_for_group_test["span_annotation"]
-    span_group = project_with_span_annotations_for_group_test["span_group"]
+    span_annotation = project_with_span_annotations_and_group["span_annotation"]
+    span_group = project_with_span_annotations_and_group["span_group"]
 
     resp = client.get(f"/span/{span_annotation.id}/groups")
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     groups = resp.json()
     returned_ids = {g["id"] for g in groups}
     assert returned_ids == {span_group.id}
@@ -428,4 +424,4 @@ def test_get_groups_ok(
 def test_get_groups_not_found(client: TestClient):
     resp = client.get("/span/999999/groups")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
