@@ -7,6 +7,7 @@ from core.user.user_orm import UserORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError
 
 SYSTEM_USER_ID: int = 1
+DEMO_USER_ID: int = 2
 ASSISTANT_ZEROSHOT_ID: int = 9990
 ASSISTANT_FEWSHOT_ID: int = 9991
 ASSISTANT_TRAINED_ID: int = 9992

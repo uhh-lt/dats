@@ -21,7 +21,7 @@ def test_create_new_metadata(client: TestClient, test_project):
     )
     resp = client.put("/projmeta", json=payload.model_dump())
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     new_metadata = ProjectMetadataRead.model_validate(resp.json())
     assert new_metadata.project_id == payload.project_id
     assert new_metadata.key == payload.key
@@ -42,7 +42,7 @@ def test_create_new_metadata_if_not_exists(client: TestClient):
     )
     resp = client.put("/projmeta", json=payload.model_dump())
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_id(
@@ -54,7 +54,7 @@ def test_get_by_id(
 
     resp = client.get(f"/projmeta/{metadata.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     meta_read = ProjectMetadataRead.model_validate(resp.json())
     assert meta_read.id == metadata.id
     assert meta_read.project_id == project.id
@@ -69,7 +69,7 @@ def test_get_by_id_if_not_exists(client: TestClient):
     non_existing_id = 99999
     resp = client.get(f"/projmeta/{non_existing_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_project(
@@ -81,7 +81,7 @@ def test_get_by_project(
 
     resp = client.get(f"/projmeta/project/{project.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     meta_list = resp.json()
     assert len(meta_list) >= len(metadata)
 
@@ -90,7 +90,7 @@ def test_get_by_project_if_not_exists(client: TestClient):
     non_existing_project_id = 777777
     resp = client.get(f"/projmeta/project/{non_existing_project_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 testdata_project_metadata_update = [
@@ -114,7 +114,7 @@ def test_update_by_id(
 
     resp = client.patch(f"/projmeta/{metadata.id}", json=payload)
 
-    assert resp.status_code == 200, f"Error: {resp.text}"
+    assert resp.status_code == 200, resp.text
     updated = ProjectMetadataRead.model_validate(resp.json())
     assert updated.id == metadata.id
     assert updated.project_id == project.id
@@ -134,7 +134,7 @@ def test_update_by_id_if_not_exists(
         f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_update_read_only(
@@ -155,7 +155,7 @@ def test_update_read_only(
         f"/projmeta/{ro_meta.id}", json=payload.model_dump(exclude_none=True)
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     updated = ProjectMetadataRead.model_validate(resp.json())
     assert updated.id == ro_meta.id
     assert updated.key == ro_meta.key, (
@@ -172,7 +172,7 @@ def test_update_read_only_if_not_exists(
         f"/projmeta/{non_exists_id}", json=payload.model_dump(exclude_none=True)
     )
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_delete_by_id(
@@ -183,7 +183,7 @@ def test_delete_by_id(
 
     resp = client.delete(f"/projmeta/{metadata.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 def test_delete_by_id_if_not_exists(
@@ -192,4 +192,4 @@ def test_delete_by_id_if_not_exists(
     non_exists_id = 99999
     resp = client.delete(f"/projmeta/{non_exists_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text

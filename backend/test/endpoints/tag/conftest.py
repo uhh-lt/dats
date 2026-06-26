@@ -12,45 +12,14 @@ from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 
 
-class ProjectWithSDoc(TypedDict):
+class ProjectWithSdocAndTag(TypedDict):
     project: ProjectORM
     source_document: SourceDocumentORM
-
-
-@pytest.fixture(scope="function")
-def project_with_sdoc(db_session, test_project, test_user) -> ProjectWithSDoc:
-    """Create a project for the test user with a source document."""
-
-    # Create a source document in the project
-    sdoc = crud_sdoc.create(
-        db=db_session,
-        create_dto=SourceDocumentCreate(
-            filename="Test Document",
-            name="Document",
-            doctype=DocType.text,
-            project_id=test_project.id,
-            folder_id=None,
-        ),
-    )
-
-    db_session.commit()
-    db_session.refresh(test_project)
-    db_session.refresh(sdoc)
-
-    return {
-        "project": test_project,
-        "source_document": sdoc,
-    }
-
-
-class ProjectWithSdocAndTag(ProjectWithSDoc):
     tag: TagORM
 
 
 @pytest.fixture(scope="function")
-def project_with_sdoc_and_tag(
-    db_session, project_with_sdoc, test_user
-) -> ProjectWithSdocAndTag:
+def project_with_sdoc_and_tag(db_session, project_with_sdoc) -> ProjectWithSdocAndTag:
     """Create a project for the test user with a source document and a tag linked to it."""
 
     project = project_with_sdoc["project"]
@@ -87,7 +56,7 @@ class ProjectWithSdocAndMultipleTags(ProjectWithSdocAndTag):
 
 @pytest.fixture(scope="function")
 def project_with_sdoc_and_multiple_tags(
-    db_session, project_with_sdoc_and_tag, test_user
+    db_session, project_with_sdoc_and_tag
 ) -> ProjectWithSdocAndMultipleTags:
     """Create a project for the test user with a source document and multiple tags linked to it."""
 
@@ -132,9 +101,9 @@ class ProjectWithMultipleSdocsAndMultipleTags(TypedDict):
 
 @pytest.fixture(scope="function")
 def project_with_multiple_sdocs_and_multiple_tags(
-    db_session, test_project, test_user
+    db_session, test_project
 ) -> ProjectWithMultipleSdocsAndMultipleTags:
-    """Create a project with multiple source documents and tags."""
+    """Create a project with multiple source documents and tags. The first tag is linked to both source documents, the second tag is linked only to the second source document."""
 
     # Create two source documents in the project
     sdoc1 = crud_sdoc.create(
@@ -181,8 +150,8 @@ def project_with_multiple_sdocs_and_multiple_tags(
     )
 
     # Link tags to source documents
-    sdoc1.tags.extend([tag1, tag2])
-    sdoc2.tags.append(tag2)
+    crud_tag.set_tags(db=db_session, sdoc_id=sdoc1.id, tag_ids=[tag1.id, tag2.id])
+    crud_tag.set_tags(db=db_session, sdoc_id=sdoc2.id, tag_ids=[tag1.id])
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()

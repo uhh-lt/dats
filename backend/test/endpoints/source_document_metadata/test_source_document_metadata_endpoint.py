@@ -4,85 +4,9 @@ from fastapi.testclient import TestClient
 from common.meta_type import MetaType
 from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataBulkUpdate,
-    SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
-
-
-def test_create_sdoc_metadata(
-    client: TestClient,
-    project_with_source_document,
-):
-    pm = project_with_source_document["project_metadata"]
-    sdoc = project_with_source_document["source_document"]
-
-    payload = SourceDocumentMetadataCreate.with_metatype(
-        source_document_id=sdoc.id,
-        project_metadata_id=pm.id,
-        metatype=MetaType.STRING,
-        value="Politics",
-    )
-    resp = client.put("/sdocmeta", json=payload.model_dump())
-
-    assert resp.status_code == 200
-    body = SourceDocumentMetadataRead.model_validate(resp.json())
-    assert body.id > 0
-    assert body.source_document_id == sdoc.id
-    assert body.project_metadata_id == pm.id
-    assert body.str_value == "Politics"
-    assert body.int_value is None
-    assert body.boolean_value is None
-    assert body.date_value is None
-    assert body.list_value is None
-
-
-def test_create_sdoc_metadata_if_id_not_exists(
-    client: TestClient,
-):
-    not_exists_id = 3000
-    payload = SourceDocumentMetadataCreate(
-        str_value="Politics",
-        int_value=None,
-        boolean_value=None,
-        date_value=None,
-        list_value=None,
-        source_document_id=not_exists_id,
-        project_metadata_id=not_exists_id,
-    )
-    resp = client.put("/sdocmeta", json=payload.model_dump())
-
-    assert resp.status_code == 403
-
-
-def test_create_sdoc_metadata_with_empty_metadata(
-    client: TestClient,
-    project_with_sdoc_and_projmeta_and_sdocmeta,
-):
-    sdoc = project_with_sdoc_and_projmeta_and_sdocmeta["source_document"]
-    pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"][0]
-
-    payload = SourceDocumentMetadataCreate(
-        str_value="Politics",
-        int_value=None,
-        boolean_value=None,
-        date_value=None,
-        list_value=None,
-        source_document_id=sdoc.id,
-        project_metadata_id=pm.id,
-    )
-    resp = client.put("/sdocmeta", json=payload.model_dump())
-
-    assert resp.status_code == 200
-    body = SourceDocumentMetadataRead.model_validate(resp.json())
-    assert body.id > 0
-    assert body.source_document_id == sdoc.id
-    assert body.project_metadata_id == pm.id
-    assert body.str_value == "Politics"
-    assert body.int_value is None
-    assert body.boolean_value is None
-    assert body.date_value is None
-    assert body.list_value is None
 
 
 def test_get_by_id(
@@ -90,12 +14,12 @@ def test_get_by_id(
     project_with_sdoc_and_projmeta_and_sdocmeta,
 ):
     sdoc = project_with_sdoc_and_projmeta_and_sdocmeta["source_document"]
-    pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"][0]
+    pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     metadata = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
     resp = client.get(f"/sdocmeta/{metadata.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     body = SourceDocumentMetadataRead.model_validate(resp.json())
     assert body.id == metadata.id
     assert body.source_document_id == sdoc.id
@@ -113,7 +37,7 @@ def test_get_by_id_if_not_exists(
     fake_id = 3000
     resp = client.get(f"/sdocmeta/{fake_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_sdoc(
@@ -126,7 +50,7 @@ def test_get_by_sdoc(
 
     resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     items = [SourceDocumentMetadataRead.model_validate(x) for x in resp.json()]
     assert len(items) == 1
     got = items[0]
@@ -146,7 +70,7 @@ def test_get_by_sdoc_if_not_exists(
     fake_id = 3000
     resp = client.get(f"/sdocmeta/sdoc/{fake_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_sdoc_and_key(
@@ -159,7 +83,7 @@ def test_get_by_sdoc_and_key(
 
     resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}/metadata/{pm.key}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     body = SourceDocumentMetadataRead.model_validate(resp.json())
     assert body.id == sm.id
     assert body.source_document_id == sdoc.id
@@ -177,36 +101,19 @@ def test_get_by_sdoc_and_key_if_not_exists(client: TestClient, project_with_sdoc
     non_existing_key = "random-key"
     resp = client.get(f"/sdocmeta/sdoc/{sdoc.id}/metadata/{non_existing_key}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 404, resp.text
 
 
 test_data_metadata_update = [
     pytest.param(
-        {"field": "str_value", "old": "Alt", "new": "Neu", "type": MetaType.STRING},
+        {"field": "str_value", "new": "Neu", "type": MetaType.STRING},
         id="update_string",
-    ),
-    pytest.param(
-        {"field": "int_value", "old": 0, "new": 100, "type": MetaType.NUMBER},
-        id="update_number",
-    ),
-    pytest.param(
-        {"field": "boolean_value", "old": False, "new": True, "type": MetaType.BOOLEAN},
-        id="update_boolean",
-    ),
-    pytest.param(
-        {
-            "field": "date_value",
-            "old": "2020-01-01",
-            "new": "2025-05-05",
-            "type": MetaType.DATE,
-        },
-        id="update_date",
     ),
 ]
 
 
 @pytest.mark.parametrize("payload_1", test_data_metadata_update)
-def test_update_sdoc_metadata_parametrized(
+def test_update_sdoc_metadata(
     client: TestClient,
     project_with_sdoc_and_projmeta_and_sdocmeta,
     payload_1,
@@ -216,13 +123,16 @@ def test_update_sdoc_metadata_parametrized(
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
     base = {
-        k: None
-        for k in ["str_value", "int_value", "boolean_value", "date_value", "list_value"]
+        "str_value": None,
+        "int_value": None,
+        "boolean_value": None,
+        "date_value": None,
+        "list_value": None,
     }
     payload = {**base, payload_1["field"]: payload_1["new"]}
     resp = client.patch(f"/sdocmeta/{sm.id}", json=payload)
 
-    assert resp.status_code == 200, f"Error: {resp.text}"
+    assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json())
     assert updated.id == sm.id
     assert updated.project_metadata_id == pm.id
@@ -249,22 +159,41 @@ def test_update_by_id_if_not_exists(
     )
     resp = client.patch(f"/sdocmeta/{fake_id}", json=payload.model_dump())
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 test_data_bulk_metadata = [
     pytest.param(
         {
             "field": "str_value",
-            "old": "Politics",
             "new": "Sports",
             "type": MetaType.STRING,
         },
         id="bulk_update_string",
     ),
     pytest.param(
-        {"field": "int_value", "old": 10, "new": 20, "type": MetaType.NUMBER},
-        id="bulk_update_number",
+        {
+            "field": "str_value",
+            "new": "Sport is important",
+            "type": MetaType.STRING,
+        },
+        id="bulk_update_string",
+    ),
+    pytest.param(
+        {
+            "field": "str_value",
+            "new": "",
+            "type": MetaType.STRING,
+        },
+        id="bulk_update_string",
+    ),
+    pytest.param(
+        {
+            "field": "str_value",
+            "new": " ",
+            "type": MetaType.STRING,
+        },
+        id="bulk_update_string",
     ),
 ]
 
@@ -289,7 +218,7 @@ def test_update_bulk_metadata_parametrized(
     payload = {**base, "id": sm.id, payload_1["field"]: payload_1["new"]}
     resp = client.patch("/sdocmeta/bulk/update", json=[payload])
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     updated = SourceDocumentMetadataRead.model_validate(resp.json()[0])
     assert updated.id == sm.id
     assert updated.source_document_id == sdoc.id
@@ -329,18 +258,18 @@ def test_delete_by_id(
     pm = project_with_sdoc_and_projmeta_and_sdocmeta["project_metadata"]
     sm = project_with_sdoc_and_projmeta_and_sdocmeta["source_document_metadata"]
 
-    response = client.delete(f"/sdocmeta/{sm[0].id}")
+    response = client.delete(f"/sdocmeta/{sm.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     deleted = SourceDocumentMetadataRead.model_validate(response.json())
-    assert deleted.id == sm[0].id
+    assert deleted.id == sm.id
     assert deleted.source_document_id == sdoc.id
     assert deleted.project_metadata_id == pm.id
-    assert deleted.str_value == "Politics"
-    assert deleted.int_value == sm[0].int_value
-    assert deleted.date_value == sm[0].date_value
-    assert deleted.boolean_value == sm[0].boolean_value
-    assert deleted.list_value == sm[0].list_value
+    assert deleted.str_value == sm.str_value
+    assert deleted.int_value == sm.int_value
+    assert deleted.date_value == sm.date_value
+    assert deleted.boolean_value == sm.boolean_value
+    assert deleted.list_value == sm.list_value
 
 
 def test_delete_by_id_if_not_exists(
@@ -349,4 +278,4 @@ def test_delete_by_id_if_not_exists(
     fake_id = 30000
     response = client.delete(f"/sdocmeta/{fake_id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text

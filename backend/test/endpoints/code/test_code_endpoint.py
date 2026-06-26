@@ -18,7 +18,7 @@ def test_create_new_code(client: TestClient, test_project):
     )
     response = client.put("/code", json=payload.model_dump())
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     code = CodeRead.model_validate(response.json())
     assert payload.name == code.name
     assert payload.color == code.color
@@ -44,7 +44,7 @@ def test_create_code_project_not_existing(
     )
     response = client.put("/code", json=payload.model_dump())
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 def test_get_code(
@@ -55,7 +55,7 @@ def test_get_code(
 
     response = client.get(f"/code/{code.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     code_read = CodeRead.model_validate(response.json())
     assert code.name == code_read.name
     assert code.color == code_read.color
@@ -72,7 +72,7 @@ def test_get_code_does_not_exist(
     non_existing_id = 999999999
 
     response = client.get(f"/code/{non_existing_id}")
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 testdata = [
@@ -94,7 +94,7 @@ def test_update_code_parametrize(
 
     response = client.patch(f"/code/{code.id}", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
     assert updated.name == payload.get("name", code.name)
     assert updated.color == payload.get("color", code.color)
@@ -119,7 +119,7 @@ def test_update_by_id_alt(
     )
     response = client.patch(f"/code/{code.id}", json=update.model_dump())
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     updated = CodeRead.model_validate(response.json())
     assert updated.name == update.name
     assert updated.color == update.color
@@ -144,7 +144,7 @@ def test_update_by_id_not_existing(
         json=update.model_dump(exclude_unset=True),
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 def test_delete_code(
@@ -155,7 +155,7 @@ def test_delete_code(
 
     response = client.delete(f"/code/{code.id}")
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     code_delete = CodeRead.model_validate(response.json())
     assert code.name == code_delete.name
     assert code.color == code_delete.color
@@ -172,7 +172,7 @@ def test_delete_code_not_existing(
     non_existing_id = 99999999
     response = client.delete(f"/code/{non_existing_id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text
 
 
 def test_get_by_project(
@@ -184,7 +184,7 @@ def test_get_by_project(
     response = client.get(f"/code/project/{project.id}")
 
     EXPECTED_COUNT = 136
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     codes_json = response.json()
     assert len(codes_json) == EXPECTED_COUNT
 
@@ -195,4 +195,4 @@ def test_get_by_project_not_existing(
     non_existing_project_id = 999999
     response = client.get(f"/code/project/{non_existing_project_id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 403, response.text

@@ -23,7 +23,7 @@ def test_create_new_doc_tag(
 
     resp = client.put("/tag", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
     tag_assert = TagRead.model_validate(resp.json())
 
@@ -48,16 +48,16 @@ def test_create_new_doc_tag_if_not_exists(
 
     resp = client.put("/tag", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_link_multiple_tags(
     client: TestClient,
-    project_with_sdoc_and_multiple_tags,
+    project_with_multiple_sdocs_and_multiple_tags,
 ):
-    sdoc = project_with_sdoc_and_multiple_tags["source_document"]
-    tag1 = project_with_sdoc_and_multiple_tags["tag1"]
-    tag2 = project_with_sdoc_and_multiple_tags["tag2"]
+    sdoc = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
+    tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
+    tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
 
     payload = SourceDocumentTagMultiLink(
         source_document_ids=[sdoc.id],
@@ -65,8 +65,9 @@ def test_link_multiple_tags(
     )
     resp = client.patch("/tag/bulk/link", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 200, resp.json()
-    assert resp.json() == 2
+    assert resp.status_code == 200, resp.text
+    # We assert 1 because the first tag is already linked to the source document, so only the second tag is newly linked.
+    assert resp.json() == 1
 
 
 def test_link_multiple_tags_not_exist(client: TestClient):
@@ -85,13 +86,13 @@ def test_unlink_multiple_tags(
     project_with_sdoc_and_multiple_tags,
 ):
     sdoc = project_with_sdoc_and_multiple_tags["source_document"]
-    tag1 = project_with_sdoc_and_multiple_tags["tag1"]
+    tag1 = project_with_sdoc_and_multiple_tags["tag"]
     tag2 = project_with_sdoc_and_multiple_tags["tag2"]
 
     payload = {"source_document_ids": [sdoc.id], "tag_ids": [tag1.id, tag2.id]}
     resp = client.request("DELETE", "/tag/bulk/unlink", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     assert resp.json() == 2
 
 
@@ -105,19 +106,20 @@ def test_unlink_multiple_tags_not_exist(client: TestClient):
 
 def test_set_tags_batch(
     client: TestClient,
-    project_with_sdoc_and_multiple_tags,
+    project_with_multiple_sdocs_and_multiple_tags,
 ):
-    sdoc = project_with_sdoc_and_multiple_tags["source_document"]
-    tag1 = project_with_sdoc_and_multiple_tags["tag1"]
-    tag2 = project_with_sdoc_and_multiple_tags["tag2"]
+    sdoc = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
+    tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
+    tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
 
     payload = [
         {"source_document_id": sdoc.id, "tag_ids": [tag1.id, tag2.id]},
     ]
     resp = client.patch("/tag/bulk/set", json=payload)
 
-    assert resp.status_code == 200, resp.json()
-    assert resp.json() == 2
+    assert resp.status_code == 200, resp.text
+    # We assert 1 because the first tag is already linked to the source document, so only the second tag is newly linked.
+    assert resp.json() == 1
 
 
 def test_set_tags_batch_not_exist(client: TestClient):
@@ -129,9 +131,27 @@ def test_set_tags_batch_not_exist(client: TestClient):
 
 
 testdata = [
-    pytest.param([1], [2], 2, id="swap_t1_t2"),
-    pytest.param([], [2], 1, id="link_only_t2"),
-    pytest.param([1], [], 1, id="unlink_only_t1"),
+    pytest.param(
+        [1, 2], [], 2, id="unlink_both"
+    ),  # we expect 2 because both tags are linked to the source document, so both will be unlinked.
+    pytest.param(
+        [], [1], 0, id="link_tag1"
+    ),  # we expect 0 because the first tag is already linked to the source document, so no new link is created.
+    pytest.param(
+        [], [2], 1, id="link_tag2"
+    ),  # we expect 0 because the second tag is already linked to the source document, so no new link is created.
+    pytest.param(
+        [], [1, 2], 1, id="link_both"
+    ),  # we expect 0 because both tags are already linked to the source document, so no new link is created.
+    pytest.param(
+        [1], [], 1, id="unlink_tag1"
+    ),  # we expect 1 because the first tag is linked to the source document, so it will be unlinked.
+    pytest.param(
+        [2], [], 1, id="unlink_tag2"
+    ),  # we expect 1 because the second tag is linked to the source document, so it will be unlinked.
+    pytest.param(
+        [], [], 0, id="nothing"
+    ),  # we expect 0 because no tags are linked or unlinked, so no modifications are made.
 ]
 
 
@@ -146,15 +166,16 @@ def test_update_tags_batch_parametrize(
     sdoc = project_with_sdoc_and_multiple_tags["source_document"]
     tag1 = project_with_sdoc_and_multiple_tags["tag"]
     tag2 = project_with_sdoc_and_multiple_tags["tag2"]
+    param_id2tag = {1: tag1, 2: tag2}
 
     payload = {
         "sdoc_ids": [sdoc.id],
-        "unlink_tag_ids": [tag1.id] if unlink_ids else [],
-        "link_tag_ids": [tag2.id] if link_ids else [],
+        "unlink_tag_ids": [param_id2tag[i] for i in unlink_ids],
+        "link_tag_ids": [param_id2tag[i] for i in link_ids],
     }
     resp = client.patch("/tag/bulk/update", json=payload)
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json() == expected_count
 
 
@@ -173,8 +194,9 @@ def test_update_tags_batch(
     }
     resp = client.patch("/tag/bulk/update", json=payload)
 
-    assert resp.status_code == 200
-    assert resp.json() == 2
+    assert resp.status_code == 200, resp.text
+    # Both tags are linked to the source document, so only one modification is made (one tag is unlinked).
+    assert resp.json() == 1
 
 
 def test_update_tags_batch_not_exists(client: TestClient):
@@ -197,7 +219,7 @@ def test_get_by_id(
 
     resp = client.get(f"/tag/{tag.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 def test_get_by_id_if_not_exsis(client: TestClient):
@@ -205,7 +227,7 @@ def test_get_by_id_if_not_exsis(client: TestClient):
 
     resp = client.get(f"/tag/{not_exists_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_tags_by_project(
@@ -213,12 +235,12 @@ def test_get_tags_by_project(
     project_with_sdoc_and_multiple_tags,
 ):
     project = project_with_sdoc_and_multiple_tags["project"]
-    tag1 = project_with_sdoc_and_multiple_tags["tag1"]
+    tag1 = project_with_sdoc_and_multiple_tags["tag"]
     tag2 = project_with_sdoc_and_multiple_tags["tag2"]
 
     resp = client.get(f"/tag/project/{project.id}")
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     items = [TagRead.model_validate(x) for x in resp.json()]
     assert {t.id for t in items} == {tag1.id, tag2.id}
 
@@ -227,7 +249,7 @@ def test_get_tags_by_project_not_exists_id(client: TestClient):
     not_exists_id = 1441
     resp = client.get(f"/tag/project/{not_exists_id}")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_by_sdoc(
@@ -239,7 +261,7 @@ def test_get_by_sdoc(
 
     resp = client.get(f"/tag/sdoc/{sdoc.id}")
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     tag_ids = set(resp.json())
     assert tag_ids == {tag.id}
 
@@ -248,7 +270,7 @@ def test_get_by_sdoc_if_not_exists(client: TestClient):
     not_exists_id = 1441
     resp = client.get(f"/tag/sdoc/{not_exists_id}")
 
-    assert resp.status_code == 403, resp.json()
+    assert resp.status_code == 403, resp.text
 
 
 testdata_tags = [
@@ -272,7 +294,7 @@ def test_update_tag_parametrized(
         f"/tag/{tag.id}", json=update_payload.model_dump(exclude_none=True)
     )
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     updated = TagRead.model_validate(resp.json())
     if "name" in payload:
         assert updated.name == payload["name"]
@@ -296,7 +318,7 @@ def test_update_by_id(
     )
     resp = client.patch(f"/tag/{tag.id}", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     updated = TagRead.model_validate(resp.json())
     assert updated.color == payload.color
     assert updated.name == payload.name
@@ -310,7 +332,7 @@ def test_update_tag_not_exists(client: TestClient):
     )
     resp = client.patch("/tag/999999", json=payload.model_dump(exclude_none=True))
 
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
     assert "There exists no Tag" in resp.text
 
 
@@ -323,43 +345,50 @@ def test_delete_tag_by_id(
 
     resp = client.delete(f"/tag/{tag.id}")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     deleted = TagRead.model_validate(resp.json())
     assert deleted.id == tag.id
     assert deleted.project_id == project.id
-    assert deleted.name == "Test Tag"
-    assert deleted.color == "green"
-    assert deleted.description is None
-    assert deleted.parent_id is None
+    assert deleted.name == tag.name
+    assert deleted.color == tag.color
+    assert deleted.description == tag.description
+    assert deleted.parent_id == tag.parent_id
 
 
 def test_delete_tag_by_id_if_not_exists(client: TestClient):
     not_exists_id = 3000
     resp = client.delete(f"/tag/{not_exists_id}")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_sdoc_ids_by_tag_id(
     client: TestClient,
     project_with_multiple_sdocs_and_multiple_tags,
 ):
-    tag = project_with_multiple_sdocs_and_multiple_tags["tag1"]
+    tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
+    tag2 = project_with_multiple_sdocs_and_multiple_tags["tag2"]
     sd1 = project_with_multiple_sdocs_and_multiple_tags["source_document1"]
     sd2 = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
 
-    resp = client.get(f"/tag/{tag.id}/sdocs")
+    resp = client.get(f"/tag/{tag1.id}/sdocs")
 
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     ids = set(resp.json())
     assert ids == {sd1.id, sd2.id}
+
+    resp2 = client.get(f"/tag/{tag2.id}/sdocs")
+
+    assert resp2.status_code == 200, resp2.text
+    ids2 = set(resp2.json())
+    assert ids2 == {sd2.id}
 
 
 def test_get_sdoc_ids_by_tag_id_if_not_exists(client: TestClient):
     not_exists_id = 2000
     resp = client.get(f"/tag/{not_exists_id}/sdocs")
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text
 
 
 def test_get_sdoc_counts(
@@ -375,7 +404,7 @@ def test_get_sdoc_counts(
     payload = [sdoc1.id, sdoc2.id]
     resp = client.post(f"/tag/sdoc_counts/{project.id}", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data.get(str(tag1.id)) == 1
     assert data.get(str(tag2.id)) == 2
@@ -391,20 +420,21 @@ def test_get_sdoc_counts_if_not_exists(client: TestClient):
 def test_count_tags(
     client: TestClient,
     project_with_multiple_sdocs_and_multiple_tags,
+    test_user,
 ):
-    project = project_with_multiple_sdocs_and_multiple_tags["project"]
-    test_user_id = project.users[0].id
-    tag = project_with_multiple_sdocs_and_multiple_tags["tag1"]
+    sdoc1 = project_with_multiple_sdocs_and_multiple_tags["source_document1"]
+    sdoc2 = project_with_multiple_sdocs_and_multiple_tags["source_document2"]
+    tag1 = project_with_multiple_sdocs_and_multiple_tags["tag1"]
 
     payload = {
-        "sdoc_ids": [tag.source_documents[0].id, tag.source_documents[1].id],
-        "class_ids": [tag.id],
+        "sdoc_ids": [sdoc1.id, sdoc2.id],
+        "class_ids": [tag1.id],
     }
-    resp = client.post(f"/tag/count_tags/{test_user_id}", json=payload)
+    resp = client.post(f"/tag/count_tags/{test_user.id}", json=payload)
 
-    assert resp.status_code == 200, resp.json()
+    assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data.get(str(tag.id)) == 2
+    assert data.get(str(tag1.id)) == 2
 
 
 def test_count_tags_not_exists(client: TestClient):
