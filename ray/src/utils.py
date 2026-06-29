@@ -43,7 +43,7 @@ def init_glitchtip():
     if dsn:
         sentry_sdk.init(
             dsn=dsn,
-            traces_sample_rate=0.01,
+            traces_sample_rate=1.0,
             auto_session_tracking=False,
             enable_logs=True,
         )
