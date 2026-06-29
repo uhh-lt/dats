@@ -64,7 +64,9 @@ def handle_image_caption_job(
     image = load_image(payload.filepath)
     image_b64 = image_to_base64(image)
     caption, _ = llm.vlm_chat(
-        user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[image_b64]
+        model=payload.settings.model,
+        user_prompt=IMG_CAPTION_USER_PROMPT,
+        b64_images=[image_b64],
     )
     raw_html = f"<html><body><p>{caption}</p></body></html>"
 

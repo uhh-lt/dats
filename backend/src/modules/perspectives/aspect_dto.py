@@ -11,6 +11,9 @@ class PipelineSettings(BaseModel):
     When updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)
     """
 
+    rewriting_model: str = Field(
+        description="Large Language Model to use for the perspective creation pipeline"
+    )
     umap_n_neighbors: int = Field(
         default=15, description="Number of neighbors for UMAP dimensionality reduction"
     )
@@ -56,7 +59,7 @@ class AspectBase(BaseModel):
     @field_validator("pipeline_settings", mode="before")
     def json_loads_settings(cls, v) -> PipelineSettings:
         if v is None:
-            return PipelineSettings()
+            raise ValueError("pipeline_settings is required and cannot be None.")
         if isinstance(v, str):
             data = srsly.json_loads(v)
             if not isinstance(data, dict):

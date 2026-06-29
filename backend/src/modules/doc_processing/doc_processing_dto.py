@@ -25,6 +25,7 @@ class ProcessingSettings(BaseModel):
         description="Maximum n-gram size for keyword extraction"
     )
     language: Language = Field(description="Language of the documents: 'de', 'en', ...")
+    model: str = Field(description="Large Language Model to use for processing")
 
 
 class ProcessingJobInput(JobInputBase):

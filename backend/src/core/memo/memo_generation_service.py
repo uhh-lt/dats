@@ -147,6 +147,7 @@ def generate_memo_llm(
         | SpanGroupORM
     ),
     db: Session,
+    model: str,
 ) -> str:
     # 1. Update job description
     msg = "Started Memo Generation (LLM)"
@@ -161,11 +162,12 @@ def generate_memo_llm(
     # 3. Send to LLM for processing
     if isImage:
         caption, _ = LLMRepo().vlm_chat(
-            user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
+            model=model, user_prompt=IMG_CAPTION_USER_PROMPT, b64_images=[obj_summary]
         )
         return caption.strip()
     else:
         response = LLMRepo().llm_chat(
+            model=model,
             system_prompt="You are a helpful assistant generating memos.",
             user_prompt=MEMO_GEN_PROMPT.format(obj_summary=obj_summary),
             response_model=LLMMemoResult,

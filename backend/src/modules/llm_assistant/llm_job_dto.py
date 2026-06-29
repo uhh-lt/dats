@@ -105,6 +105,7 @@ class ZeroShotParams(SpecificApproachParameters):
     prompts: list[LLMPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
+    model: str = Field(description="Large Language Model to use for the job")
 
 
 class FewShotParams(SpecificApproachParameters):
@@ -112,6 +113,7 @@ class FewShotParams(SpecificApproachParameters):
     prompts: list[LLMPromptTemplates] = Field(
         description="The prompt templates to use for the job"
     )
+    model: str = Field(description="Large Language Model to use for the job")
 
 
 class LLMJobInput(LLMJobParameters):
