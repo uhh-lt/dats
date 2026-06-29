@@ -3,13 +3,12 @@ from uuid import uuid4
 
 import pytest
 
-from common.doc_type import DocType
+from core.annotation.sentence_annotation_crud import crud_sentence_anno
+from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
-from core.doc.source_document_crud import crud_sdoc
-from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
@@ -18,9 +17,7 @@ from core.memo.memo_dto import (
     MemoCreateIntern,
 )
 from core.memo.memo_orm import MemoORM
-from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
-from core.project.project_service import ProjectService
 
 
 class ProjectWithCode(TypedDict):
@@ -29,21 +26,8 @@ class ProjectWithCode(TypedDict):
 
 
 @pytest.fixture(scope="function")
-def project_with_code(db_session, test_user) -> ProjectWithCode:
+def project_with_code(db_session, test_project) -> ProjectWithCode:
     """Create a project for the test user with a code."""
-
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing memos",
-    )
-
-    # Use ProjectService to create the project with all infrastructure
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
 
     # Create a code in the project
     code = crud_code.create(
@@ -54,55 +38,31 @@ def project_with_code(db_session, test_user) -> ProjectWithCode:
             description="Code for memo test",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
+            project_id=test_project.id,
             is_system=False,
         ),
     )
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
-    db_session.refresh(project)
+    db_session.refresh(test_project)
     db_session.refresh(code)
 
-    return {"project": project, "code": code}
+    return {"project": test_project, "code": code}
 
 
-class ProjectWithCodeAndMemo(TypedDict):
-    project: ProjectORM
-    code: CodeORM
+class ProjectWithCodeAndMemo(ProjectWithCode):
     memo: MemoORM
 
 
 @pytest.fixture(scope="function")
-def project_with_code_and_memo(db_session, test_user) -> ProjectWithCodeAndMemo:
+def project_with_code_and_memo(
+    db_session, project_with_code, test_user
+) -> ProjectWithCodeAndMemo:
     """Create a project for the test user with a code and a memo attached to the code."""
 
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing memos",
-    )
-
-    # Use ProjectService to create the project with all infrastructure
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
-
-    # Create a code in the project
-    code = crud_code.create(
-        db=db_session,
-        create_dto=CodeCreate(
-            name="Memo Target Code",
-            color="Blue",
-            description="Code for memo test",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=False,
-        ),
-    )
+    project = project_with_code["project"]
+    code = project_with_code["code"]
 
     # Create a memo attached to the code
     memo_create = MemoCreate(
@@ -136,48 +96,6 @@ def project_with_code_and_memo(db_session, test_user) -> ProjectWithCodeAndMemo:
     return {"project": project, "code": code, "memo": memo}
 
 
-class ProjectWithSourceDocument(TypedDict):
-    project: ProjectORM
-    source_document: SourceDocumentORM
-
-
-@pytest.fixture(scope="function")
-def project_with_source_document(db_session, test_user) -> ProjectWithSourceDocument:
-    """Create a project for the test user with a source document."""
-
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing memos",
-    )
-
-    # Use ProjectService to create the project with all infrastructure
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
-
-    # Create a source document in the project
-    sdoc = crud_sdoc.create(
-        db=db_session,
-        create_dto=SourceDocumentCreate(
-            filename="Source Document",
-            name="Document",
-            doctype=DocType.text,
-            project_id=project.id,
-            folder_id=None,
-        ),
-    )
-
-    # Commit the changes to the database and refresh the objects
-    db_session.commit()
-    db_session.refresh(project)
-    db_session.refresh(sdoc)
-
-    return {"project": project, "source_document": sdoc}
-
-
 class ProjectWithSentenceAnnotation(TypedDict):
     project: ProjectORM
     source_document: SourceDocumentORM
@@ -187,32 +105,12 @@ class ProjectWithSentenceAnnotation(TypedDict):
 
 @pytest.fixture(scope="function")
 def project_with_sentence_annotation(
-    db_session, test_user
+    db_session, project_with_sdoc, test_user
 ) -> ProjectWithSentenceAnnotation:
     """Create a project for the test user with a source document, code, and sentence annotation."""
 
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing sentence annotations",
-    )
-
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
-
-    sdoc = crud_sdoc.create(
-        db=db_session,
-        create_dto=SourceDocumentCreate(
-            filename="Test Document",
-            name="Document",
-            doctype=DocType.text,
-            project_id=project.id,
-            folder_id=None,
-        ),
-    )
+    project = project_with_sdoc["project"]
+    sdoc = project_with_sdoc["source_document"]
 
     code = crud_code.create(
         db=db_session,
@@ -226,9 +124,6 @@ def project_with_sentence_annotation(
             is_system=False,
         ),
     )
-
-    from core.annotation.sentence_annotation_crud import crud_sentence_anno
-    from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 
     sentence_annotation = crud_sentence_anno.create(
         db=db_session,
@@ -255,42 +150,18 @@ def project_with_sentence_annotation(
     }
 
 
-class ProjectWithCodeAndMultipleMemos(TypedDict):
-    project: ProjectORM
-    code: CodeORM
+class ProjectWithCodeAndMultipleMemos(ProjectWithCode):
     memos: list[MemoORM]
 
 
 @pytest.fixture(scope="function")
 def project_with_code_and_multiple_memos(
-    db_session, test_user
+    db_session, project_with_code, test_user
 ) -> ProjectWithCodeAndMultipleMemos:
     """Create a project with a code and multiple (3) memos attached to it."""
 
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing multiple memos",
-    )
-
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
-
-    code = crud_code.create(
-        db=db_session,
-        create_dto=CodeCreate(
-            name="Memo Target Code",
-            color="Blue",
-            description="Code for memo test",
-            parent_id=None,
-            enabled=True,
-            project_id=project.id,
-            is_system=False,
-        ),
-    )
+    project = project_with_code["project"]
+    code = project_with_code["code"]
 
     EXPECTED_COUNT = 3
     memos = []

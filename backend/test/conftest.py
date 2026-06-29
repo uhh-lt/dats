@@ -330,7 +330,7 @@ class ProjectWithSdoc(TypedDict):
 
 
 @pytest.fixture(scope="function")
-def project_with_sdoc(db_session, test_project, test_user) -> ProjectWithSdoc:
+def project_with_sdoc(db_session, test_project) -> ProjectWithSdoc:
     """Create a project for the test user with a source document."""
     from repos.filesystem_repo import FilesystemRepo
 
