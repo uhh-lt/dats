@@ -14,7 +14,7 @@ jobs:
     runs-on: self-hosted
     env:
       API_WORKERS: 1
-      VITE_APP_SERVER: http://localhost:13120
+      FRONTEND_API_URL: http://localhost:13120
       COMPOSE_PROFILES: "rq,backend,frontend"
       BACKEND_HAS_CHANGED: false
       RAY_HAS_CHANGED: false
