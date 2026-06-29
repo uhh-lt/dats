@@ -27,6 +27,7 @@ class RAGService(metaclass=SingletonMeta):
     ) -> tuple[str, str]:
         # Retrieve top-k similar sentences using vector search
         similar_sentences = self.sims.find_similar_sentences(
+            db=db,
             sdoc_ids_to_search=sdoc_ids,
             proj_id=proj_id,
             query=query,

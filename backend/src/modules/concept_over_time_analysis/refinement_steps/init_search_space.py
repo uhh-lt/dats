@@ -23,7 +23,7 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
         return cota.search_space
 
     # the search space is empty, we build the search space with simsearch
-    search_space = __build_search_space(cota=cota)
+    search_space = __build_search_space(db=db, cota=cota)
 
     # add the sentences to the search space
     search_space = __add_sentences_to_search_space(db=db, search_space=search_space)
@@ -38,13 +38,14 @@ def init_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     return search_space
 
 
-def __build_search_space(cota: COTARead) -> list[COTASentence]:
+def __build_search_space(db: Session, cota: COTARead) -> list[COTASentence]:
     search_space_dict: dict[str, COTASentence] = (
         dict()
     )  # we use a dict here to prevent duplicates in the search space
     for concept in cota.concepts:
         # find similar sentences for each concept to define search space
         sents = SimSearchService().find_similar_sentences(
+            db=db,
             sdoc_ids_to_search=None,
             proj_id=cota.project_id,
             query=concept.description,
