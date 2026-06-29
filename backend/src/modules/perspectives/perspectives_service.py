@@ -212,6 +212,7 @@ class PerspectivesService:
 
                 # 2.2 prompt the model (batchwise)
                 responses = self.llm.llm_batch_chat(
+                    model=aspect_dto.pipeline_settings.rewriting_model,
                     messages=batch_messages,
                     response_model=LLMResponse,
                 )
@@ -803,6 +804,7 @@ class PerspectivesService:
         self,
         top_words: dict[int, list[str]],
         cluster_ids: list[int],
+        aspect_dto: AspectRead,
     ) -> tuple[dict[int, str], dict[int, str]]:
         """
         Generates cluster titles and descriptions using an LLM based on the provided top words.
@@ -832,6 +834,7 @@ class PerspectivesService:
 
         # 2. prompt the model (batch)
         responses = self.llm.llm_batch_chat(
+            model=aspect_dto.pipeline_settings.rewriting_model,
             messages=batch_messages,
             response_model=LLMResponse,
         )
@@ -926,7 +929,9 @@ class PerspectivesService:
 
         cluster_name, cluster_description = (
             self.__generate_cluster_title_and_description(
-                top_words=top_words, cluster_ids=ids_to_generate_names_for
+                top_words=top_words,
+                cluster_ids=ids_to_generate_names_for,
+                aspect_dto=aspect_dto,
             )
         )
 
@@ -1728,6 +1733,9 @@ class PerspectivesService:
             RecomputeClusterTitleAndDescriptionParams,
         ), "RecomputeClusterTitleAndDescriptionParams expected"
 
+        aspect = crud_aspect.read(db=db, id=aspect_id)
+        aspect_dto = AspectRead.model_validate(aspect)
+
         # 1. Read cluster
         self._log_status_step(0)
         self._log_status_msg(f"Reading top words of cluster {params.cluster_id}...")
@@ -1747,6 +1755,7 @@ class PerspectivesService:
             self.__generate_cluster_title_and_description(
                 top_words={cluster.id: top_words},
                 cluster_ids=[cluster.id],
+                aspect_dto=aspect_dto,
             )
         )
         self._log_status_msg(

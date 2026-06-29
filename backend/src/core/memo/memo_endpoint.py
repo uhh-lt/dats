@@ -203,6 +203,7 @@ def generate_memo_suggestion(
     db: Session = Depends(get_db_session),
     attached_obj_id: int,
     attached_obj_type: AttachedObjectType,
+    model: str,
     authz_user: AuthzUser = Depends(),
 ) -> str:
     crud = attachedObject2Crud.get(attached_obj_type)
@@ -216,4 +217,4 @@ def generate_memo_suggestion(
 
     authz_user.assert_in_project(project_id=proj_id)
 
-    return generate_memo_llm(attached_object, db)
+    return generate_memo_llm(attached_object, db, model=model)

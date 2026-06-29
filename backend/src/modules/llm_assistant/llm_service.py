@@ -375,6 +375,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
     def __process_batch(
         self,
+        model: str,
         prompt_builder: PromptBuilder,
         db: Session,
         sdoc_ids: list[int],
@@ -404,6 +405,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
         # prompt the model (batchwise)
         responses = self.llm.llm_batch_chat(
+            model=model,
             messages=batch_messages,
             response_model=response_model,
         )
@@ -462,6 +464,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # process the batch with LLM
             responses, response_sdoc_ids, _ = self.__process_batch(
+                model=approach_parameters.model,
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -555,6 +558,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # process the batch with LLM
             responses, response_sdoc_ids, _ = self.__process_batch(
+                model=approach_parameters.model,
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -698,6 +702,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # process the batch with LLM
             responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
+                model=approach_parameters.model,
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,
@@ -871,6 +876,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
             # process the batch with LLM
             responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
+                model=approach_parameters.model,
                 prompt_builder=prompt_builder,
                 db=db,
                 sdoc_ids=sids,

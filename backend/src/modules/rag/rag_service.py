@@ -21,6 +21,7 @@ class RAGService(metaclass=SingletonMeta):
         query: str | list[str] | int,
         top_k: int,
         threshold: float,
+        model: str,
         db: Session,
         session_id: str | None = None,
         sdoc_ids: list[int] | None = None,
@@ -62,6 +63,7 @@ class RAGService(metaclass=SingletonMeta):
         )
 
         response, session_id = self.llm.llm_chat_with_session(
+            model=model,
             system_prompt="You are an assistant helping answer questions based on internal documentation.",
             user_prompt=RAG_PROMPT,
             session_id=session_id,

@@ -22,6 +22,7 @@ def rag_session(
     query: str | list[str] | int,
     top_k: int,
     threshold: float,
+    model: str,
     sdoc_ids: list[int] | None,
     authz_user: AuthzUser = Depends(),
     session_id: str | None = None,
@@ -34,6 +35,7 @@ def rag_session(
         query=query,
         top_k=top_k,
         threshold=threshold,
+        model=model,
         sdoc_ids=sdoc_ids,
         db=db,
         session_id=session_id,
@@ -51,11 +53,13 @@ def rag_session(
 )
 def chat_session(
     *,
+    model: str,
     prompt: str,
     session_id: str | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> ChatSessionResponse:
     response, session_id = LLMRepo().llm_chat_with_session(
+        model=model,
         system_prompt="You are having a chat session with a user. Respond to their queries.",
         user_prompt=prompt,
         session_id=session_id,
@@ -64,3 +68,14 @@ def chat_session(
         session_id=session_id,
         response=response.strip(),
     )
+
+
+@router.get(
+    "/models",
+    response_model=list[str],
+    summary="Get all available LLM models from the LLM Provider",
+)
+def get_available_models(
+    authz_user: AuthzUser = Depends(),
+) -> list[str]:
+    return LLMRepo().get_available_models()

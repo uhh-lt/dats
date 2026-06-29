@@ -27,7 +27,7 @@ class ModelDict(TypedDict):
 
 class LLMRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.__models: ModelDict = {}  # type: ignore
+        cls.__models: dict[str, OpenAI] = {}
 
         cls.__llm_chat_sessions: dict[str, list[dict]] = dict()
         cls.__llm_chat_session_timestamps: dict[str, float] = dict()
@@ -47,28 +47,28 @@ class LLMRepo(metaclass=SingletonMeta):
             ):
                 conn = OpenAI(
                     base_url=f"http://{settings.host}:{settings.port}/v1",
-                    api_key="no-key-needed-for-vllm",
+                    api_key=api_key,
                 )
                 models = conn.models.list().data
                 if len(models) == 0:
                     raise Exception(
                         f"No model loaded at '{settings.host}:{settings.port}'!"
                     )
-                model = models[0]
-                if model.id != settings.model:
-                    raise Exception(
-                        f"Wrong model loaded at '{settings.host}:{settings.port}'! Expected '{settings.model}', but got '{model.id}'!"
-                    )
-                cls.__models[model_type] = (model.id, conn)
+                for model in models:
+                    cls.__models[model.id] = conn
+            logger.info(cls.__models)
 
         except Exception as e:
             msg = f"Cannot instantiate LLMRepo - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
 
-        logger.info("Successfully established connection to VLLM!")
+        logger.info("Successfully established connection to all LLM Providers!")
 
         return super(LLMRepo, cls).__new__(cls)
+
+    def get_available_models(self) -> list[str]:
+        return list(self.__models.keys())
 
     def _start_llm_chat_session(self) -> str:
         session_id = str(uuid4())
@@ -95,6 +95,7 @@ class LLMRepo(metaclass=SingletonMeta):
 
     def llm_chat_with_session(
         self,
+        model: str,
         user_prompt: str,
         system_prompt: str | None = None,
         response_model: Type[T] | None = None,
@@ -132,7 +133,12 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model_schema = None
         if response_model is not None:
             response_model_schema = response_model.model_json_schema()
-        model, client = self.__models["llm"]
+        client = self.__models.get(model)
+        if client is None:
+            available = list(self.__models.keys())
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available}"
+            )
         response = client.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
@@ -156,11 +162,17 @@ class LLMRepo(metaclass=SingletonMeta):
 
     def llm_chat(
         self,
+        model: str,
         system_prompt: str,
         user_prompt: str,
         response_model: Type[T],
     ) -> T:
-        model, client = self.__models["llm"]
+        client = self.__models.get(model)
+        if client is None:
+            available = list(self.__models.keys())
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available}"
+            )
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -183,10 +195,16 @@ class LLMRepo(metaclass=SingletonMeta):
 
     def llm_batch_chat(
         self,
+        model: str,
         messages: list[LLMMessage],
         response_model: Type[T],
     ) -> list[T]:
-        model, client = self.__models["llm"]
+        client = self.__models.get(model)
+        if client is None:
+            available = list(self.__models.keys())
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available}"
+            )
 
         # prepare batch messages
         batch_messages = [
@@ -251,6 +269,7 @@ class LLMRepo(metaclass=SingletonMeta):
 
     def vlm_chat(
         self,
+        model: str,
         user_prompt: str,
         b64_images: list[str] | None = None,
         system_prompt: str | None = None,
@@ -302,7 +321,12 @@ class LLMRepo(metaclass=SingletonMeta):
         if response_model is not None:
             response_model_schema = response_model.model_json_schema()
 
-        model, client = self.__models["vlm"]
+        client = self.__models.get(model)
+        if client is None:
+            available = list(self.__models.keys())
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available}"
+            )
         response = client.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
@@ -328,7 +352,13 @@ class LLMRepo(metaclass=SingletonMeta):
         self,
         inputs: list[str],
     ) -> np.ndarray:
-        model, client = self.__models["emb"]
+        model = conf.llm_provider.emb.model
+        client = self.__models.get(model)
+        if client is None:
+            available = list(self.__models.keys())
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available}"
+            )
         res = client.embeddings.create(model=model, input=inputs)
         return np.array([emb.embedding for emb in res.data])
 
