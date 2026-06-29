@@ -18,20 +18,20 @@ export default defineConfig(({ mode }) => {
       plugins: [...sharedConfig.plugins, basicSsl()],
       server: {
         ...sharedConfig.server,
-        port: parseInt(env.PORT) || 3000,
+        port: parseInt(env.FRONTEND_PORT) || 3000,
         proxy: {
           "/api": {
-            target: env.VITE_APP_SERVER,
+            target: env.FRONTEND_API_URL,
             changeOrigin: true, // Required for virtual hosted sites
             rewrite: (path) => path.replace(/^\/api/, ""), // Optional: remove /api from the path
           },
           "/content": {
-            target: env.VITE_APP_CONTENT,
+            target: env.FRONTEND_CONTENT_URL,
             changeOrigin: true, // Required for virtual hosted sites
             rewrite: (path) => path.replace(/^\/content/, ""), // Optional: remove /content from the path
           },
           "/sentry-api": {
-            target: env.VITE_APP_GLITCHTIP,
+            target: env.FRONTEND_GLITCHTIP_URL,
             changeOrigin: true,
             secure: true,
             rewrite: (path) => path.replace(/^\/sentry-api/, ""),
