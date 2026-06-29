@@ -12,9 +12,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentCreate
 from core.doc.source_document_orm import SourceDocumentORM
-from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
-from core.project.project_service import ProjectService
 
 
 class ProjectWithBBoxAnnotation(TypedDict):
@@ -25,21 +23,10 @@ class ProjectWithBBoxAnnotation(TypedDict):
 
 
 @pytest.fixture(scope="function")
-def project_with_bbox_annotation(db_session, test_user) -> ProjectWithBBoxAnnotation:
-    """Create a project for the test user with a source document, code, and bounding box annotation."""
-
-    project_dto = ProjectCreate(
-        title="Test Project",
-        description="A project for testing bounding box annotations",
-    )
-
-    # Use ProjectService to create the project with all infrastructure
-    ps = ProjectService()
-    project = ps.create_project(
-        db=db_session,
-        create_dto=project_dto,
-        creating_user_id=test_user.id,
-    )
+def project_with_bbox_annotation(
+    db_session, test_project, test_user
+) -> ProjectWithBBoxAnnotation:
+    """Create a project for the test user with an image source document, code, and bounding box annotation."""
 
     # Create a source document in the project (image document)
     sdoc = crud_sdoc.create(
@@ -48,7 +35,7 @@ def project_with_bbox_annotation(db_session, test_user) -> ProjectWithBBoxAnnota
             filename="Test Image.jpg",
             name="Image",
             doctype=DocType.image,
-            project_id=project.id,
+            project_id=test_project.id,
             folder_id=None,
         ),
     )
@@ -62,7 +49,7 @@ def project_with_bbox_annotation(db_session, test_user) -> ProjectWithBBoxAnnota
             description="Test code for bbox annotation",
             parent_id=None,
             enabled=True,
-            project_id=project.id,
+            project_id=test_project.id,
             is_system=False,
         ),
     )
@@ -81,13 +68,13 @@ def project_with_bbox_annotation(db_session, test_user) -> ProjectWithBBoxAnnota
         ),
     )
     db_session.commit()
-    db_session.refresh(project)
+    db_session.refresh(test_project)
     db_session.refresh(sdoc)
     db_session.refresh(code)
     db_session.refresh(bbox_annotation)
 
     return {
-        "project": project,
+        "project": test_project,
         "source_document": sdoc,
         "code": code,
         "bbox_annotation": bbox_annotation,

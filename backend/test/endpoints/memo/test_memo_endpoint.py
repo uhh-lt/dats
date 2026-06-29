@@ -48,9 +48,9 @@ def test_add_memo_to_code_attached_not_existing(client: TestClient):
 
 
 def test_add_memo_to_source_document(
-    client: TestClient, project_with_source_document, test_user: UserRead
+    client: TestClient, project_with_sdoc, test_user: UserRead
 ):
-    sdoc = project_with_source_document["source_document"]
+    sdoc = project_with_sdoc["source_document"]
 
     payload = MemoCreate(
         title="First Memo Test",

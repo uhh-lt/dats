@@ -15,7 +15,7 @@ class ProjectWithUser(TypedDict):
 
 
 @pytest.fixture(scope="function")
-def project_with_user(db_session, test_project, test_user) -> ProjectWithUser:
+def project_with_user(db_session, test_project) -> ProjectWithUser:
     """Create a project for the test user with an additional user."""
 
     # Create an additional user
