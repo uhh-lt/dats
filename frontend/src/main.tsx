@@ -16,11 +16,9 @@ import { AuthProvider } from "./auth/AuthProvider.tsx";
 import "./index.css";
 import { theme } from "./plugins/ReactMUI.ts";
 import queryClient from "./plugins/ReactQueryClient.ts";
-import { initSentry } from "./plugins/Sentry.ts";
+import { SentryProvider } from "./plugins/Sentry.tsx";
 import router from "./router/routes.tsx";
 import { store } from "./store/store.ts";
-
-initSentry();
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");
@@ -30,16 +28,18 @@ root.render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<p>An unexpected error has occurred. Please try again later.</p>}>
       <QueryClientProvider client={queryClient}>
-        <Provider store={store}>
-          <PersistGate persistor={persistor}>
-            <AuthProvider>
-              <ThemeProvider theme={theme}>
-                <RouterProvider router={router} />
-              </ThemeProvider>
-            </AuthProvider>
-          </PersistGate>
-        </Provider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        <SentryProvider>
+          <Provider store={store}>
+            <PersistGate persistor={persistor}>
+              <AuthProvider>
+                <ThemeProvider theme={theme}>
+                  <RouterProvider router={router} />
+                </ThemeProvider>
+              </AuthProvider>
+            </PersistGate>
+          </Provider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </SentryProvider>
       </QueryClientProvider>
     </Sentry.ErrorBoundary>
   </React.StrictMode>,
