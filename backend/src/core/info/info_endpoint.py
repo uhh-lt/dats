@@ -14,10 +14,22 @@ def heartbeat():
 
 @router.get("/info", response_model=InstanceInfo)
 def info():
+    glitchtip_dsn = conf.glitchtip.dsn_frontend
+    glitchtip_public_key = None
+    glitchtip_project_id = None
+    if glitchtip_dsn:
+        try:
+            glitchtip_public_key = glitchtip_dsn.split("@")[0].split("//")[1]
+            glitchtip_project_id = int(glitchtip_dsn.split("/")[-1])
+        except Exception as e:
+            print(f"Error parsing Glitchtip DSN: {e}")
+
     return InstanceInfo(
         is_oidc_enabled=conf.auth.oidc.enabled,
         oidc_provider_name=conf.auth.oidc.name,
         is_stable=conf.api.is_stable,
+        glitchtip_public_key=glitchtip_public_key,
+        glitchtip_project_id=glitchtip_project_id,
     )
 
 
