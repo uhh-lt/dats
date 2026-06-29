@@ -1,24 +1,3 @@
-x-environment: &default-environment
-  DATABASE_URL: postgres://postgres:postgres@glitchtip-postgres:5432/postgres
-  # VALKEY_URL: redis://valkey:6379 # Or set to blank string to disable
-  SECRET_KEY: ${GLITCHTIP_SECRET_KEY?glitchtip-secret-key-required!} # best to run openssl rand -hex 32
-  EMAIL_URL: ${GLITCHTIP_EMAIL_URL?glitchtip-email-url-required!} # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
-  GLITCHTIP_DOMAIN: http://${GLITCHTIP_HOST?glitchtip-host-required!}:${GLITCHTIP_EXPOSED?glitchtip-exposed-required!} # Change this to your domain
-  DEFAULT_FROM_EMAIL: ${GLITCHTIP_DEFAULT_FROM_EMAIL?glitchtip-default-from-email-required!} # Change this to your email
-  ENABLE_ADMIN: "False" # Set to True to enable Django Admin at /admin/
-  ENABLE_OPENAPI: "False" # Set to True to enable OpenAPI spec at /api/docs
-  GLITCHTIP_ENABLE_MCP: "False" # Set to True to enable MCP server
-  GLITCHTIP_ENABLE_DUCKDB: "False" # Set to True to enable cold storage archival
-
-  ## To reduce RAM usage (targeting 256-512 MB), consider disabling:
-  VALKEY_URL: "" # Disable Valkey, use Postgres for task queue and cache
-  # GLITCHTIP_ENABLE_LOGS: "False" # Disable log ingestion
-  # GLITCHTIP_ENABLE_UPTIME: "False" # Disable uptime monitoring
-
-x-depends_on: &default-depends_on
-  - glitchtip-postgres
-  # - valkey # Remove when disabling Valkey
-
 services:
   glitchtip-postgres:
     image: postgres:18
@@ -34,28 +13,41 @@ services:
       timeout: 5s
     restart: unless-stopped
     volumes:
-      - pg-data:/var/lib/postgresql
-  # valkey: # Recommended. Remove this service when disabling Valkey.
-  #   image: valkey/valkey:9
-  #   restart: unless-stopped
+      - glitchtip-pg-data:/var/lib/postgresql
+    networks:
+      - glitchtip_network
 
   # TODO: add a healthcheck
   glitchtip-ui:
     image: glitchtip/glitchtip:6 # Check https://glitchtip.com/blog/ for new major versions
-    depends_on: *default-depends_on
+    depends_on:
+      - glitchtip-postgres
     ports:
       - "${GLITCHTIP_EXPOSED?glitchtip-exposed-required!}:8000"
     environment:
-      <<: *default-environment
+      DATABASE_URL: postgres://${GLITCHTIP_DB_USER?glitchtip-db-user-required!}:${GLITCHTIP_DB_PASS?glitchtip-db-pass-required!}@glitchtip-postgres:5432/${GLITCHTIP_DB?glitchtip-db-required!}
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY?glitchtip-secret-key-required!} # best to run openssl rand -hex 32
+      EMAIL_URL: ${GLITCHTIP_EMAIL_URL?glitchtip-email-url-required!} # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
+      GLITCHTIP_DOMAIN: http://${GLITCHTIP_HOST?glitchtip-host-required!}:${GLITCHTIP_EXPOSED?glitchtip-exposed-required!} # Change this to your domain
+      DEFAULT_FROM_EMAIL: ${GLITCHTIP_DEFAULT_FROM_EMAIL?glitchtip-default-from-email-required!} # Change this to your email
+      ENABLE_ADMIN: "False" # Set to True to enable Django Admin at /admin/
+      ENABLE_OPENAPI: "False" # Set to True to enable OpenAPI spec at /api/docs
+      GLITCHTIP_ENABLE_MCP: "False" # Set to True to enable MCP server
+      GLITCHTIP_ENABLE_DUCKDB: "False" # Set to True to enable cold storage archival
+      ## To reduce RAM usage (targeting 256-512 MB), consider disabling:
+      VALKEY_URL: "" # Disable Valkey, use Postgres for task queue and cache
+      # GLITCHTIP_ENABLE_LOGS: "False" # Disable log ingestion
+      # GLITCHTIP_ENABLE_UPTIME: "False" # Disable uptime monitoring
       SERVER_ROLE: all_in_one
     restart: unless-stopped
     volumes:
-      - uploads:/code/uploads
+      - glitchtip-ui-data:/code/uploads
+    networks:
+      - glitchtip_network
 
 volumes:
-  pg-data:
-  uploads:
+  glitchtip-pg-data:
+  glitchtip-ui-data:
 
 networks:
   glitchtip_network:
-    name: glitchtip_network
