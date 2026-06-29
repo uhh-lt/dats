@@ -16,8 +16,5 @@ export type LLMJobOutput = {
    * Specific result for the LLMJob w.r.t it's type
    */
   specific_task_result:
-    | TaggingLLMJobResult
-    | MetadataExtractionLLMJobResult
-    | AnnotationLLMJobResult
-    | SentenceAnnotationLLMJobResult;
+    TaggingLLMJobResult | MetadataExtractionLLMJobResult | AnnotationLLMJobResult | SentenceAnnotationLLMJobResult;
 };
