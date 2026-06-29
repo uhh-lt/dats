@@ -389,6 +389,7 @@ dependencies = [
     { name = "quotect" },
     { name = "ray", extra = ["serve"] },
     { name = "sentence-transformers" },
+    { name = "sentry-sdk" },
     { name = "spacy" },
     { name = "spacy-curated-transformers" },
     { name = "spacy-transformers" },
@@ -415,6 +416,7 @@ requires-dist = [
     { name = "quotect", specifier = "==1.1.5" },
     { name = "ray", extras = ["serve"], specifier = "==2.44.1" },
     { name = "sentence-transformers", specifier = "==4.1.0" },
+    { name = "sentry-sdk", specifier = "==2.63.0" },
     { name = "spacy", specifier = "==3.8.4" },
     { name = "spacy-curated-transformers", specifier = "==0.3.0" },
     { name = "spacy-transformers", specifier = "==1.3.9" },
@@ -1796,6 +1798,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/2d/3bd9b08e70067b2124518b308db6a84a4f8901cc8a4317e2e4288cdd9b4d/sentencepiece-0.2.1-cp311-cp311-win32.whl", hash = "sha256:6d297a1748d429ba8534eebe5535448d78b8acc32d00a29b49acf28102eeb094", size = 999555 },
     { url = "https://files.pythonhosted.org/packages/32/b8/f709977f5fda195ae1ea24f24e7c581163b6f142b1005bc3d0bbfe4d7082/sentencepiece-0.2.1-cp311-cp311-win_amd64.whl", hash = "sha256:82d9ead6591015f009cb1be1cb1c015d5e6f04046dbb8c9588b931e869a29728", size = 1054617 },
     { url = "https://files.pythonhosted.org/packages/7a/40/a1fc23be23067da0f703709797b464e8a30a1c78cc8a687120cd58d4d509/sentencepiece-0.2.1-cp311-cp311-win_arm64.whl", hash = "sha256:39f8651bd10974eafb9834ce30d9bcf5b73e1fc798a7f7d2528f9820ca86e119", size = 1033877 },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "2.63.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/c8/b3c970a5b186722d276cd40a05b3254e03bccc0208560aff20f612e018e8/sentry_sdk-2.63.0.tar.gz", hash = "sha256:2a1502bf864769275dbc8c2c9fc7a0f7f5e18358180b615d262d13a31ffba216", size = 912449 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/57/cb205f7d93373120f666b9c5736dc0815524d96a9b278e7a728f018dc22a/sentry_sdk-2.63.0-py3-none-any.whl", hash = "sha256:3a9b5ddd403f79eb73bd670f75f04485819db53d28f76ced7bc09041cb0dfd6a", size = 495950 },
 ]
 
 [[package]]
