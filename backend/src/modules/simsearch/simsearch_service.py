@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from common.singleton_meta import SingletonMeta
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
+from core.doc.source_document_crud import crud_sdoc
+from core.doc.source_document_dto import SourceDocumentRead
 from modules.ml.embedding_service import EmbeddingService
 from modules.search.sdoc_search.sdoc_search import filter_sdoc_ids
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
@@ -23,6 +25,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def _encode_query(
         self,
+        db: Session,
         text_query: list[str] | None = None,
         image_query_id: int | None = None,
         document_query: bool = False,
@@ -42,7 +45,10 @@ class SimSearchService(metaclass=SingletonMeta):
                 else self.emb.encode_sentences(sentences=text_query)[0]
             )
         elif image_query_id is not None:
-            query_emb = self.emb.encode_image(sdoc_id=image_query_id)
+            sdoc = SourceDocumentRead.model_validate(
+                crud_sdoc.read(db=db, id=image_query_id)
+            )
+            query_emb = self.emb.encode_image(sdoc=sdoc)
         else:
             msg = "This should never happend! Unknown Error!"
             logger.error(msg)
@@ -68,6 +74,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def find_similar_sentences(
         self,
+        db: Session,
         proj_id: int,
         query: str | list[str] | int,
         top_k: int,
@@ -75,6 +82,7 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_ids_to_search: list[int] | None = None,
     ) -> list[SimSearchSentenceHit]:
         query_emb = self._encode_query(
+            db=db,
             **self.__parse_query_param(query),
         ).tolist()
 
@@ -111,6 +119,7 @@ class SimSearchService(metaclass=SingletonMeta):
         )
 
         return SimSearchService().find_similar_sentences(
+            db=db,
             sdoc_ids_to_search=filtered_sdoc_ids,
             proj_id=proj_id,
             query=query,
@@ -120,6 +129,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def find_similar_images(
         self,
+        db: Session,
         sdoc_ids_to_search: list[int],
         proj_id: int,
         query: str | list[str] | int,
@@ -127,6 +137,7 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float,
     ) -> list[SimSearchImageHit]:
         query_emb = self._encode_query(
+            db=db,
             **self.__parse_query_param(query),
         ).tolist()
 
@@ -162,6 +173,7 @@ class SimSearchService(metaclass=SingletonMeta):
         )
 
         return SimSearchService().find_similar_images(
+            db=db,
             sdoc_ids_to_search=filtered_sdoc_ids,
             proj_id=proj_id,
             query=query,
