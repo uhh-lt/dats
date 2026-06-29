@@ -14,12 +14,6 @@ export type FilterExpression_SpanColumns_ = {
   id: string;
   column: SpanColumns | number;
   operator:
-    | IDOperator
-    | NumberOperator
-    | StringOperator
-    | IDListOperator
-    | ListOperator
-    | DateOperator
-    | BooleanOperator;
+    IDOperator | NumberOperator | StringOperator | IDListOperator | ListOperator | DateOperator | BooleanOperator;
   value: boolean | string | number | Array<string> | Array<Array<string>>;
 };

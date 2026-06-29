@@ -143,8 +143,8 @@ function DocumentRenderer({
             } else if (domNode.name === "t" && domNode.attribs.id) {
               const tokenId = parseInt(domNode.attribs.id);
               const token = tokenData[tokenId];
-              const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
-                (annotationId) => annotationMap.get(annotationId)!,
+              const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map((annotationId) =>
+                annotationMap.get(annotationId)!,
               );
               return <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
               // fallback case

@@ -11,9 +11,7 @@ import SpanAnnotationDeleteMenuItem from "./SpanAnnotationDeleteMenuItem.tsx";
 interface MemoMenuItemsProps {
   annotationId: number;
   annotationType:
-    | AttachedObjectType.SPAN_ANNOTATION
-    | AttachedObjectType.BBOX_ANNOTATION
-    | AttachedObjectType.SENTENCE_ANNOTATION;
+    AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION | AttachedObjectType.SENTENCE_ANNOTATION;
   handleClose: () => void;
 }
 
@@ -37,9 +35,7 @@ function MemoMenuItems({ annotationId, annotationType, handleClose }: MemoMenuIt
 interface AnnotationCardActionsMenuProps {
   annotationId: number;
   annotationType:
-    | AttachedObjectType.SPAN_ANNOTATION
-    | AttachedObjectType.BBOX_ANNOTATION
-    | AttachedObjectType.SENTENCE_ANNOTATION;
+    AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION | AttachedObjectType.SENTENCE_ANNOTATION;
   iconButtonProps?: Omit<IconButtonProps, "onClick">;
 }
 
