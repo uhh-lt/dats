@@ -4408,32 +4408,6 @@
         }
       }
     },
-    "/sdocmeta": {
-      "put": {
-        "tags": ["sdocMetadata"],
-        "summary": "Creates a new Metadata and returns it with the generated ID.",
-        "operationId": "create_new_metadata",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataCreate" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/sdocmeta/{metadata_id}": {
       "get": {
         "tags": ["sdocMetadata"],
@@ -4739,7 +4713,7 @@
         }
       }
     },
-    "/span/sdoc/{sdoc_id}/user/{user_id}}": {
+    "/span/sdoc/{sdoc_id}/user/{user_id}": {
       "get": {
         "tags": ["spanAnnotation"],
         "summary": "Returns all SpanAnnotations of the User for the SourceDocument",
@@ -6636,6 +6610,12 @@
             "type": "array",
             "title": "Code Ids",
             "description": "IDs of the codes to use for the annotation"
+          },
+          "delete_existing_annotations": {
+            "type": "boolean",
+            "title": "Delete Existing Annotations",
+            "description": "Delete existing annotations before creating new ones",
+            "default": false
           }
         },
         "type": "object",
@@ -11176,7 +11156,7 @@
             "type": "boolean",
             "title": "Delete Existing Annotations",
             "description": "Delete existing annotations before creating new ones",
-            "default": true
+            "default": false
           }
         },
         "type": "object",
@@ -11554,56 +11534,6 @@
         "type": "object",
         "required": ["int_value", "str_value", "boolean_value", "date_value", "list_value", "id"],
         "title": "SourceDocumentMetadataBulkUpdate"
-      },
-      "SourceDocumentMetadataCreate": {
-        "properties": {
-          "int_value": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Int Value",
-            "description": "Int Value of the SourceDocumentMetadata"
-          },
-          "str_value": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Str Value",
-            "description": "String Value of the SourceDocumentMetadata"
-          },
-          "boolean_value": {
-            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
-            "title": "Boolean Value",
-            "description": "Boolean Value of the SourceDocumentMetadata"
-          },
-          "date_value": {
-            "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }],
-            "title": "Date Value",
-            "description": "Date Value of the SourceDocumentMetadata"
-          },
-          "list_value": {
-            "anyOf": [{ "items": { "type": "string" }, "type": "array" }, { "type": "null" }],
-            "title": "List Value",
-            "description": "List Value of the SourceDocumentMetadata"
-          },
-          "source_document_id": {
-            "type": "integer",
-            "title": "Source Document Id",
-            "description": "SourceDocument the SourceDocumentMetadata belongs to"
-          },
-          "project_metadata_id": {
-            "type": "integer",
-            "title": "Project Metadata Id",
-            "description": "ID of the ProjectMetadata"
-          }
-        },
-        "type": "object",
-        "required": [
-          "int_value",
-          "str_value",
-          "boolean_value",
-          "date_value",
-          "list_value",
-          "source_document_id",
-          "project_metadata_id"
-        ],
-        "title": "SourceDocumentMetadataCreate"
       },
       "SourceDocumentMetadataRead": {
         "properties": {
