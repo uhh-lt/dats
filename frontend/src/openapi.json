@@ -9642,10 +9642,26 @@
             "title": "Oidc Provider Name",
             "description": "OIDC provider name"
           },
-          "is_stable": { "type": "boolean", "title": "Is Stable", "description": "Is stable" }
+          "is_stable": { "type": "boolean", "title": "Is Stable", "description": "Is stable" },
+          "glitchtip_public_key": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Glitchtip Public Key",
+            "description": "Glitchtip public key"
+          },
+          "glitchtip_project_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Glitchtip Project Id",
+            "description": "Glitchtip project ID"
+          }
         },
         "type": "object",
-        "required": ["is_oidc_enabled", "oidc_provider_name", "is_stable"],
+        "required": [
+          "is_oidc_enabled",
+          "oidc_provider_name",
+          "is_stable",
+          "glitchtip_public_key",
+          "glitchtip_project_id"
+        ],
         "title": "InstanceInfo"
       },
       "JobStatus": {

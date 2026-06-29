@@ -14,6 +14,12 @@ export type FilterExpression_SdocColumns_ = {
   id: string;
   column: SdocColumns | number;
   operator:
-    IDOperator | NumberOperator | StringOperator | IDListOperator | ListOperator | DateOperator | BooleanOperator;
+    | IDOperator
+    | NumberOperator
+    | StringOperator
+    | IDListOperator
+    | ListOperator
+    | DateOperator
+    | BooleanOperator;
   value: boolean | string | number | Array<string> | Array<Array<string>>;
 };
