@@ -15,4 +15,12 @@ export type InstanceInfo = {
    * Is stable
    */
   is_stable: boolean;
+  /**
+   * Glitchtip public key
+   */
+  glitchtip_public_key: string | null;
+  /**
+   * Glitchtip project ID
+   */
+  glitchtip_project_id: number | null;
 };

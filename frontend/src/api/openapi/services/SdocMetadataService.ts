@@ -3,33 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { SourceDocumentMetadataBulkUpdate } from "../models/SourceDocumentMetadataBulkUpdate";
-import type { SourceDocumentMetadataCreate } from "../models/SourceDocumentMetadataCreate";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class SdocMetadataService {
-  /**
-   * Creates a new Metadata and returns it with the generated ID.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static createNewMetadata({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentMetadataCreate;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "PUT",
-      url: "/sdocmeta",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
   /**
    * Returns the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response
