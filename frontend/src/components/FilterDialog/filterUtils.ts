@@ -51,13 +51,7 @@ export type FilterOperatorType =
   | typeof BooleanOperator;
 
 export type FilterOperators =
-  | IDOperator
-  | NumberOperator
-  | StringOperator
-  | IDListOperator
-  | ListOperator
-  | DateOperator
-  | BooleanOperator;
+  IDOperator | NumberOperator | StringOperator | IDListOperator | ListOperator | DateOperator | BooleanOperator;
 
 // TYPE GUARDS
 

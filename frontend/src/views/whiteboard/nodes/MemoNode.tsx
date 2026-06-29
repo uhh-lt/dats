@@ -157,12 +157,7 @@ const createMemoAttachedObjectEdge = (
 const createAttachedObjectNodes = (
   attachedObjectType: AttachedObjectType,
   attachedObject:
-    | TagRead
-    | CodeRead
-    | SpanAnnotationRead
-    | BBoxAnnotationRead
-    | SentenceAnnotationRead
-    | SourceDocumentRead,
+    TagRead | CodeRead | SpanAnnotationRead | BBoxAnnotationRead | SentenceAnnotationRead | SourceDocumentRead,
   position: XYPosition,
 ): Node<DATSNodeData>[] => {
   switch (attachedObjectType) {
