@@ -18,9 +18,9 @@ if (existsSync(openapiFilePath)) {
 }
 
 // 2. download new openapi json file
-const backendUrl = process.env.VITE_APP_SERVER;
+const backendUrl = process.env.FRONTEND_API_URL;
 if (backendUrl === "" || backendUrl === undefined) {
-  console.error("VITE_APP_SERVER .env variable is not set, don't know how to reach the backend!");
+  console.error("FRONTEND_API_URL .env variable is not set, don't know how to reach the backend!");
   process.exit(1);
 }
 get(`${backendUrl}/openapi.json`, (res) => {
