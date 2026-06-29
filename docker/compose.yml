@@ -63,6 +63,7 @@ x-dats-common: &dats-common
     - ray_network
     - vllm_network
     - docling_network
+    - glitchtip_network
 
 services:
   postgres:
@@ -236,7 +237,8 @@ services:
     environment:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
-      GLITCHTIP_DSN: ${BACKEND_GLITCHTIP_DSN}
+      GLITCHTIP_DSN_BACKEND: ${GLITCHTIP_DSN_BACKEND}
+      GLITCHTIP_DSN_FRONTEND: ${GLITCHTIP_DSN_FRONTEND}
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache
@@ -263,8 +265,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    environment:
-      VITE_APP_GLITCHTIP_DSN: ${FRONTEND_GLITCHTIP_DSN}
     volumes:
       - ./configs/frontend/logo2.png:/usr/share/nginx/html/logo2.png
       - ./configs/frontend/nginx.conf:/etc/nginx/nginx.conf
@@ -277,6 +277,7 @@ services:
       - "${FRONTEND_EXPOSED?frontend-exposed-required!}:3000"
     networks:
       - dats_network
+      - glitchtip_network
     profiles:
       - frontend
 
