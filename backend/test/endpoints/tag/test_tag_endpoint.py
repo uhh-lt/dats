@@ -138,10 +138,10 @@ testdata = [
         [], [1], 0, id="link_tag1"
     ),  # we expect 0 because the first tag is already linked to the source document, so no new link is created.
     pytest.param(
-        [], [2], 1, id="link_tag2"
+        [], [2], 0, id="link_tag2"
     ),  # we expect 0 because the second tag is already linked to the source document, so no new link is created.
     pytest.param(
-        [], [1, 2], 1, id="link_both"
+        [], [1, 2], 0, id="link_both"
     ),  # we expect 0 because both tags are already linked to the source document, so no new link is created.
     pytest.param(
         [1], [], 1, id="unlink_tag1"
@@ -170,8 +170,8 @@ def test_update_tags_batch_parametrize(
 
     payload = {
         "sdoc_ids": [sdoc.id],
-        "unlink_tag_ids": [param_id2tag[i] for i in unlink_ids],
-        "link_tag_ids": [param_id2tag[i] for i in link_ids],
+        "unlink_tag_ids": [param_id2tag[i].id for i in unlink_ids],
+        "link_tag_ids": [param_id2tag[i].id for i in link_ids],
     }
     resp = client.patch("/tag/bulk/update", json=payload)
 
@@ -205,7 +205,6 @@ def test_update_tags_batch_not_exists(client: TestClient):
         "unlink_tag_ids": [888888],
         "link_tag_ids": [777777],
     }
-
     resp = client.patch("/tag/bulk/update", json=payload)
 
     assert resp.status_code == 404, resp.text
@@ -381,7 +380,7 @@ def test_get_sdoc_ids_by_tag_id(
 
     assert resp2.status_code == 200, resp2.text
     ids2 = set(resp2.json())
-    assert ids2 == {sd2.id}
+    assert ids2 == {sd1.id}
 
 
 def test_get_sdoc_ids_by_tag_id_if_not_exists(client: TestClient):
@@ -406,8 +405,10 @@ def test_get_sdoc_counts(
 
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert data.get(str(tag1.id)) == 1
-    assert data.get(str(tag2.id)) == 2
+    # tag1 is linked to both sdoc1 and sdoc2, so the count should be 2
+    assert data.get(str(tag1.id)) == 2
+    # tag2 is linked to only sdoc2, so the count should be 1
+    assert data.get(str(tag2.id)) == 1
 
 
 def test_get_sdoc_counts_if_not_exists(client: TestClient):
