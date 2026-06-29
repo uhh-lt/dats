@@ -108,6 +108,10 @@ docling:
   host: ${oc.env:DOCLING_HOST, "localhost"}
   port: ${oc.env:DOCLING_PORT, 13139}
 
+glitchtip:
+  dsn_backend: ${oc.env:GLITCHTIP_DSN_BACKEND, ""}
+  dsn_frontend: ${oc.env:GLITCHTIP_DSN_FRONTEND, ""}
+
 rq:
   gpu_memory_limit: ${oc.env:RQ_GPU_MEMORY_LIMIT_GB, 20}
 

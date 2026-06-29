@@ -66,14 +66,20 @@ async def lifespan(app: FastAPI):
     ElasticSearchRepo().close_connection()
 
 
-## Connecting to GlitchTip using Sentry SDK
-sentry_sdk.init(
-    dsn=conf.glitchtip.dsn,
-    # GlitchTip doesn't support Sentry sessions, so we disable them
-    auto_session_tracking=False,
-    traces_sample_rate=1.0,
-    enable_logs=True,
-)
+# connect to GlitchTip using Sentry SDK
+if conf.glitchtip.dsn_backend.strip() != "":
+    sentry_sdk.init(
+        dsn=conf.glitchtip.dsn_backend,
+        # GlitchTip doesn't support Sentry sessions, so we disable them
+        auto_session_tracking=False,
+        traces_sample_rate=1.0,
+        enable_logs=True,
+    )
+    logger.info("Connected to GlitchTip using Sentry SDK!")
+else:
+    logger.info(
+        "No GlitchTip DSN provided. Skipping connection to GlitchTip using Sentry SDK."
+    )
 
 
 # create the FastAPI app

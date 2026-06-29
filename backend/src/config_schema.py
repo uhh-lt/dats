@@ -282,6 +282,13 @@ class DoclingConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
 
 
+class GlitchtipConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dsn_backend: str = Field()
+    dsn_frontend: str = Field()
+
+
 class RqConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -340,6 +347,7 @@ class BackendConfigSchema(BaseModel):
     elasticsearch: ElasticsearchConfig
     vllm: VllmConfig
     docling: DoclingConfig
+    glitchtip: GlitchtipConfig
     rq: RqConfig
     llm_assistant: LlmAssistantConfig
     cota: CotaConfig
