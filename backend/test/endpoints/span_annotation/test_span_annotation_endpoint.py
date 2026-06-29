@@ -3,9 +3,11 @@ from fastapi.testclient import TestClient
 
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
+    SpanAnnotationDeleted,
     SpanAnnotationRead,
     SpanAnnotationUpdate,
 )
+from core.annotation.span_group_dto import SpanGroupRead
 
 
 def test_add_span_annotation(
@@ -392,7 +394,7 @@ def test_remove_from_all_groups_ok(
     resp = client.delete(f"/span/{span_annotation.id}/groups")
 
     assert resp.status_code == 200, resp.text
-    deleted = SpanAnnotationRead.model_validate(resp.json())
+    deleted = SpanAnnotationDeleted.model_validate(resp.json())
     assert deleted.id == span_annotation.id
     assert deleted.sdoc_id == sdoc.id
     assert deleted.code_id == code.id
@@ -408,16 +410,16 @@ def test_remove_from_all_groups_not_found(client: TestClient):
 
 def test_get_groups_ok(
     client: TestClient,
-    project_with_span_annotations_and_group,
+    project_with_span_annotations_and_linked_group,
 ):
-    span_annotation = project_with_span_annotations_and_group["span_annotation"]
-    span_group = project_with_span_annotations_and_group["span_group"]
+    span_annotation = project_with_span_annotations_and_linked_group["span_annotation"]
+    span_group = project_with_span_annotations_and_linked_group["span_group"]
 
     resp = client.get(f"/span/{span_annotation.id}/groups")
 
     assert resp.status_code == 200, resp.text
-    groups = resp.json()
-    returned_ids = {g["id"] for g in groups}
+    groups = [SpanGroupRead.model_validate(g) for g in resp.json()]
+    returned_ids = {g.id for g in groups}
     assert returned_ids == {span_group.id}
 
 

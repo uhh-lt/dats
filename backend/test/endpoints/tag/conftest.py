@@ -35,7 +35,7 @@ def project_with_sdoc_and_tag(db_session, project_with_sdoc) -> ProjectWithSdocA
     )
 
     # Link the tag to the source document
-    sdoc.tags.append(tag)
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=[tag.id])
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -74,7 +74,7 @@ def project_with_sdoc_and_multiple_tags(
     )
 
     # Link the second tag to the source document
-    sdoc.tags.append(tag2)
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc.id], tag_ids=[tag2.id])
 
     # Commit the changes to the database and refresh the objects
     db_session.commit()
@@ -103,7 +103,7 @@ class ProjectWithMultipleSdocsAndMultipleTags(TypedDict):
 def project_with_multiple_sdocs_and_multiple_tags(
     db_session, test_project
 ) -> ProjectWithMultipleSdocsAndMultipleTags:
-    """Create a project with multiple source documents and tags. The first tag is linked to both source documents, the second tag is linked only to the second source document."""
+    """Create a project with multiple source documents and tags. The first tag is linked to both source documents, the second tag is linked only to the first source document."""
 
     # Create two source documents in the project
     sdoc1 = crud_sdoc.create(
