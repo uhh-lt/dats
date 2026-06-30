@@ -4,6 +4,6 @@
 /* eslint-disable */
 export enum SDocStatus {
   "_-100" = -100,
-  _0 = 0,
-  _1 = 1,
+  "_0" = 0,
+  "_1" = 1,
 }
