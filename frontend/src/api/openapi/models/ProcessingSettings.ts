@@ -28,4 +28,8 @@ export type ProcessingSettings = {
    * Language of the documents: 'de', 'en', ...
    */
   language: Language;
+  /**
+   * Large Language Model to use for processing
+   */
+  model: string;
 };

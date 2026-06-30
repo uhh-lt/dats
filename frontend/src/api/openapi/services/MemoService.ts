@@ -153,9 +153,11 @@ export class MemoService {
   public static generateMemoSuggestion({
     attachedObjId,
     attachedObjType,
+    model,
   }: {
     attachedObjId: number;
     attachedObjType: AttachedObjectType;
+    model: string;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "GET",
@@ -163,6 +165,9 @@ export class MemoService {
       path: {
         attached_obj_id: attachedObjId,
         attached_obj_type: attachedObjType,
+      },
+      query: {
+        model: model,
       },
       errors: {
         422: `Validation Error`,

@@ -17,12 +17,14 @@ export class RagService {
     projId,
     topK,
     threshold,
+    model,
     requestBody,
     sessionId,
   }: {
     projId: number;
     topK: number;
     threshold: number;
+    model: string;
     requestBody: Body_rag_rag_session;
     sessionId?: string | null;
   }): CancelablePromise<ChatSessionResponse> {
@@ -33,6 +35,7 @@ export class RagService {
         proj_id: projId,
         top_k: topK,
         threshold: threshold,
+        model: model,
         session_id: sessionId,
       },
       body: requestBody,
@@ -48,9 +51,11 @@ export class RagService {
    * @throws ApiError
    */
   public static chatSession({
+    model,
     prompt,
     sessionId,
   }: {
+    model: string;
     prompt: string;
     sessionId?: string | null;
   }): CancelablePromise<ChatSessionResponse> {
@@ -58,12 +63,24 @@ export class RagService {
       method: "GET",
       url: "/rag/chat_session",
       query: {
+        model: model,
         prompt: prompt,
         session_id: sessionId,
       },
       errors: {
         422: `Validation Error`,
       },
+    });
+  }
+  /**
+   * Get all available LLM models from the LLM Provider
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static getAvailableModels(): CancelablePromise<Array<string>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/rag/models",
     });
   }
 }

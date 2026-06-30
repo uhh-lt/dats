@@ -2583,7 +2583,8 @@
             "in": "path",
             "required": true,
             "schema": { "$ref": "#/components/schemas/AttachedObjectType" }
-          }
+          },
+          { "name": "model", "in": "query", "required": true, "schema": { "type": "string", "title": "Model" } }
         ],
         "responses": {
           "200": {
@@ -3332,6 +3333,7 @@
             "required": true,
             "schema": { "type": "number", "title": "Threshold" }
           },
+          { "name": "model", "in": "query", "required": true, "schema": { "type": "string", "title": "Model" } },
           {
             "name": "session_id",
             "in": "query",
@@ -3362,6 +3364,7 @@
         "operationId": "chat_session",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
+          { "name": "model", "in": "query", "required": true, "schema": { "type": "string", "title": "Model" } },
           { "name": "prompt", "in": "query", "required": true, "schema": { "type": "string", "title": "Prompt" } },
           {
             "name": "session_id",
@@ -3380,6 +3383,28 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/rag/models": {
+      "get": {
+        "tags": ["rag"],
+        "summary": "Get all available LLM models from the LLM Provider",
+        "operationId": "get_available_models",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "type": "string" },
+                  "type": "array",
+                  "title": "Response Rag-Get Available Models"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/search_annotate/auto_annotate": {
@@ -9019,10 +9044,11 @@
             "type": "array",
             "title": "Prompts",
             "description": "The prompt templates to use for the job"
-          }
+          },
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["llm_approach_type", "prompts"],
+        "required": ["llm_approach_type", "prompts", "model"],
         "title": "FewShotParams"
       },
       "FilterExpression_BBoxColumns_": {
@@ -10594,6 +10620,11 @@
       },
       "PipelineSettings": {
         "properties": {
+          "rewriting_model": {
+            "type": "string",
+            "title": "Rewriting Model",
+            "description": "Large Language Model to use for the perspective creation pipeline"
+          },
           "umap_n_neighbors": {
             "type": "integer",
             "title": "Umap N Neighbors",
@@ -10644,6 +10675,7 @@
           }
         },
         "type": "object",
+        "required": ["rewriting_model"],
         "title": "PipelineSettings",
         "description": "Settings for the perspective creation pipeline.\nWhen updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)"
       },
@@ -10677,7 +10709,8 @@
           "language": {
             "$ref": "#/components/schemas/Language",
             "description": "Language of the documents: 'de', 'en', ..."
-          }
+          },
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for processing" }
         },
         "type": "object",
         "required": [
@@ -10686,7 +10719,8 @@
           "keyword_number",
           "keyword_deduplication_threshold",
           "keyword_max_ngram_size",
-          "language"
+          "language",
+          "model"
         ],
         "title": "ProcessingSettings"
       },
@@ -13439,10 +13473,11 @@
             "type": "array",
             "title": "Prompts",
             "description": "The prompt templates to use for the job"
-          }
+          },
+          "model": { "type": "string", "title": "Model", "description": "Large Language Model to use for the job" }
         },
         "type": "object",
-        "required": ["llm_approach_type", "prompts"],
+        "required": ["llm_approach_type", "prompts", "model"],
         "title": "ZeroShotParams"
       }
     },
