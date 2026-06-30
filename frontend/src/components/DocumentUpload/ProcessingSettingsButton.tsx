@@ -25,9 +25,14 @@ import FormSwitch from "../FormInputs/FormSwitch";
 interface ProcessingSettingsButtonProps {
   settings: ProcessingSettings;
   onChangeSettings: (settings: ProcessingSettings) => void;
+  availableLLMs: string[];
 }
 
-const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ settings, onChangeSettings }) => {
+const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({
+  settings,
+  onChangeSettings,
+  availableLLMs,
+}) => {
   const [open, setOpen] = useState(false);
   const {
     control,
@@ -55,6 +60,8 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
   const tooltipContent = (
     <Typography variant="body2" component="div">
       <b>Processing Settings</b>
+      <br />
+      <em>Model:</em> {settings.model}
       <br />
       <em>Language:</em> {settings.language}
       <br />
@@ -85,6 +92,33 @@ const ProcessingSettingsButton: React.FC<ProcessingSettingsButtonProps> = ({ set
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
             <Stack spacing={3}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={500}>
+                    Model
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Select the model for document processing.
+                  </Typography>
+                </Box>
+                <FormMenu
+                  name="model"
+                  control={control}
+                  textFieldProps={{
+                    label: "Model",
+                    error: Boolean(errors.model),
+                    helperText: <ErrorMessage errors={errors} name="model" />,
+                    variant: "filled",
+                  }}
+                >
+                  {availableLLMs.map((model) => (
+                    <MenuItem key={model} value={model}>
+                      {model}
+                    </MenuItem>
+                  ))}
+                </FormMenu>
+              </Box>
+              <Divider />
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1 }}>
                 <Box>
                   <Typography variant="subtitle1" fontWeight={500}>

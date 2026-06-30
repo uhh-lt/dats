@@ -21,10 +21,12 @@ import {
 import { useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import GeneralHooks from "../../api/GeneralHooks.ts";
 import { AspectCreate } from "../../api/openapi/models/AspectCreate.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { PipelineSettings } from "../../api/openapi/models/PipelineSettings.ts";
 import PerspectivesHooks from "../../api/PerspectivesHooks.ts";
+import FormMenu from "../../components/FormInputs/FormMenu.tsx";
 import FormText from "../../components/FormInputs/FormText.tsx";
 import FormTextMultiline from "../../components/FormInputs/FormTextMultiline.tsx";
 import DATSDialogHeader from "../../components/MUI/DATSDialogHeader.tsx";
@@ -42,7 +44,7 @@ interface AspectTemplate {
 }
 
 /** Advanced pipeline parameters for expert users */
-const defaultAdvancedSettings: PipelineSettings = {
+const defaultAdvancedSettings: Omit<PipelineSettings, "rewriting_model"> = {
   umap_n_neighbors: 15,
   umap_n_components: 10,
   umap_min_dist: 0.1,
@@ -96,6 +98,9 @@ interface PerspectiveCreationDialogProps {
 function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogProps) {
   const projectId = useAppSelector((state: RootState) => state.project.projectId);
 
+  // available LLMs for the model selection
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
   // perspective creation
   const navigate = useNavigate();
   const [selectedDocType, setSelectedDocType] = useState<DocType>(DocType.TEXT);
@@ -113,6 +118,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
   } = useForm<PerspectiveFormData>({
     defaultValues: {
       name: "",
+      rewriting_model: "",
       doc_embedding_prompt: "",
       doc_modification_prompt: "",
       ...defaultAdvancedSettings,
@@ -138,6 +144,7 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
           tag_id: tagId,
           pipeline_settings: {
             ...defaultAdvancedSettings,
+            rewriting_model: data.rewriting_model,
             umap_min_dist: data.umap_min_dist,
             umap_metric: data.umap_metric,
             umap_n_neighbors: data.umap_n_neighbors,
@@ -215,6 +222,37 @@ function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreationDialogP
               </Card>
             ))}
           </Stack>
+          <FormMenu
+            name="rewriting_model"
+            control={control}
+            rules={{
+              required: "Model selection is required",
+            }}
+            textFieldProps={{
+              label: "Model",
+              placeholder: "Select the model for document processing",
+              variant: "outlined",
+              fullWidth: true,
+              error: Boolean(errors.rewriting_model),
+              helperText: <ErrorMessage errors={errors} name="rewriting_model" />,
+            }}
+          >
+            {availableLLMs.isError ? (
+              <MenuItem value="" disabled>
+                Error loading models
+              </MenuItem>
+            ) : availableLLMs.isLoading ? (
+              <MenuItem value="" disabled>
+                Loading models...
+              </MenuItem>
+            ) : availableLLMs.isSuccess ? (
+              availableLLMs.data.map((model) => (
+                <MenuItem key={model} value={model}>
+                  {model}
+                </MenuItem>
+              ))
+            ) : null}
+          </FormMenu>
           <FormText
             name="doc_embedding_prompt"
             control={control}

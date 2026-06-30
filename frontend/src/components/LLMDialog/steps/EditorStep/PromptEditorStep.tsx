@@ -21,6 +21,7 @@ type PromptEditorValues = {
 function PromptEditorStep() {
   // global state
   const projectId = useAppSelector((state) => state.dialog.llmProjectId);
+  const model = useAppSelector((state) => state.dialog.llmId);
   const method = useAppSelector((state) => state.dialog.llmMethod);
   const approach = useAppSelector((state) => state.dialog.llmApproach);
   const tags = useAppSelector((state) => state.dialog.llmTags);
@@ -111,6 +112,7 @@ function PromptEditorStep() {
   // start llm job
   const { mutate: startLLMJobMutation, isPending: isStartPending } = LLMHooks.useStartLLMJob();
   const handleStartLLMJob = useCallback(() => {
+    if (model === undefined) return;
     if (method === undefined) return;
 
     startLLMJobMutation(
@@ -120,6 +122,7 @@ function PromptEditorStep() {
           llm_job_type: method,
           llm_approach_type: approach,
           specific_approach_parameters: {
+            model: model,
             llm_approach_type: approach,
             prompts: prompts,
           },
@@ -145,6 +148,7 @@ function PromptEditorStep() {
       },
     );
   }, [
+    model,
     method,
     projectId,
     approach,
