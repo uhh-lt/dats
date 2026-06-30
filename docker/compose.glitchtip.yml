@@ -1,5 +1,5 @@
 services:
-  glitchtip-postgres:
+  glitchtip-db:
     image: postgres:18
     environment:
       POSTGRES_PASSWORD: ${GLITCHTIP_DB_PASS?glitchtip-db-pass-required!}
@@ -18,14 +18,14 @@ services:
       - glitchtip_network
 
   # TODO: add a healthcheck
-  glitchtip-ui:
+  glitchtip:
     image: glitchtip/glitchtip:6 # Check https://glitchtip.com/blog/ for new major versions
     depends_on:
-      - glitchtip-postgres
+      - glitchtip-db
     ports:
       - "${GLITCHTIP_EXPOSED?glitchtip-exposed-required!}:8000"
     environment:
-      DATABASE_URL: postgres://${GLITCHTIP_DB_USER?glitchtip-db-user-required!}:${GLITCHTIP_DB_PASS?glitchtip-db-pass-required!}@glitchtip-postgres:5432/${GLITCHTIP_DB?glitchtip-db-required!}
+      DATABASE_URL: postgres://${GLITCHTIP_DB_USER?glitchtip-db-user-required!}:${GLITCHTIP_DB_PASS?glitchtip-db-pass-required!}@glitchtip-db:5432/${GLITCHTIP_DB?glitchtip-db-required!}
       SECRET_KEY: ${GLITCHTIP_SECRET_KEY?glitchtip-secret-key-required!} # best to run openssl rand -hex 32
       EMAIL_URL: ${GLITCHTIP_EMAIL_URL?glitchtip-email-url-required!} # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
       GLITCHTIP_DOMAIN: http://${GLITCHTIP_HOST?glitchtip-host-required!}:${GLITCHTIP_EXPOSED?glitchtip-exposed-required!} # Change this to your domain
@@ -41,13 +41,14 @@ services:
       SERVER_ROLE: all_in_one
     restart: unless-stopped
     volumes:
-      - glitchtip-ui-data:/code/uploads
+      - glitchtip-data:/code/uploads
     networks:
       - glitchtip_network
 
 volumes:
   glitchtip-pg-data:
-  glitchtip-ui-data:
+  glitchtip-data:
 
 networks:
   glitchtip_network:
+    name: glitchtip_network
