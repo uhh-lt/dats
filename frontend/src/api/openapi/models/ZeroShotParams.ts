@@ -9,4 +9,8 @@ export type ZeroShotParams = {
    * The prompt templates to use for the job
    */
   prompts: Array<LLMPromptTemplates>;
+  /**
+   * Large Language Model to use for the job
+   */
+  model: string;
 };

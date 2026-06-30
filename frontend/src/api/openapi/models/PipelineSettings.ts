@@ -8,6 +8,10 @@
  */
 export type PipelineSettings = {
   /**
+   * Large Language Model to use for the perspective creation pipeline
+   */
+  rewriting_model: string;
+  /**
    * Number of neighbors for UMAP dimensionality reduction
    */
   umap_n_neighbors?: number;
