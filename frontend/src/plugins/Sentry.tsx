@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import GeneralHooks from "../api/GeneralHooks.ts";
+import { OpenAPI } from "../api/openapi/core/OpenAPI.ts";
 
 // Component that initializes Sentry after fetching instance info
 export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
@@ -27,7 +28,8 @@ export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
     tunnel: `/sentry-api/api/${projectId}/envelope/?sentry_key=${publicKey}`,
     environment: import.meta.env.MODE,
     integrations: [Sentry.browserTracingIntegration()],
-    tracesSampleRate: 1.0,
+    tracesSampleRate: import.meta.env.MODE === "development" ? 1.0 : 0.01,
+    release: OpenAPI.VERSION,
   });
   console.log("Sentry initialized with Glitchtip configuration");
 

@@ -72,8 +72,10 @@ if conf.glitchtip.dsn_backend.strip() != "":
         dsn=conf.glitchtip.dsn_backend,
         # GlitchTip doesn't support Sentry sessions, so we disable them
         auto_session_tracking=False,
-        traces_sample_rate=1.0,
+        traces_sample_rate=0.01 if conf.api.production_mode == 1 else 1.0,
         enable_logs=True,
+        environment="production" if conf.api.production_mode == 1 else "development",
+        release=conf.api.version,
     )
     logger.info("Connected to GlitchTip using Sentry SDK!")
 else:
@@ -162,7 +164,7 @@ def main() -> None:
         "The API port has to be a positive integer! E.g. 8081"
     )
 
-    is_debug = conf.api.production_mode == "0"
+    is_debug = conf.api.production_mode == 0
 
     run(
         "main:app",
