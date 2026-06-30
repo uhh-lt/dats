@@ -259,20 +259,12 @@ class ElasticsearchConfig(BaseModel):
     sniffer_timeout: int = Field(gt=0)
 
 
-class ModelServerConfig(BaseModel):
+class APIConnectionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     host: str = Field(min_length=1)
     port: int = Field(gt=0, lt=65536)
-    model: str = Field(min_length=1)
-
-
-class VllmConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    llm: ModelServerConfig
-    vlm: ModelServerConfig
-    emb: ModelServerConfig
+    api_key: str = Field()
 
 
 class DoclingConfig(BaseModel):
@@ -345,7 +337,8 @@ class BackendConfigSchema(BaseModel):
     redis: RedisConfig
     logging: LoggingConfig
     elasticsearch: ElasticsearchConfig
-    vllm: VllmConfig
+    llm_provider: APIConnectionConfig
+    emb_provider: APIConnectionConfig
     docling: DoclingConfig
     glitchtip: GlitchtipConfig
     rq: RqConfig

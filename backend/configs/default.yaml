@@ -90,19 +90,14 @@ elasticsearch:
   sniff_on_connection_fail: ${oc.env:ES_SNIFF_ON_CONNECTION_FAIL, False}
   sniffer_timeout: ${oc.env:ES_SNIFFER_TIMEOUT, 120}
 
-vllm:
-  llm:
-    host: ${oc.env:VLLM_LLM_HOST, "localhost"}
-    port: ${oc.env:VLLM_LLM_PORT, 13133}
-    model: ${oc.env:VLLM_LLM_MODEL, "gemma-3-27b"}
-  vlm:
-    host: ${oc.env:VLLM_VLM_HOST, "localhost"}
-    port: ${oc.env:VLLM_VLM_PORT, 13133}
-    model: ${oc.env:VLLM_VLM_MODEL, "gemma-3-27b"}
-  emb:
-    host: ${oc.env:VLLM_EMB_HOST, "localhost"}
-    port: ${oc.env:VLLM_EMB_PORT, 13137}
-    model: ${oc.env:VLLM_EMB_MODEL, "snowflake-arctic-embed2:568m"}
+llm_provider:
+  host: ${oc.env:LLM_PROVIDER_HOST, "localhost"}
+  port: ${oc.env:LLM_PROVIDER_PORT, 13133}
+  api_key: ${oc.env:LLM_PROVIDER_API_KEY, ""}
+emb_provider:
+  host: ${oc.env:EMB_PROVIDER_HOST, "localhost"}
+  port: ${oc.env:EMB_PROVIDER_PORT, 13137}
+  api_key: ${oc.env:EMB_PROVIDER_API_KEY, ""}
 
 docling:
   host: ${oc.env:DOCLING_HOST, "localhost"}
