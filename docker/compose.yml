@@ -37,6 +37,8 @@ x-dats-common: &dats-common
     DOCLING_PORT: ${DOCLING_PORT?docling-port-required!}
     RAY_HOST: ${RAY_HOST?ray-host-required!}
     RAY_PORT: ${RAY_PORT?ray-port-required!}
+    GLITCHTIP_DSN_BACKEND: ${GLITCHTIP_DSN_BACKEND?glitchtip-dsn-backend-required!}
+    GLITCHTIP_DSN_FRONTEND: ${GLITCHTIP_DSN_FRONTEND?glitchtip-dsn-frontend-required!}
     # Cache dirs
     NUMBA_CACHE_DIR: /cache/numba_cache
     MPLCONFIGDIR: /cache/matplotlib
@@ -237,8 +239,6 @@ services:
     environment:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
-      GLITCHTIP_DSN_BACKEND: ${GLITCHTIP_DSN_BACKEND}
-      GLITCHTIP_DSN_FRONTEND: ${GLITCHTIP_DSN_FRONTEND}
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache
