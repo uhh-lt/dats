@@ -567,7 +567,7 @@ requires-dist = [
     { name = "python-multipart", specifier = "==0.0.20" },
     { name = "pytorch-crf", specifier = "==0.7.2" },
     { name = "readability-lxml", specifier = "==0.8.1" },
-    { name = "redis", specifier = ">=7.4.1" },
+    { name = "redis", specifier = ">=8.0.1" },
     { name = "rope", specifier = "==1.9.0" },
     { name = "rq", specifier = ">=2.4.1" },
     { name = "scikit-learn", specifier = "==1.3.2" },
