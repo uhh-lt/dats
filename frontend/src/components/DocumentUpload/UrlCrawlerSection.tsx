@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import GeneralHooks from "../../api/GeneralHooks.ts";
 import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection";
@@ -27,6 +28,24 @@ function isValidHttpUrl(string: string): boolean {
 }
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
+  return (
+    <>
+      {availableLLMs.isError ? (
+        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
+      ) : availableLLMs.isLoading ? (
+        <p>Loading available LLMs...</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
+        <p>No available LLMs found. Please contact the administrator.</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
+        <UrlCrawlerSectionContent projectId={projectId} availableLLMs={availableLLMs.data} />
+      ) : null}
+    </>
+  );
+}
+
+function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectionProps & { availableLLMs: string[] }) {
   // Crawler mutation
   const crawlUrlsMutation = DocProcessingHooks.useStartCrawlerJob();
 
@@ -35,6 +54,7 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   const [urls, setUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<ProcessingSettings>({
+    model: availableLLMs[0],
     extract_images: true,
     pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
@@ -93,7 +113,9 @@ export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   return (
     <DialogSection
       title="Upload URLs"
-      action={<ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} />}
+      action={
+        <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} availableLLMs={availableLLMs} />
+      }
     >
       {/* URL Input Field */}
       <Stack direction="row" spacing={1} mb={2}>

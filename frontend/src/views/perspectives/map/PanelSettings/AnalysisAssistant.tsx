@@ -2,9 +2,21 @@ import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
 import UndoIcon from "@mui/icons-material/Undo"; // Revert
-import { Box, IconButton, Paper, Stack, TextField, Tooltip, Typography, alpha, useTheme } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  MenuItem,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+  alpha,
+  useTheme,
+} from "@mui/material";
 import { useState } from "react";
 import Markdown from "react-markdown";
+import GeneralHooks from "../../../../api/GeneralHooks.ts";
 import PerspectivesHooks from "../../../../api/PerspectivesHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { PerspectivesActions } from "../../perspectivesSlice.ts";
@@ -16,11 +28,14 @@ interface ChatMessage {
 }
 
 function AnalysisAssistant() {
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
   const theme = useTheme();
   const [inputText, setInputText] = useState<string>("");
 
   const selectedSdocIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
   const projectId = useAppSelector((state) => state.project.projectId);
+  const model = useAppSelector((state) => state.perspectives.chatModelId);
   const sessionId = useAppSelector((state) => state.perspectives.chatSessionId);
   const messages = useAppSelector((state) => state.perspectives.chatMessages);
   const lastDeleted = useAppSelector((state) => state.perspectives.lastDeletedChatMessages);
@@ -29,6 +44,7 @@ function AnalysisAssistant() {
   const handleSendMessage = () => {
     if (inputText.trim() === "") return;
     if (!projectId) return;
+    if (!model) return;
 
     const newUserMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -40,6 +56,7 @@ function AnalysisAssistant() {
 
     ragChat.mutate(
       {
+        model: model,
         sessionId: sessionId,
         projId: projectId,
         requestBody: {
@@ -121,6 +138,33 @@ function AnalysisAssistant() {
             <IconButton onClick={handleStartNewChat} size="small">
               <AddCommentIcon />
             </IconButton>
+          </Tooltip>
+          <Tooltip title="Select Model">
+            <TextField
+              select
+              size="small"
+              value={model || "-1"}
+              onChange={(e) => dispatch(PerspectivesActions.onChatModelChange(e.target.value))}
+            >
+              <MenuItem value="-1" disabled>
+                Select Model
+              </MenuItem>
+              {availableLLMs.isError ? (
+                <MenuItem value="-1" disabled>
+                  Error loading models
+                </MenuItem>
+              ) : availableLLMs.isLoading ? (
+                <MenuItem value="-1" disabled>
+                  Loading models...
+                </MenuItem>
+              ) : availableLLMs.isSuccess ? (
+                availableLLMs.data.map((model) => (
+                  <MenuItem key={model} value={model}>
+                    {model}
+                  </MenuItem>
+                ))
+              ) : null}
+            </TextField>
           </Tooltip>
         </Stack>
       </Box>

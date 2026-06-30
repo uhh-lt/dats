@@ -12,9 +12,11 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { ChangeEvent, memo, useCallback, useMemo, useState } from "react";
+import GeneralHooks from "../../../api/GeneralHooks.ts";
 import LLMHooks from "../../../api/LLMHooks.ts";
 import { ApproachType } from "../../../api/openapi/models/ApproachType.ts";
 import { TaskType } from "../../../api/openapi/models/TaskType.ts";
@@ -36,9 +38,13 @@ const explanations: Record<ApproachType, string> = {
 };
 
 function ApproachSelectionStep() {
+  // available LLMs for the model selection
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
   // global state
   const projectId = useAppSelector((state) => state.dialog.llmProjectId);
   const approachRecommendation = useAppSelector((state) => state.dialog.llmApproachRecommendation);
+  const llmId = useAppSelector((state) => state.dialog.llmId);
   const llmMethod = useAppSelector((state) => state.dialog.llmMethod);
   const metadata = useAppSelector((state) => state.dialog.llmMetadata);
   const codes = useAppSelector((state) => state.dialog.llmCodes);
@@ -47,12 +53,17 @@ function ApproachSelectionStep() {
   const dispatch = useAppDispatch();
 
   // local state
+  const [modelId, setModelId] = useState<string | undefined>(llmId);
   const [approachType, setApproachType] = useState(approachRecommendation.recommended_approach);
   const [deleteExistingAnnotations, setDeleteExistingAnnotations] = useState(DeletionStrategy.DELETE_EXISTING);
 
   // memoized handlers
   const handleChange = useCallback((event: SelectChangeEvent) => {
     setApproachType(event.target.value as ApproachType);
+  }, []);
+
+  const handleChangeModelId = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setModelId(event.target.value);
   }, []);
 
   const handleChangeDeletionStrategy = useCallback((event: SelectChangeEvent) => {
@@ -86,6 +97,7 @@ function ApproachSelectionStep() {
 
   const handleNext = useCallback(() => {
     if (!llmMethod) return;
+    if (!modelId) return;
 
     const commonParams = {
       llm_job_type: llmMethod,
@@ -116,6 +128,7 @@ function ApproachSelectionStep() {
                   prompts: data,
                   approach: approachType,
                   deleteExistingAnnotations: deleteExistingAnnotations === DeletionStrategy.DELETE_EXISTING,
+                  modelId: modelId,
                 }),
               );
             },
@@ -134,6 +147,7 @@ function ApproachSelectionStep() {
     createPromptTemplatesMutation,
     dispatch,
     deleteExistingAnnotations,
+    modelId,
   ]);
 
   const numAvailableApproaches = useMemo(
@@ -144,6 +158,26 @@ function ApproachSelectionStep() {
   return (
     <>
       <DialogContent>
+        <TextField select value={modelId || "-1"} label="Model" onChange={handleChangeModelId} sx={{ ml: 12.5, my: 2 }}>
+          <MenuItem value="-1" disabled>
+            Select LLM
+          </MenuItem>
+          {availableLLMs.isError ? (
+            <MenuItem value="-1" disabled>
+              Error loading models
+            </MenuItem>
+          ) : availableLLMs.isLoading ? (
+            <MenuItem value="-1" disabled>
+              Loading models...
+            </MenuItem>
+          ) : availableLLMs.isSuccess ? (
+            availableLLMs.data.map((model) => (
+              <MenuItem key={model} value={model}>
+                {model}
+              </MenuItem>
+            ))
+          ) : null}
+        </TextField>
         <LLMUtterance>
           <Typography>
             {approachRecommendation.reasoning.split("\n").map((utterance, idx) => (

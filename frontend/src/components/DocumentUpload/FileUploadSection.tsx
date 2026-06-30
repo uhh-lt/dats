@@ -2,6 +2,7 @@ import PlayCircle from "@mui/icons-material/PlayCircle";
 import { LoadingButton } from "@mui/lab";
 import { useCallback, useState } from "react";
 import DocProcessingHooks from "../../api/DocProcessingHooks.ts";
+import GeneralHooks from "../../api/GeneralHooks.ts";
 import { Language } from "../../api/openapi/models/Language.ts";
 import { ProcessingSettings } from "../../api/openapi/models/ProcessingSettings.ts";
 import { DialogSection } from "../MUI/DialogSection.tsx";
@@ -13,12 +14,31 @@ interface FileUploadSectionProps {
 }
 
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
+  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+
+  return (
+    <>
+      {availableLLMs.isError ? (
+        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
+      ) : availableLLMs.isLoading ? (
+        <p>Loading available LLMs...</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
+        <p>No available LLMs found. Please contact the administrator.</p>
+      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
+        <FileUploadSectionContent projectId={projectId} availableLLMs={availableLLMs.data} />
+      ) : null}
+    </>
+  );
+}
+
+function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectionProps & { availableLLMs: string[] }) {
   // Upload mutation
   const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
 
   // Local state
   const [files, setFiles] = useState<File[]>([]);
   const [settings, setSettings] = useState<ProcessingSettings>({
+    model: availableLLMs[0],
     extract_images: true,
     pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
@@ -47,7 +67,9 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   return (
     <DialogSection
       title="Upload Files"
-      action={<ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} />}
+      action={
+        <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} availableLLMs={availableLLMs} />
+      }
     >
       <UploadDropzone onFilesChanged={handleFilesChange} files={files} />
       <LoadingButton

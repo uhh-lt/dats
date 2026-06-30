@@ -6,6 +6,8 @@ export const QueryKey = {
   // managed by GeneralHooks
   // the instance info (no parameters)
   INSTANCE_INFO: "instanceInfo",
+  // the available models (no parameters)
+  AVAILABLE_LLMS: "availableLLMs",
 
   // managed by UserHooks
   // all UserRead[] of a Project (by project id)

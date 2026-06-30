@@ -56,6 +56,7 @@ export interface PerspectivesState {
   isClusterDialogOpen: boolean;
   clusterDialogClusterId: number | undefined;
   // chat
+  chatModelId?: string;
   chatSessionId?: string;
   chatMessages: ChatMessage[];
   lastDeletedChatMessages: ChatMessage[]; // For redo functionality
@@ -95,6 +96,7 @@ const initialState: PerspectivesState & FilterState = {
   isClusterDialogOpen: false,
   clusterDialogClusterId: undefined,
   // chat
+  chatModelId: undefined,
   chatSessionId: undefined,
   chatMessages: [],
   lastDeletedChatMessages: [],
@@ -292,9 +294,13 @@ export const perspectivesSlice = createSlice({
     },
     // chat
     onChatReset: (state) => {
+      state.chatModelId = undefined;
       state.chatSessionId = undefined;
       state.chatMessages = [];
       state.lastDeletedChatMessages = [];
+    },
+    onChatModelChange: (state, action: PayloadAction<string>) => {
+      state.chatModelId = action.payload;
     },
     onChatMessageSent: (state, action: PayloadAction<ChatMessage>) => {
       state.chatMessages.push(action.payload);
