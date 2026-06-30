@@ -1,5 +1,5 @@
 import time
-from typing import Tuple, Type, TypedDict, TypeVar
+from typing import Type, TypeVar
 from uuid import uuid4
 
 import numpy as np
@@ -19,16 +19,10 @@ class LLMMessage(BaseModel):
     user_prompt: str
 
 
-class ModelDict(TypedDict):
-    llm: Tuple[str, OpenAI]
-    vlm: Tuple[str, OpenAI]
-    emb: Tuple[str, OpenAI]
-
-
 class LLMRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.__models: dict[str, OpenAI] = {}
-
+        cls.__llm_conn: OpenAI
+        cls.__llm_models: list[str] = []
         cls.__llm_chat_sessions: dict[str, list[dict]] = dict()
         cls.__llm_chat_session_timestamps: dict[str, float] = dict()
         cls.__max_llm_chat_sessions = 50
@@ -39,24 +33,32 @@ class LLMRepo(metaclass=SingletonMeta):
         cls.__max_vlm_chat_sessions = 50
         cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
+        cls.__emb_conn: OpenAI
+        cls.__emb_models: list[str] = []
+
         try:
-            for model_type, settings in (
-                ("llm", conf.vllm.llm),
-                ("vlm", conf.vllm.vlm),
-                ("emb", conf.vllm.emb),
+            for provider_type, connection_info in (
+                ("llm", conf.llm_provider),
+                ("emb", conf.emb_provider),
             ):
                 conn = OpenAI(
-                    base_url=f"http://{settings.host}:{settings.port}/v1",
-                    api_key=api_key,
+                    base_url=f"http://{connection_info.host}:{connection_info.port}/v1",
+                    api_key=connection_info.api_key,
                 )
                 models = conn.models.list().data
                 if len(models) == 0:
                     raise Exception(
-                        f"No model loaded at '{settings.host}:{settings.port}'!"
+                        f"No model found at '{connection_info.host}:{connection_info.port}'!"
                     )
-                for model in models:
-                    cls.__models[model.id] = conn
-            logger.info(cls.__models)
+                if provider_type == "llm":
+                    cls.__llm_models = [m.id for m in models]
+                    cls.__llm_conn = conn
+                elif provider_type == "emb":
+                    cls.__emb_models = [m.id for m in models]
+                    cls.__emb_conn = conn
+                logger.info(
+                    f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.host}:{connection_info.port}' with the following models: {models}"
+                )
 
         except Exception as e:
             msg = f"Cannot instantiate LLMRepo - Error '{e}'"
@@ -68,7 +70,7 @@ class LLMRepo(metaclass=SingletonMeta):
         return super(LLMRepo, cls).__new__(cls)
 
     def get_available_models(self) -> list[str]:
-        return list(self.__models.keys())
+        return list(self.__llm_models)
 
     def _start_llm_chat_session(self) -> str:
         session_id = str(uuid4())
@@ -101,6 +103,12 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
+        # validate that the model is available
+        if model not in self.__llm_models:
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {self.__llm_models}"
+            )
+
         if session_id is None:
             session_id = self._start_llm_chat_session()
             messages = self.__llm_chat_sessions[session_id]
@@ -133,13 +141,7 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model_schema = None
         if response_model is not None:
             response_model_schema = response_model.model_json_schema()
-        client = self.__models.get(model)
-        if client is None:
-            available = list(self.__models.keys())
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {available}"
-            )
-        response = client.chat.completions.create(
+        response = self.__llm_conn.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
             extra_body={"guided_json": response_model_schema},
@@ -167,13 +169,13 @@ class LLMRepo(metaclass=SingletonMeta):
         user_prompt: str,
         response_model: Type[T],
     ) -> T:
-        client = self.__models.get(model)
-        if client is None:
-            available = list(self.__models.keys())
+        # validate that the model is available
+        if model not in self.__llm_models:
             raise ValueError(
-                f"Model '{model}' is not available. Available models: {available}"
+                f"Model '{model}' is not available. Available models: {self.__llm_models}"
             )
-        response = client.chat.completions.create(
+
+        response = self.__llm_conn.chat.completions.create(
             model=model,
             messages=[
                 {
@@ -199,11 +201,10 @@ class LLMRepo(metaclass=SingletonMeta):
         messages: list[LLMMessage],
         response_model: Type[T],
     ) -> list[T]:
-        client = self.__models.get(model)
-        if client is None:
-            available = list(self.__models.keys())
+        # validate that the model is available
+        if model not in self.__llm_models:
             raise ValueError(
-                f"Model '{model}' is not available. Available models: {available}"
+                f"Model '{model}' is not available. Available models: {self.__llm_models}"
             )
 
         # prepare batch messages
@@ -225,8 +226,8 @@ class LLMRepo(metaclass=SingletonMeta):
         batch_responses = batch_completion(
             model=f"hosted_vllm/{model}",
             messages=batch_messages,
-            base_url=str(client.base_url),
-            api_key=client.api_key,
+            base_url=str(self.__llm_conn.base_url),
+            api_key=self.__llm_conn.api_key,
             # temperature=self.sampling_parameters.temperature,
             # top_p=self.sampling_parameters.top_p,
             extra_body={"guided_json": response_model.model_json_schema()},
@@ -276,6 +277,12 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
+        # validate that the model is available
+        if model not in self.__llm_models:
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {self.__llm_models}"
+            )
+
         if session_id is None:
             session_id = self._start_vlm_chat_session()
             messages = self.__vlm_chat_sessions[session_id]
@@ -321,13 +328,7 @@ class LLMRepo(metaclass=SingletonMeta):
         if response_model is not None:
             response_model_schema = response_model.model_json_schema()
 
-        client = self.__models.get(model)
-        if client is None:
-            available = list(self.__models.keys())
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {available}"
-            )
-        response = client.chat.completions.create(
+        response = self.__llm_conn.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
             extra_body={"guided_json": response_model_schema},
@@ -352,19 +353,15 @@ class LLMRepo(metaclass=SingletonMeta):
         self,
         inputs: list[str],
     ) -> np.ndarray:
-        model = conf.llm_provider.emb.model
-        client = self.__models.get(model)
-        if client is None:
-            available = list(self.__models.keys())
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {available}"
-            )
-        res = client.embeddings.create(model=model, input=inputs)
+        if len(self.__emb_models) == 0:
+            raise ValueError("No embedding models are available.")
+        model = self.__emb_models[0]  # use the first available embedding model
+        res = self.__emb_conn.embeddings.create(model=model, input=inputs)
         return np.array([emb.embedding for emb in res.data])
 
     def close_connection(self):
         """
         Close the connection to the LLM client.
         """
-        for val in self.__models.values():
-            val[1].close()  # type: ignore
+        self.__emb_conn.close()
+        self.__llm_conn.close()

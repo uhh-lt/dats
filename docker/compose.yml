@@ -27,12 +27,12 @@ x-dats-common: &dats-common
     ES_HOST: elasticsearch
     ES_PORT: 9200
     # Service Connections
-    VLLM_LLM_HOST: ${VLLM_LLM_HOST?vllm-llm-host-required!}
-    VLLM_LLM_PORT: ${VLLM_LLM_PORT?vllm-llm-port-required!}
-    VLLM_VLM_HOST: ${VLLM_VLM_HOST?vllm-vlm-host-required!}
-    VLLM_VLM_PORT: ${VLLM_VLM_PORT?vllm-vlm-port-required!}
-    VLLM_EMB_HOST: ${VLLM_EMB_HOST?vllm-emb-host-required!}
-    VLLM_EMB_PORT: ${VLLM_EMB_PORT?vllm-emb-port-required!}
+    LLM_PROVIDER_HOST: ${LLM_PROVIDER_HOST?llm-provider-host-required!}
+    LLM_PROVIDER_PORT: ${LLM_PROVIDER_PORT?llm-provider-port-required!}
+    LLM_PROVIDER_API_KEY: ${LLM_PROVIDER_API_KEY?llm-provider-api-key-required!}
+    EMB_PROVIDER_HOST: ${EMB_PROVIDER_HOST?emb-provider-host-required!}
+    EMB_PROVIDER_PORT: ${EMB_PROVIDER_PORT?emb-provider-port-required!}
+    EMB_PROVIDER_API_KEY: ${EMB_PROVIDER_API_KEY?emb-provider-api-key-required!}
     DOCLING_HOST: ${DOCLING_HOST?docling-host-required!}
     DOCLING_PORT: ${DOCLING_PORT?docling-port-required!}
     RAY_HOST: ${RAY_HOST?ray-host-required!}
