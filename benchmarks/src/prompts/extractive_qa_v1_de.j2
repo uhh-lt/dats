@@ -1,0 +1,11 @@
+Bitte extrahiere eine kurze Antwort auf die folgende Frage aus dem Kontext.
+
+Kontext: {{ context }}
+
+Frage: {{ question }}
+
+Ausgaberegeln:
+1. Gib nur gültiges JSON zurück.
+2. Das JSON muss die Schlüssel "reasoning" und "answer" enthalten.
+3. Halte "reasoning" kurz.
+4. Der Wert in "answer" muss wörtlich aus dem Kontext stammen.

@@ -1,0 +1,55 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: imdb-multi-label
+
+experiment_name: document_classification_multi_label
+# run_name: llama32_3b_imdb_multi_label_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_multi_label_v1_en.j2
+prompt_variables:
+  labels:
+    - action
+    - adventure
+    - animation
+    - biography
+    - comedy
+    - crime
+    - drama
+    - family
+    - fantasy
+    - film-noir
+    - game-show
+    - history
+    - horror
+    - music
+    - musical
+    - mystery
+    - news
+    - reality-tv
+    - romance
+    - sci-fi
+    - sport
+    - talk-show
+    - thriller
+    - war
+    - western
+
+system_prompt_template: document_classification_system_en.j2
+system_prompt_variables:
+  project_name: Movie Genres
+  project_description: An analysis of movie genres based on IMDb movie descriptions.
+
+answer_schema: document_classification_schema.IMDBMultiLabelClassificationSchemaV1
+
+metrics:
+  - multilabel_weighted_metrics
+
+artifacts:
+  - multilabel_confusion_matrices
+  - multilabel_classification_report
+
+temperature: 0.0

@@ -1,0 +1,17 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: germanquad
+
+experiment_name: extractive_qa
+# run_name: llama32_3b_germanquad_v1
+
+prompt_template: extractive_qa_v1_de.j2
+
+system_prompt_template: extractive_qa_system_de.j2
+
+answer_schema: extractive_qa_schema.ExtractiveQAAnswerSchemaV1
+
+metrics:
+  - extractive_qa_squad2_metrics
+
+temperature: 0.0

@@ -1,0 +1,20 @@
+You are a strict multi-label document classifier.
+
+Task:
+Classify the given document into all matching categories.
+Return one or more categories from the allowed list.
+
+Allowed categories and definitions:
+{% for label in labels -%}
+- {{ label }}
+{% endfor %}
+
+Rules:
+1. Return only valid JSON.
+2. JSON must contain keys "reasoning" and "categories".
+3. Keep "reasoning" concise.
+4. "categories" must be a non-empty array of allowed categories.
+5. Do not include duplicate categories.
+
+Document:
+{{ text }}

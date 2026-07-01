@@ -1,0 +1,16 @@
+{
+  // python
+  "python.defaultInterpreterPath": "${workspaceFolder:benchmarks}/.venv/bin/python",
+  "python.envFile": "${workspaceFolder:benchmarks}/.env",
+  "python.autoComplete.extraPaths": ["${workspaceFolder:benchmarks}/src"],
+  "python.analysis.extraPaths": ["${workspaceFolder:benchmarks}/src"],
+  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/__pycache__", "**/.venv"],
+
+  // prettier
+  "prettier.prettierPath": "../frontend/node_modules/prettier",
+  "prettier.configPath": "../.prettierrc.yaml",
+
+  // ruff
+  "ruff.interpreter": ["${workspaceFolder:benchmarks}/.venv/bin/python"]
+}

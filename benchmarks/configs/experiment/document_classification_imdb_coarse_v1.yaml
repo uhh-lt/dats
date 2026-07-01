@@ -1,0 +1,47 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: imdb-coarse
+
+experiment_name: document_classification_coarse
+# run_name: llama32_3b_imdb_coarse_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_single_label_v1_en.j2
+prompt_variables:
+  labels:
+    - action
+    - adventure
+    - animation
+    - biography
+    - crime
+    - family
+    - fantasy
+    - film-noir
+    - history
+    - horror
+    - mystery
+    - romance
+    - scifi
+    - sports
+    - thriller
+    - war
+
+system_prompt_template: document_classification_system_en.j2
+system_prompt_variables:
+  project_name: Movie Genres
+  project_description: An analysis of movie genres based on IMDb movie descriptions.
+
+answer_schema: document_classification_schema.IMDBCoarseClassificationSchemaV1
+
+metrics:
+  - classification_macro_metrics
+  - classification_weighted_metrics
+
+artifacts:
+  - classification_confusion_matrix
+  - classification_report
+
+temperature: 0.0

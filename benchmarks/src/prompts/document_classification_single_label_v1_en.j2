@@ -1,0 +1,18 @@
+You are a strict document classifier.
+
+Task:
+Classify the given document into exactly one of the allowed categories.
+
+Allowed categories and definitions:
+{% for label in labels -%}
+- {{ label }}
+{% endfor %}
+
+Rules:
+1. Return only valid JSON.
+2. JSON must contain keys "reasoning" and "category".
+3. Keep "reasoning" concise.
+4. "category" must be one of the allowed categories.
+
+Document:
+{{ text }}

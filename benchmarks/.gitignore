@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Local env overrides
+docker/.env
+src/.env
+
+# Generated benchmark artifacts
+outputs/*.csv
+outputs/*.json
+outputs/*.png
+data/**/*.csv
+run_experiment.log

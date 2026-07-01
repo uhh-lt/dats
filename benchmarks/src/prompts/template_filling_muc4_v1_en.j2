@@ -1,0 +1,18 @@
+I want you to extract the following information about incidents from the text below. The slots are:
+
+Incident: One of "Arson", "Attack", "Bombing", "Kidnapping", "Robbery"
+Perpetrator: An individual perpetrator
+Group Perpetrator: A group or organizational perpetrator
+Victim: Sentient victims of the incident
+Target: Physical objects targeted by the incident
+Weapon: Weapons employed by the perpetrators
+
+Text: {{ context }}
+
+Output rules:
+1. Return only valid JSON.
+2. JSON must contain exactly these keys: "incident", "perpetrator", "group_perpetrator", "victim", "target", "weapon".
+3. The six slot keys must each contain a JSON array of strings.
+4. Extract slot values verbatim from the text and do not paraphrase.
+5. If there is no information for a slot, return an empty list for that slot.
+6. If there is no incident in the text, return empty lists for all six slots.

@@ -1,0 +1,26 @@
+name: german-ler-fine
+dataset_type: span_classification
+path: german-ler/german_ler_test.parquet
+tokens_column: tokens
+tags_column: fine_ner_tags
+id2label:
+  0: O
+  1: Person
+  2: Anwalt
+  3: Richter
+  4: Land
+  5: Stadt
+  6: Straße
+  7: Landschaft
+  8: Organisation
+  9: Unternehmen
+  10: Institution
+  11: Gericht
+  12: Marke
+  13: Gesetz
+  14: Verordnung
+  15: EU Norm
+  16: Vorschrift
+  17: Vertrag
+  18: Gerichtsentscheidung
+  19: Literatur

@@ -1,0 +1,5 @@
+name: tagesschau-coarse
+dataset_type: document_classification_single_label
+path: tagesschau/tagesschau_cleaned.parquet
+text_column: article
+label_column: main_tag

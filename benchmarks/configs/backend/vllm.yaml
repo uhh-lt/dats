@@ -1,0 +1,8 @@
+image: vllm/vllm-openai:latest
+host_port: 19275
+startup_timeout_seconds: 600
+gpu_id: 1
+hf_token_env_var: HF_TOKEN
+hf_cache_dir: ~/.cache/huggingface
+concurrency: 24
+api_key: EMPTY

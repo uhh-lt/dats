@@ -1,0 +1,5 @@
+name: csabstruct
+dataset_type: sequential_sentence_classification
+path: csabstruct/test.parquet
+sentences_column: sentences
+labels_column: labels

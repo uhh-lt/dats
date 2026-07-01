@@ -1,0 +1,28 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: fewnerd-fine
+
+experiment_name: span_classification
+# run_name: llama32_3b_fewnerd_fine_v1
+
+max_examples: 10000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: span_classification_v1_en.j2
+prompt_variables:
+  examples: |
+    {"category": "art - painting", "text": "Mona Lisa"}
+    {"category": "building - other", "text": "Eiffel Tower"}
+
+system_prompt_template: span_classification_system_en.j2
+
+answer_schema: span_classification_schema.FewnerdFineSpanClassificationSchemaV1
+
+metrics:
+  - span_classification_metrics
+
+artifacts:
+  - span_classification_report
+
+temperature: 0.0

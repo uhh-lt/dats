@@ -1,0 +1,9 @@
+name: german-quotations-direct
+dataset_type: span_classification
+path: german-quotations/german_direct_quotations.parquet
+tokens_column: tokens
+tags_column: tags
+id2label:
+  0: O
+  1: Sprecher
+  2: Direkte Rede

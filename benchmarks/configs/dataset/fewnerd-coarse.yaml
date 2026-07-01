@@ -1,0 +1,15 @@
+name: fewnerd-coarse
+dataset_type: span_classification
+path: fewnerd/fewnerd_test.parquet
+tokens_column: tokens
+tags_column: ner_tags
+id2label:
+  0: O
+  1: art
+  2: building
+  3: event
+  4: location
+  5: organization
+  6: other
+  7: person
+  8: product

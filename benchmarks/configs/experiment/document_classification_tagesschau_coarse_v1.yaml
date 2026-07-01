@@ -1,0 +1,35 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: tagesschau-coarse
+
+experiment_name: document_classification_coarse
+# run_name: llama32_3b_tagesschau_coarse_v1
+
+max_examples: 100
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: document_classification_single_label_v1_de.j2
+prompt_variables:
+  labels:
+    - inland - Nachrichten über Deutschland.
+    - ausland - Nachrichten über das Ausland.
+    - wirtschaft - Nachrichten über Wirtschaft, Börse und Unternehmen.
+    - wissen - Nachrichten über Wissenschaft, Forschung, Gesundheit und Klima.
+
+system_prompt_template: document_classification_system_de.j2
+system_prompt_variables:
+  project_name: Tagesschau
+  project_description: Eine Analyse der Themen in Deutschland basierend auf den Nachrichten und Artikeln der Tagesschau.
+
+answer_schema: document_classification_schema.TagesschauCoarseClassificationSchemaV1
+
+metrics:
+  - classification_macro_metrics
+  - classification_weighted_metrics
+
+artifacts:
+  - classification_confusion_matrix
+  - classification_report
+
+temperature: 0.0

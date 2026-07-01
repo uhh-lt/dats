@@ -1,0 +1,6 @@
+name: squad
+dataset_type: extractive_qa
+path: squad/validation.parquet
+context_column: context
+question_column: question
+references_column: reference

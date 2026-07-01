@@ -1,0 +1,26 @@
+Hier ist eine Liste von Kategorien, die ich aus dem Text extrahieren möchte.
+Die Kategorien sind:
+{{ labels | join('\n') }}
+
+Bitte extrahiere alle passenden Textspannen (falls es welche gibt) aus dem folgenden Text:
+{{ text }}
+
+{% if examples %}Beispiele:
+{{ examples }}
+
+{% endif %}Antworte exakt als JSON-Objekt mit dieser Struktur:
+{
+  "predictions": [
+    {
+      "category": "<Kategorie>",
+      "text": "<Extrahierter Text>"
+    }
+  ]
+}
+
+Verwende eine leere Liste, wenn keine passende Textspanne vorhanden ist:
+{
+  "predictions": []
+}
+
+Wichtig: Die extrahierten Informationen muessen wörtlich aus dem Text übernommen werden und dürfen nicht generiert werden.

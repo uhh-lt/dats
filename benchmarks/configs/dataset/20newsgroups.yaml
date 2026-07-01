@@ -1,0 +1,5 @@
+name: 20newsgroups
+dataset_type: document_classification_single_label
+path: 20newsgroups/test_full_raw.parquet
+text_column: document_text
+label_column: label

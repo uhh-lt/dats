@@ -1,0 +1,15 @@
+defaults:
+  - experiment: 20newsgroups_v1_zeroshot
+  - backend: vllm
+  - _self_
+
+output_dir: outputs
+mlflow_uri: http://localhost:19274
+fail_on_parse_error: false
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: .
+  output_subdir: null

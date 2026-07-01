@@ -1,0 +1,17 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: muc4
+
+experiment_name: template_filling
+# run_name: llama32_3b_muc4_v1
+
+prompt_template: template_filling_muc4_v1_en.j2
+
+system_prompt_template: template_filling_system_en.j2
+
+answer_schema: template_filling_schema.TemplateFillingMUC4AnswerSchemaV1
+
+metrics:
+  - template_filling_muc4_metrics
+
+temperature: 0.0

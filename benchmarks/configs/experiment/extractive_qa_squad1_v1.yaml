@@ -1,0 +1,21 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: squad
+
+experiment_name: extractive_qa
+# run_name: llama32_3b_squad1_v1
+
+max_examples: 1000
+sample_randomly: true
+sample_random_state: 42
+
+prompt_template: extractive_qa_squad1_v1_en.j2
+
+system_prompt_template: extractive_qa_system_en.j2
+
+answer_schema: extractive_qa_schema.ExtractiveQAAnswerSchemaV1
+
+metrics:
+  - extractive_qa_squad2_metrics
+
+temperature: 0.0

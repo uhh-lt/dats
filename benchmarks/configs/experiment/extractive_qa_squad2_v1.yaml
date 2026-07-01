@@ -1,0 +1,19 @@
+defaults:
+  - /model: llama32_3b
+  - /dataset: squad2
+
+experiment_name: extractive_qa
+# run_name: llama32_3b_squad2_v1
+
+prompt_template: extractive_qa_v1_en.j2
+prompt_variables:
+  no_answer_label: Not answerable
+
+system_prompt_template: extractive_qa_system_en.j2
+
+answer_schema: extractive_qa_schema.ExtractiveQAAnswerSchemaV1
+
+metrics:
+  - extractive_qa_squad2_metrics
+
+temperature: 0.0

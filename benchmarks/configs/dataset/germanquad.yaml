@@ -1,0 +1,6 @@
+name: germanquad
+dataset_type: extractive_qa
+path: germanquad/test.parquet
+context_column: context
+question_column: question
+references_column: reference
