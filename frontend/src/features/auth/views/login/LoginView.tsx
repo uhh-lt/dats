@@ -1,4 +1,5 @@
 import { ApiError } from "@api/core/ApiError";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormPassword, FormText } from "@components/form-inputs";
@@ -11,7 +12,6 @@ import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { instanceInfoQueryOptions } from "../../_api/authQueryOptions";
 
 const routeApi = getRouteApi("/_public/login");
 
@@ -37,7 +37,7 @@ export function LoginView() {
   const { updateAuthData } = useAuth();
 
   // get info about the instance, is OIDC enabled?
-  const { data: instanceInfo } = useSuspenseQuery(instanceInfoQueryOptions());
+  const { data: instanceInfo } = useSuspenseQuery(GeneralHooks.instanceInfoQueryOptions());
 
   // login
   const { mutate: loginMutation, isPending: loginIsPending } = useMutation({

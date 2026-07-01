@@ -1,4 +1,3 @@
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { ApproachType } from "@api/models/ApproachType";
 import { TaskType } from "@api/models/TaskType";
@@ -20,7 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { Fragment, memo, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, Fragment, memo, useCallback, useMemo, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
@@ -38,11 +37,12 @@ const explanations: Record<ApproachType, string> = {
 
 export const ApproachSelectionStep = memo(() => {
   // available LLMs for the model selection
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const approachRecommendation = useAppSelector((state) => state.llmAssistant.llmApproachRecommendation);
+  const llmId = useAppSelector((state) => state.llmAssistant.llmId);
   const llmMethod = useAppSelector((state) => state.llmAssistant.llmMethod);
   const metadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
   const codes = useAppSelector((state) => state.llmAssistant.llmCodes);

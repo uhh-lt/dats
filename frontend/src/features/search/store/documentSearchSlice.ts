@@ -1,3 +1,4 @@
+import { SdocColumns } from "@api/models/SdocColumns";
 import { queryClient } from "@api/queryClient";
 import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";

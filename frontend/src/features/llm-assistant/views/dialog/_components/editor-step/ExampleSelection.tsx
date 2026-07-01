@@ -5,9 +5,13 @@ import { LogicalOperator } from "@api/models/LogicalOperator";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
+import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { SpanColumns } from "@api/models/SpanColumns";
+import { TaskType } from "@api/models/TaskType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FilterTableToolbarProps } from "@core/filter";
 import { SEATFilterActions, SentenceAnnotationReduxFilterTable } from "@core/sentence-annotation";
+import { SATFilterActions, SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, CircularProgress, Dialog, ListItemIcon, Menu, MenuItem } from "@mui/material";
@@ -225,7 +229,7 @@ function SelectSpanAnnotationsDialogContent({
   );
 
   return (
-    <SpanAnnotationTable
+    <SpanAnnotationReduxFilterTable
       projectId={projectId}
       filterName={filterNameSpanAnno}
       rowSelectionModel={rowSelectionModel}

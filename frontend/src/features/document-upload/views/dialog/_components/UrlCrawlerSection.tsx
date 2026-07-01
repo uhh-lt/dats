@@ -1,5 +1,5 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import { Language } from "@api/models/Language";
 import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
@@ -16,7 +16,7 @@ interface UrlCrawlerSectionProps {
 }
 
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   return (
     <>

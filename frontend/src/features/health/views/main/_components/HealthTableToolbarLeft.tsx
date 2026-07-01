@@ -1,3 +1,4 @@
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import { Button, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
@@ -13,9 +14,10 @@ export function HealthTableToolbarLeft({
   onRetry,
   onRecompute,
 }: HealthTableToolbarProps) {
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  if (selectedRows.length === 0) {
+  if (selectedRows.length === 0 || !availableLLMs.data) {
     return null;
   }
 
@@ -69,7 +71,11 @@ export function HealthTableToolbarLeft({
           </Menu>
         </span>
       </Tooltip>
-      <ProcessingSettingsButton settings={settings} onChangeSettings={onChangeSettings} />
+      <ProcessingSettingsButton
+        settings={settings}
+        onChangeSettings={onChangeSettings}
+        availableLLMs={availableLLMs.data}
+      />
     </>
   );
 }

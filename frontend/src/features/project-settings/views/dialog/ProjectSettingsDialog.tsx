@@ -9,6 +9,7 @@ import { useDialog } from "@store/global/dialogBusSlice";
 import { SyntheticEvent, memo, useCallback, useState } from "react";
 import { ProjectImport } from "./_components/project-import/ProjectImport";
 import { ProjectCodes } from "./_components/ProjectCodes";
+import { ProjectDangerZone } from "./_components/ProjectDangerZone";
 import { ProjectDetails } from "./_components/ProjectDetails";
 import { ProjectTags } from "./_components/ProjectTags";
 import { ProjectUsers } from "./_components/ProjectUsers";

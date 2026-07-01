@@ -10,10 +10,8 @@ export const QueryKey = {
   ME: "me",
 
   // the instance info (no parameters)
-  // managed by frontend/src/features/auth/_api/authQueryOptions.ts
+  // managed by frontend/src/api/hooks/GeneralHooks.ts
   INSTANCE_INFO: "instanceInfo",
-  // the available models (no parameters)
-  AVAILABLE_LLMS: "availableLLMs",
 
   // all UserRead[] of a Project (by project id)
   // managed by frontend/src/api/hooks/UserHooks.ts
@@ -247,6 +245,9 @@ export const QueryKey = {
   // all llm jobs of a Project (by project id)
   // managed by frontend/src/api/hooks/LLMHooks.ts
   PROJECT_LLM_JOBS: "projectLLMJobs",
+  // the available models (no parameters)
+  // managed by frontend/src/api/hooks/LLMHooks.ts
+  AVAILABLE_LLMS: "availableLLMs",
 
   // llmjob (by llm job id)
   // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts

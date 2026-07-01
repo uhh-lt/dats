@@ -1,6 +1,6 @@
+import { OpenAPI } from "@api/core/OpenAPI";
+import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import * as Sentry from "@sentry/react";
-import GeneralHooks from "../api/GeneralHooks.ts";
-import { OpenAPI } from "../api/openapi/core/OpenAPI.ts";
 
 // Component that initializes Sentry after fetching instance info
 export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
@@ -12,7 +12,6 @@ export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!instanceInfo) {
-    // Data is still loading, show nothing or loading spinner
     return null;
   }
 

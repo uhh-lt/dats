@@ -1,4 +1,3 @@
-import { FolderHooks } from "@api/hooks/FolderHooks";
 import { DocType } from "@api/models/DocType";
 import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { DATSToolbar } from "@components/DATSToolbar";
@@ -9,9 +8,8 @@ import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import { ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { DocTypeIcons, getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
@@ -34,30 +32,11 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
   const annotationMode = useAppSelector((state) => state.annotations.annotationMode);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
   const dispatch = useAppDispatch();
-  const sdocFolder = FolderHooks.useGetSdocFolder(sdoc?.folder_id);
-  const folderWithSdocs = FolderHooks.useGetSdocIdsPerDoctypeInSdocFolder(sdocFolder.data?.id);
-  const sdocIds = folderWithSdocs.data?.text;
-  const navigate = useNavigate();
-
-  function handleDocSelect(event: SelectChangeEvent<number>) {
-    navigate(`/project/${sdoc?.project_id}/annotation/${event.target.value}`);
-  }
 
   return (
     <DATSToolbar disableGutters variant="dense">
       {sdoc ? (
         <>
-          {sdocIds && sdocIds.length > 1 ? (
-            <FormControl>
-              <InputLabel>Doc in Folder</InputLabel>
-              <Select size="small" value={sdoc.id} sx={{ minWidth: 120 }} onChange={handleDocSelect}>
-                {sdocIds.map((id, i) => (
-                  <MenuItem value={id}>{i + 1}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          ) : null}
-
           <ToggleButtonGroup
             value={annotationMode}
             exclusive

@@ -1,20 +1,20 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import { Language } from "@api/models/Language";
 import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
 import PlayCircle from "@mui/icons-material/PlayCircle";
+import { Button } from "@mui/material";
 import { useCallback, useState } from "react";
 import { UploadDropzone } from "./UploadDropzone";
-import { Button } from "@mui/material";
 
 interface FileUploadSectionProps {
   projectId: number;
 }
 
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   return (
     <>

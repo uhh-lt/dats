@@ -24,9 +24,6 @@ export const ConfirmationDialog = memo(() => {
     if (confirmationEventData?.onAccept) confirmationEventData.onAccept();
   }, [confirmationEventData, handleClose]);
 
-  const cancelText = "Cancel";
-  const confirmText = confirmationEventData?.type == "DELETE" ? "Delete" : "Confirm";
-
   return (
     <Dialog open={isConfirmationDialogOpen} onClose={handleClose} maxWidth="sm" fullWidth>
       {confirmationEventData && (
@@ -36,7 +33,7 @@ export const ConfirmationDialog = memo(() => {
             <DialogContentText id="alert-dialog-description">{confirmationEventData.text}</DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleReject}>{cancelText}</Button>
+            <Button onClick={handleReject}>Cancel</Button>
             <Button
               onClick={handleAccept}
               autoFocus
@@ -44,7 +41,7 @@ export const ConfirmationDialog = memo(() => {
               startIcon={confirmationEventData.type == "DELETE" ? <DeleteIcon /> : null}
               color={confirmationEventData.type == "DELETE" ? "error" : "primary"}
             >
-              {confirmText}
+              {confirmationEventData.type == "DELETE" ? "Delete" : "Confirm"}
             </Button>
           </DialogActions>
         </>

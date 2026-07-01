@@ -1,5 +1,4 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import { DocType } from "@api/models/DocType";
 import { SdocHealthResult } from "@api/models/SdocHealthResult";
 import { SDocStatus } from "@api/models/SDocStatus";
@@ -45,29 +44,7 @@ interface SdocStatusTableProps {
   onRefetch: () => void;
 }
 
-const flatMapData = (page: SdocHealthResult) => page.data;
-
-export function SdocStatusTable(props: SdocStatusTableProps) {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
-
-  return (
-    <>
-      {availableLLMs.isError ? (
-        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
-      ) : availableLLMs.isLoading ? (
-        <p>Loading available LLMs...</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
-        <p>No available LLMs found. Please contact the administrator.</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
-        <SdocStatusTableContent availableLLMs={availableLLMs.data} {...props} />
-      ) : null}
-    </>
-  );
-}
-
-
-function SdocStatusTableContent({
-  availableLLMs,
+export function SdocStatusTable({
   doctype,
   projectId,
   tableColumnInfo,

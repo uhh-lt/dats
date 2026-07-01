@@ -1,9 +1,20 @@
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import RedoIcon from "@mui/icons-material/Redo"; // Redo (using Redo for clarity, though user asked for Undo for restore)
 import SendIcon from "@mui/icons-material/Send";
 import UndoIcon from "@mui/icons-material/Undo"; // Revert
-import { Box, IconButton, MenuItem, Paper, Stack, TextField, Tooltip, Typography, alpha, useTheme } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  MenuItem,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+  alpha,
+  useTheme,
+} from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";
 import Markdown from "react-markdown";
@@ -17,7 +28,7 @@ interface ChatMessage {
 }
 
 export function AnalysisAssistant() {
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   const theme = useTheme();
   const [inputText, setInputText] = useState<string>("");

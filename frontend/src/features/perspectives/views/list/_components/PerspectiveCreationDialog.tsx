@@ -1,4 +1,4 @@
-import { GeneralHooks } from "@api/hooks/GeneralHooks";
+import { LLMHooks } from "@api/hooks/LLMHooks";
 import { AspectCreate } from "@api/models/AspectCreate";
 import { DocType } from "@api/models/DocType";
 import { PipelineSettings } from "@api/models/PipelineSettings";
@@ -96,7 +96,7 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   const projectId = useAppSelector((state) => state.project.projectId);
 
   // available LLMs for the model selection
-  const availableLLMs = GeneralHooks.useGetAvailableLLMs();
+  const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
   // perspective creation
   const tabNavigate = useTabNavigate();

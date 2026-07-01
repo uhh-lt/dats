@@ -53,6 +53,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { FolderSelection, SearchActions } from "../../../store/documentSearchSlice";
 import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
+import { FolderToggleVisibilityButton } from "./FolderToggleVisibilityButton";
 import { NoDocumentsPlaceholder } from "./NoDocumentsPlaceholder";
 import { SearchOptionsMenu } from "./SearchOptionsMenu";
 
@@ -319,7 +320,7 @@ export function SearchDocumentTable({
                   doc = doc.sub_rows[0];
                 }
                 if (!doc.is_folder) {
-                  navigate(`/project/${projectId}/annotation/${doc.id}`);
+                  navigate({ to: `/project/$projectId/annotation/$sdocId`, params: { projectId, sdocId: doc.id } });
                 }
               } else {
                 dispatch(SearchActions.onToggleSelectedSdocFolderIdChange(row.original.id));

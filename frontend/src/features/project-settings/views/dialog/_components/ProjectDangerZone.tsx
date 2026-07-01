@@ -1,38 +1,43 @@
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
+import { ProjectRead } from "@api/models/ProjectRead";
+import { useOpenConfirmationDialog } from "@core/notification";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LoadingButton } from "@mui/lab";
 import { Box, Stack, TextField, Typography } from "@mui/material";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ProjectRead } from "../../../api/openapi/models/ProjectRead.ts";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
-import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 
 interface ProjectDangerZoneProps {
   project: ProjectRead;
 }
 
-function ProjectDangerZone({ project }: ProjectDangerZoneProps) {
-  const { mutate: deleteProject, isPending } = ProjectHooks.useDeleteProject();
-  const navigate = useNavigate();
-
+export function ProjectDangerZone({ project }: ProjectDangerZoneProps) {
+  // local state
   const [name, setName] = useState("");
+
+  // confirmation dialog
+  const openConfirmationDialog = useOpenConfirmationDialog();
+
+  // handle delete
+  const navigate = useNavigate();
+  const { mutate: deleteProject, isPending } = ProjectHooks.useDeleteProject();
   const handleClickRemoveProject = useCallback(() => {
     if (project) {
-      ConfirmationAPI.openConfirmationDialog({
+      openConfirmationDialog({
         text: `Do you really want to delete the project "${project.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
         type: "DELETE",
         onAccept: () => {
-          navigate(`/projects`);
+          navigate({ to: "/projects" });
           deleteProject(
             { projId: project.id },
             {
-              onSuccess: () => navigate(`/projects`),
+              onSuccess: () => navigate({ to: "/projects" }),
             },
           );
         },
       });
     }
-  }, [project, deleteProject, navigate]);
+  }, [project, openConfirmationDialog, navigate, deleteProject]);
 
   return (
     <Box margin={2}>
@@ -71,5 +76,3 @@ function ProjectDangerZone({ project }: ProjectDangerZoneProps) {
     </Box>
   );
 }
-
-export default ProjectDangerZone;

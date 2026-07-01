@@ -4,6 +4,7 @@ import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
 import { TaskType } from "@api/models/TaskType";
 import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
+import { RagService } from "@api/services/RagService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -103,6 +104,12 @@ const useCountExistingAssistantAnnotations = ({
   });
 };
 
+const useGetAvailableLLMs = () =>
+  useQuery<string[], Error>({
+    queryKey: [QueryKey.AVAILABLE_LLMS],
+    queryFn: () => RagService.getAvailableModels(),
+  });
+
 export const LLMHooks = {
   usePollLLMJob,
   useStartLLMJob,
@@ -110,4 +117,5 @@ export const LLMHooks = {
   useDetermineApproach,
   useCreatePromptTemplates,
   useCountExistingAssistantAnnotations,
+  useGetAvailableLLMs,
 };

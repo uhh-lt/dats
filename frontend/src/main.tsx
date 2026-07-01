@@ -6,6 +6,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
 import { theme } from "@plugins/mui";
+import { SentryProvider } from "@plugins/Sentry";
 import { router } from "@plugins/tanstack";
 import * as Sentry from "@sentry/react";
 import { store } from "@store/store";
@@ -19,7 +20,6 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
-import "./styles/index.css";
 
 declare global {
   interface Window {

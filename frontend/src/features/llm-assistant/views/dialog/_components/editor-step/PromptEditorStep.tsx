@@ -21,6 +21,7 @@ type PromptEditorValues = {
 export function PromptEditorStep() {
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
+  const model = useAppSelector((state) => state.llmAssistant.llmId);
   const method = useAppSelector((state) => state.llmAssistant.llmMethod);
   const approach = useAppSelector((state) => state.llmAssistant.llmApproach);
   const tags = useAppSelector((state) => state.llmAssistant.llmTags);

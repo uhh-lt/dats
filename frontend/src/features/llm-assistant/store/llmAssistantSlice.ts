@@ -14,6 +14,7 @@ interface LLMAssistantState {
   // llm dialog
   isLLMDialogOpen: boolean;
   llmProjectId: number;
+  llmId?: string;
   llmMethod?: TaskType;
   llmDocumentIds: number[];
   llmStep: number;
@@ -32,6 +33,7 @@ const initialState: LLMAssistantState = {
   isLLMDialogOpen: false,
   llmProjectId: -1,
   llmDocumentIds: [],
+  llmId: undefined,
   llmMethod: undefined,
   llmStep: 0,
   llmTags: [],
@@ -91,12 +93,14 @@ const llmAssistantSlice = createSlice({
         approach: ApproachType;
         prompts: LLMPromptTemplates[];
         deleteExistingAnnotations: boolean;
+        modelId: string;
       }>,
     ) => {
       state.llmStep = 3;
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
       state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
+      state.llmId = action.payload.modelId;
     },
     llmDialogUpdatePromptEditor: (
       state,
@@ -140,6 +144,7 @@ const llmAssistantSlice = createSlice({
       state.isLLMDialogOpen = initialState.isLLMDialogOpen;
       state.llmProjectId = initialState.llmProjectId;
       state.llmDocumentIds = initialState.llmDocumentIds;
+      state.llmId = initialState.llmId;
       state.llmMethod = initialState.llmMethod;
       state.llmStep = initialState.llmStep;
       state.llmTags = initialState.llmTags;
@@ -166,6 +171,11 @@ const llmAssistantSlice = createSlice({
         state.llmTags = initialState.llmTags;
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
+        // user just selected the approach, reset approach selection
+      } else if (state.llmStep === 2) {
+        state.llmId = initialState.llmId;
+        state.llmApproach = initialState.llmApproach;
+        state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;
       }
     },
   },

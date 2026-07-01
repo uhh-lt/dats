@@ -11,6 +11,7 @@ interface HealthState extends TableState {
 const initialState: HealthState = {
   ...initialTableState,
   processingSettings: {
+    model: "default",
     extract_images: true,
     pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,

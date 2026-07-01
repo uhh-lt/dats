@@ -1,10 +1,10 @@
 import { IconButton, Tooltip } from "@mui/material";
-import React, { memo, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { getIconComponent, Icon } from "../../../utils/icons/iconUtils.tsx";
-import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { getIconComponent, Icon } from "@utils/icons/iconUtils";
+import { useCallback } from "react";
+import { SearchActions } from "../../../store/documentSearchSlice";
 
-function FolderToggleVisibilityButton() {
+export function FolderToggleVisibilityButton() {
   // redux (global client state)
   const showFolders = useAppSelector((state) => state.search.showFolders);
   const dispatch = useAppDispatch();
@@ -25,5 +25,3 @@ function FolderToggleVisibilityButton() {
     </Tooltip>
   );
 }
-
-export default memo(FolderToggleVisibilityButton);
