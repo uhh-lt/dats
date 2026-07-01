@@ -69,6 +69,18 @@ class LLMRepo(metaclass=SingletonMeta):
 
         return super(LLMRepo, cls).__new__(cls)
 
+    def __validate_llm_name(self, model: str) -> str:
+        if len(self.__llm_models) == 0:
+            raise ValueError("No LLM models available.")
+        if model not in self.__llm_models:
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {self.__llm_models}"
+            )
+        # this allows the user to specify "default" as the model name, which will use the first available model
+        if model == "default":
+            model = self.__llm_models[0]
+        return model
+
     def get_available_models(self) -> list[str]:
         return list(self.__llm_models)
 
@@ -103,11 +115,7 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
-        # validate that the model is available
-        if model not in self.__llm_models:
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {self.__llm_models}"
-            )
+        model = self.__validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_llm_chat_session()
@@ -169,11 +177,7 @@ class LLMRepo(metaclass=SingletonMeta):
         user_prompt: str,
         response_model: Type[T],
     ) -> T:
-        # validate that the model is available
-        if model not in self.__llm_models:
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {self.__llm_models}"
-            )
+        model = self.__validate_llm_name(model)
 
         response = self.__llm_conn.chat.completions.create(
             model=model,
@@ -201,11 +205,7 @@ class LLMRepo(metaclass=SingletonMeta):
         messages: list[LLMMessage],
         response_model: Type[T],
     ) -> list[T]:
-        # validate that the model is available
-        if model not in self.__llm_models:
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {self.__llm_models}"
-            )
+        model = self.__validate_llm_name(model)
 
         # prepare batch messages
         batch_messages = [
@@ -277,11 +277,7 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
-        # validate that the model is available
-        if model not in self.__llm_models:
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {self.__llm_models}"
-            )
+        model = self.__validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_vlm_chat_session()
