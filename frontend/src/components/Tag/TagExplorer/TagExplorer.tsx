@@ -1,12 +1,14 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { TagRead } from "../../../api/openapi/models/TagRead.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../../views/search/DocumentSearch/searchSlice.ts";
 import ExportTagsButton from "../../Export/ExportTagsButton.tsx";
 import { ITree } from "../../TreeExplorer/ITree.ts";
 import TreeExplorer from "../../TreeExplorer/TreeExplorer.tsx";
+import { flatTree } from "../../TreeExplorer/TreeUtils.ts";
+import { useTreeSortOrder } from "../../../hooks/useTreeSortOrder.ts";
 import TagMenuCreateButton from "../TagMenu/TagMenuCreateButton.tsx";
 import TagExplorerActionMenu from "./TagExplorerActionMenu.tsx";
 import useComputeTagTree from "./useComputeTagTree.ts";
@@ -15,11 +17,12 @@ const renderActions = (node: ITree<TagRead>) => <TagExplorerActionMenu node={nod
 
 interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;
+  projectId?: number;
 }
 
-function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
+function TagExplorer({ onTagClick, projectId, ...props }: TagExplorerProps & BoxProps) {
   // custom hooks
-  const { tagTree } = useComputeTagTree();
+  const { tagTree, allTags } = useComputeTagTree();
 
   // tag expansion
   const dispatch = useAppDispatch();
@@ -45,6 +48,29 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
     [onTagClick],
   );
 
+  // Get all tag IDs from the tree
+  const allTagIds = useMemo(() => {
+    if (!tagTree) return [];
+    return flatTree(tagTree.model).map((tag) => tag.id);
+  }, [tagTree]);
+
+  // Extract projectId from data for dependency tracking
+  const dataProjectId = allTags.data?.[0]?.project_id;
+
+  // Use project ID from props or derive from data (fallback)
+  // Note: In practice, all tags belong to the same project (enforced by backend)
+  // Ideally, projectId should be passed as a prop from parent components
+  const effectiveProjectId = useMemo(() => {
+    return projectId ?? dataProjectId;
+  }, [projectId, dataProjectId]);
+
+  // Use custom sort order hook
+  const { sortOrder, updateSortOrder } = useTreeSortOrder(
+    "tag-sort-order",
+    effectiveProjectId,
+    allTagIds
+  );
+
   return (
     <Box {...props}>
       {tagTree && (
@@ -66,6 +92,10 @@ function TagExplorer({ onTagClick, ...props }: TagExplorerProps & BoxProps) {
           renderActions={renderActions}
           // components
           listActions={<ListActions />}
+          // drag and drop for reordering
+          draggableItems={true}
+          sortOrder={sortOrder}
+          onSortOrderChange={updateSortOrder}
         />
       )}
     </Box>
