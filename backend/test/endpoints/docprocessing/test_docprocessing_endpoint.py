@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 def test_upload_file_to_project(client: TestClient, test_project):
     settings = {
+        "model": "gemma-3-27b",
         "language": "en",
         "extract_images": False,
         "pages_per_chunk": 1,
