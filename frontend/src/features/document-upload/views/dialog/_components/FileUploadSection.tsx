@@ -16,29 +16,10 @@ interface FileUploadSectionProps {
 export function FileUploadSection({ projectId }: FileUploadSectionProps) {
   const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
-  return (
-    <>
-      {availableLLMs.isError ? (
-        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
-      ) : availableLLMs.isLoading ? (
-        <p>Loading available LLMs...</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
-        <p>No available LLMs found. Please contact the administrator.</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
-        <FileUploadSectionContent projectId={projectId} availableLLMs={availableLLMs.data} />
-      ) : null}
-    </>
-  );
-}
-
-function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectionProps & { availableLLMs: string[] }) {
-  // Upload mutation
-  const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
-
   // Local state
   const [files, setFiles] = useState<File[]>([]);
   const [settings, setSettings] = useState<ProcessingSettings>({
-    model: availableLLMs[0],
+    model: "default",
     extract_images: true,
     pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
@@ -51,6 +32,7 @@ function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectio
     setFiles(files);
   }, []);
 
+  const uploadDocumentMutation = DocProcessingHooks.useUploadDocument();
   const handleUpload = useCallback(async () => {
     if (files.length > 0) {
       await uploadDocumentMutation.mutateAsync({
@@ -68,7 +50,11 @@ function FileUploadSectionContent({ projectId, availableLLMs }: FileUploadSectio
     <DialogSection
       title="Upload Files"
       action={
-        <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} availableLLMs={availableLLMs} />
+        <ProcessingSettingsButton
+          settings={settings}
+          onChangeSettings={setSettings}
+          availableLLMs={availableLLMs.data || []}
+        />
       }
     >
       <UploadDropzone onFilesChanged={handleFilesChange} files={files} />

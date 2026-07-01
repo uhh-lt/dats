@@ -17,7 +17,7 @@ export function HealthTableToolbarLeft({
   const availableLLMs = LLMHooks.useGetAvailableLLMs();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  if (selectedRows.length === 0 || !availableLLMs.data) {
+  if (selectedRows.length === 0) {
     return null;
   }
 
@@ -74,7 +74,7 @@ export function HealthTableToolbarLeft({
       <ProcessingSettingsButton
         settings={settings}
         onChangeSettings={onChangeSettings}
-        availableLLMs={availableLLMs.data}
+        availableLLMs={availableLLMs.data || []}
       />
     </>
   );

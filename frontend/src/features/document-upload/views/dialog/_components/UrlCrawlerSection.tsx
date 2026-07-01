@@ -18,31 +18,12 @@ interface UrlCrawlerSectionProps {
 export function UrlCrawlerSection({ projectId }: UrlCrawlerSectionProps) {
   const availableLLMs = LLMHooks.useGetAvailableLLMs();
 
-  return (
-    <>
-      {availableLLMs.isError ? (
-        <p>Error loading available LLMs: {availableLLMs.error.message}</p>
-      ) : availableLLMs.isLoading ? (
-        <p>Loading available LLMs...</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length === 0 ? (
-        <p>No available LLMs found. Please contact the administrator.</p>
-      ) : availableLLMs.isSuccess && availableLLMs.data.length > 0 ? (
-        <UrlCrawlerSectionContent projectId={projectId} availableLLMs={availableLLMs.data} />
-      ) : null}
-    </>
-  );
-}
-
-function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectionProps & { availableLLMs: string[] }) {
-  // Crawler mutation
-  const crawlUrlsMutation = DocProcessingHooks.useStartCrawlerJob();
-
   // Local state
   const [currentUrl, setCurrentUrl] = useState("");
   const [urls, setUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<ProcessingSettings>({
-    model: availableLLMs[0],
+    model: "default",
     extract_images: true,
     pages_per_chunk: 10,
     keyword_deduplication_threshold: 0.5,
@@ -85,6 +66,7 @@ function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectio
     setUrls((prev) => prev.filter((_, index) => index !== indexToRemove));
   }, []);
 
+  const crawlUrlsMutation = DocProcessingHooks.useStartCrawlerJob();
   const handleImport = useCallback(async () => {
     if (urls.length > 0) {
       await crawlUrlsMutation.mutateAsync({
@@ -102,7 +84,11 @@ function UrlCrawlerSectionContent({ projectId, availableLLMs }: UrlCrawlerSectio
     <DialogSection
       title="Upload URLs"
       action={
-        <ProcessingSettingsButton settings={settings} onChangeSettings={setSettings} availableLLMs={availableLLMs} />
+        <ProcessingSettingsButton
+          settings={settings}
+          onChangeSettings={setSettings}
+          availableLLMs={availableLLMs.data || []}
+        />
       }
     >
       {/* URL Input Field */}

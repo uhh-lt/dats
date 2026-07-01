@@ -109,11 +109,15 @@ export const ProcessingSettingsButton = ({
                     variant: "filled",
                   }}
                 >
-                  {availableLLMs.map((model) => (
-                    <MenuItem key={model} value={model}>
-                      {model}
-                    </MenuItem>
-                  ))}
+                  {availableLLMs.length === 0 ? (
+                    <MenuItem value="default">Default</MenuItem>
+                  ) : (
+                    availableLLMs.map((model, idx) => (
+                      <MenuItem key={model} value={idx === 0 ? "default" : model}>
+                        {model} {idx === 0 ? "(default)" : ""}
+                      </MenuItem>
+                    ))
+                  )}
                 </FormMenu>
               </Box>
               <Divider />

@@ -14,7 +14,7 @@ interface LLMAssistantState {
   // llm dialog
   isLLMDialogOpen: boolean;
   llmProjectId: number;
-  llmId?: string;
+  llmId: string;
   llmMethod?: TaskType;
   llmDocumentIds: number[];
   llmStep: number;
@@ -33,7 +33,7 @@ const initialState: LLMAssistantState = {
   isLLMDialogOpen: false,
   llmProjectId: -1,
   llmDocumentIds: [],
-  llmId: undefined,
+  llmId: "default",
   llmMethod: undefined,
   llmStep: 0,
   llmTags: [],

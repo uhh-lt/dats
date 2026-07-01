@@ -41,7 +41,8 @@ interface AspectTemplate {
 }
 
 /** Advanced pipeline parameters for expert users */
-const defaultAdvancedSettings: Omit<PipelineSettings, "rewriting_model"> = {
+const defaultAdvancedSettings: PipelineSettings = {
+  rewriting_model: "default",
   umap_n_neighbors: 15,
   umap_n_components: 10,
   umap_min_dist: 0.1,
@@ -115,7 +116,6 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
   } = useForm<PerspectiveFormData>({
     defaultValues: {
       name: "",
-      rewriting_model: "",
       doc_embedding_prompt: "",
       doc_modification_prompt: "",
       ...defaultAdvancedSettings,
@@ -239,20 +239,22 @@ export function PerspectiveCreationDialog({ open, onClose }: PerspectiveCreation
             }}
           >
             {availableLLMs.isError ? (
-              <MenuItem value="" disabled>
-                Error loading models
+              <MenuItem value="default" disabled>
+                Error loading models (using default)
               </MenuItem>
             ) : availableLLMs.isLoading ? (
-              <MenuItem value="" disabled>
+              <MenuItem value="default" disabled>
                 Loading models...
               </MenuItem>
             ) : availableLLMs.isSuccess ? (
-              availableLLMs.data.map((model) => (
-                <MenuItem key={model} value={model}>
-                  {model}
+              availableLLMs.data.map((model, idx) => (
+                <MenuItem key={model} value={idx === 0 ? "default" : model}>
+                  {model} {idx === 0 ? "(default)" : ""}
                 </MenuItem>
               ))
-            ) : null}
+            ) : (
+              <MenuItem value="default">Default</MenuItem>
+            )}
           </FormMenu>
           <FormText
             name="doc_embedding_prompt"

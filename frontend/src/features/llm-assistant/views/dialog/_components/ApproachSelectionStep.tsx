@@ -51,7 +51,7 @@ export const ApproachSelectionStep = memo(() => {
   const dispatch = useAppDispatch();
 
   // local state
-  const [modelId, setModelId] = useState<string | undefined>(llmId);
+  const [modelId, setModelId] = useState<string>(llmId);
   const [approachType, setApproachType] = useState(approachRecommendation.recommended_approach);
   const [deleteExistingAnnotations, setDeleteExistingAnnotations] = useState(DeletionStrategy.DELETE_EXISTING);
 
@@ -156,25 +156,24 @@ export const ApproachSelectionStep = memo(() => {
   return (
     <>
       <DialogContent>
-        <TextField select value={modelId || "-1"} label="Model" onChange={handleChangeModelId} sx={{ ml: 12.5, my: 2 }}>
-          <MenuItem value="-1" disabled>
-            Select LLM
-          </MenuItem>
+        <TextField select value={modelId} label="Model" onChange={handleChangeModelId} sx={{ ml: 12.5, my: 2 }}>
           {availableLLMs.isError ? (
-            <MenuItem value="-1" disabled>
-              Error loading models
+            <MenuItem value="default" disabled>
+              Error loading models (using default)
             </MenuItem>
           ) : availableLLMs.isLoading ? (
-            <MenuItem value="-1" disabled>
+            <MenuItem value="default" disabled>
               Loading models...
             </MenuItem>
           ) : availableLLMs.isSuccess ? (
-            availableLLMs.data.map((model) => (
-              <MenuItem key={model} value={model}>
-                {model}
+            availableLLMs.data.map((model, idx) => (
+              <MenuItem key={model} value={idx === 0 ? "default" : model}>
+                {model} {idx === 0 ? "(default)" : ""}
               </MenuItem>
             ))
-          ) : null}
+          ) : (
+            <MenuItem value="default">Default</MenuItem>
+          )}
         </TextField>
         <LLMUtterance>
           <Typography>

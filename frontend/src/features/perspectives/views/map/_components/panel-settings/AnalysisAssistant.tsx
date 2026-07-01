@@ -44,7 +44,6 @@ export function AnalysisAssistant() {
   const handleSendMessage = () => {
     if (inputText.trim() === "") return;
     if (!projectId) return;
-    if (!model) return;
 
     const newUserMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -143,27 +142,26 @@ export function AnalysisAssistant() {
             <TextField
               select
               size="small"
-              value={model || "-1"}
+              value={model}
               onChange={(e) => dispatch(PerspectivesActions.onChatModelChange(e.target.value))}
             >
-              <MenuItem value="-1" disabled>
-                Select Model
-              </MenuItem>
               {availableLLMs.isError ? (
-                <MenuItem value="-1" disabled>
-                  Error loading models
+                <MenuItem value="default" disabled>
+                  Error loading models (using default)
                 </MenuItem>
               ) : availableLLMs.isLoading ? (
-                <MenuItem value="-1" disabled>
+                <MenuItem value="default" disabled>
                   Loading models...
                 </MenuItem>
               ) : availableLLMs.isSuccess ? (
-                availableLLMs.data.map((model) => (
-                  <MenuItem key={model} value={model}>
-                    {model}
+                availableLLMs.data.map((model, idx) => (
+                  <MenuItem key={model} value={idx === 0 ? "default" : model}>
+                    {model} {idx === 0 ? "(default)" : ""}
                   </MenuItem>
                 ))
-              ) : null}
+              ) : (
+                <MenuItem value="default">Default</MenuItem>
+              )}
             </TextField>
           </Tooltip>
         </Stack>
