@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BBoxAnnotationCreate } from "@api/models/BBoxAnnotationCreate";
-import type { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import type { BBoxAnnotationUpdate } from "@api/models/BBoxAnnotationUpdate";
-import type { BBoxAnnotationUpdateBulk } from "@api/models/BBoxAnnotationUpdateBulk";
+import type { BBoxAnnotationCreate } from "../models/BBoxAnnotationCreate";
+import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
+import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
+import type { BBoxAnnotationUpdateBulk } from "../models/BBoxAnnotationUpdateBulk";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

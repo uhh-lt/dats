@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 export enum PerspectivesJobType {
   CREATE_ASPECT = "create_aspect",
   ADD_MISSING_DOCS_TO_ASPECT = "add_missing_docs_to_aspect",

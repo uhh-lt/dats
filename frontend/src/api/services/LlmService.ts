@@ -2,15 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApproachRecommendation } from "@api/models/ApproachRecommendation";
-import type { ApproachType } from "@api/models/ApproachType";
-import type { Body_llm_count_existing_assistant_annotations } from "@api/models/Body_llm_count_existing_assistant_annotations";
-import type { Body_llm_create_prompt_templates } from "@api/models/Body_llm_create_prompt_templates";
-import type { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
-import type { LLMJobInput_Input } from "@api/models/LLMJobInput_Input";
-import type { LLMJobParameters } from "@api/models/LLMJobParameters";
-import type { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
-import type { TaskType } from "@api/models/TaskType";
+import type { ApproachRecommendation } from "../models/ApproachRecommendation";
+import type { ApproachType } from "../models/ApproachType";
+import type { Body_llm_count_existing_assistant_annotations } from "../models/Body_llm_count_existing_assistant_annotations";
+import type { Body_llm_create_prompt_templates } from "../models/Body_llm_create_prompt_templates";
+import type { LlmAssistantJobRead } from "../models/LlmAssistantJobRead";
+import type { LLMJobInput_Input } from "../models/LLMJobInput_Input";
+import type { LLMJobParameters } from "../models/LLMJobParameters";
+import type { LLMPromptTemplates } from "../models/LLMPromptTemplates";
+import type { TaskType } from "../models/TaskType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { BBoxAnnoTimelineAnalysisFilter_Input } from "./BBoxAnnoTimelineAnalysisFilter_Input";
 import type { SdocTimelineAnalysisFilter_Input } from "./SdocTimelineAnalysisFilter_Input";
 import type { SentAnnoTimelineAnalysisFilter_Input } from "./SentAnnoTimelineAnalysisFilter_Input";

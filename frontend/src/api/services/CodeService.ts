@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CodeCreate } from "@api/models/CodeCreate";
-import type { CodeRead } from "@api/models/CodeRead";
-import type { CodeUpdate } from "@api/models/CodeUpdate";
+import type { CodeCreate } from "../models/CodeCreate";
+import type { CodeRead } from "../models/CodeRead";
+import type { CodeUpdate } from "../models/CodeUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

@@ -2,14 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CrawlerJobInput_Input } from "@api/models/CrawlerJobInput_Input";
-import type { CrawlerJobRead } from "@api/models/CrawlerJobRead";
-import type { DuplicateFinderInput } from "@api/models/DuplicateFinderInput";
-import type { DuplicateFinderJobRead } from "@api/models/DuplicateFinderJobRead";
-import type { ExportJobInput } from "@api/models/ExportJobInput";
-import type { ExportJobRead } from "@api/models/ExportJobRead";
-import type { MLJobInput_Input } from "@api/models/MLJobInput_Input";
-import type { MlJobRead } from "@api/models/MlJobRead";
+import type { CrawlerJobInput_Input } from "../models/CrawlerJobInput_Input";
+import type { CrawlerJobRead } from "../models/CrawlerJobRead";
+import type { DuplicateFinderInput } from "../models/DuplicateFinderInput";
+import type { DuplicateFinderJobRead } from "../models/DuplicateFinderJobRead";
+import type { ExportJobInput } from "../models/ExportJobInput";
+import type { ExportJobRead } from "../models/ExportJobRead";
+import type { MLJobInput_Input } from "../models/MLJobInput_Input";
+import type { MlJobRead } from "../models/MlJobRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

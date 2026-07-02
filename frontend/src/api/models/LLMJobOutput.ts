@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { AnnotationLLMJobResult } from "./AnnotationLLMJobResult";
 import type { MetadataExtractionLLMJobResult } from "./MetadataExtractionLLMJobResult";
 import type { SentenceAnnotationLLMJobResult } from "./SentenceAnnotationLLMJobResult";

@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { FilterExpression_MemoColumns_ } from "./FilterExpression_MemoColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_MemoColumns_ = {

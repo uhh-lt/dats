@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 export enum ExportJobType {
   ALL_DATA = "ALL_DATA",
   ALL_USERS = "ALL_USERS",

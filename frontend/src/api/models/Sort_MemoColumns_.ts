@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { MemoColumns } from "./MemoColumns";
 import type { SortDirection } from "./SortDirection";
 export type Sort_MemoColumns_ = {

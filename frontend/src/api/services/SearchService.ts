@@ -2,21 +2,21 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BBoxAnnotationSearchResult } from "@api/models/BBoxAnnotationSearchResult";
-import type { Body_search_search_bbox_annotations } from "@api/models/Body_search_search_bbox_annotations";
-import type { Body_search_search_memos } from "@api/models/Body_search_search_memos";
-import type { Body_search_search_sdocs } from "@api/models/Body_search_search_sdocs";
-import type { Body_search_search_sentence_annotations } from "@api/models/Body_search_search_sentence_annotations";
-import type { Body_search_search_span_annotations } from "@api/models/Body_search_search_span_annotations";
-import type { ColumnInfo_BBoxColumns_ } from "@api/models/ColumnInfo_BBoxColumns_";
-import type { ColumnInfo_MemoColumns_ } from "@api/models/ColumnInfo_MemoColumns_";
-import type { ColumnInfo_SdocColumns_ } from "@api/models/ColumnInfo_SdocColumns_";
-import type { ColumnInfo_SentAnnoColumns_ } from "@api/models/ColumnInfo_SentAnnoColumns_";
-import type { ColumnInfo_SpanColumns_ } from "@api/models/ColumnInfo_SpanColumns_";
-import type { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
-import type { PaginatedSDocHits } from "@api/models/PaginatedSDocHits";
-import type { SentenceAnnotationSearchResult } from "@api/models/SentenceAnnotationSearchResult";
-import type { SpanAnnotationSearchResult } from "@api/models/SpanAnnotationSearchResult";
+import type { BBoxAnnotationSearchResult } from "../models/BBoxAnnotationSearchResult";
+import type { Body_search_search_bbox_annotations } from "../models/Body_search_search_bbox_annotations";
+import type { Body_search_search_memos } from "../models/Body_search_search_memos";
+import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
+import type { Body_search_search_sentence_annotations } from "../models/Body_search_search_sentence_annotations";
+import type { Body_search_search_span_annotations } from "../models/Body_search_search_span_annotations";
+import type { ColumnInfo_BBoxColumns_ } from "../models/ColumnInfo_BBoxColumns_";
+import type { ColumnInfo_MemoColumns_ } from "../models/ColumnInfo_MemoColumns_";
+import type { ColumnInfo_SdocColumns_ } from "../models/ColumnInfo_SdocColumns_";
+import type { ColumnInfo_SentAnnoColumns_ } from "../models/ColumnInfo_SentAnnoColumns_";
+import type { ColumnInfo_SpanColumns_ } from "../models/ColumnInfo_SpanColumns_";
+import type { PaginatedElasticSearchHits } from "../models/PaginatedElasticSearchHits";
+import type { PaginatedSDocHits } from "../models/PaginatedSDocHits";
+import type { SentenceAnnotationSearchResult } from "../models/SentenceAnnotationSearchResult";
+import type { SpanAnnotationSearchResult } from "../models/SpanAnnotationSearchResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

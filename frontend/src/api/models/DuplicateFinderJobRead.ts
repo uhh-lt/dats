@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { DuplicateFinderInput } from "./DuplicateFinderInput";
 import type { DuplicateFinderOutput } from "./DuplicateFinderOutput";
 import type { JobStatus } from "./JobStatus";

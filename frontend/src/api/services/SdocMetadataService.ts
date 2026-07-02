@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SourceDocumentMetadataBulkUpdate } from "@api/models/SourceDocumentMetadataBulkUpdate";
-import type { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
-import type { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import type { SourceDocumentMetadataBulkUpdate } from "../models/SourceDocumentMetadataBulkUpdate";
+import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
+import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

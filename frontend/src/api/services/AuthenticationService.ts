@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_authentication_login } from "@api/models/Body_authentication_login";
-import type { UserAuthorizationHeaderData } from "@api/models/UserAuthorizationHeaderData";
-import type { UserCreate } from "@api/models/UserCreate";
-import type { UserRead } from "@api/models/UserRead";
+import type { Body_authentication_login } from "../models/Body_authentication_login";
+import type { UserAuthorizationHeaderData } from "../models/UserAuthorizationHeaderData";
+import type { UserCreate } from "../models/UserCreate";
+import type { UserRead } from "../models/UserRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_import_start_import_job } from "@api/models/Body_import_start_import_job";
-import type { ImportJobRead } from "@api/models/ImportJobRead";
-import type { ImportJobType } from "@api/models/ImportJobType";
+import type { Body_import_start_import_job } from "../models/Body_import_start_import_job";
+import type { ImportJobRead } from "../models/ImportJobRead";
+import type { ImportJobType } from "../models/ImportJobType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

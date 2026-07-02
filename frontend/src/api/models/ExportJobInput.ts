@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { ExportJobType } from "./ExportJobType";
 import type { ExportSelectedBboxAnnotationsParams } from "./ExportSelectedBboxAnnotationsParams";
 import type { ExportSelectedCotaParams } from "./ExportSelectedCotaParams";

@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FolderCreate } from "@api/models/FolderCreate";
-import type { FolderRead } from "@api/models/FolderRead";
-import type { FolderType } from "@api/models/FolderType";
-import type { FolderUpdate } from "@api/models/FolderUpdate";
+import type { FolderCreate } from "../models/FolderCreate";
+import type { FolderRead } from "../models/FolderRead";
+import type { FolderType } from "../models/FolderType";
+import type { FolderUpdate } from "../models/FolderUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

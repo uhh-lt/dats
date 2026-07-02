@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_docprocessing_recompute_processing_step } from "@api/models/Body_docprocessing_recompute_processing_step";
-import type { Body_docprocessing_upload_files } from "@api/models/Body_docprocessing_upload_files";
-import type { DocType } from "@api/models/DocType";
-import type { SdocHealthResult } from "@api/models/SdocHealthResult";
-import type { SdocHealthSort } from "@api/models/SdocHealthSort";
-import type { SDocStatus } from "@api/models/SDocStatus";
-import type { SourceDocumentStatusSimple } from "@api/models/SourceDocumentStatusSimple";
+import type { Body_docprocessing_recompute_processing_step } from "../models/Body_docprocessing_recompute_processing_step";
+import type { Body_docprocessing_upload_files } from "../models/Body_docprocessing_upload_files";
+import type { DocType } from "../models/DocType";
+import type { SdocHealthResult } from "../models/SdocHealthResult";
+import type { SdocHealthSort } from "../models/SdocHealthSort";
+import type { SDocStatus } from "../models/SDocStatus";
+import type { SourceDocumentStatusSimple } from "../models/SourceDocumentStatusSimple";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

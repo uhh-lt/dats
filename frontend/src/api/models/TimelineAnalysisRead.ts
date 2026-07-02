@@ -1,7 +1,7 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
-
+/* eslint-disable */
 import type { TimelineAnalysisConcept } from "./TimelineAnalysisConcept";
 import type { TimelineAnalysisSettings } from "./TimelineAnalysisSettings";
 import type { TimelineAnalysisType } from "./TimelineAnalysisType";

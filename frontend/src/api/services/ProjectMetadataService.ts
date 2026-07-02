@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProjectMetadataCreate } from "@api/models/ProjectMetadataCreate";
-import type { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import type { ProjectMetadataUpdate } from "@api/models/ProjectMetadataUpdate";
+import type { ProjectMetadataCreate } from "../models/ProjectMetadataCreate";
+import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
+import type { ProjectMetadataUpdate } from "../models/ProjectMetadataUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

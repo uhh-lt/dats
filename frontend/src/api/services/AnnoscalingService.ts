@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AnnoscalingConfirmSuggest } from "@api/models/AnnoscalingConfirmSuggest";
-import type { AnnoscalingResult } from "@api/models/AnnoscalingResult";
-import type { AnnoscalingSuggest } from "@api/models/AnnoscalingSuggest";
+import type { AnnoscalingConfirmSuggest } from "../models/AnnoscalingConfirmSuggest";
+import type { AnnoscalingResult } from "../models/AnnoscalingResult";
+import type { AnnoscalingSuggest } from "../models/AnnoscalingSuggest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

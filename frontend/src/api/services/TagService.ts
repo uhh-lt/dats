@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_tag_count_tags } from "@api/models/Body_tag_count_tags";
-import type { Body_tag_update_tags_batch } from "@api/models/Body_tag_update_tags_batch";
-import type { SourceDocumentTagLinks } from "@api/models/SourceDocumentTagLinks";
-import type { SourceDocumentTagMultiLink } from "@api/models/SourceDocumentTagMultiLink";
-import type { TagCreate } from "@api/models/TagCreate";
-import type { TagRead } from "@api/models/TagRead";
-import type { TagUpdate } from "@api/models/TagUpdate";
+import type { Body_tag_count_tags } from "../models/Body_tag_count_tags";
+import type { Body_tag_update_tags_batch } from "../models/Body_tag_update_tags_batch";
+import type { SourceDocumentTagLinks } from "../models/SourceDocumentTagLinks";
+import type { SourceDocumentTagMultiLink } from "../models/SourceDocumentTagMultiLink";
+import type { TagCreate } from "../models/TagCreate";
+import type { TagRead } from "../models/TagRead";
+import type { TagUpdate } from "../models/TagUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

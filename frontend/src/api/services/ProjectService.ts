@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProjectCreate } from "@api/models/ProjectCreate";
-import type { ProjectRead } from "@api/models/ProjectRead";
-import type { ProjectUpdate } from "@api/models/ProjectUpdate";
-import type { SDocStatus } from "@api/models/SDocStatus";
+import type { ProjectCreate } from "../models/ProjectCreate";
+import type { ProjectRead } from "../models/ProjectRead";
+import type { ProjectUpdate } from "../models/ProjectUpdate";
+import type { SDocStatus } from "../models/SDocStatus";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
