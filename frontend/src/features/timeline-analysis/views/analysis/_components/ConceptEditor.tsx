@@ -44,10 +44,14 @@ export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
     reset,
   } = useForm<TimelineAnalysisConcept>();
 
-  // reset form when dialog opens
-  useEffect(() => {
+  // reset filter when dialog opens
+  const [prevOpen, setPrevOpen] = useState(conceptEditorOpen);
+  const [prevConceptId, setPrevConceptId] = useState(currentConcept.id);
+  if (conceptEditorOpen !== prevOpen || currentConcept.id !== prevConceptId) {
+    setPrevOpen(conceptEditorOpen);
+    setPrevConceptId(currentConcept.id);
+
     if (conceptEditorOpen) {
-      reset(currentConcept);
       setEditableFilter(
         withDefaultFilterExpression(
           { ...currentConcept.ta_specific_filter.filter, id: currentConcept.id },
@@ -55,7 +59,14 @@ export function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
         ),
       );
     }
-  }, [conceptEditorOpen, currentConcept, defaultFilterExpression, reset]);
+  }
+
+  // reset form when dialog opens
+  useEffect(() => {
+    if (conceptEditorOpen) {
+      reset(currentConcept);
+    }
+  }, [conceptEditorOpen, currentConcept, reset]);
 
   // form handling
   const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
