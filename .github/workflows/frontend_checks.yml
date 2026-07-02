@@ -105,7 +105,9 @@ jobs:
         uses: EndBug/add-and-commit@v10.0.0
         if: github.event_name == 'pull_request'
         with:
-          add: "frontend/src/api"
+          add: |
+            frontend/src/api
+            frontend/src/models
           message: "Update OpenAPI spec and client"
           pathspec_error_handling: exitImmediately
           default_author: github_actions
