@@ -85,13 +85,19 @@ def compute_dataset_statistics(
     user_ids: list[int],
     class_ids: list[int],
     model: ClassifierModel,
+    merge_children_into_parent: bool = False,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
 ) -> list[ClassifierData]:
     authz_user.assert_in_project(proj_id)
 
     dataset = crud_classifier.read_dataset(
-        db=db, model=model, sdoc_ids=sdoc_ids, user_ids=user_ids, class_ids=class_ids
+        db=db,
+        model=model,
+        sdoc_ids=sdoc_ids,
+        user_ids=user_ids,
+        class_ids=class_ids,
+        merge_children_into_parent=merge_children_into_parent,
     )
     return [ClassifierData.model_validate(d) for d in dataset]
 
@@ -110,10 +116,16 @@ def compute_dataset_statistics2(
     model: ClassifierModel,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
+    merge_children_into_parent: bool = False,
 ) -> list[ClassifierData]:
     authz_user.assert_in_project(proj_id)
 
     dataset = crud_classifier.read_dataset2(
-        db=db, model=model, tag_ids=tag_ids, user_ids=user_ids, class_ids=class_ids
+        db=db,
+        model=model,
+        tag_ids=tag_ids,
+        user_ids=user_ids,
+        class_ids=class_ids,
+        merge_children_into_parent=merge_children_into_parent,
     )
     return [ClassifierData.model_validate(d) for d in dataset]
