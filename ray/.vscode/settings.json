@@ -15,8 +15,5 @@
 
   // prettier
   "prettier.prettierPath": "../frontend/node_modules/prettier",
-  "prettier.configPath": "../.prettierrc.yaml",
-
-  // ruff
-  "ruff.interpreter": ["${workspaceFolder:ray}/.venv/bin/python"]
+  "prettier.configPath": "../.prettierrc.yaml"
 }

@@ -1,0 +1,309 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { COTAConcept } from "@models/COTAConcept";
+import { COTARead } from "@models/COTARead";
+import { COTASentence } from "@models/COTASentence";
+import CircleIcon from "@mui/icons-material/Circle";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  PopoverPosition,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { MRT_RowSelectionState } from "material-react-table";
+import { Datum, Layout, ScatterData } from "plotly.js";
+import { ReactNode, useMemo, useState } from "react";
+import Plot from "react-plotly.js";
+import { CotaActions } from "../../../store/cotaSlice";
+import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
+
+interface CotaScatterPlotlyProps {
+  cota: COTARead;
+}
+
+export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
+  // 1. computed base data
+  const { chartData, conceptId2Concept, sentenceId2CotaSentence } = useMemo(() => {
+    const chartData: Record<string, Partial<ScatterData>> = {};
+    cota.concepts.forEach((concept) => {
+      chartData[concept.id] = {
+        x: [],
+        y: [],
+        ids: [],
+        type: "scattergl",
+        mode: "markers",
+        name: concept.name,
+        hoverinfo: "none",
+        selectedpoints: [],
+        marker: {
+          color: concept.color,
+          size: 10,
+        },
+        selected: {
+          marker: { size: 20 },
+        },
+        visible: concept.visible,
+      } as Partial<ScatterData>;
+    });
+
+    chartData["NO_CONCEPT"] = {
+      x: [],
+      y: [],
+      ids: [],
+      type: "scatter",
+      mode: "markers",
+      name: "Unassigned",
+      hoverinfo: "none",
+      selectedpoints: [],
+      opacity: 0.5,
+      marker: {
+        color: "purple",
+        size: 10,
+      },
+      selected: {
+        marker: { size: 20 },
+      },
+    } as Partial<ScatterData>;
+
+    cota.search_space.forEach((cotaSentence) => {
+      let trace;
+      if (cotaSentence.concept_annotation) {
+        trace = chartData[cotaSentence.concept_annotation];
+      } else {
+        trace = chartData["NO_CONCEPT"];
+      }
+      (trace.x as Datum[]).push(cotaSentence.x);
+      (trace.y as Datum[]).push(cotaSentence.y);
+      (trace.ids as string[]).push(`${cotaSentence.sdoc_id}-${cotaSentence.sentence_id}`);
+    });
+
+    const conceptId2Concept: Record<string, COTAConcept> = cota.concepts.reduce(
+      (acc, concept) => {
+        acc[concept.id] = concept;
+        return acc;
+      },
+      {} as Record<string, COTAConcept>,
+    );
+    conceptId2Concept["NO_CONCEPT"] = {
+      id: "NO_CONCEPT",
+      name: "Unassigned",
+      color: "purple",
+      description: "Unassigned",
+      visible: true,
+    };
+
+    const sentenceId2CotaSentence: Record<string, COTASentence> = cota.search_space.reduce(
+      (acc, cotaSentence) => {
+        acc[`${cotaSentence.sdoc_id}-${cotaSentence.sentence_id}`] = cotaSentence;
+        return acc;
+      },
+      {} as Record<string, COTASentence>,
+    );
+
+    return {
+      chartData,
+      conceptId2Concept,
+      sentenceId2CotaSentence,
+    };
+  }, [cota]);
+
+  // 2. Redux state integration
+  const dispatch = useAppDispatch();
+  const rowSelectionModel = useAppSelector((state) => state.cota.rowSelectionModel);
+  const isSelectionEmpty = Object.keys(rowSelectionModel).length === 0;
+
+  // 3. Derive final Plotly data dynamically (Immutable, no cascading effects)
+  const plotlyData = useMemo(() => {
+    const finalData = Object.values(chartData).map((trace) => ({
+      ...trace,
+      selectedpoints: [],
+    })) as ScatterData[];
+
+    if (!isSelectionEmpty) {
+      for (const [id, selected] of Object.entries(rowSelectionModel)) {
+        if (selected) {
+          const cotaSentence = sentenceId2CotaSentence[id];
+          if (!cotaSentence) continue;
+
+          const conceptId = cotaSentence.concept_annotation || "NO_CONCEPT";
+          const conceptName = conceptId2Concept[conceptId]?.name;
+          const trace = finalData.find((data) => data.name === conceptName);
+
+          if (trace && trace.ids) {
+            const index = trace.ids.indexOf(id);
+            if (index >= 0) {
+              trace.selectedpoints.push(index);
+            }
+          }
+        }
+      }
+    }
+    return finalData;
+  }, [chartData, rowSelectionModel, isSelectionEmpty, sentenceId2CotaSentence, conceptId2Concept]);
+
+  // 4. Derive Layout dynamically using `uirevision` to protect zoom/pan state
+  const layout = useMemo<Partial<Layout>>(() => {
+    const baseLayout: Partial<Layout> = {
+      dragmode: "select",
+      autosize: true,
+      margin: { l: 32, r: 32, b: 32, t: 32, pad: 4 },
+      xaxis: { zeroline: false },
+      yaxis: { zeroline: false },
+      showlegend: false,
+      uirevision: "preserve-ui-state", // Magic property: Plotly will not reset zoom/pan unless this string changes
+      ...(isSelectionEmpty && { selections: [] }), // If Redux selection is empty, force Plotly to wipe the drawn selection bounding box
+    };
+    return baseLayout;
+  }, [isSelectionEmpty]);
+
+  // 5. Tooltip State (Local Ephemeral UI)
+  const [tooltipData, setTooltipData] = useState<TooltipData>({
+    id: undefined,
+    position: undefined,
+  });
+
+  const handleHover = (event: any) => {
+    setTooltipData((oldData) => {
+      const newData = { ...oldData };
+      if (!newData.position) {
+        newData.position = { top: event.event.y - 4, left: event.event.x + 4 };
+      }
+      if (event.points.length > 0) {
+        newData.id = event.points[0].id;
+      }
+      return newData;
+    });
+  };
+
+  const handleUnhover = () => {
+    setTooltipData({ id: undefined, position: undefined });
+  };
+
+  // 6. Render
+  let content: ReactNode;
+  if (cota.concepts.length === 0) {
+    content = (
+      <Typography>Please add a concept to start the analysis (or make at least one concept visible).</Typography>
+    );
+  } else {
+    content = (
+      <Plot
+        data={plotlyData}
+        layout={layout}
+        useResizeHandler={true}
+        config={{ displayModeBar: true, toImageButtonOptions: { filename: `cota-scatter-plot-${cota.name}` } }}
+        style={{ width: "100%", height: "100%" }}
+        onHover={handleHover}
+        onUnhover={handleUnhover}
+        onSelected={(event) => {
+          if (!event) {
+            // Because layout is derived from Redux, we just clear Redux.
+            // The derived layout will automatically append `selections: []`!
+            dispatch(CotaActions.onRowSelectionChange({}));
+            return;
+          }
+          dispatch(
+            CotaActions.onRowSelectionChange(
+              event.points.reduce((acc: MRT_RowSelectionState, point: any) => {
+                acc[point.id] = true;
+                return acc;
+              }, {} as MRT_RowSelectionState),
+            ),
+          );
+        }}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Card className="myFlexContainer h100">
+        <CardHeader
+          className="myFlexFitContentContainer"
+          title={"Scatter Plot"}
+          subheader={`Hover on a dot to see more information. Right-click dot to modify.`}
+          action={<CotaPlotToggleButton />}
+          sx={{ pb: 0 }}
+        />
+        <CardContent className="myFlexFillAllContainer">{content}</CardContent>
+      </Card>
+      <TestTooltip
+        data={tooltipData}
+        sentenceId2CotaSentence={sentenceId2CotaSentence}
+        conceptId2Concept={conceptId2Concept}
+      />
+    </>
+  );
+}
+
+interface TooltipData {
+  id?: string;
+  position?: PopoverPosition;
+}
+
+interface TestTooltipProps {
+  data: TooltipData;
+  sentenceId2CotaSentence: Record<string, COTASentence>;
+  conceptId2Concept: Record<string, COTAConcept>;
+}
+
+function TestTooltip({ data, sentenceId2CotaSentence, conceptId2Concept }: TestTooltipProps) {
+  if (data.id && data.position) {
+    const cotaSentence = sentenceId2CotaSentence[data.id];
+    const concept = conceptId2Concept[cotaSentence.concept_annotation || "NO_CONCEPT"];
+    return (
+      <Box
+        maxWidth="sm"
+        sx={{
+          display: data.position ? "block" : "none",
+          position: "absolute",
+          top: data.position.top,
+          left: data.position.left,
+          zIndex: 9999,
+        }}
+      >
+        <Card>
+          <CardContent>
+            <Stack direction="row" alignItems="top" marginBottom={1}>
+              <CircleIcon fontSize="small" style={{ marginRight: "4px", color: concept.color }} />
+              <Typography>{cotaSentence.text}</Typography>
+            </Stack>
+
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Concept</TableCell>
+                  <TableCell>Similarity</TableCell>
+                  <TableCell>Probability</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Object.values(conceptId2Concept)
+                  .filter((concept) => concept.id !== "NO_CONCEPT")
+                  .map((concept) => (
+                    <TableRow key={concept.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                      <TableCell component="th" scope="row" sx={{ color: concept.color }}>
+                        {concept.name}
+                      </TableCell>
+                      <TableCell>{(cotaSentence.concept_similarities[concept.id] * 100.0).toFixed(2)}</TableCell>
+                      <TableCell>{(cotaSentence.concept_probabilities[concept.id] * 100.0).toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  } else {
+    return null;
+  }
+}

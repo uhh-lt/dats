@@ -1,0 +1,113 @@
+import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
+import { TagHooks } from "@api/hooks/TagHooks";
+import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
+import { TagStat } from "@models/TagStat";
+import { TabPanel } from "@mui/lab";
+import { useAppSelector } from "@store/storeHooks";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo } from "react";
+import { useFilterStats } from "../_hooks/useFilterStats";
+
+interface DocumentTagStatsProps {
+  currentTab: string;
+  projectId: number;
+  sdocIds?: number[];
+  handleClick: (tagId: number) => void;
+  parentElement: HTMLDivElement | null;
+  filterBy: string;
+}
+
+export function DocumentTagStats(props: DocumentTagStatsProps) {
+  if (props.currentTab !== `tags`) {
+    return null;
+  } else {
+    return <DocumentTagStatsContent {...props} />;
+  }
+}
+
+function DocumentTagStatsContent({ ...props }: DocumentTagStatsProps) {
+  const sortStatsByGlobal = useAppSelector((state) => state.search.sortStatsByGlobal);
+  const tagStats = StatisticsHooks.useFilterTagStats(props.sdocIds, sortStatsByGlobal);
+  return (
+    <>
+      {tagStats.isSuccess ? (
+        <DocumentTagStatsWithData tagStats={tagStats.data} {...props} />
+      ) : tagStats.isError ? (
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Error: {tagStats.error.message}
+        </TabPanel>
+      ) : tagStats.isLoading && tagStats.isFetching ? (
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Loading...
+        </TabPanel>
+      ) : (
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Something went wrong!
+        </TabPanel>
+      )}
+    </>
+  );
+}
+
+function DocumentTagStatsWithData({
+  tagStats,
+  handleClick,
+  parentElement,
+  filterBy,
+}: DocumentTagStatsProps & { tagStats: TagStat[] }) {
+  const filteredTagStats = useFilterStats(tagStats, filterBy);
+
+  // The virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: filteredTagStats.length,
+    getScrollElement: () => parentElement,
+    estimateSize: () => 35,
+  });
+
+  // computed
+  const maxValue = useMemo(() => Math.max(...filteredTagStats.map((t) => t.global_count)), [filteredTagStats]);
+
+  return (
+    <TabPanel
+      value="tags"
+      style={{
+        whiteSpace: "nowrap",
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        width: "100%",
+        position: "relative",
+        padding: 0,
+      }}
+    >
+      {filteredTagStats.length === 0 && <i>empty</i>}
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        const tagStat = filteredTagStats[virtualItem.index];
+        return (
+          <DocumentTagStatButtonContent
+            tagId={tagStat.tag.id}
+            key={virtualItem.key}
+            count={tagStat.filtered_count}
+            totalCount={tagStat.global_count}
+            maxCount={maxValue}
+            translateY={virtualItem.start}
+            handleClick={() => handleClick(tagStat.tag.id)}
+          />
+        );
+      })}
+    </TabPanel>
+  );
+}
+
+function DocumentTagStatButtonContent({
+  tagId,
+  ...props
+}: { tagId: number } & Omit<StatsDisplayButtonProps, "term" | "disabled">) {
+  const tag = TagHooks.useGetTag(tagId);
+
+  return (
+    <StatsDisplayButton
+      {...props}
+      disabled={!tag.isSuccess}
+      term={tag.data ? tag.data.name : tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : "Error"}
+    />
+  );
+}

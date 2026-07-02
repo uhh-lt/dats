@@ -1,0 +1,54 @@
+import { DocTypeIcons, getIconComponent } from "@components/icons";
+import { jobStatusToTypographyColor } from "@core/job";
+import { SDocStatus } from "@models/SDocStatus";
+import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import { Box, CircularProgress, LinearProgress, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";
+import { memo } from "react";
+
+interface SdocStatusSimpleListItemProps {
+  sdocStatus: SourceDocumentStatusSimple;
+}
+
+export const SdocStatusSimpleListItem = memo(({ sdocStatus }: SdocStatusSimpleListItemProps) => {
+  return (
+    <ListItem>
+      <Box width="50%" display="flex" alignItems="center">
+        <ListItemIcon>{getIconComponent(DocTypeIcons[sdocStatus.doctype])}</ListItemIcon>
+        <ListItemText
+          primary={sdocStatus.name}
+          primaryTypographyProps={{
+            sx: {
+              whiteSpace: "normal",
+              wordBreak: "break-all",
+              overflowWrap: "break-word",
+            },
+          }}
+        />
+      </Box>
+      <Box width="50%">
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ width: "100%", mr: 1 }}>
+            <LinearProgress variant="determinate" value={(sdocStatus.processed_jobs / sdocStatus.total_jobs) * 100} />
+          </Box>
+          <Box flexShrink={0} mr={2}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+            >{`${sdocStatus.processed_jobs}/${sdocStatus.total_jobs}`}</Typography>
+          </Box>
+          <ListItemIcon sx={{ minWidth: "1px" }}>
+            {sdocStatus.processed_status === SDocStatus._1 ? (
+              <TaskAltIcon sx={{ color: jobStatusToTypographyColor.finished }} />
+            ) : sdocStatus.processed_status === SDocStatus._0 ? (
+              <CircularProgress color="secondary" size={24} />
+            ) : (
+              <ErrorOutlineIcon sx={{ color: jobStatusToTypographyColor.failed }} />
+            )}
+          </ListItemIcon>
+        </Box>
+      </Box>
+    </ListItem>
+  );
+});

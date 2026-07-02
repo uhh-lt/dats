@@ -1,0 +1,35 @@
+import { UserHooks } from "@api/hooks/UserHooks";
+import { PublicUserRead } from "@models/PublicUserRead";
+import { UserRead } from "@models/UserRead";
+
+interface UserRendererProps {
+  user: number | UserRead | PublicUserRead;
+}
+
+export function UserRenderer({ user }: UserRendererProps) {
+  if (typeof user === "number") {
+    return <UserRendererWithoutData userId={user} />;
+  } else {
+    return <UserRendererWithData user={user} />;
+  }
+}
+
+function UserRendererWithoutData({ userId }: { userId: number }) {
+  const user = UserHooks.useGetUser(userId);
+
+  if (user.isSuccess) {
+    return <UserRendererWithData user={user.data} />;
+  } else if (user.isError) {
+    return <div>{user.error.message}</div>;
+  } else {
+    return <div>Loading...</div>;
+  }
+}
+
+function UserRendererWithData({ user }: { user: PublicUserRead }) {
+  return (
+    <span>
+      {user.first_name} {user.last_name}
+    </span>
+  );
+}

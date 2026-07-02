@@ -1,0 +1,117 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { useTabNavigate } from "@core/navigation";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { TabPanel } from "@mui/lab";
+import { Box, Button, CircularProgress, List, Stack } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { memo, useRef } from "react";
+import { SdocListItem } from "./_components/SdocListItem";
+
+interface RelatedPanelProps {
+  currentTab: string;
+  sdocId: number;
+}
+
+export const RelatedPanel = memo((props: RelatedPanelProps) => {
+  if (props.currentTab === "related") {
+    return <RelatedPanelContent {...props} />;
+  } else {
+    return null;
+  }
+});
+
+function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
+  const relatedSdocIds = SdocHooks.useGetSameFolderSdocIds(sdocId);
+
+  // virtualization
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: relatedSdocIds.data?.length || 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 48,
+  });
+
+  // check if we are in annotation view
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const tabNavigate = useTabNavigate();
+  const relatedIds = relatedSdocIds.data ?? [];
+  const currentIndex = relatedIds.findIndex((id) => id === sdocId);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < relatedIds.length - 1;
+
+  // Navigation handler for prev, next, and open
+  const handleNavigate = (direction: "prev" | "next" | "open") => {
+    if (!projectId) return;
+    let targetId: number | undefined;
+    if (direction === "prev") {
+      if (!hasPrev) return;
+      targetId = relatedIds[currentIndex - 1];
+    } else if (direction === "next") {
+      if (!hasNext) return;
+      targetId = relatedIds[currentIndex + 1];
+    } else if (direction === "open") {
+      targetId = sdocId;
+    }
+    if (targetId !== undefined) {
+      tabNavigate({
+        to: "/project/$projectId/annotation/$sdocId",
+        params: { projectId, sdocId: targetId },
+      });
+    }
+  };
+
+  const items = virtualizer.getVirtualItems();
+  return (
+    <TabPanel value="related" sx={{ p: 1 }} className="h100 myFlexContainer">
+      <Stack
+        direction="row"
+        alignItems="center"
+        width="100%"
+        justifyContent="space-between"
+        className="myFlexFitContentContainer"
+        pb={1}
+      >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => handleNavigate("prev")} disabled={!hasPrev}>
+          Prev
+        </Button>
+        <Button onClick={() => handleNavigate("open")}>Open this document</Button>
+        <Button endIcon={<ArrowForwardIcon />} onClick={() => handleNavigate("next")} disabled={!hasNext}>
+          Next
+        </Button>
+      </Stack>
+      <Box ref={parentRef} sx={{ p: 0, overflowY: "auto" }} className="myFlexFillAllContainer">
+        {relatedSdocIds.isLoading && (
+          <Box textAlign={"center"} pt={2}>
+            <CircularProgress />
+          </Box>
+        )}
+        {relatedSdocIds.isError && <span>{relatedSdocIds.error.message}</span>}
+        {relatedSdocIds.isSuccess && (
+          <Box height={virtualizer.getTotalSize()} width="100%" position="relative">
+            <List
+              disablePadding
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${items[0]?.start ?? 0}px)`,
+              }}
+            >
+              {items.map((virtualItem) => (
+                <SdocListItem
+                  sdocId={relatedSdocIds.data[virtualItem.index]}
+                  key={virtualItem.key}
+                  ref={virtualizer.measureElement}
+                  selected={relatedSdocIds.data[virtualItem.index] === sdocId}
+                />
+              ))}
+            </List>
+          </Box>
+        )}
+      </Box>
+    </TabPanel>
+  );
+}

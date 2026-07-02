@@ -1,9 +1,19 @@
 {
-  // frontend
-  "javascript.preferences.importModuleSpecifierEnding": "js",
-  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "js/ts.preferences.importModuleSpecifier": "shortest",
+  "js/ts.preferences.importModuleSpecifierEnding": "minimal",
 
   // prettier
   "prettier.prettierPath": "node_modules/prettier",
-  "prettier.configPath": "../.prettierrc.yaml"
+  "prettier.configPath": "../.prettierrc.yaml",
+
+  // tanstack router
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  }
 }

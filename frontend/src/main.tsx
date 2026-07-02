@@ -1,31 +1,38 @@
+import { queryClient } from "@api/queryClient";
+import { AuthProvider, useAuth } from "@core/auth";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
+import { theme } from "@plugins/mui";
+import { SentryProvider } from "@plugins/sentry";
+import { router } from "@plugins/tanstack";
 import * as Sentry from "@sentry/react";
+import { store } from "@store/store";
+import "@styles/index.css";
+import "@styles/layout.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import React from "react";
+import { RouterProvider } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
-import { RouterProvider } from "react-router-dom";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
-import { AuthProvider } from "./auth/AuthProvider.tsx";
-import "./index.css";
-import { theme } from "./plugins/ReactMUI.ts";
-import queryClient from "./plugins/ReactQueryClient.ts";
-import { SentryProvider } from "./plugins/Sentry.tsx";
-import router from "./router/routes.tsx";
-import { store } from "./store/store.ts";
+
+declare global {
+  interface Window {
+    __datsHideBootSplash?: () => void;
+  }
+}
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);
 
 root.render(
-  <React.StrictMode>
+  <>
     <Sentry.ErrorBoundary fallback={<p>An unexpected error has occurred. Please try again later.</p>}>
       <QueryClientProvider client={queryClient}>
         <SentryProvider>
@@ -33,7 +40,7 @@ root.render(
             <PersistGate persistor={persistor}>
               <AuthProvider>
                 <ThemeProvider theme={theme}>
-                  <RouterProvider router={router} />
+                  <App />
                 </ThemeProvider>
               </AuthProvider>
             </PersistGate>
@@ -42,5 +49,19 @@ root.render(
         </SentryProvider>
       </QueryClientProvider>
     </Sentry.ErrorBoundary>
-  </React.StrictMode>,
+  </>,
 );
+
+export function App() {
+  const auth = useAuth();
+
+  useEffect(() => {
+    window.__datsHideBootSplash?.();
+  }, []);
+
+  useEffect(() => {
+    void router.invalidate();
+  }, [auth.user?.id]);
+
+  return <RouterProvider router={router} context={{ auth, queryClient }} />;
+}

@@ -1,0 +1,49 @@
+import { Icon, getIconComponent } from "@components/icons";
+import { ITree } from "@components/tree-explorer";
+import { MemoMenuItem } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { CodeRead } from "@models/CodeRead";
+import { IconButton, Menu } from "@mui/material";
+import { useCallback, useState } from "react";
+import { CodeEditMenuItem } from "./CodeEditMenuItem";
+import { CodeToggleVisibilityMenuItem } from "./CodeToggleVisibilityMenuItem";
+
+interface CodeExplorerActionMenuProps {
+  node: ITree<CodeRead>;
+  isHidden: boolean;
+  onToggleVisibility: (codeIds: number[]) => void;
+}
+
+export function CodeExplorerActionMenu({ node, isHidden, onToggleVisibility }: CodeExplorerActionMenuProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setAnchorEl(null);
+  }, []);
+
+  return (
+    <>
+      <IconButton onClick={handleClick}>{getIconComponent(Icon.CONTEXT_MENU)}</IconButton>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <CodeToggleVisibilityMenuItem
+          code={node}
+          isHidden={isHidden}
+          onToggleVisibility={onToggleVisibility}
+          onClick={handleClose}
+        />
+        <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
+        <MemoMenuItem
+          attachedObjectId={node.data.id}
+          attachedObjectType={AttachedObjectType.CODE}
+          onClick={handleClose}
+        />
+      </Menu>
+    </>
+  );
+}

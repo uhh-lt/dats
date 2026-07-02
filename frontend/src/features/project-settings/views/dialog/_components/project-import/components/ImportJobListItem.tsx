@@ -1,0 +1,45 @@
+import { ImportHooks } from "@api/hooks/ImportHooks";
+import { JobListItem } from "@core/job";
+import { ImportJobRead } from "@models/ImportJobRead";
+import { JobStatus } from "@models/JobStatus";
+import { Typography } from "@mui/material";
+import { dateToLocaleString } from "@utils/DateUtils";
+import { memo, useMemo } from "react";
+
+interface ImportJobListItemProps {
+  initialImportJob: ImportJobRead;
+}
+
+export const ImportJobListItem = memo(({ initialImportJob }: ImportJobListItemProps) => {
+  // global server state (react-query)
+  const importJob = ImportHooks.usePollImportJob(initialImportJob.job_id, initialImportJob);
+
+  // compute subtitle
+  const subTitle = useMemo(() => {
+    if (!importJob.data) {
+      return "";
+    }
+    const createdDate = dateToLocaleString(importJob.data.created);
+    let title = `${importJob.data.input.import_job_type}, started at ${createdDate}`;
+    if (importJob.data.status === JobStatus.FINISHED && importJob.data.finished) {
+      const finishedDate = dateToLocaleString(importJob.data.finished);
+      title += `, finished at ${finishedDate}`;
+    }
+    return title;
+  }, [importJob.data]);
+
+  if (importJob.isSuccess) {
+    return (
+      <JobListItem
+        jobStatus={importJob.data.status}
+        jobId={importJob.data.job_id}
+        title={`Import Job - ${importJob.data.input.import_job_type}`}
+        subTitle={subTitle}
+      >
+        <Typography>{importJob.data.status_message}</Typography>
+      </JobListItem>
+    );
+  } else {
+    return null;
+  }
+});

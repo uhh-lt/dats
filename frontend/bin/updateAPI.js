@@ -1,11 +1,11 @@
 import { exec } from "child_process";
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import { existsSync, unlinkSync, writeFileSync } from "fs";
 import { get } from "http";
 import process from "process";
 
 // get env variables
-dotenv.config({ path: ".env" });
+config({ path: ".env" });
 
 // settings
 const openapiFilePath = "src/openapi.json";

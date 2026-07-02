@@ -22,6 +22,7 @@
     // general
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always",
       "source.organizeImports": "explicit",
     },
     "files.insertFinalNewline": true,

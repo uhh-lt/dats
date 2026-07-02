@@ -1,0 +1,48 @@
+import { Icon } from "@components/icons";
+import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
+import { SentenceSimilaritySearchView, sentenceSimilaritySearchViewLoader } from "@features/search";
+import { SdocColumns } from "@models/SdocColumns";
+import { CircularProgress } from "@mui/material";
+import { createFileRoute } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+
+const sentenceSearchSchema = z.object({
+  searchQuery: z.string().default(""),
+  [FILTER_PARAM]: z
+    .custom<string | MyFilter<SdocColumns>>()
+    .default("")
+    .transform((value) => deserializeFilterFromSearchParam<SdocColumns>(value, "root")),
+  [FILTER_EXPERT_MODE_PARAM]: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .transform((value) => value === true || value === "true")
+    .default(false),
+  topK: z.coerce.number().default(10),
+  threshold: z.coerce.number().default(0),
+});
+
+export const Route = createFileRoute("/_auth/project/$projectId/sentencesearch")({
+  staticData: {
+    tab: true,
+    icon: Icon.SENTENCE_SEARCH,
+    getTitle: () => "Sentence Search",
+  },
+  validateSearch: zodValidator(sentenceSearchSchema),
+  loaderDeps: ({ search }) => ({
+    searchQuery: search.searchQuery,
+    searchFilter: search[FILTER_PARAM],
+    topK: search.topK,
+    threshold: search.threshold,
+  }),
+  loader: ({ context, params, deps }) =>
+    sentenceSimilaritySearchViewLoader({
+      queryClient: context.queryClient,
+      projectId: params.projectId,
+      searchQuery: deps.searchQuery,
+      searchFilter: deps.searchFilter,
+      topK: deps.topK,
+      threshold: deps.threshold,
+    }),
+  pendingComponent: () => <CircularProgress />,
+  component: SentenceSimilaritySearchView,
+});

@@ -1,14 +1,37 @@
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
+import path from "path";
 import { defineConfig, loadEnv } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const sharedConfig = {
-    plugins: [react()],
+    plugins: [
+      tanstackRouter({
+        target: "react",
+        autoCodeSplitting: true,
+      }),
+      react(),
+    ],
     server: {
       strictPort: true,
+    },
+    resolve: {
+      alias: {
+        "@api": path.resolve(__dirname, "./src/api"),
+        "@components": path.resolve(__dirname, "./src/components"),
+        "@core": path.resolve(__dirname, "./src/core"),
+        "@features": path.resolve(__dirname, "./src/features"),
+        "@hooks": path.resolve(__dirname, "./src/hooks"),
+        "@models": path.resolve(__dirname, "./src/models"),
+        "@plugins": path.resolve(__dirname, "./src/plugins"),
+        "@routes": path.resolve(__dirname, "./src/routes"),
+        "@store": path.resolve(__dirname, "./src/store"),
+        "@styles": path.resolve(__dirname, "./src/styles"),
+        "@utils": path.resolve(__dirname, "./src/utils"),
+      },
     },
   };
 

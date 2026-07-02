@@ -1,0 +1,121 @@
+import { MetadataHooks } from "@api/hooks/MetadataHooks";
+import { SdocReduxFilterTable } from "@core/source-document";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider } from "@mui/material";
+import Stack from "@mui/material/Stack/Stack";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
+import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
+import { useCallback, useMemo, useState } from "react";
+import { ClassifierActions } from "../../../store/classifierSlice";
+
+export function InferDataSelectionStep() {
+  // dialog state
+  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const sdocIds = useAppSelector((state) => state.classifier.classifierSdocIds);
+  const dispatch = useAppDispatch();
+
+  // global server state
+  const projectMetadata = MetadataHooks.useGetProjectMetadataList();
+
+  // selection state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(
+    sdocIds.reduce(
+      (acc, curr) => {
+        acc[curr] = true;
+        return acc;
+      },
+      {} as Record<number, boolean>,
+    ),
+  );
+  const selectedSdocIds = useMemo(() => {
+    return Object.keys(rowSelectionModel)
+      .filter((key) => rowSelectionModel[key])
+      .map((key) => parseInt(key))
+      .filter((id) => !isNaN(id));
+  }, [rowSelectionModel]);
+
+  // dialog actions
+  const handleClose = useCallback(() => {
+    dispatch(ClassifierActions.closeClassifierDialog());
+  }, [dispatch]);
+  const handleNext = useCallback(() => {
+    dispatch(ClassifierActions.onClassifierDialogSelectSdocs(selectedSdocIds));
+  }, [dispatch, selectedSdocIds]);
+
+  return (
+    <>
+      <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
+        <Alert variant="standard" severity="info" sx={{ border: "1px solid", borderColor: "info.main" }}>
+          Choose one or more documents to run inference on. You can use filters to narrow down the list of documents.
+        </Alert>
+        <Card className="myFlexContainer myFlexFillAllContainer" sx={{ width: "100%" }} variant="outlined">
+          <CardHeader
+            title="Select documents"
+            slotProps={{
+              title: {
+                variant: "h6",
+              },
+            }}
+            sx={{ py: 1 }}
+          />
+          <Divider />
+          {projectMetadata.isSuccess && (
+            <DocumentSelector
+              metadata={projectMetadata.data}
+              projectId={projectId}
+              rowSelectionModel={rowSelectionModel}
+              onRowSelectionChange={setRowSelectionModel}
+            />
+          )}
+        </Card>
+      </Stack>
+      <Divider />
+      <DialogActions sx={{ width: "100%" }}>
+        <Box flexGrow={1} />
+        <Button onClick={handleClose}>Close</Button>
+        <Button disabled={selectedSdocIds.length === 0} onClick={handleNext}>
+          Next
+        </Button>
+      </DialogActions>
+    </>
+  );
+}
+
+const filterName = "classifierDialogDocumentSelection";
+
+interface DocumentSelectorProps {
+  projectId: number;
+  metadata: ProjectMetadataRead[];
+  rowSelectionModel: MRT_RowSelectionState;
+  onRowSelectionChange: React.Dispatch<React.SetStateAction<MRT_RowSelectionState>>;
+}
+
+function DocumentSelector({ projectId, metadata, rowSelectionModel, onRowSelectionChange }: DocumentSelectorProps) {
+  // local state
+  const [fetchSize, setFetchSize] = useState(20);
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState>(() =>
+    // init visibility (disable metadata)
+    metadata.reduce((acc, curr) => {
+      return {
+        ...acc,
+        [curr.id]: false,
+      };
+    }, {}),
+  );
+
+  return (
+    <SdocReduxFilterTable
+      projectId={projectId}
+      filterName={filterName}
+      rowSelectionModel={rowSelectionModel}
+      onRowSelectionChange={onRowSelectionChange}
+      sortingModel={sortingModel}
+      onSortingChange={setSortingModel}
+      columnVisibilityModel={visibilityModel}
+      onColumnVisibilityChange={setVisibilityModel}
+      fetchSize={fetchSize}
+      onFetchSizeChange={setFetchSize}
+    />
+  );
+}

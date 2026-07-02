@@ -1,6 +1,5 @@
 import random
 import string
-from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -8,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from config import conf
+from config_schema import SystemCodeConfig
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern, MemoInDB, MemoRead
 from core.project.project_crud import crud_project
@@ -22,18 +22,14 @@ from repos.db.sql_repo import SQLRepo
 
 
 def get_number_of_system_codes() -> int:
-    def __count_codes_recursively(
-        code_dict: dict[str, dict[str, Any]], num: int, names
-    ):
-        for code_name in code_dict.keys():
+    def __count_codes_recursively(codes: list[SystemCodeConfig], num: int, names):
+        for code in codes:
             num += 1
-            if code_name in names:
-                print(f"CODENAME: {code_name=}")
-            names.add(code_name)
-            if "children" in code_dict[code_name]:
-                num = __count_codes_recursively(
-                    code_dict[code_name]["children"], num, names
-                )
+            if code.name in names:
+                print(f"CODENAME: {code.name}")
+            names.add(code.name)
+            if len(code.children) > 0:
+                num = __count_codes_recursively(code.children, num, names)
         return num
 
     return __count_codes_recursively(conf.system_codes, 0, set())

@@ -1,0 +1,193 @@
+import {
+  AnalysisDashboard,
+  AnalysisDashboardRow,
+  HandleCreateAnalysis,
+  useAnalysisDashboardTable,
+} from "@components/analysis-dashboard";
+import { useOpenConfirmationDialog } from "@core/notification";
+import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
+import { useAppDispatch } from "@store/storeHooks";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getRouteApi } from "@tanstack/react-router";
+import { MRT_ColumnDef, MRT_Row, MRT_TableOptions } from "material-react-table";
+import { useMemo } from "react";
+import {
+  projectTimelineAnalysisQueryOptions,
+  useCreateTimelineAnalysis,
+  useDeleteTimelineAnalysis,
+  useDuplicateTimelineAnalysis,
+  useUpdateTimelineAnalysis,
+} from "../../_api/timelineAnalysisQueryOptions";
+import { TimelineAnalysisActions } from "../../store/timelineAnalysisSlice";
+import { TimelineAnalysisExportButton } from "./_components/TimelineAnalysisExportButton";
+
+const TimelineAnalysisRouteAPI = getRouteApi("/_auth/project/$projectId/analysis/timeline/");
+
+interface TimelineAnaylsisDashboardRow extends AnalysisDashboardRow {
+  type: TimelineAnalysisType;
+}
+
+const additionalColumns: MRT_ColumnDef<TimelineAnaylsisDashboardRow>[] = [
+  {
+    id: "type",
+    header: "Type",
+    accessorFn: (params) => params.type,
+    enableEditing: false,
+  },
+];
+
+export function TimelineAnalysisDashboardView() {
+  // global client state
+  const projectId = TimelineAnalysisRouteAPI.useParams({ select: (params) => params.projectId });
+
+  // global server state
+  const { data: userAnalysis } = useSuspenseQuery({
+    ...projectTimelineAnalysisQueryOptions(projectId),
+    select: (data) => Object.values(data),
+  });
+  const userAnalysisTableData: TimelineAnaylsisDashboardRow[] = useMemo(
+    () =>
+      userAnalysis?.map((analysis) => ({
+        id: analysis.id,
+        title: analysis.name,
+        updated: analysis.updated,
+        type: analysis.timeline_analysis_type,
+      })) || [],
+    [userAnalysis],
+  );
+
+  // mutations
+  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } = useCreateTimelineAnalysis();
+  const {
+    mutate: deleteTimelineAnalysis,
+    isPending: isDeletingTimelineAnalysis,
+    variables: deletingVariables,
+  } = useDeleteTimelineAnalysis();
+  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } = useUpdateTimelineAnalysis();
+  const {
+    mutate: duplicateTimelineAnalysis,
+    isPending: isDuplicatingTimelineAnalysis,
+    variables: duplicatingVariables,
+  } = useDuplicateTimelineAnalysis();
+
+  const dispatch = useAppDispatch();
+
+  // CRUD actions
+  const handleCreateAnalysis: HandleCreateAnalysis<TimelineAnaylsisDashboardRow> =
+    (createOption) =>
+    ({ values, table }) => {
+      createTimelineAnalysis(
+        {
+          requestBody: {
+            project_id: projectId,
+            name: values.title,
+            timeline_analysis_type: (createOption?.option as TimelineAnalysisType) || TimelineAnalysisType.DOCUMENT,
+          },
+        },
+        {
+          onSuccess() {
+            table.setCreatingRow(null); //exit creating mode
+          },
+        },
+      );
+    };
+
+  const handleDuplicateAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
+    duplicateTimelineAnalysis({
+      timelineAnalysisId: row.original.id,
+    });
+  };
+
+  const openConfirmationDialog = useOpenConfirmationDialog();
+  const handleDeleteAnalysis = (row: MRT_Row<TimelineAnaylsisDashboardRow>) => {
+    openConfirmationDialog({
+      text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
+      onAccept: () => {
+        deleteTimelineAnalysis({
+          timelineAnalysisId: row.original.id,
+        });
+      },
+    });
+  };
+
+  const handleEditAnalysis: MRT_TableOptions<TimelineAnaylsisDashboardRow>["onEditingRowSave"] = ({
+    values,
+    table,
+    row,
+  }) => {
+    updateTimelineAnalysis(
+      {
+        timelineAnalysisId: row.original.id,
+        requestBody: {
+          name: values.title,
+        },
+      },
+      {
+        onSuccess() {
+          table.setEditingRow(null); //exit editing mode
+        },
+      },
+    );
+  };
+
+  const navigate = TimelineAnalysisRouteAPI.useNavigate();
+  const handleOpenAnalysis = (row: TimelineAnaylsisDashboardRow) => {
+    dispatch(
+      TimelineAnalysisActions.onOpenTimelineAnalysis({
+        analysisId: row.id,
+        analysisType: row.type,
+        projectId,
+      }),
+    );
+    navigate({ to: "./$analysisId", params: { analysisId: row.id } });
+  };
+
+  // table
+  const table = useAnalysisDashboardTable({
+    analysisName: "Timeline Analysis",
+    data: userAnalysisTableData,
+    isLoadingData: false,
+    isFetchingData: false,
+    isLoadingDataError: false,
+    isCreatingAnalysis: isCreatingTimelineAnalysis,
+    isUpdatingAnalysis: isUpdatingTimelineAnalysis,
+    isDuplicatingAnalysis: isDuplicatingTimelineAnalysis,
+    isDeletingAnalysis: isDeletingTimelineAnalysis,
+    deletingAnalysisId: deletingVariables?.timelineAnalysisId,
+    duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
+    onOpenAnalysis: handleOpenAnalysis,
+    handleCreateAnalysis,
+    handleEditAnalysis,
+    handleDeleteAnalysis,
+    handleDuplicateAnalysis,
+    analysisCreateOptions: [
+      {
+        option: TimelineAnalysisType.DOCUMENT,
+        label: "Documents",
+      },
+      {
+        option: TimelineAnalysisType.SENTENCE_ANNOTATION,
+        label: "Sentence Annotations",
+      },
+      {
+        option: TimelineAnalysisType.SPAN_ANNOTATION,
+        label: "Span Annotations",
+      },
+      {
+        option: TimelineAnalysisType.BBOX_ANNOTATION,
+        label: "Image Annotations",
+      },
+    ],
+    additionalColumns,
+    renderExportButton: (props) => <TimelineAnalysisExportButton {...props} />,
+  });
+
+  return (
+    <AnalysisDashboard
+      pageTitle="Timeline Analysis Dashboard"
+      headerTitle="Timeline Analysis Dashboard"
+      subheaderTitle="Manage your timeline analysis"
+      table={table}
+    />
+  );
+}

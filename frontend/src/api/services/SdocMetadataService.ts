@@ -1,0 +1,132 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { SourceDocumentMetadataBulkUpdate } from "@models/SourceDocumentMetadataBulkUpdate";
+import type { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
+import type { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
+export class SdocMetadataService {
+  /**
+   * Returns the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/{metadata_id}",
+      path: {
+        metadata_id: metadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateById({
+    metadataId,
+    requestBody,
+  }: {
+    metadataId: number;
+    requestBody: SourceDocumentMetadataUpdate;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/sdocmeta/{metadata_id}",
+      path: {
+        metadata_id: metadataId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Deletes the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdocmeta/{metadata_id}",
+      path: {
+        metadata_id: metadataId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdoc({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the SourceDocumentMetadata with the given Key if it exists.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getBySdocAndKey({
+    sdocId,
+    metadataKey,
+  }: {
+    sdocId: number;
+    metadataKey: string;
+  }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdocmeta/sdoc/{sdoc_id}/metadata/{metadata_key}",
+      path: {
+        sdoc_id: sdocId,
+        metadata_key: metadataKey,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Updates multiple metadata objects at once.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static updateBulk({
+    requestBody,
+  }: {
+    requestBody: Array<SourceDocumentMetadataBulkUpdate>;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/sdocmeta/bulk/update",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+}

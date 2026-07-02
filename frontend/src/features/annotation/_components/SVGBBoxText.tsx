@@ -1,0 +1,40 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { SVGTextElementAttributes, memo } from "react";
+
+type CustomTextProps = Omit<
+  SVGTextElementAttributes<SVGTextElement>,
+  "x" | "y" | "width" | "height" | "stroke" | "strokeWidth" | "fill" | "bbox"
+>;
+
+interface SVGBBoxTextProps {
+  bbox: BBoxAnnotationRead;
+  xCentering?: number;
+  scaledRatio?: number;
+}
+
+export const SVGBBoxText = memo(
+  ({ bbox, xCentering = 0, scaledRatio = 1, ...props }: SVGBBoxTextProps & CustomTextProps) => {
+    const code = CodeHooks.useGetCode(bbox.code_id);
+
+    return (
+      <>
+        {code.data && (
+          <text
+            key={bbox.id}
+            x={scaledRatio * (bbox.x_min + 3) + xCentering}
+            y={scaledRatio * (bbox.y_max - 3)}
+            width={scaledRatio * (bbox.x_max - bbox.x_min)}
+            height={scaledRatio * (bbox.y_max - bbox.y_min)}
+            fill={"white"}
+            stroke={"black"}
+            strokeWidth={0.75}
+            {...props}
+          >
+            {code.data.name}
+          </text>
+        )}
+      </>
+    );
+  },
+);
