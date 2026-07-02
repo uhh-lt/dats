@@ -24,7 +24,7 @@ ass: AnnoScalingService = AnnoScalingService()
     summary="Suggest annotations",
     description="Suggest annotations",
 )
-async def suggest(
+def suggest(
     *,
     db: Session = Depends(get_db_session),
     dto: AnnoscalingSuggest,
@@ -52,7 +52,7 @@ async def suggest(
     summary="Suggest annotations",
     description="Suggest annotations",
 )
-async def confirm_suggestions(
+def confirm_suggestions(
     *,
     db: Session = Depends(get_db_session),
     dto: AnnoscalingConfirmSuggest,

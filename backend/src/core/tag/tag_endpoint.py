@@ -281,7 +281,7 @@ def get_sdoc_ids_by_tag_id(
     response_model=dict[int, int],
     summary="Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
 )
-async def get_sdoc_counts(
+def get_sdoc_counts(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -297,7 +297,7 @@ async def get_sdoc_counts(
     response_model=dict[int, int],
     summary="Counts the Tags of the User (by user_id) per Tags (by class_ids) in Documents (by sdoc_ids)",
 )
-async def count_tags(
+def count_tags(
     *,
     db: Session = Depends(get_db_session),
     user_id: int,

@@ -72,7 +72,7 @@ import_job_file_formats: dict[ImportJobType, FileFormat] = {
     response_model=ImportJobRead,
     summary="Starts an import job with the given parameters and file",
 )
-async def start_import_job(
+def start_import_job(
     *,
     project_id: int,
     import_job_type: ImportJobType,

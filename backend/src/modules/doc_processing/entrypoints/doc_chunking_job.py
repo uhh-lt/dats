@@ -1,7 +1,7 @@
 import math
 from pathlib import Path
 
-import fitz
+import pymupdf
 from loguru import logger
 
 from common.job_type import JobType
@@ -113,7 +113,7 @@ def _prepare_chunk_output_path(project_id: int, output_path: Path) -> None:
 
 def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
     try:
-        src = fitz.open(str(payload.filepath))  # type: ignore
+        src = pymupdf.open(str(payload.filepath))  # type: ignore
         total_pages = src.page_count
     except Exception as e:
         msg = f"Error opening PDF {payload.filepath.name}: {e}"
@@ -148,7 +148,7 @@ def chunk_pdf(payload: DocChunkingJobInput) -> list[Path]:
         output_fn = out_dir / f"{payload.filepath.stem}_pages_{page_range_str}.pdf"
         try:
             # Create a new PDF for the chunk
-            new_pdf = fitz.open()  # type: ignore
+            new_pdf = pymupdf.open()  # type: ignore
             new_pdf.insert_pdf(src, from_page=start_page - 1, to_page=end_page - 1)
 
             # Prepare output path (remove existing file if necessary)

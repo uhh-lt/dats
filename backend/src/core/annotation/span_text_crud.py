@@ -1,5 +1,3 @@
-import tenacity
-from psycopg2.errors import UniqueViolation
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -20,12 +18,12 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, UpdateNotAllowed]):
             return super().create(db=db, create_dto=create_dto)
         return db_obj
 
-    @tenacity.retry(
-        wait=tenacity.wait_random(),
-        stop=tenacity.stop_after_attempt(5),
-        retry=tenacity.retry_if_exception_type(UniqueViolation),
-        reraise=True,
-    )
+    # @tenacity.retry(
+    #     wait=tenacity.wait_random(),
+    #     stop=tenacity.stop_after_attempt(5),
+    #     retry=tenacity.retry_if_exception_type(UniqueViolation),
+    #     reraise=True,
+    # )
     def create_multi(
         self,
         db: Session,

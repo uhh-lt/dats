@@ -1,8 +1,8 @@
 from enum import Enum
 from pathlib import Path
+from typing import Final
 
 import magic
-from frozendict import frozendict
 
 
 class DocType(str, Enum):
@@ -12,53 +12,49 @@ class DocType(str, Enum):
     audio = "audio"
 
 
-__doc_type_to_mime_type_map = frozendict(
-    {
-        DocType.text: [
-            "text/plain",
-            "text/html",
-            "application/pdf",
-            "application/msword",  # .doc
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
-            "application/zip",  # TODO: THIS IS A TEMPORARY FIX docx
-        ],
-        DocType.image: [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp",
-            "image/bmp",
-            "image/tiff",
-        ],
-        DocType.audio: [
-            "audio/mpeg",
-            "audio/ogg",
-            "audio/wave",
-            "audio/webm",
-            "audio/x-wav",
-            "audio/x-pn-wav",
-            "audio/wav",
-            "audio/x-hx-aac-adts",
-        ],
-        DocType.video: [
-            "video/mp4",
-            "video/webm",
-            "video/x-m4v",
-            "video/x-msvideo",
-            "video/quicktime",
-        ],
-    }
-)
+__doc_type_to_mime_type_map: Final[dict[DocType, list[str]]] = {
+    DocType.text: [
+        "text/plain",
+        "text/html",
+        "application/pdf",
+        "application/msword",  # .doc
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # docx
+        "application/zip",  # TODO: THIS IS A TEMPORARY FIX docx
+    ],
+    DocType.image: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/bmp",
+        "image/tiff",
+    ],
+    DocType.audio: [
+        "audio/mpeg",
+        "audio/ogg",
+        "audio/wave",
+        "audio/webm",
+        "audio/x-wav",
+        "audio/x-pn-wav",
+        "audio/wav",
+        "audio/x-hx-aac-adts",
+    ],
+    DocType.video: [
+        "video/mp4",
+        "video/webm",
+        "video/x-m4v",
+        "video/x-msvideo",
+        "video/quicktime",
+    ],
+}
 
-__mime_type_to_doc_type_map = frozendict(
-    {
-        mime_type: doc_type
-        for doc_type, mime_types in __doc_type_to_mime_type_map.items()
-        for mime_type in __doc_type_to_mime_type_map[doc_type]
-    }
-)
+__mime_type_to_doc_type_map: Final[dict[str, DocType]] = {
+    mime_type: doc_type
+    for doc_type, mime_types in __doc_type_to_mime_type_map.items()
+    for mime_type in __doc_type_to_mime_type_map[doc_type]
+}
 
-__archive_mime_types__ = frozenset({"application/zip"})
+__archive_mime_types__: Final[set[str]] = {"application/zip"}
 
 
 def get_doc_type(mime_type: str) -> DocType | None:
