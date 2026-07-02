@@ -1,7 +1,18 @@
 import { CodeTable } from "@core/code";
 import { TagTable } from "@core/tag";
 import { ClassifierModel } from "@models/ClassifierModel";
-import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider, Stack } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardHeader,
+  DialogActions,
+  Divider,
+  FormControlLabel,
+  Stack,
+  Switch,
+} from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";
@@ -15,13 +26,14 @@ export function ClassSelectionStep() {
   // selection state
   const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
   const selectedClassIds = Object.keys(rowSelectionModel).map((key) => parseInt(key));
+  const [mergeChildren, setMergeChildren] = useState<boolean>(false);
 
   // actions
   const dispatch = useAppDispatch();
   const handleNext = useCallback(() => {
     if (selectedClassIds.length === 0) return;
-    dispatch(ClassifierActions.onClassifierDialogSelectClasses(selectedClassIds));
-  }, [dispatch, selectedClassIds]);
+    dispatch(ClassifierActions.onClassifierDialogSelectClasses({ classIds: selectedClassIds, mergeChildren }));
+  }, [dispatch, selectedClassIds, mergeChildren]);
 
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());
@@ -53,11 +65,18 @@ export function ClassSelectionStep() {
               onRowSelectionChange={setRowSelectionModel}
             />
           ) : (
-            <CodeTable
-              projectId={projectId}
-              rowSelectionModel={rowSelectionModel}
-              onRowSelectionChange={setRowSelectionModel}
-            />
+            <>
+              <CodeTable
+                projectId={projectId}
+                rowSelectionModel={rowSelectionModel}
+                onRowSelectionChange={setRowSelectionModel}
+              />
+              <FormControlLabel
+                sx={{ margin: 1 }}
+                control={<Switch onChange={(_, checked) => setMergeChildren(checked)} />}
+                label="Merge child codes into parent?"
+              />
+            </>
           )}
         </Card>
       </Stack>
