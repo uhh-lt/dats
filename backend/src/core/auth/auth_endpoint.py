@@ -1,7 +1,16 @@
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+)
+from fastapi.concurrency import run_in_threadpool
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -38,8 +47,11 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
     response_model=UserRead,
     summary="Registers a new User and returns it with the generated ID.",
 )
-async def register(
-    *, db: Session = Depends(get_db_session), user: UserCreate
+def register(
+    *,
+    db: Session = Depends(get_db_session),
+    user: UserCreate,
+    background_tasks: BackgroundTasks,
 ) -> UserRead:
     try:
         db_user = crud_user.read_by_email(db, email=user.email)
@@ -53,8 +65,11 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
-    await MailRepo().send_welcome_mail(
-        email=db_user.email, first_name=db_user.first_name, last_name=db_user.last_name
+    background_tasks.add_task(
+        MailRepo().send_welcome_mail,
+        email=db_user.email,
+        first_name=db_user.first_name,
+        last_name=db_user.last_name,
     )
     return UserRead.model_validate(db_user)
 
@@ -157,7 +172,7 @@ def refresh_access_token(
     "/content",
     summary="Returns success if the user can access the content",
 )
-async def auth_content(
+def auth_content(
     request: Request,
     db: Session = Depends(get_db_session),
     x_original_uri: Annotated[str | None, Header()] = None,
@@ -197,7 +212,8 @@ async def oidc_callback(
         raise HTTPException(status_code=401, detail=str(e))
 
     (access_token, access_token_expires) = generate_jwt(user)
-    refresh_token = crud_refresh_token.create(db, user.id)
+
+    refresh_token = await run_in_threadpool(crud_refresh_token.create, db, user.id)
 
     auth_data = UserAuthorizationHeaderData(
         access_token=access_token,
@@ -232,7 +248,7 @@ async def oidc_callback(
 
 
 @router.post("/sync-session")
-async def sync_session(
+def sync_session(
     response: Response,
     current_user: UserORM = Depends(get_current_user),
     token: str = Depends(reusable_oauth2_scheme),

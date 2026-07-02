@@ -41,7 +41,7 @@ def register_job_endpoints(
     )
 
     # Start job
-    async def start_job(
+    def start_job(
         payload: input_model,  # type: ignore
         authz_user: AuthzUser = Depends(),
     ):
@@ -59,7 +59,7 @@ def register_job_endpoints(
     )
 
     # Get job by id
-    async def get_job_by_id(
+    def get_job_by_id(
         job_id: str,
         authz_user: AuthzUser = Depends(),
     ):
@@ -78,7 +78,7 @@ def register_job_endpoints(
 
     if endpoint_generation == EndpointGeneration.ALL:
         # Abort job
-        async def abort_job(job_id: str, authz_user: AuthzUser = Depends()):
+        def abort_job(job_id: str, authz_user: AuthzUser = Depends()):
             job = job_service.get_job(job_id)
             authz_user.assert_in_project(job.get_project_id())
             return job_service.stop_job(job_id)
@@ -93,7 +93,7 @@ def register_job_endpoints(
         )
 
         # Retry job
-        async def retry_job(job_id: str, authz_user: AuthzUser = Depends()):
+        def retry_job(job_id: str, authz_user: AuthzUser = Depends()):
             job = job_service.get_job(job_id)
             authz_user.assert_in_project(job.get_project_id())
             return job_service.retry_job(job_id)
@@ -108,9 +108,7 @@ def register_job_endpoints(
         )
 
         # Get all jobs by project
-        async def get_jobs_by_project(
-            project_id: int, authz_user: AuthzUser = Depends()
-        ):
+        def get_jobs_by_project(project_id: int, authz_user: AuthzUser = Depends()):
             authz_user.assert_in_project(project_id)
             jobs = job_service.get_jobs_by_project(job_type, project_id)
             jobs.sort(key=lambda x: x.get_created(), reverse=True)

@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import Generator
 
 from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
@@ -19,7 +19,7 @@ from repos.vector.weaviate_repo import WeaviateRepo
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.auth.jwt.token_url)
 
 
-async def skip_limit_params(
+def skip_limit_params(
     skip: int | None = Query(
         title="Skip",
         description="The number of elements to skip (offset)",
@@ -44,7 +44,7 @@ async def skip_limit_params(
     return result
 
 
-async def get_db_session() -> AsyncGenerator[Session, None]:
+def get_db_session() -> Generator[Session, None, None]:
     session = SQLRepo().session_maker()
     try:
         yield session
@@ -57,7 +57,7 @@ async def get_db_session() -> AsyncGenerator[Session, None]:
             session.close()
 
 
-async def get_weaviate_session() -> AsyncGenerator[WeaviateClient, None]:
+def get_weaviate_session() -> Generator[WeaviateClient, None, None]:
     session = WeaviateRepo().weaviate_session()
     try:
         yield session

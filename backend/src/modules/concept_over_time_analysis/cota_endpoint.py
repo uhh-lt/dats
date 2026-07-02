@@ -33,7 +33,7 @@ router = APIRouter(
     summary="Creates an ConceptOverTimeAnalysis",
     description="Creates an ConceptOverTimeAnalysis",
 )
-async def create(
+def create(
     *,
     db: Session = Depends(get_db_session),
     cota: COTACreate,
@@ -53,7 +53,7 @@ async def create(
     summary="Returns the ConceptOverTimeAnalysis",
     description="Returns the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -71,7 +71,7 @@ async def get_by_id(
     summary="Returns COTAs of the Project",
     description="Returns the COTA of the Project with the given ID if it exists",
 )
-async def get_by_project(
+def get_by_project(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -89,7 +89,7 @@ async def get_by_project(
     summary="Updates the ConceptOverTimeAnalysis",
     description="Updates the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -127,7 +127,7 @@ def duplicate_by_id(
     response_model=COTARead,
     summary="Annotate (multiple) COTASentences",
 )
-async def annotate_cota_sentence(
+def annotate_cota_sentence(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -150,7 +150,7 @@ async def annotate_cota_sentence(
     response_model=COTARead,
     summary="Remove (multiple) COTASentences from the search space",
 )
-async def remove_cota_sentence(
+def remove_cota_sentence(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -172,7 +172,7 @@ async def remove_cota_sentence(
     summary="Removes the ConceptOverTimeAnalysis",
     description="Removes the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -190,7 +190,7 @@ async def delete_by_id(
     summary="Resets the ConceptOverTimeAnalysis",
     description="Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
 )
-async def reset_cota(
+def reset_cota(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
@@ -210,7 +210,7 @@ async def reset_cota(
     summary="Refines the ConceptOverTimeAnalysis",
     description="Refines the ConceptOverTimeAnalysis with the given ID if it exists",
 )
-async def refine_cota(
+def refine_cota(
     *,
     db: Session = Depends(get_db_session),
     payload: COTARefinementJobInput,
@@ -227,7 +227,7 @@ async def refine_cota(
     summary="Returns the COTA Refinement Job for the given ID",
     description="Returns the COTA Refinement Job for the given ID if it exists",
 )
-async def get_cota_job(
+def get_cota_job(
     *,
     cota_job_id: str,
     authz_user: AuthzUser = Depends(),
