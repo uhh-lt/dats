@@ -20,8 +20,8 @@ import {
 } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";
 import { EMAIL_REGEX } from "@utils/GlobalConstants";
-import { ChangeEvent, useRef, useState } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { ChangeEvent, useState } from "react";
+import { SubmitErrorHandler, SubmitHandler, useForm, useWatch } from "react-hook-form";
 
 interface RegisterFormValues extends UserCreate {
   confirmPassword: string;
@@ -33,7 +33,6 @@ export function RegisterView() {
   const {
     handleSubmit,
     formState: { errors },
-    watch,
     control,
   } = useForm<RegisterFormValues>({
     defaultValues: {
@@ -47,16 +46,22 @@ export function RegisterView() {
   });
 
   // password
-  const password = useRef<string>("");
-  password.current = watch("password", "");
+  const password = useWatch({
+    control,
+    name: "password",
+    defaultValue: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
     setShowPassword(event.target.checked);
   };
 
   // mail
-  const mail = useRef<string>("");
-  mail.current = watch("email", "");
+  const email = useWatch({
+    control,
+    name: "email",
+    defaultValue: "",
+  });
 
   // registration
   const registerUserMutation = UserHooks.useRegister();
@@ -153,7 +158,7 @@ export function RegisterView() {
               control={control}
               rules={{
                 required: "E-Mail is required",
-                validate: (value) => value === mail.current || "E-Mails do not match!",
+                validate: (value) => value === email || "E-Mails do not match!",
               }}
               textFieldProps={{
                 label: "E-Mail Confirm",
@@ -201,7 +206,7 @@ export function RegisterView() {
                 showPassword={showPassword}
                 rules={{
                   required: "Password is required",
-                  validate: (value) => value === password.current || "Passwords do not match!",
+                  validate: (value) => value === password || "Passwords do not match!",
                 }}
                 textFieldProps={{
                   label: "Password Confirm",

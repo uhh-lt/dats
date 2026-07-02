@@ -6,7 +6,6 @@ import { ErrorMessage } from "@hookform/error-message";
 import { UserRead } from "@models/UserRead";
 import { Button, Grid2, Stack, TextField, Typography } from "@mui/material";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "@utils/GlobalConstants";
-import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
 type UpdateEmailValues = {
@@ -23,17 +22,12 @@ export function UpdateEmail({ user }: UpdateEmailProps) {
   const {
     handleSubmit,
     formState: { errors },
-    watch,
     control,
   } = useForm<UpdateEmailValues>({
     defaultValues: {
       newemail: "",
     },
   });
-
-  //newemail
-  const newemail = useRef("");
-  newemail.current = watch("newemail", "");
 
   // snack bar
   const openSnackbar = useOpenSnackbar();

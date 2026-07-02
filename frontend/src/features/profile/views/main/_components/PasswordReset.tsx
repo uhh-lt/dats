@@ -13,8 +13,8 @@ import {
   Typography,
 } from "@mui/material";
 import { SUPPORT_EMAIL } from "@utils/GlobalConstants";
-import { useRef, useState } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { useState } from "react";
+import { SubmitErrorHandler, SubmitHandler, useForm, useWatch } from "react-hook-form";
 
 type UpdatePasswordValues = {
   password: string;
@@ -26,7 +26,6 @@ export function PasswordReset() {
   const {
     handleSubmit,
     formState: { errors },
-    watch,
     control,
   } = useForm<UpdatePasswordValues>({
     defaultValues: {
@@ -35,9 +34,11 @@ export function PasswordReset() {
     },
   });
 
-  // password
-  const password = useRef<string>("");
-  password.current = watch("password", "");
+  const password = useWatch({
+    control,
+    name: "password",
+    defaultValue: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setShowPassword(event.target.checked);
@@ -115,7 +116,7 @@ export function PasswordReset() {
           showPassword={showPassword}
           rules={{
             required: "Password is required",
-            validate: (value) => value === password.current || "Passwords do not match!",
+            validate: (value) => value === password || "Passwords do not match!",
           }}
           textFieldProps={{
             label: "Password Confirm",
