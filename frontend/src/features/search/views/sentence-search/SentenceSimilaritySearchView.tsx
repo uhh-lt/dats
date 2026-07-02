@@ -3,7 +3,7 @@ import { PercentageResizablePanel, useLayoutPercentage } from "@components/resiz
 import { FILTER_PARAM } from "@core/filter";
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
-import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
@@ -50,7 +50,9 @@ export function SentenceSimilaritySearchView() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // resetting search-parameter-dependant state
-  useResetTableStateOnSearch([projectId, searchQuery, filter, topK, threshold], SentenceSearchActions);
+  useResetStateOnSearch([projectId, searchQuery, filter, topK, threshold], () =>
+    dispatch(SentenceSearchActions.onSearchParamsChange()),
+  );
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));

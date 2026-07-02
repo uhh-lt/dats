@@ -1,6 +1,7 @@
 import { ContentLayout } from "@components/content-layouts";
-import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { Box } from "@mui/material";
+import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
 import { WordFrequencyActions } from "../../store/wordFrequencySlice";
@@ -20,7 +21,8 @@ export function WordFrequencyView() {
     }),
   );
   // resetting search-parameter-dependant state
-  useResetTableStateOnSearch([projectId, filter, sortingModel], WordFrequencyActions);
+  const dispatch = useAppDispatch();
+  useResetStateOnSearch([projectId, filter, sortingModel], () => dispatch(WordFrequencyActions.onSearchParamsChange()));
 
   return (
     <ContentLayout>

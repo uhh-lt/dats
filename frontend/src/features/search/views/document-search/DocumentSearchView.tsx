@@ -6,7 +6,7 @@ import { FolderExplorer, FolderInformation, FolderRenderer } from "@core/folder"
 import { DocumentInfoPanel } from "@core/source-document";
 import { TagExplorer } from "@core/tag";
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
-import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { FolderType } from "@models/FolderType";
 import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
@@ -116,9 +116,8 @@ export function DocumentSearchView() {
   }, [documentSearchQuery.data, showFolders]);
 
   // resetting search-parameter-dependant state
-  useResetTableStateOnSearch(
-    [projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel],
-    SearchActions,
+  useResetStateOnSearch([projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel], () =>
+    dispatch(SearchActions.onSearchParamsChange()),
   );
 
   // filtering feature

@@ -1,9 +1,10 @@
 import { ContentLayout } from "@components/content-layouts";
-import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
+import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { DocType } from "@models/DocType";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
+import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { SyntheticEvent, useCallback } from "react";
 import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
@@ -26,7 +27,8 @@ export function HealthView() {
   );
 
   // resetting search-parameter-dependant state
-  useResetTableStateOnSearch([projectId, tab, sortingModel], HealthActions);
+  const dispatch = useAppDispatch();
+  useResetStateOnSearch([projectId, tab, sortingModel], () => dispatch(HealthActions.onSearchParamsChange()));
 
   const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const handleTabChange = useCallback(
