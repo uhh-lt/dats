@@ -8,7 +8,7 @@ from config import conf
 
 class MailRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.is_enabled = conf.mail.enabled == "True"
+        cls.is_enabled = conf.mail.enabled
 
         config = ConnectionConfig(
             MAIL_FROM=conf.mail.mail,
@@ -16,10 +16,10 @@ class MailRepo(metaclass=SingletonMeta):
             MAIL_PASSWORD=conf.mail.password,
             MAIL_SERVER=conf.mail.server,
             MAIL_PORT=conf.mail.port,
-            MAIL_STARTTLS=conf.mail.starttls == "True",
-            MAIL_SSL_TLS=conf.mail.ssl_tls == "True",
-            USE_CREDENTIALS=conf.mail.use_credentials == "True",
-            VALIDATE_CERTS=conf.mail.validate_certs == "True",
+            MAIL_STARTTLS=conf.mail.starttls,
+            MAIL_SSL_TLS=conf.mail.ssl_tls,
+            USE_CREDENTIALS=conf.mail.use_credentials,
+            VALIDATE_CERTS=conf.mail.validate_certs,
         )
         logger.info(f"MailService config: {config}")
         cls.fast_mail = FastMail(config)
