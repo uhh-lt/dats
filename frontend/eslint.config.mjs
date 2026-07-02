@@ -15,7 +15,18 @@ import localRules from "./eslint-dats-rules.js";
 const GLOBAL_DOMAINS = ["api", "components", "core", "features", "hooks", "routes", "store", "styles", "utils"];
 
 export default tseslint.config(
-  { ignores: ["*/dist", "*/src/api/openapi", "**/routeTree.gen.ts", "**/*.css", "**/*.md", "**/*.json"] },
+  {
+    ignores: [
+      "*/dist/**",
+      "*/src/api/core/**",
+      "*/src/api/models/**",
+      "*/src/api/services/**",
+      "**/routeTree.gen.ts",
+      "**/*.css",
+      "**/*.md",
+      "**/*.json",
+    ],
+  },
   {
     languageOptions: {
       ecmaVersion: 2020,

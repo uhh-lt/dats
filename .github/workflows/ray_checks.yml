@@ -5,15 +5,16 @@ on:
       - main
   pull_request:
     paths:
-      - "ray/**"
       - ".github/workflows/ray_checks.yml"
+      - "docker/**"
+      - "ray/**"
 
 jobs:
   ray-checks:
     runs-on: self-hosted
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
       - name: Prepare environment
         run: |
           ./bin/setup-folders.sh

@@ -19,9 +19,7 @@ jobs:
       BACKEND_HAS_CHANGED: false
       RAY_HAS_CHANGED: false
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v7
       - name: Checkout PR
         if: github.event_name == 'pull_request'
         env:
@@ -89,22 +87,22 @@ jobs:
           fi
           docker compose build dats-frontend
           docker compose up --wait --quiet-pull
-      - name: Setup node
-        uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v6.4.0
         with:
-          node-version: 20
+          node-version: "24.18.0"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install dependencies
+      - name: Install Frontend dependencies
         working-directory: frontend
         run: npm ci
-      - name: Check 1 - api client is up-to-date
+      - name: Check API client is up-to-date
         working-directory: frontend
         run: |
           npm run update-api
           npm run generate-api
       - name: Add and commit changes
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10.0.0
         if: github.event_name == 'pull_request'
         with:
           add: "frontend/src/api"

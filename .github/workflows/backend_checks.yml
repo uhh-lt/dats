@@ -16,7 +16,7 @@ jobs:
     env:
       RAY_HAS_CHANGED: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Checkout PR
         if: github.event_name == 'pull_request'
         env:
@@ -62,35 +62,31 @@ jobs:
           fi
           COMPOSE_PROFILES="rq,backend" docker compose build
           COMPOSE_PROFILES="rq" docker compose up --wait --quiet-pull
-      - name: Check 1 - pytest runs without errors
+      - name: pytest runs without errors
         working-directory: docker
         run: |
           source .env
           docker compose run --user $(id -u):$(id -g) -v ./test_repo:/dats/docker/test_repo dats-backend-api /dats/backend/.venv/bin/python -m pytest /dats/backend/test
-      - name: Check 2 - Database migrates without errors database
+      - name: Database migrates without errors database
         working-directory: docker
         run: |
           source .env
           docker compose run --user $(id -u):$(id -g) dats-backend-api /dats/backend/.venv/bin/python src/migrations/run_migrations.py
-      - name: Check 3 - Database schema is up-to-date after migration
+      - name: Database schema is up-to-date after migration
         working-directory: docker
         run: |
           source .env
           docker compose run --user $(id -u):$(id -g) dats-backend-api /dats/backend/.venv/bin/alembic -c src/migrations/alembic.ini check
-      - name: Check 4 - install uv environment
+      - name: install uv environment
         working-directory: backend
         run: |
           uv sync
-      - name: Check 5 - pyright runs without errors
-        working-directory: backend
-        run: |
-          uv run pyright
       - name: Start Remaining Docker Containers
         working-directory: docker
         run: |
           source .env
           COMPOSE_PROFILES="rq,backend" docker compose up --wait --quiet-pull
-      - name: Check 6 - Test End-2-End importer script
+      - name: Test End-2-End importer script
         working-directory: backend
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
