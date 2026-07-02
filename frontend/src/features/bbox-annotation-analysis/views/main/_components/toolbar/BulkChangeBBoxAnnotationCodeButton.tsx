@@ -1,4 +1,4 @@
-import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
+import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";

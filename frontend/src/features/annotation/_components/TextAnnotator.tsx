@@ -1,10 +1,10 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { FAKE_ANNOTATION_ID, SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";

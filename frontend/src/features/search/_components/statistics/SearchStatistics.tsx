@@ -1,5 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SpanEntityStat } from "@api/models/SpanEntityStat";
+import { SpanEntityStat } from "@models/SpanEntityStat";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
 import PublicOffIcon from "@mui/icons-material/PublicOff";

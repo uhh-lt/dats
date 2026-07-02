@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_simsearch_find_similar_images } from "../models/Body_simsearch_find_similar_images";
-import type { Body_simsearch_find_similar_sentences } from "../models/Body_simsearch_find_similar_sentences";
-import type { SimSearchImageHit } from "../models/SimSearchImageHit";
-import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
+import type { Body_simsearch_find_similar_images } from "@models/Body_simsearch_find_similar_images";
+import type { Body_simsearch_find_similar_sentences } from "@models/Body_simsearch_find_similar_sentences";
+import type { SimSearchImageHit } from "@models/SimSearchImageHit";
+import type { SimSearchSentenceHit } from "@models/SimSearchSentenceHit";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

@@ -39,8 +39,6 @@ export const useInitWordFrequencySlice = ({ projectId }: { projectId: number }) 
     [dispatch],
   );
 
-  const { data: columnData } = useQuery(
-    wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencySlice),
-  );
+  const { data: columnData } = useQuery(wordFrequencyTableInfoQueryOptions(projectId, initializeWordFrequencySlice));
   return columnData;
 };

@@ -1,8 +1,4 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
 import {
   FILTER_PARAM,
@@ -22,6 +18,10 @@ import {
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { PaginatedElasticSearchHits } from "@models/PaginatedElasticSearchHits";
+import { SdocColumns } from "@models/SdocColumns";
+import { SortDirection } from "@models/SortDirection";
 import { Box, Typography } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";

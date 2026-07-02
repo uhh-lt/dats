@@ -1,4 +1,4 @@
-import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";

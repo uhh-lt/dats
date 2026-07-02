@@ -1,6 +1,6 @@
-import { JobStatus } from "@api/models/JobStatus";
-import { MlJobRead } from "@api/models/MlJobRead";
 import { JobListItem } from "@core/job";
+import { JobStatus } from "@models/JobStatus";
+import { MlJobRead } from "@models/MlJobRead";
 import { Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";

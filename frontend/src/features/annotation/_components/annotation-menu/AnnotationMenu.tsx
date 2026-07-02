@@ -1,11 +1,11 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { CodeRead } from "@api/models/CodeRead";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { MemoButton } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { CodeRead } from "@models/CodeRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import {
   Autocomplete,
   Box,

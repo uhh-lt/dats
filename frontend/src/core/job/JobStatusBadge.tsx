@@ -1,5 +1,5 @@
-import { JobStatus } from "@api/models/JobStatus";
 import { getIconComponent, JobStatusIcons } from "@components/icons";
+import { JobStatus } from "@models/JobStatus";
 import { Chip } from "@mui/material";
 import { jobStatusToColor } from "./JobStatusToColor";
 

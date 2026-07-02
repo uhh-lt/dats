@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { JobStatus } from "@api/models/JobStatus";
-import { MlJobRead } from "@api/models/MlJobRead";
 import { queryClient } from "@api/queryClient";
 import { JobService } from "@api/services/JobService";
+import { JobStatus } from "@models/JobStatus";
+import { MlJobRead } from "@models/MlJobRead";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
 export const projectMLJobsQueryOptions = (projectId: number) =>

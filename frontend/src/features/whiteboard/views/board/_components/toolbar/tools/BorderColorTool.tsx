@@ -1,4 +1,4 @@
-import { BorderStyle } from "@api/models/BorderStyle";
+import { BorderStyle } from "@models/BorderStyle";
 import { Box, Button, Menu, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { ColorGrid } from "./ColorGrid";

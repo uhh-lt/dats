@@ -1,6 +1,6 @@
-import { ProcessingSettings } from "@api/models/ProcessingSettings";
-import { SdocStatusRow } from "@api/models/SdocStatusRow";
 import { FilterTableToolbarProps } from "@core/filter";
+import { ProcessingSettings } from "@models/ProcessingSettings";
+import { SdocStatusRow } from "@models/SdocStatusRow";
 import { Dispatch, SetStateAction } from "react";
 
 export interface HealthTableToolbarProps extends FilterTableToolbarProps<SdocStatusRow> {

@@ -1,5 +1,5 @@
-import { TagRead } from "@api/models/TagRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";

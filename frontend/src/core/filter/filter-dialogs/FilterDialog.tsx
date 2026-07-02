@@ -1,5 +1,5 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
 import { useDialog } from "@hooks/useDialog";
+import { LogicalOperator } from "@models/LogicalOperator";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";

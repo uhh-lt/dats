@@ -1,5 +1,5 @@
 import { CodeMap } from "@api/hooks/CodeHooks";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
@@ -131,10 +131,7 @@ export function DocumentSentence({
                 backgroundImage: `linear-gradient(to right, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   1,
-                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(
-                  highlightedColor,
-                  0.3,
-                )})`,
+                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.3)})`,
                 boxDecorationBreak: "clone",
               }}
             >

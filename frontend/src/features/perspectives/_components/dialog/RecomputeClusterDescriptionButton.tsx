@@ -1,4 +1,4 @@
-import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
+import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { IconButton, Tooltip } from "@mui/material";
 import { PerspectivesQueryOptions } from "../../_api/perspectivesQueryOptions";

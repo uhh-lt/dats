@@ -1,5 +1,5 @@
-import { DocType } from "@api/models/DocType";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
+import { DocType } from "@models/DocType";
 import {
   Checkbox,
   FormControl,

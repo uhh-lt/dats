@@ -1,7 +1,7 @@
-import { BorderStyle } from "@api/models/BorderStyle";
-import { HorizontalAlign } from "@api/models/HorizontalAlign";
-import { VerticalAlign } from "@api/models/VerticalAlign";
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
+import { BorderStyle } from "@models/BorderStyle";
+import { HorizontalAlign } from "@models/HorizontalAlign";
+import { VerticalAlign } from "@models/VerticalAlign";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { BackgroundColorData } from "../../_types/base/BackgroundColorData";
 import { BorderData } from "../../_types/base/BorderData";
 import { TextData } from "../../_types/base/TextData";

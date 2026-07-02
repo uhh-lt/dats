@@ -1,6 +1,6 @@
-import { Body_tag_update_tags_batch } from "@api/models/Body_tag_update_tags_batch";
-import { SourceDocumentTagMultiLink } from "@api/models/SourceDocumentTagMultiLink";
-import { TagRead } from "@api/models/TagRead";
+import { Body_tag_update_tags_batch } from "@models/Body_tag_update_tags_batch";
+import { SourceDocumentTagMultiLink } from "@models/SourceDocumentTagMultiLink";
+import { TagRead } from "@models/TagRead";
 import { queryClient } from "@api/queryClient";
 import { TagService } from "@api/services/TagService";
 import { useAppSelector } from "@store/storeHooks";

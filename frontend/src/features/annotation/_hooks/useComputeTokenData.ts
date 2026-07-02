@@ -1,6 +1,6 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useMemo } from "react";
 import { IToken } from "../_types/IToken";
 

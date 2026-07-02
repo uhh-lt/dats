@@ -1,4 +1,4 @@
-import { DocType } from "@api/models/DocType";
+import { DocType } from "@models/DocType";
 import { QueryClient } from "@tanstack/react-query";
 import { sdocHealthTableColumnsQueryOptions, sdocHealthTableQueryOptions } from "../../_api/healthQueryOptions";
 

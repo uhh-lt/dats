@@ -1,5 +1,5 @@
-import { SimSearchImageHit } from "@api/models/SimSearchImageHit";
 import { useTabNavigate } from "@core/navigation";
+import { SimSearchImageHit } from "@models/SimSearchImageHit";
 import { Box, BoxProps, CircularProgress, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";

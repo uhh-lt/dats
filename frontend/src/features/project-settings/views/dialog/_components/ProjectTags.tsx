@@ -1,6 +1,6 @@
-import { TagRead } from "@api/models/TagRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
 import { TagCreateListItemButton, TagEditButton, useComputeTagTree } from "@core/tag";
+import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";

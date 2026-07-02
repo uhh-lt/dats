@@ -1,4 +1,4 @@
-import { UserRead } from "@api/models/UserRead";
+import { UserRead } from "@models/UserRead";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Button, Grid2, MenuItem, Select, SelectChangeEvent, TextField, Typography } from "@mui/material";
 import { useState } from "react";

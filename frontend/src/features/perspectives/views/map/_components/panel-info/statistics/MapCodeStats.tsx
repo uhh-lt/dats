@@ -1,6 +1,6 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
-import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
+import { SpanEntityStat } from "@models/SpanEntityStat";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";

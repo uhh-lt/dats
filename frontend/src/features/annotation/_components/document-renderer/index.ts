@@ -1,1 +1,1 @@
-export * from "./DocumentRenderer"
+export * from "./DocumentRenderer";

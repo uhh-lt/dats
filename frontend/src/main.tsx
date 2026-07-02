@@ -6,7 +6,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
 import { theme } from "@plugins/mui";
-import { SentryProvider } from "@plugins/Sentry";
+import { SentryProvider } from "@plugins/sentry";
 import { router } from "@plugins/tanstack";
 import * as Sentry from "@sentry/react";
 import { store } from "@store/store";

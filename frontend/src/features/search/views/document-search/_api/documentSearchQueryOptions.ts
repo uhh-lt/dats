@@ -1,12 +1,12 @@
 import { FolderMap } from "@api/hooks/FolderHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
-import { FolderType } from "@api/models/FolderType";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SortDirection } from "@api/models/SortDirection";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { queryClient } from "@api/queryClient";
 import { SearchService } from "@api/services/SearchService";
 import { MyFilter } from "@core/filter";
+import { FolderType } from "@models/FolderType";
+import { SdocColumns } from "@models/SdocColumns";
+import { SortDirection } from "@models/SortDirection";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 
 interface DocumentSearchQueryOptionsArgs {

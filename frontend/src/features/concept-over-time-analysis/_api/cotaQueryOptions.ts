@@ -1,9 +1,9 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { COTARead } from "@api/models/COTARead";
-import { COTARefinementJobRead } from "@api/models/COTARefinementJobRead";
-import { JobStatus } from "@api/models/JobStatus";
 import { queryClient } from "@api/queryClient";
 import { ConceptOverTimeAnalysisService } from "@api/services/ConceptOverTimeAnalysisService";
+import { COTARead } from "@models/COTARead";
+import { COTARefinementJobRead } from "@models/COTARefinementJobRead";
+import { JobStatus } from "@models/JobStatus";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 

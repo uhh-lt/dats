@@ -1,8 +1,8 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { MetaType } from "@api/models/MetaType";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { Icon, MetaTypeIcons, getIconComponent } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { MetaType } from "@models/MetaType";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import {
   Box,
   Button,

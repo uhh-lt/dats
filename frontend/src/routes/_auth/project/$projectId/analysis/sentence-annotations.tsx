@@ -1,7 +1,7 @@
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { SentAnnotationAnalysisView } from "@features/sent-annotation-analysis";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

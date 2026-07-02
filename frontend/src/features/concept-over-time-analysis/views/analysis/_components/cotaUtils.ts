@@ -1,4 +1,4 @@
-import { COTARead } from "@api/models/COTARead";
+import { COTARead } from "@models/COTARead";
 
 export const MIN_ANNOTATIONS_PER_CONCEPT = 5;
 

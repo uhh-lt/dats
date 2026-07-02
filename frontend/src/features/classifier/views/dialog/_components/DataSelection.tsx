@@ -1,6 +1,6 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
 import { TagSelector } from "@core/tag";
 import { UserSelectorMulti } from "@core/user";
+import { ClassifierModel } from "@models/ClassifierModel";
 import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";

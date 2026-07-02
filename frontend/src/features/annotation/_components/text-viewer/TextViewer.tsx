@@ -1,4 +1,4 @@
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppSelector } from "@store/storeHooks";
 import { MouseEvent, useRef } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";

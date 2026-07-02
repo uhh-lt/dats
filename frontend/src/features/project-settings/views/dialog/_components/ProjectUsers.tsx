@@ -1,7 +1,7 @@
 import { UserHooks } from "@api/hooks/UserHooks";
-import { ProjectRead } from "@api/models/ProjectRead";
 import { FormEmail } from "@components/form-inputs";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { ProjectRead } from "@models/ProjectRead";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {

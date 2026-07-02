@@ -1,4 +1,4 @@
-import { JobStatus } from "@api/models/JobStatus";
+import { JobStatus } from "@models/JobStatus";
 import { Alert, Button, DialogActions, DialogContent, Divider, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";

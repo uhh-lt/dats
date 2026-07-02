@@ -1,5 +1,5 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SentenceAnnotatorResult } from "@api/models/SentenceAnnotatorResult";
+import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { difference, intersection } from "lodash";
 import { useMemo } from "react";
 

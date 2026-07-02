@@ -1,9 +1,9 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { DocType } from "@api/models/DocType";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { TaskType } from "@api/models/TaskType";
 import { ProjectMetadataTable } from "@core/project-metadata";
+import { DocType } from "@models/DocType";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

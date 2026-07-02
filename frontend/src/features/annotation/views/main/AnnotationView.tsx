@@ -1,11 +1,11 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { DocType } from "@api/models/DocType";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { EditableTypography } from "@components/EditableTypography";
 import { SidebarContentSidebarLayout } from "@components/content-layouts";
 import { CodeExplorer } from "@core/code";
 import { DocumentInfoPanel } from "@core/source-document";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { DocType } from "@models/DocType";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Tab, Tabs } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

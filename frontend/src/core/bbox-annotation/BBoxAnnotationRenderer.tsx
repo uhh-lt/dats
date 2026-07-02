@@ -1,8 +1,8 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { CodeRenderer } from "@core/code";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 

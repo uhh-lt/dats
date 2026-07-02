@@ -1,6 +1,6 @@
-import { MetaType } from "@api/models/MetaType";
 import { getIconComponent, MetaTypeIcons } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
+import { MetaType } from "@models/MetaType";
 import {
   Autocomplete,
   AutocompleteRenderInputParams,

@@ -1,7 +1,7 @@
-import { SdocColumns } from "@api/models/SdocColumns";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { ImageSimilaritySearchView, imageSimilaritySearchViewLoader } from "@features/search";
+import { SdocColumns } from "@models/SdocColumns";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";

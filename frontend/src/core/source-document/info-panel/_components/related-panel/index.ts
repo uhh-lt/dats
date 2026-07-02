@@ -1,1 +1,1 @@
-export * from "./RelatedPanel"
+export * from "./RelatedPanel";

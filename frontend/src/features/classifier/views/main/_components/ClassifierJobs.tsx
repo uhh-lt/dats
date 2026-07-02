@@ -1,5 +1,5 @@
-import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
 import { DialogSection } from "@components/DialogSection";
+import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { ClassifierJobListItem } from "./ClassifierJobListItem";

@@ -1,6 +1,6 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { MemoRead } from "@api/models/MemoRead";
 import { UserRenderer } from "@core/user";
+import { MemoRead } from "@models/MemoRead";
 import {
   Card,
   CardActionArea,

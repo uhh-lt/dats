@@ -1,5 +1,5 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps, Typography } from "@mui/material";
 import * as React from "react";

@@ -1,8 +1,8 @@
-import { COTAConcept } from "@api/models/COTAConcept";
-import { COTARead } from "@api/models/COTARead";
-import { COTASentenceID } from "@api/models/COTASentenceID";
-import { DateGroupBy } from "@api/models/DateGroupBy";
 import { SdocRenderer } from "@core/source-document";
+import { COTAConcept } from "@models/COTAConcept";
+import { COTARead } from "@models/COTARead";
+import { COTASentenceID } from "@models/COTASentenceID";
+import { DateGroupBy } from "@models/DateGroupBy";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";

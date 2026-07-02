@@ -1,4 +1,4 @@
-import { DocType } from "@api/models/DocType";
+import { DocType } from "@models/DocType";
 import { Icon } from "./DATSIcons";
 
 export const DocTypeIcons: Record<DocType, Icon> = {

@@ -1,4 +1,4 @@
-import { WhiteboardEdgeData_Input } from "@api/models/WhiteboardEdgeData_Input";
+import { WhiteboardEdgeData_Input } from "@models/WhiteboardEdgeData_Input";
 import { Box, TextField, Typography } from "@mui/material";
 import {
   BaseEdge,

@@ -1,7 +1,7 @@
 import { AnnoscalingHooks } from "@api/hooks/AnnoscalingHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { AnnoscalingResult } from "@api/models/AnnoscalingResult";
-import { CodeRead } from "@api/models/CodeRead";
+import { AnnoscalingResult } from "@models/AnnoscalingResult";
+import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
 import {
   Autocomplete,

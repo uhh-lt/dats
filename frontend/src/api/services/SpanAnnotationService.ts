@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_spanAnnotation_count_annotations } from "../models/Body_spanAnnotation_count_annotations";
-import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
-import type { SpanAnnotationDeleted } from "../models/SpanAnnotationDeleted";
-import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
-import type { SpanAnnotationUpdate } from "../models/SpanAnnotationUpdate";
-import type { SpanAnnotationUpdateBulk } from "../models/SpanAnnotationUpdateBulk";
-import type { SpanGroupRead } from "../models/SpanGroupRead";
+import type { Body_spanAnnotation_count_annotations } from "@models/Body_spanAnnotation_count_annotations";
+import type { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
+import type { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
+import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import type { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
+import type { SpanAnnotationUpdateBulk } from "@models/SpanAnnotationUpdateBulk";
+import type { SpanGroupRead } from "@models/SpanGroupRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

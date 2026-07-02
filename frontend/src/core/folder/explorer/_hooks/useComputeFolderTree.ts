@@ -1,8 +1,8 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { FolderRead } from "@api/models/FolderRead";
-import { FolderType } from "@api/models/FolderType";
 import { dataToTree, ITree } from "@components/tree-explorer";
+import { FolderRead } from "@models/FolderRead";
+import { FolderType } from "@models/FolderType";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";

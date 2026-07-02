@@ -1,6 +1,6 @@
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { projectTimelineAnalysisQueryOptions } from "../../_api/timelineAnalysisQueryOptions";
 import { ConceptList } from "./_components/ConceptList";

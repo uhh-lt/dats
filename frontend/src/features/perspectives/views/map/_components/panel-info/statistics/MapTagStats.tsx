@@ -1,7 +1,7 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagStat } from "@api/models/TagStat";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
+import { TagStat } from "@models/TagStat";
 
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

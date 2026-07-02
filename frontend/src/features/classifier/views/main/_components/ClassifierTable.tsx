@@ -1,11 +1,11 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierRead } from "@api/models/ClassifierRead";
-import { ClassifierTask } from "@api/models/ClassifierTask";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { getIconComponent, Icon } from "@components/icons";
 import { CodeRenderer } from "@core/code";
 import { TagRenderer } from "@core/tag";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierRead } from "@models/ClassifierRead";
+import { ClassifierTask } from "@models/ClassifierTask";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";

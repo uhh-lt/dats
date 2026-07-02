@@ -1,7 +1,7 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { MetaType } from "@api/models/MetaType";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
+import { MetaType } from "@models/MetaType";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { dateToLocaleDateString } from "@utils/DateUtils";
 import { memo } from "react";
 

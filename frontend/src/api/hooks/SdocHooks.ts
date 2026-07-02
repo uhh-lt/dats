@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { queryClient } from "@api/queryClient";
 import { ProjectService } from "@api/services/ProjectService";
 import { SourceDocumentService } from "@api/services/SourceDocumentService";

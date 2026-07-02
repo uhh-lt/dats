@@ -1,5 +1,5 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";

@@ -1,7 +1,7 @@
 import { JobHooks } from "@api/hooks/JobHooks";
-import { ExportJobInput } from "@api/models/ExportJobInput";
-import { JobStatus } from "@api/models/JobStatus";
 import { useOpenSnackbar } from "@core/notification";
+import { ExportJobInput } from "@models/ExportJobInput";
+import { JobStatus } from "@models/JobStatus";
 import { useAppSelector } from "@store/storeHooks";
 import { downloadFile } from "@utils/downloadUtils";
 import { useCallback, useEffect } from "react";

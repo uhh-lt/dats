@@ -1,6 +1,6 @@
-import { DocType } from "@api/models/DocType";
 import { Icon } from "@components/icons";
 import { CodeFrequencyAnalysisView } from "@features/code-frequency-analysis";
+import { DocType } from "@models/DocType";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

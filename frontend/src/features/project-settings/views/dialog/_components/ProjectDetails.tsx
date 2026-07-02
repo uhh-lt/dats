@@ -1,9 +1,9 @@
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { ProjectRead } from "@api/models/ProjectRead";
-import { ProjectUpdate } from "@api/models/ProjectUpdate";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ProjectExportButton } from "@core/project";
 import { ErrorMessage } from "@hookform/error-message";
+import { ProjectRead } from "@models/ProjectRead";
+import { ProjectUpdate } from "@models/ProjectUpdate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, CardActions, CardContent, Divider, Stack } from "@mui/material";
 import { memo, useCallback } from "react";

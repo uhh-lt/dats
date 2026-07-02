@@ -1,9 +1,9 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
 import { UserRenderer } from "@core/user";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import {
   Card,
   CardActionArea,

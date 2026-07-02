@@ -1,4 +1,4 @@
-import { FilterOperator } from "@api/models/FilterOperator";
+import { FilterOperator } from "@models/FilterOperator";
 import { Autocomplete, Button, ButtonGroup, Chip, TextField } from "@mui/material";
 import { dateToLocaleYYYYMMDDString, isValidDateString } from "@utils/DateUtils";
 import { ChangeEvent, KeyboardEvent, SyntheticEvent, memo, useCallback } from "react";

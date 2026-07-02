@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { CodeFrequency } from "@api/models/CodeFrequency";
-import { CodeOccurrence } from "@api/models/CodeOccurrence";
-import { DocType } from "@api/models/DocType";
 import { AnalysisService } from "@api/services/AnalysisService";
+import { CodeFrequency } from "@models/CodeFrequency";
+import { CodeOccurrence } from "@models/CodeOccurrence";
+import { DocType } from "@models/DocType";
 import { useQuery } from "@tanstack/react-query";
 
 export const useCodeFrequenciesQuery = (projectId: number, userIds: number[], codeIds: number[], docTypes: DocType[]) =>

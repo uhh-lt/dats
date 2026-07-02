@@ -1,5 +1,5 @@
-import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { CardContainer } from "@components/CardContainer";
+import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import { Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo, useMemo } from "react";

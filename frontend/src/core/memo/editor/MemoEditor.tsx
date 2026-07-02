@@ -1,8 +1,8 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { MemoRead } from "@api/models/MemoRead";
 import { EditableTypography } from "@components/EditableTypography";
 import { useAuth } from "@core/auth";
 import { UserRenderer } from "@core/user";
+import { MemoRead } from "@models/MemoRead";
 import { Box, CircularProgress, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useCallback, useMemo } from "react";

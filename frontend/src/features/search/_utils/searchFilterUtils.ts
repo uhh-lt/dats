@@ -1,9 +1,3 @@
-import { IDListOperator } from "@api/models/IDListOperator";
-import { ListOperator } from "@api/models/ListOperator";
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import {
   ColumnInfo,
   MyFilter,
@@ -12,6 +6,12 @@ import {
   getDefaultOperator,
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
+import { IDListOperator } from "@models/IDListOperator";
+import { ListOperator } from "@models/ListOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SdocColumns } from "@models/SdocColumns";
+import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 
 const cloneFilter = (filter: MyFilter<SdocColumns>): MyFilter<SdocColumns> => {
   return JSON.parse(JSON.stringify(filter)) as MyFilter<SdocColumns>;

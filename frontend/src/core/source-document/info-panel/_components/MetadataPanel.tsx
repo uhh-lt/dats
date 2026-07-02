@@ -1,8 +1,8 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { ProjectMetadataCreateButton } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack } from "@mui/material";
 import { memo, useCallback } from "react";

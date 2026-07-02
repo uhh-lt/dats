@@ -1,7 +1,7 @@
-import { PerspectivesQueryOptions } from "./perspectivesQueryOptions";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { MyFilter } from "@core/filter";
+import { SdocColumns } from "@models/SdocColumns";
 import { useAppSelector } from "@store/storeHooks";
+import { PerspectivesQueryOptions } from "./perspectivesQueryOptions";
 
 export const useGetDocVisualization = (aspectId: number) => {
   const searchQuery = useAppSelector((state) => state.perspectives.searchQuery);

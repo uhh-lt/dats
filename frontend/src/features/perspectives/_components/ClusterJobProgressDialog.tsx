@@ -1,4 +1,4 @@
-import { JobStatus } from "@api/models/JobStatus";
+import { JobStatus } from "@models/JobStatus";
 import { Dialog } from "@mui/material";
 import { memo } from "react";
 import { PerspectivesQueryOptions } from "../_api/perspectivesQueryOptions";

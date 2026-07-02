@@ -1,5 +1,5 @@
-import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
+import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { Link } from "@tanstack/react-router";
 
 interface SdocAnnotationLinkProps {

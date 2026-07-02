@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
-import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
+import { PerspectivesDoc } from "@models/PerspectivesDoc";
+import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Annotations, Color, Datum, ScatterData } from "plotly.js";

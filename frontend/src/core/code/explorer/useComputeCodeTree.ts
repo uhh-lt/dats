@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRead } from "@api/models/CodeRead";
 import { dataToTree, ITree } from "@components/tree-explorer";
+import { CodeRead } from "@models/CodeRead";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
 

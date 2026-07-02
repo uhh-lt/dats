@@ -1,9 +1,9 @@
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
-import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Tooltip } from "@mui/material";
 import { useMemo } from "react";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 
 interface ClusterReviewButtonsProps {

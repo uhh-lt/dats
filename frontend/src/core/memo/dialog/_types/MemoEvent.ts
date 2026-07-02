@@ -1,4 +1,4 @@
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoCreateSuccessHandler } from "./MemoCreateSuccessHandler";
 
 export interface MemoEvent {

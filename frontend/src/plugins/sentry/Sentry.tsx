@@ -1,8 +1,12 @@
+/* eslint-disable boundaries/element-types */
+// This needs access to the "@api" layer because it needs to fetch configuration from the backend
 import { OpenAPI } from "@api/core/OpenAPI";
 import { GeneralHooks } from "@api/hooks/GeneralHooks";
 import * as Sentry from "@sentry/react";
 
-// Component that initializes Sentry after fetching instance info
+/**
+ * This component is responsible for initializing Sentry with the Glitchtip configuration fetched from the backend.
+ */
 export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: instanceInfo, isError, error } = GeneralHooks.useGetInstanceInfo();
 

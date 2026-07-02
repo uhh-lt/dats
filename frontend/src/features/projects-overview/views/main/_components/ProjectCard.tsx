@@ -1,7 +1,7 @@
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { ProjectRead } from "@api/models/ProjectRead";
-import { SDocStatus } from "@api/models/SDocStatus";
 import { useTabNavigate } from "@core/navigation";
+import { ProjectRead } from "@models/ProjectRead";
+import { SDocStatus } from "@models/SDocStatus";
 import {
   Card,
   CardActionArea,

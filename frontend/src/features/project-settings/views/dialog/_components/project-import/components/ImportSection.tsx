@@ -1,5 +1,5 @@
-import { ImportJobType } from "@api/models/ImportJobType";
 import { DialogSection } from "@components/DialogSection";
+import { ImportJobType } from "@models/ImportJobType";
 import { PlayCircle } from "@mui/icons-material";
 import {
   Button,

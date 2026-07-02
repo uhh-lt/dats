@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
-import type { SpanGroupCreate } from "../models/SpanGroupCreate";
-import type { SpanGroupRead } from "../models/SpanGroupRead";
-import type { SpanGroupUpdate } from "../models/SpanGroupUpdate";
-import type { SpanGroupWithAnnotationsRead } from "../models/SpanGroupWithAnnotationsRead";
+import type { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import type { SpanGroupCreate } from "@models/SpanGroupCreate";
+import type { SpanGroupRead } from "@models/SpanGroupRead";
+import type { SpanGroupUpdate } from "@models/SpanGroupUpdate";
+import type { SpanGroupWithAnnotationsRead } from "@models/SpanGroupWithAnnotationsRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

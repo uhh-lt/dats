@@ -1,5 +1,5 @@
-import { HorizontalAlign } from "@api/models/HorizontalAlign";
-import { VerticalAlign } from "@api/models/VerticalAlign";
+import { HorizontalAlign } from "@models/HorizontalAlign";
+import { VerticalAlign } from "@models/VerticalAlign";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";

@@ -1,8 +1,8 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TaggingLLMJobResult } from "@api/models/TaggingLLMJobResult";
-import { TagRead } from "@api/models/TagRead";
 import { getIconComponent, Icon } from "@components/icons";
+import { TaggingLLMJobResult } from "@models/TaggingLLMJobResult";
+import { TagRead } from "@models/TagRead";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useState } from "react";

@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TimelineAnalysisCreate } from "../models/TimelineAnalysisCreate";
-import type { TimelineAnalysisRead } from "../models/TimelineAnalysisRead";
-import type { TimelineAnalysisUpdate } from "../models/TimelineAnalysisUpdate";
+import type { TimelineAnalysisCreate } from "@models/TimelineAnalysisCreate";
+import type { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
+import type { TimelineAnalysisUpdate } from "@models/TimelineAnalysisUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

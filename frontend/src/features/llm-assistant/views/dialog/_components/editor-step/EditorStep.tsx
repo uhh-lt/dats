@@ -1,4 +1,4 @@
-import { ApproachType } from "@api/models/ApproachType";
+import { ApproachType } from "@models/ApproachType";
 import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";
 import { PromptEditorStep } from "./PromptEditorStep";

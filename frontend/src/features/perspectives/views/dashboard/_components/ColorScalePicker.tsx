@@ -33,9 +33,7 @@ export function ColorScalePicker({ onColorChange }: ColorScalePickerProps) {
             {cs}
             <Box
               sx={{
-                background: `linear-gradient(to right, ${d3ColorSchemes[cs](0)}, ${d3ColorSchemes[cs](
-                  0.5,
-                )}, ${d3ColorSchemes[cs](1)})`,
+                background: `linear-gradient(to right, ${d3ColorSchemes[cs](0)}, ${d3ColorSchemes[cs](0.5)}, ${d3ColorSchemes[cs](1)})`,
                 position: "relative",
                 height: "20px",
                 width: "100%",

@@ -57,7 +57,7 @@ export const useTableFetchMoreOnScroll = ({
   // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
     fetchMoreOnScroll(tableContainerRef.current);
-  }, [tableContainerRef, fetchMoreOnScroll]);     
+  }, [tableContainerRef, fetchMoreOnScroll]);
 
   return fetchMoreOnScroll;
 };

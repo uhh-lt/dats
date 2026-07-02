@@ -1,9 +1,9 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
-import { ApproachType } from "@api/models/ApproachType";
-import { SentenceAnnotationLLMJobResult } from "@api/models/SentenceAnnotationLLMJobResult";
 import { queryClient } from "@api/queryClient";
 import { useTabNavigate } from "@core/navigation";
+import { ApproachType } from "@models/ApproachType";
+import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJobResult";
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";

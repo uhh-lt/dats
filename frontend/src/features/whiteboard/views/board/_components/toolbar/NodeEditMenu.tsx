@@ -1,10 +1,10 @@
-import { BorderNodeData } from "@api/models/BorderNodeData";
-import { BorderStyle } from "@api/models/BorderStyle";
-import { HorizontalAlign } from "@api/models/HorizontalAlign";
-import { NoteNodeData } from "@api/models/NoteNodeData";
-import { TextNodeData } from "@api/models/TextNodeData";
-import { VerticalAlign } from "@api/models/VerticalAlign";
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
+import { BorderNodeData } from "@models/BorderNodeData";
+import { BorderStyle } from "@models/BorderStyle";
+import { HorizontalAlign } from "@models/HorizontalAlign";
+import { NoteNodeData } from "@models/NoteNodeData";
+import { TextNodeData } from "@models/TextNodeData";
+import { VerticalAlign } from "@models/VerticalAlign";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Divider, Paper, SelectChangeEvent, Stack, Typography } from "@mui/material";
 import { useReactFlow } from "@xyflow/react";
 import { useCallback, useImperativeHandle, useState } from "react";

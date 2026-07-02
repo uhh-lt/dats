@@ -1,5 +1,5 @@
-import { ExportJobInput } from "@api/models/ExportJobInput";
 import { getIconComponent, Icon } from "@components/icons";
+import { ExportJobInput } from "@models/ExportJobInput";
 import { CircularProgress, ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo } from "react";
 import { RUNNING_OR_WAITING, useExport } from "./_hooks/useExport";

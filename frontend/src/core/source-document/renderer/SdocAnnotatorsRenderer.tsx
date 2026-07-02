@@ -1,8 +1,8 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { UserRead } from "@api/models/UserRead";
+import { UserRenderer } from "@core/user";
+import { UserRead } from "@models/UserRead";
 import { Stack } from "@mui/material";
 import { Fragment } from "react";
-import { UserRenderer } from "@core/user";
 
 interface SdocAnnotatorsRendererProps {
   sdocId?: number;

@@ -1,3 +1,3 @@
-import { MemoRead } from "@api/models/MemoRead";
+import { MemoRead } from "@models/MemoRead";
 
 export type MemoCreateSuccessHandler = ((memo: MemoRead) => void) | undefined;

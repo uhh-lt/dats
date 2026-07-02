@@ -1,4 +1,6 @@
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { useAuth } from "@core/auth";
+import { MemoRenderer2 } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -9,8 +11,6 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import { useAuth } from "@core/auth";
-import { MemoRenderer2 } from "@core/memo";
 import { SentenceAnnotationRenderer } from "../SentenceAnnotationRenderer";
 
 interface SentenceAnnotationTableRow {

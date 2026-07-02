@@ -1,6 +1,6 @@
-import { ImportJobRead } from "@api/models/ImportJobRead";
-import { ImportJobType } from "@api/models/ImportJobType";
-import { JobStatus } from "@api/models/JobStatus";
+import { ImportJobRead } from "@models/ImportJobRead";
+import { ImportJobType } from "@models/ImportJobType";
+import { JobStatus } from "@models/JobStatus";
 import { queryClient } from "@api/queryClient";
 import { ImportService } from "@api/services/ImportService";
 import { useMutation, useQuery } from "@tanstack/react-query";

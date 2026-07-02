@@ -1,8 +1,8 @@
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { getIconComponent, Icon } from "@components/icons";
 import { MyFilter } from "@core/filter";
 import { useOpenSnackbar } from "@core/notification";
+import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useMutation } from "@tanstack/react-query";

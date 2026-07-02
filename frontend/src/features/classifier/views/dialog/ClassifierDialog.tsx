@@ -1,7 +1,7 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierTask } from "@api/models/ClassifierTask";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierTask } from "@models/ClassifierTask";
 import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";

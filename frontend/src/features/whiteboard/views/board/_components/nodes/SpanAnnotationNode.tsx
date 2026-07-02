@@ -1,13 +1,13 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { SpanAnnotationNodeData } from "@api/models/SpanAnnotationNodeData";
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { CodeRenderer } from "@core/code";
 import { useOpenMemoDialog } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { SpanAnnotationNodeData } from "@models/SpanAnnotationNodeData";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";

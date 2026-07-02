@@ -1,5 +1,5 @@
-import { UserAuthorizationHeaderData } from "@api/models/UserAuthorizationHeaderData";
-import { UserRead } from "@api/models/UserRead";
+import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
+import { UserRead } from "@models/UserRead";
 
 export interface AuthState {
   user: UserRead | undefined;

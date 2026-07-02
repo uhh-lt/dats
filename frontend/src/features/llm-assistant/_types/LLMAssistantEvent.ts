@@ -1,4 +1,4 @@
-import { TaskType } from "@api/models/TaskType";
+import { TaskType } from "@models/TaskType";
 
 export interface LLMAssistantEvent {
   method?: TaskType;

@@ -1,12 +1,12 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { ClassifierInferenceParams } from "@api/models/ClassifierInferenceParams";
-import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierRead } from "@api/models/ClassifierRead";
-import { ClassifierTask } from "@api/models/ClassifierTask";
-import { JobStatus } from "@api/models/JobStatus";
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
+import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
+import { ClassifierJobRead } from "@models/ClassifierJobRead";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierRead } from "@models/ClassifierRead";
+import { ClassifierTask } from "@models/ClassifierTask";
+import { JobStatus } from "@models/JobStatus";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { dateToLocaleDate } from "@utils/DateUtils";
 

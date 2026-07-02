@@ -1,6 +1,6 @@
-import { KeywordStat } from "@api/models/KeywordStat";
-import { SpanEntityStat } from "@api/models/SpanEntityStat";
-import { TagStat } from "@api/models/TagStat";
+import { KeywordStat } from "@models/KeywordStat";
+import { SpanEntityStat } from "@models/SpanEntityStat";
+import { TagStat } from "@models/TagStat";
 import { useMemo } from "react";
 
 export function useFilterStats<T extends Array<KeywordStat | TagStat | SpanEntityStat>>(

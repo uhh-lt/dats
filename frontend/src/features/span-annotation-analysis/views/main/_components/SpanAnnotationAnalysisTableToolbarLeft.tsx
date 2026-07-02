@@ -1,6 +1,6 @@
-import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
-import { SpanColumns } from "@api/models/SpanColumns";
 import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
+import { SpanColumns } from "@models/SpanColumns";
 import { Stack } from "@mui/material";
 import { BulkChangeSpanAnnotationCodeButton } from "./BulkChangeSpanAnnotationCodeButton";
 import { BulkDeleteSpanAnnotationsButton } from "./BulkDeleteSpanAnnotationsButton";

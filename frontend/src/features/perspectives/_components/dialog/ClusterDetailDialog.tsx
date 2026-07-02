@@ -1,6 +1,6 @@
-import { ClusterUpdate } from "@api/models/ClusterUpdate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ClusterUpdate } from "@models/ClusterUpdate";
 import { Close, Edit, Save } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

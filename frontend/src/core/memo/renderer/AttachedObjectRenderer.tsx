@@ -1,12 +1,3 @@
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { CodeRead } from "@api/models/CodeRead";
-import { ProjectRead } from "@api/models/ProjectRead";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagRead } from "@api/models/TagRead";
-import { memo } from "react";
 import { BBoxAnnotationRenderer } from "@core/bbox-annotation";
 import { CodeRenderer } from "@core/code";
 import { ProjectRenderer } from "@core/project";
@@ -14,6 +5,15 @@ import { SentenceAnnotationRenderer } from "@core/sentence-annotation";
 import { SdocRenderer } from "@core/source-document";
 import { SpanAnnotationRenderer } from "@core/span-annotation";
 import { TagRenderer } from "@core/tag";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { CodeRead } from "@models/CodeRead";
+import { ProjectRead } from "@models/ProjectRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { TagRead } from "@models/TagRead";
+import { memo } from "react";
 
 interface AttachedObjectRendererProps {
   attachedObject:

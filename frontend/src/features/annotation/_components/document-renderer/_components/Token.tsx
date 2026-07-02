@@ -1,4 +1,4 @@
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";

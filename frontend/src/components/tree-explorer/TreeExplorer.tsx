@@ -172,7 +172,7 @@ export function TreeExplorer<T extends NamedObjWithParent>({
         // expand / collapse
         expandedItems={expandedItems}
         onExpandedItemsChange={(event, itemIds) => {
-          if(event) event.stopPropagation();
+          if (event) event.stopPropagation();
           onExpandedItemsChange(itemIds);
         }}
         // actions

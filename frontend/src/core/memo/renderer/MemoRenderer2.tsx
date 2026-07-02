@@ -1,5 +1,5 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { StackProps } from "@mui/material";
 import { memo } from "react";
 import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer";

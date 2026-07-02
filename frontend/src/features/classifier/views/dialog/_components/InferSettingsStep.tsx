@@ -1,11 +1,11 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { ClassifierInferenceParams } from "@api/models/ClassifierInferenceParams";
-import { ClassifierModel } from "@api/models/ClassifierModel";
 import { FormSwitch } from "@components/form-inputs";
 import { CodeRenderer } from "@core/code";
 import { TagRenderer } from "@core/tag";
+import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
+import { ClassifierModel } from "@models/ClassifierModel";
 import {
   Alert,
   Box,

@@ -1,9 +1,9 @@
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { ProjectCreate } from "@api/models/ProjectCreate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormText, FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ProjectCreate } from "@models/ProjectCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useNavigate } from "@tanstack/react-router";

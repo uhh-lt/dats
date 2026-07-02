@@ -1,7 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { SdocColumns } from "@api/models/SdocColumns";
 import { SimsearchService } from "@api/services/SimsearchService";
 import { MyFilter } from "@core/filter";
+import { SdocColumns } from "@models/SdocColumns";
 import { queryOptions } from "@tanstack/react-query";
 
 interface ImageSimilaritySearchQueryOptionsArgs {

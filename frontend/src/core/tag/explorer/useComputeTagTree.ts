@@ -1,6 +1,6 @@
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagRead } from "@api/models/TagRead";
 import { dataToTree, ITree } from "@components/tree-explorer";
+import { TagRead } from "@models/TagRead";
 import { useMemo } from "react";
 import Tree, { Node } from "ts-tree-structure";
 

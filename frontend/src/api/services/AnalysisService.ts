@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
-import type { CodeFrequency } from "../models/CodeFrequency";
-import type { CodeOccurrence } from "../models/CodeOccurrence";
-import type { SampledSdocsResults } from "../models/SampledSdocsResults";
+import type { Body_analysis_code_frequencies } from "@models/Body_analysis_code_frequencies";
+import type { CodeFrequency } from "@models/CodeFrequency";
+import type { CodeOccurrence } from "@models/CodeOccurrence";
+import type { SampledSdocsResults } from "@models/SampledSdocsResults";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

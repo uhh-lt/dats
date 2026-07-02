@@ -1,5 +1,5 @@
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import { useState } from "react";

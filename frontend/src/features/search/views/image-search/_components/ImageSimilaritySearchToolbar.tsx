@@ -1,9 +1,9 @@
-import { SdocColumns } from "@api/models/SdocColumns";
-import { StringOperator } from "@api/models/StringOperator";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { URLFilterDialog } from "@core/filter";
 import { DeleteSdocsButton, SdocExportButton } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
+import { SdocColumns } from "@models/SdocColumns";
+import { StringOperator } from "@models/StringOperator";
 import { Box, Checkbox, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useState } from "react";

@@ -1,5 +1,5 @@
-import { ClusterRead } from "@api/models/ClusterRead";
 import { ReactWordcloud } from "@cp949/react-wordcloud";
+import { ClusterRead } from "@models/ClusterRead";
 import { Box, Card, Typography } from "@mui/material";
 import { useMemo } from "react";
 interface ClusterWordCloudProps {

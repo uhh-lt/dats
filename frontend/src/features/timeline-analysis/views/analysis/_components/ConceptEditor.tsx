@@ -1,9 +1,9 @@
-import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
 import { MyFilter, withDefaultFilterExpression } from "@core/filter";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { TimelineAnalysisConcept } from "@models/TimelineAnalysisConcept";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

@@ -1,5 +1,5 @@
-import { MemoRead } from "@api/models/MemoRead";
 import { Icon, getIconComponent } from "@components/icons";
+import { MemoRead } from "@models/MemoRead";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { MemoDeleteMenuItem } from "./MemoDeleteMenuItem";

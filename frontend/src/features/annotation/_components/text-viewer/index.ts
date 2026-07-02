@@ -1,1 +1,1 @@
-export * from "./TextViewer"
+export * from "./TextViewer";

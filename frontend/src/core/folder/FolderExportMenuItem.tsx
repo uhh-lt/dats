@@ -1,5 +1,5 @@
-import { ExportJobType } from "@api/models/ExportJobType";
 import { ExportMenuItem } from "@core/export-buttons";
+import { ExportJobType } from "@models/ExportJobType";
 
 export function FolderExportMenuItem() {
   return (

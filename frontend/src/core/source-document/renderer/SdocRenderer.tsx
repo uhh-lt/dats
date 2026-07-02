@@ -1,6 +1,6 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 

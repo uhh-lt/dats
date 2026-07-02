@@ -1,4 +1,4 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
 import ClearIcon from "@mui/icons-material/Clear";
 import { IconButton, Stack, TextField, Tooltip } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";

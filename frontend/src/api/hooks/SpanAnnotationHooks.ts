@@ -1,8 +1,8 @@
-import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
-import { SpanAnnotationDeleted } from "@api/models/SpanAnnotationDeleted";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { SpanAnnotationUpdate } from "@api/models/SpanAnnotationUpdate";
-import { UserRead } from "@api/models/UserRead";
+import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
+import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
+import { UserRead } from "@models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";

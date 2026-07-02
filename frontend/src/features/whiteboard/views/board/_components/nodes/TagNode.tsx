@@ -1,12 +1,12 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { TagNodeData } from "@api/models/TagNodeData";
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { useOpenMemoDialog } from "@core/memo";
 import { TagRenderer } from "@core/tag";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { TagNodeData } from "@models/TagNodeData";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { Node, NodeProps, useReactFlow } from "@xyflow/react";

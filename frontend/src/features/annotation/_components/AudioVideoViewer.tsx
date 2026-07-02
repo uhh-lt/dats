@@ -1,4 +1,4 @@
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, Tooltip } from "@mui/material";
 import type { SyntheticEvent } from "react";
 import { useMemo, useRef, useState } from "react";

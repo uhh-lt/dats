@@ -2,9 +2,9 @@ import { queryClient } from "@api/queryClient";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
-import { ProjectCreate } from "@api/models/ProjectCreate";
-import { ProjectRead } from "@api/models/ProjectRead";
-import { SDocStatus } from "@api/models/SDocStatus";
+import { ProjectCreate } from "@models/ProjectCreate";
+import { ProjectRead } from "@models/ProjectRead";
+import { SDocStatus } from "@models/SDocStatus";
 import { ProjectService } from "@api/services/ProjectService";
 
 // PROJECT QUERIES

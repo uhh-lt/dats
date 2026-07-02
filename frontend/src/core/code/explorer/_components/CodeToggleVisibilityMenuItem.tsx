@@ -1,6 +1,6 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { getIconComponent, Icon } from "@components/icons";
 import { flatTree, ITree } from "@components/tree-explorer";
+import { CodeRead } from "@models/CodeRead";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { memo, MouseEventHandler, useCallback } from "react";
 

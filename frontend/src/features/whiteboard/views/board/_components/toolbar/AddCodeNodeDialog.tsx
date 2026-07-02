@@ -1,9 +1,9 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { CodeTable } from "@core/code";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { CodeRead } from "@models/CodeRead";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState } from "material-react-table";

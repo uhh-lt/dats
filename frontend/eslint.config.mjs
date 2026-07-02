@@ -13,15 +13,26 @@ import { configs as tseslintConfigs } from "typescript-eslint";
 // eslint-disable-next-line import-x/extensions
 import { datsRulesPlugin } from "./eslint-dats-rules.js";
 
-const GLOBAL_DOMAINS = ["api", "components", "core", "features", "hooks", "routes", "store", "styles", "utils"];
+const GLOBAL_DOMAINS = [
+  "api",
+  "components",
+  "core",
+  "features",
+  "hooks",
+  "models",
+  "routes",
+  "store",
+  "styles",
+  "utils",
+];
 
 export default defineConfig(
   {
     ignores: [
       "dist/**",
       "src/api/core/**",
-      "src/api/models/**",
       "src/api/services/**",
+      "src/models/**",
       "**/routeTree.gen.ts",
       "**/*.css",
       "**/*.md",
@@ -107,6 +118,7 @@ export default defineConfig(
         { type: "hooks", pattern: "src/hooks/**" },
         { type: "store", pattern: "src/store/**" },
         { type: "api", pattern: "src/api/**" },
+        { type: "models", pattern: "src/models/**" },
         { type: "components", pattern: "src/components/*", mode: "folder", capture: ["componentName"] },
         { type: "core", pattern: "src/core/*", mode: "folder", capture: ["domain"] },
         { type: "features", pattern: "src/features/*", mode: "folder", capture: ["featureName"] },
@@ -129,29 +141,31 @@ export default defineConfig(
             { from: ["store"], allow: [] },
             // Utils are reusable functions. They do not contain domain-specific logic.
             { from: ["utils"], allow: [] },
+            // Models are reusable data structures They define the structure of the domain.
+            { from: ["models"], allow: [] },
             // Hooks are reusable functions. They do not contain domain-specific logic.
             { from: ["hooks"], allow: ["utils"] },
             // Components are low-level, reusable UI components. They do not contain domain-specific logic."
             {
               from: ["components"],
-              allow: ["components", "hooks", "store", "utils"],
+              allow: ["components", "hooks", "models", "store", "utils"],
             },
             // API contains global server state management logic. Having access to API, means having access to all server state and mutation functions. It means being domain logic.
-            { from: ["api"], allow: ["hooks", "store", "utils"] },
+            { from: ["api"], allow: ["models", "hooks", "store", "utils"] },
             // Core contains domain-specific logic and components that are shared across features.
             {
               from: ["core"],
-              allow: ["api", "components", "core", "hooks", "store", "utils"],
+              allow: ["api", "components", "core", "hooks", "models", "store", "utils"],
             },
             // Features use generic and core components to compose domain-specific functionalities.
             {
               from: ["features"],
-              allow: ["api", "components", "core", "hooks", "store", "utils"],
+              allow: ["api", "components", "core", "hooks", "models", "store", "utils"],
             },
             // Routes are the entry point of the application. They compose generic components, core components, and features to create pages.
             {
               from: ["routes"],
-              allow: ["components", "core", "features"],
+              allow: ["components", "core", "features", "models"],
             },
           ],
         },

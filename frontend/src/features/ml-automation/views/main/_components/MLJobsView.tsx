@@ -1,5 +1,5 @@
-import { MlJobRead } from "@api/models/MlJobRead";
 import { DialogSection } from "@components/DialogSection";
+import { MlJobRead } from "@models/MlJobRead";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, List, Stack, Tooltip, Typography } from "@mui/material";
 import { MLJobListItem } from "./MLJobListItem";

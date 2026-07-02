@@ -1,7 +1,7 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
 import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { BBoxAnnotationAnalysisView } from "@features/bbox-annotation-analysis";
+import { BBoxColumns } from "@models/BBoxColumns";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";

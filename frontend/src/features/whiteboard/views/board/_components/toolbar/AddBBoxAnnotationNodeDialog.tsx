@@ -1,11 +1,11 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { BBoxColumns } from "@api/models/BBoxColumns";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { BBoxAnnotationReduxFilterTable } from "@core/bbox-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { BBoxColumns } from "@models/BBoxColumns";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";

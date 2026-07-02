@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRead } from "@api/models/CodeRead";
 import { ITree } from "@components/tree-explorer";
+import { CodeRead } from "@models/CodeRead";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";

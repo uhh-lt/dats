@@ -1,6 +1,6 @@
-import { FolderRead } from "@api/models/FolderRead";
-import { FolderType } from "@api/models/FolderType";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { FolderRead } from "@models/FolderRead";
+import { FolderType } from "@models/FolderType";
 import FolderIcon from "@mui/icons-material/Folder";
 import InboxIcon from "@mui/icons-material/Inbox";
 import { Box, BoxProps } from "@mui/material";

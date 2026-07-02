@@ -1,9 +1,9 @@
 import { UserHooks } from "@api/hooks/UserHooks";
-import { UserRead } from "@api/models/UserRead";
 import { FormEmail } from "@components/form-inputs";
 import { useAuth } from "@core/auth";
 import { useOpenSnackbar } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
+import { UserRead } from "@models/UserRead";
 import { Button, Grid2, Stack, TextField, Typography } from "@mui/material";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "@utils/GlobalConstants";
 import { useRef } from "react";

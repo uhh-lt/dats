@@ -1,8 +1,4 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { MemoColumns } from "@api/models/MemoColumns";
-import { PaginatedElasticSearchHits } from "@api/models/PaginatedElasticSearchHits";
-import { SortDirection } from "@api/models/SortDirection";
 import { SearchService } from "@api/services/SearchService";
 import {
   FILTER_PARAM,
@@ -18,6 +14,10 @@ import {
 } from "@core/filter";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { MemoColumns } from "@models/MemoColumns";
+import { PaginatedElasticSearchHits } from "@models/PaginatedElasticSearchHits";
+import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";

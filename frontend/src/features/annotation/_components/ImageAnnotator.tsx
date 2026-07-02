@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { Annotation } from "../_types/Annotation";

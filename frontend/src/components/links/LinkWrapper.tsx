@@ -10,11 +10,7 @@ interface LinkWrapperProps extends LinkProps {
 
 const LinkWrapperComponent = ({ children, link, ...props }: LinkWrapperProps) => {
   if (link) {
-    return (
-      <Link {...props}>
-        {children}
-      </Link>
-    );
+    return <Link {...props}>{children}</Link>;
   }
   return children;
 };

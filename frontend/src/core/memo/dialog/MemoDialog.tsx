@@ -1,8 +1,8 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { MemoRead } from "@api/models/MemoRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { MemoRead } from "@models/MemoRead";
 import { CircularProgress, Dialog } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";

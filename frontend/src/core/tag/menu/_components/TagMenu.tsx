@@ -1,6 +1,6 @@
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagRead } from "@api/models/TagRead";
 import { Icon, getIconComponent } from "@components/icons";
+import { TagRead } from "@models/TagRead";
 import {
   Box,
   Checkbox,

@@ -1,10 +1,10 @@
-import { ClassifierEvaluationOutput } from "@api/models/ClassifierEvaluationOutput";
-import { ClassifierInferenceOutput } from "@api/models/ClassifierInferenceOutput";
-import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
-import { ClassifierTask } from "@api/models/ClassifierTask";
-import { ClassifierTrainingOutput } from "@api/models/ClassifierTrainingOutput";
-import { JobStatus } from "@api/models/JobStatus";
 import { JobListItem, jobStatusToSimple } from "@core/job";
+import { ClassifierEvaluationOutput } from "@models/ClassifierEvaluationOutput";
+import { ClassifierInferenceOutput } from "@models/ClassifierInferenceOutput";
+import { ClassifierJobRead } from "@models/ClassifierJobRead";
+import { ClassifierTask } from "@models/ClassifierTask";
+import { ClassifierTrainingOutput } from "@models/ClassifierTrainingOutput";
+import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";

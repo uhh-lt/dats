@@ -1,6 +1,6 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
-import { StringOperator } from "@api/models/StringOperator";
 import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
+import { BBoxColumns } from "@models/BBoxColumns";
+import { StringOperator } from "@models/StringOperator";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 

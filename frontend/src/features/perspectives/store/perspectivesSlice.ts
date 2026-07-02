@@ -1,11 +1,3 @@
-import { ChatSessionResponse } from "@api/models/ChatSessionResponse";
-import { IDListOperator } from "@api/models/IDListOperator";
-import { ListOperator } from "@api/models/ListOperator";
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
-import { StringOperator } from "@api/models/StringOperator";
 import {
   createEmptyFilter,
   createInitialFilterState,
@@ -18,6 +10,14 @@ import {
   resetProjectFilterState,
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
+import { ChatSessionResponse } from "@models/ChatSessionResponse";
+import { IDListOperator } from "@models/IDListOperator";
+import { ListOperator } from "@models/ListOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SdocColumns } from "@models/SdocColumns";
+import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
+import { StringOperator } from "@models/StringOperator";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import * as d3 from "d3";

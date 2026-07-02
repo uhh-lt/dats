@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { KeywordStat } from "../models/KeywordStat";
-import type { SpanEntityStat } from "../models/SpanEntityStat";
-import type { TagStat } from "../models/TagStat";
+import type { KeywordStat } from "@models/KeywordStat";
+import type { SpanEntityStat } from "@models/SpanEntityStat";
+import type { TagStat } from "@models/TagStat";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

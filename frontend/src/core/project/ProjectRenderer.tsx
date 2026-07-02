@@ -1,5 +1,5 @@
 import { ProjectHooks } from "@api/hooks/ProjectHooks";
-import { ProjectRead } from "@api/models/ProjectRead";
+import { ProjectRead } from "@models/ProjectRead";
 
 interface ProjectRendererProps {
   project: number | ProjectRead;

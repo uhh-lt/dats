@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
-import { KeywordStat } from "@api/models/KeywordStat";
-import { SpanEntityStat } from "@api/models/SpanEntityStat";
-import { TagStat } from "@api/models/TagStat";
+import { KeywordStat } from "@models/KeywordStat";
+import { SpanEntityStat } from "@models/SpanEntityStat";
+import { TagStat } from "@models/TagStat";
 import { StatisticsService } from "@api/services/StatisticsService";
 
 const useFilterCodeStats = (codeId: number, sdocIds: number[] | null | undefined, sortByGlobal: boolean | undefined) =>

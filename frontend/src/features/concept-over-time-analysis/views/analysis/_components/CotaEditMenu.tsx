@@ -1,5 +1,5 @@
-import { COTARead } from "@api/models/COTARead";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
+import { COTARead } from "@models/COTARead";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";

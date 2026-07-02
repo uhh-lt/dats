@@ -1,2 +1,2 @@
-export * from "./UserSelectorSingle"
-export * from "./UserSelectorMulti"
+export * from "./UserSelectorSingle";
+export * from "./UserSelectorMulti";

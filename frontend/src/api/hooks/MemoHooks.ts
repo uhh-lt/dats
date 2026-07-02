@@ -1,5 +1,5 @@
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { MemoRead } from "@api/models/MemoRead";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { MemoRead } from "@models/MemoRead";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { useMutation, useQuery } from "@tanstack/react-query";

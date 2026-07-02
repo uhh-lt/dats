@@ -1,6 +1,6 @@
-import { DocType } from "@api/models/DocType";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { DocType } from "@models/DocType";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
 import { DocTypeIcons, getIconComponent, Icon } from "@components/icons";

@@ -1,7 +1,7 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
-import { FolderRead } from "@api/models/FolderRead";
-import { FolderType } from "@api/models/FolderType";
 import { Icon, getIconComponent } from "@components/icons";
+import { FolderRead } from "@models/FolderRead";
+import { FolderType } from "@models/FolderType";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import {
   Box,

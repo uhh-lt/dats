@@ -1,1 +1,1 @@
-export * from "./FolderActionMenuButton"
+export * from "./FolderActionMenuButton";

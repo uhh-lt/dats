@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProjectAddUser } from "../models/ProjectAddUser";
-import type { PublicUserRead } from "../models/PublicUserRead";
-import type { UserRead } from "../models/UserRead";
-import type { UserUpdate } from "../models/UserUpdate";
+import type { ProjectAddUser } from "@models/ProjectAddUser";
+import type { PublicUserRead } from "@models/PublicUserRead";
+import type { UserRead } from "@models/UserRead";
+import type { UserUpdate } from "@models/UserUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

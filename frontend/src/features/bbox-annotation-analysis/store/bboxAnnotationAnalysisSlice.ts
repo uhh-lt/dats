@@ -1,5 +1,5 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
 import { BBoxFilterActions } from "@core/bbox-annotation";
+import { BBoxColumns } from "@models/BBoxColumns";
 import { createSlice } from "@reduxjs/toolkit";
 import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";

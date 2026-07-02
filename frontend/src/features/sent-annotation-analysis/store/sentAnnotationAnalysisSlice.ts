@@ -1,5 +1,5 @@
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
 import { SEATFilterActions } from "@core/sentence-annotation";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { createSlice } from "@reduxjs/toolkit";
 import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";

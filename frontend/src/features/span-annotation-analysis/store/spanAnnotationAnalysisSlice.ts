@@ -1,5 +1,5 @@
-import { SpanColumns } from "@api/models/SpanColumns";
 import { SATFilterActions } from "@core/span-annotation";
+import { SpanColumns } from "@models/SpanColumns";
 import { createSlice } from "@reduxjs/toolkit";
 import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
 import { ProjectActions } from "@store/global/projectSlice";

@@ -1,5 +1,5 @@
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { Link } from "@tanstack/react-router";
 
 interface SdocAnnotationLinkProps {

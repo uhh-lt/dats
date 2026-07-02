@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { COTACreate } from "../models/COTACreate";
-import type { COTARead } from "../models/COTARead";
-import type { COTARefinementJobInput } from "../models/COTARefinementJobInput";
-import type { COTARefinementJobRead } from "../models/COTARefinementJobRead";
-import type { COTASentenceID } from "../models/COTASentenceID";
-import type { COTAUpdate } from "../models/COTAUpdate";
+import type { COTACreate } from "@models/COTACreate";
+import type { COTARead } from "@models/COTARead";
+import type { COTARefinementJobInput } from "@models/COTARefinementJobInput";
+import type { COTARefinementJobRead } from "@models/COTARefinementJobRead";
+import type { COTASentenceID } from "@models/COTASentenceID";
+import type { COTAUpdate } from "@models/COTAUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

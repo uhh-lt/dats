@@ -1,5 +1,5 @@
-import { ExportJobType } from "@api/models/ExportJobType";
 import { ExportButton } from "@core/export-buttons";
+import { ExportJobType } from "@models/ExportJobType";
 
 interface SentenceAnnotationExportButtonProps {
   sentenceAnnotationIds: number[];

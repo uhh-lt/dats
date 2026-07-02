@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import { SearchService } from "@api/services/SearchService";
 import { ColumnInfo } from "@core/filter";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
+import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import { AppDispatch } from "@store/store";
 import { useAppDispatch } from "@store/storeHooks";
 import { useQuery } from "@tanstack/react-query";

@@ -1,10 +1,10 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierRead } from "@api/models/ClassifierRead";
-import { ClassifierTask } from "@api/models/ClassifierTask";
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeRenderer } from "@core/code";
 import { useTabNavigate } from "@core/navigation";
 import { TagRenderer } from "@core/tag";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierRead } from "@models/ClassifierRead";
+import { ClassifierTask } from "@models/ClassifierTask";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import {
   Divider,

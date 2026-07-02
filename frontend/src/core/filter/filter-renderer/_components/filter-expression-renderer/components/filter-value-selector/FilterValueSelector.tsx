@@ -1,4 +1,4 @@
-import { FilterValueType } from "@api/models/FilterValueType";
+import { FilterValueType } from "@models/FilterValueType";
 import { memo, useMemo } from "react";
 import { ColumnInfo } from "../../../../../filterUtils";
 import { CodeIdValueSelector } from "./components/CodeIdValueSelector";

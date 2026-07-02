@@ -1,6 +1,6 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
 import { CodeTable } from "@core/code";
 import { TagTable } from "@core/tag";
+import { ClassifierModel } from "@models/ClassifierModel";
 import { Alert, Box, Button, Card, CardHeader, DialogActions, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";

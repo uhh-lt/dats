@@ -1,8 +1,8 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { ApproachType } from "@api/models/ApproachType";
-import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
 import { FormTextMultiline } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { ApproachType } from "@models/ApproachType";
+import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Stack, Tab, Typography } from "@mui/material";

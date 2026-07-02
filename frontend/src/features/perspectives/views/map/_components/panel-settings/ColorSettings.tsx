@@ -1,7 +1,7 @@
-import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
-import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { PerspectivesJobType } from "@models/PerspectivesJobType";
+import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import InfoIcon from "@mui/icons-material/Info";
 import {
   Alert,

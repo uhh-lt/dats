@@ -1,5 +1,5 @@
-import { MlJobRead } from "@api/models/MlJobRead";
-import { TagRecommendationResult } from "@api/models/TagRecommendationResult";
+import { MlJobRead } from "@models/MlJobRead";
+import { TagRecommendationResult } from "@models/TagRecommendationResult";
 import { queryClient } from "@api/queryClient";
 import { TagRecommendationService } from "@api/services/TagRecommendationService";
 import { useAppSelector } from "@store/storeHooks";

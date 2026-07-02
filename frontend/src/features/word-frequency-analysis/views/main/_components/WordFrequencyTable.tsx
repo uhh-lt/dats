@@ -1,10 +1,10 @@
-import { StringOperator } from "@api/models/StringOperator";
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
-import { WordFrequencyResult } from "@api/models/WordFrequencyResult";
-import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { ContentContentLayout } from "@components/content-layouts";
 import { FilterTable, MyFilter } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { StringOperator } from "@models/StringOperator";
+import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
+import { WordFrequencyResult } from "@models/WordFrequencyResult";
+import { WordFrequencyStat } from "@models/WordFrequencyStat";
 import { RootState } from "@store/store";
 import { useReduxConnector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";

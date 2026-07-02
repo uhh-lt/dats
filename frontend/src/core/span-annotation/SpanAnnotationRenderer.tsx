@@ -1,9 +1,9 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { LinkWrapper } from "@components/links";
 import { CodeRenderer } from "@core/code";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 

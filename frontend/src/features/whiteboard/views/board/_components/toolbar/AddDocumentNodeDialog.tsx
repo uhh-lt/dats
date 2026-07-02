@@ -1,12 +1,12 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { SdocReduxFilterTable } from "@core/source-document";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";

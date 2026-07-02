@@ -1,7 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { WhiteboardRead } from "@api/models/WhiteboardRead";
 import { queryClient } from "@api/queryClient";
 import { WhiteboardService } from "@api/services/WhiteboardService";
+import { WhiteboardRead } from "@models/WhiteboardRead";
 import { useAppSelector } from "@store/storeHooks";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 

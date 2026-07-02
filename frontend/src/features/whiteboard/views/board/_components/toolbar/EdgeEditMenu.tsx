@@ -1,4 +1,4 @@
-import { WhiteboardEdgeType } from "@api/models/WhiteboardEdgeType";
+import { WhiteboardEdgeType } from "@models/WhiteboardEdgeType";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Button, ButtonGroup, Divider, Paper, SelectChangeEvent, Stack } from "@mui/material";
 import { Edge, EdgeMarker, MarkerType, useReactFlow } from "@xyflow/react";

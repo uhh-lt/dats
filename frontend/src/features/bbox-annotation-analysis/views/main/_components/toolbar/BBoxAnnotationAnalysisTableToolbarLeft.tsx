@@ -1,6 +1,6 @@
-import { BBoxAnnotationRow } from "@api/models/BBoxAnnotationRow";
-import { BBoxColumns } from "@api/models/BBoxColumns";
 import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
+import { BBoxColumns } from "@models/BBoxColumns";
 import { Stack } from "@mui/material";
 import { BulkChangeBBoxAnnotationCodeButton } from "./BulkChangeBBoxAnnotationCodeButton";
 import { BulkDeleteBBoxAnnotationsButton } from "./BulkDeleteBBoxAnnotationsButton";

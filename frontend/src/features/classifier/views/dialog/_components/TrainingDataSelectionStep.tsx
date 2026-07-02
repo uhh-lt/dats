@@ -1,4 +1,4 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierModel } from "@models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";

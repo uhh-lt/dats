@@ -1,4 +1,4 @@
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import type { BBoxAnnotationNode } from "../_components/nodes/BBoxAnnotationNode";
 import type { BorderNode } from "../_components/nodes/BorderNode";
 import type { CodeNode } from "../_components/nodes/CodeNode";

@@ -1,4 +1,4 @@
-import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
+import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";

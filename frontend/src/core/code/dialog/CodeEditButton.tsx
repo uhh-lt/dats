@@ -1,5 +1,5 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { Icon, getIconComponent } from "@components/icons";
+import { CodeRead } from "@models/CodeRead";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { MouseEventHandler, memo, useCallback } from "react";

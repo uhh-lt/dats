@@ -1,5 +1,5 @@
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { MyFilter } from "@core/filter";
+import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { QueryClient } from "@tanstack/react-query";
 import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
 

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_word_frequency_word_frequency_analysis } from "../models/Body_word_frequency_word_frequency_analysis";
-import type { Body_word_frequency_word_frequency_analysis_export } from "../models/Body_word_frequency_word_frequency_analysis_export";
-import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
-import type { WordFrequencyRead } from "../models/WordFrequencyRead";
-import type { WordFrequencyResult } from "../models/WordFrequencyResult";
+import type { Body_word_frequency_word_frequency_analysis } from "@models/Body_word_frequency_word_frequency_analysis";
+import type { Body_word_frequency_word_frequency_analysis_export } from "@models/Body_word_frequency_word_frequency_analysis_export";
+import type { ColumnInfo_WordFrequencyColumns_ } from "@models/ColumnInfo_WordFrequencyColumns_";
+import type { WordFrequencyRead } from "@models/WordFrequencyRead";
+import type { WordFrequencyResult } from "@models/WordFrequencyResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

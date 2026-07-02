@@ -1,6 +1,6 @@
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { FilterDialog, LocalFilterTableToolbarProps } from "@core/filter";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
+import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { Stack } from "@mui/material";
 import { BulkChangeSentAnnotationCodeButton } from "./BulkChangeSentAnnotationCodeButton";
 import { BulkDeleteSentAnnotationsButton } from "./BulkDeleteSentAnnotationsButton";

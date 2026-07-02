@@ -1,5 +1,5 @@
 import { CodeMap } from "@api/hooks/CodeHooks";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -8,8 +8,8 @@ import { Box, IconButton, ListItemButton, Stack, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
-import { isAnnotationSame } from "../_utils/comparisonUtils";
 import { SentAnnoMap, useComputeSentAnnoMap } from "../_hooks/useComputeSentAnnoMap";
+import { isAnnotationSame } from "../_utils/comparisonUtils";
 
 interface DocumentSentenceProps {
   sentenceId: number;
@@ -218,10 +218,7 @@ function DocumentSentencePart({
                 backgroundImage: `linear-gradient(to right, ${ColorUtils.colorStringToRGBA(
                   highlightedColor,
                   1,
-                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(
-                  highlightedColor,
-                  0.3,
-                )})`,
+                )}, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.7)} 4%, ${ColorUtils.colorStringToRGBA(highlightedColor, 0.3)})`,
                 boxDecorationBreak: "clone",
               }}
             >

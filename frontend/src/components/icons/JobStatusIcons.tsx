@@ -1,4 +1,4 @@
-import { JobStatus } from "@api/models/JobStatus";
+import { JobStatus } from "@models/JobStatus";
 import { Icon } from "./DATSIcons";
 
 export const JobStatusIcons: Record<JobStatus, Icon> = {

@@ -1,9 +1,9 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { MemoRead } from "@api/models/MemoRead";
 import { Icon, getIconComponent } from "@components/icons";
 import { useAuth } from "@core/auth";
 import { MemoCard, MemoEditor } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { MemoRead } from "@models/MemoRead";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
 import { memo, useCallback, useState } from "react";

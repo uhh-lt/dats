@@ -1,6 +1,6 @@
-import { TagRead } from "@api/models/TagRead";
 import { SdocRenderer } from "@core/source-document";
 import { TagRenderer } from "@core/tag";
+import { TagRead } from "@models/TagRead";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import {
   getMRT_RowSelectionHandler,

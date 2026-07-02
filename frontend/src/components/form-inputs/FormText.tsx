@@ -6,7 +6,12 @@ interface FormTextProps<T extends FieldValues> extends Omit<ControllerProps<T>, 
   control: Control<T>;
 }
 
-export function FormText<T extends FieldValues>({ name, control, textFieldProps, ...controllerProps }: FormTextProps<T>) {
+export function FormText<T extends FieldValues>({
+  name,
+  control,
+  textFieldProps,
+  ...controllerProps
+}: FormTextProps<T>) {
   return (
     <Controller
       {...controllerProps}

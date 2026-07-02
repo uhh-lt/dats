@@ -1,6 +1,6 @@
-import { JobStatus } from "@api/models/JobStatus";
-import { PerspectivesJobRead } from "@api/models/PerspectivesJobRead";
-import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
+import { JobStatus } from "@models/JobStatus";
+import { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import { Card, CardContent, CircularProgress, Stack, Step, StepLabel, Stepper, Typography } from "@mui/material";
 
 const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];

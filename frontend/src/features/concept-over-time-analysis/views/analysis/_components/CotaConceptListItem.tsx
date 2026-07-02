@@ -1,5 +1,5 @@
-import { COTAConcept } from "@api/models/COTAConcept";
 import { getIconComponent, Icon } from "@components/icons";
+import { COTAConcept } from "@models/COTAConcept";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, ListItemButton, ListItemIcon, Menu, MenuItem } from "@mui/material";

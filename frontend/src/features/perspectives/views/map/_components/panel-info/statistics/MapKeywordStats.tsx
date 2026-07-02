@@ -1,6 +1,6 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
-import { KeywordStat } from "@api/models/KeywordStat";
 import { StatsDisplayButton } from "@components/StatsDisplayButton";
+import { KeywordStat } from "@models/KeywordStat";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";

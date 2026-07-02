@@ -1,6 +1,6 @@
-import { AnnoscalingResult } from "@api/models/AnnoscalingResult";
 import { queryClient } from "@api/queryClient";
 import { AnnoscalingService } from "@api/services/AnnoscalingService";
+import { AnnoscalingResult } from "@models/AnnoscalingResult";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 

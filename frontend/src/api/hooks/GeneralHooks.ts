@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
-import { InstanceInfo } from "@api/models/InstanceInfo";
+import { InstanceInfo } from "@models/InstanceInfo";
 import { GeneralService } from "@api/services/GeneralService";
 import { QueryKey } from "./QueryKey";
 

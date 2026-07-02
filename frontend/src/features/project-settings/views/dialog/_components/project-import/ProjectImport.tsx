@@ -1,4 +1,4 @@
-import { ProjectRead } from "@api/models/ProjectRead";
+import { ProjectRead } from "@models/ProjectRead";
 import { Box, Stack } from "@mui/material";
 import { ImportJobsView } from "./components/ImportJobsView";
 import { ImportSection } from "./components/ImportSection";

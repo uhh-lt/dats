@@ -1,8 +1,8 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { CodeRead } from "@api/models/CodeRead";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { CodeRead } from "@models/CodeRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { memo, MouseEventHandler, useCallback, useMemo, useRef } from "react";
 import {
   TextAnnotationValidationMenu,

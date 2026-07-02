@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRead } from "@api/models/CodeRead";
 import { useDebounce } from "@hooks/useDebounce";
+import { CodeRead } from "@models/CodeRead";
 import { Square } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, CircularProgress, Divider, Stack, TextField, ToggleButton } from "@mui/material";

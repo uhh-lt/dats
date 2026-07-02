@@ -1,9 +1,9 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { COTARead } from "@api/models/COTARead";
-import { DateGroupBy } from "@api/models/DateGroupBy";
-import { DocType } from "@api/models/DocType";
-import { MetaType } from "@api/models/MetaType";
 import { SdocsWithDateCounter } from "@core/sdoc-metadata";
+import { COTARead } from "@models/COTARead";
+import { DateGroupBy } from "@models/DateGroupBy";
+import { DocType } from "@models/DocType";
+import { MetaType } from "@models/MetaType";
 import InfoIcon from "@mui/icons-material/Info";
 import { MenuItem, Stack, TextField } from "@mui/material";
 import Card from "@mui/material/Card";

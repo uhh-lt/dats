@@ -1,10 +1,10 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { DocType } from "@api/models/DocType";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
 import { ProjectMetadataCreateButton } from "@core/project-metadata";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
+import { DocType } from "@models/DocType";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, CircularProgress, Stack, Tab, Tabs } from "@mui/material";
 import { memo, useCallback, useState } from "react";

@@ -1,5 +1,5 @@
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataRead } from "@api/models/SourceDocumentMetadataRead";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataRead } from "@models/SourceDocumentMetadataRead";
 import { queryClient } from "@api/queryClient";
 import { ProjectMetadataService } from "@api/services/ProjectMetadataService";
 import { SdocMetadataService } from "@api/services/SdocMetadataService";

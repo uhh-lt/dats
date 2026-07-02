@@ -1,10 +1,10 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { MetadataExtractionResult } from "@api/models/MetadataExtractionResult";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SourceDocumentMetadataBulkUpdate } from "@api/models/SourceDocumentMetadataBulkUpdate";
-import { SourceDocumentMetadataReadResolved } from "@api/models/SourceDocumentMetadataReadResolved";
 import { SdocMetadataRendererWithData } from "@core/sdoc-metadata";
 import { SdocRenderer } from "@core/source-document";
+import { MetadataExtractionResult } from "@models/MetadataExtractionResult";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SourceDocumentMetadataBulkUpdate } from "@models/SourceDocumentMetadataBulkUpdate";
+import { SourceDocumentMetadataReadResolved } from "@models/SourceDocumentMetadataReadResolved";
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, Button, DialogActions, Stack, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";

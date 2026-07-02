@@ -1,6 +1,6 @@
-import { DocType } from "@api/models/DocType";
-import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { getIconComponent, Icon } from "@components/icons";
+import { DocType } from "@models/DocType";
+import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import RuleIcon from "@mui/icons-material/Rule";

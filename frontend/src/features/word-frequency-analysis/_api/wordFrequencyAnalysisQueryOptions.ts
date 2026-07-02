@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { SortDirection } from "@api/models/SortDirection";
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
 import { WordFrequencyService } from "@api/services/WordFrequencyService";
 import { MyFilter } from "@core/filter";
+import { SortDirection } from "@models/SortDirection";
+import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
 import { infiniteQueryOptions } from "@tanstack/react-query";
 
 interface WordFrequencyTableQueryOptionsArgs {

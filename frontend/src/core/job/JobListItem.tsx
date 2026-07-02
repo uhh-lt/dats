@@ -1,5 +1,5 @@
-import { JobStatus } from "@api/models/JobStatus";
 import { getIconComponent, JobStatusIcons } from "@components/icons";
+import { JobStatus } from "@models/JobStatus";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";

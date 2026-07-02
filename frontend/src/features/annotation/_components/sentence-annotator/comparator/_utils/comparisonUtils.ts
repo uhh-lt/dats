@@ -1,4 +1,4 @@
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 
 export const isAnnotationSame = (anno1: SentenceAnnotationRead, anno2: SentenceAnnotationRead) => {
   return (

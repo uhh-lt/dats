@@ -1,5 +1,5 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
 import { SpanAnnotationCard } from "./_components/SpanAnnotationCard";

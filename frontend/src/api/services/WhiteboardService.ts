@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WhiteboardCreate } from "../models/WhiteboardCreate";
-import type { WhiteboardData } from "../models/WhiteboardData";
-import type { WhiteboardRead } from "../models/WhiteboardRead";
-import type { WhiteboardUpdate } from "../models/WhiteboardUpdate";
+import type { WhiteboardCreate } from "@models/WhiteboardCreate";
+import type { WhiteboardData } from "@models/WhiteboardData";
+import type { WhiteboardRead } from "@models/WhiteboardRead";
+import type { WhiteboardUpdate } from "@models/WhiteboardUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

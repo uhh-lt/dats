@@ -1,5 +1,5 @@
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 // TODO: Rework Annotation Result Rendering!!
 /* eslint-disable boundaries/element-types */
 // eslint-disable-next-line local/no-internal-modules-public-entry

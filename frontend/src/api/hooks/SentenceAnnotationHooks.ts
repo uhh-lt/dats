@@ -1,8 +1,8 @@
 import { CancelablePromise } from "@api/core/CancelablePromise";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SentenceAnnotationUpdate } from "@api/models/SentenceAnnotationUpdate";
-import { SentenceAnnotatorResult } from "@api/models/SentenceAnnotatorResult";
-import { UserRead } from "@api/models/UserRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
+import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
+import { UserRead } from "@models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";

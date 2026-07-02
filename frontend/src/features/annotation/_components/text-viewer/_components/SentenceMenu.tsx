@@ -1,8 +1,8 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { MemoListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import {

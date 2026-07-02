@@ -1,7 +1,7 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { SpanEntityStat } from "@api/models/SpanEntityStat";
 import { CodeRenderer } from "@core/code";
+import { SpanEntityStat } from "@models/SpanEntityStat";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import { Box, Button, Divider, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";

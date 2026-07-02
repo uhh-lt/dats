@@ -1,10 +1,10 @@
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
-import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import { CardContainer } from "@components/CardContainer";
 import { BBoxAnnotationTableSimple } from "@core/bbox-annotation";
 import { SentenceAnnotationTableSimple } from "@core/sentence-annotation";
 import { SdocTableSimple } from "@core/source-document";
 import { SpanAnnotationTableSimple } from "@core/span-annotation";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
+import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import InfoIcon from "@mui/icons-material/Info";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";

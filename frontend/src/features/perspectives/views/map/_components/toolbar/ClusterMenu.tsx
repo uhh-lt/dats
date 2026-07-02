@@ -1,7 +1,7 @@
-import { ClusterRead } from "@api/models/ClusterRead";
-import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
-import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { getIconComponent, Icon } from "@components/icons";
+import { ClusterRead } from "@models/ClusterRead";
+import { PerspectivesDoc } from "@models/PerspectivesDoc";
+import { PerspectivesJobType } from "@models/PerspectivesJobType";
 import {
   Box,
   Checkbox,

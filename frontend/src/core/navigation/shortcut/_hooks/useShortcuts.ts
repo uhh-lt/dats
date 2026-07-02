@@ -59,7 +59,10 @@ export function useShortcuts() {
         "s",
         "Go to Search",
         () => tabNavigate({ to: "/project/$projectId/search", params: { projectId } }),
-        { ctrlmeta: true, shift: true },
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
       ),
       createShortcut(
         "goToPerspectives",
@@ -116,7 +119,10 @@ export function useShortcuts() {
         "l",
         "Go to Logbook",
         () => tabNavigate({ to: "/project/$projectId/logbook", params: { projectId } }),
-        { ctrlmeta: true, shift: true },
+        {
+          ctrlmeta: true,
+          shift: true,
+        },
       ),
       createShortcut(
         "goToHealth",
@@ -134,35 +140,17 @@ export function useShortcuts() {
       }),
 
       // Tab navigation shortcuts
-      createShortcut(
-        "goToLeftTab",
-        "ArrowLeft",
-        "Go to Left Tab",
-        () => tabManager.goToPreviousTab(),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "goToRightTab",
-        "ArrowRight",
-        "Go to Right Tab",
-        () => tabManager.goToNextTab(),
-        {
-          ctrlmeta: true,
-          shift: true,
-        },
-      ),
-      createShortcut(
-        "closeActiveTab",
-        "w",
-        "Close Active Tab",
-        () => tabManager.closeActiveTab(),
-        {
-          ctrlmeta: true,
-        },
-      ),
+      createShortcut("goToLeftTab", "ArrowLeft", "Go to Left Tab", () => tabManager.goToPreviousTab(), {
+        ctrlmeta: true,
+        shift: true,
+      }),
+      createShortcut("goToRightTab", "ArrowRight", "Go to Right Tab", () => tabManager.goToNextTab(), {
+        ctrlmeta: true,
+        shift: true,
+      }),
+      createShortcut("closeActiveTab", "w", "Close Active Tab", () => tabManager.closeActiveTab(), {
+        ctrlmeta: true,
+      }),
 
       // Documentation shortcuts
       createShortcut("openWiki", "w", "Open Wiki", () => window.open("https://github.com/uhh-lt/dats/wiki", "_blank"), {

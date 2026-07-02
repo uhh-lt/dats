@@ -1,4 +1,3 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { ITree, TreeExplorer } from "@components/tree-explorer";
 import {
   CodeCreateListItemButton,
@@ -6,6 +5,7 @@ import {
   CodeToggleEnabledButton,
   CodeToggleVisibilityButton,
 } from "@core/code";
+import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { memo, useCallback, useState } from "react";

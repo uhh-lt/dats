@@ -1,1 +1,1 @@
-export * from "./ShortcutManager"
+export * from "./ShortcutManager";

@@ -59,9 +59,7 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
       {dialogData && (
         <>
           <DATSDialogHeader
-            title={`Changing the code of ${dialogData.annotationIds.length} annotation${
-              dialogData.annotationIds.length > 1 && "s"
-            }`}
+            title={`Changing the code of ${dialogData.annotationIds.length} annotation${dialogData.annotationIds.length > 1 && "s"}`}
             onClose={handleClose}
             isMaximized={isMaximized}
             onToggleMaximize={toggleMaximize}

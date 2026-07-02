@@ -1,8 +1,8 @@
-import { CodeFrequency } from "@api/models/CodeFrequency";
-import { CodeRead } from "@api/models/CodeRead";
-import { DocType } from "@api/models/DocType";
 import { ExportChartButton } from "@components/export-chart-buttons";
 import { ITree } from "@components/tree-explorer";
+import { CodeFrequency } from "@models/CodeFrequency";
+import { CodeRead } from "@models/CodeRead";
+import { DocType } from "@models/DocType";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import { Card, CardContent, CardHeader, CircularProgress, IconButton, Tooltip } from "@mui/material";
@@ -148,11 +148,7 @@ export function CodeFrequencyPlot({ projectId, userIds, docTypes, data, setSelec
                   <Legend />
                 </PieChart>
               ) : (
-                <BarChart
-                  data={chartData.data}
-                  className={`code-frequency-chart-${data.model.data.name}`}
-                 
-                >
+                <BarChart data={chartData.data} className={`code-frequency-chart-${data.model.data.name}`}>
                   <XAxis
                     dataKey={(codeFrequency) => codeId2Code.get(codeFrequency.code_id)?.name || "Error: Code not found"}
                     interval={0}

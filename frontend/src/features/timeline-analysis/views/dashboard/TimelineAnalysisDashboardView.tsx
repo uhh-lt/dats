@@ -1,4 +1,3 @@
-import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import {
   AnalysisDashboard,
   AnalysisDashboardRow,
@@ -6,6 +5,7 @@ import {
   useAnalysisDashboardTable,
 } from "@components/analysis-dashboard";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";

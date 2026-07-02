@@ -1,5 +1,5 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,

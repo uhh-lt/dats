@@ -1,4 +1,4 @@
-import { JobStatus } from "@api/models/JobStatus";
+import { JobStatus } from "@models/JobStatus";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { Box } from "@mui/material";
 

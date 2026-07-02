@@ -1,7 +1,4 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { AspectCreate } from "@api/models/AspectCreate";
-import { DocType } from "@api/models/DocType";
-import { PipelineSettings } from "@api/models/PipelineSettings";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useTabNavigate } from "@core/navigation";
@@ -9,6 +6,9 @@ import { DocTypeSelector } from "@core/source-document";
 import { TagSelector } from "@core/tag";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { AspectCreate } from "@models/AspectCreate";
+import { DocType } from "@models/DocType";
+import { PipelineSettings } from "@models/PipelineSettings";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SaveIcon from "@mui/icons-material/Save";
 import TuneIcon from "@mui/icons-material/Tune";

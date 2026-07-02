@@ -1,10 +1,10 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
-import { DocType } from "@api/models/DocType";
-import { SdocHealthResult } from "@api/models/SdocHealthResult";
-import { SDocStatus } from "@api/models/SDocStatus";
-import { SdocStatusRow } from "@api/models/SdocStatusRow";
 import { FilterTable } from "@core/filter";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { DocType } from "@models/DocType";
+import { SdocHealthResult } from "@models/SdocHealthResult";
+import { SDocStatus } from "@models/SDocStatus";
+import { SdocStatusRow } from "@models/SdocStatusRow";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";

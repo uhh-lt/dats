@@ -1,5 +1,5 @@
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagRead } from "@api/models/TagRead";
+import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
 import {
   MRT_ColumnDef,

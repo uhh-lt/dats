@@ -1,5 +1,5 @@
-import { TagRead } from "@api/models/TagRead";
 import { getIconComponent, Icon } from "@components/icons";
+import { TagRead } from "@models/TagRead";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { memo, MouseEventHandler, useCallback } from "react";

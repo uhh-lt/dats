@@ -1,10 +1,10 @@
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagCreate } from "@api/models/TagCreate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormMenu, FormText, FormTextMultiline } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { TagCreate } from "@models/TagCreate";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack, rgbToHex } from "@mui/material";
 import { useDialog } from "@store/global/dialogBusSlice";

@@ -1,4 +1,4 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
 import { ColumnInfo, FilterOperators, MyFilter, MyFilterExpression, createEmptyFilter } from "../filterUtils";
 import {
   addDefaultFilterExpressionToEditableFilter,
@@ -44,12 +44,11 @@ export const deserializeFilterFromSearchParam = <T extends string = string>(
   value: unknown,
   filterName: string,
 ): MyFilter<T> => {
-  const parsed =
-    isValidFilter(value)
-      ? value
-      : typeof value === "string" && value.length > 0
-        ? tryParseFilter(value)
-        : undefined;
+  const parsed = isValidFilter(value)
+    ? value
+    : typeof value === "string" && value.length > 0
+      ? tryParseFilter(value)
+      : undefined;
 
   if (!parsed) {
     return createEmptyFilter(filterName) as MyFilter<T>;

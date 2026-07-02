@@ -1,5 +1,5 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { MetadataExtractionLLMJobResult } from "@api/models/MetadataExtractionLLMJobResult";
+import { MetadataExtractionLLMJobResult } from "@models/MetadataExtractionLLMJobResult";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { memo } from "react";

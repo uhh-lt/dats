@@ -1,4 +1,4 @@
-import { TagRead } from "@api/models/TagRead";
+import { TagRead } from "@models/TagRead";
 
 export interface ChartDataPoint {
   tags: TagRead[];

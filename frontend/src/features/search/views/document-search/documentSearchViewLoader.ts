@@ -1,5 +1,5 @@
-import { SdocColumns } from "@api/models/SdocColumns";
 import { MyFilter } from "@core/filter";
+import { SdocColumns } from "@models/SdocColumns";
 import { QueryClient } from "@tanstack/react-query";
 import { projectMetadataListQueryOptions } from "../../_api/searchQueryOptions";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
@@ -25,7 +25,7 @@ export async function documentSearchViewLoader({
   sortingModel,
   fetchSize,
 }: DocumentSearchViewLoaderArgs) {
-    await Promise.all([
+  await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
     queryClient.prefetchInfiniteQuery(
       documentSearchQueryOptions({

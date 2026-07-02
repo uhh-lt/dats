@@ -1,5 +1,5 @@
-import { ClassifierEvaluationParams } from "@api/models/ClassifierEvaluationParams";
-import { ClassifierModel } from "@api/models/ClassifierModel";
+import { ClassifierEvaluationParams } from "@models/ClassifierEvaluationParams";
+import { ClassifierModel } from "@models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";

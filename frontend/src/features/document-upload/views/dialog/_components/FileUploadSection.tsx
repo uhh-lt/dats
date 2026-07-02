@@ -1,9 +1,9 @@
 import { DocProcessingHooks } from "@api/hooks/DocProcessingHooks";
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { Language } from "@api/models/Language";
-import { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { DialogSection } from "@components/DialogSection";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
+import { Language } from "@models/Language";
+import { ProcessingSettings } from "@models/ProcessingSettings";
 import PlayCircle from "@mui/icons-material/PlayCircle";
 import { Button } from "@mui/material";
 import { useCallback, useState } from "react";

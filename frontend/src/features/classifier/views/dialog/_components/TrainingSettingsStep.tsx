@@ -1,7 +1,7 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierTrainingParams } from "@api/models/ClassifierTrainingParams";
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText, FreeSoloOptions } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
 import {
   Alert,
   Box,

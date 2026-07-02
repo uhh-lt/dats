@@ -1,7 +1,7 @@
-import { ApproachType } from "@api/models/ApproachType";
-import { JobStatus } from "@api/models/JobStatus";
-import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
-import { TaskType } from "@api/models/TaskType";
+import { ApproachType } from "@models/ApproachType";
+import { JobStatus } from "@models/JobStatus";
+import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import { TaskType } from "@models/TaskType";
 import { queryClient } from "@api/queryClient";
 import { LlmService } from "@api/services/LlmService";
 import { RagService } from "@api/services/RagService";

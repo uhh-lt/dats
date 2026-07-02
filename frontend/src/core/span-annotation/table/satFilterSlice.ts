@@ -1,6 +1,6 @@
-import { SpanColumns } from "@api/models/SpanColumns";
-import { StringOperator } from "@api/models/StringOperator";
 import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
+import { SpanColumns } from "@models/SpanColumns";
+import { StringOperator } from "@models/StringOperator";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 

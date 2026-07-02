@@ -1,5 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { memo, SVGProps } from "react";
 
 type CustomSVGProps = Omit<

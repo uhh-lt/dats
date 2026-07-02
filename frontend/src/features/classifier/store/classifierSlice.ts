@@ -1,5 +1,5 @@
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierTask } from "@api/models/ClassifierTask";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierTask } from "@models/ClassifierTask";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 
 interface ClassifierState {

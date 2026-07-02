@@ -1,15 +1,15 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { CodeRead } from "@api/models/CodeRead";
-import { MemoNodeData } from "@api/models/MemoNodeData";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagRead } from "@api/models/TagRead";
-import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
 import { attachedObjectTypeToText, MemoRenderer, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { CodeRead } from "@models/CodeRead";
+import { MemoNodeData } from "@models/MemoNodeData";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { TagRead } from "@models/TagRead";
+import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
 import { Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
@@ -154,7 +154,12 @@ const createMemoAttachedObjectEdge = (
 const createAttachedObjectNodes = (
   attachedObjectType: AttachedObjectType,
   attachedObject:
-    TagRead | CodeRead | SpanAnnotationRead | BBoxAnnotationRead | SentenceAnnotationRead | SourceDocumentRead,
+    | TagRead
+    | CodeRead
+    | SpanAnnotationRead
+    | BBoxAnnotationRead
+    | SentenceAnnotationRead
+    | SourceDocumentRead,
   position: XYPosition,
 ): DATSNode[] => {
   switch (attachedObjectType) {

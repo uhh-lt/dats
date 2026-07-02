@@ -1,8 +1,8 @@
-import { ClassifierData } from "@api/models/ClassifierData";
-import { ClassifierEvaluationRead } from "@api/models/ClassifierEvaluationRead";
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { ClassifierRead } from "@api/models/ClassifierRead";
 import { getIconComponent, Icon } from "@components/icons";
+import { ClassifierData } from "@models/ClassifierData";
+import { ClassifierEvaluationRead } from "@models/ClassifierEvaluationRead";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { ClassifierRead } from "@models/ClassifierRead";
 import {
   Box,
   Divider,

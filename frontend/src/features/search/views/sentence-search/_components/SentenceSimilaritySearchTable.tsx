@@ -1,6 +1,3 @@
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SimSearchSentenceHit } from "@api/models/SimSearchSentenceHit";
-import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { useAuth } from "@core/auth";
@@ -16,6 +13,9 @@ import {
   SdocTagsRenderer,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
+import { SdocColumns } from "@models/SdocColumns";
+import { SimSearchSentenceHit } from "@models/SimSearchSentenceHit";
+import { StringOperator } from "@models/StringOperator";
 import { Box } from "@mui/material";
 import { selectSelectedIds } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";

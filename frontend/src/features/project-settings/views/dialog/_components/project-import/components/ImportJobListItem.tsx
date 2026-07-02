@@ -1,7 +1,7 @@
 import { ImportHooks } from "@api/hooks/ImportHooks";
-import { ImportJobRead } from "@api/models/ImportJobRead";
-import { JobStatus } from "@api/models/JobStatus";
 import { JobListItem } from "@core/job";
+import { ImportJobRead } from "@models/ImportJobRead";
+import { JobStatus } from "@models/JobStatus";
 import { Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { memo, useMemo } from "react";

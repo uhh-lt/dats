@@ -1,9 +1,9 @@
-import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
-import { DimensionalityReductionAlgorithm } from "@api/models/DimensionalityReductionAlgorithm";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormNumber } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { COTATrainingSettings } from "@models/COTATrainingSettings";
+import { DimensionalityReductionAlgorithm } from "@models/DimensionalityReductionAlgorithm";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Divider, MenuItem, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

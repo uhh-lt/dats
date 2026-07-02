@@ -1,9 +1,9 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeOccurrence } from "@api/models/CodeOccurrence";
 import { CardContainer } from "@components/CardContainer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
+import { CodeOccurrence } from "@models/CodeOccurrence";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import {
   MRT_ColumnDef,

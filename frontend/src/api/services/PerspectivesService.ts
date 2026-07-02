@@ -2,25 +2,25 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AddMissingDocsToAspectParams } from "../models/AddMissingDocsToAspectParams";
-import type { AspectCreate } from "../models/AspectCreate";
-import type { AspectRead } from "../models/AspectRead";
-import type { AspectUpdate } from "../models/AspectUpdate";
-import type { Body_perspectives_visualize_documents } from "../models/Body_perspectives_visualize_documents";
-import type { ChangeClusterParams } from "../models/ChangeClusterParams";
-import type { ClusterRead } from "../models/ClusterRead";
-import type { ClusterUpdate } from "../models/ClusterUpdate";
-import type { CreateClusterWithNameParams } from "../models/CreateClusterWithNameParams";
-import type { CreateClusterWithSdocsParams } from "../models/CreateClusterWithSdocsParams";
-import type { MergeClustersParams } from "../models/MergeClustersParams";
-import type { PerspectivesClusterSimilarities } from "../models/PerspectivesClusterSimilarities";
-import type { PerspectivesJobRead } from "../models/PerspectivesJobRead";
-import type { PerspectivesVisualization } from "../models/PerspectivesVisualization";
-import type { RecomputeClusterTitleAndDescriptionParams } from "../models/RecomputeClusterTitleAndDescriptionParams";
-import type { RefineModelParams } from "../models/RefineModelParams";
-import type { RemoveClusterParams } from "../models/RemoveClusterParams";
-import type { ResetModelParams } from "../models/ResetModelParams";
-import type { SplitClusterParams } from "../models/SplitClusterParams";
+import type { AddMissingDocsToAspectParams } from "@models/AddMissingDocsToAspectParams";
+import type { AspectCreate } from "@models/AspectCreate";
+import type { AspectRead } from "@models/AspectRead";
+import type { AspectUpdate } from "@models/AspectUpdate";
+import type { Body_perspectives_visualize_documents } from "@models/Body_perspectives_visualize_documents";
+import type { ChangeClusterParams } from "@models/ChangeClusterParams";
+import type { ClusterRead } from "@models/ClusterRead";
+import type { ClusterUpdate } from "@models/ClusterUpdate";
+import type { CreateClusterWithNameParams } from "@models/CreateClusterWithNameParams";
+import type { CreateClusterWithSdocsParams } from "@models/CreateClusterWithSdocsParams";
+import type { MergeClustersParams } from "@models/MergeClustersParams";
+import type { PerspectivesClusterSimilarities } from "@models/PerspectivesClusterSimilarities";
+import type { PerspectivesJobRead } from "@models/PerspectivesJobRead";
+import type { PerspectivesVisualization } from "@models/PerspectivesVisualization";
+import type { RecomputeClusterTitleAndDescriptionParams } from "@models/RecomputeClusterTitleAndDescriptionParams";
+import type { RefineModelParams } from "@models/RefineModelParams";
+import type { RemoveClusterParams } from "@models/RemoveClusterParams";
+import type { ResetModelParams } from "@models/ResetModelParams";
+import type { SplitClusterParams } from "@models/SplitClusterParams";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

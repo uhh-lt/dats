@@ -1,5 +1,5 @@
-import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
 import { getIconComponent, Icon } from "@components/icons";
+import { TimelineAnalysisConcept } from "@models/TimelineAnalysisConcept";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, ListItemIcon, Menu, MenuItem } from "@mui/material";

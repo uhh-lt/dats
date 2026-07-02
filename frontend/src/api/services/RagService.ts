@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_rag_rag_session } from "../models/Body_rag_rag_session";
-import type { ChatSessionResponse } from "../models/ChatSessionResponse";
+import type { Body_rag_rag_session } from "@models/Body_rag_rag_session";
+import type { ChatSessionResponse } from "@models/ChatSessionResponse";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

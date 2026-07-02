@@ -1,5 +1,5 @@
-import { COTAConcept } from "@api/models/COTAConcept";
-import { COTARead } from "@api/models/COTARead";
+import { COTAConcept } from "@models/COTAConcept";
+import { COTARead } from "@models/COTARead";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItemButton, ListItemIcon, Tooltip } from "@mui/material";

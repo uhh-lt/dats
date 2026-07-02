@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TagRecommendationLinkRead } from "../models/TagRecommendationLinkRead";
-import type { TagRecommendationResult } from "../models/TagRecommendationResult";
+import type { TagRecommendationLinkRead } from "@models/TagRecommendationLinkRead";
+import type { TagRecommendationResult } from "@models/TagRecommendationResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

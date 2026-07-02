@@ -1,6 +1,6 @@
-import { DocType } from "@api/models/DocType";
 import { Icon } from "@components/icons";
 import { HealthView, healthViewLoader } from "@features/health";
+import { DocType } from "@models/DocType";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";

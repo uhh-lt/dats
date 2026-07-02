@@ -1,7 +1,7 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { TagRead } from "@api/models/TagRead";
-import { TaskType } from "@api/models/TaskType";
 import { TagTable } from "@core/tag";
+import { TagRead } from "@models/TagRead";
+import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Box, Button, DialogActions, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";

@@ -1,9 +1,9 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { COTARead } from "@api/models/COTARead";
-import { COTATrainingSettings } from "@api/models/COTATrainingSettings";
-import { JobStatus } from "@api/models/JobStatus";
 import { queryClient } from "@api/queryClient";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { COTARead } from "@models/COTARead";
+import { COTATrainingSettings } from "@models/COTATrainingSettings";
+import { JobStatus } from "@models/JobStatus";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";

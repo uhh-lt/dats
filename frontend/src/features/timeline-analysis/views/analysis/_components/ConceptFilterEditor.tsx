@@ -1,4 +1,3 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
 import {
   ColumnInfo,
   FilterOperators,
@@ -13,6 +12,7 @@ import {
   changeFilterValue,
   deleteFilterItem,
 } from "@core/filter";
+import { LogicalOperator } from "@models/LogicalOperator";
 import { Box, Typography } from "@mui/material";
 import { Dispatch, SetStateAction, useCallback } from "react";
 

@@ -1,5 +1,5 @@
-import { TagRead } from "@api/models/TagRead";
 import { EditableTypography } from "@components/EditableTypography";
+import { TagRead } from "@models/TagRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
 import {

@@ -1,8 +1,8 @@
 /* eslint-disable boundaries/element-types */
 // This file needs access to all dialog payload types and the registry, so it's simpler to keep everything in one place rather than splitting into multiple files.
-import { CodeRead } from "@api/models/CodeRead";
-import { FolderRead } from "@api/models/FolderRead";
-import { TagRead } from "@api/models/TagRead";
+import { CodeRead } from "@models/CodeRead";
+import { FolderRead } from "@models/FolderRead";
+import { TagRead } from "@models/TagRead";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { castDraft } from "immer";

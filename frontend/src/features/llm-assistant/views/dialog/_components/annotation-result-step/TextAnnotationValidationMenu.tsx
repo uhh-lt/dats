@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { CodeRead } from "@api/models/CodeRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
+import { CodeRead } from "@models/CodeRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import {

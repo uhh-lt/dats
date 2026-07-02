@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_sentenceAnnotation_count_annotations } from "../models/Body_sentenceAnnotation_count_annotations";
-import type { SentenceAnnotationCreate } from "../models/SentenceAnnotationCreate";
-import type { SentenceAnnotationRead } from "../models/SentenceAnnotationRead";
-import type { SentenceAnnotationUpdate } from "../models/SentenceAnnotationUpdate";
-import type { SentenceAnnotationUpdateBulk } from "../models/SentenceAnnotationUpdateBulk";
-import type { SentenceAnnotatorResult } from "../models/SentenceAnnotatorResult";
+import type { Body_sentenceAnnotation_count_annotations } from "@models/Body_sentenceAnnotation_count_annotations";
+import type { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
+import type { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import type { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
+import type { SentenceAnnotationUpdateBulk } from "@models/SentenceAnnotationUpdateBulk";
+import type { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

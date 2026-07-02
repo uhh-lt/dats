@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { COTAConcept } from "@api/models/COTAConcept";
-import { COTARead } from "@api/models/COTARead";
-import { COTASentence } from "@api/models/COTASentence";
+import { COTAConcept } from "@models/COTAConcept";
+import { COTARead } from "@models/COTARead";
+import { COTASentence } from "@models/COTASentence";
 import CircleIcon from "@mui/icons-material/Circle";
 import {
   Box,

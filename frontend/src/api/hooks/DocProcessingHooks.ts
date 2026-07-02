@@ -1,8 +1,8 @@
-import { Body_docprocessing_recompute_processing_step } from "@api/models/Body_docprocessing_recompute_processing_step";
-import { CrawlerJobRead } from "@api/models/CrawlerJobRead";
-import { JobStatus } from "@api/models/JobStatus";
-import { SDocStatus } from "@api/models/SDocStatus";
-import { SourceDocumentStatusSimple } from "@api/models/SourceDocumentStatusSimple";
+import { Body_docprocessing_recompute_processing_step } from "@models/Body_docprocessing_recompute_processing_step";
+import { CrawlerJobRead } from "@models/CrawlerJobRead";
+import { JobStatus } from "@models/JobStatus";
+import { SDocStatus } from "@models/SDocStatus";
+import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
 import { queryClient } from "@api/queryClient";
 import { DocprocessingService } from "@api/services/DocprocessingService";
 import { JobService } from "@api/services/JobService";

@@ -1,12 +1,12 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import { SentenceAnnotationRow } from "@api/models/SentenceAnnotationRow";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
+import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { memo, useCallback, useState } from "react";

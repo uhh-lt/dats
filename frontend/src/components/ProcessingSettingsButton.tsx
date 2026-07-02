@@ -1,8 +1,8 @@
-import { Language } from "@api/models/Language";
-import type { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { FormMenu, FormNumber, FormSwitch } from "@components/form-inputs";
 import { getIconComponent, Icon } from "@components/icons";
 import { ErrorMessage } from "@hookform/error-message";
+import { Language } from "@models/Language";
+import type { ProcessingSettings } from "@models/ProcessingSettings";
 import {
   Box,
   Button,

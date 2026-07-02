@@ -1,7 +1,3 @@
-import { FolderType } from "@api/models/FolderType";
-import { HierarchicalElasticSearchHit } from "@api/models/HierarchicalElasticSearchHit";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { StringOperator } from "@api/models/StringOperator";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { Draggable } from "@components/drag-and-drop";
@@ -18,6 +14,10 @@ import {
   SdocTagsRenderer,
 } from "@core/source-document";
 import { TagMenuButton } from "@core/tag";
+import { FolderType } from "@models/FolderType";
+import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
+import { SdocColumns } from "@models/SdocColumns";
+import { StringOperator } from "@models/StringOperator";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
 import { ClassifierInferenceButton } from "@features/classifier";

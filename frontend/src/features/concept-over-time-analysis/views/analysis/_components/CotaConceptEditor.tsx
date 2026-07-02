@@ -1,8 +1,8 @@
-import { COTAConcept } from "@api/models/COTAConcept";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormColorPicker, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { COTAConcept } from "@models/COTAConcept";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

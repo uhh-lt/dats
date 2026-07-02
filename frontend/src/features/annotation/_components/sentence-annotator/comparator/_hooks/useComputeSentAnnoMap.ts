@@ -1,5 +1,5 @@
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SentenceAnnotatorResult } from "@api/models/SentenceAnnotatorResult";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { useMemo } from "react";
 
 export type SentAnnoMap = Record<number, SentenceAnnotationRead>;

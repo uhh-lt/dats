@@ -1,6 +1,3 @@
-/* eslint-disable boundaries/element-types */
-// We want to define icons for all kinds of things in one place, so we can easily maintain a consistent iconography across the app and avoid importing MUI icons all over the codebase
-// Hence, allow this utils file to import from all layers, making this not a "pure" utils file
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";

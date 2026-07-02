@@ -1,4 +1,4 @@
-import { UserRead } from "@api/models/UserRead";
+import { UserRead } from "@models/UserRead";
 import { queryClient } from "@api/queryClient";
 import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";

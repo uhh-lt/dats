@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SourceDocumentDataRead } from "../models/SourceDocumentDataRead";
-import type { SourceDocumentRead } from "../models/SourceDocumentRead";
-import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
+import type { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
+import type { SourceDocumentRead } from "@models/SourceDocumentRead";
+import type { SourceDocumentUpdate } from "@models/SourceDocumentUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

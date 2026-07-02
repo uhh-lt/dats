@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { Box, BoxProps } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";

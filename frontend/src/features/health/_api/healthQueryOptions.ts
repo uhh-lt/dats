@@ -1,8 +1,8 @@
 import { QueryKey } from "@api/hooks/QueryKey";
-import { DocType } from "@api/models/DocType";
-import { SdocHealthResult } from "@api/models/SdocHealthResult";
-import { SortDirection } from "@api/models/SortDirection";
 import { DocprocessingService } from "@api/services/DocprocessingService";
+import { DocType } from "@models/DocType";
+import { SdocHealthResult } from "@models/SdocHealthResult";
+import { SortDirection } from "@models/SortDirection";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 interface SdocHealthTableQueryOptionsArgs {

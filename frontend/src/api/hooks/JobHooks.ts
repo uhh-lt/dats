@@ -1,6 +1,6 @@
-import { DuplicateFinderJobRead } from "@api/models/DuplicateFinderJobRead";
-import { ExportJobRead } from "@api/models/ExportJobRead";
-import { JobStatus } from "@api/models/JobStatus";
+import { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
+import { ExportJobRead } from "@models/ExportJobRead";
+import { JobStatus } from "@models/JobStatus";
 import { JobService } from "@api/services/JobService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";

@@ -1,4 +1,4 @@
-import { WhiteboardEdgeType } from "@api/models/WhiteboardEdgeType";
+import { WhiteboardEdgeType } from "@models/WhiteboardEdgeType";
 import MovingIcon from "@mui/icons-material/Moving";
 import StraightIcon from "@mui/icons-material/Straight";
 import TurnRightIcon from "@mui/icons-material/TurnRight";

@@ -1,7 +1,7 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
 import { useTabNavigate } from "@core/navigation";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import SearchIcon from "@mui/icons-material/Search";
 import { Box, Button } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";

@@ -1,7 +1,7 @@
 import { StatisticsHooks } from "@api/hooks/StatisticsHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { TagStat } from "@api/models/TagStat";
 import { StatsDisplayButton, StatsDisplayButtonProps } from "@components/StatsDisplayButton";
+import { TagStat } from "@models/TagStat";
 import { TabPanel } from "@mui/lab";
 import { useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";

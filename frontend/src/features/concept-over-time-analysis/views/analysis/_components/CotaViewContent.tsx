@@ -1,6 +1,6 @@
-import { COTARead } from "@api/models/COTARead";
 import { SidebarContentLayout } from "@components/content-layouts";
 import { PercentageResizablePanel, useLayoutPercentage } from "@components/resizable-panels";
+import { COTARead } from "@models/COTARead";
 import { useAppSelector } from "@store/storeHooks";
 import { CotaConceptList } from "./CotaConceptList";
 import { CotaControl } from "./CotaControl";

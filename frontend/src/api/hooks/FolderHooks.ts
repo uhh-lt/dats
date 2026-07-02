@@ -1,5 +1,5 @@
-import { FolderRead } from "@api/models/FolderRead";
-import { FolderType } from "@api/models/FolderType";
+import { FolderRead } from "@models/FolderRead";
+import { FolderType } from "@models/FolderType";
 import { queryClient } from "@api/queryClient";
 import { FolderService } from "@api/services/FolderService";
 import { useAppSelector } from "@store/storeHooks";

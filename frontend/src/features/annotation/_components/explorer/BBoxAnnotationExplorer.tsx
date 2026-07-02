@@ -1,5 +1,5 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationExplorer } from "./_components/AnnotationExplorer";
 import { BBoxAnnotationCard } from "./_components/BBoxAnnotationCard";

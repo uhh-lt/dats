@@ -1,4 +1,4 @@
-import { TagRead } from "@api/models/TagRead";
+import { TagRead } from "@models/TagRead";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { ChartDataPoint } from "../_types/ChartDataPoint";

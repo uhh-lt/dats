@@ -1,15 +1,15 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { ApproachType } from "@api/models/ApproachType";
-import { DocType } from "@api/models/DocType";
-import { FewShotParams } from "@api/models/FewShotParams";
-import { JobStatus } from "@api/models/JobStatus";
-import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
-import { LLMJobOutput } from "@api/models/LLMJobOutput";
-import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
-import { ZeroShotParams } from "@api/models/ZeroShotParams";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { LinkListItemButton } from "@components/links";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
+import { ApproachType } from "@models/ApproachType";
+import { DocType } from "@models/DocType";
+import { FewShotParams } from "@models/FewShotParams";
+import { JobStatus } from "@models/JobStatus";
+import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import { LLMJobOutput } from "@models/LLMJobOutput";
+import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import { ZeroShotParams } from "@models/ZeroShotParams";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
@@ -188,11 +188,7 @@ function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; 
     <LinkListItemButton to="/project/$projectId/annotation/$sdocId" params={{ projectId, sdocId: result.sdoc_id }}>
       <ListItemIcon
         sx={{
-          color: `${
-            result.status == "finished"
-              ? jobStatusToTypographyColor[JobStatus.FINISHED]
-              : jobStatusToTypographyColor[JobStatus.FAILED]
-          }`,
+          color: `${result.status == "finished" ? jobStatusToTypographyColor[JobStatus.FINISHED] : jobStatusToTypographyColor[JobStatus.FAILED]}`,
         }}
       >
         {getIconComponent(DocTypeIcons[DocType.TEXT])}

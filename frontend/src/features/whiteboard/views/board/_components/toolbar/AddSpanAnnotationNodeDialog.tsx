@@ -1,13 +1,13 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
-import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
-import { SpanColumns } from "@api/models/SpanColumns";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { SpanAnnotationReduxFilterTable } from "@core/span-annotation";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
+import { SpanColumns } from "@models/SpanColumns";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";

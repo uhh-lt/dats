@@ -1,7 +1,7 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { Icon, getIconComponent } from "@components/icons";
 import { MemoDeleteMenuItem } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { BBoxAnnotationDeleteMenuItem } from "./BBoxAnnotationDeleteMenuItem";

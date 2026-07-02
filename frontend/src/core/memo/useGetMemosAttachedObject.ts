@@ -4,8 +4,8 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { CodeRead } from "@api/models/CodeRead";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { CodeRead } from "@models/CodeRead";
 
 /**
  * Hook to fetch the attached object of a memo based on its type.

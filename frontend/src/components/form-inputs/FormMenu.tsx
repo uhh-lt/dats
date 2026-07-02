@@ -7,7 +7,13 @@ interface FormMenu<T extends FieldValues> extends Omit<ControllerProps<T>, "rend
   children: React.ReactNode;
 }
 
-export function FormMenu<T extends FieldValues>({ name, control, textFieldProps, children, ...controllerProps }: FormMenu<T>) {
+export function FormMenu<T extends FieldValues>({
+  name,
+  control,
+  textFieldProps,
+  children,
+  ...controllerProps
+}: FormMenu<T>) {
   return (
     <Controller
       {...controllerProps}

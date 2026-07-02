@@ -1,7 +1,7 @@
-import { DocType } from "@api/models/DocType";
 import { ContentLayout } from "@components/content-layouts";
 import { useResetTableStateOnSearch } from "@hooks/useResetTableStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
+import { DocType } from "@models/DocType";
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";

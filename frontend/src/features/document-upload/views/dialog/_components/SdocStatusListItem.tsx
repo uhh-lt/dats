@@ -1,7 +1,7 @@
-import { SDocStatus } from "@api/models/SDocStatus";
-import { SourceDocumentStatusSimple } from "@api/models/SourceDocumentStatusSimple";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { jobStatusToTypographyColor } from "@core/job";
+import { SDocStatus } from "@models/SDocStatus";
+import { SourceDocumentStatusSimple } from "@models/SourceDocumentStatusSimple";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { Box, CircularProgress, LinearProgress, ListItem, ListItemIcon, ListItemText, Typography } from "@mui/material";

@@ -1,12 +1,12 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
-import { FolderType } from "@api/models/FolderType";
-import { FolderUpdate } from "@api/models/FolderUpdate";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { FormMenu, FormText } from "@components/form-inputs";
 import { useWithLevel } from "@components/tree-explorer";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ErrorMessage } from "@hookform/error-message";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
+import { FolderType } from "@models/FolderType";
+import { FolderUpdate } from "@models/FolderUpdate";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { Button, Dialog, DialogActions, DialogContent, MenuItem, Stack } from "@mui/material";

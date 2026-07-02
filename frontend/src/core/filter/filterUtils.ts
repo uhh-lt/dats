@@ -1,13 +1,13 @@
-import { BooleanOperator } from "@api/models/BooleanOperator";
-import { DateOperator } from "@api/models/DateOperator";
-import { FilterOperator } from "@api/models/FilterOperator";
-import { FilterValueType } from "@api/models/FilterValueType";
-import { IDListOperator } from "@api/models/IDListOperator";
-import { IDOperator } from "@api/models/IDOperator";
-import { ListOperator } from "@api/models/ListOperator";
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { NumberOperator } from "@api/models/NumberOperator";
-import { StringOperator } from "@api/models/StringOperator";
+import { BooleanOperator } from "@models/BooleanOperator";
+import { DateOperator } from "@models/DateOperator";
+import { FilterOperator } from "@models/FilterOperator";
+import { FilterValueType } from "@models/FilterValueType";
+import { IDListOperator } from "@models/IDListOperator";
+import { IDOperator } from "@models/IDOperator";
+import { ListOperator } from "@models/ListOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
+import { NumberOperator } from "@models/NumberOperator";
+import { StringOperator } from "@models/StringOperator";
 import { dateToLocaleYYYYMMDDString } from "@utils/DateUtils";
 
 // TYPES
@@ -51,7 +51,13 @@ export type FilterOperatorType =
   | typeof BooleanOperator;
 
 export type FilterOperators =
-  IDOperator | NumberOperator | StringOperator | IDListOperator | ListOperator | DateOperator | BooleanOperator;
+  | IDOperator
+  | NumberOperator
+  | StringOperator
+  | IDListOperator
+  | ListOperator
+  | DateOperator
+  | BooleanOperator;
 
 // TYPE GUARDS
 

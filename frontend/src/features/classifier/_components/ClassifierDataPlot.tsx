@@ -1,8 +1,8 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
-import { ClassifierData } from "@api/models/ClassifierData";
-import { ClassifierModel } from "@api/models/ClassifierModel";
-import { TagRead } from "@api/models/TagRead";
+import { ClassifierData } from "@models/ClassifierData";
+import { ClassifierModel } from "@models/ClassifierModel";
+import { TagRead } from "@models/TagRead";
 import { Typography } from "@mui/material";
 import { useMemo } from "react";
 import type { BarShapeProps } from "recharts";

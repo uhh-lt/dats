@@ -1,4 +1,4 @@
-import { TaskType } from "@api/models/TaskType";
+import { TaskType } from "@models/TaskType";
 import { Box, Card, CardActionArea, CardContent, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";

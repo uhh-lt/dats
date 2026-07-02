@@ -1,6 +1,6 @@
-import { MemoColumns } from "@api/models/MemoColumns";
-import { StringOperator } from "@api/models/StringOperator";
 import { createInitialFilterState, filterReducer, MyFilterExpression, resetProjectFilterState } from "@core/filter";
+import { MemoColumns } from "@models/MemoColumns";
+import { StringOperator } from "@models/StringOperator";
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 

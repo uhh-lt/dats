@@ -1,6 +1,6 @@
-import { WordFrequencyColumns } from "@api/models/WordFrequencyColumns";
-import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { MyFilter, URLFilterTableToolbarProps } from "@core/filter";
+import { WordFrequencyColumns } from "@models/WordFrequencyColumns";
+import { WordFrequencyStat } from "@models/WordFrequencyStat";
 
 export interface WordFrequencyTableToolbarProps extends URLFilterTableToolbarProps<WordFrequencyStat> {
   filter: MyFilter<WordFrequencyColumns>;

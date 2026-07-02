@@ -1,7 +1,7 @@
-import { ClusterRead } from "@api/models/ClusterRead";
-import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { getIconComponent, Icon } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
+import { ClusterRead } from "@models/ClusterRead";
+import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";

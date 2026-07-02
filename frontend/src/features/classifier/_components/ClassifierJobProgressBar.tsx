@@ -1,5 +1,5 @@
-import { ClassifierJobRead } from "@api/models/ClassifierJobRead";
 import { LinearProgressWithLabel } from "@components/progress-bars";
+import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
 

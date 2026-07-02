@@ -1,4 +1,4 @@
-import { JobStatus } from "@api/models/JobStatus";
+import { JobStatus } from "@models/JobStatus";
 
 export const jobStatusToColor: Record<JobStatus, "default" | "primary" | "success" | "error" | "warning"> = {
   // waiting

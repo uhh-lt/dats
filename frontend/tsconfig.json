@@ -23,13 +23,13 @@
     "noUncheckedSideEffectImports": true,
 
     /* Path aliases */
-    "baseUrl": ".",
     "paths": {
       "@api/*": ["./src/api/*"],
       "@components/*": ["./src/components/*"],
       "@core/*": ["./src/core/*"],
       "@features/*": ["./src/features/*"],
       "@hooks/*": ["./src/hooks/*"],
+      "@models/*": ["./src/models/*"],
       "@plugins/*": ["./src/plugins/*"],
       "@routes/*": ["./src/routes/*"],
       "@store/*": ["./src/store/*"],

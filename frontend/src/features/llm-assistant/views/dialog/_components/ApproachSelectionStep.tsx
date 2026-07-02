@@ -1,7 +1,7 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { ApproachType } from "@api/models/ApproachType";
-import { TaskType } from "@api/models/TaskType";
 import { CodeRenderer } from "@core/code";
+import { ApproachType } from "@models/ApproachType";
+import { TaskType } from "@models/TaskType";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import {
   Box,

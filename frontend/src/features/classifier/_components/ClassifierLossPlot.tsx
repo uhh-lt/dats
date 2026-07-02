@@ -1,4 +1,4 @@
-import { ClassifierLoss } from "@api/models/ClassifierLoss";
+import { ClassifierLoss } from "@models/ClassifierLoss";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface ClassifierLossPlotProps {

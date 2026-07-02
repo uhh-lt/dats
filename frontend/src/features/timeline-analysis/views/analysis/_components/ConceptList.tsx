@@ -1,8 +1,8 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
 import { MyFilter } from "@core/filter";
+import { LogicalOperator } from "@models/LogicalOperator";
+import { TimelineAnalysisConcept } from "@models/TimelineAnalysisConcept";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import { ListItem, ListItemButton, ListItemIcon } from "@mui/material";

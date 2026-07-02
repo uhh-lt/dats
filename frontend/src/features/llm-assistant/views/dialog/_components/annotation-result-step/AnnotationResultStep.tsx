@@ -1,9 +1,9 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { AnnotationLLMJobResult } from "@api/models/AnnotationLLMJobResult";
-import { SpanAnnotationCreate } from "@api/models/SpanAnnotationCreate";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
 import { SdocRenderer } from "@core/source-document";
+import { AnnotationLLMJobResult } from "@models/AnnotationLLMJobResult";
+import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";

@@ -1,5 +1,5 @@
-import { ElasticSearchHit } from "@api/models/ElasticSearchHit";
 import { FilterTableToolbarProps } from "@core/filter";
+import { ElasticSearchHit } from "@models/ElasticSearchHit";
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_ToggleDensePaddingButton } from "material-react-table";
 import { useMemo } from "react";

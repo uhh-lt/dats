@@ -1,5 +1,5 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { SourceDocumentDataRead } from "@api/models/SourceDocumentDataRead";
+import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 
 interface SdocSentenceRendererProps {
   sdoc: number | SourceDocumentDataRead;

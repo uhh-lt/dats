@@ -1,4 +1,4 @@
-import { MetaType } from "@api/models/MetaType";
+import { MetaType } from "@models/MetaType";
 import { Icon } from "./DATSIcons";
 
 export const MetaTypeIcons: Record<MetaType, Icon> = {

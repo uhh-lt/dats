@@ -1,12 +1,12 @@
 import { CodeMap } from "@api/hooks/CodeHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
-import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
-import { MemoRead } from "@api/models/MemoRead";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
-import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
-import { SpanAnnotationRead } from "@api/models/SpanAnnotationRead";
-import { TagRead } from "@api/models/TagRead";
 import { WhiteboardService } from "@api/services/WhiteboardService";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
+import { MemoRead } from "@models/MemoRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { TagRead } from "@models/TagRead";
 import { QueryClient } from "@tanstack/react-query";
 import { projectWhiteboardsQueryOptions } from "../../_api/whiteboardQueryOptions";
 

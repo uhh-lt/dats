@@ -1,6 +1,6 @@
-import { WordFrequencyStat } from "@api/models/WordFrequencyStat";
 import { DATSToolbar } from "@components/DATSToolbar";
 import { ReactWordcloud } from "@cp949/react-wordcloud";
+import { WordFrequencyStat } from "@models/WordFrequencyStat";
 import CloudIcon from "@mui/icons-material/Cloud";
 import PaletteIcon from "@mui/icons-material/Palette";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";

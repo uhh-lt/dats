@@ -1,4 +1,4 @@
-import { CodeRead } from "@api/models/CodeRead";
+import { CodeRead } from "@models/CodeRead";
 import { queryClient } from "@api/queryClient";
 import { CodeService } from "@api/services/CodeService";
 import { useAppSelector } from "@store/storeHooks";

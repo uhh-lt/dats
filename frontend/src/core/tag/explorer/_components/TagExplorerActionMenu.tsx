@@ -1,8 +1,8 @@
-import { AttachedObjectType } from "@api/models/AttachedObjectType";
-import { TagRead } from "@api/models/TagRead";
 import { Icon, getIconComponent } from "@components/icons";
 import { ITree } from "@components/tree-explorer";
 import { MemoMenuItem } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { TagRead } from "@models/TagRead";
 import { IconButton, Menu } from "@mui/material";
 import { useCallback, useState } from "react";
 import { TagEditMenuItem } from "./TagEditMenuItem";

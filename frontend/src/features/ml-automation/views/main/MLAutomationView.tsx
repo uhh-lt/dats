@@ -1,7 +1,7 @@
-import { MLJobType } from "@api/models/MLJobType";
 import { ContentContainerLayout } from "@components/content-layouts";
 import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { MLJobType } from "@models/MLJobType";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";

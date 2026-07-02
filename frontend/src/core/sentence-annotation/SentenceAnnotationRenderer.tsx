@@ -1,9 +1,9 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
 import { LinkWrapper } from "@components/links";
 import { CodeRenderer } from "@core/code";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 
@@ -81,9 +81,7 @@ function SentenceAnnotationRendererWithData({
         {showCode && <CodeRenderer code={sentenceAnnotation.code_id} />}
         {showCode && showSpanText && ": "}
         {showSpanText &&
-          `This annotation spans sentences ${sentenceAnnotation.sentence_id_start + 1} to ${
-            sentenceAnnotation.sentence_id_end + 1
-          }.`}
+          `This annotation spans sentences ${sentenceAnnotation.sentence_id_start + 1} to ${sentenceAnnotation.sentence_id_end + 1}.`}
       </Stack>
     </LinkWrapper>
   );

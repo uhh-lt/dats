@@ -2,14 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_classifier_compute_dataset_statistics } from "../models/Body_classifier_compute_dataset_statistics";
-import type { Body_classifier_compute_dataset_statistics2 } from "../models/Body_classifier_compute_dataset_statistics2";
-import type { ClassifierData } from "../models/ClassifierData";
-import type { ClassifierJobInput } from "../models/ClassifierJobInput";
-import type { ClassifierJobRead } from "../models/ClassifierJobRead";
-import type { ClassifierModel } from "../models/ClassifierModel";
-import type { ClassifierRead } from "../models/ClassifierRead";
-import type { ClassifierUpdate } from "../models/ClassifierUpdate";
+import type { Body_classifier_compute_dataset_statistics } from "@models/Body_classifier_compute_dataset_statistics";
+import type { Body_classifier_compute_dataset_statistics2 } from "@models/Body_classifier_compute_dataset_statistics2";
+import type { ClassifierData } from "@models/ClassifierData";
+import type { ClassifierJobInput } from "@models/ClassifierJobInput";
+import type { ClassifierJobRead } from "@models/ClassifierJobRead";
+import type { ClassifierModel } from "@models/ClassifierModel";
+import type { ClassifierRead } from "@models/ClassifierRead";
+import type { ClassifierUpdate } from "@models/ClassifierUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";

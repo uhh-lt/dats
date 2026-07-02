@@ -1,4 +1,4 @@
-import { LogicalOperator } from "@api/models/LogicalOperator";
+import { LogicalOperator } from "@models/LogicalOperator";
 import { ColumnInfo, FilterOperators, MyFilter } from "../filterUtils";
 
 export interface FilterRendererHandlers {

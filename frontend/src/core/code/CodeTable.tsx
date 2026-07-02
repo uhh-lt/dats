@@ -1,4 +1,4 @@
-import { CodeRead } from "@api/models/CodeRead";
+import { CodeRead } from "@models/CodeRead";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,

@@ -1,5 +1,5 @@
-import { TimelineAnalysisRead } from "@api/models/TimelineAnalysisRead";
 import { CardContainer } from "@components/CardContainer";
+import { TimelineAnalysisRead } from "@models/TimelineAnalysisRead";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import ReplayIcon from "@mui/icons-material/Replay";
 import TimelineIcon from "@mui/icons-material/Timeline";

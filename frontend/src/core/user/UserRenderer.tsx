@@ -1,6 +1,6 @@
 import { UserHooks } from "@api/hooks/UserHooks";
-import { PublicUserRead } from "@api/models/PublicUserRead";
-import { UserRead } from "@api/models/UserRead";
+import { PublicUserRead } from "@models/PublicUserRead";
+import { UserRead } from "@models/UserRead";
 
 interface UserRendererProps {
   user: number | UserRead | PublicUserRead;

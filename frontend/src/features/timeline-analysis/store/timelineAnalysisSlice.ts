@@ -1,11 +1,3 @@
-import { BBoxColumns } from "@api/models/BBoxColumns";
-import { LogicalOperator } from "@api/models/LogicalOperator";
-import { SdocColumns } from "@api/models/SdocColumns";
-import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
-import { SpanColumns } from "@api/models/SpanColumns";
-import { StringOperator } from "@api/models/StringOperator";
-import { TimelineAnalysisConcept } from "@api/models/TimelineAnalysisConcept";
-import { TimelineAnalysisType } from "@api/models/TimelineAnalysisType";
 import {
   createInitialFilterState,
   filterReducer,
@@ -13,6 +5,14 @@ import {
   MyFilterExpression,
   resetProjectFilterState,
 } from "@core/filter";
+import { BBoxColumns } from "@models/BBoxColumns";
+import { LogicalOperator } from "@models/LogicalOperator";
+import { SdocColumns } from "@models/SdocColumns";
+import { SentAnnoColumns } from "@models/SentAnnoColumns";
+import { SpanColumns } from "@models/SpanColumns";
+import { StringOperator } from "@models/StringOperator";
+import { TimelineAnalysisConcept } from "@models/TimelineAnalysisConcept";
+import { TimelineAnalysisType } from "@models/TimelineAnalysisType";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
 import { ColorUtils } from "@utils/colors/ColorUtils";

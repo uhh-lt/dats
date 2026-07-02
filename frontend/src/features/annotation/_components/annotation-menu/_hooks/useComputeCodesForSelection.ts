@@ -1,6 +1,6 @@
-import { CodeRead } from "@api/models/CodeRead";
 import { flatTreeWithRoot } from "@components/tree-explorer";
 import { useComputeCodeTree } from "@core/code";
+import { CodeRead } from "@models/CodeRead";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 

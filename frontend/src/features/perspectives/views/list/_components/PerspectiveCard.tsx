@@ -1,8 +1,8 @@
-import { AspectRead } from "@api/models/AspectRead";
-import { JobStatus } from "@api/models/JobStatus";
 import { getIconComponent, Icon } from "@components/icons";
 import { JobStatusBadge } from "@core/job";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { AspectRead } from "@models/AspectRead";
+import { JobStatus } from "@models/JobStatus";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
