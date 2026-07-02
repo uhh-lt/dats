@@ -76,6 +76,27 @@ export default defineConfig(
   tanstackQuery.configs["flat/recommended"],
   importPlugin.recommended,
   importPlugin.typescript,
+  // TEMPORARILY DISABLE REACT COMPILER WARNINGS
+  {
+    files: [
+      "src/core/source-document/info-panel/_components/related-panel/RelatedPanel.tsx",
+      "src/features/annotation/_components/explorer/_components/AnnotationExplorer.tsx",
+      "src/features/annotation/_components/sentence-annotator/annotator/SentenceAnnotator.tsx",
+      "src/features/annotation/_components/sentence-annotator/comparator/SentenceAnnotationComparison.tsx",
+      "src/features/llm-assistant/views/dialog/_components/LLMJobListItem.tsx",
+      "src/features/perspectives/views/map/_components/panel-info/statistics/MapCodeStats.tsx",
+      "src/features/perspectives/views/map/_components/panel-info/statistics/MapKeywordStats.tsx",
+      "src/features/perspectives/views/map/_components/panel-info/statistics/MapTagStats.tsx",
+      "src/features/search/_components/statistics/_components/CodeStats.tsx",
+      "src/features/search/_components/statistics/_components/DocumentTagStats.tsx",
+      "src/features/search/_components/statistics/_components/KeywordStats.tsx",
+      "src/features/search/views/image-search/_components/ImageSimilarityView.tsx",
+    ],
+    rules: {
+      // Note: Waiting for TanStack Virtual to resolve React Compiler compatibility
+      "react-hooks/incompatible-library": "off",
+    },
+  },
   // FILE NAMING RULES (excluding routes folder due to Tanstack Router's special naming conventions)
   {
     files: ["src/**/*.*"],
