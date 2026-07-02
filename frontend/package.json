@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --max-warnings 0",
     "lint-fix": "eslint . --ext js,jsx,ts,tsx --max-warnings 0 --fix",
-    "format": "prettier --write --ignore-unknown --config ../.prettierrc.yaml .",
+    "format": "prettier --write --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore .",
     "tsc-watch": "tsc --noEmit --watch",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",

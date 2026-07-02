@@ -59,6 +59,8 @@ repos:
             "--ignore-unknown",
             "--config",
             ".prettierrc.yaml",
+            "--ignore-path",
+            ".prettierignore",
             "--cache-location",
             "frontend/node_modules/.cache/prettier",
             "--list-different",
