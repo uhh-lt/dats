@@ -14,6 +14,7 @@ export function DataSelection() {
   const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
   const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
 
   // global server state
   const datasetStats = ClassifierHooks.useComputeDatasetStatistics2();
@@ -25,6 +26,7 @@ export function DataSelection() {
     datasetStats.mutate({
       projId: projectId,
       model: model!,
+      mergeChildrenIntoParent: mergeChildren,
       requestBody: {
         tag_ids: tagIds,
         user_ids: userIds,

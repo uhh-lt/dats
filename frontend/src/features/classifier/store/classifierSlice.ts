@@ -13,6 +13,7 @@ interface ClassifierState {
   classifierSdocIds: number[];
   classifierUserIds: number[];
   classifierTagIds: number[];
+  classifierMergeChildren: boolean;
   classifierJobId?: string;
 }
 
@@ -27,6 +28,7 @@ const initialState: ClassifierState = {
   classifierSdocIds: [],
   classifierUserIds: [],
   classifierTagIds: [],
+  classifierMergeChildren: false,
   classifierJobId: undefined,
 };
 
@@ -55,8 +57,15 @@ const classifierSlice = createSlice({
       state.classifierClassIds = action.payload.classifierClassIds || [];
       state.classifierSdocIds = action.payload.classifierSdocIds || [];
     },
-    onClassifierDialogSelectClasses: (state, action: PayloadAction<number[]>) => {
-      state.classifierClassIds = action.payload;
+    onClassifierDialogSelectClasses: (
+      state,
+      action: PayloadAction<{
+        classIds: number[];
+        mergeChildren: boolean;
+      }>,
+    ) => {
+      state.classifierClassIds = action.payload.classIds;
+      state.classifierMergeChildren = action.payload.mergeChildren;
       state.classifierStep += 1;
     },
     onClassifierDialogSelectSdocs: (state, action: PayloadAction<number[]>) => {

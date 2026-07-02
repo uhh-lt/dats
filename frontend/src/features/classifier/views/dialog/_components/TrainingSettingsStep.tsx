@@ -71,6 +71,7 @@ export function TrainingSettingsStep() {
   const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
   const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
   const dispatch = useAppDispatch();
 
   // form state
@@ -113,6 +114,7 @@ export function TrainingSettingsStep() {
       // training data
       tag_ids: tagIds,
       user_ids: userIds,
+      merge_children_into_parent: mergeChildren,
       // training settings
       batch_size: data.batchSize,
       epochs: data.epochs,
