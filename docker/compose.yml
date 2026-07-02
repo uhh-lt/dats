@@ -162,11 +162,11 @@ services:
   rq-cpu-worker:
     <<: *dats-common
     healthcheck:
-      test: "/dats/backend/.venv/bin/python /dats/backend/src/worker.py healthcheck"
+      test: ["CMD-SHELL", "python src/worker.py healthcheck || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-    command: /dats/backend/src/rq_worker_entrypoint.sh cpu
+    command: python src/worker.py work cpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
@@ -183,11 +183,11 @@ services:
   rq-gpu-worker:
     <<: *dats-common
     healthcheck:
-      test: "/dats/backend/.venv/bin/python /dats/backend/src/worker.py healthcheck"
+      test: ["CMD-SHELL", "python src/worker.py healthcheck || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-    command: /dats/backend/src/rq_worker_entrypoint.sh gpu
+    command: python src/worker.py work gpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
@@ -235,7 +235,13 @@ services:
       interval: 60s
       timeout: 10s
       retries: 5
-    command: /dats/backend/src/backend_api_entrypoint.sh
+    command: >
+      uvicorn
+      --log-level "${LOG_LEVEL:?log-level-required!}"
+      --port 5500"
+      --host 0.0.0.0
+      --workers "${API_WORKERS:?api-workers-required!}"
+      main:app
     environment:
       <<: *dats-common-env
       API_WORKERS: ${API_WORKERS?api-workers-required!}
