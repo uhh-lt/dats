@@ -3,6 +3,7 @@ import string
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import Request
+from fastapi.concurrency import run_in_threadpool
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -18,7 +19,7 @@ class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.mail_repo = MailRepo()
 
-        cls.is_enabled = conf.auth.oidc.enabled == "True"
+        cls.is_enabled = conf.auth.oidc.enabled
         cls.oauth = OAuth()
 
         # Create Authentik OAuth client
@@ -53,33 +54,35 @@ class OAuthService(metaclass=SingletonMeta):
             print(f"Userinfo: {userinfo}")
 
             try:
-                # Warning: Security concern
-                user = crud_user.read_by_email(db=db, email=userinfo["email"])
+                user = await run_in_threadpool(
+                    crud_user.read_by_email, db=db, email=userinfo["email"]
+                )
                 return user
             except Exception as e:
                 logger.info(f"User not found, creating new user: {e}")
-                # Create user if not exists
-                user = crud_user.create(
-                    db=db,
-                    create_dto=UserCreate(
-                        email=userinfo["email"],
-                        first_name=userinfo.get("given_name", "Unknown"),
-                        last_name=userinfo.get("family_name", "Unknown"),
-                        # Set a random password since we'll only use OIDC
-                        password="".join(
-                            random.choices(
-                                string.ascii_letters + string.digits,
-                                k=32,
-                            )
-                        ),
+
+                create_dto = UserCreate(
+                    email=userinfo["email"],
+                    first_name=userinfo.get("given_name", "Unknown"),
+                    last_name=userinfo.get("family_name", "Unknown"),
+                    password="".join(
+                        random.choices(
+                            string.ascii_letters + string.digits,
+                            k=32,
+                        )
                     ),
                 )
+                user = await run_in_threadpool(
+                    crud_user.create, db=db, create_dto=create_dto
+                )
+
                 await MailRepo().send_welcome_mail(
                     email=user.email,
                     first_name=user.first_name,
                     last_name=user.last_name,
                 )
                 return user
+
         except Exception as e:
             logger.error(f"Error processing OIDC authentication: {e}")
             raise Exception("Authentication failed")
