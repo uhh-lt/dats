@@ -7,20 +7,21 @@ import checkFile from "eslint-plugin-check-file";
 import { flatConfigs as importPlugin } from "eslint-plugin-import-x";
 import { configs as reactHooks } from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
-import tseslint, { configs as tseslintConfigs } from "typescript-eslint";
+import { configs as tseslintConfigs } from "typescript-eslint";
 // eslint-disable-next-line import-x/extensions
-import localRules from "./eslint-dats-rules.js";
+import { datsRulesPlugin } from "./eslint-dats-rules.js";
 
 const GLOBAL_DOMAINS = ["api", "components", "core", "features", "hooks", "routes", "store", "styles", "utils"];
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
-      "*/dist/**",
-      "*/src/api/core/**",
-      "*/src/api/models/**",
-      "*/src/api/services/**",
+      "dist/**",
+      "src/api/core/**",
+      "src/api/models/**",
+      "src/api/services/**",
       "**/routeTree.gen.ts",
       "**/*.css",
       "**/*.md",
@@ -160,7 +161,7 @@ export default tseslint.config(
   // IMPORT NAMING RULES
   {
     plugins: {
-      local: localRules,
+      local: datsRulesPlugin,
     },
     rules: {
       // Rule: Enforce path aliases for global folders based on resolved paths
@@ -220,7 +221,7 @@ export default tseslint.config(
   // PUBLIC VS PRIVATE SCOPE RULES
   {
     plugins: {
-      local: localRules,
+      local: datsRulesPlugin,
     },
     rules: {
       // Rule: Custom rule to enforce that private folders (prefixed with _) can only be accessed from within their own scope

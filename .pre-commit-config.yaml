@@ -42,7 +42,7 @@ repos:
     hooks:
       - id: eslint
         name: "ESLint (frontend)"
-        entry: bash -c 'cd frontend && npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${@#frontend/}" --'
+        entry: bash -c 'cd frontend && npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${@#frontend/}"' --
         language: system
         files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
   # Prettier
