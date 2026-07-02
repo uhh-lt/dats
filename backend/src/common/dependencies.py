@@ -2,7 +2,7 @@ from typing import AsyncGenerator
 
 from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
+from jwt import InvalidTokenError
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
@@ -74,7 +74,10 @@ def get_current_user(
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except (JWTError, ValidationError):
+    except (
+        InvalidTokenError,
+        ValidationError,
+    ):
         raise credentials_exception
 
     user = crud_user.read_by_email(db=db, email=email)
