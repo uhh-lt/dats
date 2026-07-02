@@ -100,6 +100,14 @@ parser.add_argument(
     dest="no_extract_images",
 )
 parser.add_argument(
+    "--llm_id",
+    help="ID of the LLM to use for processing (default: 'default')",
+    type=str,
+    default="default",
+    required=False,
+    dest="llm_id",
+)
+parser.add_argument(
     "--pages_per_chunk",
     help="Number of pages per chunk during preprocessing (default: 10)",
     type=int,
@@ -296,6 +304,7 @@ if (args.max_num_docs != -1) and (len(files) > args.max_num_docs):
 # upload files
 uploading_files = files[: args.max_num_docs] if args.max_num_docs != -1 else files
 settings = {
+    "model": args.llm_id,
     "extract_images": not args.no_extract_images,
     "pages_per_chunk": args.pages_per_chunk,
     "keyword_number": args.keyword_number,

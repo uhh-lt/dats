@@ -252,6 +252,7 @@ class DATSAPI:
         # Default settings if not provided
         if settings is None:
             settings = {
+                "model": "default",
                 "extract_images": True,
                 "pages_per_chunk": 10,
                 "keyword_number": 5,
