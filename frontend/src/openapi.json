@@ -704,6 +704,12 @@
             "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/ClassifierModel" }
+          },
+          {
+            "name": "merge_children_into_parent",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Merge Children Into Parent" }
           }
         ],
         "requestBody": {
@@ -747,6 +753,12 @@
             "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/ClassifierModel" }
+          },
+          {
+            "name": "merge_children_into_parent",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Merge Children Into Parent" }
           }
         ],
         "requestBody": {
@@ -8052,6 +8064,11 @@
             "title": "Tag Ids",
             "description": "List of Tag IDs to train on"
           },
+          "merge_children_into_parent": {
+            "type": "boolean",
+            "title": "Merge Children Into Parent",
+            "description": "Merge child codes in parent code?"
+          },
           "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs to train for" },
           "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size to use for training" },
           "early_stopping": {
@@ -8108,6 +8125,7 @@
           "class_ids",
           "user_ids",
           "tag_ids",
+          "merge_children_into_parent",
           "epochs",
           "batch_size",
           "early_stopping",

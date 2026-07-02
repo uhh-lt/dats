@@ -29,6 +29,10 @@ export type ClassifierTrainingParams = {
    */
   tag_ids: Array<number>;
   /**
+   * Merge child codes in parent code?
+   */
+  merge_children_into_parent: boolean;
+  /**
    * Number of epochs to train for
    */
   epochs: number;

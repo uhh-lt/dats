@@ -82,10 +82,12 @@ export class ClassifierService {
     projId,
     model,
     requestBody,
+    mergeChildrenIntoParent = false,
   }: {
     projId: number;
     model: ClassifierModel;
     requestBody: Body_classifier_compute_dataset_statistics;
+    mergeChildrenIntoParent?: boolean;
   }): CancelablePromise<Array<ClassifierData>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -95,6 +97,7 @@ export class ClassifierService {
       },
       query: {
         model: model,
+        merge_children_into_parent: mergeChildrenIntoParent,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -112,10 +115,12 @@ export class ClassifierService {
     projId,
     model,
     requestBody,
+    mergeChildrenIntoParent = false,
   }: {
     projId: number;
     model: ClassifierModel;
     requestBody: Body_classifier_compute_dataset_statistics2;
+    mergeChildrenIntoParent?: boolean;
   }): CancelablePromise<Array<ClassifierData>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -125,6 +130,7 @@ export class ClassifierService {
       },
       query: {
         model: model,
+        merge_children_into_parent: mergeChildrenIntoParent,
       },
       body: requestBody,
       mediaType: "application/json",
