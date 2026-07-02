@@ -3,6 +3,7 @@ import { SourceDocumentRead } from "@api/models/SourceDocumentRead";
 import { DATSToolbar } from "@components/DATSToolbar";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
+import { DocTypeIcons, getIconComponent, Icon } from "@components/icons";
 import { LLMAssistanceButton } from "@features/llm-assistant";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
@@ -10,7 +11,6 @@ import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import { ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { DocTypeIcons, getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { TagStyle } from "../../_types/TagStyle";

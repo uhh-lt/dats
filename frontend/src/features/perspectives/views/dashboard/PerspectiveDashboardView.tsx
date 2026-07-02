@@ -1,5 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
+import { getIconComponent, Icon } from "@components/icons";
 import { LinkButton } from "@components/links";
 import { JobStatusBadge } from "@core/job";
 import { TagRenderer } from "@core/tag";
@@ -11,7 +12,6 @@ import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { D3ColorScale } from "@utils/colors/D3ColorScale";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo, useState } from "react";
 import { PerspectivesQueryOptions, projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../_api/useGetDocVisualization";

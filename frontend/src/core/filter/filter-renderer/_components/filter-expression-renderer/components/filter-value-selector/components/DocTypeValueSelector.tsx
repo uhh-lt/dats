@@ -1,6 +1,6 @@
 import { DocType } from "@api/models/DocType";
+import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { MenuItem, Stack, TextField } from "@mui/material";
-import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { ChangeEvent, memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 

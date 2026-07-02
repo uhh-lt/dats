@@ -1,6 +1,6 @@
+import { getIconComponent, Icon } from "@components/icons";
 import { Box, Button, CircularProgress, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import {
   createRow,
   MRT_ColumnDef,

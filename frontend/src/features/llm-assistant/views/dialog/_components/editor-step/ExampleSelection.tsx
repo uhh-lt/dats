@@ -9,6 +9,7 @@ import { SpanAnnotationRow } from "@api/models/SpanAnnotationRow";
 import { SpanColumns } from "@api/models/SpanColumns";
 import { TaskType } from "@api/models/TaskType";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { getIconComponent, Icon } from "@components/icons";
 import { FilterTableToolbarProps } from "@core/filter";
 import { SEATFilterActions, SentenceAnnotationReduxFilterTable } from "@core/sentence-annotation";
 import { SATFilterActions, SpanAnnotationReduxFilterTable } from "@core/span-annotation";
@@ -17,7 +18,6 @@ import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Button, CircularProgress, Dialog, ListItemIcon, Menu, MenuItem } from "@mui/material";
 import ListItemText from "@mui/material/ListItemText";
 import { useAppDispatch } from "@store/storeHooks";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
 import { useCallback, useState } from "react";
 

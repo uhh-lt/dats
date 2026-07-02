@@ -1,6 +1,6 @@
+import { Icon } from "@components/icons";
 import { useAppDispatch } from "@store/storeHooks";
 import { useParams, useRouterState } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 import { useEffect } from "react";
 import { TabRouteSearch, TabRouteState } from "../_types/TabData";
 import { TabActions } from "../tabSlice";

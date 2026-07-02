@@ -1,9 +1,9 @@
 import { SentAnnoColumns } from "@api/models/SentAnnoColumns";
+import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { SentAnnotationAnalysisView } from "@features/sent-annotation-analysis";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const sentenceAnnotationAnalysisSearchSchema = z.object({

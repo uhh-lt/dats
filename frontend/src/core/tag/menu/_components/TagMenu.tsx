@@ -1,5 +1,6 @@
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagRead } from "@api/models/TagRead";
+import { Icon, getIconComponent } from "@components/icons";
 import {
   Box,
   Checkbox,
@@ -16,7 +17,6 @@ import {
   Typography,
 } from "@mui/material";
 import { CheckboxState } from "@utils/CheckboxState";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { TagCreateListItemButton } from "../../dialog";

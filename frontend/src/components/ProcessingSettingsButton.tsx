@@ -1,6 +1,7 @@
 import { Language } from "@api/models/Language";
 import type { ProcessingSettings } from "@api/models/ProcessingSettings";
 import { FormMenu, FormNumber, FormSwitch } from "@components/form-inputs";
+import { getIconComponent, Icon } from "@components/icons";
 import { ErrorMessage } from "@hookform/error-message";
 import {
   Box,
@@ -16,7 +17,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 

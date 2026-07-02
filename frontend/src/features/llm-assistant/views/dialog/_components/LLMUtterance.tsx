@@ -1,5 +1,5 @@
+import { Icon, getIconComponent } from "@components/icons";
 import { Box, Stack, StackProps } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 
 export const LLMUtterance = memo(

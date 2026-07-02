@@ -1,9 +1,9 @@
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
+import { getIconComponent, Icon } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
 import { Box } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MaterialReactTable, MRT_ColumnDef, useMaterialReactTable } from "material-react-table";
 import { memo, useMemo } from "react";
 import { PerspectivesQueryOptions } from "../_api/perspectivesQueryOptions";

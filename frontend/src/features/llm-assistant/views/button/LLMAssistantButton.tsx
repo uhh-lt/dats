@@ -1,6 +1,6 @@
+import { Icon, getIconComponent } from "@components/icons";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 import { LLMAssistantEvent } from "../../_types/LLMAssistantEvent";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";

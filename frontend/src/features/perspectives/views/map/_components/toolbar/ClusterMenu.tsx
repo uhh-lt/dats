@@ -1,6 +1,7 @@
 import { ClusterRead } from "@api/models/ClusterRead";
 import { PerspectivesDoc } from "@api/models/PerspectivesDoc";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
+import { getIconComponent, Icon } from "@components/icons";
 import {
   Box,
   Checkbox,
@@ -17,7 +18,6 @@ import {
   Typography,
 } from "@mui/material";
 import { CheckboxState } from "@utils/CheckboxState";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";

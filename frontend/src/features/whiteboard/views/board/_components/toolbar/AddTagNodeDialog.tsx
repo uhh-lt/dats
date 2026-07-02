@@ -1,10 +1,10 @@
 import { TagRead } from "@api/models/TagRead";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
+import { getIconComponent, Icon } from "@components/icons";
 import { TagTable } from "@core/tag";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { Box, Button, ButtonProps, Dialog, Stack, Tooltip } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { XYPosition } from "@xyflow/react";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useCallback, useState } from "react";

@@ -1,9 +1,6 @@
 /* eslint-disable boundaries/element-types */
 // We want to define icons for all kinds of things in one place, so we can easily maintain a consistent iconography across the app and avoid importing MUI icons all over the codebase
 // Hence, allow this utils file to import from all layers, making this not a "pure" utils file
-import { DocType } from "@api/models/DocType";
-import { JobStatus } from "@api/models/JobStatus";
-import { MetaType } from "@api/models/MetaType";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
@@ -320,35 +317,4 @@ const iconMap: Record<Icon, IconFactory> = {
  */
 export const getIconComponent = (icon: Icon, props?: SvgIconProps): React.ReactElement => {
   return iconMap[icon](props || {});
-};
-
-export const DocTypeIcons: Record<DocType, Icon> = {
-  [DocType.TEXT]: Icon.TEXT_DOCUMENT,
-  [DocType.IMAGE]: Icon.IMAGE_DOCUMENT,
-  [DocType.VIDEO]: Icon.VIDEO_DOCUMENT,
-  [DocType.AUDIO]: Icon.AUDIO_DOCUMENT,
-};
-
-export const MetaTypeIcons: Record<MetaType, Icon> = {
-  [MetaType.STRING]: Icon.META_STRING,
-  [MetaType.NUMBER]: Icon.META_NUMBER,
-  [MetaType.DATE]: Icon.META_DATE,
-  [MetaType.BOOLEAN]: Icon.META_BOOLEAN,
-  [MetaType.LIST]: Icon.META_LIST,
-};
-
-export const JobStatusIcons: Record<JobStatus, Icon> = {
-  // waiting
-  [JobStatus.QUEUED]: Icon.JOB_WAITING,
-  [JobStatus.DEFERRED]: Icon.JOB_WAITING,
-  [JobStatus.SCHEDULED]: Icon.JOB_WAITING,
-  // running
-  [JobStatus.STARTED]: Icon.JOB_RUNNING,
-  // done
-  [JobStatus.FINISHED]: Icon.JOB_DONE,
-  // errors
-  [JobStatus.FAILED]: Icon.JOB_ERROR,
-  // aborted
-  [JobStatus.STOPPED]: Icon.JOB_ABORTED,
-  [JobStatus.CANCELED]: Icon.JOB_ABORTED,
 };

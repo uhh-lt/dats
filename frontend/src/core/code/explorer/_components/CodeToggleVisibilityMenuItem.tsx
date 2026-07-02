@@ -1,7 +1,7 @@
 import { CodeRead } from "@api/models/CodeRead";
+import { getIconComponent, Icon } from "@components/icons";
 import { flatTree, ITree } from "@components/tree-explorer";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback } from "react";
 
 interface CodeToggleVisibilityMenuItemProps {

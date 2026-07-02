@@ -1,4 +1,5 @@
 import { OpenAPI } from "@api/core/OpenAPI";
+import { getIconComponent, Icon } from "@components/icons";
 import { LinkListItemButton, LinkMenuItem } from "@components/links";
 import { useAuth } from "@core/auth";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -26,7 +27,6 @@ import {
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useLocation } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 import { useTabNavigate } from "./tabs";
 

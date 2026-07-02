@@ -1,7 +1,7 @@
 import { FolderRead } from "@api/models/FolderRead";
+import { Icon, getIconComponent } from "@components/icons";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
 interface FolderEditMenuItemProps {

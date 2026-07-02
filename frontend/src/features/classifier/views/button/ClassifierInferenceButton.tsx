@@ -1,6 +1,7 @@
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierRead } from "@api/models/ClassifierRead";
 import { ClassifierTask } from "@api/models/ClassifierTask";
+import { Icon, getIconComponent } from "@components/icons";
 import { CodeRenderer } from "@core/code";
 import { useTabNavigate } from "@core/navigation";
 import { TagRenderer } from "@core/tag";
@@ -19,7 +20,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment, MouseEvent, memo, useCallback, useMemo, useState } from "react";
 import { ClassifierHooks } from "../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../store/classifierSlice";

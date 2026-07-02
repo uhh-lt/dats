@@ -1,7 +1,7 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { MouseEventHandler, useCallback } from "react";
 
 interface BBoxAnnotationDeleteMenuItemProps {

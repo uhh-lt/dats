@@ -6,6 +6,7 @@ import { ContentContainerLayout } from "@components/content-layouts";
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
 import { DocumentTaggingResultRow } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTaggingResultRow";
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
+import { getIconComponent, Icon } from "@components/icons";
 import { DocumentTagResultStepTable } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTagResultStepTable";
 import {
   Button,
@@ -20,7 +21,6 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 
 export function TagRecommendationsView() {

@@ -1,8 +1,8 @@
 import { CodeRead } from "@api/models/CodeRead";
+import { getIconComponent, Icon } from "@components/icons";
 import { flatTree, ITree } from "@components/tree-explorer";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback } from "react";
 
 interface CodeToggleVisibilityButtonProps extends IconButtonProps {

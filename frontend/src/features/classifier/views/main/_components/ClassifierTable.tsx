@@ -3,13 +3,13 @@ import { ClassifierRead } from "@api/models/ClassifierRead";
 import { ClassifierTask } from "@api/models/ClassifierTask";
 import { CardContainer } from "@components/CardContainer";
 import { DATSToolbar } from "@components/DATSToolbar";
+import { getIconComponent, Icon } from "@components/icons";
 import { CodeRenderer } from "@core/code";
 import { TagRenderer } from "@core/tag";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, Card, IconButton, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { dateToLocaleDate } from "@utils/DateUtils";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import {
   MRT_ColumnDef,
   MRT_LinearProgressBar,

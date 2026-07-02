@@ -1,7 +1,7 @@
+import { Icon } from "@components/icons";
 import { TimelineAnalysisDashboardView, timelineAnalysisDashboardViewLoader } from "@features/timeline-analysis";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 
 export const Route = createFileRoute("/_auth/project/$projectId/analysis/timeline/")({
   staticData: {

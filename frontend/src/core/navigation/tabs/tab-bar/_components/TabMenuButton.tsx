@@ -1,6 +1,6 @@
+import { getIconComponent, Icon } from "@components/icons";
 import { ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
 import { useTabManager } from "../../hooks/useTabManager";
 import { TabIconButton } from "./styledComponents";

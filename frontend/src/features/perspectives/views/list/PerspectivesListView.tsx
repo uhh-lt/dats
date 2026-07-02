@@ -1,10 +1,10 @@
 import { ContentContainerLayout } from "@components/content-layouts";
+import { getIconComponent, Icon } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
 import { useDialog } from "@hooks/useDialog";
 import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { ChangeEvent, useState } from "react";
 import { projectAspectsQueryOptions } from "../../_api/perspectivesQueryOptions";
 import { PerspectiveCard } from "./_components/PerspectiveCard";

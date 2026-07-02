@@ -1,10 +1,10 @@
 import { COTAConcept } from "@api/models/COTAConcept";
+import { getIconComponent, Icon } from "@components/icons";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, ListItemButton, ListItemIcon, Menu, MenuItem } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 
 interface CotaConceptListItemProps {

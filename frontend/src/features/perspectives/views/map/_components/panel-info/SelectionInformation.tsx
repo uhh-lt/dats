@@ -1,9 +1,9 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@api/models/SourceDocumentMetadataUpdate";
+import { getIconComponent, Icon } from "@components/icons";
 import { SdocMetadataRow } from "@core/sdoc-metadata";
 import { TagMenuButton, TagRow } from "@core/tag";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
@@ -11,8 +11,8 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { Link } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback, useEffect } from "react";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 

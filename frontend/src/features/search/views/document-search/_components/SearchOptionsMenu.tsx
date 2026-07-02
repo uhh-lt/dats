@@ -1,7 +1,7 @@
+import { Icon, getIconComponent } from "@components/icons";
 import { useURLConnector } from "@hooks/useURLConnector";
 import HelpIcon from "@mui/icons-material/Help";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useState } from "react";
 import { DocumentSearchRouteAPI } from "../_hooks/documentSearchRouteAPI";
 

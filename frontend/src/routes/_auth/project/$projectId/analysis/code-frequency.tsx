@@ -1,8 +1,8 @@
 import { DocType } from "@api/models/DocType";
+import { Icon } from "@components/icons";
 import { CodeFrequencyAnalysisView } from "@features/code-frequency-analysis";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const codeFrequencySearchSchema = z.object({

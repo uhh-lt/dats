@@ -1,12 +1,12 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { MemoRead } from "@api/models/MemoRead";
+import { Icon, getIconComponent } from "@components/icons";
+import { UserRenderer } from "@core/user";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Box, Stack, StackProps } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 import Markdown from "react-markdown";
-import { UserRenderer } from "@core/user";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 export interface MemoRendererSharedProps {

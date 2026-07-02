@@ -1,9 +1,9 @@
 import { JobStatus } from "@api/models/JobStatus";
+import { getIconComponent, JobStatusIcons } from "@components/icons";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
-import { getIconComponent, JobStatusIcons } from "@utils/icons/iconUtils";
 import { memo, useCallback, useState } from "react";
 
 const RUNNING_OR_WAITING = [JobStatus.QUEUED, JobStatus.DEFERRED, JobStatus.SCHEDULED, JobStatus.STARTED];

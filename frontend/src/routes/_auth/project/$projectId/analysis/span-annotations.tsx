@@ -1,9 +1,9 @@
 import { SpanColumns } from "@api/models/SpanColumns";
+import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { SpanAnnotationAnalysisView } from "@features/span-annotation-analysis";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const spanAnnotationAnalysisSearchSchema = z.object({

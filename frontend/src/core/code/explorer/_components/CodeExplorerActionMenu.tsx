@@ -1,9 +1,9 @@
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { CodeRead } from "@api/models/CodeRead";
+import { Icon, getIconComponent } from "@components/icons";
 import { ITree } from "@components/tree-explorer";
 import { MemoMenuItem } from "@core/memo";
 import { IconButton, Menu } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 import { CodeEditMenuItem } from "./CodeEditMenuItem";
 import { CodeToggleVisibilityMenuItem } from "./CodeToggleVisibilityMenuItem";

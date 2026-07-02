@@ -2,6 +2,7 @@ import { ClassifierData } from "@api/models/ClassifierData";
 import { ClassifierEvaluationRead } from "@api/models/ClassifierEvaluationRead";
 import { ClassifierModel } from "@api/models/ClassifierModel";
 import { ClassifierRead } from "@api/models/ClassifierRead";
+import { getIconComponent, Icon } from "@components/icons";
 import {
   Box,
   Divider,
@@ -16,7 +17,6 @@ import {
   Typography,
 } from "@mui/material";
 import { dateToLocaleDate } from "@utils/DateUtils";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { Fragment } from "react";
 import { ClassifierDataPlot } from "./ClassifierDataPlot";
 import { ClassifierLossPlot } from "./ClassifierLossPlot";

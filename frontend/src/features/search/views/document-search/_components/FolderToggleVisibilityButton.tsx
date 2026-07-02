@@ -1,6 +1,6 @@
+import { getIconComponent, Icon } from "@components/icons";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useCallback } from "react";
 import { SearchActions } from "../../../store/documentSearchSlice";
 

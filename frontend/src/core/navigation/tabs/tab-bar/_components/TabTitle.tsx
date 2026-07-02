@@ -1,5 +1,5 @@
+import { getIconComponent } from "@components/icons";
 import { Box } from "@mui/material";
-import { getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 import { TabData } from "../../../_types/TabData";
 import { LabelText, TabLabel } from "./styledComponents";

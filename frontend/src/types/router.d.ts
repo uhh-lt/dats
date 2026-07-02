@@ -1,5 +1,5 @@
+import { Icon } from "@components/icons";
 import "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 
 type GetTitleFn = {
   bivarianceHack(loaderData?: unknown, params?: Record<string, unknown>): string;

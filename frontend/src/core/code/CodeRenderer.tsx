@@ -1,7 +1,7 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { CodeRead } from "@api/models/CodeRead";
+import { Icon, getIconComponent } from "@components/icons";
 import { Stack } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 
 interface CodeRendererProps {

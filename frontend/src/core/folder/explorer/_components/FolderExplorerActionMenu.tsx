@@ -1,7 +1,7 @@
 import { FolderRead } from "@api/models/FolderRead";
+import { Icon, getIconComponent } from "@components/icons";
 import { ITree } from "@components/tree-explorer";
 import { IconButton, Menu } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 import { FolderEditMenuItem } from "../../FolderEditMenuItem";
 

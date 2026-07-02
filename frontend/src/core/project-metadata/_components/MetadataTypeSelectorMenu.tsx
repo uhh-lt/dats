@@ -1,4 +1,5 @@
 import { MetaType } from "@api/models/MetaType";
+import { getIconComponent, MetaTypeIcons } from "@components/icons";
 import { useDebounce } from "@hooks/useDebounce";
 import {
   Autocomplete,
@@ -11,7 +12,6 @@ import {
   PopoverPosition,
   TextField,
 } from "@mui/material";
-import { getIconComponent, MetaTypeIcons } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
 const filter = createFilterOptions<string>();

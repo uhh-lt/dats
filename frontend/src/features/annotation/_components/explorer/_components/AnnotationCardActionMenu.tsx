@@ -1,8 +1,8 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { AttachedObjectType } from "@api/models/AttachedObjectType";
+import { Icon, getIconComponent } from "@components/icons";
 import { MemoDeleteMenuItem } from "@core/memo";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useState } from "react";
 import { BBoxAnnotationDeleteMenuItem } from "./BBoxAnnotationDeleteMenuItem";
 import { SentenceAnnotationDeleteMenuItem } from "./SentenceAnnotationDeleteMenuItem";
@@ -11,7 +11,9 @@ import { SpanAnnotationDeleteMenuItem } from "./SpanAnnotationDeleteMenuItem";
 interface MemoMenuItemsProps {
   annotationId: number;
   annotationType:
-    AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION | AttachedObjectType.SENTENCE_ANNOTATION;
+    | AttachedObjectType.SPAN_ANNOTATION
+    | AttachedObjectType.BBOX_ANNOTATION
+    | AttachedObjectType.SENTENCE_ANNOTATION;
   handleClose: () => void;
 }
 
@@ -27,7 +29,9 @@ function MemoMenuItems({ annotationId, annotationType, handleClose }: MemoMenuIt
 interface AnnotationCardActionsMenuProps {
   annotationId: number;
   annotationType:
-    AttachedObjectType.SPAN_ANNOTATION | AttachedObjectType.BBOX_ANNOTATION | AttachedObjectType.SENTENCE_ANNOTATION;
+    | AttachedObjectType.SPAN_ANNOTATION
+    | AttachedObjectType.BBOX_ANNOTATION
+    | AttachedObjectType.SENTENCE_ANNOTATION;
   iconButtonProps?: Omit<IconButtonProps, "onClick">;
 }
 

@@ -3,6 +3,7 @@ import { AttachedObjectType } from "@api/models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@api/models/BBoxAnnotationRead";
 import { CodeRead } from "@api/models/CodeRead";
 import { SentenceAnnotationRead } from "@api/models/SentenceAnnotationRead";
+import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { MemoButton } from "@core/memo";
 import {
@@ -20,7 +21,6 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useEffect, useImperativeHandle, useMemo, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";
 import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";

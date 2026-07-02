@@ -1,7 +1,7 @@
 import { ExportChartMenuItem } from "@components/export-chart-buttons";
+import { getIconComponent, Icon } from "@components/icons";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { useMemo, useState } from "react";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";

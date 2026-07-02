@@ -1,5 +1,5 @@
+import { Icon, getIconComponent } from "@components/icons";
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { useCallback, useState } from "react";
 import { FolderExportMenuItem } from "../../FolderExportMenuItem";
 

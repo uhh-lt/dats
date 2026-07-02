@@ -1,8 +1,8 @@
+import { Icon } from "@components/icons";
 import { AnnotationView, annotationViewLoader } from "@features/annotation";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const annotationSearchSchema = z.object({

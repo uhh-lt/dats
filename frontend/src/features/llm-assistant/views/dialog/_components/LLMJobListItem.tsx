@@ -7,13 +7,13 @@ import { LlmAssistantJobRead } from "@api/models/LlmAssistantJobRead";
 import { LLMJobOutput } from "@api/models/LLMJobOutput";
 import { LLMPromptTemplates } from "@api/models/LLMPromptTemplates";
 import { ZeroShotParams } from "@api/models/ZeroShotParams";
+import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { LinkListItemButton } from "@components/links";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback, useRef, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 

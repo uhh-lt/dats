@@ -1,5 +1,6 @@
 import { MLJobType } from "@api/models/MLJobType";
 import { ContentContainerLayout } from "@components/content-layouts";
+import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import NotStartedIcon from "@mui/icons-material/NotStarted";
@@ -20,7 +21,6 @@ import {
 } from "@mui/material";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { projectMLJobsQueryOptions, useStartMLJob } from "../../_api/mlAutomationQueryOptions";
 import { MLJobsView } from "./_components/MLJobsView";
 

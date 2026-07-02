@@ -1,7 +1,7 @@
+import { getIconComponent, Icon } from "@components/icons";
 import { PopoverOrigin } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { memo, MouseEventHandler, useCallback, useState } from "react";
 import { ClusterMenu } from "./ClusterMenu";
 

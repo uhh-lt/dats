@@ -1,7 +1,7 @@
+import { Icon } from "@components/icons";
 import { ClassifierView, classifierViewLoader } from "@features/classifier";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
-import { Icon } from "@utils/icons/iconUtils";
 
 export const Route = createFileRoute("/_auth/project/$projectId/classifier")({
   staticData: {

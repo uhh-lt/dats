@@ -1,6 +1,6 @@
-import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 import { AspectRead } from "@api/models/AspectRead";
 import { JobStatus } from "@api/models/JobStatus";
+import { getIconComponent, Icon } from "@components/icons";
 import { JobStatusBadge } from "@core/job";
 import { useOpenConfirmationDialog } from "@core/notification";
 import ConstructionIcon from "@mui/icons-material/Construction";
@@ -9,8 +9,8 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import { ReactElement } from "react";
+import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
 const statusToIcon: Record<JobStatus, ReactElement> = {
   // waiting

@@ -1,6 +1,7 @@
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { MetaType } from "@api/models/MetaType";
 import { ProjectMetadataRead } from "@api/models/ProjectMetadataRead";
+import { Icon, MetaTypeIcons, getIconComponent } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import {
   Box,
@@ -16,7 +17,6 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { Icon, MetaTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { ChangeEventHandler, MouseEventHandler, useCallback, useState } from "react";
 import { MetadataTypeSelectorMenu } from "./_components/MetadataTypeSelectorMenu";
 

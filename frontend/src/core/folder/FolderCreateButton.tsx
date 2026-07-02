@@ -1,6 +1,6 @@
+import { Icon, getIconComponent } from "@components/icons";
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 
 interface FolderActionButtonCreateProps {

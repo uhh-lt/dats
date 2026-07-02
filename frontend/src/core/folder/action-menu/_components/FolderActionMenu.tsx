@@ -1,6 +1,7 @@
 import { FolderHooks } from "@api/hooks/FolderHooks";
 import { FolderRead } from "@api/models/FolderRead";
 import { FolderType } from "@api/models/FolderType";
+import { Icon, getIconComponent } from "@components/icons";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import {
   Box,
@@ -17,7 +18,6 @@ import {
   TextField,
 } from "@mui/material";
 import { CheckboxState } from "@utils/CheckboxState";
-import { Icon, getIconComponent } from "@utils/icons/iconUtils";
 import { isEqual } from "lodash";
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react";
 import { FolderCreateButton } from "../../FolderCreateButton";

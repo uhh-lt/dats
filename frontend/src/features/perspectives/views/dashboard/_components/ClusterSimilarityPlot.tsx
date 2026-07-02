@@ -1,4 +1,4 @@
-import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
+import { getIconComponent, Icon } from "@components/icons";
 import {
   Box,
   Card,
@@ -12,9 +12,9 @@ import {
 } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { D3ColorScale, d3ColorSchemes } from "@utils/colors/D3ColorScale";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";
 import { memo } from "react";
+import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
 interface ClusterSimilarityPlotProps {
   aspectId: number;

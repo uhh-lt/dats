@@ -1,4 +1,4 @@
-import { Icon } from "@utils/icons/iconUtils";
+import { Icon } from "@components/icons";
 
 export type TabRouteSearch = Record<string, unknown>;
 

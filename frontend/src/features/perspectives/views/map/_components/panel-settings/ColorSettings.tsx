@@ -1,6 +1,6 @@
-import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { PerspectivesJobType } from "@api/models/PerspectivesJobType";
 import { PerspectivesVisualization } from "@api/models/PerspectivesVisualization";
+import { getIconComponent, Icon } from "@components/icons";
 import { useOpenConfirmationDialog } from "@core/notification";
 import InfoIcon from "@mui/icons-material/Info";
 import {
@@ -26,9 +26,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import * as d3 from "d3";
 import { useState } from "react";
+import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
 import { PerspectivesActions } from "../../../../store/perspectivesSlice";
 import { ClusterCreationDialog } from "./ClusterCreationDialog";

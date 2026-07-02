@@ -1,4 +1,5 @@
 import { DocType } from "@api/models/DocType";
+import { DocTypeIcons, getIconComponent } from "@components/icons";
 import {
   Checkbox,
   FormControl,
@@ -10,7 +11,6 @@ import {
   SelectChangeEvent,
   Stack,
 } from "@mui/material";
-import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { Fragment } from "react";
 
 interface DocTypeSelectorMultipleProps {

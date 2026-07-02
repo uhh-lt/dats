@@ -7,6 +7,7 @@ import { WhiteboardEdgeData_Output } from "@api/models/WhiteboardEdgeData_Output
 import { WhiteboardNodeType } from "@api/models/WhiteboardNodeType";
 import { WhiteboardRead } from "@api/models/WhiteboardRead";
 import { EditableTypography } from "@components/EditableTypography";
+import { getIconComponent, Icon } from "@components/icons";
 import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
 import { SpanAnnotationEditDialog } from "@core/span-annotation";
@@ -15,7 +16,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Box, Button, IconButton, Menu, MenuItem, Paper, Stack, Tooltip } from "@mui/material";
 import { useBlocker } from "@tanstack/react-router";
 import { downloadFile } from "@utils/downloadUtils";
-import { getIconComponent, Icon } from "@utils/icons/iconUtils";
 import {
   addEdge,
   Background,

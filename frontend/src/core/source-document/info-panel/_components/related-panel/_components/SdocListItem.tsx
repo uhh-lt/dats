@@ -1,7 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
+import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
 import { Link } from "@tanstack/react-router";
-import { DocTypeIcons, getIconComponent } from "@utils/icons/iconUtils";
 import { memo } from "react";
 
 interface SdocListItemProps {

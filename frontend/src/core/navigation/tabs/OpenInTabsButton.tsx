@@ -1,7 +1,7 @@
+import { Icon } from "@components/icons";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { IconButton, Tooltip } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
-import { Icon } from "@utils/icons/iconUtils";
 import { memo, useCallback } from "react";
 import { TabData } from "../_types/TabData";
 import { TabActions } from "../tabSlice";

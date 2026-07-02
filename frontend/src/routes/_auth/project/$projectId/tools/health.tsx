@@ -1,9 +1,9 @@
 import { DocType } from "@api/models/DocType";
+import { Icon } from "@components/icons";
 import { HealthView, healthViewLoader } from "@features/health";
 import { CircularProgress } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const healthSearchSchema = z.object({

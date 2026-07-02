@@ -1,6 +1,6 @@
 import { JobStatus } from "@api/models/JobStatus";
+import { getIconComponent, JobStatusIcons } from "@components/icons";
 import { Chip } from "@mui/material";
-import { getIconComponent, JobStatusIcons } from "@utils/icons/iconUtils";
 import { jobStatusToColor } from "./JobStatusToColor";
 
 export function JobStatusBadge({ status }: { status: JobStatus | null | undefined }) {

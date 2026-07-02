@@ -1,9 +1,9 @@
 import { BBoxColumns } from "@api/models/BBoxColumns";
+import { Icon } from "@components/icons";
 import { deserializeFilterFromSearchParam, FILTER_EXPERT_MODE_PARAM, FILTER_PARAM, MyFilter } from "@core/filter";
 import { BBoxAnnotationAnalysisView } from "@features/bbox-annotation-analysis";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Icon } from "@utils/icons/iconUtils";
 import { z } from "zod";
 
 const bboxAnnotationAnalysisSearchSchema = z.object({
