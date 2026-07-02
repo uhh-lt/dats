@@ -115,6 +115,9 @@ class ClassifierTrainingParams(BaseModel):
     # training data
     user_ids: list[int] = Field(description="List of user IDs to train on")
     tag_ids: list[int] = Field(description="List of Tag IDs to train on")
+    merge_children_into_parent: bool = Field(
+        description="Merge child codes in parent code?"
+    )
     # training settings
     epochs: int = Field(description="Number of epochs to train for")
     batch_size: int = Field(description="Batch size to use for training")

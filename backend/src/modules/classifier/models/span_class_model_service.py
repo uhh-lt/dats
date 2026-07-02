@@ -372,6 +372,8 @@ class SpanClassificationModelService(TextClassificationModelService):
         if not check_hf_model_exists(parameters.base_name):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
+        merge_children_into_parent = parameters.merge_children_into_parent
+
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
         if parameters.chunk_size:
             tokenizer.model_max_length = parameters.chunk_size
@@ -393,12 +395,36 @@ class SpanClassificationModelService(TextClassificationModelService):
         job.update(current_step=1)
         # Get codes and create mapping
         codes = crud_code.read_by_ids(db=db, ids=parameters.class_ids)
-        classid2labelid: dict[int, int] = {
-            code.id: i + 1 for i, code in enumerate(codes)
-        }
+
+        if merge_children_into_parent:
+            child_codes = [
+                crud_code.read_with_children(db, code_id=id)
+                for id in parameters.class_ids
+            ]
+            classid2labelid: dict[int, int] = {
+                c.id: i + 1
+                for code, (i, parent) in zip(
+                    child_codes, enumerate(parameters.class_ids)
+                )
+                for c in code
+            }
+            class_ids = list(set(c.id for children in child_codes for c in children))
+            code2parent = {
+                code.id: parent
+                for children, parent in zip(child_codes, parameters.class_ids)
+                for code in children
+            }
+        else:
+            classid2labelid: dict[int, int] = {
+                code.id: i + 1 for i, code in enumerate(codes)
+            }
+            class_ids = parameters.class_ids
+            code2parent = {code: code for code in class_ids}
+
         classid2labelid[0] = 0
         id2label = {i + 1: code.name for i, code in enumerate(codes)}
         id2label[0] = "O"
+        code2parent[0] = 0
 
         # Build dataset
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
@@ -406,7 +432,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=parameters.class_ids,
+            class_ids=class_ids,
             classid2labelid=classid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
@@ -472,14 +498,14 @@ class SpanClassificationModelService(TextClassificationModelService):
             split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[annotation.code_id] += 1
+                train_dataset_stats[code2parent[annotation.code_id]] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[annotation.code_id] += 1
+                eval_dataset_stats[code2parent[annotation.code_id]] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -491,7 +517,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
-        num_labels = len(classid2labelid)
+        num_labels = len(id2label)
         class_weights = [0.0] * num_labels
         for label, count in label_counts.items():
             if count > 0:
@@ -547,7 +573,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             # Initialize the Lightning Model
             lightning_model = SpanClassificationLightningModel(
                 base_name=parameters.base_name,
-                num_labels=len(classid2labelid),
+                num_labels=len(id2label),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
@@ -592,7 +618,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path or "ERROR!",
                 project_id=payload.project_id,
-                labelid2classid={v: k for k, v in classid2labelid.items()},
+                labelid2classid={v: code2parent[k] for k, v in classid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
