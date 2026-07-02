@@ -1,12 +1,13 @@
 import { TagHooks } from "@api/hooks/TagHooks";
 import { TagRecommendationHooks } from "@api/hooks/TagRecommendationHooks";
 import { ContentContainerLayout } from "@components/content-layouts";
+import { getIconComponent, Icon } from "@components/icons";
 import { TagRead } from "@models/TagRead";
 import { TagRecommendationResult } from "@models/TagRecommendationResult";
+// TODO: This feature needs its own components or rework in general
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
 import { DocumentTaggingResultRow } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTaggingResultRow";
 // eslint-disable-next-line local/no-internal-modules-public-entry, boundaries/element-types
-import { getIconComponent, Icon } from "@components/icons";
 import { DocumentTagResultStepTable } from "@features/llm-assistant/views/dialog/_components/document-tagging-result-step/DocumentTagResultStepTable";
 import {
   Button,

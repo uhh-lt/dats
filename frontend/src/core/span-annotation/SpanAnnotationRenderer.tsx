@@ -1,6 +1,6 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { LinkWrapper } from "@components/links";
 import { CodeRenderer } from "@core/code";
+import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";

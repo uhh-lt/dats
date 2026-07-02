@@ -1,7 +1,7 @@
 import { DATSLogo } from "@components/DATSLogo";
 import { RouteErrorPanel } from "@components/error";
-import { LinkButton } from "@components/links";
 import { AuthState } from "@core/auth";
+import { LinkButton } from "@core/navigation";
 import { SnackbarDialog } from "@core/notification";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import { Alert, AlertTitle, alpha, Box, Button, Container, CssBaseline, Paper, Stack, Typography } from "@mui/material";

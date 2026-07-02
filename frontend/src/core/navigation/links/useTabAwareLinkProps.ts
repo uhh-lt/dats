@@ -1,9 +1,9 @@
-import { toTabNavigateArgs } from "@core/navigation";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useRouter } from "@tanstack/react-router";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useMemo } from "react";
+import { toTabNavigateArgs } from "../_utils/TabRouteTargetUtils";
 
 function getProjectIdFromPathname(pathname: string): number | null {
   const matched = pathname.match(/\/project\/(\d+)/);

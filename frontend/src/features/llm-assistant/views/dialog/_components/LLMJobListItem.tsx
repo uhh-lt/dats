@@ -1,7 +1,7 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
-import { LinkListItemButton } from "@components/links";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
+import { LinkListItemButton } from "@core/navigation";
 import { ApproachType } from "@models/ApproachType";
 import { DocType } from "@models/DocType";
 import { FewShotParams } from "@models/FewShotParams";

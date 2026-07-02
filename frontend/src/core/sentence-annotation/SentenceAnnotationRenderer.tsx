@@ -1,6 +1,6 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { LinkWrapper } from "@components/links";
 import { CodeRenderer } from "@core/code";
+import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";

@@ -1,8 +1,8 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { ExportChartButton } from "@components/export-chart-buttons";
 import { getIconComponent, Icon } from "@components/icons";
-import { LinkButton } from "@components/links";
 import { JobStatusBadge } from "@core/job";
+import { LinkButton } from "@core/navigation";
 import { TagRenderer } from "@core/tag";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";

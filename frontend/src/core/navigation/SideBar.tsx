@@ -1,6 +1,5 @@
 import { OpenAPI } from "@api/core/OpenAPI";
 import { getIconComponent, Icon } from "@components/icons";
-import { LinkListItemButton, LinkMenuItem } from "@components/links";
 import { useAuth } from "@core/auth";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -28,6 +27,7 @@ import {
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useLocation } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { LinkListItemButton, LinkMenuItem } from "./links";
 import { useTabNavigate } from "./tabs";
 
 interface SideBarProps {

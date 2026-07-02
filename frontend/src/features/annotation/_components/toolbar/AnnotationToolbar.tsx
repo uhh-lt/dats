@@ -1,9 +1,9 @@
 import { DATSToolbar } from "@components/DATSToolbar";
+import { DocTypeIcons, getIconComponent, Icon } from "@components/icons";
 import { DocType } from "@models/DocType";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 // TODO: Fix feature-to-feature imports
 // eslint-disable-next-line boundaries/element-types
-import { DocTypeIcons, getIconComponent, Icon } from "@components/icons";
 import { LLMAssistanceButton } from "@features/llm-assistant";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";

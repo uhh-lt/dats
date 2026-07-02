@@ -1,7 +1,7 @@
 import { Draft, PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
 import { ProjectTabState, TabData } from "./_types/TabData";
-import { normalizeTabRoute } from "./tabs/utils/TabRouteTargetUtils";
+import { normalizeTabRoute } from "./_utils/TabRouteTargetUtils";
 
 export interface TabState {
   tabsByProject: Record<number, ProjectTabState>;

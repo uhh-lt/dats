@@ -1,5 +1,5 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
-import { LinkLink } from "@components/links";
+import { LinkLink } from "@core/navigation";
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import { Box } from "@mui/material";
 

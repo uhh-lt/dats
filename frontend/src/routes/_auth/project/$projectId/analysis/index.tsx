@@ -1,6 +1,6 @@
 import { ContentContainerLayout } from "@components/content-layouts";
 import { Icon } from "@components/icons";
-import { LinkCard } from "@components/links";
+import { LinkCard } from "@core/navigation";
 import { Box } from "@mui/material";
 import { createFileRoute } from "@tanstack/react-router";
 

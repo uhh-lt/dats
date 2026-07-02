@@ -1,4 +1,4 @@
-import { TabRouteSearch, TabRouteState } from "../../_types/TabData";
+import { TabRouteSearch, TabRouteState } from "../_types/TabData";
 
 const normalizeHash = (hash: string | undefined): string | undefined => {
   if (!hash) {

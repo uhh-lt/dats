@@ -1,5 +1,4 @@
-import { LinkListItemButton } from "@components/links";
-import { useTabNavigate } from "@core/navigation";
+import { LinkListItemButton, useTabNavigate } from "@core/navigation";
 import ImageIcon from "@mui/icons-material/Image";
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";

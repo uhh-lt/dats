@@ -1,12 +1,9 @@
-import { LinkButton } from "@components/links";
-import { Box, Button, Container, LinearProgress, Typography } from "@mui/material";
-// eslint-disable-next-line boundaries/element-types
-import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-
 import { RouteErrorPanel } from "@components/error";
-import { SideBar, TabBar, TabSynchronizer } from "@core/navigation";
+import { LinkButton, SideBar, TabBar, TabSynchronizer } from "@core/navigation";
 import { useDebounce } from "@hooks/useDebounce";
+import { Box, Button, Container, LinearProgress, Typography } from "@mui/material";
 import { ProjectActions } from "@store/global/projectSlice";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import {
   createFileRoute,
   type ErrorComponentProps,

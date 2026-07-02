@@ -1,5 +1,5 @@
 import { RouteErrorPanel } from "@components/error";
-import { LinkButton } from "@components/links";
+import { LinkButton } from "@core/navigation";
 import { Box, Button, Container, Stack } from "@mui/material";
 import { Outlet, createFileRoute, type ErrorComponentProps } from "@tanstack/react-router";
 

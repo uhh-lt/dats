@@ -1,8 +1,7 @@
 import { useOpenDialog, useToggleDialog } from "@store/global/dialogBusSlice";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
-import { useTabNavigate } from "../../tabs";
-import { useTabManager } from "../../tabs/hooks/useTabManager";
+import { useTabManager, useTabNavigate } from "../../tabs";
 
 export interface Shortcut {
   id: string;

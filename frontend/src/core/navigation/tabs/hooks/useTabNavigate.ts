@@ -2,7 +2,7 @@ import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { RegisteredRouter, useNavigate, useParams, useRouter, ValidateNavigateOptions } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { toTabNavigateArgs } from "./utils/TabRouteTargetUtils";
+import { toTabNavigateArgs } from "../../_utils/TabRouteTargetUtils";
 
 type StrictNavigateArgs<TOptions> = ValidateNavigateOptions<RegisteredRouter, TOptions>;
 

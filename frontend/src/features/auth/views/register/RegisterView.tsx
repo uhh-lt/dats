@@ -1,7 +1,7 @@
 import { UserHooks } from "@api/hooks/UserHooks";
 import { DATSLogo } from "@components/DATSLogo";
 import { FormEmail, FormPassword, FormText } from "@components/form-inputs";
-import { LinkButton } from "@components/links";
+import { LinkButton } from "@core/navigation";
 import { ErrorMessage } from "@hookform/error-message";
 import { UserCreate } from "@models/UserCreate";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";

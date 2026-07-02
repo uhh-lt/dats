@@ -2,8 +2,8 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { TabData } from "../../_types/TabData";
+import { toTabNavigateArgs } from "../../_utils/TabRouteTargetUtils";
 import { selectProjectTabState, TabActions } from "../../tabSlice";
-import { toTabNavigateArgs } from "../utils/TabRouteTargetUtils";
 
 type Direction = "left" | "right";
 
