@@ -161,7 +161,7 @@ class ContentServerConfig(BaseModel):
 class FilesystemConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    root_directory: Path = Field(min_length=1)
+    root_directory: Path = Field()
     content_server: ContentServerConfig
 
 
