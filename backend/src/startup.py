@@ -198,7 +198,7 @@ def __create_system_user__(db: Session) -> None:
             email=conf.system_user.email,
             first_name=conf.system_user.first_name,
             last_name=conf.system_user.last_name,
-            password=conf.system_user.password,
+            password=conf.system_user.password.get_secret_value(),
         )
         crud_user.create(db=db, create_dto=create_dto)
 
@@ -216,7 +216,7 @@ def __create_demo_user__(db: Session) -> None:
             email=conf.demo_user.email,
             first_name=conf.demo_user.first_name,
             last_name=conf.demo_user.last_name,
-            password=conf.demo_user.password,
+            password=conf.demo_user.password.get_secret_value(),
         )
         crud_user.create(db=db, create_dto=create_dto)
 
@@ -242,7 +242,7 @@ def __create_assistant_users__(db: Session) -> None:
                 + conf.assistant_user.email.split("@")[1],
                 first_name=conf.assistant_user.first_name,
                 last_name=last_name,
-                password=conf.assistant_user.password,
+                password=conf.assistant_user.password.get_secret_value(),
             )
             crud_user.create_with_id(db=db, create_dto=create_dto, id=user_id)
 

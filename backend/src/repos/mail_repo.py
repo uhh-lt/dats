@@ -1,6 +1,6 @@
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from loguru import logger
-from pydantic import EmailStr
+from pydantic import EmailStr, NameEmail
 
 from common.singleton_meta import SingletonMeta
 from config import conf
@@ -29,7 +29,7 @@ class MailRepo(metaclass=SingletonMeta):
         if self.is_enabled:
             message = MessageSchema(
                 subject=subject,
-                recipients=[email],
+                recipients=[NameEmail(name="", email=email)],
                 body=body,
                 subtype=MessageType.html,
             )

@@ -31,9 +31,9 @@ class CustomImagesDownloadPipeline(ImagesPipeline):
 
             # might need to change suffix
             if response is not None:
-                image_suffix = mimetypes.guess_extension(
-                    response.headers.get("Content-Type").decode()
-                )
+                content_type = response.headers.get("Content-Type")
+                if content_type:
+                    image_suffix = mimetypes.guess_extension(content_type.decode())
                 if image_suffix and not image_path.name.endswith(image_suffix):
                     name = f"{slugify(filename + '-' + image_name)}{image_suffix}"
 
@@ -44,8 +44,13 @@ class CustomImagesDownloadPipeline(ImagesPipeline):
     # https://docs.scrapy.org/en/latest/topics/media-pipeline.html#scrapy.pipelines.images.ImagesPipeline.item_completed
     def item_completed(self, results, item: CrawledItem, info) -> CrawledItem:
         # collect images names
-        # the image name of failed downloads are False
-        image_names = [result[1]["path"] if result[0] else False for result in results]
+        image_names = []
+        for result in results:
+            match result:
+                case (True, file_info):
+                    image_names.append(file_info["path"])
+                case (False, _failure):
+                    image_names.append(False)
 
         # write item names
         item["image_names"] = image_names

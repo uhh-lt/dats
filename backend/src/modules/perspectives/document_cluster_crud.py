@@ -1,5 +1,5 @@
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import select, tuple_, update
+from sqlalchemy import CursorResult, select, tuple_, update
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -232,6 +232,7 @@ class CRUDDocumentCluster(
 
             # 3. Execute the statement
             results = db.execute(stmt)
+            assert isinstance(results, CursorResult), "Expected a CursorResult!"
 
             # Accumulate the count of updated rows from this batch
             count = results.rowcount if results.rowcount is not None else 0
@@ -287,6 +288,7 @@ class CRUDDocumentCluster(
 
             # 3. Execute the statement
             results = db.execute(stmt)
+            assert isinstance(results, CursorResult), "Expected a CursorResult!"
 
             # Accumulate the count of updated rows from this batch
             count = results.rowcount if results.rowcount is not None else 0

@@ -1,7 +1,9 @@
+import copy
 import re
 from typing import Any
 
-from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4 import BeautifulSoup, Tag
+from bs4.element import NavigableString
 
 
 def split_html_into_chunks(html_content: str, max_chars: int) -> list[str]:
@@ -257,19 +259,14 @@ def _wrap_element_children(parent: Tag, children: list[Any]) -> Tag:
     Returns:
         A new Tag with the same properties as parent but with specified children.
     """
-    # Create a new soup to build the element
-    new_soup = BeautifulSoup("", "html.parser")
-    new_tag = new_soup.new_tag(parent.name, attrs=parent.attrs)
+    # Create a new tag with the same name and attributes as the parent, but without its original children
+    new_tag = copy.copy(parent)
+    new_tag.clear()
 
     for child in children:
         if isinstance(child, NavigableString):
             new_tag.append(str(child))
-        elif isinstance(child, str):
-            new_tag.append(child)
         else:
-            # Need to copy the child to avoid modifying original
-            child_copy = BeautifulSoup(str(child), "html.parser")
-            for item in child_copy.children:
-                new_tag.append(item)
+            new_tag.append(copy.copy(child))
 
     return new_tag

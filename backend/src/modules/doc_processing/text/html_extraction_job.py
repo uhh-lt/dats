@@ -126,6 +126,7 @@ def __extract_html_and_images_from_html(
     base64_images = {}
     for img_tag in soup.find_all("img"):
         src = img_tag.get("src", "")
+        src = str(src)
         if src.startswith("data:image") and "base64," in src:
             base64_data = src.split("base64,")[1]
             unique_filename = f"{uuid4()}.png"

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
 from common.doc_type import DocType
 from common.meta_type import MetaType
@@ -137,7 +137,7 @@ class PersonConfig(BaseModel):
     first_name: str = Field(min_length=1)
     last_name: str = Field(min_length=1)
     email: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+    password: SecretStr = Field(min_length=1)
 
 
 class RayConfig(BaseModel):
@@ -187,7 +187,7 @@ class PostgresConfig(BaseModel):
     port: int = Field(gt=0, lt=65536)
     db: str = Field(min_length=1)
     user: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+    password: SecretStr = Field(min_length=1)
     batch_size: int = Field(gt=0)
     pool: PostgresPoolConfig
 
@@ -198,7 +198,7 @@ class MailConfig(BaseModel):
     enabled: bool
     mail: str
     user: str
-    password: str
+    password: SecretStr
     server: str
     port: int
     starttls: bool
@@ -224,7 +224,14 @@ class MailConfig(BaseModel):
             ]
             for field in required_fields:
                 value = values.get(field)
-                if not value or (isinstance(value, str) and not value.strip()):
+                if (
+                    not value
+                    or (
+                        (isinstance(value, SecretStr))
+                        and not value.get_secret_value().strip()
+                    )
+                    or (isinstance(value, str) and not value.strip())
+                ):
                     raise ValueError(
                         f"Field '{field}' is required when mail is enabled."
                     )
@@ -235,7 +242,7 @@ class RedisConfig(BaseModel):
 
     host: str = Field(min_length=1)
     port: int = Field(gt=0, lt=65536)
-    password: str = Field(min_length=1)
+    password: SecretStr = Field(min_length=1)
     rq_idx: int = Field(ge=0)
 
 

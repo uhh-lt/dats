@@ -176,7 +176,7 @@ def setup_users(db_session) -> None:
             email=conf.system_user.email,
             first_name=conf.system_user.first_name,
             last_name=conf.system_user.last_name,
-            password=conf.system_user.password,
+            password=conf.system_user.password.get_secret_value(),
         ),
     )
 
@@ -186,7 +186,7 @@ def setup_users(db_session) -> None:
             email=conf.demo_user.email,
             first_name=conf.demo_user.first_name,
             last_name=conf.demo_user.last_name,
-            password=conf.demo_user.password,
+            password=conf.demo_user.password.get_secret_value(),
         ),
     )
 
@@ -205,7 +205,7 @@ def setup_users(db_session) -> None:
                 email=f"assistant-{lname.lower()}@{domain}",
                 first_name=conf.assistant_user.first_name,
                 last_name=lname,
-                password=conf.assistant_user.password,
+                password=conf.assistant_user.password.get_secret_value(),
             ),
             id=uid,
         )

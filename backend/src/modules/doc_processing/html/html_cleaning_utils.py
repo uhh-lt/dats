@@ -60,8 +60,9 @@ def remove_unresolved_links(html_content: str) -> str:
     # an unresolved link is a link that does not start with http or https
     soup = BeautifulSoup(html_content, "html.parser")
     for link in soup.find_all("a"):
-        href = link.get("href")
-        if href and not href.startswith("http"):
+        href = link.get("href", "")
+        href = str(href)
+        if not href.startswith("http"):
             logger.debug("removing unresolved link", href)
             link.unwrap()
 
