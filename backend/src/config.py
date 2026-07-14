@@ -1,10 +1,16 @@
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from loguru import logger
 from omegaconf import OmegaConf
 
 from config_schema import BackendConfigSchema
+
+env_file = Path(__file__).resolve().parents[1].joinpath(".env")
+if env_file.exists():
+    logger.info(f"Loading environment variables from {env_file}")
+    load_dotenv(dotenv_path=env_file)
 
 config_dir = Path(__file__).resolve().parents[1] / "configs"
 

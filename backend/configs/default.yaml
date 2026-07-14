@@ -1,6 +1,4 @@
 api:
-  port: ${oc.env:API_PORT, 13120}
-  workers: ${oc.env:API_WORKERS, 1}
   max_upload_file_size: ${oc.env:API_MAX_UPLOAD_FILE_SIZE, 104857600} # 100 MB in bytes
   production_mode: ${oc.env:API_PRODUCTION_MODE, 0}
   is_stable: ${oc.env:API_IS_STABLE, False}
