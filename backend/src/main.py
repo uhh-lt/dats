@@ -8,69 +8,20 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.openapi.utils import get_openapi
 from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
+from rq.exceptions import NoSuchJobError
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
-from uvicorn.main import run
 
-#####################################################################################################################
-#                                               READ BEFORE CHANGING                                                #
-#####################################################################################################################
-#                               !!!!! IMPORT STUFF ONLY AFTER THE STARTUP CALL !!!!!                                #
-#       It's very important to NOT import ANY DATS internal models here, as this would lead to circular imports.    #
-#####################################################################################################################
-
-# Flo: just do it once. We have to check because if we start the main function,
-#  unvicorn will import this file once more manually, so it would be executed twice.
-STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
-RESET_DATA = bool(int(os.environ.get("RESET_DATA", "0")))
-if not STARTUP_DONE:
-    from startup import startup  # isort: skip
-
-    startup(reset_data=RESET_DATA, sql_echo=False)
-    os.environ["STARTUP_DONE"] = "1"
-
-# Import DATS internal models
-
-from rq.exceptions import NoSuchJobError
-
-from common.exception_handler import exception_handler, exception_handlers
 from config import conf
-from repos.elastic.elastic_repo import ElasticSearchRepo
-from repos.filesystem_repo import FilesystemRepo
-from repos.llm_repo import LLMRepo
 from utils.import_utils import import_by_suffix
 
-# import all jobs dynamically
-import_by_suffix("_job.py")
-
-
-# custom method to generate OpenApi function names
-def custom_generate_unique_id(route: APIRoute):
-    return f"{route.tags[0]}-{route.name}"
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Starting Discourse Analysis Tool Suite FastAPI!")
-    yield
-    # Shutdown
-    logger.info("Stopping Discourse Analysis Tool Suite FastAPI!")
-    FilesystemRepo().purge_temporary_files()
-    # Close repo connections
-    LLMRepo().close_connection()
-    ElasticSearchRepo().close_connection()
-
-
-# connect to GlitchTip using Sentry SDK
+# 1. Init Sentry
 if conf.glitchtip.dsn_backend.strip() != "":
     sentry_sdk.init(
         dsn=conf.glitchtip.dsn_backend,
-        # GlitchTip doesn't support Sentry sessions, so we disable them
         auto_session_tracking=False,
         traces_sample_rate=0.01 if conf.api.production_mode == 1 else 1.0,
         enable_logs=True,
@@ -79,65 +30,77 @@ if conf.glitchtip.dsn_backend.strip() != "":
     )
     logger.info("Connected to GlitchTip using Sentry SDK!")
 else:
-    logger.info(
-        "No GlitchTip DSN provided. Skipping connection to GlitchTip using Sentry SDK."
-    )
+    logger.info("No GlitchTip DSN provided. Skipping Sentry SDK connection.")
 
 
-# create the FastAPI app
+# 2. Init FastAPI
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- Worker Startup ---
+    logger.info(f"Worker {os.getpid()} starting Discourse Analysis Tool Suite FastAPI!")
+
+    # Connect to repos (external services)
+    from repos.db.sql_repo import SQLRepo
+    from repos.docling_repo import DoclingRepo
+    from repos.elastic.elastic_repo import ElasticSearchRepo
+    from repos.filesystem_repo import FilesystemRepo
+    from repos.llm_repo import LLMRepo
+    from repos.mail_repo import MailRepo
+    from repos.ray.ray_repo import RayRepo
+    from repos.redis_repo import RedisRepo
+    from repos.vector.weaviate_repo import WeaviateRepo
+
+    SQLRepo()
+    ElasticSearchRepo()
+    RayRepo()
+    WeaviateRepo()
+    DoclingRepo()
+    FilesystemRepo()
+    LLMRepo()
+    MailRepo()
+    RedisRepo()
+
+    yield
+
+    # --- Worker Shutdown ---
+    logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
+    FilesystemRepo().purge_temporary_files()
+    LLMRepo().close_connection()
+    ElasticSearchRepo().close_connection()
+
+
+def custom_generate_unique_id(route: APIRoute):
+    return f"{route.tags[0]}-{route.name}"
+
+
 app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
     lifespan=lifespan,
+    title="Discourse Analysis Tool Suite API",
+    version=conf.api.version,
 )
 
-
-# customize openapi schema
-# we need to add some DTOs manually, because they are not used in any endpoint, but needed in the frontend nonetheless
-def custom_openapi():
-    openapi_schema = get_openapi(
-        title="Discourse Analysis Tool Suite API",
-        version=conf.api.version,
-        routes=app.routes,
-    )
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi
-
-# Handle CORS
-# TODO Flo: Handle CORS via ReverseProxy in FrontEnd!
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "*",
-]
-
+# 3. Add Middlewares
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost", "http://localhost:8080", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Middleware to return GZip for results over a certain number of bytes
 app.add_middleware(GZipMiddleware, minimum_size=500)
-
-
-# Middleware required for Oauth2
-# see https://docs.authlib.org/en/latest/client/fastapi.html
 app.add_middleware(SessionMiddleware, secret_key=conf.auth.session.secret)
 
-
-# import & register all endpoints dynamically
+# 4. Dynamically Include Endpoints
+import_by_suffix("_job.py")
 endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
 
+# 5. Dynamically Register Exception Handlers
+from common.exception_handler import exception_handler, exception_handlers
 
-# register all exception handlers in fastAPI
 exception_handler(
     http_status_code=lambda exc: (
         409
@@ -155,18 +118,3 @@ exception_handler(404)(NoSuchJobError)
 
 for ex_class, handler_func in exception_handlers:
     app.add_exception_handler(ex_class, handler_func)
-
-
-def main() -> None:
-    run(
-        "main:app",
-        host="0.0.0.0",
-        port=conf.api.port,
-        log_level=conf.logging.level.lower(),
-        reload=conf.api.production_mode == 0,
-        workers=conf.api.workers,
-    )
-
-
-if __name__ == "__main__":
-    main()
