@@ -36,7 +36,7 @@ host = conf.postgres.host
 port = conf.postgres.port
 db = conf.postgres.db
 user = conf.postgres.user
-password = conf.postgres.password
+password = conf.postgres.password.get_secret_value()
 url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
 config.set_main_option("sqlalchemy.url", url)
 

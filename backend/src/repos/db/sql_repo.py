@@ -17,7 +17,7 @@ import_by_suffix("_orm.py")
 class SQLRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
-            db_uri = f"postgresql://{conf.postgres.user}:{conf.postgres.password}@{conf.postgres.host}:{conf.postgres.port}/{conf.postgres.db}"
+            db_uri = f"postgresql://{conf.postgres.user}:{conf.postgres.password.get_secret_value()}@{conf.postgres.host}:{conf.postgres.port}/{conf.postgres.db}"
             engine = create_engine(
                 db_uri,
                 pool_pre_ping=True,
