@@ -235,16 +235,10 @@ services:
       interval: 60s
       timeout: 10s
       retries: 5
-    command: >
-      uvicorn
-      --log-level "${LOG_LEVEL:?log-level-required!}"
-      --port 5500"
-      --host 0.0.0.0
-      --workers "${API_WORKERS:?api-workers-required!}"
-      main:app
+    command: python src/main.py
     environment:
       <<: *dats-common-env
-      API_WORKERS: ${API_WORKERS?api-workers-required!}
+      API_PORT: 5500
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache

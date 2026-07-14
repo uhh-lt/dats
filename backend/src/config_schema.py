@@ -70,6 +70,7 @@ class ApiConfig(BaseModel):
 
     version: str = Field(min_length=1)
     port: int = Field(gt=0, lt=65536)
+    workers: int = Field(gt=0)
     max_upload_file_size: int = Field(gt=0)
     production_mode: int = Field(ge=0, le=1)
     is_stable: bool
@@ -249,7 +250,6 @@ class RedisConfig(BaseModel):
 class LoggingConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    max_file_size: int = Field(gt=0)
     level: str = Field(min_length=1)
 
 
