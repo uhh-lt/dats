@@ -10,7 +10,7 @@ class RedisRepo(metaclass=SingletonMeta):
         # setup redis
         r_host = conf.redis.host
         r_port = conf.redis.port
-        r_pass = conf.redis.password
+        r_pass = conf.redis.password.get_secret_value()
         rq_idx = conf.redis.rq_idx
 
         cls.redis_conn = redis.Redis(

@@ -3,7 +3,7 @@ from typing import Generic, Type, TypeVar
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from sqlalchemy import delete
+from sqlalchemy import CursorResult, delete
 from sqlalchemy.orm import Session
 
 from common.exception_handler import exception_handler
@@ -195,6 +195,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
             # 3. Execute the statement
             result = db.execute(stmt)
+            assert isinstance(result, CursorResult), "Expected a CursorResult!"
+
             total_deleted_count += result.rowcount
 
         # 4. Flush

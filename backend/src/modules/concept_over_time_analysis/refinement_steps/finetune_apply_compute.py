@@ -179,9 +179,9 @@ def __apply_model(
         raise ValueError(f"Model {model} does not have a sentence_transformer!")
     sentence_transformer.eval()
     embeddings_tensor = sentence_transformer.encode(
-        sentences=sentences,
+        sentences,
         show_progress_bar=True,
-        convert_to_numpy=True,
+        convert_to_tensor=True,
         normalize_embeddings=True,
     )
     assert isinstance(embeddings_tensor, np.ndarray)

@@ -1,3 +1,5 @@
+from typing import Set
+
 import pandas as pd
 from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
@@ -38,11 +40,10 @@ def document_sampler_by_tags(
     if len(res) == 0:
         return []
 
-    data = []
-    groups = set()
-    for x in res:
-        sdoc = x[0]
-        tags = x[1]
+    data: list[dict[str, int]] = []
+    groups: Set[str] = set()
+    for row in res:
+        (sdoc, tags) = row.tuple()
         datum = {
             "sdoc": sdoc,
         }
@@ -71,11 +72,18 @@ def document_sampler_by_tags(
     )
 
     result: list[SampledSdocsResults] = []
-    for group in counts.keys():
+    for group, sdocs in counts.items():
+        if isinstance(group, int):
+            group_tags = [group]
+        elif isinstance(group, tuple):
+            group_tags = list(group)
+        else:
+            raise RuntimeError(f"Unexpected group key type: {type(group)}")
+
         result.append(
             SampledSdocsResults(
-                tags=[group] if isinstance(group, int) else list(group),
-                sdocs=counts.get(group, []),
+                tags=group_tags,
+                sdocs=sdocs,
                 sample_fixed=sample_fixed.get(group, []),
                 sample_relative=sample_relative.get(group, []),
             )

@@ -4,8 +4,8 @@
   "python.envFile": "${workspaceFolder:backend}/.env",
   "python.autoComplete.extraPaths": ["${workspaceFolder:backend}/src"],
   "python.analysis.extraPaths": ["${workspaceFolder:backend}/src"],
-  "python.analysis.pyrightVersion": "1.1.385", // this has to match pyproject.toml
-  "python.analysis.exclude": ["**/__pycache__", "**/.venv"],
+  "python.analysis.pyrightVersion": "1.1.411", // this has to match pyproject.toml
+  "python.analysis.exclude": ["**/__pycache__", "**/.venv", "**/node_modules", "**/.*"],
 
   // pytest
   "python.testing.unittestEnabled": false,

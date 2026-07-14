@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Iterable
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import CursorResult, delete, func, select
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -221,6 +221,7 @@ class CRUDTag(CRUDBase[TagORM, TagCreate, TagUpdate]):
 
             # 3. Execute the statement
             result = db.execute(stmt)
+            assert isinstance(result, CursorResult), "Expected a CursorResult!"
 
             # Add the count of deleted rows from this batch
             total_deleted_count += result.rowcount
