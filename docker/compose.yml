@@ -235,10 +235,10 @@ services:
       interval: 60s
       timeout: 10s
       retries: 5
-    command: python src/main.py
+    command: src/backend_api_entrypoint.sh
     environment:
       <<: *dats-common-env
-      API_PORT: 5500
+      LOG_LEVEL: ${API_LOG_LEVEL?api-log-level-required!}
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache
