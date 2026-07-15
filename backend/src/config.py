@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,8 +26,3 @@ if not filesystem_root.is_absolute():
 version_conf = OmegaConf.load(str(config_dir / "version.yaml"))
 conf = OmegaConf.merge(conf, version_conf)
 conf = BackendConfigSchema.model_validate(OmegaConf.to_container(conf, resolve=True))
-
-# setup loguru logging
-logger.remove()
-logger.add(sys.stderr, level=conf.logging.level.upper())
-logger.info("Loaded config 'default.yaml'")
