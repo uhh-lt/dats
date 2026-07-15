@@ -63,9 +63,7 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         weaviate_repo.connect()
         if reset_data:
             weaviate_repo.remove_data()
-
-        with weaviate_repo.weaviate_session() as client:
-            _create_weaviate_colllections(client=client)
+        _create_weaviate_colllections(client=weaviate_repo.get_client())
 
         #################
         # 5. Init Redis #
