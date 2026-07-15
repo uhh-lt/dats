@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from repos.repo_base import RepoBase
 
 
 class DoclingPDF2HTMLOutput(BaseModel):
@@ -16,29 +17,60 @@ class DoclingPDF2HTMLOutput(BaseModel):
     )
 
 
-class DoclingRepo(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
+class DoclingRepo(RepoBase, metaclass=SingletonMeta):
+    def __init__(self):
+        """
+        Initialize DoclingRepo. DO NOT connect here - call connect() explicitly.
+        """
+        RepoBase.__init__(self)
+        self._url: str | None = None
+
+    def connect(self) -> None:
+        """Establish connection to Docling."""
+        if self._url is not None:
+            logger.debug("DoclingRepo already connected, skipping")
+            return
+
         try:
             url = f"http://{conf.docling.host}:{conf.docling.port}"
 
-            # test connection to docling serve
+            # test connection to docling
             with httpx.Client(timeout=10) as client:
                 resp = client.get(url + "/health")
                 resp.raise_for_status()
 
-            cls.url = url
+            self._url = url
+            logger.info("Successfully connected to Docling!")
 
         except Exception as e:
             msg = f"Cannot instantiate DoclingRepo - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
 
-        logger.info("Successfully connected to Docling Serve!")
+    def close_connection(self) -> None:
+        """
+        Close the connection to Docling.
+        This does nothing as Docling is stateless.
+        """
+        if self._url is None:
+            logger.debug("DoclingRepo already closed, skipping")
+            return
 
-        return super(DoclingRepo, cls).__new__(cls)
+        logger.info("Closing connection to Docling...")
+        self._url = None
+
+    def remove_data(self) -> None:
+        """
+        Reset/clear Docling data.
+        This does nothing as Docling is stateless.
+        """
+        logger.info("Docling reset (no state to clear)")
 
     def pdf2html(self, pdf_chunk: Path) -> DoclingPDF2HTMLOutput:
         # Here we assume that the pdf_chunk is a valid PDF file chunk
+        if self._url is None:
+            raise RuntimeError("DoclingRepo is not connected. Call connect() first.")
+
         if (
             not pdf_chunk.exists()
             or not pdf_chunk.is_file()
@@ -66,7 +98,7 @@ class DoclingRepo(metaclass=SingletonMeta):
         # 1. submit task
         with httpx.Client(timeout=300) as client:
             response = client.post(
-                url=f"{self.url}/v1/convert/file/async", files=files, data=parameters
+                url=f"{self._url}/v1/convert/file/async", files=files, data=parameters
             )
             response.raise_for_status()
             task = response.json()
@@ -75,7 +107,7 @@ class DoclingRepo(metaclass=SingletonMeta):
         with httpx.Client(timeout=300) as client:
             while task["task_status"] not in ["success", "failure"]:
                 response = client.get(
-                    url=f"{self.url}/v1/status/poll/{task['task_id']}"
+                    url=f"{self._url}/v1/status/poll/{task['task_id']}"
                 )
                 response.raise_for_status()
                 task = response.json()
@@ -86,7 +118,7 @@ class DoclingRepo(metaclass=SingletonMeta):
             raise ValueError("Docling conversion failed!")
 
         with httpx.Client(timeout=300) as client:
-            response = client.get(url=f"{self.url}/v1/result/{task['task_id']}")
+            response = client.get(url=f"{self._url}/v1/result/{task['task_id']}")
             response.raise_for_status()
             result = response.json()
 
