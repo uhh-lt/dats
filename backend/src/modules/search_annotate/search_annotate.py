@@ -99,7 +99,7 @@ def search_and_auto_annotate(
     logger.info("Searching in ES database")
     t0 = time.time()
     search_results = _search_highlights(
-        client=ElasticSearchRepo().client,
+        client=ElasticSearchRepo().get_client(),
         project_id=project_id,
         term=query,
     )

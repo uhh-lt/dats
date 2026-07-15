@@ -313,7 +313,7 @@ def import_sdocs_to_proj(
 
         # 6. Add the source documents to the Elasticsearch index
         crud_elastic_sdoc.create(
-            client=ElasticSearchRepo().client,
+            client=ElasticSearchRepo().get_client(),
             proj_id=project_id,
             create_dto=ElasticSearchDocumentCreate(
                 project_id=project_id,

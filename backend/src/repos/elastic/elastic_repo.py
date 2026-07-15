@@ -79,7 +79,7 @@ class ElasticSearchRepo(RepoBase, metaclass=SingletonMeta):
         self._client.indices.delete(index="dats_*", allow_no_indices=True)
         logger.info("ElasticSearch indices reset")
 
-    def elastic_search_session(self) -> Elasticsearch:
+    def get_client(self) -> Elasticsearch:
         """Return the ElasticSearch client instance"""
         if self._client is None:
             raise RuntimeError(

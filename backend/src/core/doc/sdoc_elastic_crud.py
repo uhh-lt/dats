@@ -73,7 +73,7 @@ def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
     from repos.elastic.elastic_repo import ElasticSearchRepo
 
     crud_elastic_sdoc.delete(
-        client=ElasticSearchRepo().client,
+        client=ElasticSearchRepo().get_client(),
         id=sdoc_id,
         proj_id=project_id,
     )

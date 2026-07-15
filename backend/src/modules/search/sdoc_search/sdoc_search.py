@@ -137,7 +137,7 @@ def find_sdoc_ids(
             skip = None
             limit = None
         return crud_elastic_sdoc.search_sdocs_by_content_query(
-            client=ElasticSearchRepo().client,
+            client=ElasticSearchRepo().get_client(),
             proj_id=project_id,
             query=search_query,
             sdoc_ids=filtered_sdoc_ids,
