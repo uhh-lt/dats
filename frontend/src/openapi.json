@@ -1851,7 +1851,7 @@
         "summary": "Start Crawler job",
         "operationId": "start_crawler_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput-Input" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobInput" } } },
           "required": true
         },
         "responses": {
@@ -1974,7 +1974,7 @@
         "summary": "Start Ml job",
         "operationId": "start_ml_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobInput-Input" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MLJobInput" } } },
           "required": true
         },
         "responses": {
@@ -2289,7 +2289,7 @@
         "summary": "Start LlmAssistant job",
         "operationId": "start_llm_assistant_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobInput-Input" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LLMJobInput" } } },
           "required": true
         },
         "responses": {
@@ -7056,10 +7056,14 @@
             "title": "Grant Type"
           },
           "username": { "type": "string", "title": "Username" },
-          "password": { "type": "string", "title": "Password" },
+          "password": { "type": "string", "format": "password", "title": "Password" },
           "scope": { "type": "string", "title": "Scope", "default": "" },
           "client_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Client Id" },
-          "client_secret": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Client Secret" }
+          "client_secret": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "format": "password",
+            "title": "Client Secret"
+          }
         },
         "type": "object",
         "required": ["username", "password"],
@@ -7098,7 +7102,7 @@
         "properties": {
           "settings": { "type": "string", "title": "Settings", "description": "ProcessingSettings as JSON string" },
           "uploaded_files": {
-            "items": { "type": "string", "format": "binary" },
+            "items": { "type": "string", "contentMediaType": "application/octet-stream" },
             "type": "array",
             "title": "Uploaded Files",
             "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
@@ -7109,7 +7113,13 @@
         "title": "Body_docprocessing-upload_files"
       },
       "Body_import-start_import_job": {
-        "properties": { "uploaded_file": { "type": "string", "format": "binary", "title": "Uploaded File" } },
+        "properties": {
+          "uploaded_file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Uploaded File"
+          }
+        },
         "type": "object",
         "required": ["uploaded_file"],
         "title": "Body_import-start_import_job"
@@ -7137,7 +7147,10 @@
       },
       "Body_perspectives-visualize_documents": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
@@ -7161,7 +7174,10 @@
       },
       "Body_search-search_bbox_annotations": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_BBoxColumns_-Input" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_BBoxColumns_-Input",
+            "description": "The filter of the Concept"
+          },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
@@ -7179,7 +7195,10 @@
       },
       "Body_search-search_sdocs": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_SdocColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
@@ -7188,7 +7207,10 @@
       },
       "Body_search-search_sentence_annotations": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SentAnnoColumns_-Input",
+            "description": "The filter of the Concept"
+          },
           "sorts": {
             "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
             "type": "array",
@@ -7201,7 +7223,10 @@
       },
       "Body_search-search_span_annotations": {
         "properties": {
-          "filter": { "$ref": "#/components/schemas/Filter_SpanColumns_-Input" },
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SpanColumns_-Input",
+            "description": "The filter of the Concept"
+          },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
         },
         "type": "object",
@@ -7223,7 +7248,10 @@
             "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
             "title": "Query"
           },
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          }
         },
         "type": "object",
         "required": ["query", "filter"],
@@ -7235,7 +7263,10 @@
             "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }, { "type": "integer" }],
             "title": "Query"
           },
-          "filter": { "$ref": "#/components/schemas/Filter_SdocColumns_-Input" }
+          "filter": {
+            "$ref": "#/components/schemas/Filter_SdocColumns_-Input",
+            "description": "The filter of the Concept"
+          }
         },
         "type": "object",
         "required": ["query", "filter"],
@@ -7960,7 +7991,12 @@
             "title": "Labelid2Classid",
             "description": "Mapping from internal model label id to code/tag id, depending on ClassifierModel."
           },
-          "train_params": { "type": "object", "title": "Train Params", "description": "Training parameters" },
+          "train_params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Train Params",
+            "description": "Training parameters"
+          },
           "train_loss": {
             "items": { "$ref": "#/components/schemas/ClassifierLoss" },
             "type": "array",
@@ -8512,26 +8548,7 @@
         "required": ["ml_job_type"],
         "title": "CoreferenceResolutionParams"
       },
-      "CrawlerJobInput-Input": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "The ID of the Project to import the crawled data."
-          },
-          "settings": { "$ref": "#/components/schemas/ProcessingSettings", "description": "Processing settings" },
-          "urls": {
-            "items": { "type": "string" },
-            "type": "array",
-            "title": "Urls",
-            "description": "List of URLs to crawl."
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "settings", "urls"],
-        "title": "CrawlerJobInput"
-      },
-      "CrawlerJobInput-Output": {
+      "CrawlerJobInput": {
         "properties": {
           "project_id": {
             "type": "integer",
@@ -8582,7 +8599,7 @@
             "title": "Steps",
             "description": "Total number of steps in the job process"
           },
-          "input": { "$ref": "#/components/schemas/CrawlerJobInput-Output", "description": "Input for the job" },
+          "input": { "$ref": "#/components/schemas/CrawlerJobInput", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/CrawlerJobOutput" }, { "type": "null" }],
             "description": "Output for the job"
@@ -9731,67 +9748,7 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
-      "LLMJobInput-Input": {
-        "properties": {
-          "project_id": {
-            "type": "integer",
-            "title": "Project Id",
-            "description": "Project ID associated with the job"
-          },
-          "llm_job_type": {
-            "$ref": "#/components/schemas/TaskType",
-            "description": "The type of the LLMJob (what to llm)"
-          },
-          "specific_task_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/TaggingParams" },
-              { "$ref": "#/components/schemas/MetadataExtractionParams" },
-              { "$ref": "#/components/schemas/AnnotationParams" },
-              { "$ref": "#/components/schemas/SentenceAnnotationParams" }
-            ],
-            "title": "Specific Task Parameters",
-            "description": "Specific parameters for the LLMJob w.r.t it's type",
-            "discriminator": {
-              "propertyName": "llm_job_type",
-              "mapping": {
-                "ANNOTATION": "#/components/schemas/AnnotationParams",
-                "METADATA_EXTRACTION": "#/components/schemas/MetadataExtractionParams",
-                "SENTENCE_ANNOTATION": "#/components/schemas/SentenceAnnotationParams",
-                "TAGGING": "#/components/schemas/TaggingParams"
-              }
-            }
-          },
-          "llm_approach_type": {
-            "$ref": "#/components/schemas/ApproachType",
-            "description": "The approach to use for the LLMJob"
-          },
-          "specific_approach_parameters": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/ZeroShotParams" },
-              { "$ref": "#/components/schemas/FewShotParams" }
-            ],
-            "title": "Specific Approach Parameters",
-            "description": "Specific parameters for the approach w.r.t it's type",
-            "discriminator": {
-              "propertyName": "llm_approach_type",
-              "mapping": {
-                "LLM_FEW_SHOT": "#/components/schemas/FewShotParams",
-                "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
-              }
-            }
-          }
-        },
-        "type": "object",
-        "required": [
-          "project_id",
-          "llm_job_type",
-          "specific_task_parameters",
-          "llm_approach_type",
-          "specific_approach_parameters"
-        ],
-        "title": "LLMJobInput"
-      },
-      "LLMJobInput-Output": {
+      "LLMJobInput": {
         "properties": {
           "project_id": {
             "type": "integer",
@@ -9962,7 +9919,7 @@
             "title": "Steps",
             "description": "Total number of steps in the job process"
           },
-          "input": { "$ref": "#/components/schemas/LLMJobInput-Output", "description": "Input for the job" },
+          "input": { "$ref": "#/components/schemas/LLMJobInput", "description": "Input for the job" },
           "output": {
             "anyOf": [{ "$ref": "#/components/schemas/LLMJobOutput" }, { "type": "null" }],
             "description": "Output for the job"
@@ -9989,42 +9946,7 @@
         "title": "LogicalOperator",
         "description": "This tells our filter how to combine multiple column expressions."
       },
-      "MLJobInput-Input": {
-        "properties": {
-          "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
-          "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
-          "specific_ml_job_parameters": {
-            "anyOf": [
-              {
-                "oneOf": [
-                  { "$ref": "#/components/schemas/QuotationAttributionParams" },
-                  { "$ref": "#/components/schemas/DocTagRecommendationParams" },
-                  { "$ref": "#/components/schemas/CoreferenceResolutionParams" },
-                  { "$ref": "#/components/schemas/DocumentEmbeddingParams" },
-                  { "$ref": "#/components/schemas/SentenceEmbeddingParams" }
-                ],
-                "discriminator": {
-                  "propertyName": "ml_job_type",
-                  "mapping": {
-                    "COREFERENCE_RESOLUTION": "#/components/schemas/CoreferenceResolutionParams",
-                    "DOCUMENT_EMBEDDING": "#/components/schemas/DocumentEmbeddingParams",
-                    "QUOTATION_ATTRIBUTION": "#/components/schemas/QuotationAttributionParams",
-                    "SENTENCE_EMBEDDING": "#/components/schemas/SentenceEmbeddingParams",
-                    "TAG_RECOMMENDATION": "#/components/schemas/DocTagRecommendationParams"
-                  }
-                }
-              },
-              { "type": "null" }
-            ],
-            "title": "Specific Ml Job Parameters",
-            "description": "Specific parameters for the MLJob w.r.t it's type"
-          }
-        },
-        "type": "object",
-        "required": ["project_id", "ml_job_type", "specific_ml_job_parameters"],
-        "title": "MLJobInput"
-      },
-      "MLJobInput-Output": {
+      "MLJobInput": {
         "properties": {
           "project_id": { "type": "integer", "title": "Project Id", "description": "The ID of the Project to analyse" },
           "ml_job_type": { "$ref": "#/components/schemas/MLJobType", "description": "The type of the MLJob" },
@@ -10294,7 +10216,7 @@
             "title": "Steps",
             "description": "Total number of steps in the job process"
           },
-          "input": { "$ref": "#/components/schemas/MLJobInput-Output", "description": "Input for the job" },
+          "input": { "$ref": "#/components/schemas/MLJobInput", "description": "Input for the job" },
           "output": { "type": "null", "title": "Output", "description": "Output for the job" },
           "created": {
             "type": "string",
@@ -12959,42 +12881,25 @@
             "title": "Location"
           },
           "msg": { "type": "string", "title": "Message" },
-          "type": { "type": "string", "title": "Error Type" }
+          "type": { "type": "string", "title": "Error Type" },
+          "input": { "title": "Input" },
+          "ctx": { "type": "object", "title": "Context" }
         },
         "type": "object",
         "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "VerticalAlign": { "type": "string", "enum": ["top", "center", "bottom"], "title": "VerticalAlign" },
-      "WhiteboardContent-Input": {
+      "WhiteboardContent": {
         "properties": {
           "nodes": {
-            "items": { "$ref": "#/components/schemas/WhiteboardNode-Input" },
+            "items": { "$ref": "#/components/schemas/WhiteboardNode" },
             "type": "array",
             "title": "Nodes",
             "description": "Nodes of the Whiteboard"
           },
           "edges": {
-            "items": { "$ref": "#/components/schemas/WhiteboardEdge-Input" },
-            "type": "array",
-            "title": "Edges",
-            "description": "Edges of the Whiteboard"
-          }
-        },
-        "type": "object",
-        "required": ["nodes", "edges"],
-        "title": "WhiteboardContent"
-      },
-      "WhiteboardContent-Output": {
-        "properties": {
-          "nodes": {
-            "items": { "$ref": "#/components/schemas/WhiteboardNode-Output" },
-            "type": "array",
-            "title": "Nodes",
-            "description": "Nodes of the Whiteboard"
-          },
-          "edges": {
-            "items": { "$ref": "#/components/schemas/WhiteboardEdge-Output" },
+            "items": { "$ref": "#/components/schemas/WhiteboardEdge" },
             "type": "array",
             "title": "Edges",
             "description": "Edges of the Whiteboard"
@@ -13062,7 +12967,7 @@
         "required": ["sdocs", "codes", "tags", "span_annotations", "sent_annotations", "bbox_annotations", "memos"],
         "title": "WhiteboardData"
       },
-      "WhiteboardEdge-Input": {
+      "WhiteboardEdge": {
         "properties": {
           "id": { "type": "string", "title": "Id", "description": "ID of the edge" },
           "type": {
@@ -13083,22 +12988,22 @@
             "description": "Target handle position"
           },
           "data": {
-            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardEdgeData-Input" }, { "type": "null" }],
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardEdgeData" }, { "type": "null" }],
             "description": "Data of the edge"
           },
           "style": {
-            "anyOf": [{ "type": "object" }, { "type": "null" }],
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
             "title": "Style",
             "description": "Style of the edge"
           },
           "markerEnd": {
-            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "string" }],
             "title": "Markerend",
             "description": "Marker end of the edge",
             "default": ""
           },
           "markerStart": {
-            "anyOf": [{ "type": "object" }, { "type": "string" }],
+            "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "string" }],
             "title": "Markerstart",
             "description": "Marker start of the edge",
             "default": ""
@@ -13108,62 +13013,7 @@
         "required": ["id", "source", "target"],
         "title": "WhiteboardEdge"
       },
-      "WhiteboardEdge-Output": {
-        "properties": {
-          "id": { "type": "string", "title": "Id", "description": "ID of the edge" },
-          "type": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Type",
-            "description": "Type of the edge"
-          },
-          "source": { "type": "string", "title": "Source", "description": "Source node ID" },
-          "sourceHandle": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Sourcehandle",
-            "description": "Source handle position"
-          },
-          "target": { "type": "string", "title": "Target", "description": "Target node ID" },
-          "targetHandle": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Targethandle",
-            "description": "Target handle position"
-          },
-          "data": {
-            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardEdgeData-Output" }, { "type": "null" }],
-            "description": "Data of the edge"
-          },
-          "style": {
-            "anyOf": [{ "type": "object" }, { "type": "null" }],
-            "title": "Style",
-            "description": "Style of the edge"
-          },
-          "markerEnd": {
-            "anyOf": [{ "type": "object" }, { "type": "string" }],
-            "title": "Markerend",
-            "description": "Marker end of the edge",
-            "default": ""
-          },
-          "markerStart": {
-            "anyOf": [{ "type": "object" }, { "type": "string" }],
-            "title": "Markerstart",
-            "description": "Marker start of the edge",
-            "default": ""
-          }
-        },
-        "type": "object",
-        "required": ["id", "source", "target"],
-        "title": "WhiteboardEdge"
-      },
-      "WhiteboardEdgeData-Input": {
-        "properties": {
-          "type": { "$ref": "#/components/schemas/WhiteboardEdgeType", "description": "Type of the edge" },
-          "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData" }
-        },
-        "type": "object",
-        "required": ["type", "label"],
-        "title": "WhiteboardEdgeData"
-      },
-      "WhiteboardEdgeData-Output": {
+      "WhiteboardEdgeData": {
         "properties": {
           "type": { "$ref": "#/components/schemas/WhiteboardEdgeType", "description": "Type of the edge" },
           "label": { "$ref": "#/components/schemas/WhiteboardEdgeLabelData" }
@@ -13223,7 +13073,7 @@
         "enum": ["bezier", "straight", "simplebezier", "smoothstep"],
         "title": "WhiteboardEdgeType"
       },
-      "WhiteboardNode-Input": {
+      "WhiteboardNode": {
         "properties": {
           "id": { "type": "string", "title": "Id", "description": "ID of the node" },
           "type": {
@@ -13274,64 +13124,13 @@
             "title": "Height",
             "description": "Height of the node"
           },
-          "style": { "type": "object", "title": "Style", "description": "Style of the node", "default": {} }
-        },
-        "type": "object",
-        "required": ["id", "data", "position"],
-        "title": "WhiteboardNode"
-      },
-      "WhiteboardNode-Output": {
-        "properties": {
-          "id": { "type": "string", "title": "Id", "description": "ID of the node" },
-          "type": {
-            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardNodeType" }, { "type": "string" }],
-            "title": "Type",
-            "description": "Type of the node",
-            "default": "text"
-          },
-          "data": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/TextNodeData" },
-              { "$ref": "#/components/schemas/NoteNodeData" },
-              { "$ref": "#/components/schemas/BorderNodeData" },
-              { "$ref": "#/components/schemas/SdocNodeData" },
-              { "$ref": "#/components/schemas/MemoNodeData" },
-              { "$ref": "#/components/schemas/CodeNodeData" },
-              { "$ref": "#/components/schemas/TagNodeData" },
-              { "$ref": "#/components/schemas/SpanAnnotationNodeData" },
-              { "$ref": "#/components/schemas/SentenceAnnotationNodeData" },
-              { "$ref": "#/components/schemas/BBoxAnnotationNodeData" }
-            ],
-            "title": "Data",
-            "description": "Data of the node",
-            "discriminator": {
-              "propertyName": "type",
-              "mapping": {
-                "bboxAnnotation": "#/components/schemas/BBoxAnnotationNodeData",
-                "border": "#/components/schemas/BorderNodeData",
-                "code": "#/components/schemas/CodeNodeData",
-                "memo": "#/components/schemas/MemoNodeData",
-                "note": "#/components/schemas/NoteNodeData",
-                "sdoc": "#/components/schemas/SdocNodeData",
-                "sentenceAnnotation": "#/components/schemas/SentenceAnnotationNodeData",
-                "spanAnnotation": "#/components/schemas/SpanAnnotationNodeData",
-                "tag": "#/components/schemas/TagNodeData",
-                "text": "#/components/schemas/TextNodeData"
-              }
-            }
-          },
-          "position": { "$ref": "#/components/schemas/XYPosition", "description": "Position of the node" },
-          "width": {
-            "anyOf": [{ "type": "number" }, { "type": "null" }],
-            "title": "Width",
-            "description": "Width of the node"
-          },
-          "height": {
-            "anyOf": [{ "type": "number" }, { "type": "null" }],
-            "title": "Height",
-            "description": "Height of the node"
-          },
-          "style": { "type": "object", "title": "Style", "description": "Style of the node", "default": {} }
+          "style": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Style",
+            "description": "Style of the node",
+            "default": {}
+          }
         },
         "type": "object",
         "required": ["id", "data", "position"],
@@ -13374,10 +13173,7 @@
             "title": "Updated",
             "description": "Updated timestamp of the Whiteboard"
           },
-          "content": {
-            "$ref": "#/components/schemas/WhiteboardContent-Output",
-            "description": "Content of the Whiteboard"
-          }
+          "content": { "$ref": "#/components/schemas/WhiteboardContent", "description": "Content of the Whiteboard" }
         },
         "type": "object",
         "required": ["title", "id", "project_id", "created", "updated", "content"],
@@ -13391,7 +13187,7 @@
             "description": "Title of the Whiteboard"
           },
           "content": {
-            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardContent-Input" }, { "type": "null" }],
+            "anyOf": [{ "$ref": "#/components/schemas/WhiteboardContent" }, { "type": "null" }],
             "description": "Conten of the Whiteboard"
           }
         },
