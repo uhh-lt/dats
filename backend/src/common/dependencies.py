@@ -45,16 +45,8 @@ def skip_limit_params(
 
 
 def get_db_session() -> Generator[Session, None, None]:
-    session = SQLRepo().session_maker()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        if session is not None:
-            session.close()
+    with SQLRepo().transaction() as db:
+        yield db
 
 
 def get_weaviate_session() -> Generator[WeaviateClient, None, None]:
