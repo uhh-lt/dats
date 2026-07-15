@@ -16,7 +16,7 @@ class LoggingInterceptHandler(logging.Handler):
         except ValueError:
             level = record.levelno
 
-        # we explicitly inject the exact metadata that standard logging already captured!
+        # Inject the exact metadata that standard logging captured
         logger_with_overrides = logger.patch(
             lambda log_record: log_record.update(
                 {
@@ -33,26 +33,33 @@ class LoggingInterceptHandler(logging.Handler):
 
 
 def _hijack_standard_loggers():
-    """Forces Uvicorn, RQ, and FastAPI to use Loguru."""
-    logging.root.handlers = [LoggingInterceptHandler()]
-    logging.root.setLevel(conf.logging.level.upper())
+    """Forces Uvicorn, RQ, and FastAPI to use Loguru, while keeping the rest of Python quiet."""
 
-    # Remove all existing handlers from specific noisy libraries
+    # 1. Attach our interceptor to the Root Logger
+    logging.root.handlers = [LoggingInterceptHandler()]
+
+    # 2. Explicitly set the standard Root Logger to WARNING.
+    logging.root.setLevel(logging.WARNING)
+
+    # 3. Strip handlers from libraries that normally print (Uvicorn/RQ)
     for name in logging.root.manager.loggerDict.keys():
-        logging.getLogger(name).handlers = []
-        logging.getLogger(name).propagate = True
+        logging_logger = logging.getLogger(name)
+        logging_logger.handlers = []
+        logging_logger.propagate = True
 
 
 def _setup_loguru_logging():
     """Sets up Loguru logging with a custom format."""
     logger.remove()
+
     LOGURU_FORMAT = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
-        "<magenta>PID: {process.id}</magenta> | "  # <-- Highlights which worker is logging!
+        "<magenta>PID: {process.id}</magenta> | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
         "<level>{message}</level>"
     )
+
     logger.add(
         sys.stderr,
         level=conf.logging.level.upper(),
