@@ -1,6 +1,7 @@
 # ignore unorganized imports for this file
 # ruff: noqa: E402
 
+import inspect
 import os
 from contextlib import asynccontextmanager
 
@@ -16,7 +17,12 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import conf
+from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
+from utils.logger import setup_logging
+
+setup_logging()
+
 
 # 1. Init Sentry
 if conf.glitchtip.dsn_backend.strip() != "":
@@ -39,34 +45,41 @@ async def lifespan(app: FastAPI):
     # --- Worker Startup ---
     logger.info(f"Worker {os.getpid()} starting Discourse Analysis Tool Suite FastAPI!")
 
-    # Connect to repos (external services)
-    from repos.db.sql_repo import SQLRepo
-    from repos.docling_repo import DoclingRepo
-    from repos.elastic.elastic_repo import ElasticSearchRepo
-    from repos.filesystem_repo import FilesystemRepo
-    from repos.llm_repo import LLMRepo
-    from repos.mail_repo import MailRepo
-    from repos.ray.ray_repo import RayRepo
-    from repos.redis_repo import RedisRepo
-    from repos.vector.weaviate_repo import WeaviateRepo
+    # Find all repos dynamically
+    repos: list[RepoBase] = []
+    repo_modules = import_by_suffix("_repo.py")
+    repo_modules.sort(key=lambda x: x.__name__.split(".")[-1])
+    for module in repo_modules:
+        for name, cls in inspect.getmembers(module, inspect.isclass):
+            if (
+                issubclass(cls, RepoBase)  # 1. Must inherit from RepoBase
+                and cls is not RepoBase  # 2. Must not be the base class itself
+                and cls.__module__ == module.__name__  # 3. Must be defined in THIS file
+            ):
+                repo_instance = cls()
+                repos.append(repo_instance)
 
-    SQLRepo()
-    ElasticSearchRepo()
-    RayRepo()
-    WeaviateRepo()
-    DoclingRepo()
-    FilesystemRepo()
-    LLMRepo()
-    MailRepo()
-    RedisRepo()
+    # Setup repos lazily
+    for repo in repos:
+        repo.connect()
+
+    # Setup services lazily
+    from systems.job_system.job_service import JobService
+
+    JobService().initialize()
 
     yield
 
     # --- Worker Shutdown ---
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
+
+    from repos.filesystem_repo import FilesystemRepo
+
     FilesystemRepo().purge_temporary_files()
-    LLMRepo().close_connection()
-    ElasticSearchRepo().close_connection()
+
+    # Close all repo connections
+    for repo in repos:
+        repo.close_connection()
 
 
 def custom_generate_unique_id(route: APIRoute):

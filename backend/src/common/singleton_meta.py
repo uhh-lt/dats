@@ -1,15 +1,12 @@
 from abc import ABCMeta
 from typing import Type, TypeVar
 
-from loguru import logger
-
 SingletonInstance = TypeVar("SingletonInstance")
 
 
 class SingletonMeta(ABCMeta):
     def __init__(cls, class_name, bases, attrs):
         cls.__singleton = None
-        logger.info(f"Instantiating {class_name} Singleton...")
         super().__init__(class_name, bases, attrs)
 
     def __call__(cls: Type[SingletonInstance], *args, **kwargs) -> SingletonInstance:
