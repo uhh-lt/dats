@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+from itertools import repeat
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 from common.doc_type import DocType
 from common.meta_type import MetaType
@@ -127,7 +135,17 @@ class AuthConfig(BaseModel):
 
     jwt: JwtConfig
     session: SessionConfig
-    oidc: OidcConfig
+    oidc: list[OidcConfig]
+
+    @field_validator("oidc", mode="before")
+    @classmethod
+    def transform(cls, value: dict) -> list[OidcConfig]:
+        # transforms the environemnt variables for OIDC configuration
+        # from comma-separeted lists into list of objects
+        split = {k: v.split(",") for k, v in value.items()}
+        tmp = list(zip(repeat(split.keys()), *split.values()))
+        result = [OidcConfig(**{k: v for k, v in zip(x[0], x[1:])}) for x in tmp]
+        return result
 
 
 class PersonConfig(BaseModel):

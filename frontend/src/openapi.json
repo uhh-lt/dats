@@ -355,6 +355,7 @@
         "summary": "Oidc Login",
         "operationId": "oidc_login",
         "parameters": [
+          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } },
           {
             "name": "redirect_uri",
             "in": "query",
@@ -376,8 +377,15 @@
         "tags": ["authentication"],
         "summary": "Oidc Callback",
         "operationId": "oidc_callback",
+        "parameters": [
+          { "name": "provider", "in": "query", "required": true, "schema": { "type": "string", "title": "Provider" } }
+        ],
         "responses": {
-          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
         }
       }
     },
@@ -1968,6 +1976,49 @@
         }
       }
     },
+    "/job/duplicate_finder": {
+      "post": {
+        "tags": ["job"],
+        "summary": "Start DuplicateFinder job",
+        "operationId": "start_duplicate_finder_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/job/duplicate_finder/{job_id}": {
+      "get": {
+        "tags": ["job"],
+        "summary": "Get DuplicateFinder job",
+        "operationId": "get_duplicate_finder_job_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/job/ml": {
       "post": {
         "tags": ["job"],
@@ -2079,49 +2130,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/job/duplicate_finder": {
-      "post": {
-        "tags": ["job"],
-        "summary": "Start DuplicateFinder job",
-        "operationId": "start_duplicate_finder_job",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderInput" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/job/duplicate_finder/{job_id}": {
-      "get": {
-        "tags": ["job"],
-        "summary": "Get DuplicateFinder job",
-        "operationId": "get_duplicate_finder_job_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "job_id", "in": "path", "required": true, "schema": { "type": "string", "title": "Job Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DuplicateFinderJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -9745,10 +9753,11 @@
       "InstanceInfo": {
         "properties": {
           "is_oidc_enabled": { "type": "boolean", "title": "Is Oidc Enabled", "description": "Is OIDC enabled" },
-          "oidc_provider_name": {
-            "type": "string",
-            "title": "Oidc Provider Name",
-            "description": "OIDC provider name"
+          "oidc_provider_names": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Oidc Provider Names",
+            "description": "OIDC provider names"
           },
           "is_stable": { "type": "boolean", "title": "Is Stable", "description": "Is stable" },
           "glitchtip_public_key": {
@@ -9765,7 +9774,7 @@
         "type": "object",
         "required": [
           "is_oidc_enabled",
-          "oidc_provider_name",
+          "oidc_provider_names",
           "is_stable",
           "glitchtip_public_key",
           "glitchtip_project_id"

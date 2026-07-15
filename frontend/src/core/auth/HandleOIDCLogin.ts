@@ -1,6 +1,9 @@
 import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 
-export function handleOIDCLogin(updateAuthData: (authData: UserAuthorizationHeaderData) => void): void {
+export function handleOIDCLogin(
+  provider: string,
+  updateAuthData: (authData: UserAuthorizationHeaderData) => void,
+): void {
   const width = 600;
   const height = 600;
   const left = window.screenX + (window.outerWidth - width) / 2;
@@ -8,7 +11,7 @@ export function handleOIDCLogin(updateAuthData: (authData: UserAuthorizationHead
 
   // Open the OIDC login window
   const loginWindow = window.open(
-    `/api/authentication/oidc/login?redirect_uri=${encodeURIComponent(window.location.origin + "/api/authentication/oidc/callback")}`,
+    `/api/authentication/oidc/login?provider=${provider}&redirect_uri=${encodeURIComponent(window.location.origin + `/api/authentication/oidc/callback?provider=${provider}`)}`,
     "oidc_login",
     `width=${width},height=${height},left=${left},top=${top}`,
   );

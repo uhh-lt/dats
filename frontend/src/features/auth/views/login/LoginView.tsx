@@ -146,15 +146,19 @@ export function LoginView() {
                     </Typography>
                   </Divider>
                 </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                  onClick={() => handleOIDCLogin(updateAuthData)}
-                >
-                  Sign in with {instanceInfo.oidc_provider_name}
-                </Button>
+                {instanceInfo.oidc_provider_names.map((provider_name) => {
+                  return (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      onClick={() => handleOIDCLogin(provider_name, updateAuthData)}
+                    >
+                      Sign in with {provider_name}
+                    </Button>
+                  );
+                })}
               </>
             )}
           </CardContent>

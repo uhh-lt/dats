@@ -8,9 +8,9 @@ export type InstanceInfo = {
    */
   is_oidc_enabled: boolean;
   /**
-   * OIDC provider name
+   * OIDC provider names
    */
-  oidc_provider_name: string;
+  oidc_provider_names: Array<string>;
   /**
    * Is stable
    */

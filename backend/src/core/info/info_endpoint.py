@@ -25,8 +25,9 @@ def info():
             print(f"Error parsing Glitchtip DSN: {e}")
 
     return InstanceInfo(
-        is_oidc_enabled=conf.auth.oidc.enabled,
-        oidc_provider_name=conf.auth.oidc.name,
+        is_oidc_enabled=len(conf.auth.oidc) > 0
+        and any(x.enabled for x in conf.auth.oidc),
+        oidc_provider_names=[x.name for x in conf.auth.oidc if x.enabled],
         is_stable=conf.api.is_stable,
         glitchtip_public_key=glitchtip_public_key,
         glitchtip_project_id=glitchtip_project_id,
