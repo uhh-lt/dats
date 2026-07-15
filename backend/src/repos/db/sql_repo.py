@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from typing import Generator
 
 from loguru import logger
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
@@ -63,6 +63,17 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
         self._session_maker = None
 
     def remove_data(self) -> None:
+        """Clear all data by dropping tables, preserving the DB and connections."""
+        if self._engine is None:
+            raise RuntimeError("SQLRepo is not connected.")
+
+        from repos.db.orm_base import ORMBase
+
+        if database_exists(self._engine.url):
+            logger.warning("Dropping all tables to clean data!")
+            ORMBase.metadata.drop_all(self._engine)
+
+    def drop_database(self) -> None:
         """Drop the entire database (use with caution)."""
         if self._engine is None:
             raise RuntimeError("SQLRepo is not connected. Call connect() first.")
@@ -79,24 +90,6 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
         if not database_exists(self._engine.url):
             create_database(self._engine.url)
             logger.debug("Created database!")
-
-    def database_contains_data(self) -> bool:
-        """Check if the database contains any data."""
-        if self._engine is None:
-            raise RuntimeError("SQLRepo is not connected. Call connect() first.")
-
-        if not database_exists(self._engine.url):
-            return False
-
-        inspector = inspect(self._engine)
-        schemas = inspector.get_schema_names()
-
-        for schema in schemas:
-            print("schema: %s" % schema)
-            if len(inspector.get_table_names(schema=schema)) > 0:
-                return True
-
-        return False
 
     @contextmanager
     def transaction(self) -> Generator[Session, None, None]:
