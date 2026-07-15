@@ -4,6 +4,9 @@ from alembic.command import upgrade
 from alembic.config import Config
 
 from repos.db.sql_repo import SQLRepo
+from utils.logger import setup_logging
+
+setup_logging()
 
 
 def run_migrations():
