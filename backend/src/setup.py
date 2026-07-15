@@ -5,9 +5,14 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from config import conf
+from utils.banner import print_dats_banner
+from utils.logger import setup_logging
+
+setup_logging()
 
 
 def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
+    print_dats_banner()
     logger.info(f"Setting up Discourse Analysis Tool Suite (v{conf.api.version}) ...")
 
     try:
@@ -25,13 +30,16 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         from migrations.run_migrations import run_migrations
         from repos.db.sql_repo import SQLRepo
 
-        SQLRepo(echo=sql_echo, remove_if_exists=reset_data)
+        sql_repo = SQLRepo(echo=sql_echo)
+        sql_repo.connect()
+        if reset_data:
+            sql_repo.remove_data()
 
         logger.info("Running Database Migrations...")
         run_migrations()
         logger.info("Database Migrations Completed Successfully!")
 
-        with SQLRepo().transaction() as db:
+        with sql_repo.transaction() as db:
             _create_system_user(db=db)
             _create_demo_user(db=db)
             _create_assistant_users(db=db)
@@ -41,14 +49,21 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         #########################
         from repos.elastic.elastic_repo import ElasticSearchRepo
 
-        ElasticSearchRepo(remove_if_exists=reset_data)
+        es_repo = ElasticSearchRepo()
+        es_repo.connect()
+        if reset_data:
+            es_repo.remove_data()
 
         ####################
         # 4. Init Weaviate #
         ####################
         from repos.vector.weaviate_repo import WeaviateRepo
 
-        weaviate_repo = WeaviateRepo(remove_if_exists=reset_data)
+        weaviate_repo = WeaviateRepo()
+        weaviate_repo.connect()
+        if reset_data:
+            weaviate_repo.remove_data()
+
         with weaviate_repo.weaviate_session() as client:
             _create_weaviate_colllections(client=client)
 
@@ -57,7 +72,10 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         #################
         from repos.redis_repo import RedisRepo
 
-        RedisRepo(remove_if_exists=reset_data)
+        redis_repo = RedisRepo()
+        redis_repo.connect()
+        if reset_data:
+            redis_repo.remove_data()
 
         logger.info(
             f"Discourse Analysis Tool Suite (v{conf.api.version}) Setup Completed Successfully!"

@@ -1,3 +1,4 @@
+import inspect
 import multiprocessing as mp
 import os
 import signal
@@ -9,35 +10,60 @@ from rq import SimpleWorker, Worker
 from rq.worker_pool import WorkerPool
 
 from repos.redis_repo import RedisRepo
+from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
+from utils.logger import setup_logging
 
-redis_conn = RedisRepo().redis_connection()
-
-
-def do_healthcheck():
-    try:
-        rq_workers = redis_conn.smembers("rq:workers")
-        num_workers = len(rq_workers)  # type: ignore
-        if num_workers > 0:
-            logger.info(f"Found {num_workers} RQ workers")
-            sys.exit(0)
-        else:
-            logger.error("No active RQ worker found")
-            sys.exit(1)
-    except Exception as e:
-        logger.error(f"Healthcheck failed: {e}")
-        sys.exit(1)
+setup_logging()
 
 
+# ==============================================================================
+# CUSTOM WORKER CLASSES
+# ==============================================================================
+def connect_all_repos():
+    """Dynamically finds all Repos and calls .connect() safely after the fork."""
+    logger.info(f"Worker {os.getpid()} initializing repository connections...")
+    repo_modules = import_by_suffix("_repo.py")
+    repo_modules.sort(key=lambda x: x.__name__.split(".")[-1])
+    for module in repo_modules:
+        for name, cls in inspect.getmembers(module, inspect.isclass):
+            if (
+                issubclass(cls, RepoBase)  # 1. Must inherit from RepoBase
+                and cls is not RepoBase  # 2. Must not be the base class itself
+                and cls.__module__ == module.__name__  # 3. Must be defined in THIS file
+            ):
+                repo_instance = cls()
+                repo_instance.connect()
+
+
+class DATSWorker(Worker):
+    """Custom standard worker (forks per job - used for GPU)"""
+
+    def work(self, *args, **kwargs):
+        connect_all_repos()
+        super().work(*args, **kwargs)
+
+
+class DATSSimpleWorker(SimpleWorker):
+    """Custom simple worker (does NOT fork per job - used for CPU/API)"""
+
+    def work(self, *args, **kwargs):
+        connect_all_repos()
+        super().work(*args, **kwargs)
+
+
+# ==============================================================================
+# COMMAND: work
+# ==============================================================================
 def do_work(device: str):
     # import all expensive stuff before forking, so that imports are only done once
+    # (Hollow Singletons are instantiated here, but NOT connected yet!)
     import_by_suffix("_repo.py")
     import_by_suffix("_service.py")
     import_by_suffix("_orm.py")
     import_by_suffix("_dto.py")
     import_by_suffix("_crud.py")
     import_by_suffix("_job.py")
-    # import doc_processing_pipeline
     import modules.doc_processing.doc_processing_pipeline  # noqa: F401
 
     ctx = mp.get_context("fork")
@@ -48,18 +74,14 @@ def do_work(device: str):
 
     processes = []
 
-    # handle SIGTERM and SIGINT
     def cleanup(signum, frame):
         logger.info(f"Parent received signal {signum}. Stopping children...")
         for p in processes:
             if p.is_alive():
                 logger.info(f"Terminating child process {p.name}...")
-                p.terminate()  # Sends SIGTERM to the child (create_pool)
-
-        # Wait for children to finish cleaning up
+                p.terminate()
         for p in processes:
             p.join()
-
         logger.info("All children stopped. Parent exiting.")
         sys.exit(0)
 
@@ -92,17 +114,22 @@ def do_work(device: str):
 def create_pool(queue_name: str, num_workers: int):
     from rq import Queue
 
+    RedisRepo().connect()
+    redis_conn = RedisRepo().redis_connection()
+
     queues = [
         Queue(f"{queue_name}-high", connection=redis_conn),
         Queue(f"{queue_name}-default", connection=redis_conn),
         Queue(f"{queue_name}-low", connection=redis_conn),
     ]
 
+    worker_class = DATSWorker if queue_name == "gpu" else DATSSimpleWorker
+
     worker_pool = WorkerPool(
         queues,
         connection=redis_conn,
         num_workers=num_workers,
-        worker_class=Worker if "gpu" == queue_name else SimpleWorker,
+        worker_class=worker_class,
     )
 
     def cleanup(signum, frame):
@@ -122,18 +149,12 @@ def create_pool(queue_name: str, num_workers: int):
     worker_pool.start()
 
 
+# ==============================================================================
+# COMMAND: stop
+# ==============================================================================
 def stop_work(device: str):
-    """
-    Gracefully stops workers associated with the given device configuration.
-    Strategy:
-    1. Identify target queue prefixes based on 'device'.
-    2. Fetch all workers from Redis.
-    3. Filter for workers listening to the target queues.
-    4. Send SIGINT (Warm Shutdown) to their PIDs.
-    """
     target_prefixes = []
     if device == "cpu":
-        # 'cpu' command starts both CPU and API pools
         target_prefixes = ["cpu", "api"]
     elif device == "gpu":
         target_prefixes = ["gpu"]
@@ -148,13 +169,11 @@ def stop_work(device: str):
     )
 
     try:
-        # Fetch all workers registered in Redis
-        workers = Worker.all(connection=redis_conn)
+        RedisRepo().connect()
+        workers = Worker.all(connection=RedisRepo().redis_connection())
         stopped_count = 0
 
         for worker in workers:
-            # Check if this worker listens to any of our target queues
-            # worker.queues is a list of Queue objects
             is_target_worker = False
             for queue in worker.queues:
                 if any(queue.name.startswith(prefix) for prefix in target_prefixes):
@@ -166,7 +185,6 @@ def stop_work(device: str):
                     logger.info(
                         f"Sending SIGINT to worker {worker.name} (PID {worker.pid})..."
                     )
-                    # SIGINT triggers a Warm Shutdown in RQ (finish job, then exit)
                     os.kill(worker.pid, signal.SIGTERM)
                     worker.request_stop(signal.SIGTERM, None)
                     stopped_count += 1
@@ -187,6 +205,28 @@ def stop_work(device: str):
         sys.exit(1)
 
 
+# ==============================================================================
+# COMMAND: healthcheck
+# ==============================================================================
+def do_healthcheck():
+    try:
+        RedisRepo().connect()
+        rq_workers = RedisRepo().redis_connection().smembers("rq:workers")
+        num_workers = len(rq_workers)  # type: ignore
+        if num_workers > 0:
+            logger.info(f"Found {num_workers} RQ workers")
+            sys.exit(0)
+        else:
+            logger.error("No active RQ worker found")
+            sys.exit(1)
+    except Exception as e:
+        logger.error(f"Healthcheck failed: {e}")
+        sys.exit(1)
+
+
+# ==============================================================================
+# Entrypoint
+# ==============================================================================
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: worker.py [healthcheck | work <mode> | stop <mode>]")
