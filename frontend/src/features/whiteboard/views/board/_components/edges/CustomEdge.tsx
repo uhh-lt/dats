@@ -1,4 +1,4 @@
-import { WhiteboardEdgeData_Input } from "@models/WhiteboardEdgeData_Input";
+import { WhiteboardEdgeData } from "@models/WhiteboardEdgeData";
 import { Box, TextField, Typography } from "@mui/material";
 import {
   BaseEdge,
@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import { DATSEdge } from "../../_types/DATSEdge";
 import { DATSNode } from "../../_types/DATSNode";
 
-export type CustomEdge = Edge<WhiteboardEdgeData_Input, "custom">;
+export type CustomEdge = Edge<WhiteboardEdgeData, "custom">;
 
 const useGetPath = (edge: EdgeProps<CustomEdge>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {

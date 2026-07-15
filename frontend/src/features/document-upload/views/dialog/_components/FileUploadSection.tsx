@@ -39,6 +39,7 @@ export function FileUploadSection({ projectId }: FileUploadSectionProps) {
         projId: projectId,
         formData: {
           settings: JSON.stringify(settings),
+          // @ts-expect-error: ignore this error until we switch to new codegen heyapi.dev
           uploaded_files: Array.from(files),
         },
       });
