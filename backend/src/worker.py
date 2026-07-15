@@ -20,9 +20,11 @@ setup_logging()
 # ==============================================================================
 # CUSTOM WORKER CLASSES
 # ==============================================================================
-def connect_all_repos() -> list[RepoBase]:
-    """Dynamically finds all Repos and calls .connect() safely after the fork."""
-    logger.info(f"Worker {os.getpid()} initializing repository connections...")
+def init_repos_and_services() -> list[RepoBase]:
+    """Dynamically init all repos (connecting them) and init services."""
+    logger.info(
+        f"Worker {os.getpid()} initializing repository connections & services..."
+    )
     repos = []
     repo_modules = import_by_suffix("_repo.py")
     repo_modules.sort(key=lambda x: x.__name__.split(".")[-1])
@@ -37,11 +39,16 @@ def connect_all_repos() -> list[RepoBase]:
                 repo_instance.connect()
                 repos.append(repo_instance)
 
+    # Setup services lazily
+    from systems.job_system.job_service import JobService
+
+    JobService().initialize()
+
     return repos
 
 
-def disconnect_all_repos(repos: list[RepoBase]):
-    """Safely closes all connections and cleans up temp files."""
+def teardown_repos_and_services(repos: list[RepoBase]):
+    """Safely closes all connections."""
     logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
 
     for repo in repos:
@@ -56,22 +63,22 @@ class DATSWorker(Worker):
     """Custom standard worker (forks per job - used for GPU)"""
 
     def work(self, *args, **kwargs):
-        repos = connect_all_repos()
+        repos = init_repos_and_services()
         try:
             super().work(*args, **kwargs)
         finally:
-            disconnect_all_repos(repos)
+            teardown_repos_and_services(repos)
 
 
 class DATSSimpleWorker(SimpleWorker):
     """Custom simple worker (does NOT fork per job - used for CPU/API)"""
 
     def work(self, *args, **kwargs):
-        repos = connect_all_repos()
+        repos = init_repos_and_services()
         try:
             super().work(*args, **kwargs)
         finally:
-            disconnect_all_repos(repos)
+            teardown_repos_and_services(repos)
 
 
 # ==============================================================================
