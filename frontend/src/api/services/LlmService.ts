@@ -7,7 +7,7 @@ import type { ApproachType } from "@models/ApproachType";
 import type { Body_llm_count_existing_assistant_annotations } from "@models/Body_llm_count_existing_assistant_annotations";
 import type { Body_llm_create_prompt_templates } from "@models/Body_llm_create_prompt_templates";
 import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
-import type { LLMJobInput_Input } from "@models/LLMJobInput_Input";
+import type { LLMJobInput } from "@models/LLMJobInput";
 import type { LLMJobParameters } from "@models/LLMJobParameters";
 import type { LLMPromptTemplates } from "@models/LLMPromptTemplates";
 import type { TaskType } from "@models/TaskType";
@@ -96,7 +96,7 @@ export class LlmService {
   public static startLlmAssistantJob({
     requestBody,
   }: {
-    requestBody: LLMJobInput_Input;
+    requestBody: LLMJobInput;
   }): CancelablePromise<LlmAssistantJobRead> {
     return __request(OpenAPI, {
       method: "POST",

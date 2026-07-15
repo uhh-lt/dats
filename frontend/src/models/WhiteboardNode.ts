@@ -14,7 +14,7 @@ import type { TagNodeData } from "./TagNodeData";
 import type { TextNodeData } from "./TextNodeData";
 import type { WhiteboardNodeType } from "./WhiteboardNodeType";
 import type { XYPosition } from "./XYPosition";
-export type WhiteboardNode_Input = {
+export type WhiteboardNode = {
   /**
    * ID of the node
    */

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { JobStatus } from "./JobStatus";
-import type { MLJobInput_Output } from "./MLJobInput_Output";
+import type { MLJobInput } from "./MLJobInput";
 export type MlJobRead = {
   /**
    * RQ job ID
@@ -36,7 +36,7 @@ export type MlJobRead = {
   /**
    * Input for the job
    */
-  input: MLJobInput_Output;
+  input: MLJobInput;
   /**
    * Output for the job
    */

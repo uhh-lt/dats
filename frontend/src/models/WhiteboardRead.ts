@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WhiteboardContent_Output } from "./WhiteboardContent_Output";
+import type { WhiteboardContent } from "./WhiteboardContent";
 export type WhiteboardRead = {
   /**
    * Title of the Whiteboard
@@ -27,5 +27,5 @@ export type WhiteboardRead = {
   /**
    * Content of the Whiteboard
    */
-  content: WhiteboardContent_Output;
+  content: WhiteboardContent;
 };

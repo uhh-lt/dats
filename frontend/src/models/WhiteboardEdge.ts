@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WhiteboardEdgeData_Output } from "./WhiteboardEdgeData_Output";
-export type WhiteboardEdge_Output = {
+import type { WhiteboardEdgeData } from "./WhiteboardEdgeData";
+export type WhiteboardEdge = {
   /**
    * ID of the edge
    */
@@ -31,7 +31,7 @@ export type WhiteboardEdge_Output = {
   /**
    * Data of the edge
    */
-  data?: WhiteboardEdgeData_Output | null;
+  data?: WhiteboardEdgeData | null;
   /**
    * Style of the edge
    */

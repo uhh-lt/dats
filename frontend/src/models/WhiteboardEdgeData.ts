@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { WhiteboardEdgeLabelData } from "./WhiteboardEdgeLabelData";
 import type { WhiteboardEdgeType } from "./WhiteboardEdgeType";
-export type WhiteboardEdgeData_Input = {
+export type WhiteboardEdgeData = {
   /**
    * Type of the edge
    */

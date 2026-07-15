@@ -3,5 +3,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type Body_import_start_import_job = {
-  uploaded_file: Blob;
+  uploaded_file: string;
 };

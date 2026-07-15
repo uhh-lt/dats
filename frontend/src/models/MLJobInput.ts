@@ -8,7 +8,7 @@ import type { DocumentEmbeddingParams } from "./DocumentEmbeddingParams";
 import type { MLJobType } from "./MLJobType";
 import type { QuotationAttributionParams } from "./QuotationAttributionParams";
 import type { SentenceEmbeddingParams } from "./SentenceEmbeddingParams";
-export type MLJobInput_Input = {
+export type MLJobInput = {
   /**
    * The ID of the Project to analyse
    */

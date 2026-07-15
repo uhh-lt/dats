@@ -2,13 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CrawlerJobInput_Input } from "@models/CrawlerJobInput_Input";
+import type { CrawlerJobInput } from "@models/CrawlerJobInput";
 import type { CrawlerJobRead } from "@models/CrawlerJobRead";
 import type { DuplicateFinderInput } from "@models/DuplicateFinderInput";
 import type { DuplicateFinderJobRead } from "@models/DuplicateFinderJobRead";
 import type { ExportJobInput } from "@models/ExportJobInput";
 import type { ExportJobRead } from "@models/ExportJobRead";
-import type { MLJobInput_Input } from "@models/MLJobInput_Input";
+import type { MLJobInput } from "@models/MLJobInput";
 import type { MlJobRead } from "@models/MlJobRead";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -19,11 +19,7 @@ export class JobService {
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError
    */
-  public static startCrawlerJob({
-    requestBody,
-  }: {
-    requestBody: CrawlerJobInput_Input;
-  }): CancelablePromise<CrawlerJobRead> {
+  public static startCrawlerJob({ requestBody }: { requestBody: CrawlerJobInput }): CancelablePromise<CrawlerJobRead> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/job/crawler",
@@ -111,7 +107,7 @@ export class JobService {
    * @returns MlJobRead Successful Response
    * @throws ApiError
    */
-  public static startMlJob({ requestBody }: { requestBody: MLJobInput_Input }): CancelablePromise<MlJobRead> {
+  public static startMlJob({ requestBody }: { requestBody: MLJobInput }): CancelablePromise<MlJobRead> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/job/ml",
