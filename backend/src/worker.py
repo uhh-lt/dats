@@ -20,36 +20,58 @@ setup_logging()
 # ==============================================================================
 # CUSTOM WORKER CLASSES
 # ==============================================================================
-def connect_all_repos():
+def connect_all_repos() -> list[RepoBase]:
     """Dynamically finds all Repos and calls .connect() safely after the fork."""
     logger.info(f"Worker {os.getpid()} initializing repository connections...")
+    repos = []
     repo_modules = import_by_suffix("_repo.py")
     repo_modules.sort(key=lambda x: x.__name__.split(".")[-1])
     for module in repo_modules:
         for name, cls in inspect.getmembers(module, inspect.isclass):
             if (
-                issubclass(cls, RepoBase)  # 1. Must inherit from RepoBase
-                and cls is not RepoBase  # 2. Must not be the base class itself
-                and cls.__module__ == module.__name__  # 3. Must be defined in THIS file
+                issubclass(cls, RepoBase)
+                and cls is not RepoBase
+                and cls.__module__ == module.__name__
             ):
                 repo_instance = cls()
                 repo_instance.connect()
+                repos.append(repo_instance)
+
+    return repos
+
+
+def disconnect_all_repos(repos: list[RepoBase]):
+    """Safely closes all connections and cleans up temp files."""
+    logger.info(f"Worker {os.getpid()} stopping. Cleaning up resources...")
+
+    for repo in repos:
+        try:
+            logger.info(f"Closing {repo.__class__.__name__}...")
+            repo.close_connection()
+        except Exception as e:
+            logger.error(f"Failed to close {repo.__class__.__name__}: {e}")
 
 
 class DATSWorker(Worker):
     """Custom standard worker (forks per job - used for GPU)"""
 
     def work(self, *args, **kwargs):
-        connect_all_repos()
-        super().work(*args, **kwargs)
+        repos = connect_all_repos()
+        try:
+            super().work(*args, **kwargs)
+        finally:
+            disconnect_all_repos(repos)
 
 
 class DATSSimpleWorker(SimpleWorker):
     """Custom simple worker (does NOT fork per job - used for CPU/API)"""
 
     def work(self, *args, **kwargs):
-        connect_all_repos()
-        super().work(*args, **kwargs)
+        repos = connect_all_repos()
+        try:
+            super().work(*args, **kwargs)
+        finally:
+            disconnect_all_repos(repos)
 
 
 # ==============================================================================
