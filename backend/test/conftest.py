@@ -93,17 +93,21 @@ def setup_repos() -> None:
     fsr = FilesystemRepo()
     fsr._create_root_directory_structure(remove_if_exists=True)
 
-    sqlr = SQLRepo(remove_if_exists=True)
-    sqlr.drop_database()
+    sqlr = SQLRepo()
+    sqlr.connect()
+    sqlr.remove_data()
 
-    es = ElasticSearchRepo(remove_if_exists=True)
-    es.drop_indices()
+    es = ElasticSearchRepo()
+    es.connect()
+    es.remove_data()
 
-    weaviate = WeaviateRepo(remove_if_exists=True)
-    weaviate.drop_indices()
+    weaviate = WeaviateRepo()
+    weaviate.connect()
+    weaviate.remove_data()
 
-    redis = RedisRepo(remove_if_exists=True)
-    redis.drop_database()
+    redis = RedisRepo()
+    redis.connect()
+    redis.remove_data()
 
 
 # ---------------------------------------------------------------------------
@@ -117,23 +121,22 @@ def db_session(setup_repos) -> Generator[Session, Any, None]:
     from repos.db.sql_repo import SQLRepo
 
     sql = SQLRepo()
+    sql.connect()
     sql.create_database_if_not_exists()
 
-    with sql.engine.begin() as conn:
-        conn.execute(
+    with sql.transaction() as db:
+        db.execute(
             text(
                 "CREATE COLLATION IF NOT EXISTS natsort "
                 "(provider = icu, locale = 'und-u-kn-true');"
             )
         )
 
-    ORMBase.metadata.create_all(sql.engine)
+    assert sql._engine is not None
+    ORMBase.metadata.create_all(sql._engine)
 
-    session = sql.session_maker()
-    try:
-        yield session
-    finally:
-        session.close()
+    with sql.transaction() as db:
+        yield db
 
 
 # ---------------------------------------------------------------------------
