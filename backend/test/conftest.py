@@ -81,10 +81,27 @@ def start_workers() -> Generator[None, Any, Any]:
 
 
 # ---------------------------------------------------------------------------
+# INIT POSTGRES DB
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session", autouse=True)
+def init_postgres() -> None:
+    """Before running tests, nuke the PostgreSQL database and create a new one."""
+    from repos.db.sql_repo import SQLRepo
+
+    sqlr = SQLRepo()
+    sqlr.connect()
+    sqlr.drop_database()
+    sqlr.create_database_if_not_exists()
+
+
+# ---------------------------------------------------------------------------
 # INIT REPOS
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function", autouse=True)
-def setup_repos() -> None:
+def setup_repos(init_postgres) -> None:
+    from sqlalchemy import text
+
+    from repos.db.orm_base import ORMBase
     from repos.db.sql_repo import SQLRepo
     from repos.elastic.elastic_repo import ElasticSearchRepo
     from repos.filesystem_repo import FilesystemRepo
@@ -95,7 +112,18 @@ def setup_repos() -> None:
 
     sqlr = SQLRepo()
     sqlr.connect()
+    # drop all tables
     sqlr.remove_data()
+    # create all tables
+    with sqlr.transaction() as db:
+        db.execute(
+            text(
+                "CREATE COLLATION IF NOT EXISTS natsort "
+                "(provider = icu, locale = 'und-u-kn-true');"
+            )
+        )
+    assert sqlr._engine is not None
+    ORMBase.metadata.create_all(sqlr._engine)
 
     es = ElasticSearchRepo()
     es.connect()
@@ -115,27 +143,9 @@ def setup_repos() -> None:
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function")
 def db_session(setup_repos) -> Generator[Session, Any, None]:
-    from sqlalchemy import text
-
-    from repos.db.orm_base import ORMBase
     from repos.db.sql_repo import SQLRepo
 
-    sql = SQLRepo()
-    sql.connect()
-    sql.create_database_if_not_exists()
-
-    with sql.transaction() as db:
-        db.execute(
-            text(
-                "CREATE COLLATION IF NOT EXISTS natsort "
-                "(provider = icu, locale = 'und-u-kn-true');"
-            )
-        )
-
-    assert sql._engine is not None
-    ORMBase.metadata.create_all(sql._engine)
-
-    with sql.transaction() as db:
+    with SQLRepo().transaction() as db:
         yield db
 
 
@@ -151,12 +161,12 @@ def setup_weaviate_collections(setup_repos) -> None:
     from modules.perspectives.cluster_collection import ClusterCollection
     from repos.vector.weaviate_repo import WeaviateRepo
 
-    with WeaviateRepo().weaviate_session() as client:
-        DocumentCollection.create_collection(client)
-        SentenceCollection.create_collection(client)
-        ImageCollection.create_collection(client)
-        AspectCollection.create_collection(client)
-        ClusterCollection.create_collection(client)
+    client = WeaviateRepo().get_client()
+    DocumentCollection.create_collection(client)
+    SentenceCollection.create_collection(client)
+    ImageCollection.create_collection(client)
+    AspectCollection.create_collection(client)
+    ClusterCollection.create_collection(client)
 
 
 # ---------------------------------------------------------------------------
