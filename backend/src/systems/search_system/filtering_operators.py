@@ -117,7 +117,7 @@ class IDListOperator(Enum):
 
     def apply(self, column, value: FilterValue):
         if not isinstance(value, (str, list, int)):
-            raise ValueError(
+            raise ValueError(  # pyright: ignore[reportUnreachable]
                 "Invalid value type for IDListOperator (requires str, list[str], or int)!"
             )
         if isinstance(value, list) and len(value) > 0 and not isinstance(value[0], str):
