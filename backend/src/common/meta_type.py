@@ -78,4 +78,3 @@ class MetaType(str, Enum):
                 return isinstance(value, list) and all(
                     isinstance(item, str) for item in value
                 )
-        return False

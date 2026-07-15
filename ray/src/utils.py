@@ -18,7 +18,7 @@ def image_to_base64(image: Image.Image | Path) -> str:
     if isinstance(image, Path):
         image = Image.open(image).convert("RGB")
     if not isinstance(image, Image.Image):
-        raise ValueError("Input must be a PIL Image or a Path to an image file.")
+        raise ValueError("Input must be a PIL Image or a Path to an image file.")  # pyright: ignore[reportUnreachable]
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
