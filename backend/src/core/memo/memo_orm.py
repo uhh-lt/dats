@@ -46,7 +46,11 @@ class MemoORM(ORMBase):
 
     attached_to_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("objecthandle.id", ondelete="CASCADE"),
+        ForeignKey(
+            "objecthandle.id",
+            ondelete="CASCADE",
+            name="fk_memo_attached_to_objecthandle",
+        ),
         nullable=False,
         index=True,
     )
