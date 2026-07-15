@@ -106,6 +106,7 @@ def setup_repos(init_postgres) -> None:
     from repos.elastic.elastic_repo import ElasticSearchRepo
     from repos.filesystem_repo import FilesystemRepo
     from repos.vector.weaviate_repo import WeaviateRepo
+    from systems.job_system.job_service import JobService
 
     fsr = FilesystemRepo()
     fsr._create_root_directory_structure(remove_if_exists=True)
@@ -136,6 +137,8 @@ def setup_repos(init_postgres) -> None:
     redis = RedisRepo()
     redis.connect()
     redis.remove_data()
+
+    JobService().initialize()
 
 
 # ---------------------------------------------------------------------------
