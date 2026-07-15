@@ -61,6 +61,7 @@ export function ImportSection({ projectId }: { projectId: number }) {
         importJobType: importType,
         projectId,
         formData: {
+          // @ts-expect-error: ignore this error until we switch to new codegen heyapi.dev
           uploaded_file: file,
         },
       },

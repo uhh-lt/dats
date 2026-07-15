@@ -8,7 +8,7 @@ import { getIconComponent, Icon } from "@components/icons";
 import { BBoxAnnotationEditDialog } from "@core/bbox-annotation";
 import { SentenceAnnotationEditDialog } from "@core/sentence-annotation";
 import { SpanAnnotationEditDialog } from "@core/span-annotation";
-import { WhiteboardEdgeData_Output } from "@models/WhiteboardEdgeData_Output";
+import { WhiteboardEdgeData } from "@models/WhiteboardEdgeData";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
 import { WhiteboardRead } from "@models/WhiteboardRead";
 import InterestsIcon from "@mui/icons-material/Interests";
@@ -131,7 +131,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
       verticalAlign: "center",
     },
     type: "simplebezier",
-  } as WhiteboardEdgeData_Output,
+  } as WhiteboardEdgeData,
   style: {
     stroke: "#000000",
     strokeWidth: 3,
