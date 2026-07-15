@@ -189,17 +189,25 @@ def auth_content(
 
 
 @router.get("/oidc/login")
-async def oidc_login(request: Request, redirect_uri: str) -> Response:
+async def oidc_login(request: Request, provider: str, redirect_uri: str) -> Response:
     if not oauth_service.is_enabled:
         raise HTTPException(
             status_code=404, detail="OIDC authentication is not enabled"
         )
-    return await oauth_service.authentik.authorize_redirect(request, redirect_uri)
+    client = oauth_service.clients.get(provider)
+    if client is None:
+        raise HTTPException(
+            status_code=400, detail=f"provider '{provider} does not exist"
+        )
+    return await client.authorize_redirect(request, redirect_uri)
 
 
 @router.get("/oidc/callback")
 async def oidc_callback(
-    request: Request, response: Response, db: Session = Depends(get_db_session)
+    request: Request,
+    provider: str,
+    response: Response,
+    db: Session = Depends(get_db_session),
 ):
     if not oauth_service.is_enabled:
         raise HTTPException(
@@ -207,7 +215,9 @@ async def oidc_callback(
         )
 
     try:
-        user = await oauth_service.authenticate_oidc(db=db, request=request)
+        user = await oauth_service.authenticate_oidc(
+            db=db, request=request, provider=provider
+        )
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
 

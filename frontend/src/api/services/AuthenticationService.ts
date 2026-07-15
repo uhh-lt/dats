@@ -106,11 +106,18 @@ export class AuthenticationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static oidcLogin({ redirectUri }: { redirectUri: string }): CancelablePromise<any> {
+  public static oidcLogin({
+    provider,
+    redirectUri,
+  }: {
+    provider: string;
+    redirectUri: string;
+  }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/authentication/oidc/login",
       query: {
+        provider: provider,
         redirect_uri: redirectUri,
       },
       errors: {
@@ -123,10 +130,16 @@ export class AuthenticationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static oidcCallback(): CancelablePromise<any> {
+  public static oidcCallback({ provider }: { provider: string }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/authentication/oidc/callback",
+      query: {
+        provider: provider,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
     });
   }
   /**

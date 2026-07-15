@@ -19,32 +19,40 @@ class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.mail_repo = MailRepo()
 
-        cls.is_enabled = conf.auth.oidc.enabled
-        cls.oauth = OAuth()
-
-        # Create Authentik OAuth client
-        cls.oauth.register(
-            name="authentik",
-            client_id=conf.auth.oidc.client_id,
-            client_secret=conf.auth.oidc.client_secret,
-            server_metadata_url=conf.auth.oidc.server_metadata_url,
-            client_kwargs={
-                "scope": "openid email profile",
-                "code_challenge_method": "S256",
-                "token_endpoint_auth_method": "client_secret_post",
-            },
-            id_token_encryption_alg="RSA-OAEP-256",
-            id_token_encryption_enc="A256CBC-HS512",
+        cls.is_enabled = len(conf.auth.oidc) > 0 and any(
+            x.enabled for x in conf.auth.oidc
         )
-        client = cls.oauth.create_client("authentik")
-        assert client is not None, "Failed to create Authentik OAuth client"
-        cls.authentik = client
+        cls.oauth = OAuth()
+        cls.clients = {}
+
+        for oidc in conf.auth.oidc:
+            if not oidc.enabled:
+                continue
+            # Create OAuth client
+            cls.oauth.register(
+                name=oidc.name,
+                client_id=oidc.client_id,
+                client_secret=oidc.client_secret,
+                server_metadata_url=oidc.server_metadata_url,
+                client_kwargs={
+                    "scope": "openid email profile",
+                    "code_challenge_method": "S256",
+                    "token_endpoint_auth_method": "client_secret_post",
+                },
+                id_token_encryption_alg="RSA-OAEP-256",
+                id_token_encryption_enc="A256CBC-HS512",
+            )
+            client = cls.oauth.create_client(oidc.name)
+            assert client is not None, "Failed to create Authentik OAuth client"
+            cls.clients[oidc.name] = client
 
         return super(OAuthService, cls).__new__(cls)
 
-    async def authenticate_oidc(self, db: Session, request: Request) -> UserORM:
+    async def authenticate_oidc(
+        self, db: Session, request: Request, provider: str
+    ) -> UserORM:
         try:
-            token = await self.authentik.authorize_access_token(request)
+            token = await self.clients[provider].authorize_access_token(request)
         except OAuthError as error:
             logger.error(f"OAuth error: {error}")
             raise error
