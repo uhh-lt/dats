@@ -45,7 +45,9 @@ class ObjectHandleORM(ORMBase):
     )
 
     memo_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("memo.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey("memo.id", ondelete="CASCADE", name="fk_objecthandle_memo_id"),
+        index=True,
     )
     memo: Mapped["MemoORM"] = relationship(
         "MemoORM", back_populates="object_handle", foreign_keys="objecthandle.c.memo_id"
