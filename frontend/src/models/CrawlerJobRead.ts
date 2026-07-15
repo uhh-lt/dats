@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CrawlerJobInput_Output } from "./CrawlerJobInput_Output";
+import type { CrawlerJobInput } from "./CrawlerJobInput";
 import type { CrawlerJobOutput } from "./CrawlerJobOutput";
 import type { JobStatus } from "./JobStatus";
 export type CrawlerJobRead = {
@@ -37,7 +37,7 @@ export type CrawlerJobRead = {
   /**
    * Input for the job
    */
-  input: CrawlerJobInput_Output;
+  input: CrawlerJobInput;
   /**
    * Output for the job
    */

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { JobStatus } from "./JobStatus";
-import type { LLMJobInput_Output } from "./LLMJobInput_Output";
+import type { LLMJobInput } from "./LLMJobInput";
 import type { LLMJobOutput } from "./LLMJobOutput";
 export type LlmAssistantJobRead = {
   /**
@@ -37,7 +37,7 @@ export type LlmAssistantJobRead = {
   /**
    * Input for the job
    */
-  input: LLMJobInput_Output;
+  input: LLMJobInput;
   /**
    * Output for the job
    */

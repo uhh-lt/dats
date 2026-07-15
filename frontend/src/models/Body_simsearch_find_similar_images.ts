@@ -5,5 +5,8 @@
 import type { Filter_SdocColumns__Input } from "./Filter_SdocColumns__Input";
 export type Body_simsearch_find_similar_images = {
   query: string | Array<string> | number;
+  /**
+   * The filter of the Concept
+   */
   filter: Filter_SdocColumns__Input;
 };

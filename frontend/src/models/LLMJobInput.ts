@@ -10,7 +10,7 @@ import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
 import type { TaggingParams } from "./TaggingParams";
 import type { TaskType } from "./TaskType";
 import type { ZeroShotParams } from "./ZeroShotParams";
-export type LLMJobInput_Input = {
+export type LLMJobInput = {
   /**
    * Project ID associated with the job
    */

@@ -10,5 +10,5 @@ export type Body_docprocessing_upload_files = {
   /**
    * File(s) that get uploaded and represented by the SourceDocument(s)
    */
-  uploaded_files: Array<Blob>;
+  uploaded_files: Array<string>;
 };

@@ -5,6 +5,9 @@
 import type { Filter_SpanColumns__Input } from "./Filter_SpanColumns__Input";
 import type { Sort_SpanColumns_ } from "./Sort_SpanColumns_";
 export type Body_search_search_span_annotations = {
+  /**
+   * The filter of the Concept
+   */
   filter: Filter_SpanColumns__Input;
   sorts: Array<Sort_SpanColumns_>;
 };
