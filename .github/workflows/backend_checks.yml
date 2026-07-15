@@ -52,7 +52,16 @@ jobs:
             mkdir -p $HOME/ray_cache
             chmod 777 $HOME/ray_cache
           fi
-      - name: Build & Start Docker Containers
+      - name: Install uv environment
+        working-directory: backend
+        run: |
+          uv sync
+      - name: Build backend docker container
+        working-directory: docker
+        run: |
+          source .env
+          COMPOSE_PROFILES="rq,backend" docker compose build
+      - name: Start docker containers
         working-directory: docker
         run: |
           source .env
@@ -60,28 +69,27 @@ jobs:
             docker compose -f compose.ray.yml build
             docker compose -f compose.ray.yml up --wait
           fi
-          COMPOSE_PROFILES="rq,backend" docker compose build
-          COMPOSE_PROFILES="rq" docker compose up --wait --quiet-pull
-      - name: pytest runs without errors
-        working-directory: docker
-        run: |
-          source .env
-          docker compose run --user $(id -u):$(id -g) -v ./test_repo:/dats/docker/test_repo dats-backend-api /dats/backend/.venv/bin/python -m pytest /dats/backend/test
-      - name: Database migrates without errors database
-        working-directory: docker
-        run: |
-          source .env
-          docker compose run --user $(id -u):$(id -g) dats-backend-api /dats/backend/.venv/bin/python src/migrations/run_migrations.py
-      - name: Database schema is up-to-date after migration
-        working-directory: docker
-        run: |
-          source .env
-          docker compose run --user $(id -u):$(id -g) dats-backend-api /dats/backend/.venv/bin/alembic -c src/migrations/alembic.ini check
-      - name: install uv environment
+          COMPOSE_PROFILES="" docker compose up --wait --quiet-pull
+      - name: Pytest runs without errors
         working-directory: backend
         run: |
-          uv sync
-      - name: Start Remaining Docker Containers
+          source .env
+          uv run pytest
+      - name: Database migrates without errors
+        working-directory: backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend/src
+        run: |
+          source .env
+          uv run src/migrations/run_migrations.py
+      - name: Database schema is up-to-date after migration
+        working-directory: backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend/src
+        run: |
+          source .env
+          uv run alembic -c src/migrations/alembic.ini check
+      - name: Start remaining docker containers
         working-directory: docker
         run: |
           source .env
