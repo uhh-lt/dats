@@ -101,7 +101,6 @@ class ErroneousArchiveException(Exception):
 class FilesystemRepo(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         root_dir = conf.filesystem.root_directory
-        logger.info(f"Using root directory {root_dir}")
         cls.root_dir = root_dir
         cls.temp_files_root = root_dir.joinpath("temporary_files")
         cls.logs_root = root_dir.joinpath("logs")
@@ -115,6 +114,26 @@ class FilesystemRepo(metaclass=SingletonMeta):
         cls.base_url = base_url
 
         return super(FilesystemRepo, cls).__new__(cls)
+
+    def connect(self) -> None:
+        logger.info(f"Using root directory '{self.root_dir}' for DATS Filesystem!")
+
+    def close_connection(self) -> None:
+        pass
+
+    def remove_data(self) -> None:
+        """Drop the entire filesystem."""
+        if self.root_dir.exists():
+            logger.warning(f"Removing DATS Filesystem at {self.root_dir}")
+            for filename in self.root_dir.iterdir():
+                file_path = self.root_dir.joinpath(self.root_dir, filename)
+                try:
+                    if file_path.is_file() or file_path.is_symlink():
+                        os.unlink(file_path)
+                    elif file_path.is_dir():
+                        shutil.rmtree(file_path)
+                except Exception as e:
+                    logger.error(f"Failed to remove {file_path} because: {e}")
 
     @staticmethod
     def truncate_filename(filename: str | Path) -> str:

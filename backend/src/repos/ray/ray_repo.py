@@ -17,44 +17,79 @@ from repos.ray.dto.glotlid import GlotLIDInput, GlotLIDOutput
 from repos.ray.dto.quote import QuoteJobInput, QuoteJobOutput
 from repos.ray.dto.spacy import SpacyInput, SpacyPipelineOutput
 from repos.ray.dto.whisper import WhisperTranscriptionOutput
+from repos.repo_base import RepoBase
 
 
-class RayRepo(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
-        cls.base_url = f"{conf.ray.protocol}://{conf.ray.host}:{conf.ray.port}"
-        logger.info(f"RayModelService base_url: {cls.base_url}")
+class RayRepo(RepoBase, metaclass=SingletonMeta):
+    def __init__(self):
+        """
+        Initialize RayRepo lazily.
+        """
+        RepoBase.__init__(self)
+        self._base_url: str | None = None
+        self._base_routes: list[str] = []
+
+    def connect(self) -> None:
+        """Establish connection to Ray."""
+        if self._base_url is not None:
+            logger.debug("RayRepo already connected, skipping")
+            return
 
         try:
-            response = requests.get(f"{cls.base_url}/-/routes")
+            self._base_url = f"{conf.ray.protocol}://{conf.ray.host}:{conf.ray.port}"
+            logger.info(f"Ray base_url: {self._base_url}")
+
+            response = requests.get(f"{self._base_url}/-/routes")
             if not response.status_code == 200:
                 msg = (
-                    f"Request to {cls.base_url} failed with "
+                    f"Request to {self._base_url} failed with "
                     f"status code {response.status_code}!\n"
                     f"Response: {response.text}!"
                 )
                 logger.error(msg)
                 raise Exception(msg)
 
-            cls.base_routes: list[str] = list(response.json().keys())
+            self._base_routes = list(response.json().keys())
             logger.info(
-                f"RayModelService detected the following base routes:"
-                f"\n{cls.base_routes}"
+                f"Successfully established connection to Ray ({self._base_url})! The following base routes are available: {self._base_routes}"
             )
 
         except Exception as e:
-            msg = f"Error while starting the RayModelService! Exception: {str(e)}"
+            msg = f"Error while connecting to Ray (using base_url: {self._base_url})! Exception: {str(e)}"
             logger.error(msg)
             raise SystemExit(msg)
 
-        return super(RayRepo, cls).__new__(cls)
+    def close_connection(self) -> None:
+        """
+        Close the connection to Ray.
+        """
+        if not self._base_url:
+            logger.debug("RayRepo already closed, skipping")
+            return
+
+        logger.info("Closing connection to Ray...")
+        self._base_url = None
+        self._base_routes = []
+
+    def remove_data(self) -> None:
+        """
+        Remove all data in the Ray.
+        This does nothing as Ray is stateless.
+        """
+        logger.info("Ray reset (no state to clear)")
 
     def _assert_valid_base_route(self, endpoint: str) -> None:
-        for br in self.base_routes:
+        if not self._base_routes:
+            raise RuntimeError(
+                "RayRepo is not connected. Call connect() first to fetch base routes."
+            )
+
+        for br in self._base_routes:
             if endpoint.startswith(br):
                 return
         msg = (
             f"Invalid endpoint '{endpoint}'! "
-            f"Must start with one of the following base routes: {self.base_routes}"
+            f"Must start with one of the following base routes: {self._base_routes}"
         )
         logger.error(msg)
         raise Exception(msg)
@@ -62,7 +97,11 @@ class RayRepo(metaclass=SingletonMeta):
     def _make_post_request_with_json_data(
         self, endpoint: str, data: dict[str, Any]
     ) -> Response:
-        url = f"{self.base_url}{endpoint}"
+        self._assert_valid_base_route(endpoint)
+        if self._base_url is None:
+            raise RuntimeError("RayRepo is not connected. Call connect() first.")
+
+        url = f"{self._base_url}{endpoint}"
         logger.debug(f"Making POST request to {url} with data: {data}"[:1000])
         response = requests.post(url, json=data, timeout=1200)
         if not response.status_code == 200:
@@ -81,7 +120,11 @@ class RayRepo(metaclass=SingletonMeta):
         data: bytes,
         params: dict[str, str] | None = None,
     ) -> Response:
-        url = f"{self.base_url}{endpoint}"
+        self._assert_valid_base_route(endpoint)
+        if self._base_url is None:
+            raise RuntimeError("RayRepo is not connected. Call connect() first.")
+
+        url = f"{self._base_url}{endpoint}"
         logger.debug(f"Making POST request to {url} with binary data ({len(data)}")
         response = requests.post(
             url,

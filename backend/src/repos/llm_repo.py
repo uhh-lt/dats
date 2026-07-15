@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from repos.repo_base import RepoBase
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -19,22 +20,32 @@ class LLMMessage(BaseModel):
     user_prompt: str
 
 
-class LLMRepo(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
-        cls.__llm_conn: OpenAI
-        cls.__llm_models: list[str] = []
-        cls.__llm_chat_sessions: dict[str, list[dict]] = dict()
-        cls.__llm_chat_session_timestamps: dict[str, float] = dict()
-        cls.__max_llm_chat_sessions = 50
-        cls.__max_llm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
+class LLMRepo(RepoBase, metaclass=SingletonMeta):
+    def __init__(self):
+        """
+        Initialize LLMRepo.
+        """
+        RepoBase.__init__(self)
+        self.__llm_conn: OpenAI | None = None
+        self.__llm_models: list[str] = []
+        self.__llm_chat_sessions: dict[str, list[dict]] = dict()
+        self.__llm_chat_session_timestamps: dict[str, float] = dict()
+        self.__max_llm_chat_sessions = 50
+        self.__max_llm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
-        cls.__vlm_chat_sessions: dict[str, list[dict]] = dict()
-        cls.__vlm_chat_session_timestamps: dict[str, float] = dict()
-        cls.__max_vlm_chat_sessions = 50
-        cls.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
+        self.__vlm_chat_sessions: dict[str, list[dict]] = dict()
+        self.__vlm_chat_session_timestamps: dict[str, float] = dict()
+        self.__max_vlm_chat_sessions = 50
+        self.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
-        cls.__emb_conn: OpenAI
-        cls.__emb_models: list[str] = []
+        self.__emb_conn: OpenAI | None = None
+        self.__emb_models: list[str] = []
+
+    def connect(self) -> None:
+        """Establish connections to LLM Providers."""
+        if self.__llm_conn is not None:
+            logger.debug("LLMRepo already connected, skipping")
+            return
 
         try:
             for provider_type, connection_info in (
@@ -51,13 +62,13 @@ class LLMRepo(metaclass=SingletonMeta):
                         f"No model found at '{connection_info.host}:{connection_info.port}'!"
                     )
                 if provider_type == "llm":
-                    cls.__llm_models = [m.id for m in models]
-                    cls.__llm_conn = conn
+                    self.__llm_models = [m.id for m in models]
+                    self.__llm_conn = conn
                 elif provider_type == "emb":
-                    cls.__emb_models = [m.id for m in models]
-                    cls.__emb_conn = conn
+                    self.__emb_models = [m.id for m in models]
+                    self.__emb_conn = conn
                 logger.info(
-                    f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.host}:{connection_info.port}' with the following models: {models}"
+                    f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.host}:{connection_info.port}' with the following models: {[model.id for model in models]}"
                 )
 
         except Exception as e:
@@ -65,9 +76,28 @@ class LLMRepo(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
-        logger.info("Successfully established connection to all LLM Providers!")
+    def close_connection(self) -> None:
+        """
+        Close connections to LLM Providers.
+        Currently, this does nothing as OpenAI client doesn't require explicit closing.
+        """
+        if self.__llm_conn is None:
+            logger.debug("LLMRepo already closed, skipping")
+            return
 
-        return super(LLMRepo, cls).__new__(cls)
+        logger.info("Closing connections to LLM Providers...")
+        self.__llm_conn = None
+        self.__emb_conn = None
+
+    def remove_data(self) -> None:
+        """
+        Reset/clear LLM chat sessions. This clears all chat session data.
+        """
+        logger.info("Resetting LLM chat sessions...")
+        self.__llm_chat_sessions.clear()
+        self.__llm_chat_session_timestamps.clear()
+        self.__vlm_chat_sessions.clear()
+        self.__vlm_chat_session_timestamps.clear()
 
     def __validate_llm_name(self, model: str) -> str:
         if len(self.__llm_models) == 0:
@@ -115,6 +145,9 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
+        if self.__llm_conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
         model = self.__validate_llm_name(model)
 
         if session_id is None:
@@ -177,6 +210,9 @@ class LLMRepo(metaclass=SingletonMeta):
         user_prompt: str,
         response_model: Type[T],
     ) -> T:
+        if self.__llm_conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
         model = self.__validate_llm_name(model)
 
         response = self.__llm_conn.chat.completions.create(
@@ -205,6 +241,9 @@ class LLMRepo(metaclass=SingletonMeta):
         messages: list[LLMMessage],
         response_model: Type[T],
     ) -> list[T]:
+        if self.__llm_conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
         model = self.__validate_llm_name(model)
 
         # prepare batch messages
@@ -277,6 +316,9 @@ class LLMRepo(metaclass=SingletonMeta):
         response_model: Type[T] | None = None,
         session_id: str | None = None,
     ) -> tuple[str | T, str]:
+        if self.__llm_conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
         model = self.__validate_llm_name(model)
 
         if session_id is None:
@@ -349,15 +391,12 @@ class LLMRepo(metaclass=SingletonMeta):
         self,
         inputs: list[str],
     ) -> np.ndarray:
+        if self.__emb_conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
         if len(self.__emb_models) == 0:
             raise ValueError("No embedding models are available.")
+
         model = self.__emb_models[0]  # use the first available embedding model
         res = self.__emb_conn.embeddings.create(model=model, input=inputs)
         return np.array([emb.embedding for emb in res.data])
-
-    def close_connection(self):
-        """
-        Close the connection to the LLM client.
-        """
-        self.__emb_conn.close()
-        self.__llm_conn.close()

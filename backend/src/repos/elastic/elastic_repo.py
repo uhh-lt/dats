@@ -3,10 +3,23 @@ from loguru import logger
 
 from common.singleton_meta import SingletonMeta
 from config import conf
+from repos.repo_base import RepoBase
 
 
-class ElasticSearchRepo(metaclass=SingletonMeta):
-    def __new__(cls, remove_if_exists: bool = False):
+class ElasticSearchRepo(RepoBase, metaclass=SingletonMeta):
+    def __init__(self):
+        """
+        Initialize ElasticSearchRepo lazily.
+        """
+        RepoBase.__init__(self)
+        self._client: Elasticsearch | None = None
+
+    def connect(self) -> None:
+        """Establish connection to ElasticSearch."""
+        if self._client is not None:
+            logger.debug("ElasticSearchRepo already connected, skipping")
+            return
+
         try:
             # ElasticSearch Connection
             esc = Elasticsearch(
@@ -32,33 +45,44 @@ class ElasticSearchRepo(metaclass=SingletonMeta):
                     f"Cant connect to ElasticSearch on {conf.elasticsearch.host}:{conf.elasticsearch.port}"
                 )
 
-            cls.client = esc
+            self._client = esc
+            logger.info("Successfully established connection to ElasticSearch!")
 
         except Exception as e:
             msg = f"Cannot instantiate ElasticSearchService - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
 
-        logger.info("Successfully established connection to ElasticSearch!")
-
-        if remove_if_exists:
-            logger.warning("Removing all ElasticSearch indices!")
-            esc.indices.delete(index="dats_*", allow_no_indices=True)
-
-        return super(ElasticSearchRepo, cls).__new__(cls)
-
-    @classmethod
-    def elastic_search_session(cls):
-        """Return the ElasticSearch client instance"""
-        return cls.client
-
-    @classmethod
-    def drop_indices(cls) -> None:
-        logger.warning("Dropping all ElasticSearch indices!")
-        cls.client.indices.delete(index="dats_*", allow_no_indices=True)
-
-    def close_connection(self):
+    def close_connection(self) -> None:
         """
         Close the connection to the ElasticSearch client.
         """
-        self.client.close()
+        if self._client is None:
+            logger.debug("ElasticSearchRepo already closed, skipping")
+            return
+
+        logger.info("Closing connection to ElasticSearch...")
+        self._client.close()
+        self._client = None
+
+    def remove_data(self) -> None:
+        """
+        Reset all ElasticSearch indices.
+        This deletes all indices matching the 'dats_*' pattern.
+        """
+        if self._client is None:
+            raise RuntimeError(
+                "ElasticSearchRepo is not connected. Call connect() first."
+            )
+
+        logger.warning("Dropping all ElasticSearch indices!")
+        self._client.indices.delete(index="dats_*", allow_no_indices=True)
+        logger.info("ElasticSearch indices reset")
+
+    def elastic_search_session(self) -> Elasticsearch:
+        """Return the ElasticSearch client instance"""
+        if self._client is None:
+            raise RuntimeError(
+                "ElasticSearchRepo is not connected. Call connect() first."
+            )
+        return self._client
