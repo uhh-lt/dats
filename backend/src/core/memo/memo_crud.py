@@ -112,7 +112,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             attached_object_type=attached_object_type,
         )
         crud_elastic_memo.create(
-            client=ElasticSearchRepo().client,
+            client=ElasticSearchRepo().get_client(),
             create_dto=esmemo,
             proj_id=memo_orm.project_id,
         )
@@ -185,7 +185,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
 
         crud_elastic_memo.update(
-            client=ElasticSearchRepo().client,
+            client=ElasticSearchRepo().get_client(),
             id=memo_orm.id,
             update_dto=update_es_dto,
             proj_id=memo_orm.project_id,

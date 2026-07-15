@@ -84,7 +84,7 @@ def find_memos(
 
         if search_content:
             return crud_elastic_memo.search_memos_by_content_query(
-                client=ElasticSearchRepo().client,
+                client=ElasticSearchRepo().get_client(),
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),
@@ -93,7 +93,7 @@ def find_memos(
             )
         else:
             return crud_elastic_memo.search_memos_by_title_query(
-                client=ElasticSearchRepo().client,
+                client=ElasticSearchRepo().get_client(),
                 proj_id=project_id,
                 query=search_query,
                 memo_ids=set(filtered_memo_ids),

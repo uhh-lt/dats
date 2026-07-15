@@ -47,7 +47,7 @@ def handle_text_es_index_job(payload: TextESIndexJobInput, job: Job) -> None:
     )
 
     crud_elastic_sdoc.create(
-        client=ElasticSearchRepo().client,
+        client=ElasticSearchRepo().get_client(),
         create_dto=esdoc,
         proj_id=payload.project_id,
     )

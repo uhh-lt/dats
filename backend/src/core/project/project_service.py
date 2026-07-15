@@ -98,7 +98,7 @@ class ProjectService(metaclass=SingletonMeta):
         self.fsr.create_directory_structure_for_project(proj_id=project_id)
 
         # 7) create elasticsearch indices for this project
-        client = self.es_repo.client
+        client = self.es_repo.get_client()
         crud_elastic_sdoc.index.create_index(client=client, proj_id=project_id)
         crud_elastic_memo.index.create_index(client=client, proj_id=project_id)
 
@@ -130,7 +130,7 @@ class ProjectService(metaclass=SingletonMeta):
         self.fsr.purge_project_data(proj_id=proj_id)
 
         # 3) delete elasticsearch indices for this project
-        client = self.es_repo.client
+        client = self.es_repo.get_client()
         crud_elastic_sdoc.index.delete_index(client=client, proj_id=proj_id)
         crud_elastic_memo.index.delete_index(client=client, proj_id=proj_id)
 
