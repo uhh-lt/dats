@@ -60,19 +60,17 @@ def finetune_apply_compute(
                 sentence.concept_similarities[concept_id] = similarity
 
     else:
-        with WeaviateRepo().weaviate_session() as client:
-            embeddings = crud_sentence_embedding.get_embeddings(
-                client=client,
-                project_id=cota.project_id,
-                ids=[
-                    SentenceObjectIdentifier(
-                        sdoc_id=cota_sent.sdoc_id,
-                        sentence_id=cota_sent.sentence_id,
-                    )
-                    for cota_sent in search_space
-                ],
-            )
-
+        embeddings = crud_sentence_embedding.get_embeddings(
+            client=WeaviateRepo().get_client(),
+            project_id=cota.project_id,
+            ids=[
+                SentenceObjectIdentifier(
+                    sdoc_id=cota_sent.sdoc_id,
+                    sentence_id=cota_sent.sentence_id,
+                )
+                for cota_sent in search_space
+            ],
+        )
         embeddings_tensor = np.array(embeddings)
         probabilities = [[0.5, 0.5] for _ in search_space]
         logger.debug("No model exists. We use weaviate embeddings.")

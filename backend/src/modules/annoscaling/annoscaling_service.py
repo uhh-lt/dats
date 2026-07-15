@@ -88,68 +88,64 @@ class AnnoScalingService(metaclass=SingletonMeta):
         # suggest
         hits: list[SimSearchSentenceHit] = []
 
-        with self.weaviate.weaviate_session() as client:
-            for sdoc_id, sent_id in pos_sdoc_sent_ids:
-                search_result = crud_sentence_embedding.search_near_sentence(
-                    client=client,
-                    project_id=proj_id,
-                    id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
-                    k=top_k,
-                    threshold=0.0,
-                )
-                hits.extend(
-                    [
-                        SimSearchSentenceHit(
-                            sdoc_id=r.id.sdoc_id,
-                            sentence_id=r.id.sentence_id,
-                            score=r.score,
-                        )
-                        for r in search_result
-                    ]
-                )
-
-            marked_sdoc_sent_ids = {
-                entry for entry in pos_sdoc_sent_ids + neg_sdoc_sent_ids
-            }
-            hits = [
-                h
-                for h in hits
-                if (h.sdoc_id, h.sentence_id) not in marked_sdoc_sent_ids
-            ]
-            hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
-            hits = self.__unique_consecutive(
-                hits, key=lambda x: (x.sdoc_id, x.sentence_id)
+        client = self.weaviate.get_client()
+        for sdoc_id, sent_id in pos_sdoc_sent_ids:
+            search_result = crud_sentence_embedding.search_near_sentence(
+                client=client,
+                project_id=proj_id,
+                id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
+                k=top_k,
+                threshold=0.0,
             )
-            candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
+            hits.extend(
+                [
+                    SimSearchSentenceHit(
+                        sdoc_id=r.id.sdoc_id,
+                        sentence_id=r.id.sentence_id,
+                        score=r.score,
+                    )
+                    for r in search_result
+                ]
+            )
 
-            # suggest
-            nearest: list[SimSearchSentenceHit] = []
-            for sdoc_id, sent_id in candidates:
-                search_result = crud_sentence_embedding.search_near_sentence(
-                    client=client,
-                    project_id=proj_id,
-                    id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
-                    k=1,
-                    threshold=0.0,
-                )
-                nearest.extend(
-                    [
-                        SimSearchSentenceHit(
-                            sdoc_id=r.id.sdoc_id,
-                            sentence_id=r.id.sentence_id,
-                            score=r.score,
-                        )
-                        for r in search_result
-                    ]
-                )
+        marked_sdoc_sent_ids = {
+            entry for entry in pos_sdoc_sent_ids + neg_sdoc_sent_ids
+        }
+        hits = [
+            h for h in hits if (h.sdoc_id, h.sentence_id) not in marked_sdoc_sent_ids
+        ]
+        hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
+        hits = self.__unique_consecutive(hits, key=lambda x: (x.sdoc_id, x.sentence_id))
+        candidates = [(h.sdoc_id, h.sentence_id) for h in hits]
 
-            results = []
-            for hit, near in zip(hits, nearest):
-                assert type(near) is SimSearchSentenceHit
-                if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
-                    results.append(hit)
-            results.sort(key=lambda x: x.score, reverse=True)
-            return results[0 : min(len(results), top_k)]
+        # suggest
+        nearest: list[SimSearchSentenceHit] = []
+        for sdoc_id, sent_id in candidates:
+            search_result = crud_sentence_embedding.search_near_sentence(
+                client=client,
+                project_id=proj_id,
+                id=SentenceObjectIdentifier(sdoc_id=sdoc_id, sentence_id=sent_id),
+                k=1,
+                threshold=0.0,
+            )
+            nearest.extend(
+                [
+                    SimSearchSentenceHit(
+                        sdoc_id=r.id.sdoc_id,
+                        sentence_id=r.id.sentence_id,
+                        score=r.score,
+                    )
+                    for r in search_result
+                ]
+            )
+
+        results = []
+        for hit, near in zip(hits, nearest):
+            assert type(near) is SimSearchSentenceHit
+            if (near.sdoc_id, near.sentence_id) not in neg_sdoc_sent_ids:
+                results.append(hit)
+        results.sort(key=lambda x: x.score, reverse=True)
+        return results[0 : min(len(results), top_k)]
 
     def __unique_consecutive(
         self, hits: list[SimSearchHit], key: Callable[[SimSearchHit], Any]

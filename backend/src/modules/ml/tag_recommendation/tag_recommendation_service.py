@@ -80,28 +80,28 @@ class DocumentClassificationService(metaclass=SingletonMeta):
         sdocs_and_tags = crud_tag.read_tags_for_documents(db, sdoc_ids=sdoc_ids)
 
         # Suggest similar documents based on the already tagged documents
-        with self.weaviate.weaviate_session() as client:
-            match method:
-                case TagRecommendationMethod.EXCLUSIVE:
-                    dto_iter = self._exclusive_suggestions(
-                        client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
-                    )
-                case TagRecommendationMethod.KNN:
-                    dto_iter = self._knn_suggestions(
-                        db,
-                        client,
-                        ml_job_id,
-                        project_id,
-                        list(sdoc_ids),
-                        sdocs_and_tags,
-                        tag_ids,
-                    )
-                case TagRecommendationMethod.SIMPLE:
-                    dto_iter = self._simple_suggestions(
-                        client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
-                    )
+        client = self.weaviate.get_client()
+        match method:
+            case TagRecommendationMethod.EXCLUSIVE:
+                dto_iter = self._exclusive_suggestions(
+                    client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
+                )
+            case TagRecommendationMethod.KNN:
+                dto_iter = self._knn_suggestions(
+                    db,
+                    client,
+                    ml_job_id,
+                    project_id,
+                    list(sdoc_ids),
+                    sdocs_and_tags,
+                    tag_ids,
+                )
+            case TagRecommendationMethod.SIMPLE:
+                dto_iter = self._simple_suggestions(
+                    client, ml_job_id, project_id, sdoc_ids, sdocs_and_tags
+                )
 
-            dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
+        dtos = self._deduplicate_document_classifications(dto_iter, multi_class)
 
         # Insert all generated tag recommendation DTOs into the database at once.
         crud_tag_recommendation_link.create_multi(db=db, create_dtos=dtos)

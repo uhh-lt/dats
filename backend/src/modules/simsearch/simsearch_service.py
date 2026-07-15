@@ -86,15 +86,14 @@ class SimSearchService(metaclass=SingletonMeta):
             **self.__parse_query_param(query),
         ).tolist()
 
-        with self.weaviate.weaviate_session() as client:
-            results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
-                client=client,
-                vector=query_emb,
-                project_id=proj_id,
-                k=top_k,
-                threshold=threshold,
-                sdoc_ids=sdoc_ids_to_search,
-            )
+        results = crud_sentence_embedding.search_near_vector_in_sdoc_ids(
+            client=self.weaviate.get_client(),
+            vector=query_emb,
+            project_id=proj_id,
+            k=top_k,
+            threshold=threshold,
+            sdoc_ids=sdoc_ids_to_search,
+        )
 
         return [
             SimSearchSentenceHit(
@@ -141,15 +140,14 @@ class SimSearchService(metaclass=SingletonMeta):
             **self.__parse_query_param(query),
         ).tolist()
 
-        with self.weaviate.weaviate_session() as client:
-            results = crud_image_embedding.search_near_vector_in_sdoc_ids(
-                client=client,
-                vector=query_emb,
-                project_id=proj_id,
-                k=top_k,
-                threshold=threshold,
-                sdoc_ids=sdoc_ids_to_search,
-            )
+        results = crud_image_embedding.search_near_vector_in_sdoc_ids(
+            client=self.weaviate.get_client(),
+            vector=query_emb,
+            project_id=proj_id,
+            k=top_k,
+            threshold=threshold,
+            sdoc_ids=sdoc_ids_to_search,
+        )
 
         return [
             SimSearchImageHit(

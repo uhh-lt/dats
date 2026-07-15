@@ -66,7 +66,7 @@ class WeaviateRepo(RepoBase, metaclass=SingletonMeta):
         logger.warning("Dropping all Weaviate indices!")
         self._client.collections.delete_all()
 
-    def weaviate_session(self):
+    def get_client(self):
         """Return the Weaviate client instance"""
         if self._client is None:
             raise RuntimeError("WeaviateRepo is not connected. Call connect() first.")

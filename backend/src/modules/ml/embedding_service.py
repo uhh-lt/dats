@@ -71,19 +71,19 @@ class EmbeddingService(metaclass=SingletonMeta):
         total_processed = 0
         num_processed = -1
 
-        with self.weaviate.weaviate_session() as client:
-            if recompute:
-                crud_sentence_embedding.remove_embeddings_by_project(client, project_id)
+        client = self.weaviate.get_client()
+        if recompute:
+            crud_sentence_embedding.remove_embeddings_by_project(client, project_id)
 
-            while num_processed != 0:
-                num_processed = self._process_sentences_batch(
-                    db,
-                    client,
-                    filter_criterion,
-                    project_id,
-                )
-                total_processed += num_processed
-            return total_processed
+        while num_processed != 0:
+            num_processed = self._process_sentences_batch(
+                db,
+                client,
+                filter_criterion,
+                project_id,
+            )
+            total_processed += num_processed
+        return total_processed
 
     def _process_sentences_batch(
         self,
@@ -157,22 +157,22 @@ class EmbeddingService(metaclass=SingletonMeta):
         total_processed = 0
         num_processed = -1
 
-        with self.weaviate.weaviate_session() as client:
-            if recompute:
-                crud_document_embedding.remove_embeddings_by_project(
-                    client=client, project_id=project_id
-                )
+        client = self.weaviate.get_client()
+        if recompute:
+            crud_document_embedding.remove_embeddings_by_project(
+                client=client, project_id=project_id
+            )
 
-            while num_processed != 0:
-                num_processed = self._process_document_batch(
-                    db,
-                    client,
-                    filter_criterion,
-                    project_id,
-                    force_override=(recompute and (total_processed == 0)),
-                )
-                total_processed += num_processed
-            return total_processed
+        while num_processed != 0:
+            num_processed = self._process_document_batch(
+                db,
+                client,
+                filter_criterion,
+                project_id,
+                force_override=(recompute and (total_processed == 0)),
+            )
+            total_processed += num_processed
+        return total_processed
 
     def _process_document_batch(
         self,
