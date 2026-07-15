@@ -109,12 +109,12 @@ class ProjectService(metaclass=SingletonMeta):
         from modules.perspectives.aspect_collection import AspectCollection
         from modules.perspectives.cluster_collection import ClusterCollection
 
-        with self.weaviate.weaviate_session() as client:
-            DocumentCollection.create_tenant(client, project_id)
-            SentenceCollection.create_tenant(client, project_id)
-            ImageCollection.create_tenant(client, project_id)
-            AspectCollection.create_tenant(client, project_id)
-            ClusterCollection.create_tenant(client, project_id)
+        client = self.weaviate.get_client()
+        DocumentCollection.create_tenant(client, project_id)
+        SentenceCollection.create_tenant(client, project_id)
+        ImageCollection.create_tenant(client, project_id)
+        AspectCollection.create_tenant(client, project_id)
+        ClusterCollection.create_tenant(client, project_id)
 
         # 8) re-load fresh instance to avoid detachment
         fresh = db.get(ProjectORM, project_id)
@@ -135,23 +135,23 @@ class ProjectService(metaclass=SingletonMeta):
         crud_elastic_memo.index.delete_index(client=client, proj_id=proj_id)
 
         # 4) delete weaviate embeddings and related search indices for this project
-        with self.weaviate.weaviate_session() as client:
-            # remove all vector embeddings stored in Weaviate
-            crud_document_embedding.remove_embeddings_by_project(
-                client=client, project_id=proj_id
-            )
-            crud_image_embedding.remove_embeddings_by_project(
-                client=client, project_id=proj_id
-            )
-            crud_sentence_embedding.remove_embeddings_by_project(
-                client=client, project_id=proj_id
-            )
-            crud_aspect_embedding.remove_embeddings_by_project(
-                client=client, project_id=proj_id
-            )
-            crud_cluster_embedding.remove_embeddings_by_project(
-                client=client, project_id=proj_id
-            )
+        client = self.weaviate.get_client()
+        # remove all vector embeddings stored in Weaviate
+        crud_document_embedding.remove_embeddings_by_project(
+            client=client, project_id=proj_id
+        )
+        crud_image_embedding.remove_embeddings_by_project(
+            client=client, project_id=proj_id
+        )
+        crud_sentence_embedding.remove_embeddings_by_project(
+            client=client, project_id=proj_id
+        )
+        crud_aspect_embedding.remove_embeddings_by_project(
+            client=client, project_id=proj_id
+        )
+        crud_cluster_embedding.remove_embeddings_by_project(
+            client=client, project_id=proj_id
+        )
 
         # 5) delete redis entries for this project
         self.js.remove_jobs_by_project(project_id=proj_id)

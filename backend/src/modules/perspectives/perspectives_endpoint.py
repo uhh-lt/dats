@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from common.crud_enum import Crud
-from common.dependencies import get_current_user, get_db_session, get_weaviate_session
+from common.dependencies import get_current_user, get_db_session, get_weaviate_client
 from common.job_type import JobType
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
@@ -240,7 +240,7 @@ def update_aspect_by_id(
 def remove_aspect_by_id(
     *,
     db: Session = Depends(get_db_session),
-    weaviate: WeaviateClient = Depends(get_weaviate_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_client),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> AspectRead:
@@ -431,7 +431,7 @@ def visualize_documents(
 def get_cluster_similarities(
     *,
     db: Session = Depends(get_db_session),
-    weaviate: WeaviateClient = Depends(get_weaviate_session),
+    weaviate: WeaviateClient = Depends(get_weaviate_client),
     aspect_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> PerspectivesClusterSimilarities:

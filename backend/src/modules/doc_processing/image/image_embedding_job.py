@@ -47,10 +47,9 @@ def handle_image_embedding_job(payload: ImageEmbeddingJobInput, job: Job) -> Non
     logger.debug(
         f"Adding image SDoc {payload.sdoc_id} in Project {payload.project_id} to Weaviate ..."
     )
-    with weaviate.weaviate_session() as client:
-        crud_image_embedding.add_embedding(
-            client=client,
-            project_id=payload.project_id,
-            id=ImageObjectIdentifier(sdoc_id=payload.sdoc_id),
-            embedding=embedding,
-        )
+    crud_image_embedding.add_embedding(
+        client=weaviate.get_client(),
+        project_id=payload.project_id,
+        id=ImageObjectIdentifier(sdoc_id=payload.sdoc_id),
+        embedding=embedding,
+    )

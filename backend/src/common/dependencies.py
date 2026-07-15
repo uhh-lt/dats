@@ -49,13 +49,8 @@ def get_db_session() -> Generator[Session, None, None]:
         yield db
 
 
-def get_weaviate_session() -> Generator[WeaviateClient, None, None]:
-    session = WeaviateRepo().weaviate_session()
-    try:
-        yield session
-    finally:
-        if session is not None:
-            session.close()
+def get_weaviate_client() -> WeaviateClient:
+    return WeaviateRepo().get_client()
 
 
 def get_current_user(

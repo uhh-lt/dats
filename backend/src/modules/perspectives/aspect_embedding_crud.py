@@ -94,7 +94,6 @@ crud_aspect_embedding = CRUDAspectEmbedding(
 def handle_source_document_deleted(sender, sdoc_id: int, project_id: int):
     from repos.vector.weaviate_repo import WeaviateRepo
 
-    with WeaviateRepo().weaviate_session() as client:
-        crud_aspect_embedding.delete_by_sdoc_id(
-            client=client, project_id=project_id, sdoc_id=sdoc_id
-        )
+    crud_aspect_embedding.delete_by_sdoc_id(
+        client=WeaviateRepo().get_client(), project_id=project_id, sdoc_id=sdoc_id
+    )

@@ -53,13 +53,12 @@ def handle_text_sentence_embedding_job(
             f"Adding {len(embeddings)} sentences "
             f"from SDoc {payload.sdoc_id} in project {payload.project_id} to index ..."
         )
-        with WeaviateRepo().weaviate_session() as client:
-            crud_sentence_embedding.add_embedding_batch(
-                client=client,
-                project_id=payload.project_id,
-                ids=[
-                    SentenceObjectIdentifier(sdoc_id=payload.sdoc_id, sentence_id=i)
-                    for i in range(len(payload.sentences))
-                ],
-                embeddings=embeddings,
-            )
+        crud_sentence_embedding.add_embedding_batch(
+            client=WeaviateRepo().get_client(),
+            project_id=payload.project_id,
+            ids=[
+                SentenceObjectIdentifier(sdoc_id=payload.sdoc_id, sentence_id=i)
+                for i in range(len(payload.sentences))
+            ],
+            embeddings=embeddings,
+        )
