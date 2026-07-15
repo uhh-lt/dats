@@ -1,7 +1,6 @@
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
-from src.modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 
 from common.singleton_meta import SingletonMeta
 from core.code.code_crud import crud_code
@@ -28,6 +27,7 @@ from core.user.user_crud import (
 )
 from core.user.user_orm import UserORM
 from modules.perspectives.aspect_embedding_crud import crud_aspect_embedding
+from modules.perspectives.cluster_embedding_crud import crud_cluster_embedding
 from repos.elastic.elastic_repo import ElasticSearchRepo
 from repos.filesystem_repo import FilesystemRepo
 from repos.vector.weaviate_repo import WeaviateRepo
