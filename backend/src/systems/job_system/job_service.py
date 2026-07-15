@@ -5,6 +5,7 @@ from typing import Callable, Dict, Literal, TypedDict, TypeVar
 import rq
 from fastapi import APIRouter
 from loguru import logger
+from redis import Redis
 from rq.registry import (
     BaseRegistry,
     CanceledJobRegistry,
@@ -47,27 +48,36 @@ class RegisteredJob(TypedDict):
 
 
 class JobService(metaclass=SingletonMeta):
-    def __new__(cls, *args, **kwargs):
-        cls.redis_conn = RedisRepo().redis_connection()
+    def __init__(self):
+        self.redis_conn: Redis | None = None
+        self.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
+        self.registries: dict[tuple[str, JobPriority], dict[str, BaseRegistry]] = {}
+        self.job_registry: Dict[JobType, RegisteredJob] = {}
 
-        # Define priority queues and their registries (every queue has its own 5 registries)
-        cls.queues: Dict[tuple[str, JobPriority], rq.Queue] = {}
-        cls.registries: dict[tuple[str, JobPriority], dict[str, BaseRegistry]] = {}
+    def initialize(self) -> None:
+        """Initialize the JobService by connecting to Redis and setting up queues and registries."""
+
+        self.redis_conn = RedisRepo().redis_connection()
         for device in ["cpu", "gpu", "api"]:
             for priority in [JobPriority.HIGH, JobPriority.DEFAULT, JobPriority.LOW]:
                 qk = (device, priority)  # queue key
                 qn = f"{device}-{priority.value}"  # queue name
-                cls.queues[qk] = rq.Queue(name=qn, connection=cls.redis_conn)
-                cls.registries[qk] = {
-                    "started": StartedJobRegistry(name=qn, connection=cls.redis_conn),
-                    "finished": FinishedJobRegistry(name=qn, connection=cls.redis_conn),
-                    "failed": FailedJobRegistry(name=qn, connection=cls.redis_conn),
-                    "deferred": DeferredJobRegistry(name=qn, connection=cls.redis_conn),
-                    "canceled": CanceledJobRegistry(name=qn, connection=cls.redis_conn),
+                self.queues[qk] = rq.Queue(name=qn, connection=self.redis_conn)
+                self.registries[qk] = {
+                    "started": StartedJobRegistry(name=qn, connection=self.redis_conn),
+                    "finished": FinishedJobRegistry(
+                        name=qn, connection=self.redis_conn
+                    ),
+                    "failed": FailedJobRegistry(name=qn, connection=self.redis_conn),
+                    "deferred": DeferredJobRegistry(
+                        name=qn, connection=self.redis_conn
+                    ),
+                    "canceled": CanceledJobRegistry(
+                        name=qn, connection=self.redis_conn
+                    ),
                 }
 
-        cls.job_registry: Dict[JobType, RegisteredJob] = {}
-        return super(JobService, cls).__new__(cls)
+        logger.info("JobService initialized successfully!")
 
     def register_job(
         self,
