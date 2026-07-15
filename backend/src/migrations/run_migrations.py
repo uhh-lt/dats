@@ -7,6 +7,7 @@ from repos.db.sql_repo import SQLRepo
 
 
 def run_migrations():
+    SQLRepo().connect()
     SQLRepo().create_database_if_not_exists()
     config = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
     upgrade(config, "head")
