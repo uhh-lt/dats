@@ -74,7 +74,10 @@ class DATSAPI:
         r = requests.put(
             self.BASE_PATH + "project",
             data=json.dumps({"title": title, "description": description}),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         project = r.json()
@@ -173,7 +176,10 @@ class DATSAPI:
                     "sorts": [],
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         sdocs: dict[str, dict] = r.json()["sdocs"]
@@ -190,7 +196,10 @@ class DATSAPI:
                     "sorts": [],
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         sdocs: dict[str, dict] = r.json()["sdocs"]
@@ -219,7 +228,10 @@ class DATSAPI:
                     "sorts": [],
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         sdocs: dict[str, dict] = r.json()["sdocs"]
@@ -283,7 +295,10 @@ class DATSAPI:
         r = requests.patch(
             self.BASE_PATH + f"sdoc/{sdoc_id}",
             data=json.dumps({"name": name}),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         logger.info(f"Set SDoc {sdoc_id} Name to {name}!")
@@ -309,7 +324,10 @@ class DATSAPI:
                     "project_id": proj_id,
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         tag = r.json()
@@ -340,7 +358,10 @@ class DATSAPI:
         r = requests.patch(
             self.BASE_PATH + "tag/bulk/link",
             data=json.dumps({"source_document_ids": sdoc_ids, "tag_ids": tag_ids}),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         logger.info(f"Applied tags {tag_ids} to documents {sdoc_ids}!")
@@ -363,7 +384,10 @@ class DATSAPI:
                     "project_id": proj_id,
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         logger.info(f"Create project metadata {r.json()}!")
@@ -405,7 +429,10 @@ class DATSAPI:
                     "list_value": value if metatype == "LIST" else None,
                 }
             ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
+            headers={
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json",
+            },
         )
         r.raise_for_status()
         return r.json()
