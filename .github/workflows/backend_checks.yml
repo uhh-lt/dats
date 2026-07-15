@@ -44,6 +44,20 @@ jobs:
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
           sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
+
+          # If RAY has NOT changed, update RAY_PORT prefix from 131 to 101 in backend/.env
+          # to connect to our ray service running on the action-runner host
+          if [ "${{ env.RAY_HAS_CHANGED }}" != "true" ]; then
+            sed -i 's/^RAY_PORT=131/RAY_PORT=101/' backend/.env
+          fi
+
+          # Update the provider port prefixes from 131 to 101 in backend/.env
+          # to connect to our services running on the action-runner host
+          sed -i 's/^LLM_PROVIDER_PORT=131/LLM_PROVIDER_PORT=101/' backend/.env
+          sed -i 's/^EMB_PROVIDER_PORT=131/EMB_PROVIDER_PORT=101/' backend/.env
+          sed -i 's/^DOCLING_PORT=131/DOCLING_PORT=101/' backend/.env
+
+          # Handle the case where RAY HAS changed
           if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
             sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
             sed -i 's/ray_network/ray_network_${{ github.run_id }}/g' docker/compose.ray.yml
