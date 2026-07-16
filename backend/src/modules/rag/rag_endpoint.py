@@ -78,4 +78,4 @@ def chat_session(
 def get_available_models(
     authz_user: AuthzUser = Depends(),
 ) -> list[str]:
-    return LLMRepo().get_available_models()
+    return LLMRepo().get_available_llms()
