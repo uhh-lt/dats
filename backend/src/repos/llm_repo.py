@@ -195,14 +195,23 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         print(messages)
         print("" + "-" * 50)
         # get response
-        response_model_schema = None
-        if response_model is not None:
-            response_model_schema = response_model.model_json_schema()
-        response = self.__llm_conn.chat.completions.create(
-            model=model,
-            messages=messages,  # type: ignore
-            extra_body={"guided_json": response_model_schema},
-        )
+        if response_model is None:
+            response = self.__llm_conn.chat.completions.create(
+                model=model,
+                messages=messages,  # type: ignore
+            )
+        else:
+            response = self.__llm_conn.chat.completions.create(
+                model=model,
+                messages=messages,  # type: ignore
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": response_model.__name__.lower(),
+                        "schema": response_model.model_json_schema(),
+                    },
+                },
+            )
         msg = response.choices[0].message
         if msg.content is None:
             raise Exception(f"VLLM response is None: {response}")
@@ -243,7 +252,13 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
                     "content": user_prompt.strip(),
                 },
             ],
-            extra_body={"guided_json": response_model.model_json_schema()},
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_model.__name__.lower(),
+                    "schema": response_model.model_json_schema(),
+                },
+            },
         )
         msg = response.choices[0].message
         if msg.content is None:
@@ -285,7 +300,13 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
             api_key=self.__llm_conn.api_key,
             # temperature=self.sampling_parameters.temperature,
             # top_p=self.sampling_parameters.top_p,
-            extra_body={"guided_json": response_model.model_json_schema()},
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_model.__name__.lower(),
+                    "schema": response_model.model_json_schema(),
+                },
+            },
         )
 
         # parse responses
@@ -378,15 +399,23 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         messages.append(user_message)
 
         # get response
-        response_model_schema = None
-        if response_model is not None:
-            response_model_schema = response_model.model_json_schema()
-
-        response = self.__llm_conn.chat.completions.create(
-            model=model,
-            messages=messages,  # type: ignore
-            extra_body={"guided_json": response_model_schema},
-        )
+        if response_model is None:
+            response = self.__llm_conn.chat.completions.create(
+                model=model,
+                messages=messages,  # type: ignore
+            )
+        else:
+            response = self.__llm_conn.chat.completions.create(
+                model=model,
+                messages=messages,  # type: ignore
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": response_model.__name__.lower(),
+                        "schema": response_model.model_json_schema(),
+                    },
+                },
+            )
         msg = response.choices[0].message
         if msg.content is None:
             raise RuntimeWarning(f"LLM response is None: {response}")
