@@ -21,8 +21,8 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         ######################
         from repos.filesystem_repo import FilesystemRepo
 
-        fsr = FilesystemRepo()
-        fsr._create_root_directory_structure(remove_if_exists=reset_data)
+        fs_repo = FilesystemRepo()
+        fs_repo._create_root_directory_structure(remove_if_exists=reset_data)
 
         ########################
         # 2. Init SQL Database #
@@ -78,6 +78,13 @@ def setup_dats(sql_echo: bool = False, reset_data: bool = False) -> None:
         logger.info(
             f"Discourse Analysis Tool Suite (v{conf.api.version}) Setup Completed Successfully!"
         )
+
+        # 6. Close connections
+        fs_repo.close_connection()
+        sql_repo.close_connection()
+        es_repo.close_connection()
+        weaviate_repo.close_connection()
+        redis_repo.close_connection()
 
     except Exception as e:
         msg = f"Error while running setup script! Exception: {str(e)}"
