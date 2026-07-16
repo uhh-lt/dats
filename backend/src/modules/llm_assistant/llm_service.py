@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Callable, Type, TypeVar
 
 from loguru import logger
@@ -13,7 +12,10 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationRead,
 )
 from core.annotation.span_annotation_crud import crud_span_anno
-from core.annotation.span_annotation_dto import SpanAnnotationRead
+from core.annotation.span_annotation_dto import (
+    SpanAnnotationCreate,
+    SpanAnnotationRead,
+)
 from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -681,7 +683,6 @@ class LLMAssistantService(metaclass=SingletonMeta):
             )
 
         # automatic annotation
-        annotation_id = 0
         result: list[AnnotationResult] = []
         num_batches = (len(task_parameters.sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
         for i in range(0, len(task_parameters.sdoc_ids), BATCH_SIZE):
@@ -711,7 +712,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             )
 
             # parse the responses, preparing the suggested annotation creation
-            suggested_annotations: list[SpanAnnotationRead] = []
+            suggested_annotations: list[SpanAnnotationCreate] = []
             for response, sdoc_id, sentence_id in zip(
                 responses, response_sdoc_ids, response_sentence_ids
             ):
@@ -759,32 +760,32 @@ class LLMAssistantService(metaclass=SingletonMeta):
 
                     # create the suggested annotation
                     suggested_annotations.append(
-                        SpanAnnotationRead(
-                            id=annotation_id,
+                        SpanAnnotationCreate(
                             sdoc_id=sdoc_data.id,
-                            user_id=ASSISTANT_FEWSHOT_ID
-                            if is_fewshot
-                            else ASSISTANT_ZEROSHOT_ID,
                             begin=start,
                             end=end,
                             begin_token=begin_token,
                             end_token=end_token + 1,
-                            text=span["text"],
+                            span_text=span["text"],
                             code_id=code_id,
-                            created=datetime.now(),
-                            updated=datetime.now(),
-                            group_ids=[],
-                            memo_ids=[],
                         )
                     )
-                    annotation_id += 1
+
+            # create the suggested annotations in the database
+            created_annos = crud_span_anno.create_bulk(
+                db=db,
+                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+                create_dtos=suggested_annotations,
+            )
 
             # create results for this batch
             sdoc_id2created_annos: dict[int, list[SpanAnnotationRead]] = {}
-            for anno in suggested_annotations:
+            for anno in created_annos:
                 if anno.sdoc_id not in sdoc_id2created_annos:
                     sdoc_id2created_annos[anno.sdoc_id] = []
-                sdoc_id2created_annos[anno.sdoc_id].append(anno)
+                sdoc_id2created_annos[anno.sdoc_id].append(
+                    SpanAnnotationRead.model_validate(anno)
+                )
             result.extend(
                 [
                     AnnotationResult(
