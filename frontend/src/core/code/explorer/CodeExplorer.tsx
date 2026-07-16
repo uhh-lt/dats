@@ -33,7 +33,11 @@ export function CodeExplorer({
   ...props
 }: CodeExplorerProps) {
   // custom hooks
-  const { codeTree } = useComputeCodeTree();
+  const { codeTree, allCodes } = useComputeCodeTree();
+
+  // Determine parentCodeId for the create dialog based on the selected code
+  const selectedCode = allCodes.data?.find((code) => code.id === selectedCodeId);
+  const parentCodeId = selectedCode && !selectedCode.is_system ? selectedCode.id : undefined;
 
   // local client state
   const [codeFilter, setCodeFilter] = useState<string>("");
@@ -102,17 +106,17 @@ export function CodeExplorer({
           // actions
           renderActions={renderActions}
           // components
-          listActions={<ListActions />}
+          listActions={<ListActions parentCodeId={parentCodeId} />}
         />
       )}
     </Box>
   );
 }
 
-function ListActions() {
+function ListActions({ parentCodeId }: { parentCodeId: number | undefined }) {
   return (
     <>
-      <CodeCreateListItemButton parentCodeId={undefined} />
+      <CodeCreateListItemButton parentCodeId={parentCodeId} />
       <CodeExportButton />
     </>
   );
