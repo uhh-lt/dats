@@ -31,6 +31,7 @@ export interface CodeEditDialogData {
 
 export interface FolderCreateDialogData {
   folderName?: string;
+  parentFolderId?: number;
 }
 
 export interface FolderEditDialogData {

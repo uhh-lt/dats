@@ -63,6 +63,9 @@ export const FolderExplorer = memo(
       [onFolderClick],
     );
 
+    // Determine parentFolderId for the create dialog based on the selected folder
+    const parentFolderId = selectedFolderId !== -1 ? selectedFolderId : undefined;
+
     return (
       <Box {...props}>
         {folderTree && (
@@ -86,7 +89,13 @@ export const FolderExplorer = memo(
             // renderers
             renderActions={renderActions}
             // components
-            listActions={<ListActions showFolders={showFolders} onToggleShowFolders={onToggleShowFolders} />}
+            listActions={
+              <ListActions
+                showFolders={showFolders}
+                onToggleShowFolders={onToggleShowFolders}
+                parentFolderId={parentFolderId}
+              />
+            }
             // root node rendering
             renderRoot={true}
             disableRootActions={true}
@@ -102,10 +111,18 @@ export const FolderExplorer = memo(
   },
 );
 
-function ListActions({ showFolders, onToggleShowFolders }: { showFolders: boolean; onToggleShowFolders?: () => void }) {
+function ListActions({
+  showFolders,
+  onToggleShowFolders,
+  parentFolderId,
+}: {
+  showFolders: boolean;
+  onToggleShowFolders?: () => void;
+  parentFolderId: number | undefined;
+}) {
   return (
     <>
-      <FolderCreateButton folderName="" />
+      <FolderCreateButton folderName="" parentFolderId={parentFolderId} />
       <FolderExplorerMenu showFolders={showFolders} onToggleShowFolders={onToggleShowFolders} />
     </>
   );
