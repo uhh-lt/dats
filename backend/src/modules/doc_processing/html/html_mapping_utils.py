@@ -9,6 +9,7 @@ class Text(TypedDict):
     text: str
     start: int
     end: int
+    new_block: bool
 
 
 class CustomLineHTMLParser(HTMLParser):
@@ -38,16 +39,50 @@ class CustomLineHTMLParser(HTMLParser):
 
 
 class HTMLTextMapper(CustomLineHTMLParser):
+    BLOCK_TAGS = {
+        "p",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "div",
+        "ul",
+        "ol",
+        "li",
+        "table",
+        "tr",
+        "td",
+        "th",
+        "thead",
+        "tbody",
+        "section",
+        "article",
+        "aside",
+        "header",
+        "footer",
+        "nav",
+        "pre",
+        "address",
+        "fieldset",
+        "legend",
+        "hr",
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = []
         self.text: Text | None = None
         self.end_spaces = 0
+        self.block_boundary_crossed = True
 
     def reset(self):
         super().reset()
         self.result = []
         self.text = None
+        self.block_boundary_crossed = True
 
     def handle_data(self, data: str):
         # only add text if it is not only whitespaces!
@@ -65,13 +100,18 @@ class HTMLTextMapper(CustomLineHTMLParser):
                 "text": data.strip(),
                 "start": self.current_index + start_spaces,
                 "end": -1,
+                "new_block": self.block_boundary_crossed,
             }
 
     def handle_starttag(self, tag, attrs):
         self.text_end()
+        if tag.lower() in self.BLOCK_TAGS:
+            self.block_boundary_crossed = True
 
     def handle_endtag(self, tag):
         self.text_end()
+        if tag.lower() in self.BLOCK_TAGS:
+            self.block_boundary_crossed = True
 
     def handle_comment(self, data):
         self.text_end()
@@ -82,6 +122,7 @@ class HTMLTextMapper(CustomLineHTMLParser):
             self.result.append(self.text)
             self.text = None
             self.end_spaces = 0
+            self.block_boundary_crossed = False
 
     def close(self):
         super().close()
