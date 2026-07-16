@@ -14,6 +14,7 @@ import { ReactElement, SyntheticEvent, useCallback, useState } from "react";
 import { AudioVideoViewer } from "../../_components/AudioVideoViewer";
 import { ImageAnnotator } from "../../_components/ImageAnnotator";
 import { ImageViewer } from "../../_components/ImageViewer";
+import { SpanAnnotationComparison } from "../../_components/SpanAnnotationComparison";
 import { TextAnnotator } from "../../_components/TextAnnotator";
 import { BBoxAnnotationExplorer, SentenceAnnotationExplorer, SpanAnnotationExplorer } from "../../_components/explorer";
 import { SentenceAnnotationComparison, SentenceAnnotator } from "../../_components/sentence-annotator";
@@ -80,7 +81,12 @@ const comparatorComponent = (
   boxRef: HTMLDivElement,
 ): Record<DocType, Record<AnnotationMode, React.ReactElement>> => ({
   [DocType.TEXT]: {
-    [AnnotationMode.Annotation]: <div>Not supported</div>,
+    [AnnotationMode.Annotation]: (
+      <SpanAnnotationComparison
+        sdocData={sdocData}
+        style={{ marginLeft: "-16px", marginBottom: "-24px", marginRight: "-16px" }}
+      />
+    ),
     [AnnotationMode.SentenceAnnotation]: (
       <SentenceAnnotationComparison
         sdocData={sdocData}

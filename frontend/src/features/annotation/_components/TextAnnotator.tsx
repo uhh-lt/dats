@@ -15,7 +15,7 @@ import { Annotation } from "../_types/Annotation";
 import { TagStyle } from "../_types/TagStyle";
 import { AnnoActions } from "../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
-import { DocumentRenderer } from "./document-renderer/DocumentRenderer";
+import { DocumentRenderer } from "./DocumentRenderer";
 
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;

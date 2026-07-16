@@ -2,9 +2,9 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
-import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
-import { IToken } from "../../../_types/IToken";
-import { TagStyle } from "../../../_types/TagStyle";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
+import { IToken } from "../../_types/IToken";
+import { TagStyle } from "../../_types/TagStyle";
 import { CodeIndicator } from "./CodeIndicator";
 import { Mark } from "./Mark";
 
