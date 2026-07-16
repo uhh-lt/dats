@@ -265,51 +265,50 @@ class AnnotationPromptBuilder(PromptBuilder):
             + examples_block
         )
 
+    def parse_result(
+        self,
+        result: str,
+    ):
+        """
+        Returns:
+        - clean_text: str
+        - spans: list of dicts with code_id, text, begin, end
+        """
+        clean_text = ""
+        spans = []
 
-def parse_result(
-    self,
-    result: str,
-):
-    """
-    Returns:
-    - clean_text: str
-    - spans: list of dicts with code_id, text, begin, end
-    """
-    clean_text = ""
-    spans = []
+        # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
+        cursor = 0
 
-    # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
-    cursor = 0
+        for match in CODE_PATTERN.finditer(result):
+            # 1. Grab the raw text before this match and add it to our clean string
+            before = result[cursor : match.start()]
+            clean_text += before
 
-    for match in CODE_PATTERN.finditer(result):
-        # 1. Grab the raw text before this match and add it to our clean string
-        before = result[cursor : match.start()]
-        clean_text += before
+            entity_text = match.group("text")
+            code = match.group("code")
 
-        entity_text = match.group("text")
-        code = match.group("code")
+            # 2. Calculate the offsets based on the CURRENT length of our clean string
+            begin = len(clean_text)
+            end = begin + len(entity_text)
 
-        # 2. Calculate the offsets based on the CURRENT length of our clean string
-        begin = len(clean_text)
-        end = begin + len(entity_text)
+            # 3. Only append to spans if the code is recognized
+            if code.upper() in self.codename2id_dict:
+                spans.append(
+                    {
+                        "code_id": self.codename2id_dict[code.upper()],
+                        "text": entity_text,
+                        "begin": begin,
+                        "end": end,
+                    }
+                )
 
-        # 3. Only append to spans if the code is recognized
-        if code.upper() in self.codename2id_dict:
-            spans.append(
-                {
-                    "code_id": self.codename2id_dict[code.upper()],
-                    "text": entity_text,
-                    "begin": begin,
-                    "end": end,
-                }
-            )
+            # 4. ALWAYS append the text and advance the original string cursor
+            clean_text += entity_text
+            cursor = match.end()
 
-        # 4. ALWAYS append the text and advance the original string cursor
-        clean_text += entity_text
-        cursor = match.end()
+        # 5. Append anything left over after the final match
+        tail = result[cursor:]
+        clean_text += tail
 
-    # 5. Append anything left over after the final match
-    tail = result[cursor:]
-    clean_text += tail
-
-    return clean_text, spans
+        return clean_text, spans
