@@ -53,7 +53,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
   useEffect(() => {
     if (isCodeCreateDialogOpen) {
       reset({
-        parentCodeId: dialogData?.parentCodeId || -1,
+        parentCodeId: dialogData?.parentCodeId ?? -1,
         name: dialogData?.codeName || "",
         color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
         description: "",
