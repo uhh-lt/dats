@@ -1,17 +1,20 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { SdocRenderer } from "@core/source-document";
+import { QueryKey } from "@api/hooks/QueryKey";
+import { queryClient } from "@api/queryClient";
+import { useTabNavigate } from "@core/navigation";
+import { ApproachType } from "@models/ApproachType";
 import { AnnotationLLMJobResult } from "@models/AnnotationLLMJobResult";
-import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
-import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, CircularProgress, DialogActions, DialogContent, Tab, Typography } from "@mui/material";
+import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { memo, useCallback, useMemo, useState } from "react";
+import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
+import { memo, useCallback } from "react";
 import { LLMAssistantActions } from "../../../../store/llmAssistantSlice";
 import { LLMUtterance } from "../LLMUtterance";
-import { TextAnnotationValidator } from "./TextAnnotationValidator";
+
+const approach2AssistantID: Record<ApproachType, number> = {
+  [ApproachType.LLM_ZERO_SHOT]: ASSISTANT_ZEROSHOT_ID,
+  [ApproachType.LLM_FEW_SHOT]: ASSISTANT_FEWSHOT_ID,
+};
 
 export const AnnotationResultStep = memo(() => {
   // get the job
@@ -20,7 +23,10 @@ export const AnnotationResultStep = memo(() => {
 
   if (llmJob.isSuccess && llmJob.data.output) {
     return (
-      <AnnotationResultStepContent jobResult={llmJob.data.output.specific_task_result as AnnotationLLMJobResult} />
+      <AnnotationResultStepContent
+        jobResult={llmJob.data.output.specific_task_result as AnnotationLLMJobResult}
+        approachType={llmJob.data.input.llm_approach_type}
+      />
     );
   } else if (llmJob.isLoading) {
     return (
@@ -35,144 +41,64 @@ export const AnnotationResultStep = memo(() => {
   }
 });
 
-function AnnotationResultStepContent({ jobResult }: { jobResult: AnnotationLLMJobResult }) {
-  // we extract the codes from the job
-  const codeIdsForSelection = useMemo(() => {
-    const codeIds = jobResult.results.reduce<Set<number>>((acc, r) => {
-      r.suggested_annotations.forEach((annotation) => {
-        acc.add(annotation.code_id);
-      });
-      return acc;
-    }, new Set<number>());
-    return Array.from(codeIds);
-  }, [jobResult]);
+interface AnnotationResultStepContentProps {
+  jobResult: AnnotationLLMJobResult;
+  approachType: ApproachType;
+}
 
-  // local state to manage tabs
-  const [tab, setTab] = useState<string>(jobResult.results.length > 0 ? jobResult.results[0].sdoc_id.toString() : "");
-  const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
-    setTab(newValue);
-  }, []);
-
-  // local state to manage annotations
-  const [annotations, setAnnotations] = useState<Record<number, SpanAnnotationRead[]>>(() =>
-    jobResult.results.reduce<Record<number, SpanAnnotationRead[]>>((acc, r) => {
-      acc[r.sdoc_id] = r.suggested_annotations;
-      return acc;
-    }, {}),
-  );
-  const handleChangeAnnotations = useCallback(
-    (sdocId: number) => (annotations: SpanAnnotationRead[]) => {
-      setAnnotations((prev) => ({
-        ...prev,
-        [sdocId]: annotations,
-      }));
-    },
-    [],
-  );
-
+const AnnotationResultStepContent = memo(({ jobResult, approachType }: AnnotationResultStepContentProps) => {
   // actions
   const dispatch = useAppDispatch();
   const handleClose = useCallback(() => {
     dispatch(LLMAssistantActions.closeLLMDialog());
   }, [dispatch]);
 
-  const { mutate: createBulkAnnotationsMutation, isPending } = SpanAnnotationHooks.useCreateBulkAnnotations();
-  const handleApplySuggestedAnnotations = useCallback(() => {
-    if (!annotations) return;
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const tabNavigate = useTabNavigate();
+  const handleOpenFirstDocument = () => {
+    if (!projectId) return;
 
-    const bulkAnnotations = Object.entries(annotations).reduce((acc, [sdocId, sdocAnnos]) => {
-      const sdocIdInt = parseInt(sdocId);
-      for (const annotation of sdocAnnos) {
-        acc.push({
-          sdoc_id: sdocIdInt,
-          code_id: annotation.code_id,
-          begin: annotation.begin,
-          end: annotation.end,
-          begin_token: annotation.begin_token,
-          end_token: annotation.end_token,
-          span_text: annotation.text,
-        });
-      }
-      return acc;
-    }, [] as SpanAnnotationCreate[]);
+    const firstSdocId = jobResult.results[0].sdoc_id;
 
-    createBulkAnnotationsMutation(
-      { requestBody: bulkAnnotations },
-      {
-        onSuccess: () => {
-          dispatch(LLMAssistantActions.closeLLMDialog());
-        },
+    dispatch(LLMAssistantActions.closeLLMDialog());
+    tabNavigate({
+      params: { projectId, sdocId: firstSdocId },
+      to: "/project/$projectId/annotation/$sdocId",
+      search: {
+        compareWithUserId: approach2AssistantID[approachType],
+        visibleUserId: undefined,
+        selectedAnnotationId: undefined,
       },
-    );
-  }, [annotations, createBulkAnnotationsMutation, dispatch]);
+    });
 
-  // rendering
-  const tabPanels = useMemo(
-    () =>
-      Object.entries(annotations).map(([sdocIdStr, annotations]) => {
-        const sdocId = parseInt(sdocIdStr);
-        return (
-          <TabPanel key={sdocId} value={sdocIdStr} sx={{ px: 0, py: 1 }}>
-            <TextAnnotationValidator
-              sdocId={sdocId}
-              codeIdsForSelection={codeIdsForSelection}
-              annotations={annotations}
-              handleChangeAnnotations={handleChangeAnnotations(sdocId)}
-            />
-          </TabPanel>
-        );
-      }),
-    [annotations, codeIdsForSelection, handleChangeAnnotations],
-  );
-
-  const tabs = useMemo(
-    () =>
-      Object.keys(annotations).map((sdocId) => (
-        <Tab key={sdocId} label={<SdocRenderer sdoc={parseInt(sdocId)} renderName />} value={sdocId} />
-      )),
-    [annotations],
-  );
+    // reload annotations
+    queryClient.invalidateQueries({
+      queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, firstSdocId, approach2AssistantID[approachType]],
+    });
+  };
 
   return (
     <>
-      <DialogContent>
-        {jobResult.results.length === 0 ? (
-          <LLMUtterance>
-            <Typography>No Results :( An error has occured!</Typography>
-          </LLMUtterance>
-        ) : (
-          <LLMUtterance>
-            <Typography>
-              Here are the results! My suggestions are highlighted in the documents. Now, you can decide what to do with
-              them. You can click on an annotation and either:
-            </Typography>
-            <ul style={{ margin: 0 }}>
-              <li>Delete my suggestion</li>
-              <li>Change the code of my annotated text passage</li>
-            </ul>
-            <Typography>Remember to look through all the documents.</Typography>
-          </LLMUtterance>
-        )}
-
-        <TabContext value={tab}>
-          <Box sx={{ mt: 3, borderBottom: 1, borderColor: "divider" }}>
-            <TabList onChange={handleChangeTab}>{tabs}</TabList>
-          </Box>
-          {tabPanels}
-        </TabContext>
-      </DialogContent>
+      <LLMUtterance p={3}>
+        <Typography>
+          I am done with annotating the text passages. You can now view the results in the Text Annotator. My
+          suggestions for the next steps are the following:
+        </Typography>
+        <ul style={{ margin: 0 }}>
+          <li>Open a document in the Annotator</li>
+          <li>Change to the span annotation mode (Text icon)</li>
+          <li>Use the "Compare with" feature to compare your annotations with mine</li>
+          <li>Apply correct & validated annotations to your document, so that I can learn from your feedback</li>
+        </ul>
+        <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
+      </LLMUtterance>
       <DialogActions>
-        <Button onClick={handleClose}>Discard results & close</Button>
-        <Button
-          variant="contained"
-          startIcon={<PlayCircleIcon />}
-          loading={isPending}
-          loadingPosition="start"
-          onClick={handleApplySuggestedAnnotations}
-        >
-          Apply annotations!
+        <Button onClick={handleClose}>Close dialog</Button>
+        <Button variant="contained" onClick={handleOpenFirstDocument}>
+          Open first document
         </Button>
       </DialogActions>
     </>
   );
-}
+});
+AnnotationResultStepContent.displayName = "AnnotationResultStepContent";

@@ -2,14 +2,14 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
 import { useCallback, useEffect, useMemo } from "react";
-import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
-import { IToken } from "../../_types/IToken";
+import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { IToken } from "../_types/IToken";
 import { DocumentPage } from "./_components/DocumentPage";
 import { SdocAudioLink } from "./_components/SdocAudioLink";
 import { SdocImage } from "./_components/SdocImage";
 import { SdocVideoLink } from "./_components/SdocVideoLink";
 import { Token } from "./_components/Token";
-import "./_styles/DocumentRenderer.css";
+import "./_styles/Annotation.css";
 
 interface DocumentRendererProps {
   html: string;
