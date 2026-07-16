@@ -26,8 +26,10 @@ class BaseCollection:
                 description=cls.description,
                 properties=list(cls.properties.values()),
                 # All configurations below apply to all collections:
-                vector_index_config=Configure.VectorIndex.hnsw(
-                    distance_metric=VectorDistances.COSINE
+                vector_config=Configure.Vectors.self_provided(
+                    vector_index_config=Configure.VectorIndex.hnsw(
+                        distance_metric=VectorDistances.COSINE
+                    ),
                 ),
                 # Enable multi-tenancy: one project = one tenant
                 multi_tenancy_config=Configure.multi_tenancy(
