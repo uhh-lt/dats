@@ -17,6 +17,7 @@ from core.doc.source_document_data_dto import (
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from core.user.user_crud import SYSTEM_USER_ID
 from modules.doc_processing.doc_processing_dto import SdocProcessingJobInput
+from modules.doc_processing.html.html_mapping_utils import HTMLTextMapper
 from modules.word_frequency.word_frequency_crud import crud_word_frequency
 from modules.word_frequency.word_frequency_dto import WordFrequencyCreate
 from repos.db.sql_repo import SQLRepo
@@ -100,7 +101,7 @@ def handle_text_spacy_job(payload: SpacyJobInput, job: Job) -> SpacyJobOutput:
         )
 
         # tokens & offsets & sentences
-        sdoc_data = extract_tok_sent_data(spacy_output)
+        sdoc_data = extract_tok_sent_data(spacy_output, payload.raw_html)
 
         # keywords
         # if payload does not have keywords:
@@ -249,6 +250,7 @@ def extract_span_annotations(
 
 def extract_tok_sent_data(
     spacy_output: SpacyPipelineOutput,
+    raw_html: str,
 ) -> dict:
     token_starts: list[int] = []
     token_ends: list[int] = []
@@ -256,11 +258,40 @@ def extract_tok_sent_data(
         token_starts.append(token.start_char)
         token_ends.append(token.end_char)
 
+    # 1. Parse raw HTML with HTMLTextMapper to find block boundaries in plain text
+    parser = HTMLTextMapper()
+    results = parser(raw_html)
+
+    block_boundaries = set()
+    current_len = 0
+    for r in results:
+        if r.get("new_block"):
+            block_boundaries.add(current_len)
+        current_len += len(r["text"]) + 1
+
+    # 2. Iterate through SpaCy sentences and split them at block boundaries
     sentence_starts: list[int] = []
     sentence_ends: list[int] = []
     for s in spacy_output.sents:
-        sentence_starts.append(s.start_char)
-        sentence_ends.append(s.end_char)
+        s_start = s.start_char
+        s_end = s.end_char
+
+        # Find all boundaries that lie strictly inside this sentence
+        boundaries_in_sent = sorted(
+            [b for b in block_boundaries if s_start < b < s_end]
+        )
+
+        last_start = s_start
+        for b in boundaries_in_sent:
+            # We split the sentence: [last_start, b - 1] (excluding the joining space)
+            if b - 1 > last_start:
+                sentence_starts.append(last_start)
+                sentence_ends.append(b - 1)
+            last_start = b
+
+        if s_end > last_start:
+            sentence_starts.append(last_start)
+            sentence_ends.append(s_end)
 
     return {
         "token_starts": token_starts,

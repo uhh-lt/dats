@@ -69,14 +69,7 @@ def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> 
             raise e
         new_html += payload.raw_html[current_position:html_start]
         if (
-            len(payload.sentence_ends) > current_sentence_idx
-            and payload.sentence_ends[current_sentence_idx] == text_end
-        ):
-            new_html += "</sent>"
-            current_sentence_idx += 1
-
-        if (
-            len([payload.sentence_starts]) > current_sentence_idx
+            len(payload.sentence_starts) > current_sentence_idx
             and payload.sentence_starts[current_sentence_idx] == text_start
         ):
             new_html += f"<sent id={current_sentence_idx}>"
@@ -84,6 +77,13 @@ def handle_text_html_mapping_job(payload: TextHTMLMappingJobInput, job: Job) -> 
         new_html += f"<t id={token_id}>"
         new_html += payload.raw_html[html_start:html_end]
         new_html += "</t>"
+
+        if (
+            len(payload.sentence_ends) > current_sentence_idx
+            and payload.sentence_ends[current_sentence_idx] == text_end
+        ):
+            new_html += "</sent>"
+            current_sentence_idx += 1
 
         current_position = html_end
     new_html += payload.raw_html[current_position:]
