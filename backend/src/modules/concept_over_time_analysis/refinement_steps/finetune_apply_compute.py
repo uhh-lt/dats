@@ -182,13 +182,12 @@ def __apply_model(
         convert_to_tensor=True,
         normalize_embeddings=True,
     )
-    assert isinstance(embeddings_tensor, np.ndarray)
 
     # 3. Predict the probabilities for each concept
     regression_model = model.model_head
     assert isinstance(regression_model, LogisticRegression)
     probabilities = regression_model.predict_proba(embeddings_tensor).tolist()
-    return embeddings_tensor, probabilities
+    return embeddings_tensor.numpy(force=True), probabilities
 
 
 def __compute_results(
