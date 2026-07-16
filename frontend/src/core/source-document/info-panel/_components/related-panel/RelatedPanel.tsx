@@ -102,6 +102,7 @@ function RelatedPanelContent({ sdocId }: RelatedPanelProps) {
             >
               {items.map((virtualItem) => (
                 <SdocListItem
+                  projectId={projectId}
                   sdocId={relatedSdocIds.data[virtualItem.index]}
                   key={virtualItem.key}
                   ref={virtualizer.measureElement}

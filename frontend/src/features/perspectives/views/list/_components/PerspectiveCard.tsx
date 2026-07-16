@@ -1,5 +1,6 @@
 import { getIconComponent, Icon } from "@components/icons";
 import { JobStatusBadge } from "@core/job";
+import { LinkCardActionArea } from "@core/navigation";
 import { useOpenConfirmationDialog } from "@core/notification";
 import { AspectRead } from "@models/AspectRead";
 import { JobStatus } from "@models/JobStatus";
@@ -7,8 +8,7 @@ import ConstructionIcon from "@mui/icons-material/Construction";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import WarningIcon from "@mui/icons-material/Warning";
-import { Box, Card, CardActionArea, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
-import { Link } from "@tanstack/react-router";
+import { Box, Card, CardContent, CardMedia, IconButton, Stack, Typography } from "@mui/material";
 import { ReactElement } from "react";
 import { PerspectivesQueryOptions } from "../../../_api/perspectivesQueryOptions";
 
@@ -47,10 +47,9 @@ const statusToText: Record<JobStatus, string> = {
 interface PerspectiveCardProps {
   aspect: AspectRead;
   title: string;
-  to: string;
 }
 
-export function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
+export function PerspectiveCard({ aspect, title }: PerspectiveCardProps) {
   const perspectivesJob = PerspectivesQueryOptions.usePollPerspectivesJob(aspect.most_recent_job_id, undefined);
   const openConfirmationDialog = useOpenConfirmationDialog();
   const { mutate: deleteMutation, isPending } = PerspectivesQueryOptions.useDeleteAspect();
@@ -70,7 +69,10 @@ export function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
       <Box position={"absolute"} top={8} right={8} zIndex={1}>
         <JobStatusBadge status={perspectivesJob.data?.status} />
       </Box>
-      <CardActionArea component={Link} to={to}>
+      <LinkCardActionArea
+        to="/project/$projectId/perspectives/$aspectId"
+        params={{ projectId: aspect.project_id, aspectId: aspect.id }}
+      >
         {perspectivesJob.data.status === JobStatus.FINISHED ? (
           <CardMedia
             sx={{ height: 360, width: 360, objectFit: "cover" }}
@@ -110,7 +112,7 @@ export function PerspectiveCard({ aspect, to, title }: PerspectiveCardProps) {
             </IconButton>
           </Stack>
         </CardContent>
-      </CardActionArea>
+      </LinkCardActionArea>
     </Card>
   );
 }

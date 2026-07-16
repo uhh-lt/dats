@@ -4,3 +4,4 @@ export * from "./LinkLink";
 export * from "./LinkListItemButton";
 export * from "./LinkMenuItem";
 export * from "./LinkWrapper";
+export * from "./LinkCardActionArea";

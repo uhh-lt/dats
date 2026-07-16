@@ -100,7 +100,7 @@ export function PerspectivesListView() {
           </Stack>
           <Box display="flex" gap={2} paddingY={0} flexWrap="wrap">
             {filteredAspects.map((aspect) => (
-              <PerspectiveCard key={aspect.id} to={`./dashboard/${aspect.id}`} title={aspect.name} aspect={aspect} />
+              <PerspectiveCard key={aspect.id} title={aspect.name} aspect={aspect} />
             ))}
           </Box>
         </Stack>

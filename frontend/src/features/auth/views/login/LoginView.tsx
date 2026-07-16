@@ -8,9 +8,10 @@ import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
+import { LinkButton } from "@core/navigation";
 import { Box, Button, Card, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 
 const routeApi = getRouteApi("/_public/login");
@@ -121,9 +122,9 @@ export function LoginView() {
                 />
               </Box>
               <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Button color="primary" component={Link} to="/register">
+                <LinkButton color="primary" to="/register">
                   Create Account
-                </Button>
+                </LinkButton>
                 <Button
                   variant="contained"
                   color="primary"

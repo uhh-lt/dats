@@ -1,20 +1,31 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
-import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
-import { Link } from "@tanstack/react-router";
-import { memo } from "react";
+import { LinkListItemButton } from "@core/navigation";
+import { ListItemIcon, ListItemText } from "@mui/material";
+import { forwardRef, memo } from "react";
 
 interface SdocListItemProps {
   sdocId: number;
+  projectId?: number;
+  selected?: boolean;
 }
 
 export const SdocListItem = memo(
-  ({ sdocId, ...props }: SdocListItemProps & Omit<ListItemButtonProps, "disablePadding">) => {
+  forwardRef<HTMLAnchorElement, SdocListItemProps>(({ sdocId, projectId, selected }, ref) => {
     // query (global server state)
     const sdoc = SdocHooks.useGetDocument(sdocId);
 
+    if (projectId === undefined) {
+      return null;
+    }
+
     return (
-      <ListItemButton component={Link} to="../annotation/$sdocId" params={{ sdocId }} {...props}>
+      <LinkListItemButton
+        ref={ref}
+        to="/project/$projectId/annotation/$sdocId"
+        params={{ projectId, sdocId }}
+        selected={selected}
+      >
         {sdoc.isSuccess ? (
           <>
             <ListItemIcon>{getIconComponent(DocTypeIcons[sdoc.data.doctype])}</ListItemIcon>
@@ -25,7 +36,7 @@ export const SdocListItem = memo(
         ) : sdoc.isLoading ? (
           <ListItemText primary="Loading..." />
         ) : null}
-      </ListItemButton>
+      </LinkListItemButton>
     );
-  },
+  }),
 );
