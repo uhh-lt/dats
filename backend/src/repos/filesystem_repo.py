@@ -125,8 +125,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
         """Drop the entire filesystem."""
         if self.root_dir.exists():
             logger.warning(f"Removing DATS Filesystem at {self.root_dir}")
-            for filename in self.root_dir.iterdir():
-                file_path = self.root_dir.joinpath(self.root_dir, filename)
+            for file_path in self.root_dir.iterdir():
                 try:
                     if file_path.is_file() or file_path.is_symlink():
                         os.unlink(file_path)
@@ -155,16 +154,7 @@ class FilesystemRepo(metaclass=SingletonMeta):
     def _create_root_directory_structure(self, remove_if_exists: bool = False):
         try:
             if self.root_dir.exists() and remove_if_exists:
-                logger.warning(f"Removing DATS Filesystem at {self.root_dir}")
-                for filename in self.root_dir.iterdir():
-                    file_path = self.root_dir.joinpath(self.root_dir, filename)
-                    try:
-                        if file_path.is_file() or file_path.is_symlink():
-                            os.unlink(file_path)
-                        elif file_path.is_dir():
-                            shutil.rmtree(file_path)
-                    except Exception as e:
-                        logger.error(f"Failed to remove {file_path} because: {e}")
+                self.remove_data()
 
             # make sure filesystem root dir exists
             if not self.root_dir.exists():
