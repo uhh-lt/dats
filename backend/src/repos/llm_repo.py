@@ -1,4 +1,5 @@
 import time
+from enum import Enum
 from typing import Type, TypeVar
 from uuid import uuid4
 
@@ -20,6 +21,11 @@ class LLMMessage(BaseModel):
     user_prompt: str
 
 
+class ProviderType(str, Enum):
+    LLM = "llm"
+    EMB = "emb"
+
+
 class LLMRepo(RepoBase, metaclass=SingletonMeta):
     def __init__(self):
         """
@@ -27,7 +33,6 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         """
         RepoBase.__init__(self)
         self.__llm_conn: OpenAI | None = None
-        self.__llm_models: list[str] = []
         self.__llm_chat_sessions: dict[str, list[dict]] = dict()
         self.__llm_chat_session_timestamps: dict[str, float] = dict()
         self.__max_llm_chat_sessions = 50
@@ -39,7 +44,6 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         self.__max_vlm_chat_session_age = 7 * 24 * 60 * 60  # 7 days
 
         self.__emb_conn: OpenAI | None = None
-        self.__emb_models: list[str] = []
 
     def connect(self) -> None:
         """Establish connections to LLM Providers."""
@@ -49,8 +53,8 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
 
         try:
             for provider_type, connection_info in (
-                ("llm", conf.llm_provider),
-                ("emb", conf.emb_provider),
+                (ProviderType.LLM, conf.llm_provider),
+                (ProviderType.EMB, conf.emb_provider),
             ):
                 conn = OpenAI(
                     base_url=f"http://{connection_info.host}:{connection_info.port}/v1",
@@ -61,12 +65,11 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
                     raise Exception(
                         f"No model found at '{connection_info.host}:{connection_info.port}'!"
                     )
-                if provider_type == "llm":
-                    self.__llm_models = [m.id for m in models]
-                    self.__llm_conn = conn
-                elif provider_type == "emb":
-                    self.__emb_models = [m.id for m in models]
-                    self.__emb_conn = conn
+                match provider_type:
+                    case ProviderType.LLM:
+                        self.__llm_conn = conn
+                    case ProviderType.EMB:
+                        self.__emb_conn = conn
                 logger.info(
                     f"Successfully established connection to LLM Provider '{provider_type}' at '{connection_info.host}:{connection_info.port}' with the following models: {[model.id for model in models]}"
                 )
@@ -99,20 +102,33 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         self.__vlm_chat_sessions.clear()
         self.__vlm_chat_session_timestamps.clear()
 
-    def __validate_llm_name(self, model: str) -> str:
-        if len(self.__llm_models) == 0:
+    def _fetch_available_models(self, provider: ProviderType) -> list[str]:
+        match provider:
+            case ProviderType.LLM:
+                conn = self.__llm_conn
+            case ProviderType.EMB:
+                conn = self.__emb_conn
+
+        if conn is None:
+            raise RuntimeError("LLMRepo is not connected. Call connect() first.")
+
+        return [model.id for model in conn.models.list().data]
+
+    def _validate_llm_name(self, model: str) -> str:
+        available_models = self._fetch_available_models(provider=ProviderType.LLM)
+        if len(available_models) == 0:
             raise ValueError("No LLM models available.")
-        if model not in self.__llm_models:
-            raise ValueError(
-                f"Model '{model}' is not available. Available models: {self.__llm_models}"
-            )
         # this allows the user to specify "default" as the model name, which will use the first available model
         if model == "default":
-            model = self.__llm_models[0]
+            model = available_models[0]
+        if model not in available_models:
+            raise ValueError(
+                f"Model '{model}' is not available. Available models: {available_models}"
+            )
         return model
 
-    def get_available_models(self) -> list[str]:
-        return list(self.__llm_models)
+    def get_available_llms(self) -> list[str]:
+        return self._fetch_available_models(provider=ProviderType.LLM)
 
     def _start_llm_chat_session(self) -> str:
         session_id = str(uuid4())
@@ -148,7 +164,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self.__validate_llm_name(model)
+        model = self._validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_llm_chat_session()
@@ -213,7 +229,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self.__validate_llm_name(model)
+        model = self._validate_llm_name(model)
 
         response = self.__llm_conn.chat.completions.create(
             model=model,
@@ -244,7 +260,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self.__validate_llm_name(model)
+        model = self._validate_llm_name(model)
 
         # prepare batch messages
         batch_messages = [
@@ -319,7 +335,7 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        model = self.__validate_llm_name(model)
+        model = self._validate_llm_name(model)
 
         if session_id is None:
             session_id = self._start_vlm_chat_session()
@@ -394,9 +410,11 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         if self.__emb_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
-        if len(self.__emb_models) == 0:
+        available_models = self._fetch_available_models(provider=ProviderType.EMB)
+
+        if len(available_models) == 0:
             raise ValueError("No embedding models are available.")
 
-        model = self.__emb_models[0]  # use the first available embedding model
+        model = available_models[0]  # use the first available embedding model
         res = self.__emb_conn.embeddings.create(model=model, input=inputs)
         return np.array([emb.embedding for emb in res.data])
