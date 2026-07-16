@@ -8,9 +8,9 @@ import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
 import { ArrowBackIosNew, ArrowForwardIos } from "@mui/icons-material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { LinkButton } from "@core/navigation";
 import { Box, Button, ButtonGroup, CircularProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { PerspectivesQueryOptions } from "../../../../_api/perspectivesQueryOptions";
 import { useGetDocVisualization } from "../../../../_api/useGetDocVisualization";
@@ -25,6 +25,7 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
   const selectedSdocIds = useAppSelector((state) => state.perspectives.selectedSdocIds);
   const selectedSdocIdsIndex = useAppSelector((state) => state.perspectives.selectedSdocIdsIndex);
   const colorScheme = useAppSelector((state) => state.perspectives.colorScheme);
+  const projectId = useAppSelector((state) => state.project.projectId);
 
   // selection index management
   const dispatch = useAppDispatch();
@@ -103,15 +104,17 @@ export function SelectionInformation({ aspectId }: SelectionInformationProps) {
                     </Button>
                   </span>
                 </Tooltip>
-                <Button
-                  component={Link}
-                  to={`../annotation/${selectedSdocIds[selectedSdocIdsIndex]}`}
-                  variant="text"
-                  size="small"
-                  startIcon={<OpenInNewIcon />}
-                >
-                  Open Doc
-                </Button>
+                {projectId !== undefined && (
+                  <LinkButton
+                    to="/project/$projectId/annotation/$sdocId"
+                    params={{ projectId, sdocId: selectedSdocIds[selectedSdocIdsIndex] }}
+                    variant="text"
+                    size="small"
+                    startIcon={<OpenInNewIcon />}
+                  >
+                    Open Doc
+                  </LinkButton>
+                )}
               </Stack>
 
               <Stack direction="column" pl={0.5}>
