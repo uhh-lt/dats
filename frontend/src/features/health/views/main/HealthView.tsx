@@ -28,7 +28,10 @@ export function HealthView() {
 
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
-  useResetStateOnSearch([projectId, tab, sortingModel], () => dispatch(HealthActions.onSearchParamsChange()));
+  const resetState = useCallback(() => {
+    dispatch(HealthActions.onSearchParamsChange());
+  }, [dispatch]);
+  useResetStateOnSearch([projectId, tab, sortingModel], resetState);
 
   const { data: tableColumnInfo } = useSuspenseQuery(sdocHealthTableColumnsQueryOptions(tab));
   const handleTabChange = useCallback(

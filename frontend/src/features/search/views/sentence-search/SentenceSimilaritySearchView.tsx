@@ -50,9 +50,10 @@ export function SentenceSimilaritySearchView() {
   const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // resetting search-parameter-dependant state
-  useResetStateOnSearch([projectId, searchQuery, filter, topK, threshold], () =>
-    dispatch(SentenceSearchActions.onSearchParamsChange()),
-  );
+  const resetState = useCallback(() => {
+    dispatch(SentenceSearchActions.onSearchParamsChange());
+  }, [dispatch]);
+  useResetStateOnSearch([projectId, searchQuery, filter, topK, threshold], resetState);
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));
