@@ -28,6 +28,7 @@
       "envFile": "${workspaceFolder}/.env",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/src",
+        "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}",
         "RQ_WORKERS_CPU": "1",
         "RQ_WORKERS_API": "1",
         "RQ_WORKERS_GPU": "1"
