@@ -35,9 +35,11 @@ export const tableReducer = {
   onSearchParamsChange: (state: Draft<TableState>) => {
     if (Object.keys(state.rowSelectionModel).length > 0) {
       state.rowSelectionModel = initialTableState.rowSelectionModel;
+      console.log("Resetting row selection model due to search params change!");
     }
     if (state.fetchSize !== initialTableState.fetchSize) {
       state.fetchSize = initialTableState.fetchSize;
+      console.log("Resetting fetch size due to search params change!");
     }
   },
   // selection

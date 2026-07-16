@@ -116,9 +116,10 @@ export function DocumentSearchView() {
   }, [documentSearchQuery.data, showFolders]);
 
   // resetting search-parameter-dependant state
-  useResetStateOnSearch([projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel], () =>
-    dispatch(SearchActions.onSearchParamsChange()),
-  );
+  const resetState = useCallback(() => {
+    dispatch(SearchActions.onSearchParamsChange());
+  }, [dispatch]);
+  useResetStateOnSearch([projectId, selectedFolderId, searchQuery, filter, searchExpertMode, sortingModel], resetState);
 
   // filtering feature
   const { data: projectMetadata } = useSuspenseQuery(projectMetadataListQueryOptions(projectId));

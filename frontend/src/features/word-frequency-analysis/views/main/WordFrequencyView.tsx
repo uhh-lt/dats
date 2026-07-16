@@ -3,6 +3,7 @@ import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { Box } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { wordFrequencyTableQueryOptions } from "../../_api/wordFrequencyAnalysisQueryOptions";
 import { WordFrequencyActions } from "../../store/wordFrequencySlice";
 import { WordFrequencyTable } from "./_components/WordFrequencyTable";
@@ -22,7 +23,10 @@ export function WordFrequencyView() {
   );
   // resetting search-parameter-dependant state
   const dispatch = useAppDispatch();
-  useResetStateOnSearch([projectId, filter, sortingModel], () => dispatch(WordFrequencyActions.onSearchParamsChange()));
+  const resetState = useCallback(() => {
+    dispatch(WordFrequencyActions.onSearchParamsChange());
+  }, [dispatch]);
+  useResetStateOnSearch([projectId, filter, sortingModel], resetState);
 
   return (
     <ContentLayout>
