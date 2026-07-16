@@ -42,7 +42,7 @@ export function FolderCreateDialog({ projectId, onFoldersCreated }: FolderCreate
       reset({
         name: data?.folderName || "",
         folder_type: FolderType.NORMAL,
-        parent_id: -1,
+        parent_id: data?.parentFolderId ?? -1,
         project_id: projectId,
       });
     }

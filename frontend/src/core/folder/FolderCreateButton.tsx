@@ -5,15 +5,16 @@ import { memo, useCallback } from "react";
 
 interface FolderActionButtonCreateProps {
   folderName: string;
+  parentFolderId?: number;
 }
 
 export const FolderCreateButton = memo(
-  ({ folderName, ...props }: FolderActionButtonCreateProps & ListItemButtonProps) => {
+  ({ folderName, parentFolderId, ...props }: FolderActionButtonCreateProps & ListItemButtonProps) => {
     const openFolderCreateDialog = useOpenDialog("folderCreate");
 
     const handleClick = useCallback(() => {
-      openFolderCreateDialog({ folderName });
-    }, [openFolderCreateDialog, folderName]);
+      openFolderCreateDialog({ folderName, parentFolderId });
+    }, [openFolderCreateDialog, folderName, parentFolderId]);
 
     const buttonText = folderName.length > 0 ? `"${folderName}" (Create new)` : "Create new folder";
 
