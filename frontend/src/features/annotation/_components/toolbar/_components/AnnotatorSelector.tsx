@@ -20,9 +20,9 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
   // global client state (context)
   const { user } = useAuth();
 
-  // global client state (URL search params)
-  const { compareWithUserId } = AnnotationRouteAPI.useSearch();
-  const [visibleUserId, setVisibleUserId] = useURLConnector(AnnotationRouteAPI, "visibleUserId");
+  const navigate = AnnotationRouteAPI.useNavigate();
+  const { compareWithUserId, visibleUserId } = AnnotationRouteAPI.useSearch();
+  const setVisibleUserId = useURLConnector(AnnotationRouteAPI, "visibleUserId")[1];
   const isCompareMode = compareWithUserId !== undefined;
 
   // global server state (react query)
@@ -31,7 +31,19 @@ export function AnnotatorSelector({ sdocId }: AnnotatorSelector) {
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {
-    setVisibleUserId(event.target.value as number);
+    const value = event.target.value as number;
+    if (value === compareWithUserId) {
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          visibleUserId: compareWithUserId,
+          compareWithUserId: visibleUserId ?? user?.id,
+        }),
+        replace: true,
+      });
+    } else {
+      setVisibleUserId(value);
+    }
   };
 
   // init: set current user as the visible user if not already set
