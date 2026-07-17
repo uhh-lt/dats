@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from loguru import logger
+
 from common.job_type import JobType
 from config import conf
 from modules.doc_processing.doc_processing_pipeline import (
@@ -16,10 +18,16 @@ def rq_job_handler(jobtype: JobType, handler, payload: JobInputBase):
     handle_job_started(jobtype, input=payload)
     try:
         # figure whether to run the job on gpu
-        if job.job.origin == "gpu":
+        if job.job.origin.startswith("gpu"):
             import torch
 
+            if not torch.cuda.is_available():
+                raise RuntimeError(
+                    "CUDA is not available, but a GPU job was scheduled!"
+                )
+
             cuda_device = find_unused_cuda_device()
+            logger.info(f"Running job {jobtype} on GPU device {cuda_device}")
             with torch.cuda.device(cuda_device):
                 set_cuda_memory_limit(conf.rq.gpu_memory_limit)
                 output = handler(payload=payload, job=job)

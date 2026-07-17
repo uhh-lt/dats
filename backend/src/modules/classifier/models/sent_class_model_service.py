@@ -540,6 +540,7 @@ class SentClassificationModelService(TextClassificationModelService):
             callbacks=callbacks,
             enable_progress_bar=True,
             precision=parameters.precision,
+            devices=[torch.cuda.current_device()],
             # Special params
             # gradient_clip_val=1.0,  # Gradient clipping
         )
@@ -565,6 +566,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 3. Train the model
         job.update(current_step=3)
+        lightning_model.train()
         trainer.fit(
             lightning_model,
             train_dataloaders=train_dataloader,
@@ -576,6 +578,7 @@ class SentClassificationModelService(TextClassificationModelService):
         best_model = SentClassificationLightningModel.load_from_checkpoint(
             checkpoint_callback.best_model_path
         )
+        best_model.eval()
         eval_results = trainer.validate(best_model, dataloaders=val_dataloader)[0]
 
         # 5. Retrieve training statistics from the logs
@@ -703,6 +706,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = SentClassificationLightningModel.load_from_checkpoint(classifier.path)
+        model.eval()
 
         # 4. Eval model
         job.update(current_step=4)
@@ -710,6 +714,7 @@ class SentClassificationModelService(TextClassificationModelService):
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
+            devices=[torch.cuda.current_device()],
         )
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
 
@@ -817,6 +822,7 @@ class SentClassificationModelService(TextClassificationModelService):
         model = SentClassificationLightningModel.load_from_checkpoint(
             classifier.path,
         )
+        model.eval()
 
         # 4. Predict with model
         job.update(current_step=4)
@@ -824,6 +830,7 @@ class SentClassificationModelService(TextClassificationModelService):
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
+            devices=[torch.cuda.current_device()],
         )
         predictions = trainer.predict(model, dataloaders=inference_dataloader)
         assert predictions is not None, "No predictions returned!"
