@@ -17,6 +17,7 @@ interface DocumentSearchQueryOptionsArgs {
   expertMode: boolean;
   sortingModel: { id: string; desc: boolean }[];
   fetchSize: number;
+  showFolders?: boolean;
 }
 
 export const documentSearchQueryOptions = ({
@@ -27,6 +28,7 @@ export const documentSearchQueryOptions = ({
   expertMode,
   sortingModel,
   fetchSize,
+  showFolders = true,
 }: DocumentSearchQueryOptionsArgs) =>
   infiniteQueryOptions({
     queryKey: [
@@ -38,6 +40,7 @@ export const documentSearchQueryOptions = ({
       expertMode,
       sortingModel,
       fetchSize,
+      showFolders,
     ],
     queryFn: async ({ pageParam }) => {
       const data = await SearchService.searchSdocs({
@@ -46,6 +49,7 @@ export const documentSearchQueryOptions = ({
         folderId: selectedFolderId === -1 ? null : selectedFolderId,
         highlight: true,
         expertMode,
+        showFolders,
         requestBody: {
           filter,
           sorts: sortingModel.map((sort) => ({

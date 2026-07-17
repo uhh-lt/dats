@@ -3530,6 +3530,12 @@
             "in": "query",
             "required": false,
             "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
+          },
+          {
+            "name": "show_folders",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true, "title": "Show Folders" }
           }
         ],
         "requestBody": {

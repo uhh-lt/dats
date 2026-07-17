@@ -284,7 +284,7 @@ export function SearchDocumentTable({
     // pagination
     enablePagination: false,
     // sorting
-    manualSorting: false,
+    manualSorting: true,
     onSortingChange: setSortingModel,
     // density
     onDensityChange: setGridDensityModel,

@@ -57,6 +57,7 @@ export function DocumentSearchView() {
       expertMode: searchExpertMode,
       sortingModel,
       fetchSize,
+      showFolders,
     }),
   );
 
@@ -77,7 +78,11 @@ export function DocumentSearchView() {
     if (!showFolders) {
       const flatData = searchData.pages.flatMap((page) =>
         page.hits.reduce((acc, hit) => {
-          acc.push(...hit.sub_rows);
+          if (hit.is_folder) {
+            acc.push(...hit.sub_rows);
+          } else {
+            acc.push(hit);
+          }
           return acc;
         }, [] as HierarchicalElasticSearchHit[]),
       );

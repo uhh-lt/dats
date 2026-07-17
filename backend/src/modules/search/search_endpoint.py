@@ -74,6 +74,7 @@ def search_sdocs(
     folder_id: int | None = None,
     page_number: int | None = None,
     page_size: int | None = None,
+    show_folders: bool = True,
     authz_user: AuthzUser = Depends(),
 ) -> PaginatedSDocHits:
     authz_user.assert_in_project(project_id)
@@ -88,6 +89,7 @@ def search_sdocs(
         sorts=sorts,
         page_number=page_number,
         page_size=page_size,
+        show_folders=show_folders,
     )
 
 
