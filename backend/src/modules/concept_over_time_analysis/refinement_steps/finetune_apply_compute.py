@@ -136,34 +136,48 @@ def __train_model(
         )
     )
 
-    # 2. load a SetFit model from Hub
-    model = SetFitModel.from_pretrained(MODEL)
-    logger.info(f"Loaded COTA model {MODEL} on {model.device}.")
+    # 2. load a SetFit model from Hub with single GPU restriction
+    import torch
 
-    # 3. init training
-    args = TrainingArguments(
-        batch_size=BATCH_SIZE,
-        num_epochs=1,
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
-        load_best_model_at_end=True,
-        output_dir=str(model_output_dir),
-        report_to="none",
-    )
-    trainer = Trainer(
-        model=model,
-        args=args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        metric="accuracy",
-        column_mapping={
-            "text": "text",
-            "label": "label",
-        },  # Map dataset columns to text/label expected by trainer
-    )
+    original_device_count = torch.cuda.device_count
+    try:
+        if torch.cuda.is_available():
+            # Patch device_count to force Trainer/SetFit to believe only 1 GPU is visible,
+            # preventing it from wrapping the model in multi-GPU DataParallel (DP).
+            torch.cuda.device_count = lambda: 1
+            device_str = f"cuda:{torch.cuda.current_device()}"
+        else:
+            raise RuntimeError("CUDA is not available, but a GPU job was scheduled!")
 
-    # 4. train
-    trainer.train()
+        model = SetFitModel.from_pretrained(MODEL, device=device_str)
+        logger.info(f"Loaded COTA model {MODEL} on {model.device}.")
+
+        # 3. init training
+        args = TrainingArguments(
+            batch_size=BATCH_SIZE,
+            num_epochs=1,
+            evaluation_strategy="epoch",
+            save_strategy="epoch",
+            load_best_model_at_end=True,
+            output_dir=str(model_output_dir),
+            report_to="none",
+        )
+        trainer = Trainer(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            metric="accuracy",
+            column_mapping={
+                "text": "text",
+                "label": "label",
+            },  # Map dataset columns to text/label expected by trainer
+        )
+
+        # 4. train
+        trainer.train()
+    finally:
+        torch.cuda.device_count = original_device_count
 
     return model, sentences
 
@@ -176,18 +190,18 @@ def __apply_model(
     if sentence_transformer is None:
         raise ValueError(f"Model {model} does not have a sentence_transformer!")
     sentence_transformer.eval()
-    embeddings_tensor = sentence_transformer.encode(
+    embeddings = sentence_transformer.encode(
         sentences,
         show_progress_bar=True,
-        convert_to_tensor=True,
+        convert_to_numpy=True,
         normalize_embeddings=True,
     )
 
     # 3. Predict the probabilities for each concept
     regression_model = model.model_head
     assert isinstance(regression_model, LogisticRegression)
-    probabilities = regression_model.predict_proba(embeddings_tensor).tolist()
-    return embeddings_tensor.numpy(force=True), probabilities
+    probabilities = regression_model.predict_proba(embeddings).tolist()  # type: ignore
+    return embeddings, probabilities
 
 
 def __compute_results(
