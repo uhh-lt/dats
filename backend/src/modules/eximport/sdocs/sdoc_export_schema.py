@@ -59,8 +59,9 @@ class SourceDocumentExportSchema(BaseModel):
     )
 
     # Embeddings of the source document
-    document_embedding: list[float] = Field(
-        description="Document embedding of the source document"
+    document_embedding: list[float] | None = Field(
+        description="Document embedding of the source document",
+        default=None,
     )
     image_embedding: list[float] | None = Field(
         description="Image embedding of the source document (Only for image files)",
@@ -188,9 +189,11 @@ class SourceDocumentExportSchema(BaseModel):
                 f"Got {len(sentence_starts)} and {len(sentence_ends)}"
             )
 
-        if len(sentence_starts) != len(sentence_embeddings):
+        if len(sentence_embeddings) > 0 and len(sentence_starts) != len(
+            sentence_embeddings
+        ):
             raise ValueError(
-                f"sentence_starts and sentence_embeddings must have the same length. "
+                f"sentence_starts and sentence_embeddings must have the same length if sentence_embeddings are present. "
                 f"Got {len(sentence_starts)} and {len(sentence_embeddings)}"
             )
 
@@ -217,17 +220,14 @@ class SourceDocumentExportSchema(BaseModel):
     @classmethod
     @field_validator("__all__", mode="after")
     def validate_image_embedding(cls, values, info):
-        """Validate that image_embedding is present for image documents."""
+        """Validate that image_embedding is present for image documents (if available)."""
         # Skip validation if this isn't the whole model
         if not isinstance(values, dict):
             return values
 
-        # Validate image embedding for image documents
-        doctype = values.get("doctype")
-        image_embedding = values.get("image_embedding")
-
-        if doctype == "image" and image_embedding is None:
-            raise ValueError("image_embedding must be present for image documents")
+        # Validate image embedding for image documents - no longer strictly required
+        # doctype = values.get("doctype")
+        # image_embedding = values.get("image_embedding")
 
         return values
 

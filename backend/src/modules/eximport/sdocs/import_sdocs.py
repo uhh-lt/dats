@@ -281,12 +281,13 @@ def import_sdocs_to_proj(
         # 5. Add embeddings to the vector database
         client = WeaviateRepo().get_client()
         # Document embeddings
-        crud_document_embedding.add_embedding(
-            client=client,
-            project_id=project_id,
-            id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
-            embedding=sdoc_export.document_embedding,
-        )
+        if sdoc_export.document_embedding is not None:
+            crud_document_embedding.add_embedding(
+                client=client,
+                project_id=project_id,
+                id=DocumentObjectIdentifier(sdoc_id=created_sdoc.id),
+                embedding=sdoc_export.document_embedding,
+            )
 
         # Sentence embeddings
         crud_sentence_embedding.add_embedding_batch(
