@@ -13,12 +13,62 @@ from repos.db.sql_utils import aggregate_ids
 def document_sampler_by_tags(
     db: Session, project_id: int, tag_ids: list[list[int]], n: int, frac: float
 ) -> list[SampledSdocsResults]:
+    """Samples source documents based on combinations of tags from distinct tag groups.
+
+    ### User Perspective & Concept:
+    This feature allows users to extract representative, balanced samples of documents
+    based on cross-cutting categories (variables).
+
+    1. **What is a Group?**
+       A group represents a metadata category or variable.
+       For example:
+       - Group 0 (Sentiment): [Tag "Positive", Tag "Negative", Tag "Neutral"]
+       - Group 1 (Gender): [Tag "Male", Tag "Female"]
+
+    2. **Mutually Exclusive Criteria**:
+       A document is only considered if it has **exactly one tag** from each group.
+       For example, a document must have exactly one Sentiment tag AND exactly one Gender tag.
+       Documents with multiple tags from the same group (e.g., both Positive and Negative)
+       or missing tags from any group are excluded.
+
+    3. **Combinations**:
+       All qualifying documents are partitioned into unique cross-category combinations:
+       - (Positive, Male)
+       - (Positive, Female)
+       - (Negative, Male)
+       - (Negative, Female)
+
+    4. **Sampling Types**:
+       - **Counts**: The total number of documents in each combination.
+       - **Fixed size (sample_fixed)**: Samples up to `n` documents per combination.
+         To ensure a balanced sample size across categories, the size is capped at
+         the size of the smallest combination.
+       - **Relative size (sample_relative)**: Samples a fraction (`frac`) of the total
+         documents in each combination.
+
+    Args:
+        db: The SQLAlchemy database session.
+        project_id: The ID of the project.
+        tag_ids: A list of tag groups, where each group is represented as a list of tag IDs.
+            Example: [[1, 2], [3, 4]] where group 0 has tags {1, 2} and group 1 has tags {3, 4}.
+        n: The maximum number of documents to sample per tag combination for the fixed-size sample.
+        frac: The fraction of documents (between 0.0 and 1.0) to sample per tag combination
+            for the relative-size sample.
+
+    Returns:
+        A list of SampledSdocsResults containing:
+            - tags: The specific tag combination (one ID from each group).
+            - sdocs: All document IDs matching this combination.
+            - sample_fixed: Sampled document IDs (fixed size).
+            - sample_relative: Sampled document IDs (fractional/relative size).
+    """
     all_tag_ids = [tag_id for group in tag_ids for tag_id in group]
     tag2group = {tag_id: idx for idx, group in enumerate(tag_ids) for tag_id in group}
 
     query = (
         db.query(SourceDocumentORM.id, aggregate_ids(TagORM.id, "tags"))
-        .where(SourceDocumentORM.tags.any(TagORM.id.in_(all_tag_ids)))
+        .join(SourceDocumentORM.tags)
+        .where(TagORM.id.in_(all_tag_ids))
         .group_by(SourceDocumentORM.id)
         # this having clause ensures that the document has one tag from each group
         .having(
@@ -48,6 +98,8 @@ def document_sampler_by_tags(
             "sdoc": sdoc,
         }
         for tag_id in tags:
+            if tag_id not in tag2group:
+                continue
             group_id = tag2group[tag_id]
             datum[f"group_{group_id}"] = tag_id
             groups.add(f"group_{group_id}")
