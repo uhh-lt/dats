@@ -118,32 +118,29 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
                   </Typography>
                 )}
                 <Stack direction="row" spacing={1}>
-                  {isEditing ? (
-                    <>
-                      <Tooltip title="Save">
-                        <IconButton
-                          onClick={handleSubmit(handleSave)}
-                          color="primary"
-                          disabled={updateCluster.isPending}
-                        >
-                          <Save />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Cancel">
-                        <IconButton onClick={handleCancel} color="error" disabled={updateCluster.isPending}>
-                          <Close />
-                        </IconButton>
-                      </Tooltip>
-                    </>
-                  ) : (
-                    <>
-                      <Tooltip title="Edit title and description">
-                        <IconButton onClick={() => setIsEditing(true)}>
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <RecomputeClusterDescriptionButton aspectId={aspectId} clusterId={cluster.id} />
-                    </>
+                  {isEditing && (
+                    <Tooltip key="save" title="Save">
+                      <IconButton onClick={handleSubmit(handleSave)} color="primary" disabled={updateCluster.isPending}>
+                        <Save />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {isEditing && (
+                    <Tooltip key="cancel" title="Cancel">
+                      <IconButton onClick={handleCancel} color="error" disabled={updateCluster.isPending}>
+                        <Close />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {!isEditing && (
+                    <Tooltip key="edit" title="Edit title and description">
+                      <IconButton onClick={() => setIsEditing(true)}>
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {!isEditing && (
+                    <RecomputeClusterDescriptionButton key="recompute" aspectId={aspectId} clusterId={cluster.id} />
                   )}
                 </Stack>
               </Stack>
@@ -163,7 +160,7 @@ export function ClusterDetailDialog({ aspectId }: ClusterDetailDialogProps) {
                   )}
                 />
               ) : (
-                <Typography pt={1} color="textSecondary">
+                <Typography component="div" pt={1} color="textSecondary">
                   <Markdown>{cluster.description}</Markdown>
                 </Typography>
               )}
