@@ -60,6 +60,7 @@ def code_occurrences(
     user_ids: list[int],
     code_id: int,
     return_children: bool,
+    doctypes: list[DocType],
     authz_user: AuthzUser = Depends(),
 ) -> list[CodeOccurrence]:
     authz_user.assert_in_project(project_id)
@@ -69,6 +70,7 @@ def code_occurrences(
         project_id=project_id,
         user_ids=user_ids,
         code_id=code_id,
+        doctypes=doctypes,
         return_children=return_children,
     )
 

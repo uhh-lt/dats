@@ -4,6 +4,7 @@ import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { SdocRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { CodeOccurrence } from "@models/CodeOccurrence";
+import { DocType } from "@models/DocType";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -50,9 +51,10 @@ interface CodeOccurrenceTableProps {
   projectId: number;
   codeId: number;
   userIds: number[];
+  docTypes: DocType[];
 }
 
-export function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurrenceTableProps) {
+export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: CodeOccurrenceTableProps) {
   // with children toggle
   const [withChildren, setWithChildren] = useState(false);
   const handleWithChildrenChange: ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -63,7 +65,7 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds }: CodeOccurren
   const code = CodeHooks.useGetCode(codeId);
 
   // computed
-  const codeOccurrences = useCodeOccurrencesQuery(projectId, userIds, codeId, withChildren);
+  const codeOccurrences = useCodeOccurrencesQuery(projectId, userIds, codeId, docTypes, withChildren);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);

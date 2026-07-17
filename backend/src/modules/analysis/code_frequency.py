@@ -158,6 +158,7 @@ def find_code_occurrences(
     project_id: int,
     user_ids: list[int],
     code_id: int,
+    doctypes: list[DocType],
     return_children: bool = False,
 ) -> list[CodeOccurrence]:
     filter_code_ids = [code_id]
@@ -191,6 +192,7 @@ def find_code_occurrences(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             CodeORM.id.in_(filter_code_ids),
+            SourceDocumentORM.doctype.in_(doctypes),
         )
     )
     query = query.group_by(SourceDocumentORM.id, CodeORM.id, SpanTextORM.text)
@@ -235,6 +237,7 @@ def find_code_occurrences(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             CodeORM.id.in_(filter_code_ids),
+            SourceDocumentORM.doctype.in_(doctypes),
         )
     )
     query = query.group_by(
@@ -287,6 +290,7 @@ def find_code_occurrences(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
             CodeORM.id.in_(filter_code_ids),
+            SourceDocumentORM.doctype.in_(doctypes),
         )
     )
     query = query.group_by(

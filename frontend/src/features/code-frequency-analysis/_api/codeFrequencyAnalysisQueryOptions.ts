@@ -23,16 +23,20 @@ export const useCodeOccurrencesQuery = (
   projectId: number,
   userIds: number[],
   codeId: number | null | undefined,
+  docTypes: DocType[],
   returnChildren: boolean,
 ) =>
   useQuery<CodeOccurrence[], Error>({
-    queryKey: [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId, returnChildren],
+    queryKey: [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId, docTypes, returnChildren],
     queryFn: () =>
       AnalysisService.codeOccurrences({
         projectId,
         codeId: codeId!,
-        requestBody: userIds,
+        requestBody: {
+          user_ids: userIds,
+          doctypes: docTypes,
+        },
         returnChildren,
       }),
-    enabled: userIds.length > 0 && !!codeId,
+    enabled: userIds.length > 0 && !!codeId && docTypes.length > 0,
   });
