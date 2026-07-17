@@ -81,7 +81,14 @@ export function CustomEdge(props: EdgeProps<CustomEdge>) {
 
   return (
     <>
-      <BaseEdge path={edgePath} {...props} />
+      <BaseEdge
+        id={props.id}
+        path={edgePath}
+        markerEnd={props.markerEnd}
+        markerStart={props.markerStart}
+        style={props.style}
+        interactionWidth={props.interactionWidth}
+      />
       {props.data && props.data?.label.text.trim() !== "" && (
         <EdgeLabelRenderer>
           <Box
