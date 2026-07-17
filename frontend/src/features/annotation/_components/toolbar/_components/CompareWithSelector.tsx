@@ -14,7 +14,8 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   // global client state (context)
   const { user } = useAuth();
 
-  // global client state (URL search params)
+  const navigate = AnnotationRouteAPI.useNavigate();
+  const { visibleUserId } = AnnotationRouteAPI.useSearch();
   const [compareWithUserId, setCompareWithUserId] = useURLConnector(AnnotationRouteAPI, "compareWithUserId");
 
   // global server state (react query)
@@ -23,11 +24,20 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {
-    const value = event.target.value;
+    const value = event.target.value as number;
     if (value === -1) {
       setCompareWithUserId(undefined);
+    } else if (value === (visibleUserId ?? user?.id)) {
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          compareWithUserId: visibleUserId ?? user?.id,
+          visibleUserId: compareWithUserId,
+        }),
+        replace: true,
+      });
     } else {
-      setCompareWithUserId(event.target.value as number);
+      setCompareWithUserId(value);
     }
   };
 
