@@ -19,6 +19,9 @@ from modules.eximport.sdocs.sdoc_export_schema import (
     SourceDocumentExportSchema,
 )
 from repos.filesystem_repo import FilesystemRepo
+from repos.vector.weaviate_exceptions import (
+    WeaviateObjectIDNotFoundException,
+)
 from repos.vector.weaviate_repo import WeaviateRepo
 
 
@@ -111,26 +114,43 @@ def __export_sdocs(
 
         client = WeaviateRepo().get_client()
         # Get document embeddings
-        doc_embedding = crud_document_embedding.get_embedding(
-            client=client,
-            project_id=sdoc.project_id,
-            id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
-        )
+        doc_embedding = None
+        if crud_document_embedding._tenant_exists(
+            client=client, project_id=sdoc.project_id
+        ):
+            try:
+                doc_embedding = crud_document_embedding.get_embedding(
+                    client=client,
+                    project_id=sdoc.project_id,
+                    id=DocumentObjectIdentifier(sdoc_id=sdoc.id),
+                )
+            except WeaviateObjectIDNotFoundException:
+                doc_embedding = None
 
         # Get sentence embeddings
-        sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
-            client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
-        )
-        sentence_embeddings = [se.embedding for se in sentence_embeddings]
+        sentence_embeddings = []
+        if crud_sentence_embedding._tenant_exists(
+            client=client, project_id=sdoc.project_id
+        ):
+            sentence_embeddings = crud_sentence_embedding.get_embeddings_by_sdoc_id(
+                client=client, project_id=sdoc.project_id, sdoc_id=sdoc.id
+            )
+            sentence_embeddings = [se.embedding for se in sentence_embeddings]
 
         # Get image embeddings
         image_embedding = None
         if sdoc.doctype == "image":
-            image_embedding = crud_image_embedding.get_embedding(
-                client=client,
-                project_id=sdoc.project_id,
-                id=ImageObjectIdentifier(sdoc_id=sdoc.id),
-            )
+            if crud_image_embedding._tenant_exists(
+                client=client, project_id=sdoc.project_id
+            ):
+                try:
+                    image_embedding = crud_image_embedding.get_embedding(
+                        client=client,
+                        project_id=sdoc.project_id,
+                        id=ImageObjectIdentifier(sdoc_id=sdoc.id),
+                    )
+                except WeaviateObjectIDNotFoundException:
+                    image_embedding = None
 
         # Create export schema for the document
         export_schema = SourceDocumentExportSchema(
