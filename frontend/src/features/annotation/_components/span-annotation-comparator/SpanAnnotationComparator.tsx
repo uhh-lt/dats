@@ -38,6 +38,10 @@ interface SpanAnnotationComparisonProps {
  *   retaining the document's original HTML structure and styling.
  * - Virtualized list rendering (via @tanstack/react-virtual) for performance with large documents.
  * - In-place copying/reverting of span annotations via the centered middle controls column.
+ *   - Controls are shown ONLY if one of the selected annotators is the current logged-in user.
+ *   - Controls are generated ONLY for the other user's annotations (to copy to, or revert from,
+ *     the logged-in user's document). No copy/revert buttons are shown for the logged-in user's
+ *     own unique annotations to prevent accidental modification.
  * - Synchronized highlight states on hovering over middle column buttons.
  * - Supports normal text and unstyled documents by falling back to sentence elements.
  */
@@ -53,6 +57,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const effectiveRightUserId = rightUserId;
 
   const isAnnotationAllowedLeft = effectiveLeftUserId === user?.id;
+  const isAnnotationAllowedRight = effectiveRightUserId === user?.id;
 
   // Redux state
   const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
@@ -132,24 +137,9 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       } else if (rightId) {
         const rightEls = document.querySelectorAll(`.span-${rightId}`);
         rightEls.forEach((el) => el.classList.add("span-hovered"));
-
-        // Also check if this right annotation has a matching left annotation
-        const rightAnno = rightAnnotationsList.find((a) => a.id === rightId);
-        if (rightAnno) {
-          const leftAnno = leftAnnotationsList.find(
-            (leftAnno) =>
-              leftAnno.begin_token === rightAnno.begin_token &&
-              leftAnno.end_token === rightAnno.end_token &&
-              leftAnno.code_id === rightAnno.code_id,
-          );
-          if (leftAnno) {
-            const leftEls = document.querySelectorAll(`.span-${leftAnno.id}`);
-            leftEls.forEach((el) => el.classList.add("span-hovered"));
-          }
-        }
       }
     }
-  }, [hoveredControlKey, leftAnnotationsList, rightAnnotationsList]);
+  }, [hoveredControlKey]);
 
   // Single annotation actions
   const handleApplyAnnotation = useCallback(
@@ -567,6 +557,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
                     leftAnnotationsList={leftAnnotationsList}
                     rightAnnotationsList={rightAnnotationsList}
                     isAnnotationAllowedLeft={isAnnotationAllowedLeft}
+                    isAnnotationAllowedRight={isAnnotationAllowedRight}
                     handleApplyAnnotation={handleApplyAnnotation}
                     handleRevertAnnotation={handleRevertAnnotation}
                     setHoveredControlKey={setHoveredControlKey}
