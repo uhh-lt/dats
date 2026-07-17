@@ -18,7 +18,7 @@ import {
   addKeywordFilter,
   addMetadataFilter,
   addSpanAnnotationFilter,
-  addTagFilter,
+  toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { ImageSearchActions } from "../../store/imageSearchSlice";
@@ -68,9 +68,9 @@ export function ImageSimilaritySearchView() {
     },
     [keywordMetadataIds, setFilter],
   );
-  const handleAddTagFilter = useCallback(
+  const handleToggleTagFilter = useCallback(
     (tagId: number) => {
-      setFilter((currentFilter) => addTagFilter(currentFilter, tagId));
+      setFilter((currentFilter) => toggleTagFilter(currentFilter, tagId));
     },
     [setFilter],
   );
@@ -110,7 +110,7 @@ export function ImageSimilaritySearchView() {
           firstContent={
             <TagExplorer
               className="h100"
-              onTagClick={handleAddTagFilter}
+              onTagClick={handleToggleTagFilter}
               expandedTagIds={expandedTagIds}
               onExpandedTagIdsChange={handleExpandedTagIdsChange}
             />
@@ -121,7 +121,7 @@ export function ImageSimilaritySearchView() {
               projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
-              handleTagClick={handleAddTagFilter}
+              handleTagClick={handleToggleTagFilter}
               handleCodeClick={handleAddCodeFilter}
             />
           }

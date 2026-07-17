@@ -24,7 +24,7 @@ import {
   addKeywordFilter,
   addMetadataFilter,
   addSpanAnnotationFilter,
-  addTagFilter,
+  toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { documentSearchQueryOptions } from "./_api/documentSearchQueryOptions";
@@ -138,9 +138,9 @@ export function DocumentSearchView() {
     },
     [keywordMetadataIds, setFilter],
   );
-  const handleAddTagFilter = useCallback(
+  const handleToggleTagFilter = useCallback(
     (tagId: number) => {
-      setFilter((filter) => addTagFilter(filter, tagId));
+      setFilter((filter) => toggleTagFilter(filter, tagId));
     },
     [setFilter],
   );
@@ -271,7 +271,7 @@ export function DocumentSearchView() {
             secondContent={
               <TagExplorer
                 className="h100"
-                onTagClick={handleAddTagFilter}
+                onTagClick={handleToggleTagFilter}
                 expandedTagIds={expandedTagIds}
                 onExpandedTagIdsChange={handleExpandedTagIdsChange}
               />
@@ -306,7 +306,7 @@ export function DocumentSearchView() {
               projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
-              handleTagClick={handleAddTagFilter}
+              handleTagClick={handleToggleTagFilter}
               handleCodeClick={handleAddCodeFilter}
             />
           )

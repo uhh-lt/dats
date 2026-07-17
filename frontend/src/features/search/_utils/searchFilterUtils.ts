@@ -43,17 +43,25 @@ export const addKeywordFilter = (
   return nextFilter;
 };
 
-export const addTagFilter = (appliedFilter: MyFilter<SdocColumns>, tagId: number | string): MyFilter<SdocColumns> => {
+export const toggleTagFilter = (
+  appliedFilter: MyFilter<SdocColumns>,
+  tagId: number | string,
+): MyFilter<SdocColumns> => {
   const nextFilter = cloneFilter(appliedFilter);
-  nextFilter.items = [
-    ...nextFilter.items,
-    {
+  const index = nextFilter.items.findIndex(
+    (item) => "column" in item && item.column === SdocColumns.SD_TAG_ID_LIST && String(item.value) === String(tagId),
+  );
+
+  if (index !== -1) {
+    nextFilter.items.splice(index, 1);
+  } else {
+    nextFilter.items.push({
       id: crypto.randomUUID(),
       column: SdocColumns.SD_TAG_ID_LIST,
       operator: IDListOperator.ID_LIST_CONTAINS,
       value: tagId,
-    },
-  ];
+    });
+  }
   return nextFilter;
 };
 
