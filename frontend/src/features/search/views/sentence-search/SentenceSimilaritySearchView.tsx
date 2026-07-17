@@ -18,7 +18,7 @@ import {
   addKeywordFilter,
   addMetadataFilter,
   addSpanAnnotationFilter,
-  addTagFilter,
+  toggleTagFilter,
 } from "../../_utils/searchFilterUtils";
 import { SearchActions } from "../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../store/sentenceSearchSlice";
@@ -74,9 +74,9 @@ export function SentenceSimilaritySearchView() {
     },
     [keywordMetadataIds, setFilter],
   );
-  const handleAddTagFilter = useCallback(
+  const handleToggleTagFilter = useCallback(
     (tagId: number) => {
-      setFilter((currentFilter) => addTagFilter(currentFilter, tagId));
+      setFilter((currentFilter) => toggleTagFilter(currentFilter, tagId));
     },
     [setFilter],
   );
@@ -102,7 +102,7 @@ export function SentenceSimilaritySearchView() {
           firstContent={
             <TagExplorer
               className="h100"
-              onTagClick={handleAddTagFilter}
+              onTagClick={handleToggleTagFilter}
               expandedTagIds={expandedTagIds}
               onExpandedTagIdsChange={handleExpandedTagIdsChange}
             />
@@ -113,7 +113,7 @@ export function SentenceSimilaritySearchView() {
               projectId={projectId}
               sdocIds={sdocIds}
               handleKeywordClick={handleAddKeywordFilter}
-              handleTagClick={handleAddTagFilter}
+              handleTagClick={handleToggleTagFilter}
               handleCodeClick={handleAddCodeFilter}
             />
           }
