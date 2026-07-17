@@ -22,6 +22,7 @@ interface BlockComparisonRowProps {
   leftAnnotationsList: SpanAnnotationRead[];
   rightAnnotationsList: SpanAnnotationRead[];
   isAnnotationAllowedLeft: boolean;
+  isAnnotationAllowedRight: boolean;
   handleApplyAnnotation: (annotation: SpanAnnotationRead) => void;
   handleRevertAnnotation: (annotation: SpanAnnotationRead) => void;
   setHoveredControlKey: (key: string | null) => void;
@@ -52,6 +53,7 @@ export const BlockComparisonRow = memo(
     leftAnnotationsList,
     rightAnnotationsList,
     isAnnotationAllowedLeft,
+    isAnnotationAllowedRight,
     handleApplyAnnotation,
     handleRevertAnnotation,
     setHoveredControlKey,
@@ -83,41 +85,53 @@ export const BlockComparisonRow = memo(
         codeId: number;
       }[] = [];
 
-      const matchedLeftIds = new Set<number>();
+      // If neither user is Me, show no control buttons
+      if (!isAnnotationAllowedLeft && !isAnnotationAllowedRight) {
+        return items;
+      }
 
-      rightAnnos.forEach((rightAnno) => {
-        const matchingLeft = leftAnnos.find(
-          (leftAnno) =>
-            leftAnno.begin_token === rightAnno.begin_token &&
-            leftAnno.end_token === rightAnno.end_token &&
-            leftAnno.code_id === rightAnno.code_id,
-        );
+      if (isAnnotationAllowedLeft) {
+        // Left is Me, Right is Other.
+        // We only show controls for Right annotations (Other).
+        rightAnnos.forEach((rightAnno) => {
+          const matchingLeft = leftAnnos.find(
+            (leftAnno) =>
+              leftAnno.begin_token === rightAnno.begin_token &&
+              leftAnno.end_token === rightAnno.end_token &&
+              leftAnno.code_id === rightAnno.code_id,
+          );
 
-        if (matchingLeft) {
-          matchedLeftIds.add(matchingLeft.id);
-        }
-
-        items.push({
-          key: `r-${rightAnno.id}`,
-          annotationRight: rightAnno,
-          annotationLeft: matchingLeft,
-          isApplied: !!matchingLeft,
-          codeId: rightAnno.code_id,
+          items.push({
+            key: `r-${rightAnno.id}`,
+            annotationRight: rightAnno,
+            annotationLeft: matchingLeft,
+            isApplied: !!matchingLeft,
+            codeId: rightAnno.code_id,
+          });
         });
-      });
+      } else {
+        // Right is Me, Left is Other.
+        // We only show controls for Left annotations (Other).
+        leftAnnos.forEach((leftAnno) => {
+          const matchingRight = rightAnnos.find(
+            (rightAnno) =>
+              rightAnno.begin_token === leftAnno.begin_token &&
+              rightAnno.end_token === leftAnno.end_token &&
+              rightAnno.code_id === leftAnno.code_id,
+          );
 
-      leftAnnos.forEach((leftAnno) => {
-        if (matchedLeftIds.has(leftAnno.id)) return;
-        items.push({
-          key: `l-${leftAnno.id}`,
-          annotationLeft: leftAnno,
-          isApplied: false,
-          codeId: leftAnno.code_id,
+          items.push({
+            key: `l-${leftAnno.id}`,
+            annotationLeft: leftAnno,
+            annotationRight: matchingRight,
+            isApplied: !!matchingRight,
+            codeId: leftAnno.code_id,
+          });
         });
-      });
+      }
 
       return items;
-    }, [rightAnnos, leftAnnos]);
+    }, [isAnnotationAllowedLeft, isAnnotationAllowedRight, leftAnnos, rightAnnos]);
 
     return (
       <Box
@@ -174,7 +188,6 @@ export const BlockComparisonRow = memo(
                     alignItems: "center",
                     height: 30,
                   }}
-                  onMouseEnter={() => setHoveredControlKey(item.key)}
                   onMouseLeave={() => setHoveredControlKey(null)}
                 >
                   <Stack direction="row" alignItems="center" justifyContent="center">
@@ -184,6 +197,9 @@ export const BlockComparisonRow = memo(
                           sx={{ p: 0.25 }}
                           disabled={item.isApplied || !item.annotationRight}
                           onClick={() => item.annotationRight && handleApplyAnnotation(item.annotationRight)}
+                          onMouseEnter={() =>
+                            item.annotationRight && setHoveredControlKey(`r-${item.annotationRight.id}`)
+                          }
                         >
                           <ArrowBackIcon fontSize="small" />
                         </IconButton>
@@ -191,6 +207,9 @@ export const BlockComparisonRow = memo(
                           sx={{ p: 0.25 }}
                           disabled={!item.annotationLeft}
                           onClick={() => item.annotationLeft && handleRevertAnnotation(item.annotationLeft)}
+                          onMouseEnter={() =>
+                            item.annotationLeft && setHoveredControlKey(`l-${item.annotationLeft.id}`)
+                          }
                         >
                           <ClearIcon fontSize="small" />
                         </IconButton>
@@ -201,15 +220,21 @@ export const BlockComparisonRow = memo(
                         {code && <SquareIcon style={{ color: code.color }} fontSize="small" />}
                         <IconButton
                           sx={{ p: 0.25 }}
-                          disabled={!item.annotationLeft}
-                          onClick={() => item.annotationLeft && handleRevertAnnotation(item.annotationLeft)}
+                          disabled={!item.annotationRight}
+                          onClick={() => item.annotationRight && handleRevertAnnotation(item.annotationRight)}
+                          onMouseEnter={() =>
+                            item.annotationRight && setHoveredControlKey(`r-${item.annotationRight.id}`)
+                          }
                         >
                           <ClearIcon fontSize="small" />
                         </IconButton>
                         <IconButton
                           sx={{ p: 0.25 }}
-                          disabled={item.isApplied || !item.annotationRight}
-                          onClick={() => item.annotationRight && handleApplyAnnotation(item.annotationRight)}
+                          disabled={item.isApplied || !item.annotationLeft}
+                          onClick={() => item.annotationLeft && handleApplyAnnotation(item.annotationLeft)}
+                          onMouseEnter={() =>
+                            item.annotationLeft && setHoveredControlKey(`l-${item.annotationLeft.id}`)
+                          }
                         >
                           <ArrowForwardIcon fontSize="small" />
                         </IconButton>
