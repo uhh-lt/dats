@@ -1,5 +1,6 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
@@ -13,21 +14,32 @@ const filterByText = (text: string) => (annotation: SentenceAnnotationRead) =>
 
 export function SentenceAnnotationExplorer({ sdocId }: { sdocId: number }) {
   // data
-  const { visibleUserId } = AnnotationRouteAPI.useSearch();
-  const annotator = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, visibleUserId);
+  const { visibleUserId, compareWithUserId } = AnnotationRouteAPI.useSearch();
+  const annotatorLeft = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, visibleUserId);
+  const annotatorRight = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, compareWithUserId);
+
   const annotations = useMemo(() => {
-    if (!annotator.data) return [];
     const result: SentenceAnnotationRead[] = [];
-    Object.entries(annotator.data.sentence_annotations).forEach(([sentenceId, annotations]) => {
-      const sentId = parseInt(sentenceId);
-      annotations.forEach((annotation) => {
-        if (annotation.sentence_id_start === sentId) {
-          result.push(annotation);
-        }
+    const seenIds = new Set<number>();
+
+    const addAnnotations = (data: SentenceAnnotatorResult | undefined) => {
+      if (!data) return;
+      Object.entries(data.sentence_annotations).forEach(([sentenceId, annos]) => {
+        const sentId = parseInt(sentenceId);
+        annos.forEach((annotation) => {
+          if (annotation.sentence_id_start === sentId && !seenIds.has(annotation.id)) {
+            seenIds.add(annotation.id);
+            result.push(annotation);
+          }
+        });
       });
-    });
-    return result;
-  }, [annotator.data]);
+    };
+
+    addAnnotations(annotatorLeft.data);
+    addAnnotations(annotatorRight.data);
+
+    return result.sort((a, b) => a.sentence_id_start - b.sentence_id_start);
+  }, [annotatorLeft.data, annotatorRight.data]);
 
   return (
     <AnnotationExplorer
