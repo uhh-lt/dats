@@ -66,7 +66,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "User Ids" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-code_occurrences" } }
           }
         },
         "responses": {
@@ -7054,6 +7054,15 @@
         "type": "object",
         "required": ["code_ids", "user_ids", "doctypes"],
         "title": "Body_analysis-code_frequencies"
+      },
+      "Body_analysis-code_occurrences": {
+        "properties": {
+          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
+          "doctypes": { "items": { "$ref": "#/components/schemas/DocType" }, "type": "array", "title": "Doctypes" }
+        },
+        "type": "object",
+        "required": ["user_ids", "doctypes"],
+        "title": "Body_analysis-code_occurrences"
       },
       "Body_authentication-login": {
         "properties": {

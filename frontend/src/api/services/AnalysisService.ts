@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_analysis_code_frequencies } from "@models/Body_analysis_code_frequencies";
+import type { Body_analysis_code_occurrences } from "@models/Body_analysis_code_occurrences";
 import type { CodeFrequency } from "@models/CodeFrequency";
 import type { CodeOccurrence } from "@models/CodeOccurrence";
 import type { SampledSdocsResults } from "@models/SampledSdocsResults";
@@ -49,7 +50,7 @@ export class AnalysisService {
     projectId: number;
     codeId: number;
     returnChildren: boolean;
-    requestBody: Array<number>;
+    requestBody: Body_analysis_code_occurrences;
   }): CancelablePromise<Array<CodeOccurrence>> {
     return __request(OpenAPI, {
       method: "POST",

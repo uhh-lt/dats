@@ -67,7 +67,12 @@ export function CodeFrequencyAnalysisView() {
       rightContent={
         <>
           {selectedCode ? (
-            <CodeOccurrenceTable projectId={projectId} codeId={selectedCode} userIds={selectedUserIds} />
+            <CodeOccurrenceTable
+              projectId={projectId}
+              codeId={selectedCode}
+              userIds={selectedUserIds}
+              docTypes={selectedDocTypes}
+            />
           ) : (
             <CardContainer className="h100">
               <CardHeader title={`Click on a bar / slice to see occurrences!`} />
