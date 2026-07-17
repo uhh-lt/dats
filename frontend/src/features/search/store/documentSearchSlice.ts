@@ -137,6 +137,9 @@ const searchSlice = createSlice({
     },
     onToggleShowFolders: (state) => {
       state.showFolders = !state.showFolders;
+      if (!state.showFolders) {
+        state.selectedSdocFolderId = undefined;
+      }
     },
     // search statistics
     onToggleSortStatsByGlobal: (state) => {
