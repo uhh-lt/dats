@@ -234,8 +234,8 @@ export const BBoxAnnotationReduxFilterTable = memo(
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
-    const filter =
-      useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
+    const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
+    const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
 
     return (
       <BBoxAnnotationFilterTable

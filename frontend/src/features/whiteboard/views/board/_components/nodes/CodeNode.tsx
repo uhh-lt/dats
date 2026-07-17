@@ -69,7 +69,9 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .filter(isCodeParentCodeEdge)
       .filter((edge) => edge.target === `code-${props.data.codeId}`)
       .filter((edge) => edge.source !== `code-${parentCodeId}`);
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which code nodes are already in the graph and adds edges to the correct node
     const existingCodeNodeIds = reactFlowInstance
@@ -78,7 +80,11 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .map((code) => code.data.codeId);
 
     if (existingCodeNodeIds.includes(parentCodeId)) {
-      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: props.data.codeId, parentCodeId })]);
+      const newEdge = createCodeParentCodeEdge({ codeId: props.data.codeId, parentCodeId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.codeId, reactFlowInstance, parentCode.data]);
 
@@ -92,18 +98,23 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .filter(isCodeParentCodeEdge)
       .filter((edge) => edge.source === `code-${codeId}`)
       .filter((edge) => !childCodeIds.includes(parseInt(edge.target.split("-")[1])));
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which child code nodes are already in the graph and adds edges to the correct node
     const existingChildCodeNodes = reactFlowInstance
       .getNodes()
       .filter(isCodeNode)
       .filter((code) => childCodeIds.includes(code.data.codeId));
-    reactFlowInstance.addEdges(
-      existingChildCodeNodes.map((childCode) =>
-        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId }),
-      ),
-    );
+
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = existingChildCodeNodes
+      .map((childCode) => createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId }))
+      .filter((newEdge) => !currentEdges.some((existingEdge) => existingEdge.id === newEdge.id));
+    if (edgesToAdd.length > 0) {
+      reactFlowInstance.addEdges(edgesToAdd);
+    }
   }, [reactFlowInstance, props.data.codeId, childCodes]);
 
   useEffect(() => {
@@ -116,7 +127,9 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .filter(isMemoCodeEdge)
       .filter((edge) => edge.target === `code-${props.data.codeId}`) // isEdgeForThisCode
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which memo nodes are already in the graph and adds edge to the correct node
     const existingMemoNodeIds = reactFlowInstance
@@ -124,7 +137,11 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: props.data.codeId })]);
+      const newEdge = createMemoCodeEdge({ memoId, codeId: props.data.codeId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.codeId, reactFlowInstance, memo.data]);
 

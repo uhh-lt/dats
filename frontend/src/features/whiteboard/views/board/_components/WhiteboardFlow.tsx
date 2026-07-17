@@ -34,7 +34,6 @@ import {
   ReactFlow,
   ReactFlowState,
   reconnectEdge,
-  useConnection,
   useReactFlow,
   useStore,
   XYPosition,
@@ -165,8 +164,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const reactFlowInstance = useReactFlow<DATSNode, DATSEdge>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
   const resetSelection = useStore(resetSelectedElementsSelector);
-  const connection = useConnection();
-  const connectionHandleId = connection?.fromHandle?.id;
+  const connectionHandleId = useStore((state: ReactFlowState) => state.connection.fromHandle?.id);
 
   // mutations
   const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();

@@ -58,7 +58,9 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isCodeSentenceAnnotationEdge)
       .filter((edge) => edge.target === `sentenceAnnotation-${props.data.sentenceAnnotationId}`) // isEdgeForThisSentenceAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== codeId); // isEdgeForIncorrectCode
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which code nodes are already in the graph and adds edges to the correct node
     const existingCodeNodeIds = reactFlowInstance
@@ -66,9 +68,14 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isCodeNode)
       .map((code) => code.data.codeId);
     if (existingCodeNodeIds.includes(codeId)) {
-      reactFlowInstance.addEdges([
-        createCodeSentenceAnnotationEdge({ codeId, sentenceAnnotationId: props.data.sentenceAnnotationId }),
-      ]);
+      const newEdge = createCodeSentenceAnnotationEdge({
+        codeId,
+        sentenceAnnotationId: props.data.sentenceAnnotationId,
+      });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.sentenceAnnotationId, reactFlowInstance, code.data]);
 
@@ -82,7 +89,9 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isSdocSentenceAnnotationEdge)
       .filter((edge) => edge.target === `sentenceAnnotation-${props.data.sentenceAnnotationId}`) // isEdgeForThisSentenceAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== sdocId); // isEdgeForIncorrectSdoc
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which sdoc nodes are already in the graph and adds edges to the correct node
     const existingSdocNodeIds = reactFlowInstance
@@ -90,9 +99,14 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     if (existingSdocNodeIds.includes(sdocId)) {
-      reactFlowInstance.addEdges([
-        createSdocSentenceAnnotationEdge({ sdocId, sentenceAnnotationId: props.data.sentenceAnnotationId }),
-      ]);
+      const newEdge = createSdocSentenceAnnotationEdge({
+        sdocId,
+        sentenceAnnotationId: props.data.sentenceAnnotationId,
+      });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.sentenceAnnotationId, reactFlowInstance, annotation.data]);
 
@@ -106,7 +120,9 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isMemoSentenceAnnotationEdge)
       .filter((edge) => edge.target === `sentenceAnnotation-${props.data.sentenceAnnotationId}`) // isEdgeForThisSentenceAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which memo nodes are already in the graph and adds edge to the correct node
     const existingMemoNodeIds = reactFlowInstance
@@ -114,9 +130,14 @@ export function SentenceAnnotationNode(props: NodeProps<SentenceAnnotationNode>)
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([
-        createMemoSentenceAnnotationEdge({ memoId, sentenceAnnotationId: props.data.sentenceAnnotationId }),
-      ]);
+      const newEdge = createMemoSentenceAnnotationEdge({
+        memoId,
+        sentenceAnnotationId: props.data.sentenceAnnotationId,
+      });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.sentenceAnnotationId, reactFlowInstance, memo.data]);
 
