@@ -262,10 +262,10 @@ def __compute_timeline_analysis(
 
     # create a date range from earliest to latest (used for x-axis)
     parse_str = "%Y"
-    freq = "Y"
+    freq = "YE"
     if timeline_analysis.settings.group_by == DateGroupBy.MONTH:
         parse_str = "%Y-%m"
-        freq = "M"
+        freq = "ME"
     elif timeline_analysis.settings.group_by == DateGroupBy.DAY:
         parse_str = "%Y-%m-%d"
         freq = "D"
