@@ -221,7 +221,9 @@ export function MemoNode(props: NodeProps<MemoNode>) {
       .filter(isMemoAttachedObjectEdge(memo.data.attached_object_type))
       .filter((edge) => edge.source === `memo-${props.data.memoId}`) // isEdgeForThisMemo
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== attachedObjectId); // isEdgeForIncorrectAttachedObject
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which attachedObject nodes are already in the graph and adds edge to the correct node
     const existingAttachedObjectNodeIds = reactFlowInstance
@@ -232,7 +234,10 @@ export function MemoNode(props: NodeProps<MemoNode>) {
     if (existingAttachedObjectNodeIds.includes(attachedObjectId)) {
       const newEdge = createMemoAttachedObjectEdge(memo.data.attached_object_type, attachedObjectId, props.data.memoId);
       if (newEdge) {
-        reactFlowInstance.addEdges(newEdge);
+        const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+        if (!edgeExists) {
+          reactFlowInstance.addEdges(newEdge);
+        }
       }
     }
   }, [props.data.memoId, reactFlowInstance, memo.data, attachedObject.data]);

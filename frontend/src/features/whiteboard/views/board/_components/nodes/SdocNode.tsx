@@ -54,17 +54,23 @@ export function SdocNode(props: NodeProps<SdocNode>) {
       .filter(isTagSdocEdge) // isTagEdge
       .filter((edge) => edge.target === `sdoc-${props.data.sdocId}`) // isEdgeForThisSdoc
       .filter((edge) => !tagIds.data.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForNonExistingTag
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which tag nodes are already in the graph and adds edges to them
     const existingTagNodeIds = reactFlowInstance
       .getNodes()
       .filter(isTagNode)
       .map((tag) => tag.data.tagId);
-    const edgesToAdd = intersection(existingTagNodeIds, tagIds.data).map((tagId) =>
-      createTagSdocEdge({ tagId, sdocId: props.data.sdocId }),
-    );
-    reactFlowInstance.addEdges(edgesToAdd);
+
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = intersection(existingTagNodeIds, tagIds.data)
+      .map((tagId) => createTagSdocEdge({ tagId, sdocId: props.data.sdocId }))
+      .filter((newEdge) => !currentEdges.some((existingEdge) => existingEdge.id === newEdge.id));
+    if (edgesToAdd.length > 0) {
+      reactFlowInstance.addEdges(edgesToAdd);
+    }
   }, [props.data.sdocId, reactFlowInstance, tagIds.data]);
 
   useEffect(() => {
@@ -77,7 +83,9 @@ export function SdocNode(props: NodeProps<SdocNode>) {
       .filter(isMemoSdocEdge)
       .filter((edge) => edge.target === `sdoc-${props.data.sdocId}`) // isEdgeForThisSdoc
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which memo nodes are already in the graph and adds edge to the correct node
     const existingMemoNodeIds = reactFlowInstance
@@ -85,7 +93,11 @@ export function SdocNode(props: NodeProps<SdocNode>) {
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoSdocEdge({ memoId, sdocId: props.data.sdocId })]);
+      const newEdge = createMemoSdocEdge({ memoId, sdocId: props.data.sdocId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.sdocId, reactFlowInstance, memo.data]);
 

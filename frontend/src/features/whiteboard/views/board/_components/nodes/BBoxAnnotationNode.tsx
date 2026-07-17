@@ -60,7 +60,9 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isCodeBBoxAnnotationEdge)
       .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== codeId); // isEdgeForIncorrectCode
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which code nodes are already in the graph and adds edges to the correct node
     const existingCodeNodeIds = reactFlowInstance
@@ -68,9 +70,11 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isCodeNode)
       .map((code) => code.data.codeId);
     if (existingCodeNodeIds.includes(codeId)) {
-      reactFlowInstance.addEdges([
-        createCodeBBoxAnnotationEdge({ codeId, bboxAnnotationId: props.data.bboxAnnotationId }),
-      ]);
+      const newEdge = createCodeBBoxAnnotationEdge({ codeId, bboxAnnotationId: props.data.bboxAnnotationId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.bboxAnnotationId, reactFlowInstance, code.data]);
 
@@ -84,7 +88,9 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isSdocBBoxAnnotationEdge)
       .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== sdocId); // isEdgeForIncorrectSdoc
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which sdoc nodes are already in the graph and adds edges to the correct node
     const existingSdocNodeIds = reactFlowInstance
@@ -92,9 +98,11 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     if (existingSdocNodeIds.includes(sdocId)) {
-      reactFlowInstance.addEdges([
-        createSdocBBoxAnnotationEdge({ sdocId, bboxAnnotationId: props.data.bboxAnnotationId }),
-      ]);
+      const newEdge = createSdocBBoxAnnotationEdge({ sdocId, bboxAnnotationId: props.data.bboxAnnotationId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.bboxAnnotationId, reactFlowInstance, annotation.data]);
 
@@ -108,7 +116,9 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isMemoBBoxAnnotationEdge)
       .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
-    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    if (edgesToDelete.length > 0) {
+      reactFlowInstance.deleteElements({ edges: edgesToDelete });
+    }
 
     // checks which memo nodes are already in the graph and adds edge to the correct node
     const existingMemoNodeIds = reactFlowInstance
@@ -116,9 +126,11 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([
-        createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: props.data.bboxAnnotationId }),
-      ]);
+      const newEdge = createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: props.data.bboxAnnotationId });
+      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
+      if (!edgeExists) {
+        reactFlowInstance.addEdges([newEdge]);
+      }
     }
   }, [props.data.bboxAnnotationId, reactFlowInstance, memo.data]);
 

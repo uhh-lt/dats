@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { FilterDialog, InternalFilterDialogProps } from "./FilterDialog";
 
 import { RootState } from "@store/store";
@@ -33,8 +33,8 @@ export const ReduxFilterDialog = memo(
       filterActions.onChangeFilterExpertMode,
     );
 
-    const filter =
-      useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
+    const reduxFilter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
+    const filter = useMemo(() => reduxFilter || createEmptyFilter(filterName), [reduxFilter, filterName]);
     const setFilter = useCallback(
       (nextFilter: MyFilter) => {
         dispatch(filterActions.onChangeFilter({ filterName, filter: nextFilter }));
