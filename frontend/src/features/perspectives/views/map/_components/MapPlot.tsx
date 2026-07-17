@@ -3,9 +3,9 @@ import { PerspectivesDoc } from "@models/PerspectivesDoc";
 import { PerspectivesVisualization } from "@models/PerspectivesVisualization";
 import { Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { Annotations, Color, Datum, ScatterData } from "plotly.js";
+import { Annotations, Color, Data, Datum, Frame, Layout, ScatterData } from "plotly.js";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"; // Added useRef
-import Plot, { Figure } from "react-plotly.js";
+import Plot from "react-plotly.js";
 import { PerspectivesActions } from "../../../store/perspectivesSlice";
 import { MapTooltip, MapTooltipData } from "./MapTooltip";
 
@@ -169,7 +169,7 @@ export const MapPlot = memo(({ vis }: MapPlotProps) => {
   ]);
 
   // plot state
-  const [figure, setFigure] = useState<Figure>({
+  const [figure, setFigure] = useState<{ data: Data[]; layout: Partial<Layout>; frames: Frame[] | null }>({
     data: Object.values(chartData),
     layout: {
       colorway: colorScheme,
