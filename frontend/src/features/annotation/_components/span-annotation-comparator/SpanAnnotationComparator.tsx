@@ -1,4 +1,4 @@
-import { CodeHooks, CodeMap } from "@api/hooks/CodeHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
 import { QueryKey } from "@api/hooks/QueryKey";
 import { FAKE_ANNOTATION_ID, SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { queryClient } from "@api/queryClient";
@@ -8,463 +8,39 @@ import { UserRenderer } from "@core/user";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ClearIcon from "@mui/icons-material/Clear";
-import SquareIcon from "@mui/icons-material/Square";
-import { Box, BoxProps, Button, IconButton, Stack, Typography } from "@mui/material";
+import { Box, BoxProps, Button, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
-import parse, { DOMNode, domToReact, Element, HTMLReactParserOptions } from "html-react-parser";
 import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
-import { useComputeTokenData } from "../_hooks/useComputeTokenData";
-import { Annotation } from "../_types/Annotation";
-import { IToken } from "../_types/IToken";
-import { AnnoActions } from "../store/annoSlice";
-import { SdocAudioLink } from "./_components/SdocAudioLink";
-import { SdocImage } from "./_components/SdocImage";
-import { SdocVideoLink } from "./_components/SdocVideoLink";
-import { Token } from "./_components/Token";
-import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu";
+import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
+import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
+import { Annotation } from "../../_types/Annotation";
+import { AnnoActions } from "../../store/annoSlice";
+import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
+import { BlockComparisonRow } from "./_components/BlockComparisonRow";
+import { useBlockPartition } from "./_hooks/useBlockPartition";
 
 const selectionIsEmpty = (selection: Selection): boolean => {
   return selection.toString().trim().length === 0;
 };
 
-const BLOCK_TAGS = new Set([
-  "sent",
-  "p",
-  "blockquote",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "div",
-  "ul",
-  "ol",
-  "li",
-  "table",
-  "tr",
-  "td",
-  "th",
-  "thead",
-  "tbody",
-  "section",
-  "article",
-  "aside",
-  "header",
-  "footer",
-  "nav",
-  "pre",
-  "address",
-  "fieldset",
-  "legend",
-  "hr",
-]);
-
-const LEAF_BLOCK_TAGS = new Set(["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "td", "th", "blockquote", "pre"]);
-
-const BLOCK_TAGS_SELECTOR = Array.from(BLOCK_TAGS).join(",");
-
-const isBlockOrHasBlockDescendant = (node: Node): boolean => {
-  if (node.nodeType !== Node.ELEMENT_NODE) return false;
-  const element = node as HTMLElement;
-  const tagName = element.tagName.toLowerCase();
-  if (BLOCK_TAGS.has(tagName)) return true;
-  return element.querySelector(BLOCK_TAGS_SELECTOR) !== null;
-};
-
-function getHTMLWithInlineAncestors(nodes: Node[]): string {
-  if (nodes.length === 0) return "";
-
-  const inlineAncestors: HTMLElement[] = [];
-  let curr = nodes[0].parentElement;
-  while (curr && curr.tagName.toLowerCase() !== "body" && !BLOCK_TAGS.has(curr.tagName.toLowerCase())) {
-    inlineAncestors.unshift(curr);
-    curr = curr.parentElement;
-  }
-
-  const tempDiv = document.createElement("div");
-  let parent: HTMLElement = tempDiv;
-  for (const ancestor of inlineAncestors) {
-    const clone = ancestor.cloneNode(false) as HTMLElement;
-    parent.appendChild(clone);
-    parent = clone;
-  }
-
-  for (const node of nodes) {
-    parent.appendChild(node.cloneNode(true));
-  }
-
-  return tempDiv.innerHTML;
-}
-
-interface RenderBlock {
-  id: string;
-  html: string;
-  sentenceIds: number[];
-}
-
-function partitionNode(node: Node): RenderBlock[] {
-  const blocks: RenderBlock[] = [];
-
-  const traverse = (currNode: Node) => {
-    if (currNode.nodeType === Node.TEXT_NODE) return;
-
-    const element = currNode as HTMLElement;
-    const tagName = element.tagName?.toLowerCase();
-
-    if (LEAF_BLOCK_TAGS.has(tagName)) {
-      blocks.push(createRenderBlock([element]));
-      return;
-    }
-
-    const hasBlockDescendants = Array.from(element.childNodes).some(isBlockOrHasBlockDescendant);
-
-    if (!hasBlockDescendants) {
-      blocks.push(createRenderBlock([element]));
-      return;
-    }
-
-    let currentInlineGroup: Node[] = [];
-    const flushInlineGroup = () => {
-      if (currentInlineGroup.length > 0) {
-        const hasText = currentInlineGroup.some((n) => n.textContent?.trim());
-        if (hasText) {
-          blocks.push(createRenderBlock(currentInlineGroup));
-        }
-        currentInlineGroup = [];
-      }
-    };
-
-    element.childNodes.forEach((child) => {
-      if (isBlockOrHasBlockDescendant(child)) {
-        flushInlineGroup();
-        traverse(child);
-      } else {
-        currentInlineGroup.push(child);
-      }
-    });
-
-    flushInlineGroup();
-  };
-
-  traverse(node);
-  return blocks;
-}
-
-function createRenderBlock(nodes: Node[]): RenderBlock {
-  const sentenceIds: number[] = [];
-  nodes.forEach((node) => {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = node as HTMLElement;
-      if (element.tagName.toLowerCase() === "sent") {
-        sentenceIds.push(parseInt(element.getAttribute("id")!));
-      }
-      element.querySelectorAll("sent").forEach((sent) => {
-        sentenceIds.push(parseInt(sent.getAttribute("id")!));
-      });
-    }
-  });
-
-  const html = getHTMLWithInlineAncestors(nodes);
-
-  return {
-    id: `block-${sentenceIds.join("-") || Math.random().toString(36).substr(2, 9)}`,
-    html,
-    sentenceIds: Array.from(new Set(sentenceIds)).sort((a, b) => a - b),
-  };
-}
-
 interface SpanAnnotationComparisonProps {
   sdocData: SourceDocumentDataRead;
 }
 
-interface BlockContentProps {
-  html: string;
-  tokenData: IToken[] | undefined;
-  annotationsPerToken: Map<number, number[]> | undefined;
-  annotationMap: Map<number, SpanAnnotationRead> | undefined;
-  projectId: number;
-}
-
-const BlockContent = memo(({ html, tokenData, annotationsPerToken, annotationMap, projectId }: BlockContentProps) => {
-  const options = useMemo<HTMLReactParserOptions>(() => {
-    const parserOpts: HTMLReactParserOptions = {
-      replace(domNode: DOMNode): React.ReactElement | string | null | boolean | object | void {
-        if (domNode instanceof Element && domNode.attribs) {
-          if (domNode.name === "a" && domNode.attribs.href) {
-            return <>{domToReact(domNode.children as DOMNode[], parserOpts)}</>;
-          } else if (domNode.name === "img" && domNode.attribs.src) {
-            const filename = domNode.attribs.src;
-            return <SdocImage key={`image-link-${filename}`} filename={filename} projectId={projectId} />;
-          } else if (domNode.name === "video" && domNode.attribs.src) {
-            const filename = domNode.attribs.src;
-            return <SdocVideoLink key={`video-link-${filename}`} filename={filename} projectId={projectId} />;
-          } else if (domNode.name === "audio" && domNode.attribs.src) {
-            const filename = domNode.attribs.src;
-            return <SdocAudioLink key={`audio-link-${filename}`} filename={filename} projectId={projectId} />;
-          } else if (domNode.name === "sent" && domNode.attribs.id) {
-            const sentenceId = parseInt(domNode.attribs.id);
-            return (
-              <span key={`sentence-${sentenceId}`} className="sentence" data-sentenceid={sentenceId}>
-                {domToReact(domNode.children as DOMNode[], parserOpts)}
-              </span>
-            );
-          } else if (domNode.name === "t" && domNode.attribs.id) {
-            const tokenId = parseInt(domNode.attribs.id);
-            if (!tokenData || !annotationsPerToken || !annotationMap) {
-              return (
-                <span data-tokenid={tokenId} className="tok">
-                  {domToReact(domNode.children as DOMNode[], parserOpts)}
-                </span>
-              );
-            }
-            const token = tokenData[tokenId];
-            const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
-              (annotationId) => annotationMap.get(annotationId)!,
-            );
-            return <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
-          }
-        }
-      },
-    };
-    return parserOpts;
-  }, [tokenData, annotationsPerToken, annotationMap, projectId]);
-
-  const parsed = useMemo(() => {
-    return parse(html, options);
-  }, [html, options]);
-
-  return <>{parsed}</>;
-});
-
-interface BlockComparisonRowProps {
-  block: RenderBlock;
-  sentenceTokenIds: number[][];
-  leftTokenData: IToken[] | undefined;
-  leftAnnotationsPerToken: Map<number, number[]> | undefined;
-  leftAnnotationMap: Map<number, SpanAnnotationRead> | undefined;
-  rightTokenData: IToken[] | undefined;
-  rightAnnotationsPerToken: Map<number, number[]> | undefined;
-  rightAnnotationMap: Map<number, SpanAnnotationRead> | undefined;
-  leftAnnotationsList: SpanAnnotationRead[];
-  rightAnnotationsList: SpanAnnotationRead[];
-  isAnnotationAllowedLeft: boolean;
-  handleApplyAnnotation: (annotation: SpanAnnotationRead) => void;
-  handleRevertAnnotation: (annotation: SpanAnnotationRead) => void;
-  setHoveredControlKey: (key: string | null) => void;
-  handleLeftMouseUp: (event: MouseEvent) => void;
-  handleRightMouseUp: (event: MouseEvent) => void;
-  codeMap: CodeMap;
-  projectId: number;
-}
-
-const BlockComparisonRow = memo(
-  ({
-    block,
-    sentenceTokenIds,
-    leftTokenData,
-    leftAnnotationsPerToken,
-    leftAnnotationMap,
-    rightTokenData,
-    rightAnnotationsPerToken,
-    rightAnnotationMap,
-    leftAnnotationsList,
-    rightAnnotationsList,
-    isAnnotationAllowedLeft,
-    handleApplyAnnotation,
-    handleRevertAnnotation,
-    setHoveredControlKey,
-    handleLeftMouseUp,
-    handleRightMouseUp,
-    codeMap,
-    projectId,
-  }: BlockComparisonRowProps) => {
-    const blockTokenIds = useMemo(() => {
-      return block.sentenceIds.flatMap((sentId) => sentenceTokenIds[sentId] || []);
-    }, [block.sentenceIds, sentenceTokenIds]);
-
-    // Find annotations starting in this block
-    const rightAnnos = useMemo(() => {
-      return rightAnnotationsList.filter((anno) => blockTokenIds.includes(anno.begin_token));
-    }, [rightAnnotationsList, blockTokenIds]);
-
-    const leftAnnos = useMemo(() => {
-      return leftAnnotationsList.filter((anno) => blockTokenIds.includes(anno.begin_token));
-    }, [leftAnnotationsList, blockTokenIds]);
-
-    // Match them into control items for this row
-    const rowControlItems = useMemo(() => {
-      const items: {
-        key: string;
-        annotationRight?: SpanAnnotationRead;
-        annotationLeft?: SpanAnnotationRead;
-        isApplied: boolean;
-        codeId: number;
-      }[] = [];
-
-      const matchedLeftIds = new Set<number>();
-
-      rightAnnos.forEach((rightAnno) => {
-        const matchingLeft = leftAnnos.find(
-          (leftAnno) =>
-            leftAnno.begin_token === rightAnno.begin_token &&
-            leftAnno.end_token === rightAnno.end_token &&
-            leftAnno.code_id === rightAnno.code_id,
-        );
-
-        if (matchingLeft) {
-          matchedLeftIds.add(matchingLeft.id);
-        }
-
-        items.push({
-          key: `r-${rightAnno.id}`,
-          annotationRight: rightAnno,
-          annotationLeft: matchingLeft,
-          isApplied: !!matchingLeft,
-          codeId: rightAnno.code_id,
-        });
-      });
-
-      leftAnnos.forEach((leftAnno) => {
-        if (matchedLeftIds.has(leftAnno.id)) return;
-        items.push({
-          key: `l-${leftAnno.id}`,
-          annotationLeft: leftAnno,
-          isApplied: false,
-          codeId: leftAnno.code_id,
-        });
-      });
-
-      return items;
-    }, [rightAnnos, leftAnnos]);
-
-    return (
-      <Box
-        display="flex"
-        flexDirection="row"
-        width="100%"
-        sx={{
-          py: 1.5,
-          borderBottom: "1px solid #e8eaed",
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.01)",
-          },
-        }}
-      >
-        {/* Left Column */}
-        <Box
-          sx={{ flexGrow: 1, flexBasis: 0, paddingRight: 2, display: "flex", flexWrap: "wrap", alignItems: "baseline" }}
-          onMouseUp={handleLeftMouseUp}
-        >
-          <BlockContent
-            html={block.html}
-            tokenData={leftTokenData}
-            annotationsPerToken={leftAnnotationsPerToken}
-            annotationMap={leftAnnotationMap}
-            projectId={projectId}
-          />
-        </Box>
-
-        {/* Middle Controls (164px) */}
-        <Box
-          style={{
-            width: 164,
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            borderLeft: "1px solid #e8eaed",
-            borderRight: "1px solid #e8eaed",
-            backgroundColor: "rgba(0, 0, 0, 0.01)",
-            minHeight: 35,
-            padding: "4px 0",
-          }}
-        >
-          <Stack spacing={0.5} justifyContent="center" alignItems="center">
-            {rowControlItems.map((item) => {
-              const code = codeMap[item.codeId];
-              return (
-                <Box
-                  key={item.key}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: 30,
-                  }}
-                  onMouseEnter={() => setHoveredControlKey(item.key)}
-                  onMouseLeave={() => setHoveredControlKey(null)}
-                >
-                  <Stack direction="row" alignItems="center" justifyContent="center">
-                    {isAnnotationAllowedLeft ? (
-                      <>
-                        <IconButton
-                          sx={{ p: 0.25 }}
-                          disabled={item.isApplied || !item.annotationRight}
-                          onClick={() => item.annotationRight && handleApplyAnnotation(item.annotationRight)}
-                        >
-                          <ArrowBackIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          sx={{ p: 0.25 }}
-                          disabled={!item.annotationLeft}
-                          onClick={() => item.annotationLeft && handleRevertAnnotation(item.annotationLeft)}
-                        >
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                        {code && <SquareIcon style={{ color: code.color }} fontSize="small" />}
-                      </>
-                    ) : (
-                      <>
-                        {code && <SquareIcon style={{ color: code.color }} fontSize="small" />}
-                        <IconButton
-                          sx={{ p: 0.25 }}
-                          disabled={!item.annotationLeft}
-                          onClick={() => item.annotationLeft && handleRevertAnnotation(item.annotationLeft)}
-                        >
-                          <ClearIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          sx={{ p: 0.25 }}
-                          disabled={item.isApplied || !item.annotationRight}
-                          onClick={() => item.annotationRight && handleApplyAnnotation(item.annotationRight)}
-                        >
-                          <ArrowForwardIcon fontSize="small" />
-                        </IconButton>
-                      </>
-                    )}
-                  </Stack>
-                </Box>
-              );
-            })}
-          </Stack>
-        </Box>
-
-        {/* Right Column */}
-        <Box
-          sx={{ flexGrow: 1, flexBasis: 0, paddingLeft: 2, display: "flex", flexWrap: "wrap", alignItems: "baseline" }}
-          onMouseUp={handleRightMouseUp}
-        >
-          <BlockContent
-            html={block.html}
-            tokenData={rightTokenData}
-            annotationsPerToken={rightAnnotationsPerToken}
-            annotationMap={rightAnnotationMap}
-            projectId={projectId}
-          />
-        </Box>
-      </Box>
-    );
-  },
-);
-
+/**
+ * SpanAnnotationComparison displays a side-by-side view comparing span annotations
+ * between two users for a given document.
+ *
+ * Key features:
+ * - Content is grouped by logical block elements (e.g. paragraphs, headings, blockquotes)
+ *   retaining the document's original HTML structure and styling.
+ * - Virtualized list rendering (via @tanstack/react-virtual) for performance with large documents.
+ * - In-place copying/reverting of span annotations via the centered middle controls column.
+ * - Synchronized highlight states on hovering over middle column buttons.
+ * - Supports normal text and unstyled documents by falling back to sentence elements.
+ */
 export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnotationComparisonProps & BoxProps) => {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
@@ -518,23 +94,8 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
 
   const projectId = useAppSelector((state) => state.project.projectId) ?? -1;
 
-  // Parse HTML and partition into RenderBlocks
-  const { renderBlocks, sentenceTokenIds } = useMemo(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sdocData.html, "text/html");
-
-    // Extract sentence token IDs
-    const sentences = doc.querySelectorAll("sent");
-    const sentTokenIds = Array.from(sentences).map((sentNode) => {
-      const tokenNodes = sentNode.querySelectorAll("t");
-      return Array.from(tokenNodes).map((tNode) => parseInt(tNode.getAttribute("id")!));
-    });
-
-    // Partition body into blocks
-    const blocks = partitionNode(doc.body);
-
-    return { renderBlocks: blocks, sentenceTokenIds: sentTokenIds };
-  }, [sdocData.html]);
+  // Parse HTML and partition into RenderBlocks using custom hook
+  const { renderBlocks, sentenceTokenIds } = useBlockPartition(sdocData.html);
 
   // Virtualization configuration
   // eslint-disable-next-line react-hooks/incompatible-library
