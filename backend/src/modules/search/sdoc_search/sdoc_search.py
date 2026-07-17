@@ -159,6 +159,7 @@ def find_sdocs(
     sorts: list[Sort[SdocColumns]],
     page_number: int | None = None,
     page_size: int | None = None,
+    show_folders: bool = True,
 ) -> PaginatedSDocHits:
     data = find_sdoc_ids(
         db,
@@ -192,10 +193,9 @@ def find_sdocs(
 
     # construct the nested result object
     hierarchical_hits: list[HierarchicalElasticSearchHit] = []
-    hits_by_folder: dict[int, list[HierarchicalElasticSearchHit]] = {}
-    for hit in data.hits:
-        sdoc = sdocs[hit.id]
-        hits_by_folder.setdefault(sdoc.folder_id, []).append(
+
+    if not show_folders:
+        hierarchical_hits = [
             HierarchicalElasticSearchHit(
                 id=hit.id,
                 score=hit.score,
@@ -203,18 +203,32 @@ def find_sdocs(
                 is_folder=False,
                 sub_rows=[],
             )
-        )
+            for hit in data.hits
+        ]
+    else:
+        hits_by_folder: dict[int, list[HierarchicalElasticSearchHit]] = {}
+        for hit in data.hits:
+            sdoc = sdocs[hit.id]
+            hits_by_folder.setdefault(sdoc.folder_id, []).append(
+                HierarchicalElasticSearchHit(
+                    id=hit.id,
+                    score=hit.score,
+                    highlights=hit.highlights,
+                    is_folder=False,
+                    sub_rows=[],
+                )
+            )
 
-    hierarchical_hits = [
-        HierarchicalElasticSearchHit(
-            id=folder.id,
-            score=None,
-            highlights=[],
-            is_folder=True,
-            sub_rows=hits_by_folder.get(folder.id, []),
-        )
-        for folder in folders
-    ]
+        hierarchical_hits = [
+            HierarchicalElasticSearchHit(
+                id=folder.id,
+                score=None,
+                highlights=[],
+                is_folder=True,
+                sub_rows=hits_by_folder.get(folder.id, []),
+            )
+            for folder in folders
+        ]
 
     return PaginatedSDocHits(
         hits=hierarchical_hits,

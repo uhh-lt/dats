@@ -131,6 +131,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
         folderId: null,
         highlight: true,
         expertMode: false,
+        showFolders: false,
         requestBody: {
           filter: filter as MyFilter<SdocColumns>,
           sorts: sortingModel.map((sort) => ({

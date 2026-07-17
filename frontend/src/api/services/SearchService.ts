@@ -56,6 +56,7 @@ export class SearchService {
     folderId,
     pageNumber,
     pageSize,
+    showFolders = true,
   }: {
     projectId: number;
     searchQuery: string;
@@ -65,6 +66,7 @@ export class SearchService {
     folderId?: number | null;
     pageNumber?: number | null;
     pageSize?: number | null;
+    showFolders?: boolean;
   }): CancelablePromise<PaginatedSDocHits> {
     return __request(OpenAPI, {
       method: "POST",
@@ -77,6 +79,7 @@ export class SearchService {
         folder_id: folderId,
         page_number: pageNumber,
         page_size: pageSize,
+        show_folders: showFolders,
       },
       body: requestBody,
       mediaType: "application/json",
