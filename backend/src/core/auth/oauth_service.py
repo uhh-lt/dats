@@ -1,5 +1,6 @@
 import random
 import string
+from typing import Any
 
 from authlib.integrations.starlette_client import OAuth, OAuthError
 from fastapi import Request
@@ -17,19 +18,18 @@ from repos.mail_repo import MailRepo
 
 class OAuthService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.mail_repo = MailRepo()
 
-        cls.is_enabled = len(conf.auth.oidc) > 0 and any(
+        cls.__is_enabled = len(conf.auth.oidc) > 0 and any(
             x.enabled for x in conf.auth.oidc
         )
-        cls.oauth = OAuth()
-        cls.clients = {}
+        cls.__oauth = OAuth()
+        cls.__clients: dict[str, Any] = {}
 
         for oidc in conf.auth.oidc:
             if not oidc.enabled:
                 continue
             # Create OAuth client
-            cls.oauth.register(
+            cls.__oauth.register(
                 name=oidc.name,
                 client_id=oidc.client_id,
                 client_secret=oidc.client_secret,
@@ -42,17 +42,22 @@ class OAuthService(metaclass=SingletonMeta):
                 id_token_encryption_alg="RSA-OAEP-256",
                 id_token_encryption_enc="A256CBC-HS512",
             )
-            client = cls.oauth.create_client(oidc.name)
+            client = cls.__oauth.create_client(oidc.name)
             assert client is not None, "Failed to create Authentik OAuth client"
-            cls.clients[oidc.name] = client
+            cls.__clients[oidc.name] = client
 
         return super(OAuthService, cls).__new__(cls)
+
+    async def login(self, request: Request, provider: str, redirect_uri: str):
+        client = self.__get_provider_client(provider)
+        return await client.authorize_redirect(request, redirect_uri)
 
     async def authenticate_oidc(
         self, db: Session, request: Request, provider: str
     ) -> UserORM:
         try:
-            token = await self.clients[provider].authorize_access_token(request)
+            client = self.__get_provider_client(provider)
+            token = await client.authorize_access_token(request)
         except OAuthError as error:
             logger.error(f"OAuth error: {error}")
             raise error
@@ -94,3 +99,11 @@ class OAuthService(metaclass=SingletonMeta):
         except Exception as e:
             logger.error(f"Error processing OIDC authentication: {e}")
             raise Exception("Authentication failed")
+
+    def __get_provider_client(self, provider: str):
+        if not self.__is_enabled:
+            raise Exception("OIDC authentication is not enabled")
+        client = self.__clients.get(provider)
+        if client is None:
+            raise Exception(f"OIDC provider '{provider} does not exist")
+        return client
