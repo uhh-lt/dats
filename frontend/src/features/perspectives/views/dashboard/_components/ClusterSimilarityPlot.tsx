@@ -104,9 +104,8 @@ export const ClusterSimilarityPlot = memo(({ aspectId, height, colorName }: Clus
                       const cluster = vis.data.clusters[i];
                       if (cluster.is_outlier) return null; // Skip outlier clusters
                       return (
-                        <HtmlTooltip title={cluster.name}>
+                        <HtmlTooltip key={`row-label-${i}`} title={cluster.name}>
                           <Box
-                            key={`row-label-${i}`}
                             sx={{
                               flex: 1,
                               display: "flex",
@@ -188,9 +187,8 @@ export const ClusterSimilarityPlot = memo(({ aspectId, height, colorName }: Clus
                     {/* Actual Column Labels */}
                     <Box sx={{ flex: 1, display: "flex", flexDirection: "row" }}>
                       {Array.from({ length: numCols }).map((_, j) => (
-                        <HtmlTooltip title={vis.data.clusters[j]?.name || `Cluster ${j + 1}`}>
+                        <HtmlTooltip key={`col-label-${j}`} title={vis.data.clusters[j]?.name || `Cluster ${j + 1}`}>
                           <Box
-                            key={`col-label-${j}`}
                             sx={{
                               flex: 1,
                               display: "flex",
