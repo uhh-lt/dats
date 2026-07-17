@@ -20,7 +20,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { MRT_RowSelectionState } from "material-react-table";
 import { Datum, Layout, ScatterData } from "plotly.js";
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useMemo, useRef, useState } from "react";
 import Plot from "react-plotly.js";
 import { CotaActions } from "../../../store/cotaSlice";
 import { CotaPlotToggleButton } from "./CotaPlotToggleButton";
@@ -30,6 +30,12 @@ interface CotaScatterPlotlyProps {
 }
 
 export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
+  // Track last user interaction timestamp to differentiate genuine user actions on the plot
+  // (lassoing, box selecting, double-clicking to clear) from programmatic updates to plotlyData.
+  // Without this guard, updating plotlyData programmatically triggers Plotly's onSelected with
+  // undefined, which would immediately wipe the Redux selection model when table rows are checked.
+  const lastPlotMouseDownRef = useRef<number>(0);
+
   // 1. computed base data
   const { chartData, conceptId2Concept, sentenceId2CotaSentence } = useMemo(() => {
     const chartData: Record<string, Partial<ScatterData>> = {};
@@ -101,21 +107,17 @@ export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
     };
 
     const sentenceId2CotaSentence: Record<string, COTASentence> = cota.search_space.reduce(
-      (acc, cotaSentence) => {
-        acc[`${cotaSentence.sdoc_id}-${cotaSentence.sentence_id}`] = cotaSentence;
+      (acc, sentence) => {
+        acc[`${sentence.sdoc_id}-${sentence.sentence_id}`] = sentence;
         return acc;
       },
       {} as Record<string, COTASentence>,
     );
 
-    return {
-      chartData,
-      conceptId2Concept,
-      sentenceId2CotaSentence,
-    };
+    return { chartData, conceptId2Concept, sentenceId2CotaSentence };
   }, [cota]);
 
-  // 2. Redux state integration
+  // 2. global client state (redux)
   const dispatch = useAppDispatch();
   const rowSelectionModel = useAppSelector((state) => state.cota.rowSelectionModel);
   const isSelectionEmpty = Object.keys(rowSelectionModel).length === 0;
@@ -195,31 +197,46 @@ export function CotaScatterPlotly({ cota }: CotaScatterPlotlyProps) {
     );
   } else {
     content = (
-      <Plot
-        data={plotlyData}
-        layout={layout}
-        useResizeHandler={true}
-        config={{ displayModeBar: true, toImageButtonOptions: { filename: `cota-scatter-plot-${cota.name}` } }}
-        style={{ width: "100%", height: "100%" }}
-        onHover={handleHover}
-        onUnhover={handleUnhover}
-        onSelected={(event) => {
-          if (!event) {
-            // Because layout is derived from Redux, we just clear Redux.
-            // The derived layout will automatically append `selections: []`!
-            dispatch(CotaActions.onRowSelectionChange({}));
-            return;
-          }
-          dispatch(
-            CotaActions.onRowSelectionChange(
-              event.points.reduce((acc: MRT_RowSelectionState, point: any) => {
-                acc[point.id] = true;
-                return acc;
-              }, {} as MRT_RowSelectionState),
-            ),
-          );
+      <Box
+        sx={{ width: "100%", height: "100%" }}
+        onMouseDown={() => {
+          lastPlotMouseDownRef.current = Date.now();
         }}
-      />
+        onTouchStart={() => {
+          lastPlotMouseDownRef.current = Date.now();
+        }}
+      >
+        <Plot
+          data={plotlyData}
+          layout={layout}
+          useResizeHandler={true}
+          config={{ displayModeBar: true, toImageButtonOptions: { filename: `cota-scatter-plot-${cota.name}` } }}
+          style={{ width: "100%", height: "100%" }}
+          onHover={handleHover}
+          onUnhover={handleUnhover}
+          onSelected={(event) => {
+            // Ignore programmatic onSelected updates that trigger when plotlyData / selectedpoints change.
+            // Check if a mouse click or touch gesture happened within the last 2 seconds.
+            const isUserInteraction = Date.now() - lastPlotMouseDownRef.current < 2000;
+            if (!isUserInteraction) return;
+
+            if (!event) {
+              // Because layout is derived from Redux, we just clear Redux.
+              // The derived layout will automatically append `selections: []`!
+              dispatch(CotaActions.onRowSelectionChange({}));
+              return;
+            }
+            dispatch(
+              CotaActions.onRowSelectionChange(
+                event.points.reduce((acc: MRT_RowSelectionState, point: any) => {
+                  acc[point.id] = true;
+                  return acc;
+                }, {} as MRT_RowSelectionState),
+              ),
+            );
+          }}
+        />
+      </Box>
     );
   }
 
