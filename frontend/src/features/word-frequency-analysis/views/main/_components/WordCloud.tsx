@@ -6,7 +6,18 @@ import PaletteIcon from "@mui/icons-material/Palette";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import TuneIcon from "@mui/icons-material/Tune";
 import TypeSpecimenIcon from "@mui/icons-material/TypeSpecimen";
-import { Box, Button, IconButton, MenuItem, Popover, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  MenuItem,
+  Popover,
+  Stack,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import * as d3 from "d3";
 import { toPng } from "html-to-image";
 import { useMemo, useRef, useState } from "react";
@@ -110,6 +121,7 @@ const asGradient = (colors: string[]): string => {
 export function WordCloud({ width, height, words }: WordCloudProps) {
   const [colorScale, setColorScale] = useState<ColorScaleKey>("viridis");
   const [colorSteps, setColorSteps] = useState<number>(9);
+  const [colorScaleReverse, setColorScaleReverse] = useState<boolean>(false);
   const [fontFamily, setFontFamily] = useState<string>("Impact");
   const [fontStyle, setFontStyle] = useState<FontStyleType>("normal");
   const [fontSizes, setFontSizes] = useState<[number, number]>([20, 100]);
@@ -123,7 +135,10 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
   const wordCloudRef = useRef<HTMLDivElement>(null);
 
   const cloudWords = useMemo(() => words.map((w) => ({ text: w.word, value: w.count })), [words]);
-  const selectedColors = useMemo(() => sampleColorScale(colorScales[colorScale], colorSteps), [colorScale, colorSteps]);
+  const selectedColors = useMemo(() => {
+    const colors = sampleColorScale(colorScales[colorScale], colorSteps);
+    return colorScaleReverse ? [...colors].reverse() : colors;
+  }, [colorScale, colorSteps, colorScaleReverse]);
   const colorScalePreviewOptions = useMemo(() => {
     return Object.keys(colorScales).map((key) => {
       const name = key as ColorScaleKey;
@@ -200,6 +215,7 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
   const handleReset = () => {
     setColorScale("viridis");
     setColorSteps(9);
+    setColorScaleReverse(false);
     setFontFamily("Impact");
     setFontStyle("normal");
     setFontSizes([10, 100]);
@@ -358,7 +374,8 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
                 },
                 renderValue: (selected) => {
                   const selectedName = selected as ColorScaleKey;
-                  const selectedPreview = sampleColorScale(colorScales[selectedName], PREVIEW_STEPS);
+                  const colors = sampleColorScale(colorScales[selectedName], PREVIEW_STEPS);
+                  const selectedPreview = colorScaleReverse ? [...colors].reverse() : colors;
                   return renderScaleOption(selectedName, selectedPreview);
                 },
               },
@@ -382,6 +399,16 @@ export function WordCloud({ width, height, words }: WordCloudProps) {
             helperText={`Sample ${COLOR_STEPS_MIN}-${COLOR_STEPS_MAX} shades from the selected scale`}
             fullWidth
           />
+
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1 }}>
+            <Box>
+              <Typography variant="body2">Reverse Scale</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                Flip the color gradient direction
+              </Typography>
+            </Box>
+            <Switch checked={colorScaleReverse} onChange={(event) => setColorScaleReverse(event.target.checked)} />
+          </Stack>
         </Stack>
       </Popover>
 
