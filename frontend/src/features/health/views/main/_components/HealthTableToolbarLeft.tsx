@@ -1,6 +1,6 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { ProcessingSettingsButton } from "@components/ProcessingSettingsButton";
-import { Button, Menu, MenuItem, Tooltip, Typography } from "@mui/material";
+import { Button, Menu, MenuItem, Stack, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { HealthTableToolbarProps } from "./HealthTableToolbarProps";
 
@@ -22,7 +22,7 @@ export function HealthTableToolbarLeft({
   }
 
   return (
-    <>
+    <Stack direction="row" spacing={1} alignItems="center">
       <Tooltip
         title={
           <>
@@ -76,6 +76,6 @@ export function HealthTableToolbarLeft({
         onChangeSettings={onChangeSettings}
         availableLLMs={availableLLMs.data || []}
       />
-    </>
+    </Stack>
   );
 }

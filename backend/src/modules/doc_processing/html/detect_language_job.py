@@ -59,7 +59,7 @@ def handle_text_language_detection_job(
     payload: TextLanguageDetectionJobInput, job: Job
 ) -> TextLanguageDetectionJobOutput:
     if payload.settings.language != Language.auto:
-        lang = payload.settings.language
+        lang = payload.settings.language.value
     else:
         glotlid_input = GlotLIDInput(text=payload.text)
         glotlid_output: GlotLIDOutput = ray.language_identification(glotlid_input)

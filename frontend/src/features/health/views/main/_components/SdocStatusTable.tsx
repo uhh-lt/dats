@@ -174,6 +174,7 @@ export function SdocStatusTable({
       onColumnVisibilityChange={setColumnVisibilityModel}
       renderTopLeftToolbar={HealthTableToolbarLeft}
       renderTopRightToolbar={HealthTableToolbarRight}
+      positionToolbarAlertBanner="head-overlay"
       toolbarExtraProps={{
         selectedRows,
         tableColumnInfo,
