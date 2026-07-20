@@ -7,6 +7,7 @@ import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { Box, Stack, StackProps } from "@mui/material";
 import { memo } from "react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
 export interface MemoRendererSharedProps {
@@ -95,8 +96,8 @@ export function MemoRendererWithData({
       {showIcon && getIconComponent(Icon.MEMO, { sx: { mr: 1 } })}
       {showTitle && memo.title}
       {showContent && (
-        <Box>
-          <Markdown>{memo.content}</Markdown>
+        <Box className="markdown-content">
+          <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
         </Box>
       )}
       {showUser && <UserRenderer user={memo.user_id} />}
