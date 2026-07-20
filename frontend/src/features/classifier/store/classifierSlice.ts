@@ -87,6 +87,16 @@ const classifierSlice = createSlice({
     },
     previousClassifierDialogStep: (state) => {
       state.classifierStep -= 1;
+      if (state.classifierStep < 0) {
+        state.classifierStep = 0;
+      }
+      if (state.classifierStep === 0) {
+        state.classifierClassIds = initialState.classifierClassIds;
+        state.classifierMergeChildren = initialState.classifierMergeChildren;
+        state.classifierSdocIds = initialState.classifierSdocIds;
+        state.classifierUserIds = initialState.classifierUserIds;
+        state.classifierTagIds = initialState.classifierTagIds;
+      }
     },
     closeClassifierDialog: (state) => {
       state.isClassifierDialogOpen = initialState.isClassifierDialogOpen;
