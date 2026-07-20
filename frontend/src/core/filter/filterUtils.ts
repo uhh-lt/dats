@@ -3,6 +3,7 @@ import { DateOperator } from "@models/DateOperator";
 import { FilterOperator } from "@models/FilterOperator";
 import { FilterValueType } from "@models/FilterValueType";
 import { IDListOperator } from "@models/IDListOperator";
+import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { IDOperator } from "@models/IDOperator";
 import { ListOperator } from "@models/ListOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
@@ -46,6 +47,7 @@ export type FilterOperatorType =
   | typeof NumberOperator
   | typeof StringOperator
   | typeof IDListOperator
+  | typeof IDListRecursiveOperator
   | typeof ListOperator
   | typeof DateOperator
   | typeof BooleanOperator;
@@ -55,6 +57,7 @@ export type FilterOperators =
   | NumberOperator
   | StringOperator
   | IDListOperator
+  | IDListRecursiveOperator
   | ListOperator
   | DateOperator
   | BooleanOperator;
@@ -77,6 +80,7 @@ export const filterOperator2defaultValue: Record<FilterOperator, boolean | strin
   [FilterOperator.ID]: 0,
   [FilterOperator.NUMBER]: 0,
   [FilterOperator.ID_LIST]: [],
+  [FilterOperator.ID_LIST_RECURSIVE]: [],
   [FilterOperator.LIST]: [],
   [FilterOperator.DATE]: dateToLocaleYYYYMMDDString(new Date()),
 };
@@ -87,6 +91,7 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
   [FilterOperator.ID]: IDOperator,
   [FilterOperator.NUMBER]: NumberOperator,
   [FilterOperator.ID_LIST]: IDListOperator,
+  [FilterOperator.ID_LIST_RECURSIVE]: IDListRecursiveOperator,
   [FilterOperator.LIST]: ListOperator,
   [FilterOperator.DATE]: DateOperator,
 };

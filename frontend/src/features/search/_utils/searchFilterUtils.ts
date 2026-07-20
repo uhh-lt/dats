@@ -6,7 +6,7 @@ import {
   getDefaultOperator,
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
-import { IDListOperator } from "@models/IDListOperator";
+import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { ListOperator } from "@models/ListOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -49,7 +49,8 @@ export const toggleTagFilter = (
 ): MyFilter<SdocColumns> => {
   const nextFilter = cloneFilter(appliedFilter);
   const index = nextFilter.items.findIndex(
-    (item) => "column" in item && item.column === SdocColumns.SD_TAG_ID_LIST && String(item.value) === String(tagId),
+    (item) =>
+      "column" in item && item.column === SdocColumns.SD_TAG_ID_LIST_RECURSIVE && String(item.value) === String(tagId),
   );
 
   if (index !== -1) {
@@ -57,8 +58,8 @@ export const toggleTagFilter = (
   } else {
     nextFilter.items.push({
       id: crypto.randomUUID(),
-      column: SdocColumns.SD_TAG_ID_LIST,
-      operator: IDListOperator.ID_LIST_CONTAINS,
+      column: SdocColumns.SD_TAG_ID_LIST_RECURSIVE,
+      operator: IDListRecursiveOperator.IDLR_CONTAINS,
       value: tagId,
     });
   }

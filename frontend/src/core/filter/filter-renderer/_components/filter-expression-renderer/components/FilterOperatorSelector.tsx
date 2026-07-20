@@ -1,6 +1,7 @@
 import { BooleanOperator } from "@models/BooleanOperator";
 import { DateOperator } from "@models/DateOperator";
 import { IDListOperator } from "@models/IDListOperator";
+import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { IDOperator } from "@models/IDOperator";
 import { ListOperator } from "@models/ListOperator";
 import { NumberOperator } from "@models/NumberOperator";
@@ -30,6 +31,9 @@ const operator2HumanReadable: Record<FilterOperators, string> = {
   [StringOperator.STRING_ENDS_WITH]: "ends with",
   [IDListOperator.ID_LIST_CONTAINS]: "contains",
   [IDListOperator.ID_LIST_NOT_CONTAINS]: "contains not",
+  [IDListRecursiveOperator.IDLR_CONTAINS]: "contains",
+  [IDListRecursiveOperator.IDLR_NOT_CONTAINS]: "contains not",
+  [IDListRecursiveOperator.IDLR_CONTAINS_RECURSIVE]: "contains or child",
   [ListOperator.LIST_CONTAINS]: "contains",
   [ListOperator.LIST_NOT_CONTAINS]: "contains not",
   [DateOperator.DATE_EQUALS]: "=",

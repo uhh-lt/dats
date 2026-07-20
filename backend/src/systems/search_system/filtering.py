@@ -11,11 +11,40 @@ from systems.search_system.filtering_operators import (
     DateOperator,
     FilterValue,
     IDListOperator,
+    IDListRecursiveOperator,
     IDOperator,
     ListOperator,
     NumberOperator,
     StringOperator,
 )
+
+
+def get_descendant_ids(
+    db: Session, column: AbstractColumns, parent_id: int
+) -> list[int]:
+    from core.code.code_orm import CodeORM
+    from core.tag.tag_orm import TagORM
+
+    val = column.value if hasattr(column, "value") else str(column)
+    # TODO: THIS IS HARDCODED AND NOT GOOD
+    if "CODE_ID_LIST_RECURSIVE" in val:
+        orm_class = CodeORM
+    elif "TAG_ID_LIST_RECURSIVE" in val:
+        orm_class = TagORM
+    else:
+        return [parent_id]
+
+    cte = (
+        db.query(orm_class.id)
+        .filter(orm_class.id == parent_id)
+        .cte(name="descendant_items", recursive=True)
+    )
+    cte_alias = cte.alias()
+    cte = cte.union_all(
+        db.query(orm_class.id).join(cte_alias, orm_class.parent_id == cte_alias.c.id)  # type: ignore
+    )
+    return [row[0] for row in db.query(cte).all()]
+
 
 T = TypeVar("T", bound=AbstractColumns)
 
@@ -42,6 +71,7 @@ class FilterExpression(BaseModel, Generic[T]):
         | NumberOperator
         | StringOperator
         | IDListOperator
+        | IDListRecursiveOperator
         | ListOperator
         | DateOperator
         | BooleanOperator
@@ -75,10 +105,13 @@ class FilterExpression(BaseModel, Generic[T]):
             self.value = resolved_ids[0]
             return self
 
-        # Resolve IDs for IDListOperator
+        # Resolve IDs for IDListOperator and IDListRecursiveOperator
         if (
             self.operator == IDListOperator.CONTAINS
             or self.operator == IDListOperator.NOT_CONTAINS
+            or self.operator == IDListRecursiveOperator.CONTAINS
+            or self.operator == IDListRecursiveOperator.NOT_CONTAINS
+            or self.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE
         ):
             if isinstance(self.value, str):
                 ids = [int(self.value)]
@@ -116,10 +149,13 @@ class FilterExpression(BaseModel, Generic[T]):
             self.value = resolved_names[0]
             return self
 
-        # Resolve names for IDListOperator
+        # Resolve names for IDListOperator and IDListRecursiveOperator
         if (
             self.operator == IDListOperator.CONTAINS
             or self.operator == IDListOperator.NOT_CONTAINS
+            or self.operator == IDListRecursiveOperator.CONTAINS
+            or self.operator == IDListRecursiveOperator.NOT_CONTAINS
+            or self.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE
         ):
             if isinstance(self.value, str):
                 names = [self.value]
@@ -131,12 +167,11 @@ class FilterExpression(BaseModel, Generic[T]):
             else:
                 names = []
 
-            resolved_names = [
-                str(id)
-                for id in self.column.resolve_names(
-                    db=db, project_id=project_id, names=names
-                )
-            ]
+            resolved_names_ids = self.column.resolve_names(
+                db=db, project_id=project_id, names=names
+            )
+
+            resolved_names = [str(id) for id in resolved_names_ids]
             if len(names) > 0 and len(resolved_names) == 0:
                 raise ValueError(
                     f"Names '{self.value}' not found for column {self.column}"
@@ -214,12 +249,55 @@ class Filter(BaseModel, Generic[T]):
 Filter.model_rebuild()
 
 
+def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
+    resolved = filter.model_copy(deep=True)
+    resolved_items = []
+    for item in filter.items:
+        if isinstance(item, FilterExpression):
+            if item.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE:
+                expr = item.model_copy(deep=True)
+                if isinstance(expr.column, int):
+                    raise ValueError(
+                        "Metadata columns are not supported for recursive filtering!"
+                    )
+
+                if isinstance(expr.value, str):
+                    parent_ids = [int(expr.value)]
+                elif isinstance(expr.value, int):
+                    parent_ids = [int(expr.value)]
+                elif isinstance(expr.value, list):
+                    parent_ids = []
+                    for v in expr.value:
+                        if isinstance(v, list):
+                            raise ValueError(
+                                "Nested lists are not supported for IDListRecursiveOperator!"
+                            )
+                        parent_ids.append(int(v))
+                else:
+                    parent_ids = []
+
+                expanded_ids = []
+                for parent_id in parent_ids:
+                    descendant_ids = get_descendant_ids(db, expr.column, parent_id)
+                    expanded_ids.extend(descendant_ids)
+
+                expr.value = list(set(expanded_ids))
+                resolved_items.append(expr)
+            else:
+                resolved_items.append(item)
+        else:
+            resolved_items.append(resolve_recursive_filter(item, db))
+    resolved.items = resolved_items
+    return resolved
+
+
 def apply_filtering(
     query,
     filter: Filter,
     subquery_dict,
 ):
-    return query.filter(filter.get_sqlalchemy_expression(subquery_dict))
+    resolved_filter = resolve_recursive_filter(filter, query.session)
+    return query.filter(resolved_filter.get_sqlalchemy_expression(subquery_dict))
 
 
 def get_columns_affected_by_filter(filter: Filter[T]) -> set[T | int]:

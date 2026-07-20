@@ -20,8 +20,8 @@ from systems.search_system.search_builder import SearchBuilder
 class SdocColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_TYPE = "SD_SOURCE_DOCUMENT_TYPE"
     SOURCE_DOCUMENT_NAME = "SD_SOURCE_DOCUMENT_NAME"
-    TAG_ID_LIST = "SD_TAG_ID_LIST"
-    CODE_ID_LIST = "SD_CODE_ID_LIST"
+    TAG_ID_LIST_RECURSIVE = "SD_TAG_ID_LIST_RECURSIVE"
+    CODE_ID_LIST_RECURSIVE = "SD_CODE_ID_LIST_RECURSIVE"
     USER_ID_LIST = "SD_USER_ID_LIST"
     SPAN_ANNOTATIONS = "SD_SPAN_ANNOTATIONS"
 
@@ -31,10 +31,10 @@ class SdocColumns(str, AbstractColumns):
                 return SourceDocumentORM.name
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
-            case SdocColumns.TAG_ID_LIST:
-                return subquery_dict[SdocColumns.TAG_ID_LIST.value]
-            case SdocColumns.CODE_ID_LIST:
-                return subquery_dict[SdocColumns.CODE_ID_LIST.value]
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
+                return subquery_dict[SdocColumns.TAG_ID_LIST_RECURSIVE.value]
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
+                return subquery_dict[SdocColumns.CODE_ID_LIST_RECURSIVE.value]
             case SdocColumns.USER_ID_LIST:
                 return subquery_dict[SdocColumns.USER_ID_LIST.value]
             case SdocColumns.SPAN_ANNOTATIONS:
@@ -46,10 +46,10 @@ class SdocColumns(str, AbstractColumns):
                 return FilterOperator.STRING
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterOperator.ID
-            case SdocColumns.TAG_ID_LIST:
-                return FilterOperator.ID_LIST
-            case SdocColumns.CODE_ID_LIST:
-                return FilterOperator.ID_LIST
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             case SdocColumns.USER_ID_LIST:
                 return FilterOperator.ID_LIST
             case SdocColumns.SPAN_ANNOTATIONS:
@@ -61,9 +61,9 @@ class SdocColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return FilterValueType.DOC_TYPE
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterValueType.TAG_ID
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
             case SdocColumns.USER_ID_LIST:
                 return FilterValueType.USER_ID
@@ -76,9 +76,9 @@ class SdocColumns(str, AbstractColumns):
                 return SourceDocumentORM.name
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 return None
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 return None
             case SdocColumns.USER_ID_LIST:
                 return None
@@ -91,9 +91,9 @@ class SdocColumns(str, AbstractColumns):
                 return "Document name"
             case SdocColumns.SOURCE_DOCUMENT_TYPE:
                 return "Type"
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 return "Tags"
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 return "Code"
             case SdocColumns.USER_ID_LIST:
                 return "Annotated by"
@@ -102,20 +102,20 @@ class SdocColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
                         TagORM.id,
-                        label=SdocColumns.TAG_ID_LIST.value,
+                        label=SdocColumns.TAG_ID_LIST_RECURSIVE.value,
                     )
                 )
                 query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_two_ids(
                         SpanAnnotationORM.code_id,
                         SentenceAnnotationORM.code_id,
-                        label=SdocColumns.CODE_ID_LIST.value,
+                        label=SdocColumns.CODE_ID_LIST_RECURSIVE.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -185,10 +185,10 @@ class SdocColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
             case SdocColumns.USER_ID_LIST:
@@ -201,10 +201,10 @@ class SdocColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SdocColumns.TAG_ID_LIST:
+            case SdocColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
-            case SdocColumns.CODE_ID_LIST:
+            case SdocColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case SdocColumns.USER_ID_LIST:

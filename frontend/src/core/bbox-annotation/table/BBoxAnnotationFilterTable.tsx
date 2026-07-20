@@ -84,7 +84,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             ...colDef,
             accessorFn: (row) => row.sdoc.name,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_TAG_ID_LIST:
+        case BBoxColumns.BB_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,

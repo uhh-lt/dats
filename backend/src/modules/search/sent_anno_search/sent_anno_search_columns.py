@@ -23,14 +23,14 @@ class SentAnnoColumns(str, AbstractColumns):
     USER_ID = "SentAnno_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME"
-    TAG_ID_LIST = "SentAnno_TAG_ID_LIST"
+    TAG_ID_LIST_RECURSIVE = "SentAnno_TAG_ID_LIST_RECURSIVE"
 
     def get_filter_column(self, subquery_dict):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
-            case SentAnnoColumns.TAG_ID_LIST:
-                return subquery_dict[SentAnnoColumns.TAG_ID_LIST.value]
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
+                return subquery_dict[SentAnnoColumns.TAG_ID_LIST_RECURSIVE.value]
             case SentAnnoColumns.CODE_ID:
                 return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
@@ -44,8 +44,8 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
-            case SentAnnoColumns.TAG_ID_LIST:
-                return FilterOperator.ID_LIST
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             case SentAnnoColumns.CODE_ID:
                 return FilterOperator.ID
             # case SentAnnoColumns.TEXT:
@@ -59,7 +59,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterValueType.TAG_ID
             case SentAnnoColumns.CODE_ID:
                 return FilterValueType.CODE_ID
@@ -74,7 +74,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return None
             case SentAnnoColumns.CODE_ID:
                 return CodeORM.name
@@ -89,7 +89,7 @@ class SentAnnoColumns(str, AbstractColumns):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return "Document name"
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return "Tags"
             case SentAnnoColumns.CODE_ID:
                 return "Code"
@@ -102,11 +102,11 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
                         TagORM.id,
-                        label=SentAnnoColumns.TAG_ID_LIST.value,
+                        label=SentAnnoColumns.TAG_ID_LIST_RECURSIVE.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -149,7 +149,7 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
             case SentAnnoColumns.CODE_ID:
@@ -165,7 +165,7 @@ class SentAnnoColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SentAnnoColumns.TAG_ID_LIST:
+            case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
             case SentAnnoColumns.CODE_ID:

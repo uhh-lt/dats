@@ -90,7 +90,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             accessorFn: (row) => row.sdoc.name,
             Cell: ({ row }) => <SdocAnnotationLink sdoc={row.original.sdoc} annotation={row.original} />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
-        case SpanColumns.SP_TAG_ID_LIST:
+        case SpanColumns.SP_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             accessorFn: (row) => row.tag_ids,
