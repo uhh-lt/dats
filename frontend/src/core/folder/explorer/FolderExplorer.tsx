@@ -22,6 +22,8 @@ interface FolderExplorerProps {
   onSelectedFolderIdChange: (folderId: number) => void;
   showFolders: boolean;
   onToggleShowFolders?: () => void;
+  showChildFolders?: boolean;
+  onToggleShowChildFolders?: () => void;
 }
 
 export const FolderExplorer = memo(
@@ -33,6 +35,8 @@ export const FolderExplorer = memo(
     onSelectedFolderIdChange,
     showFolders,
     onToggleShowFolders,
+    showChildFolders,
+    onToggleShowChildFolders,
     ...props
   }: FolderExplorerProps & BoxProps) => {
     // custom hooks
@@ -94,6 +98,8 @@ export const FolderExplorer = memo(
                 showFolders={showFolders}
                 onToggleShowFolders={onToggleShowFolders}
                 parentFolderId={parentFolderId}
+                showChildFolders={showChildFolders}
+                onToggleShowChildFolders={onToggleShowChildFolders}
               />
             }
             // root node rendering
@@ -115,15 +121,24 @@ function ListActions({
   showFolders,
   onToggleShowFolders,
   parentFolderId,
+  showChildFolders,
+  onToggleShowChildFolders,
 }: {
   showFolders: boolean;
   onToggleShowFolders?: () => void;
   parentFolderId: number | undefined;
+  showChildFolders?: boolean;
+  onToggleShowChildFolders?: () => void;
 }) {
   return (
     <>
       <FolderCreateButton folderName="" parentFolderId={parentFolderId} />
-      <FolderExplorerMenu showFolders={showFolders} onToggleShowFolders={onToggleShowFolders} />
+      <FolderExplorerMenu
+        showFolders={showFolders}
+        onToggleShowFolders={onToggleShowFolders}
+        showChildFolders={showChildFolders}
+        onToggleShowChildFolders={onToggleShowChildFolders}
+      />
     </>
   );
 }

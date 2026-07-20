@@ -3536,6 +3536,12 @@
             "in": "query",
             "required": false,
             "schema": { "type": "boolean", "default": true, "title": "Show Folders" }
+          },
+          {
+            "name": "show_child_folders",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Show Child Folders" }
           }
         ],
         "requestBody": {

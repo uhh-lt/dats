@@ -31,6 +31,10 @@ const documentSearchSchema = z.object({
     )
     .default([]),
   fetchSize: z.coerce.number().default(20),
+  showChildFolders: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .transform((value) => value === true || value === "true")
+    .default(false),
 });
 
 export const Route = createFileRoute("/_auth/project/$projectId/search")({
@@ -47,6 +51,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
     selectedFolderId: search.selectedFolderId,
     sortingModel: search.sortingModel,
     fetchSize: search.fetchSize,
+    showChildFolders: search.showChildFolders,
   }),
   loader: ({ context, params, deps }) =>
     documentSearchViewLoader({
@@ -58,6 +63,7 @@ export const Route = createFileRoute("/_auth/project/$projectId/search")({
       selectedFolderId: deps.selectedFolderId,
       sortingModel: deps.sortingModel,
       fetchSize: deps.fetchSize,
+      showChildFolders: deps.showChildFolders,
     }),
   pendingComponent: () => <CircularProgress />,
   component: DocumentSearchView,
