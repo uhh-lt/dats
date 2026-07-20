@@ -37,6 +37,7 @@ export function DocumentSearchView() {
   const { searchQuery, searchExpertMode, sortingModel, fetchSize } = DocumentSearchRouteAPI.useSearch();
   const [filter, setFilter] = useURLConnector(DocumentSearchRouteAPI, FILTER_PARAM);
   const [selectedFolderId, setSelectedFolderId] = useURLConnector(DocumentSearchRouteAPI, "selectedFolderId");
+  const [showChildFolders, setShowChildFolders] = useURLConnector(DocumentSearchRouteAPI, "showChildFolders");
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -58,6 +59,7 @@ export function DocumentSearchView() {
       sortingModel,
       fetchSize,
       showFolders,
+      showChildFolders,
     }),
   );
 
@@ -168,6 +170,9 @@ export function DocumentSearchView() {
     [setSelectedFolderId],
   );
   const handleToggleShowFolders = useCallback(() => dispatch(SearchActions.onToggleShowFolders()), [dispatch]);
+  const handleToggleShowChildFolders = useCallback(() => {
+    setShowChildFolders((prev) => !prev);
+  }, [setShowChildFolders]);
 
   // tag explorer handlers
   const handleExpandedTagIdsChange = useCallback(
@@ -271,6 +276,8 @@ export function DocumentSearchView() {
                 onSelectedFolderIdChange={handleSelectedFolderIdChange}
                 showFolders={showFolders}
                 onToggleShowFolders={handleToggleShowFolders}
+                showChildFolders={showChildFolders}
+                onToggleShowChildFolders={handleToggleShowChildFolders}
               />
             }
             secondContent={

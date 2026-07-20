@@ -13,6 +13,7 @@ interface DocumentSearchViewLoaderArgs {
   selectedFolderId: number;
   sortingModel: { id: string; desc: boolean }[];
   fetchSize: number;
+  showChildFolders: boolean;
 }
 
 export async function documentSearchViewLoader({
@@ -24,6 +25,7 @@ export async function documentSearchViewLoader({
   selectedFolderId,
   sortingModel,
   fetchSize,
+  showChildFolders,
 }: DocumentSearchViewLoaderArgs) {
   await Promise.all([
     queryClient.ensureQueryData(projectMetadataListQueryOptions(projectId)),
@@ -36,6 +38,7 @@ export async function documentSearchViewLoader({
         expertMode,
         sortingModel,
         fetchSize,
+        showChildFolders,
       }),
     ),
   ]);

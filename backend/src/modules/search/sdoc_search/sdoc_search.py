@@ -55,6 +55,7 @@ def filter_sdoc_ids(
     sorts: list[Sort[SdocColumns]] = [],
     page_number: int | None = None,
     page_size: int | None = None,
+    show_child_folders: bool = False,
 ) -> tuple[list[int], int]:
     builder = SearchBuilder(db, filter, sorts)
     # build the initial subquery that just queries all sdoc_ids of the project
@@ -69,17 +70,44 @@ def filter_sdoc_ids(
             )
         ).build_subquery()
     else:
-        subquery = builder.init_subquery(
-            db.query(
-                SourceDocumentORM.id,
+        if show_child_folders:
+            # Query all descendant folder IDs recursively using a recursive CTE
+            cte = (
+                db.query(FolderORM.id)
+                .filter(FolderORM.id == folder_id)
+                .cte(name="descendant_folders", recursive=True)
             )
-            .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
-            .group_by(SourceDocumentORM.id)
-            .filter(
-                SourceDocumentORM.project_id == project_id,
-                FolderORM.parent_id == folder_id,
+            cte_alias = cte.alias()
+            cte = cte.union_all(
+                db.query(FolderORM.id).join(  # type: ignore
+                    cte_alias, FolderORM.parent_id == cte_alias.c.id
+                )
             )
-        ).build_subquery()
+            descendant_ids = [row[0] for row in db.query(cte).all()]
+
+            subquery = builder.init_subquery(
+                db.query(
+                    SourceDocumentORM.id,
+                )
+                .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
+                .group_by(SourceDocumentORM.id)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    FolderORM.parent_id.in_(descendant_ids),
+                )
+            ).build_subquery()
+        else:
+            subquery = builder.init_subquery(
+                db.query(
+                    SourceDocumentORM.id,
+                )
+                .join(FolderORM, SourceDocumentORM.folder_id == FolderORM.id)
+                .group_by(SourceDocumentORM.id)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    FolderORM.parent_id == folder_id,
+                )
+            ).build_subquery()
     # build the query, specifying the result columns and joining the subquery
     builder.init_query(
         db.query(
@@ -104,6 +132,7 @@ def find_sdoc_ids(
     sorts: list[Sort[SdocColumns]],
     page_number: int | None = None,
     page_size: int | None = None,
+    show_child_folders: bool = False,
 ) -> PaginatedElasticSearchHits:
     if search_query.strip() == "":
         filtered_sdoc_ids, total_results = filter_sdoc_ids(
@@ -114,18 +143,28 @@ def find_sdoc_ids(
             sorts,
             page_number=page_number,
             page_size=page_size,
+            show_child_folders=show_child_folders,
         )
         return PaginatedElasticSearchHits(
             hits=[ElasticSearchHit(id=sdoc_id) for sdoc_id in filtered_sdoc_ids],
             total_results=total_results,
         )
     else:
-        # special case: no filter, no sorting -> all sdocs are relevant
-        if len(filter.items) == 0 and (sorts is None or len(sorts) == 0):
+        # special case: no filter, no sorting, no folder restriction -> all sdocs are relevant
+        if (
+            len(filter.items) == 0
+            and (sorts is None or len(sorts) == 0)
+            and folder_id is None
+        ):
             filtered_sdoc_ids = None
         else:
             filtered_sdoc_ids, _ = filter_sdoc_ids(
-                db, project_id, folder_id, filter, sorts
+                db,
+                project_id,
+                folder_id,
+                filter,
+                sorts,
+                show_child_folders=show_child_folders,
             )
             filtered_sdoc_ids = set(filtered_sdoc_ids)
 
@@ -160,6 +199,7 @@ def find_sdocs(
     page_number: int | None = None,
     page_size: int | None = None,
     show_folders: bool = True,
+    show_child_folders: bool = False,
 ) -> PaginatedSDocHits:
     data = find_sdoc_ids(
         db,
@@ -172,6 +212,7 @@ def find_sdocs(
         sorts,
         page_number=page_number,
         page_size=page_size,
+        show_child_folders=show_child_folders,
     )
 
     # get the additional information about the documents
