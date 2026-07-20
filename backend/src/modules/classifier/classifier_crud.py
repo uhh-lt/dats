@@ -128,14 +128,21 @@ class CRUDClassifier(CRUDBase[ClassifierORM, ClassifierCreate, ClassifierUpdate]
                         .all()
                     )
                     results.extend(result)
-        return [
-            ClassifierDataset(
+        result_map = {
+            cid: ClassifierDataset(
+                class_id=cid,
+                num_examples=0,
+                data_ids=[],
+            )
+            for cid in class_ids
+        }
+        for row in results:
+            result_map[row.class_id] = ClassifierDataset(
                 class_id=row.class_id,
                 num_examples=row.num_examples,
                 data_ids=row.data_ids,
             )
-            for row in results
-        ]
+        return list(result_map.values())
 
     def read_dataset2(
         self,
