@@ -125,9 +125,9 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     submit(newValue.data, false);
   };
 
-  const handleEdit = (annotationToEdit: Annotation, code: CodeRead) => {
+  const handleEdit = (annotationToEdit: Annotation) => {
     setEditingAnnotation(annotationToEdit);
-    setAutoCompleteValue({ data: code, title: code.name, level: 0 });
+    setAutoCompleteValue(null);
     setShowCodeSelection(true);
   };
 
@@ -136,8 +136,8 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     closeAnnotationMenu();
   };
 
-  const handleDuplicate = (annotation: Annotation, code: CodeRead) => {
-    setAutoCompleteValue({ data: code, title: code.name, level: 0 });
+  const handleDuplicate = (annotation: Annotation) => {
+    setAutoCompleteValue(null);
     setShowCodeSelection(true);
     setDuplicatingAnnotation(annotation);
   };
@@ -254,8 +254,8 @@ interface CodeSelectorListItemProps {
   annotation: Annotation;
   handleOpenMemo: () => void;
   handleDelete: (annotationToDelete: Annotation) => void;
-  handleEdit: (annotationToEdit: Annotation, newCode: CodeRead) => void;
-  handleDuplicate: (annotationToEdit: Annotation, currentCode: CodeRead) => void;
+  handleEdit: (annotationToEdit: Annotation) => void;
+  handleDuplicate: (annotationToEdit: Annotation) => void;
 }
 
 const isBboxAnnotation = (annotation: Annotation): annotation is BBoxAnnotationRead => {
@@ -309,10 +309,10 @@ function CodeSelectorListItem({
             <IconButton onClick={() => handleDelete(annotation)}>{getIconComponent(Icon.DELETE)}</IconButton>
           </Tooltip>
           <Tooltip title="Edit">
-            <IconButton onClick={() => handleEdit(annotation, code.data)}>{getIconComponent(Icon.EDIT)}</IconButton>
+            <IconButton onClick={() => handleEdit(annotation)}>{getIconComponent(Icon.EDIT)}</IconButton>
           </Tooltip>
           <Tooltip title="Duplicate">
-            <IconButton edge="end" onClick={() => handleDuplicate(annotation, code.data)}>
+            <IconButton edge="end" onClick={() => handleDuplicate(annotation)}>
               {getIconComponent(Icon.DUPLICATE)}
             </IconButton>
           </Tooltip>
