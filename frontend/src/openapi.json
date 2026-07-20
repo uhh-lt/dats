@@ -7048,7 +7048,7 @@
       },
       "BBoxColumns": {
         "type": "string",
-        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_NAME", "BB_TAG_ID_LIST"],
+        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_NAME", "BB_TAG_ID_LIST_RECURSIVE"],
         "title": "BBoxColumns"
       },
       "Body_analysis-code_frequencies": {
@@ -9120,6 +9120,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9154,6 +9155,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9188,6 +9190,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9222,6 +9225,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9256,6 +9260,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9290,6 +9295,7 @@
               { "$ref": "#/components/schemas/NumberOperator" },
               { "$ref": "#/components/schemas/StringOperator" },
               { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/IDListRecursiveOperator" },
               { "$ref": "#/components/schemas/ListOperator" },
               { "$ref": "#/components/schemas/DateOperator" },
               { "$ref": "#/components/schemas/BooleanOperator" }
@@ -9313,7 +9319,7 @@
       },
       "FilterOperator": {
         "type": "string",
-        "enum": ["BOOLEAN", "STRING", "ID", "NUMBER", "ID_LIST", "LIST", "DATE"],
+        "enum": ["BOOLEAN", "STRING", "ID", "NUMBER", "ID_LIST", "ID_LIST_RECURSIVE", "LIST", "DATE"],
         "title": "FilterOperator"
       },
       "FilterValueType": {
@@ -9628,6 +9634,11 @@
         "type": "string",
         "enum": ["ID_LIST_CONTAINS", "ID_LIST_NOT_CONTAINS"],
         "title": "IDListOperator"
+      },
+      "IDListRecursiveOperator": {
+        "type": "string",
+        "enum": ["IDLR_CONTAINS", "IDLR_NOT_CONTAINS", "IDLR_CONTAINS_RECURSIVE"],
+        "title": "IDListRecursiveOperator"
       },
       "IDOperator": { "type": "string", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "title": "IDOperator" },
       "ImportJobInput": {
@@ -10941,8 +10952,8 @@
         "enum": [
           "SD_SOURCE_DOCUMENT_TYPE",
           "SD_SOURCE_DOCUMENT_NAME",
-          "SD_TAG_ID_LIST",
-          "SD_CODE_ID_LIST",
+          "SD_TAG_ID_LIST_RECURSIVE",
+          "SD_CODE_ID_LIST_RECURSIVE",
           "SD_USER_ID_LIST",
           "SD_SPAN_ANNOTATIONS"
         ],
@@ -11057,7 +11068,7 @@
           "SentAnno_USER_ID",
           "SentAnno_MEMO_CONTENT",
           "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME",
-          "SentAnno_TAG_ID_LIST"
+          "SentAnno_TAG_ID_LIST_RECURSIVE"
         ],
         "title": "SentAnnoColumns"
       },
@@ -12178,7 +12189,7 @@
           "SP_USER_ID",
           "SP_MEMO_CONTENT",
           "SP_SOURCE_SOURCE_DOCUMENT_NAME",
-          "SP_TAG_ID_LIST"
+          "SP_TAG_ID_LIST_RECURSIVE"
         ],
         "title": "SpanColumns"
       },
@@ -13224,8 +13235,8 @@
           "WF_SOURCE_DOCUMENT_FREQUENCY",
           "WF_SOURCE_DOCUMENT_PERCENT",
           "WF_SOURCE_DOCUMENT_NAME",
-          "WF_TAG_ID_LIST",
-          "WF_CODE_ID_LIST",
+          "WF_TAG_ID_LIST_RECURSIVE",
+          "WF_CODE_ID_LIST_RECURSIVE",
           "WF_USER_ID_LIST",
           "WF_SPAN_ANNOTATIONS"
         ],

@@ -11,7 +11,7 @@ import {
 } from "@core/filter";
 import { getMetadataValue } from "@core/sdoc-metadata";
 import { ChatSessionResponse } from "@models/ChatSessionResponse";
-import { IDListOperator } from "@models/IDListOperator";
+import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { ListOperator } from "@models/ListOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
@@ -243,8 +243,8 @@ const perspectivesSlice = createSlice({
         ...currentFilter.items,
         {
           id: crypto.randomUUID(),
-          column: SdocColumns.SD_TAG_ID_LIST,
-          operator: IDListOperator.ID_LIST_CONTAINS,
+          column: SdocColumns.SD_TAG_ID_LIST_RECURSIVE,
+          operator: IDListRecursiveOperator.IDLR_CONTAINS,
           value: action.payload.tagId,
         },
       ];

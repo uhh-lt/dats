@@ -5,6 +5,7 @@
 import type { BooleanOperator } from "./BooleanOperator";
 import type { DateOperator } from "./DateOperator";
 import type { IDListOperator } from "./IDListOperator";
+import type { IDListRecursiveOperator } from "./IDListRecursiveOperator";
 import type { IDOperator } from "./IDOperator";
 import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
@@ -18,6 +19,7 @@ export type FilterExpression_SpanColumns_ = {
     | NumberOperator
     | StringOperator
     | IDListOperator
+    | IDListRecursiveOperator
     | ListOperator
     | DateOperator
     | BooleanOperator;

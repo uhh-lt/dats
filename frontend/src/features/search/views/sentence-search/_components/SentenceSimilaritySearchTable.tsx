@@ -117,7 +117,7 @@ export function SentenceSimilaritySearchTable({
             size: 360,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderName />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SdocColumns.SD_TAG_ID_LIST:
+        case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
@@ -127,7 +127,7 @@ export function SentenceSimilaritySearchTable({
             ...colDef,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
           } as MRT_ColumnDef<SimSearchSentenceHit>;
-        case SdocColumns.SD_CODE_ID_LIST:
+        case SdocColumns.SD_CODE_ID_LIST_RECURSIVE:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;

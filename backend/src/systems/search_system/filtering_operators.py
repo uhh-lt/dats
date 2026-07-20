@@ -22,6 +22,7 @@ class FilterOperator(Enum):
     ID = "ID"
     NUMBER = "NUMBER"
     ID_LIST = "ID_LIST"
+    ID_LIST_RECURSIVE = "ID_LIST_RECURSIVE"
     LIST = "LIST"
     DATE = "DATE"
 
@@ -150,12 +151,56 @@ class IDListOperator(Enum):
                 else:
                     raise ValueError("Invalid value for IDListOperator!")
             else:
-                # Column is aggregated list of IDs, e.g. subquery_dict.CODE_ID_LIST
+                # Column is aggregated list of IDs, e.g. subquery_dict.CODE_ID_LIST_RECURSIVE
                 match self:
                     case IDListOperator.CONTAINS:
                         return column.contains([int(value)])
                     case IDListOperator.NOT_CONTAINS:
                         return not_(column.contains([int(value)]))
+
+
+class IDListRecursiveOperator(Enum):
+    CONTAINS = "IDLR_CONTAINS"
+    NOT_CONTAINS = "IDLR_NOT_CONTAINS"
+    CONTAINS_RECURSIVE = "IDLR_CONTAINS_RECURSIVE"
+
+    def apply(self, column, value: FilterValue):
+        if self == IDListRecursiveOperator.CONTAINS_RECURSIVE:
+            if not isinstance(value, list):
+                value_list = [value]
+            else:
+                value_list = value
+
+            resolved_ints: list[int] = []
+            for v in value_list:
+                if isinstance(v, list):
+                    raise ValueError(
+                        "Nested lists are not supported for IDListRecursiveOperator!"
+                    )
+                if isinstance(v, (str, int)):
+                    resolved_ints.append(int(v))
+                else:
+                    raise ValueError(f"Invalid value type: {type(v)}")
+
+            if isinstance(column, tuple):
+                if len(column) == 2:
+                    return column[0].any(column[1].in_(resolved_ints))
+                else:
+                    raise ValueError(
+                        "Invalid column or value for IDListRecursiveOperator!"
+                    )
+            else:
+                if len(resolved_ints) == 0:
+                    from sqlalchemy import false
+
+                    return false()
+                from sqlalchemy import or_
+
+                return or_(*[column.contains([v]) for v in resolved_ints])
+        else:
+            standard_value = self.value.replace("IDLR_", "ID_LIST_")
+            mapped_operator = IDListOperator(standard_value)
+            return mapped_operator.apply(column, value)
 
 
 class ListOperator(Enum):

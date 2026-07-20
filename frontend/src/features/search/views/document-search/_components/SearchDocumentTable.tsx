@@ -204,7 +204,7 @@ export function SearchDocumentTable({
                 <SdocRenderer sdoc={row.original.id} renderName />
               ),
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_TAG_ID_LIST:
+        case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             Cell: ({ row }) => (row.original.is_folder ? null : <SdocTagsRenderer sdocId={row.original.id} />),
@@ -214,7 +214,7 @@ export function SearchDocumentTable({
             ...colDef,
             Cell: ({ row }) => (row.original.is_folder ? null : <SdocAnnotatorsRenderer sdocId={row.original.id} />),
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
-        case SdocColumns.SD_CODE_ID_LIST:
+        case SdocColumns.SD_CODE_ID_LIST_RECURSIVE:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;

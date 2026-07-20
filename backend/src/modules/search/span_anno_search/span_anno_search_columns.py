@@ -24,14 +24,14 @@ class SpanColumns(str, AbstractColumns):
     USER_ID = "SP_USER_ID"
     MEMO_CONTENT = "SP_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SP_SOURCE_SOURCE_DOCUMENT_NAME"
-    TAG_ID_LIST = "SP_TAG_ID_LIST"
+    TAG_ID_LIST_RECURSIVE = "SP_TAG_ID_LIST_RECURSIVE"
 
     def get_filter_column(self, subquery_dict):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
-            case SpanColumns.TAG_ID_LIST:
-                return subquery_dict[SpanColumns.TAG_ID_LIST.value]
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
+                return subquery_dict[SpanColumns.TAG_ID_LIST_RECURSIVE.value]
             case SpanColumns.CODE_ID:
                 return SpanAnnotationORM.code_id
             case SpanColumns.SPAN_TEXT:
@@ -45,8 +45,8 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
-            case SpanColumns.TAG_ID_LIST:
-                return FilterOperator.ID_LIST
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             case SpanColumns.CODE_ID:
                 return FilterOperator.ID
             case SpanColumns.SPAN_TEXT:
@@ -60,7 +60,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return FilterValueType.INFER_FROM_OPERATOR
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterValueType.TAG_ID
             case SpanColumns.CODE_ID:
                 return FilterValueType.CODE_ID
@@ -75,7 +75,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 return None
             case SpanColumns.CODE_ID:
                 return CodeORM.name
@@ -90,7 +90,7 @@ class SpanColumns(str, AbstractColumns):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return "Document name"
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 return "Tags"
             case SpanColumns.CODE_ID:
                 return "Code"
@@ -103,11 +103,11 @@ class SpanColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
                         TagORM.id,
-                        label=SpanColumns.TAG_ID_LIST.value,
+                        label=SpanColumns.TAG_ID_LIST_RECURSIVE.value,
                     )
                 )
                 query_builder._join_subquery(
@@ -155,7 +155,7 @@ class SpanColumns(str, AbstractColumns):
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
             case SpanColumns.CODE_ID:
@@ -171,7 +171,7 @@ class SpanColumns(str, AbstractColumns):
         self, db: Session, project_id: int, names: list[str]
     ) -> list[int]:
         match self:
-            case SpanColumns.TAG_ID_LIST:
+            case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
             case SpanColumns.CODE_ID:

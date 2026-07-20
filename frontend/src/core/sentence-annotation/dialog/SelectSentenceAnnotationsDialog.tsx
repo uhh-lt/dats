@@ -91,7 +91,7 @@ function SelectSentenceAnnotationsDialogContent({
       },
       {
         [SentAnnoColumns.SENT_ANNO_MEMO_CONTENT]: false,
-        [SentAnnoColumns.SENT_ANNO_TAG_ID_LIST]: false,
+        [SentAnnoColumns.SENT_ANNO_TAG_ID_LIST_RECURSIVE]: false,
       },
     ),
   );

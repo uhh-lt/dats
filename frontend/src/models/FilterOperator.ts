@@ -8,6 +8,7 @@ export enum FilterOperator {
   ID = "ID",
   NUMBER = "NUMBER",
   ID_LIST = "ID_LIST",
+  ID_LIST_RECURSIVE = "ID_LIST_RECURSIVE",
   LIST = "LIST",
   DATE = "DATE",
 }
