@@ -1,9 +1,7 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
-import { DocTypeIcons, getIconComponent } from "@components/icons";
 import { JobListItem, jobStatusToTypographyColor } from "@core/job";
-import { LinkListItemButton } from "@core/navigation";
+import { SdocRenderer } from "@core/source-document";
 import { ApproachType } from "@models/ApproachType";
-import { DocType } from "@models/DocType";
 import { FewShotParams } from "@models/FewShotParams";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
@@ -11,10 +9,11 @@ import { LLMJobOutput } from "@models/LLMJobOutput";
 import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
 import { ZeroShotParams } from "@models/ZeroShotParams";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { Box, Button, List, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
+import { Box, Button, List, ListItem, ListItemIcon, ListItemText, Stack, Tab, TextField } from "@mui/material";
 import { useAppDispatch } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, useCallback, useRef, useState } from "react";
+import { dateToLocaleString } from "@utils/DateUtils";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 
 interface LLMJobListItemProps {
@@ -32,6 +31,18 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
     dispatch(LLMAssistantActions.llmDialogOpenFromBackgroundTask(llmJob.data));
   }, [dispatch, llmJob.data]);
 
+  // compute subtitle
+  const subTitle = useMemo(() => {
+    if (!llmJob.data) return "";
+    const count = llmJob.data.input.specific_task_parameters.sdoc_ids.length;
+    const createdDate = dateToLocaleString(llmJob.data.created);
+    let title = `Processes ${count} document${count !== 1 ? "s" : ""}, started at ${createdDate}`;
+    if (llmJob.data.status === JobStatus.FINISHED && llmJob.data.finished) {
+      title += `, finished at ${dateToLocaleString(llmJob.data.finished)}`;
+    }
+    return title;
+  }, [llmJob.data]);
+
   // tab state
   const [tab, setTab] = useState("Status");
   const handleChangeTab = useCallback((_: React.SyntheticEvent, newValue: string) => {
@@ -44,7 +55,7 @@ export const LLMJobListItem = memo(({ initialLLMJob }: LLMJobListItemProps) => {
         jobStatus={llmJob.data.status}
         jobId={llmJob.data.job_id}
         title={`LLM Job - ${llmJob.data.input.llm_job_type} - ${llmJob.data.input.llm_approach_type}`}
-        subTitle={`This job processes ${llmJob.data.input.specific_task_parameters.sdoc_ids.length} documents.`}
+        subTitle={subTitle}
       >
         <Stack sx={{ px: 9 }}>
           <TabContext value={tab}>
@@ -183,17 +194,21 @@ interface ResultStatusItem {
   sdoc_id: number;
 }
 
-function LLMResultStatusItem({ result, projectId }: { result: ResultStatusItem; projectId: number }) {
+function LLMResultStatusItem({ result }: { result: ResultStatusItem; projectId: number }) {
+  const statusColor =
+    result.status === "finished"
+      ? jobStatusToTypographyColor[JobStatus.FINISHED]
+      : jobStatusToTypographyColor[JobStatus.FAILED];
+
   return (
-    <LinkListItemButton to="/project/$projectId/annotation/$sdocId" params={{ projectId, sdocId: result.sdoc_id }}>
-      <ListItemIcon
-        sx={{
-          color: `${result.status == "finished" ? jobStatusToTypographyColor[JobStatus.FINISHED] : jobStatusToTypographyColor[JobStatus.FAILED]}`,
-        }}
-      >
-        {getIconComponent(DocTypeIcons[DocType.TEXT])}
+    <ListItem sx={{ px: 0 }}>
+      <ListItemIcon sx={{ color: statusColor }}>
+        <SdocRenderer sdoc={result.sdoc_id} renderDoctypeIcon />
       </ListItemIcon>
-      <ListItemText primary={`Document with ID ${result.sdoc_id} - ${result.status_message}`} />
-    </LinkListItemButton>
+      <ListItemText
+        primary={<SdocRenderer sdoc={result.sdoc_id} link renderName />}
+        secondary={result.status_message}
+      />
+    </ListItem>
   );
 }
