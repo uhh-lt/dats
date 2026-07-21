@@ -217,8 +217,8 @@ class DATSAPI:
                         "items": [
                             {
                                 "id": "asdf2",
-                                "column": "SD_TAG_ID_LIST",
-                                "operator": "ID_LIST_CONTAINS",
+                                "column": "SD_TAG_ID_LIST_RECURSIVE",
+                                "operator": "IDLR_CONTAINS",
                                 "value": tag,
                             }
                             for tag in tags
