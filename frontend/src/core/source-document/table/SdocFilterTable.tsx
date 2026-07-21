@@ -29,7 +29,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import { MRT_ColumnDef } from "material-react-table";
 import { memo, useCallback, useMemo, useState } from "react";
-import { SdocAnnotatorsRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
+import { SdocAnnotatorsRenderer, SdocFolderRenderer, SdocRenderer, SdocTagsRenderer } from "../renderer";
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
 
@@ -102,6 +102,11 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;
+        case SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.id} renderName renderIcon />,
+          } as MRT_ColumnDef<ElasticSearchHit>;
         default:
           if (!isNaN(parseInt(column.column))) {
             return {

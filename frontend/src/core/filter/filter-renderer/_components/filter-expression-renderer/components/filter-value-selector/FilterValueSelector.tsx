@@ -4,6 +4,7 @@ import { ColumnInfo } from "../../../../../filterUtils";
 import { CodeIdValueSelector } from "./components/CodeIdValueSelector";
 import { DefaultValueSelector } from "./components/DefaultValueSelector";
 import { DocTypeValueSelector } from "./components/DocTypeValueSelector";
+import { FolderIdValueSelector } from "./components/FolderIdValueSelector";
 import { SpanAnnotationValueSelector } from "./components/SpanAnnotationValueSelector";
 import { TagIdValueSelector } from "./components/TagIdValueSelector";
 import { UserIdValueSelector } from "./components/UserIdValueSelector";
@@ -22,6 +23,8 @@ export const FilterValueSelector = memo(
         return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
       case FilterValueType.CODE_ID:
         return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+      case FilterValueType.FOLDER_ID:
+        return <FolderIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
       case FilterValueType.USER_ID:
         return <UserIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
       case FilterValueType.SPAN_ANNOTATION:

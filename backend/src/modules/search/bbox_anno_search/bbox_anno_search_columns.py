@@ -4,6 +4,9 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderType
+from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
@@ -20,6 +23,7 @@ class BBoxColumns(str, AbstractColumns):
     MEMO_CONTENT = "BB_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "BB_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "BB_TAG_ID_LIST_RECURSIVE"
+    FOLDER_ID_LIST_RECURSIVE = "BB_FOLDER_ID_LIST_RECURSIVE"
 
     def get_filter_column(self, subquery_dict):
         match self:
@@ -27,6 +31,8 @@ class BBoxColumns(str, AbstractColumns):
                 return SourceDocumentORM.name
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 return subquery_dict[BBoxColumns.TAG_ID_LIST_RECURSIVE.value]
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                return subquery_dict[BBoxColumns.FOLDER_ID_LIST_RECURSIVE.value]
             case BBoxColumns.CODE_ID:
                 return BBoxAnnotationORM.code_id
             case BBoxColumns.MEMO_CONTENT:
@@ -37,6 +43,8 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
             case BBoxColumns.CODE_ID:
                 return FilterOperator.ID
@@ -49,6 +57,8 @@ class BBoxColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterValueType.TAG_ID
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                return FilterValueType.FOLDER_ID
             case BBoxColumns.CODE_ID:
                 return FilterValueType.CODE_ID
             case BBoxColumns.MEMO_CONTENT:
@@ -59,6 +69,8 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
+                return None
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
             case BBoxColumns.CODE_ID:
                 return CodeORM.name
@@ -71,6 +83,8 @@ class BBoxColumns(str, AbstractColumns):
                 return "Document name"
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 return "Tags"
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                return "Folder"
             case BBoxColumns.CODE_ID:
                 return "Code"
             case BBoxColumns.MEMO_CONTENT:
@@ -95,6 +109,28 @@ class BBoxColumns(str, AbstractColumns):
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
                 query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                # folder_id → SDOC_FOLDER; SDOC_FOLDER.parent_id → NORMAL folder (what users filter on)
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        FolderORM.parent_id,
+                        label=BBoxColumns.FOLDER_ID_LIST_RECURSIVE.value,
+                    )
+                )
+                query_builder._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == BBoxAnnotationORM.annotation_document_id,
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
+                query_builder._join_subquery(
+                    FolderORM,
+                    FolderORM.id == SourceDocumentORM.folder_id,
+                    isouter=True,
+                )
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -122,6 +158,9 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                folders = crud_folder.read_by_ids(db, ids=ids)
+                return [folder.name for folder in folders]
             case BBoxColumns.CODE_ID:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
@@ -135,6 +174,14 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
+            case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
+                result = crud_folder.read_by_names(
+                    db,
+                    project_id=project_id,
+                    names=names,
+                    folder_type=FolderType.NORMAL,
+                )
+                return [folder.id for folder in result]
             case BBoxColumns.CODE_ID:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]

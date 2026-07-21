@@ -8,6 +8,7 @@ import {
   DeleteSdocsButton,
   SdocAnnotatorsRenderer,
   SdocExportButton,
+  SdocFolderRenderer,
   SdocRenderer,
   SdocSentenceRenderer,
   SdocTagsRenderer,
@@ -131,6 +132,11 @@ export function SentenceSimilaritySearchTable({
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
           return null;
+        case SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc_id} renderName renderIcon />,
+          } as MRT_ColumnDef<SimSearchSentenceHit>;
         default:
           // render metadata
           if (!isNaN(parseInt(column.column))) {

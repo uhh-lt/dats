@@ -21,7 +21,7 @@ import {
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocTagsRenderer } from "@core/source-document";
+import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -122,6 +122,11 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
                   showIcon={false}
                 />
               ) : null,
+          } as MRT_ColumnDef<SentenceAnnotationRow>;
+        case SentAnnoColumns.SENT_ANNO_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         default:
           if (!isNaN(parseInt(column.column))) {

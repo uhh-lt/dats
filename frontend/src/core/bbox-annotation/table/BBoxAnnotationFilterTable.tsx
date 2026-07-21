@@ -21,7 +21,7 @@ import {
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocTagsRenderer } from "@core/source-document";
+import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -106,6 +106,11 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
                 showIcon={false}
               />
             ),
+          } as MRT_ColumnDef<BBoxAnnotationRow>;
+        case BBoxColumns.BB_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
         default:
           if (!isNaN(parseInt(column.column))) {

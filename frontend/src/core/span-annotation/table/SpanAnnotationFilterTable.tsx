@@ -21,7 +21,7 @@ import {
 } from "@core/filter";
 import { MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocTagsRenderer } from "@core/source-document";
+import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
@@ -127,6 +127,11 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             accessorFn: (row) => row.span_text,
+          } as MRT_ColumnDef<SpanAnnotationRow>;
+        case SpanColumns.SP_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.sdoc.id} renderName renderIcon />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
         default:
           if (!isNaN(parseInt(column.column))) {

@@ -7048,7 +7048,13 @@
       },
       "BBoxColumns": {
         "type": "string",
-        "enum": ["BB_CODE_ID", "BB_MEMO_CONTENT", "BB_SOURCE_SOURCE_DOCUMENT_NAME", "BB_TAG_ID_LIST_RECURSIVE"],
+        "enum": [
+          "BB_CODE_ID",
+          "BB_MEMO_CONTENT",
+          "BB_SOURCE_SOURCE_DOCUMENT_NAME",
+          "BB_TAG_ID_LIST_RECURSIVE",
+          "BB_FOLDER_ID_LIST_RECURSIVE"
+        ],
         "title": "BBoxColumns"
       },
       "Body_analysis-code_frequencies": {
@@ -9324,7 +9330,16 @@
       },
       "FilterValueType": {
         "type": "string",
-        "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "DOC_TYPE", "INFER_FROM_OPERATOR"],
+        "enum": [
+          "SDOC_ID",
+          "CODE_ID",
+          "USER_ID",
+          "TAG_ID",
+          "FOLDER_ID",
+          "SPAN_ANNOTATION",
+          "DOC_TYPE",
+          "INFER_FROM_OPERATOR"
+        ],
         "title": "FilterValueType"
       },
       "Filter_BBoxColumns_-Input": {
@@ -10954,6 +10969,7 @@
           "SD_SOURCE_DOCUMENT_NAME",
           "SD_TAG_ID_LIST_RECURSIVE",
           "SD_CODE_ID_LIST_RECURSIVE",
+          "SD_FOLDER_ID_LIST_RECURSIVE",
           "SD_USER_ID_LIST",
           "SD_SPAN_ANNOTATIONS"
         ],
@@ -11068,7 +11084,8 @@
           "SentAnno_USER_ID",
           "SentAnno_MEMO_CONTENT",
           "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME",
-          "SentAnno_TAG_ID_LIST_RECURSIVE"
+          "SentAnno_TAG_ID_LIST_RECURSIVE",
+          "SentAnno_FOLDER_ID_LIST_RECURSIVE"
         ],
         "title": "SentAnnoColumns"
       },
@@ -12189,7 +12206,8 @@
           "SP_USER_ID",
           "SP_MEMO_CONTENT",
           "SP_SOURCE_SOURCE_DOCUMENT_NAME",
-          "SP_TAG_ID_LIST_RECURSIVE"
+          "SP_TAG_ID_LIST_RECURSIVE",
+          "SP_FOLDER_ID_LIST_RECURSIVE"
         ],
         "title": "SpanColumns"
       },
@@ -13237,6 +13255,7 @@
           "WF_SOURCE_DOCUMENT_NAME",
           "WF_TAG_ID_LIST_RECURSIVE",
           "WF_CODE_ID_LIST_RECURSIVE",
+          "WF_FOLDER_ID_LIST_RECURSIVE",
           "WF_USER_ID_LIST",
           "WF_SPAN_ANNOTATIONS"
         ],
