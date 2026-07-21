@@ -236,14 +236,22 @@ class DateOperator(Enum):
         if not isinstance(value, str):
             raise ValueError("Invalid value type for DateOperator (requires str)!")
 
+        from dateutil.parser import parse
+        from sqlalchemy import Date, cast
+
+        try:
+            parsed_date = parse(value).date()
+        except Exception as e:
+            raise ValueError(f"Invalid date format: {value}") from e
+
         match self:
             case DateOperator.EQUALS:
-                return column == value
+                return cast(column, Date) == parsed_date
             case DateOperator.GT:
-                return column > value
+                return cast(column, Date) > parsed_date
             case DateOperator.LT:
-                return column < value
+                return cast(column, Date) < parsed_date
             case DateOperator.GTE:
-                return column >= value
+                return cast(column, Date) >= parsed_date
             case DateOperator.LTE:
-                return column <= value
+                return cast(column, Date) <= parsed_date
