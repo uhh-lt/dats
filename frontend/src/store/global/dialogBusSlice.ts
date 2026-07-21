@@ -71,6 +71,7 @@ export interface DialogPayloadMap {
   documentUpload: undefined;
   projectSettings: undefined;
   quickCommandMenu: undefined;
+  codeShortcutManager: undefined;
 }
 
 // ─── Callback Registry ────────────────────────────────────────────────────────
@@ -133,6 +134,7 @@ const initialState: DialogBusState = {
   documentUpload: closed,
   projectSettings: closed,
   quickCommandMenu: closed,
+  codeShortcutManager: closed,
 };
 
 // ─── Action payload type ───────────────────────────────────────────────────────
