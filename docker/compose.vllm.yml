@@ -1,7 +1,7 @@
 # docker compose -f compose.vllm.yml up -d
 
 x-vllm-common: &vllm-common
-  image: vllm/vllm-openai:v0.10.1.1
+  image: vllm/vllm-openai:v0.25.1
   environment:
     - HUGGING_FACE_HUB_TOKEN=${HF_HUB_TOKEN?hf-hub-token-required!}
     - VLLM_LOGGING_LEVEL=INFO
