@@ -10,7 +10,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
 import { MouseEvent, MouseEventHandler, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
-import { useComputeTokenData } from "../_hooks/useComputeTokenData";
+import { useComputeTokenData, useTokenData } from "../_hooks/useComputeTokenData";
+import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../_types/Annotation";
 import { TagStyle } from "../_types/TagStyle";
 import { AnnoActions } from "../store/annoSlice";
@@ -45,9 +46,12 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   const openSnackbar = useOpenSnackbar();
 
   // computed / custom hooks
+  const resizeTokenData = useTokenData(sdocData);
+  const resizeController = useSpanAnnotationResize(resizeTokenData);
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocData,
     userId: visibleUserId,
+    annotationOverride: resizeController.previewAnnotation,
   });
 
   // mutations for create, update, delete
@@ -101,6 +105,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   };
 
   const handleMouseUp = async (event: MouseEvent) => {
+    if (resizeController.shouldIgnoreMouseUp()) return;
     if (event.button === 2) return;
     if (!tokenData) return;
 
@@ -314,6 +319,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         annotationMap={annotationMap}
         isViewer={false}
         projectId={sdocData.project_id}
+        onResizeStart={resizeController.handleResizeStart}
         style={{
           zIndex: 1,
           overflowY: "auto",

@@ -124,10 +124,11 @@ def update_by_id(
     validate: Validate = Depends(),
 ) -> SpanAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
-    authz_user.assert_in_same_project_as(Crud.CODE, span_anno.code_id)
-    validate.validate_objects_in_same_project(
-        [(Crud.SPAN_ANNOTATION, span_id), (Crud.CODE, span_anno.code_id)]
-    )
+    if span_anno.code_id is not None:
+        authz_user.assert_in_same_project_as(Crud.CODE, span_anno.code_id)
+        validate.validate_objects_in_same_project(
+            [(Crud.SPAN_ANNOTATION, span_id), (Crud.CODE, span_anno.code_id)]
+        )
 
     db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
     return SpanAnnotationRead.model_validate(db_obj)

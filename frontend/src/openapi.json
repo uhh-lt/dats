@@ -12188,10 +12188,38 @@
       },
       "SpanAnnotationUpdate": {
         "properties": {
-          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SpanAnnotation refers to" }
+          "code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Code Id",
+            "description": "Code the SpanAnnotation refers to"
+          },
+          "begin": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Begin",
+            "description": "Begin of the SpanAnnotation in characters"
+          },
+          "end": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "End",
+            "description": "End of the SpanAnnotation in characters"
+          },
+          "begin_token": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Begin Token",
+            "description": "Begin of the SpanAnnotation in tokens"
+          },
+          "end_token": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "End Token",
+            "description": "End of the SpanAnnotation in tokens"
+          },
+          "span_text": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }],
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          }
         },
         "type": "object",
-        "required": ["code_id"],
         "title": "SpanAnnotationUpdate"
       },
       "SpanAnnotationUpdateBulk": {

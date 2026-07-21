@@ -139,7 +139,12 @@ const useUpdateSpanAnnotation = () =>
               anno.id === spanAnnotationToUpdate.id
                 ? {
                     ...anno,
-                    code_id: requestBody.code_id,
+                    code_id: requestBody.code_id ?? anno.code_id,
+                    begin: requestBody.begin ?? anno.begin,
+                    end: requestBody.end ?? anno.end,
+                    begin_token: requestBody.begin_token ?? anno.begin_token,
+                    end_token: requestBody.end_token ?? anno.end_token,
+                    text: requestBody.span_text ?? anno.text,
                   }
                 : anno,
             )
