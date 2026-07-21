@@ -4,6 +4,9 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderType
+from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
@@ -24,6 +27,7 @@ class SentAnnoColumns(str, AbstractColumns):
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "SentAnno_TAG_ID_LIST_RECURSIVE"
+    FOLDER_ID_LIST_RECURSIVE = "SentAnno_FOLDER_ID_LIST_RECURSIVE"
 
     def get_filter_column(self, subquery_dict):
         match self:
@@ -31,6 +35,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return SourceDocumentORM.name
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return subquery_dict[SentAnnoColumns.TAG_ID_LIST_RECURSIVE.value]
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                return subquery_dict[SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE.value]
             case SentAnnoColumns.CODE_ID:
                 return SentenceAnnotationORM.code_id
             # case SentAnnoColumns.TEXT:
@@ -45,6 +51,8 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return FilterOperator.STRING
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
             case SentAnnoColumns.CODE_ID:
                 return FilterOperator.ID
@@ -61,6 +69,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterValueType.INFER_FROM_OPERATOR
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterValueType.TAG_ID
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                return FilterValueType.FOLDER_ID
             case SentAnnoColumns.CODE_ID:
                 return FilterValueType.CODE_ID
             # case SentAnnoColumns.TEXT:
@@ -75,6 +85,8 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
+                return None
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
             case SentAnnoColumns.CODE_ID:
                 return CodeORM.name
@@ -91,6 +103,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return "Document name"
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 return "Tags"
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                return "Folder"
             case SentAnnoColumns.CODE_ID:
                 return "Code"
             # case SentAnnoColumns.TEXT:
@@ -119,6 +133,28 @@ class SentAnnoColumns(str, AbstractColumns):
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
                 query_builder._join_subquery(SourceDocumentORM.tags, isouter=True)
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                # folder_id → SDOC_FOLDER; SDOC_FOLDER.parent_id → NORMAL folder (what users filter on)
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        FolderORM.parent_id,
+                        label=SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE.value,
+                    )
+                )
+                query_builder._join_subquery(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == SentenceAnnotationORM.annotation_document_id,
+                )
+                query_builder._join_subquery(
+                    SourceDocumentORM,
+                    SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+                )
+                query_builder._join_subquery(
+                    FolderORM,
+                    FolderORM.id == SourceDocumentORM.folder_id,
+                    isouter=True,
+                )
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -152,6 +188,9 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                folders = crud_folder.read_by_ids(db, ids=ids)
+                return [folder.name for folder in folders]
             case SentAnnoColumns.CODE_ID:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
@@ -168,6 +207,14 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
+            case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
+                result = crud_folder.read_by_names(
+                    db,
+                    project_id=project_id,
+                    names=names,
+                    folder_type=FolderType.NORMAL,
+                )
+                return [folder.id for folder in result]
             case SentAnnoColumns.CODE_ID:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]

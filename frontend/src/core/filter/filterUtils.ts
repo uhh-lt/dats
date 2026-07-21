@@ -100,6 +100,7 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
 export const filterValueType2defaultValue: Record<FilterValueType, boolean | string | number | string[]> = {
   [FilterValueType.CODE_ID]: -1,
   [FilterValueType.DOC_TYPE]: "none",
+  [FilterValueType.FOLDER_ID]: -1,
   [FilterValueType.SDOC_ID]: 0,
   [FilterValueType.SPAN_ANNOTATION]: ["-1", ""],
   [FilterValueType.TAG_ID]: -1,

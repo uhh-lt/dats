@@ -74,6 +74,7 @@ export enum Icon {
   SENTENCE_ANNOTATION = "sentence_annotation",
   BBOX_ANNOTATION = "bbox_annotation",
   FOLDER = "folder",
+  ROOT_FOLDER = "root_folder",
   FOLDER_OFF = "folder_off",
 
   // Document types
@@ -199,6 +200,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION]: (iconProps) => <FilterIcon {...iconProps} />,
   [Icon.FOLDER]: (iconProps) => <FolderIcon {...iconProps} />,
+  [Icon.ROOT_FOLDER]: (iconProps) => <InboxIcon {...iconProps} />,
   [Icon.FOLDER_OFF]: (iconProps) => <FolderOffIcon {...iconProps} />,
 
   // Document types

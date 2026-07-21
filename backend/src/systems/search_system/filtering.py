@@ -23,6 +23,7 @@ def get_descendant_ids(
     db: Session, column: AbstractColumns, parent_id: int
 ) -> list[int]:
     from core.code.code_orm import CodeORM
+    from core.doc.folder_orm import FolderORM
     from core.tag.tag_orm import TagORM
 
     val = column.value if hasattr(column, "value") else str(column)
@@ -31,6 +32,8 @@ def get_descendant_ids(
         orm_class = CodeORM
     elif "TAG_ID_LIST_RECURSIVE" in val:
         orm_class = TagORM
+    elif "FOLDER_ID_LIST_RECURSIVE" in val:
+        orm_class = FolderORM
     else:
         return [parent_id]
 

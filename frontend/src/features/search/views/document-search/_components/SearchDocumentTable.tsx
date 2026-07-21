@@ -10,6 +10,7 @@ import {
   DeleteSdocsButton,
   SdocAnnotatorsRenderer,
   SdocExportButton,
+  SdocFolderRenderer,
   SdocRenderer,
   SdocTagsRenderer,
 } from "@core/source-document";
@@ -213,6 +214,12 @@ export function SearchDocumentTable({
           return {
             ...colDef,
             Cell: ({ row }) => (row.original.is_folder ? null : <SdocAnnotatorsRenderer sdocId={row.original.id} />),
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
+        case SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE:
+          return {
+            ...colDef,
+            Cell: ({ row }) =>
+              row.original.is_folder ? null : <SdocFolderRenderer sdocId={row.original.id} renderName renderIcon />,
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_CODE_ID_LIST_RECURSIVE:
           return null;

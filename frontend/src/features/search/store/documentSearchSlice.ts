@@ -54,11 +54,19 @@ const searchSlice = createSlice({
       state.column2Info = action.payload.columnInfoMap;
       state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
         if (!column.column) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.column))) {
+        // do not show the folder column in the table, as it is not useful for the user
+        if (column.column === SdocColumns.SD_FOLDER_ID_LIST_RECURSIVE) {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+        // show normal columsn
+        else if (isNaN(parseInt(column.column))) {
           return acc;
-          // this is a metadata column
-        } else {
+        }
+        // do not show metadata columns
+        else {
           return {
             ...acc,
             [column.column]: false,

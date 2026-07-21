@@ -7,6 +7,9 @@ from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
 from core.code.code_crud import crud_code
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderType
+from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
@@ -27,6 +30,7 @@ class WordFrequencyColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_NAME = "WF_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "WF_TAG_ID_LIST_RECURSIVE"
     CODE_ID_LIST_RECURSIVE = "WF_CODE_ID_LIST_RECURSIVE"
+    FOLDER_ID_LIST_RECURSIVE = "WF_FOLDER_ID_LIST_RECURSIVE"
     USER_ID_LIST = "WF_USER_ID_LIST"
     SPAN_ANNOTATIONS = "WF_SPAN_ANNOTATIONS"
 
@@ -48,6 +52,10 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return subquery_dict[WordFrequencyColumns.TAG_ID_LIST_RECURSIVE]
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
                 return subquery_dict[WordFrequencyColumns.CODE_ID_LIST_RECURSIVE]
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                return subquery_dict[
+                    WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE.value
+                ]
             case WordFrequencyColumns.USER_ID_LIST:
                 return subquery_dict[WordFrequencyColumns.USER_ID_LIST]
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
@@ -70,6 +78,8 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
             case WordFrequencyColumns.USER_ID_LIST:
                 return FilterOperator.ID_LIST
@@ -94,6 +104,8 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return FilterValueType.TAG_ID
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                return FilterValueType.FOLDER_ID
             case WordFrequencyColumns.USER_ID_LIST:
                 return FilterValueType.USER_ID
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
@@ -116,6 +128,8 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
                 return None
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
+                return None
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
             case WordFrequencyColumns.USER_ID_LIST:
                 return None
@@ -140,6 +154,8 @@ class WordFrequencyColumns(str, AbstractColumns):
                 return "Tags"
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
                 return "Codes"
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                return "Folder"
             case WordFrequencyColumns.USER_ID_LIST:
                 return "Annotated by"
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
@@ -178,6 +194,19 @@ class WordFrequencyColumns(str, AbstractColumns):
                     SentenceAnnotationORM,
                     SentenceAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
+                    isouter=True,
+                )
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                # folder_id → SDOC_FOLDER; SDOC_FOLDER.parent_id → NORMAL folder (what users filter on)
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        FolderORM.parent_id,
+                        label=WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE.value,
+                    )
+                )
+                query_builder._join_subquery(
+                    FolderORM,
+                    FolderORM.id == SourceDocumentORM.folder_id,
                     isouter=True,
                 )
 
@@ -237,6 +266,9 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                folders = crud_folder.read_by_ids(db, ids=ids)
+                return [folder.name for folder in folders]
             case WordFrequencyColumns.USER_ID_LIST:
                 users = crud_user.read_by_ids(db, ids=ids)
                 return [user.email for user in users]
@@ -253,6 +285,14 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
+            case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
+                result = crud_folder.read_by_names(
+                    db,
+                    project_id=project_id,
+                    names=names,
+                    folder_type=FolderType.NORMAL,
+                )
+                return [folder.id for folder in result]
             case WordFrequencyColumns.USER_ID_LIST:
                 result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]
