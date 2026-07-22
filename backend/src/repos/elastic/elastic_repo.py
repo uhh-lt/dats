@@ -68,7 +68,7 @@ class ElasticSearchRepo(RepoBase, metaclass=SingletonMeta):
     def remove_data(self) -> None:
         """
         Reset all ElasticSearch indices.
-        This deletes all indices matching the 'dats_*' pattern.
+        This deletes all indices matching the ES index prefix pattern.
         """
         if self._client is None:
             raise RuntimeError(
@@ -76,7 +76,9 @@ class ElasticSearchRepo(RepoBase, metaclass=SingletonMeta):
             )
 
         logger.warning("Dropping all ElasticSearch indices!")
-        self._client.indices.delete(index="dats_*", allow_no_indices=True)
+        self._client.indices.delete(
+            index=f"{conf.elasticsearch.index_prefix}_*", allow_no_indices=True
+        )
         logger.info("ElasticSearch indices reset")
 
     def get_client(self) -> Elasticsearch:
