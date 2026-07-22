@@ -1,5 +1,6 @@
 x-dats-common: &dats-common
   image: uhhlt/dats_backend:${DATS_BACKEND_DOCKER_VERSION:?dats-backend-docker-version-required!}
+  restart: unless-stopped
   build:
     context: ../backend
     dockerfile: Dockerfile
@@ -70,6 +71,7 @@ x-dats-common: &dats-common
 services:
   postgres:
     image: postgres:15-alpine
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:?postgres-user-required!}"]
       interval: 10s
@@ -80,12 +82,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?postgres-password-required!}
       POSTGRES_DB: ${POSTGRES_DB:?postgres-db-required!}
     command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:?postgres-max-connections-required!}"]
-    restart: always
     networks:
       - dats_network
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -95,19 +97,12 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?redis-password-required!}
     command: redis-server --requirepass "${REDIS_PASSWORD:?redis-password-required!}" --save 900 1 --save 300 10
-    restart: always
     networks:
       - dats_network
 
   weaviate:
-    command:
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8080"
-      - --scheme
-      - http
     image: semitechnologies/weaviate:1.30.4
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1"]
       interval: 30s
@@ -115,7 +110,6 @@ services:
       retries: 5
     volumes:
       - "../backups/weaviate:/mount/backups"
-    restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
@@ -125,11 +119,19 @@ services:
       LOG_LEVEL: "info"
       ENABLE_MODULES: "backup-filesystem"
       BACKUP_FILESYSTEM_PATH: "/mount/backups"
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --scheme
+      - http
     networks:
       - dats_network
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    restart: unless-stopped
     user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
     group_add:
       - "0"
@@ -166,7 +168,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    command: python src/worker.py work cpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_CPU: ${RQ_WORKERS_CPU?rq-workers-cpu-required!}
@@ -174,6 +175,7 @@ services:
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
       POSTGRES_POOL_SIZE: 1
       POSTGRES_MAX_OVERFLOW: 1
+    command: python src/worker.py work cpu
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./rq_cpu_cache:/cache
@@ -187,13 +189,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    command: python src/worker.py work gpu
     environment:
       <<: *dats-common-env
       RQ_WORKERS_GPU: ${RQ_WORKERS_GPU?rq-workers-gpu-required!}
       LOG_LEVEL: ${RQ_LOG_LEVEL?rq-log-level-required!}
       POSTGRES_POOL_SIZE: 1
       POSTGRES_MAX_OVERFLOW: 1
+    command: python src/worker.py work gpu
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./rq_gpu_cache:/cache
@@ -209,6 +211,7 @@ services:
 
   rq-dashboard:
     image: cjlapao/rq-dashboard:0.8.4
+    restart: unless-stopped
     environment:
       RQ_DASHBOARD_REDIS_URL: redis://:${REDIS_PASSWORD:?redis-password-required!}@redis:6379/10
       RQ_DASHBOARD_USERNAME: ${RQ_DASHBOARD_USERNAME?rq-dashboard-username-required!}
@@ -235,10 +238,10 @@ services:
       interval: 60s
       timeout: 10s
       retries: 5
-    command: src/backend_api_entrypoint.sh
     environment:
       <<: *dats-common-env
       LOG_LEVEL: ${API_LOG_LEVEL?api-log-level-required!}
+    command: src/backend_api_entrypoint.sh
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
       - ./api_cache:/cache
@@ -257,6 +260,7 @@ services:
 
   dats-frontend:
     image: uhhlt/dats_frontend:${DATS_FRONTEND_DOCKER_VERSION?dats-frontend-docker-version-required!}
+    restart: unless-stopped
     build:
       context: ../frontend
       dockerfile: Dockerfile
