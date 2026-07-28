@@ -12,6 +12,7 @@ from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationUpdateBulk,
 )
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.code.code_service import code_service
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import CRUDBase
@@ -30,6 +31,9 @@ class CRUDSentenceAnnotation(
         # get or create the annotation document
         adoc = crud_adoc.exists_or_create(
             db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+        )
+        code_service.validate_annotation_code(
+            db, code_id=create_dto.code_id, project_id=adoc.source_document.project_id
         )
 
         # create the SentenceAnnotation
@@ -68,6 +72,13 @@ class CRUDSentenceAnnotation(
             adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
                 db=db, user_id=user_id, sdoc_id=sdoc_id
             ).id
+
+        for create_dto in create_dtos:
+            code_service.validate_annotation_code(
+                db,
+                code_id=create_dto.code_id,
+                project_id=project_id_by_sdoc_id[create_dto.sdoc_id],
+            )
 
         # create the annotations
         return self.create_multi(
@@ -162,35 +173,40 @@ class CRUDSentenceAnnotation(
     def read_by_code_and_user(
         self, db: Session, *, code_id: int, user_id: int
     ) -> list[SentenceAnnotationORM]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
             .filter(
-                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
+                self.model.code_id.in_(snapshot_ids),
+                AnnotationDocumentORM.user_id == user_id,
             )
         )
 
         return query.all()
 
     def read_by_code(self, db: Session, *, code_id: int) -> list[SentenceAnnotationORM]:
-        query = db.query(self.model).filter(self.model.code_id == code_id)
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
+        query = db.query(self.model).filter(self.model.code_id.in_(snapshot_ids))
         return query.all()
 
     def read_by_code_ids(
         self, db: Session, *, code_ids: list[int]
     ) -> list[SentenceAnnotationORM]:
-        return super().read_by_ids(db=db, ids=code_ids, id_field="code_id")
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
+        return db.query(self.model).filter(self.model.code_id.in_(snapshot_ids)).all()
 
     def read_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[SentenceAnnotationORM]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
             .filter(
                 AnnotationDocumentORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
             )
         )
         return query.all()
@@ -200,6 +216,10 @@ class CRUDSentenceAnnotation(
     def update(
         self, db: Session, *, id: int, update_dto: SentenceAnnotationUpdate
     ) -> SentenceAnnotationORM:
+        current = self.read(db, id)
+        code_service.validate_annotation_code(
+            db, code_id=update_dto.code_id, project_id=current.project_id
+        )
         sentence_anno = super().update(db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=sentence_anno.annotation_document_id)
@@ -290,6 +310,7 @@ class CRUDSentenceAnnotation(
     def remove_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[int]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
         # find all span annotations to be removed
         query = (
             db.query(self.model.id, AnnotationDocumentORM.id)
@@ -297,7 +318,7 @@ class CRUDSentenceAnnotation(
             .filter(
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
                 AnnotationDocumentORM.user_id == user_id,
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
             )
         )
         removed_orms = query.all()
@@ -321,17 +342,28 @@ class CRUDSentenceAnnotation(
         sdoc_ids: list[int],
         user_id: int,
     ) -> dict[int, int]:
+        snapshots_by_requested = {
+            code_id: code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
+            for code_id in code_ids
+        }
+        snapshot_ids = list(
+            {item for items in snapshots_by_requested.values() for item in items}
+        )
         result = (
             db.query(self.model.code_id, func.count(self.model.id))
             .join(self.model.annotation_document)
             .where(
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
                 AnnotationDocumentORM.user_id == user_id,
             )
             .group_by(self.model.code_id)
         )
-        return {code_id: count for code_id, count in result.all()}
+        counts = {snapshot_id: count for snapshot_id, count in result.all()}
+        return {
+            code_id: sum(counts.get(snapshot_id, 0) for snapshot_id in ids)
+            for code_id, ids in snapshots_by_requested.items()
+        }
 
 
 crud_sentence_anno = CRUDSentenceAnnotation(SentenceAnnotationORM)

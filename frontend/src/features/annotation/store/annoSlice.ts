@@ -14,6 +14,7 @@ export interface AnnoState {
   mostRecentCodeId: number | undefined; // the most recently applied code, it is always at the top of the annotation menu and the default code for new annotations.
   expandedCodeIds: string[]; // the code ids of the expanded codes in the code explorer.
   hiddenCodeIds: number[]; // the code ids of the hidden codes. Hidden codes are shown in the CodeExplorer, but are not rendered in the Annotator.
+  showExternalAnnotations: boolean;
   // app state:
   annotationMode: AnnotationMode; // the annotation mode.
   tagStyle: TagStyle; // position of the tag in the Annotator.
@@ -26,6 +27,7 @@ const initialState: AnnoState = {
   mostRecentCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
+  showExternalAnnotations: false,
   // app state:
   annotationMode: AnnotationMode.Reader,
   tagStyle: TagStyle.Inline,
@@ -63,6 +65,9 @@ const annoSlice = createSlice({
         });
       }
       state.hiddenCodeIds = hiddenCodeIds;
+    },
+    toggleExternalAnnotations: (state) => {
+      state.showExternalAnnotations = !state.showExternalAnnotations;
     },
     setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
@@ -115,6 +120,10 @@ const annoSlice = createSlice({
       state.mostRecentCodeId = initialState.mostRecentCodeId;
       state.expandedCodeIds = initialState.expandedCodeIds;
       state.hiddenCodeIds = initialState.hiddenCodeIds;
+      state.showExternalAnnotations = initialState.showExternalAnnotations;
+    });
+    builder.addCase(ProjectActions.selectCodeBranch, (state) => {
+      state.showExternalAnnotations = initialState.showExternalAnnotations;
     });
   },
 });

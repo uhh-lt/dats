@@ -1,4 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { memo, SVGProps } from "react";
 
@@ -15,6 +16,7 @@ interface SVGBBoxProps {
 
 export const SVGBBox = memo(({ bbox, xCentering = 0, scaledRatio = 1, ...props }: SVGBBoxProps & CustomSVGProps) => {
   const code = CodeHooks.useGetCode(bbox.code_id);
+  const requiresReview = useAnnotationRequiresReview(bbox.code_id);
 
   return (
     <>
@@ -28,6 +30,7 @@ export const SVGBBox = memo(({ bbox, xCentering = 0, scaledRatio = 1, ...props }
           height={scaledRatio * (bbox.y_max - bbox.y_min)}
           stroke={code.data.color}
           strokeWidth={3}
+          strokeDasharray={requiresReview ? "8 4" : undefined}
           fill={"transparent"}
           {...props}
         />

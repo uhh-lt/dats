@@ -1,10 +1,11 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { CodeRenderer } from "@core/code";
 import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { Stack } from "@mui/material";
+import { Chip, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 
 interface SpanAnnotationRendererSharedProps {
@@ -58,6 +59,7 @@ function SpanAnnotationRendererWithData({
   link,
 }: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) {
   const projectId = useAppSelector((state) => state.project.projectId);
+  const requiresReview = useAnnotationRequiresReview(spanAnnotation.code_id);
 
   if (!projectId) {
     return <div>Error: This component requires a project ID.</div>;
@@ -78,9 +80,10 @@ function SpanAnnotationRendererWithData({
         {showSdocProjectMetadataId && (
           <SdocMetadataRenderer sdocId={spanAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
         )}
-        {showCode && <CodeRenderer code={spanAnnotation.code_id} />}
+        {showCode && <CodeRenderer code={spanAnnotation.code_id} showOriginBranch />}
         {showCode && showSpanText && ": "}
         {showSpanText && spanAnnotation.text}
+        {requiresReview && <Chip size="small" color="warning" label="Needs review" sx={{ ml: 0.5 }} />}
       </Stack>
     </LinkWrapper>
   );

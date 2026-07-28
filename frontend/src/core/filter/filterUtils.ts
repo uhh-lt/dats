@@ -25,7 +25,7 @@ export interface MyFilterExpression<T = string> {
   id: string;
   column: T | number;
   operator: FilterOperators;
-  value: boolean | string | number | string[] | string[][];
+  value: boolean | string | number | string[] | number[] | string[][];
 }
 
 export interface MyFilter<T = string> {
@@ -98,7 +98,7 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
 
 // this has to align with FilterValueSelector.tsx
 export const filterValueType2defaultValue: Record<FilterValueType, boolean | string | number | string[]> = {
-  [FilterValueType.CODE_ID]: -1,
+  [FilterValueType.CODE_ID]: "",
   [FilterValueType.DOC_TYPE]: "none",
   [FilterValueType.FOLDER_ID]: -1,
   [FilterValueType.SDOC_ID]: 0,

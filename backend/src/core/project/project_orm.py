@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
     from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
     from core.annotation.span_annotation_orm import SpanAnnotationORM
+    from core.code.code_branch_orm import CodeBranchORM
     from core.code.code_orm import CodeORM
+    from core.code.codebook_release_orm import CodebookReleaseORM
     from core.doc.folder_orm import FolderORM
     from core.doc.source_document_orm import SourceDocumentORM
     from core.memo.memo_orm import MemoORM
@@ -45,6 +47,20 @@ class ProjectORM(ORMBase):
     # one to many
     codes: Mapped[list["CodeORM"]] = relationship(
         "CodeORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    code_branches: Mapped[list["CodeBranchORM"]] = relationship(
+        "CodeBranchORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    codebook_releases: Mapped[list["CodebookReleaseORM"]] = relationship(
+        "CodebookReleaseORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

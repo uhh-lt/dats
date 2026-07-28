@@ -1,5 +1,6 @@
 import { CodeMap } from "@api/hooks/CodeHooks";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -15,12 +16,12 @@ interface BlockComparisonRowProps {
   sentenceTokenIds: number[][];
   leftTokenData: IToken[] | undefined;
   leftAnnotationsPerToken: Map<number, number[]> | undefined;
-  leftAnnotationMap: Map<number, SpanAnnotationRead> | undefined;
+  leftAnnotationMap: Map<number, ContextualAnnotation<SpanAnnotationRead>> | undefined;
   rightTokenData: IToken[] | undefined;
   rightAnnotationsPerToken: Map<number, number[]> | undefined;
-  rightAnnotationMap: Map<number, SpanAnnotationRead> | undefined;
-  leftAnnotationsList: SpanAnnotationRead[];
-  rightAnnotationsList: SpanAnnotationRead[];
+  rightAnnotationMap: Map<number, ContextualAnnotation<SpanAnnotationRead>> | undefined;
+  leftAnnotationsList: ContextualAnnotation<SpanAnnotationRead>[];
+  rightAnnotationsList: ContextualAnnotation<SpanAnnotationRead>[];
   isAnnotationAllowedLeft: boolean;
   isAnnotationAllowedRight: boolean;
   handleApplyAnnotation: (annotation: SpanAnnotationRead) => void;

@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
-from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
@@ -34,7 +33,7 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[BBoxColumns.FOLDER_ID_LIST_RECURSIVE.value]
             case BBoxColumns.CODE_ID:
-                return BBoxAnnotationORM.code_id
+                return CodeORM.concept_id
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
 
@@ -161,9 +160,6 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case BBoxColumns.CODE_ID:
-                codes = crud_code.read_by_ids(db, ids=ids)
-                return [code.name for code in codes]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -182,8 +178,5 @@ class BBoxColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case BBoxColumns.CODE_ID:
-                result = crud_code.read_by_names(db, project_id=project_id, names=names)
-                return [code.id for code in result]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")

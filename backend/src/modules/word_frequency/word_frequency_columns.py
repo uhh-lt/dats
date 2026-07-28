@@ -6,7 +6,6 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
-from core.code.code_crud import crud_code
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
 from core.doc.folder_orm import FolderORM
@@ -263,9 +262,6 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
                 tags = crud_tag.read_by_ids(db, ids=ids)
                 return [tag.name for tag in tags]
-            case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
-                codes = crud_code.read_by_ids(db, ids=ids)
-                return [code.name for code in codes]
             case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
@@ -282,9 +278,6 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.TAG_ID_LIST_RECURSIVE:
                 result = crud_tag.read_by_names(db, project_id=project_id, names=names)
                 return [tag.id for tag in result]
-            case WordFrequencyColumns.CODE_ID_LIST_RECURSIVE:
-                result = crud_code.read_by_names(db, project_id=project_id, names=names)
-                return [code.id for code in result]
             case WordFrequencyColumns.FOLDER_ID_LIST_RECURSIVE:
                 result = crud_folder.read_by_names(
                     db,

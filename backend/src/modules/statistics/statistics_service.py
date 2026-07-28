@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
+from core.code.code_service import code_service
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
 from core.tag.tag_orm import SourceDocumentTagLinkTable, TagORM
@@ -109,6 +110,7 @@ def compute_code_statistics(
     sdoc_ids: set[int],
     top_k: int = 20,
 ) -> list[SpanEntityStat]:
+    snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
     # code statistics for the sdoc_ids
     count = func.count(AnnotationDocumentORM.source_document_id.distinct()).label(
         "count"
@@ -123,7 +125,7 @@ def compute_code_statistics(
         .join(SpanAnnotationORM.annotation_document)
         .group_by(SpanTextORM.id)
         .filter(
-            SpanAnnotationORM.code_id == code_id,
+            SpanAnnotationORM.code_id.in_(snapshot_ids),
             AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
         )
         .order_by(count.desc())
@@ -148,7 +150,7 @@ def compute_code_statistics(
         .join(SpanAnnotationORM.code)
         .group_by(SpanTextORM.id)
         .filter(
-            SpanAnnotationORM.code_id == code_id,
+            SpanAnnotationORM.code_id.in_(snapshot_ids),
             SpanTextORM.id.in_(span_text_ids),
         )
         .order_by(func.array_position(span_text_ids, SpanTextORM.id))

@@ -7,21 +7,66 @@ import { queryClient } from "@api/queryClient";
 import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
+import { primeCodeSnapshots } from "./CodeHooks";
+import { useAppSelector } from "@store/storeHooks";
+import { useMemo } from "react";
+import { useAnnotationBranchVisibility } from "./useAnnotationBranchVisibility";
 
 export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 
 // SENTENCE QUERIES
 // TODO: filter out all disabled code ids
-const useGetSentenceAnnotator = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<SentenceAnnotatorResult, Error>({
+const useGetSentenceAnnotator = (
+  sdocId: number | null | undefined,
+  userId: number | null | undefined,
+  enabled = true,
+) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const query = useQuery<SentenceAnnotatorResult, Error>({
     queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId],
-    queryFn: () =>
-      SentenceAnnotationService.getBySdocAndUser({
+    queryFn: async () => {
+      const result = await SentenceAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
-      }),
-    enabled: !!sdocId && !!userId,
+      });
+      const annotations = Object.values(result.sentence_annotations).flat();
+      if (projectId)
+        await primeCodeSnapshots(
+          projectId,
+          annotations.map((annotation) => annotation.code_id),
+        );
+      return result;
+    },
+    enabled: enabled && !!sdocId && !!userId,
   });
+  const uniqueAnnotations = useMemo(() => {
+    if (!query.data) return undefined;
+    const annotationsById = new Map<number, SentenceAnnotationRead>();
+    Object.values(query.data.sentence_annotations)
+      .flat()
+      .forEach((annotation) => annotationsById.set(annotation.id, annotation));
+    return [...annotationsById.values()];
+  }, [query.data]);
+  const visibility = useAnnotationBranchVisibility(uniqueAnnotations);
+  const data = useMemo(() => {
+    if (!query.data || !visibility.data) return undefined;
+    const visibleIds = new Set(visibility.data.map((annotation) => annotation.id));
+    return {
+      sentence_annotations: Object.fromEntries(
+        Object.entries(query.data.sentence_annotations).map(([sentenceId, annotations]) => [
+          sentenceId,
+          annotations.filter((annotation) => visibleIds.has(annotation.id)),
+        ]),
+      ),
+    };
+  }, [query.data, visibility.data]);
+  return {
+    ...query,
+    data,
+    externalCount: visibility.externalCount,
+    isLoading: query.isLoading || visibility.isLoading,
+  };
+};
 
 const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
   useQuery<SentenceAnnotationRead, Error>({
@@ -204,6 +249,8 @@ const useUpdateSentenceAnnotation = () =>
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.SENT_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SentenceAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
       queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
       queryClient.setQueryData<SentenceAnnotatorResult>(
         [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id, data.user_id],
@@ -238,6 +285,8 @@ const useUpdateBulkSentenceAnno = () =>
         });
         queryClient.invalidateQueries({ queryKey: [QueryKey.SENTENCE_ANNOTATION, annotation.id] });
       });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
     },
     meta: {
       successMessage: (data: SentenceAnnotationRead[]) => `Updated ${data.length} Sentence Annotations`,

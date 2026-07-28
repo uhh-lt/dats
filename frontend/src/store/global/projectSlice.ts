@@ -6,11 +6,13 @@ const storage = createWebStorage("local");
 export interface ProjectState {
   // app state:
   projectId?: number;
+  codeBranchByProject: Record<number, number | null>;
 }
 
 const initialState: ProjectState = {
   // app state:
   projectId: undefined,
+  codeBranchByProject: {},
 };
 
 const projectSlice = createSlice({
@@ -20,6 +22,9 @@ const projectSlice = createSlice({
     changeProject: (state, action: PayloadAction<number | undefined>) => {
       console.log("Project changed!", action.payload);
       state.projectId = action.payload;
+    },
+    selectCodeBranch: (state, action: PayloadAction<{ projectId: number; branchId: number | null }>) => {
+      state.codeBranchByProject[action.payload.projectId] = action.payload.branchId;
     },
   },
 });

@@ -1,4 +1,4 @@
-import { CodeRenderer } from "@core/code";
+import { AnnotationReviewBadge, CodeRenderer } from "@core/code";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
@@ -17,7 +17,12 @@ export function SentenceAnnotationCard({
   return (
     <Card {...cardProps}>
       <CardHeader
-        title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
+        title={
+          <Stack direction="row" alignItems="center">
+            <CodeRenderer key={annotation.code_id} code={annotation.code_id} showOriginBranch />
+            <AnnotationReviewBadge codeId={annotation.code_id} />
+          </Stack>
+        }
         action={
           <AnnotationCardActionsMenu
             annotationId={annotation.id}
@@ -40,7 +45,7 @@ export function SentenceAnnotationCard({
             sx={{
               wordBreak: "break-word",
               borderLeft: "3px solid",
-              borderColor: code.color,
+              borderColor: code?.color ?? "text.disabled",
               pl: 1,
             }}
           >
@@ -59,7 +64,7 @@ export function SentenceAnnotationCard({
           <AnnotationCardMemo
             annotationId={annotation.id}
             annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
-            codeName={code.name}
+            codeName={code?.name ?? "Unavailable code"}
             annotationText={"Sentence"}
           />
         </>

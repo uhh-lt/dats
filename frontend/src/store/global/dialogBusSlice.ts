@@ -1,5 +1,6 @@
 /* eslint-disable boundaries/element-types */
 // This file needs access to all dialog payload types and the registry, so it's simpler to keep everything in one place rather than splitting into multiple files.
+import { CodeReadWithParent } from "@core/code/codeTypes";
 import { CodeRead } from "@models/CodeRead";
 import { FolderRead } from "@models/FolderRead";
 import { TagRead } from "@models/TagRead";
@@ -26,7 +27,7 @@ export interface CodeCreateDialogData {
 }
 
 export interface CodeEditDialogData {
-  code: CodeRead;
+  code: CodeReadWithParent;
 }
 
 export interface FolderCreateDialogData {

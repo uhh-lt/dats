@@ -1,4 +1,5 @@
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
@@ -9,7 +10,7 @@ import { CodeIndicator } from "./CodeIndicator";
 import { Mark } from "./Mark";
 
 interface TokenProps {
-  spanAnnotations: SpanAnnotationRead[];
+  spanAnnotations: ContextualAnnotation<SpanAnnotationRead>[];
   token: IToken;
 }
 

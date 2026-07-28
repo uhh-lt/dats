@@ -9,6 +9,8 @@ from repos.db.orm_base import ORMBase
 if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
     from core.auth.refresh_token_orm import RefreshTokenORM
+    from core.code.code_branch_orm import CodeBranchORM
+    from core.code.code_orm import CodeORM
     from core.memo.memo_orm import MemoORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
@@ -56,6 +58,14 @@ class UserORM(ORMBase):
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+
+    code_versions: Mapped[list["CodeORM"]] = relationship(
+        "CodeORM", back_populates="author"
+    )
+
+    created_code_branches: Mapped[list["CodeBranchORM"]] = relationship(
+        "CodeBranchORM", back_populates="created_by"
     )
 
     # many to many

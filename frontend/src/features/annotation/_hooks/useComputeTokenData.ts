@@ -1,6 +1,7 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { useMemo } from "react";
 import { IToken } from "../_types/IToken";
 
@@ -38,15 +39,14 @@ export function useComputeTokenData({
   const { annotationMap, annotationsPerToken } = useMemo(() => {
     if (!annotations.data) return { annotationMap: undefined, annotationsPerToken: undefined };
     const spanGroupIdMapping = new Map<number, number>();
-    const annotationMap = new Map<number, SpanAnnotationRead>();
+    const annotationMap = new Map<number, ContextualAnnotation<SpanAnnotationRead>>();
     const annotationsPerToken = new Map<number, number[]>();
-    annotations.data.forEach((annotation) => {
-      for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
-        const tokenAnnotations = annotationsPerToken.get(i) || [];
-        tokenAnnotations.push(annotation.id);
-        annotationsPerToken.set(i, tokenAnnotations);
-      }
-      annotation.group_ids = annotation.group_ids.map((id) => {
+    annotations.data.forEach((storedAnnotation) => {
+      const selectedAnnotation =
+        storedAnnotation.id === annotationOverride?.id
+          ? { ...annotationOverride, requires_review: storedAnnotation.requires_review }
+          : storedAnnotation;
+      const groupIds = selectedAnnotation.group_ids.map((id) => {
         let mapped = spanGroupIdMapping.get(id);
         if (mapped === undefined) {
           mapped = spanGroupIdMapping.size + 1;
@@ -54,6 +54,16 @@ export function useComputeTokenData({
         }
         return mapped;
       });
+      const annotation: ContextualAnnotation<SpanAnnotationRead> = {
+        ...selectedAnnotation,
+        group_ids: groupIds,
+      };
+
+      for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
+        const tokenAnnotations = annotationsPerToken.get(i) || [];
+        tokenAnnotations.push(annotation.id);
+        annotationsPerToken.set(i, tokenAnnotations);
+      }
       annotationMap.set(annotation.id, annotation);
     });
     return { annotationMap, annotationsPerToken };

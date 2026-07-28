@@ -5,6 +5,7 @@ import { MemoButton } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent, EMPTY_CODE } from "@core/code";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import {
   Autocomplete,
@@ -41,7 +42,7 @@ export interface AnnotationMenuHandle {
   isOpen: boolean;
 }
 
-interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeRead> {
+interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeReadWithParent> {
   title: string;
 }
 
@@ -198,17 +199,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
               const isExisting = options.some((option: ICodeFilterWithLevel) => inputValue === option.title);
               if (inputValue.trim() !== "" && !isExisting) {
                 filtered.push({
-                  data: {
-                    name: inputValue.trim(),
-                    id: -1,
-                    color: "",
-                    created: "",
-                    updated: "",
-                    description: "",
-                    project_id: -1,
-                    is_system: false,
-                    memo_ids: [],
-                  },
+                  data: { ...EMPTY_CODE, name: inputValue.trim() },
                   title: `Add "${inputValue.trim()}"`,
                   level: 0,
                 });

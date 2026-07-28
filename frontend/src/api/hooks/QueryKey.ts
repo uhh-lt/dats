@@ -24,6 +24,20 @@ export const QueryKey = {
   // CodeMap of a Project (by project id)
   // managed by frontend/src/api/hooks/CodeHooks.ts
   PROJECT_CODES: "projectCodes",
+  CODE_SNAPSHOT: "codeSnapshot",
+  CODE_HISTORY: "codeHistory",
+  CODE_CHANGELOG: "codeChangelog",
+  CODEBOOK_RELEASES: "codebookReleases",
+  CODEBOOK_RELEASE: "codebookRelease",
+  CODEBOOK_RELEASE_COMPARISON: "codebookReleaseComparison",
+  CODE_FILTER_CONCEPTS: "codeFilterConcepts",
+  CODE_FILTER_VERSION_SUMMARY: "codeFilterVersionSummary",
+  CODE_FILTER_VERSIONS: "codeFilterVersions",
+  CODE_BRANCHES: "codeBranches",
+  CODE_BRANCH_CHANGES: "codeBranchChanges",
+  ANNOTATION_REVIEW_COUNTS: "annotationReviewCounts",
+  ANNOTATION_REVIEWS: "annotationReviews",
+  RECENT_ANNOTATED_DOCUMENTS: "recentAnnotatedDocuments",
 
   // all TagRead[] of a Project (by project id)
   // managed by frontend/src/api/hooks/TagHooks.ts

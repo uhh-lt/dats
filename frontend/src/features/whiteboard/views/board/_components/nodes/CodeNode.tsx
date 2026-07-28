@@ -44,16 +44,19 @@ export function CodeNode(props: NodeProps<CodeNode>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
+  const projectCodes = CodeHooks.useGetAllCodesList();
   const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
-  const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
+  const parentCodeId = projectCodes.data?.find(
+    (candidate) => candidate.concept_id === code.data?.parent_concept_id,
+  )?.id;
+  const parentCode = CodeHooks.useGetCode(parentCodeId);
   const memo = MemoHooks.useGetUserMemo(AttachedObjectType.CODE, props.data.codeId);
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes
   // then we need to invalidate these child codes, on code update
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
-  const projectCodes = CodeHooks.useGetAllCodesList();
   const childCodes = useMemo(() => {
     return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);

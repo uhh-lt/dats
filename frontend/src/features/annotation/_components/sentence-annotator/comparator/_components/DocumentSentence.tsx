@@ -1,4 +1,5 @@
 import { CodeMap } from "@api/hooks/CodeHooks";
+import { AnnotationReviewBadge, CodeRenderer } from "@core/code";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -241,7 +242,16 @@ function DocumentSentencePart({
           const isStartOfAnnotation = sentenceId === annotation.sentence_id_start;
           const isEndOfAnnotation = sentenceId === annotation.sentence_id_end;
           return (
-            <Tooltip key={key} title={code.name} placement="top">
+            <Tooltip
+              key={key}
+              title={
+                <Stack direction="row" alignItems="center">
+                  <CodeRenderer code={code} showOriginBranch />
+                  <AnnotationReviewBadge codeId={annotation.code_id} />
+                </Stack>
+              }
+              placement="top"
+            >
               <div
                 onClick={(event) => onAnnotationClick(event, annotation)}
                 onMouseEnter={() => onAnnotationMouseEnter(annoId)}

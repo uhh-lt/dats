@@ -12,6 +12,7 @@ from core.annotation.bbox_annotation_dto import (
 )
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.code.code_orm import CodeORM
+from core.code.code_service import code_service
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import CRUDBase
@@ -28,6 +29,9 @@ class CRUDBBoxAnnotation(
         # get or create the annotation document
         adoc = crud_adoc.exists_or_create(
             db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+        )
+        code_service.validate_annotation_code(
+            db, code_id=create_dto.code_id, project_id=adoc.source_document.project_id
         )
 
         # create the BboxAnnotation
@@ -56,6 +60,12 @@ class CRUDBBoxAnnotation(
         *,
         create_dtos: list[BBoxAnnotationCreateIntern],
     ) -> list[BBoxAnnotationORM]:
+        for create_dto in create_dtos:
+            code_service.validate_annotation_code(
+                db,
+                code_id=create_dto.code_id,
+                project_id=create_dto.project_id,
+            )
         # update all affected annotation documents' timestamp
         adoc_ids = list(
             set([create_dto.annotation_document_id for create_dto in create_dtos])
@@ -196,11 +206,13 @@ class CRUDBBoxAnnotation(
         user_id: int,
         exclude_disabled_codes: bool = True,
     ) -> list[BBoxAnnotationORM]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
             .filter(
-                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
+                self.model.code_id.in_(snapshot_ids),
+                AnnotationDocumentORM.user_id == user_id,
             )
         )
         if exclude_disabled_codes:
@@ -213,6 +225,10 @@ class CRUDBBoxAnnotation(
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
     ) -> BBoxAnnotationORM:
+        current = self.read(db, id)
+        code_service.validate_annotation_code(
+            db, code_id=update_dto.code_id, project_id=current.project_id
+        )
         bbox_anno = super().update(db, id=id, update_dto=update_dto)
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)

@@ -17,6 +17,7 @@ type CodeCreateValues = {
   name: string;
   color: string;
   description: string;
+  commitMessage: string;
 };
 
 interface CodeCreateDialogProps {
@@ -35,6 +36,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
   // maximize
   // codes for selection as parent
   const codes = CodeHooks.useGetEnabledCodes();
+  const branchId = CodeHooks.useSelectedCodeBranchId();
   const parentCodes = useMemo(() => codes.data?.filter((code) => !code.is_system) || [], [codes.data]);
   const codeTree = useWithLevel(parentCodes);
 
@@ -57,6 +59,7 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
         name: dialogData?.codeName || "",
         color: rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]),
         description: "",
+        commitMessage: "",
       });
     }
   }, [dialogData, isCodeCreateDialogOpen, reset]);
@@ -65,12 +68,13 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
   const { mutate: createCodeMutation, isPending } = CodeHooks.useCreateCode();
   const handleSubmitCodeCreateDialog = useCallback<SubmitHandler<CodeCreateValues>>(
     (createData) => {
-      let pcid: number | undefined = undefined;
+      let pcid: number | undefined;
       if (typeof createData.parentCodeId === "string") {
         pcid = parseInt(createData.parentCodeId);
       } else {
         pcid = createData.parentCodeId;
       }
+      const parentCode = pcid === -1 ? undefined : parentCodes.find((code) => code.id === pcid);
       createCodeMutation(
         {
           requestBody: {
@@ -78,8 +82,10 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
             description: createData.description,
             color: createData.color,
             project_id: projectId,
-            parent_id: pcid === -1 ? null : pcid,
+            parent_concept_id: parentCode?.concept_id ?? null,
             is_system: false,
+            branch_id: branchId,
+            commit_message: createData.commitMessage || null,
           },
         },
         {
@@ -87,11 +93,10 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
             // if we add a new code successfully, we want to show the code in the code explorer
             // this means, we have to expand the parent codes, so the new code is visible
             const codesToExpand = [];
-            let parentCodeId = data.parent_id;
-            while (parentCodeId) {
-              const currentParentCodeId = parentCodeId;
-              codesToExpand.push(parentCodeId);
-              parentCodeId = parentCodes.find((code) => code.id === currentParentCodeId)?.parent_id;
+            let parentCode = parentCodes.find((code) => code.concept_id === data.parent_concept_id);
+            while (parentCode) {
+              codesToExpand.push(parentCode.id);
+              parentCode = parentCodes.find((code) => code.id === parentCode?.parent_id);
             }
             onCodesCreated?.(codesToExpand);
             onSuccessHandler(data, true);
@@ -100,7 +105,15 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
         },
       );
     },
-    [createCodeMutation, handleCloseCodeCreateDialog, onCodesCreated, onSuccessHandler, parentCodes, projectId],
+    [
+      branchId,
+      createCodeMutation,
+      handleCloseCodeCreateDialog,
+      onCodesCreated,
+      onSuccessHandler,
+      parentCodes,
+      projectId,
+    ],
   );
   const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
@@ -176,6 +189,11 @@ export function CodeCreateDialog({ projectId, onCodesCreated }: CodeCreateDialog
               helperText: <ErrorMessage errors={errors} name="description" />,
               variant: "standard",
             }}
+          />
+          <FormText
+            name="commitMessage"
+            control={control}
+            textFieldProps={{ label: "Change message (optional)", variant: "standard" }}
           />
         </Stack>
       </DialogContent>

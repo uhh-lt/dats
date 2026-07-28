@@ -1,10 +1,11 @@
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { CodeRenderer } from "@core/code";
 import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { Stack } from "@mui/material";
+import { Chip, Stack } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 
 interface SentenceAnnotationRendererSharedProps {
@@ -58,6 +59,7 @@ function SentenceAnnotationRendererWithData({
   link,
 }: { sentenceAnnotation: SentenceAnnotationRead } & SentenceAnnotationRendererSharedProps) {
   const projectId = useAppSelector((state) => state.project.projectId);
+  const requiresReview = useAnnotationRequiresReview(sentenceAnnotation.code_id);
 
   if (!projectId) {
     return <div>Error: This component requires a project ID.</div>;
@@ -78,10 +80,11 @@ function SentenceAnnotationRendererWithData({
         {showSdocProjectMetadataId && (
           <SdocMetadataRenderer sdocId={sentenceAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
         )}
-        {showCode && <CodeRenderer code={sentenceAnnotation.code_id} />}
+        {showCode && <CodeRenderer code={sentenceAnnotation.code_id} showOriginBranch />}
         {showCode && showSpanText && ": "}
         {showSpanText &&
           `This annotation spans sentences ${sentenceAnnotation.sentence_id_start + 1} to ${sentenceAnnotation.sentence_id_end + 1}.`}
+        {requiresReview && <Chip size="small" color="warning" label="Needs review" sx={{ ml: 0.5 }} />}
       </Stack>
     </LinkWrapper>
   );

@@ -92,7 +92,11 @@ def import_bbox_annotations_to_proj(
             project_sdoc_names[sdoc_name] = sdoc
 
     # 3. Check if the Codes exists
-    project_code_names = {code.name: code for code in project.codes}
+    project_code_names = {
+        code.name: code
+        for code in project.codes
+        if code.branch_id is None and code.is_active and not code.is_deleted
+    }
     for code_name in code_names:
         if code_name not in project_code_names:
             error_messages.append(

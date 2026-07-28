@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
+from core.code.code_dto import CodeCreate, CodeDeleteStrategy, CodeRead, CodeUpdate
 
 
 def test_create_new_code(client: TestClient, test_project):
@@ -11,7 +11,7 @@ def test_create_new_code(client: TestClient, test_project):
         name="New Test",
         color="Red",
         description="Hallo here is the new test",
-        parent_id=None,
+        parent_concept_id=None,
         enabled=True,
         project_id=project.id,
         is_system=False,
@@ -23,7 +23,7 @@ def test_create_new_code(client: TestClient, test_project):
     assert payload.name == code.name
     assert payload.color == code.color
     assert payload.description == code.description
-    assert payload.parent_id == code.parent_id
+    assert payload.parent_concept_id == code.parent_concept_id
     assert payload.enabled == code.enabled
     assert payload.project_id == code.project_id
     assert payload.is_system == code.is_system
@@ -37,7 +37,7 @@ def test_create_code_project_not_existing(
         name="Wrong Project Test",
         color="Green",
         description="Trying to create code in a non-existing project",
-        parent_id=None,
+        parent_concept_id=None,
         enabled=True,
         project_id=non_existing_project_id,
         is_system=False,
@@ -60,7 +60,7 @@ def test_get_code(
     assert code.name == code_read.name
     assert code.color == code_read.color
     assert code.description == code_read.description
-    assert code.parent_id == code_read.parent_id
+    assert code.parent_concept_id == code_read.parent_concept_id
     assert code.enabled == code_read.enabled
     assert code.project_id == code_read.project_id
     assert code.is_system == code_read.is_system
@@ -79,7 +79,7 @@ testdata = [
     pytest.param({"name": "New Name", "color": "blue"}, id="name_and_color"),
     pytest.param({"description": "New Description"}, id="only_description"),
     pytest.param({"enabled": False}, id="toggle_enabled"),
-    pytest.param({"parent_id": None}, id="clear_parent"),
+    pytest.param({"parent_concept_id": None}, id="clear_parent"),
 ]
 
 
@@ -100,7 +100,8 @@ def test_update_code_parametrize(
     assert updated.color == payload.get("color", code.color)
     assert updated.description == payload.get("description", code.description)
     assert updated.enabled == payload.get("enabled", code.enabled)
-    assert updated.id == code.id
+    assert updated.id != code.id
+    assert updated.concept_id == code.concept_id
     assert updated.project_id == project.id
 
 
@@ -114,7 +115,7 @@ def test_update_by_id_alt(
         name="new Update Code",
         color="blue",
         description="here is the updated Code",
-        parent_id=None,
+        parent_concept_id=None,
         enabled=False,
     )
     response = client.patch(f"/code/{code.id}", json=update.model_dump())
@@ -124,7 +125,7 @@ def test_update_by_id_alt(
     assert updated.name == update.name
     assert updated.color == update.color
     assert updated.description == update.description
-    assert updated.parent_id == update.parent_id
+    assert updated.parent_concept_id == update.parent_concept_id
     assert updated.enabled == update.enabled
 
 
@@ -136,7 +137,7 @@ def test_update_by_id_not_existing(
         name="new Update Code",
         color="blue",
         description="here is the updated Code",
-        parent_id=None,
+        parent_concept_id=None,
         enabled=False,
     )
     response = client.patch(
@@ -153,14 +154,18 @@ def test_delete_code(
 ):
     code = project_with_code["code"]
 
-    response = client.delete(f"/code/{code.id}")
+    response = client.request(
+        "DELETE",
+        f"/code/{code.id}",
+        json={"strategy": CodeDeleteStrategy.CASCADE.value},
+    )
 
     assert response.status_code == 200, response.text
-    code_delete = CodeRead.model_validate(response.json())
+    code_delete = CodeRead.model_validate(response.json()[0])
     assert code.name == code_delete.name
     assert code.color == code_delete.color
     assert code.description == code_delete.description
-    assert code.parent_id == code_delete.parent_id
+    assert code.parent_concept_id == code_delete.parent_concept_id
     assert code.enabled == code_delete.enabled
     assert code.project_id == code_delete.project_id
     assert code.is_system == code_delete.is_system
@@ -170,7 +175,11 @@ def test_delete_code_not_existing(
     client: TestClient,
 ):
     non_existing_id = 99999999
-    response = client.delete(f"/code/{non_existing_id}")
+    response = client.request(
+        "DELETE",
+        f"/code/{non_existing_id}",
+        json={"strategy": CodeDeleteStrategy.CASCADE.value},
+    )
 
     assert response.status_code == 403, response.text
 

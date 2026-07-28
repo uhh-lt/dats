@@ -1,9 +1,10 @@
 from enum import Enum
+from uuid import UUID
 
 from sqlalchemy import not_
 from sqlalchemy.orm import QueryableAttribute
 
-FilterValue = bool | str | int | list[str] | list[list[str]]
+FilterValue = bool | str | int | UUID | list[str] | list[int] | list[list[str]]
 
 
 class FilterValueType(Enum):
@@ -76,7 +77,7 @@ class IDOperator(Enum):
         column: QueryableAttribute,
         value: FilterValue,
     ):
-        if not isinstance(value, (int, str)):
+        if not isinstance(value, (int, str, UUID)):
             raise ValueError("Invalid value type for IDOperator (requires int or str)!")
 
         match self:
@@ -122,12 +123,7 @@ class IDListOperator(Enum):
             raise ValueError(  # pyright: ignore[reportUnreachable]
                 "Invalid value type for IDListOperator (requires str, list[str], or int)!"
             )
-        if isinstance(value, list) and len(value) > 0 and not isinstance(value[0], str):
-            raise ValueError(
-                "Invalid value type for IDListOperator (requires list[str])!"
-            )
-
-        # value should be str | list[str]
+        # value should be str | int | list[str] | internally resolved list[int]
         if isinstance(column, tuple):
             if isinstance(value, (str, int)) and (len(column) == 2):
                 # Column is tuple of ORMs, e.g. (SourceDocumentORM.tags, TagORM.id)
@@ -141,7 +137,7 @@ class IDListOperator(Enum):
 
         else:
             if isinstance(value, list):
-                if len(value) == 2:
+                if len(value) == 2 and all(isinstance(item, str) for item in value):
                     # This is a special case only for span annotations! (this is bad...)
                     # Column is aggregated list of ["CODE_ID", "SPAN_TEXT"], e.g. subquery_dict.SPAN_ANNOTATIONS
                     match self:
@@ -149,6 +145,26 @@ class IDListOperator(Enum):
                             return column.contains([value])
                         case IDListOperator.NOT_CONTAINS:
                             return not_(column.contains([value]))
+                elif all(isinstance(item, (str, int)) for item in value):
+                    from sqlalchemy import and_, false, or_
+
+                    resolved_ids: list[int] = []
+                    for item in value:
+                        if not isinstance(item, (str, int)):
+                            raise ValueError("Invalid code snapshot ID")
+                        resolved_ids.append(int(item))
+                    if not resolved_ids:
+                        return (
+                            false()
+                            if self == IDListOperator.CONTAINS
+                            else not_(false())
+                        )
+                    expressions = [
+                        column.contains([code_id]) for code_id in resolved_ids
+                    ]
+                    if self == IDListOperator.CONTAINS:
+                        return or_(*expressions)
+                    return and_(*[not_(expression) for expression in expressions])
                 else:
                     raise ValueError("Invalid value for IDListOperator!")
             else:

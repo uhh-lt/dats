@@ -1,4 +1,5 @@
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import parse, { DOMNode, domToReact, Element, HTMLReactParserOptions } from "html-react-parser";
 import { memo, useMemo } from "react";
 import { IToken } from "../../../_types/IToken";
@@ -11,7 +12,7 @@ interface BlockContentProps {
   html: string;
   tokenData: IToken[] | undefined;
   annotationsPerToken: Map<number, number[]> | undefined;
-  annotationMap: Map<number, SpanAnnotationRead> | undefined;
+  annotationMap: Map<number, ContextualAnnotation<SpanAnnotationRead>> | undefined;
   projectId: number;
 }
 

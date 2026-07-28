@@ -1,6 +1,6 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ImageCropper } from "@components/ImageCropper";
-import { CodeRenderer } from "@core/code";
+import { AnnotationReviewBadge, CodeRenderer } from "@core/code";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
@@ -26,7 +26,12 @@ export const BBoxAnnotationCard = memo(
     return (
       <Card {...cardProps}>
         <CardHeader
-          title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
+          title={
+            <Stack direction="row" alignItems="center">
+              <CodeRenderer key={annotation.code_id} code={annotation.code_id} showOriginBranch />
+              <AnnotationReviewBadge codeId={annotation.code_id} />
+            </Stack>
+          }
           action={
             <AnnotationCardActionsMenu
               annotationId={annotation.id}
@@ -54,7 +59,7 @@ export const BBoxAnnotationCard = memo(
                 height={annotation.y_max - annotation.y_min}
                 targetHeight={100}
                 style={{
-                  border: "4px solid " + code.color,
+                  border: `4px solid ${code?.color ?? "transparent"}`,
                 }}
               />
             ) : (
@@ -74,7 +79,7 @@ export const BBoxAnnotationCard = memo(
               annotationId={annotation.id}
               annotationType={AttachedObjectType.BBOX_ANNOTATION}
               annotationText="Image"
-              codeName={code.name}
+              codeName={code?.name ?? "Unavailable code"}
             />
           </>
         )}

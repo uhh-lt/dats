@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
-from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
@@ -39,7 +38,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[SpanColumns.FOLDER_ID_LIST_RECURSIVE.value]
             case SpanColumns.CODE_ID:
-                return SpanAnnotationORM.code_id
+                return CodeORM.concept_id
             case SpanColumns.SPAN_TEXT:
                 return SpanTextORM.text
             case SpanColumns.MEMO_CONTENT:
@@ -197,9 +196,6 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case SpanColumns.CODE_ID:
-                codes = crud_code.read_by_ids(db, ids=ids)
-                return [code.name for code in codes]
             case SpanColumns.USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
                 return [user.email for user in users]
@@ -221,9 +217,6 @@ class SpanColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case SpanColumns.CODE_ID:
-                result = crud_code.read_by_names(db, project_id=project_id, names=names)
-                return [code.id for code in result]
             case SpanColumns.USER_ID:
                 result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]

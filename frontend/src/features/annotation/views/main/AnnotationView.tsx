@@ -20,6 +20,7 @@ import { SentenceAnnotationComparison, SentenceAnnotator } from "../../_componen
 import { SpanAnnotationComparison } from "../../_components/span-annotation-comparator";
 import { TextViewer } from "../../_components/text-viewer";
 import { AnnotationToolbar } from "../../_components/toolbar";
+import { AnnotationBranchVisibilityAlert } from "../../_components/AnnotationBranchVisibilityAlert";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
 import { AnnoActions } from "../../store/annoSlice";
@@ -245,6 +246,7 @@ export function AnnotationView() {
       content={
         <Box className="h100 myFlexContainer">
           <AnnotationToolbar sdoc={sdoc} />
+          <AnnotationBranchVisibilityAlert sdocId={sdoc.id} docType={sdoc.doctype} annotationMode={annotationMode} />
           <Box className="myFlexFillAllContainer" ref={setBoxNode}>
             <Container sx={{ py: 2 }} maxWidth="xl">
               <Card raised>

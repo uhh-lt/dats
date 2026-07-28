@@ -1,4 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeBranchHooks } from "@api/hooks/CodeBranchHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SVGTextElementAttributes, memo } from "react";
 
@@ -16,6 +18,8 @@ interface SVGBBoxTextProps {
 export const SVGBBoxText = memo(
   ({ bbox, xCentering = 0, scaledRatio = 1, ...props }: SVGBBoxTextProps & CustomTextProps) => {
     const code = CodeHooks.useGetCode(bbox.code_id);
+    const branchLabel = CodeBranchHooks.useCodeOriginBranchLabel(code.data?.branch_id);
+    const requiresReview = useAnnotationRequiresReview(bbox.code_id);
 
     return (
       <>
@@ -32,6 +36,8 @@ export const SVGBBoxText = memo(
             {...props}
           >
             {code.data.name}
+            {branchLabel ? ` · ${branchLabel}` : ""}
+            {requiresReview ? " · Review" : ""}
           </text>
         )}
       </>

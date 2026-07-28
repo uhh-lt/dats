@@ -1,6 +1,6 @@
 import { flatTreeWithRoot } from "@components/tree-explorer";
 import { useComputeCodeTree } from "@core/code";
-import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent } from "@core/code";
 import { useAppSelector } from "@store/storeHooks";
 import { useMemo } from "react";
 
@@ -13,7 +13,7 @@ export const useComputeCodesForSelection = () => {
 
   // computed
   const codesForSelection = useMemo(() => {
-    let codesForSelection: CodeRead[] = [];
+    let codesForSelection: CodeReadWithParent[] = [];
     if (!selectedCodeId) {
       // if no code is selected, return all codes
       codesForSelection = allCodes.data || [];
@@ -23,7 +23,7 @@ export const useComputeCodesForSelection = () => {
       if (!parentCode) {
         return [];
       }
-      codesForSelection = flatTreeWithRoot(parentCode.model) as CodeRead[];
+      codesForSelection = flatTreeWithRoot(parentCode.model);
     }
     return codesForSelection;
   }, [allCodes, codeTree, selectedCodeId]);

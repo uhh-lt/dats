@@ -7,6 +7,9 @@ import { queryClient } from "@api/queryClient";
 import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
+import { primeCodeSnapshots } from "./CodeHooks";
+import { useAppSelector } from "@store/storeHooks";
+import { useAnnotationBranchVisibility } from "./useAnnotationBranchVisibility";
 
 export const FAKE_ANNOTATION_ID = -1;
 
@@ -32,16 +35,35 @@ const useGetByCodeAndUser = (codeId: number | null | undefined) =>
     enabled: !!codeId,
   });
 
-const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) => {
-  return useQuery<SpanAnnotationRead[], Error>({
+const useGetSpanAnnotationsBatch = (
+  sdocId: number | null | undefined,
+  userId: number | null | undefined,
+  enabled = true,
+) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const query = useQuery<SpanAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
-    queryFn: () =>
-      SpanAnnotationService.getBySdocAndUser({
+    queryFn: async () => {
+      const annotations = await SpanAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
-      }) as Promise<SpanAnnotationRead[]>,
-    enabled: !!sdocId && !!userId,
+      });
+      if (projectId)
+        await primeCodeSnapshots(
+          projectId,
+          annotations.map((annotation) => annotation.code_id),
+        );
+      return annotations;
+    },
+    enabled: enabled && !!sdocId && !!userId,
   });
+  const visibility = useAnnotationBranchVisibility(query.data);
+  return {
+    ...query,
+    data: visibility.data,
+    externalCount: visibility.externalCount,
+    isLoading: query.isLoading || visibility.isLoading,
+  };
 };
 
 // SPAN MUTATIONS
@@ -159,6 +181,8 @@ const useUpdateSpanAnnotation = () =>
         (old) => (old ? old.map((span) => (span.id === data.id ? data : span)) : [data]),
       );
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] }); // TODO: This is not optimal, shoudl be projectId, selectedUserId... We do this because of SpanAnnotationTable
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
     },
     meta: {
       successMessage: (data: SpanAnnotationRead) => `Updated Span Annotation ${data.id}`,
@@ -198,6 +222,8 @@ const useUpdateBulkSpan = () =>
           return Array.from(oldMap.values());
         });
       });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
     },
     meta: {
       successMessage: (data: SpanAnnotationRead[]) => `Updated ${data.length} Span Annotations`,

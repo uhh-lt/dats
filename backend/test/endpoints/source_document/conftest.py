@@ -140,7 +140,7 @@ def project_with_sentence_annotation(
             name="Test Code",
             color="Red",
             description="Test code for sentence annotation",
-            parent_id=None,
+            parent_concept_id=None,
             enabled=True,
             project_id=project.id,
             is_system=False,

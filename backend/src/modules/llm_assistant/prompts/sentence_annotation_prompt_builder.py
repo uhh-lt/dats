@@ -108,7 +108,11 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
     ):
         project = crud_project.read(db=db, id=project_id)
         self.db = db
-        self.codes = project.codes
+        self.codes = [
+            code
+            for code in project.codes
+            if code.branch_id is None and code.is_active and not code.is_deleted
+        ]
         self.codename2id_dict = {code.name.lower(): code.id for code in self.codes}
         self.codeid2name_dict = {code.id: code.name for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}

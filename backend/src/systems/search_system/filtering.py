@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Generic, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, not_, or_
 from sqlalchemy.orm import Session
 
 from systems.search_system.abstract_column import AbstractColumns
@@ -22,15 +22,12 @@ from systems.search_system.filtering_operators import (
 def get_descendant_ids(
     db: Session, column: AbstractColumns, parent_id: int
 ) -> list[int]:
-    from core.code.code_orm import CodeORM
     from core.doc.folder_orm import FolderORM
     from core.tag.tag_orm import TagORM
 
     val = column.value if hasattr(column, "value") else str(column)
     # TODO: THIS IS HARDCODED AND NOT GOOD
-    if "CODE_ID_LIST_RECURSIVE" in val:
-        orm_class = CodeORM
-    elif "TAG_ID_LIST_RECURSIVE" in val:
+    if "TAG_ID_LIST_RECURSIVE" in val:
         orm_class = TagORM
     elif "FOLDER_ID_LIST_RECURSIVE" in val:
         orm_class = FolderORM
@@ -87,14 +84,58 @@ class FilterExpression(BaseModel, Generic[T]):
                 subquery_dict[f"METADATA-{self.column}"], value=self.value
             )
 
-        else:
-            return self.operator.apply(
-                self.column.get_filter_column(subquery_dict), value=self.value
+        column = self.column.get_filter_column(subquery_dict)
+        column_value = self.column.value if hasattr(self.column, "value") else ""
+        if "CODE_ID" in str(column_value) and isinstance(self.value, str):
+            from core.code.code_filter_service import (
+                parse_code_concept_filter_value,
+                parse_code_snapshot_filter_value,
             )
+            from core.code.code_orm import CodeORM
+
+            snapshot_id = parse_code_snapshot_filter_value(self.value)
+            if snapshot_id is not None:
+                is_direct_concept_column = (
+                    getattr(column, "class_", None) is CodeORM
+                    and getattr(column, "key", None) == "concept_id"
+                )
+                target_column = CodeORM.id if is_direct_concept_column else column
+                return self.operator.apply(target_column, value=snapshot_id)
+
+            selection = parse_code_concept_filter_value(self.value)
+            if selection is not None:
+                if not isinstance(self.operator, IDOperator):
+                    raise ValueError(
+                        "Code-concept filter was not resolved for a list column"
+                    )
+                scope_expression = CodeORM.branch_id.is_(None)
+                if selection.branch_id is not None:
+                    scope_expression = or_(
+                        scope_expression,
+                        CodeORM.branch_id == selection.branch_id,
+                    )
+                match_expression = and_(
+                    CodeORM.concept_id == selection.concept_id,
+                    scope_expression,
+                )
+                if self.operator == IDOperator.EQUALS:
+                    return match_expression
+                return not_(match_expression)
+
+        return self.operator.apply(column, value=self.value)
 
     def resolve_ids(self, db: Session) -> "FilterExpression[T]":
         # We don't need to resolve IDs for metadata columns
         if isinstance(self.column, int):
+            return self
+
+        column_value = self.column.value if hasattr(self.column, "value") else ""
+        if "CODE_ID" in str(column_value):
+            from core.code.code_filter_service import code_filter_service
+
+            if not isinstance(self.value, str):
+                raise ValueError("Code filters require an explicit token")
+            self.value = code_filter_service.export_filter_value(db, value=self.value)
             return self
 
         # Resolve IDs for IDOperator
@@ -139,6 +180,17 @@ class FilterExpression(BaseModel, Generic[T]):
     def resolve_names(self, db: Session, project_id: int) -> "FilterExpression[T]":
         # We don't need to resolve names for metadata columns
         if isinstance(self.column, int):
+            return self
+
+        column_value = self.column.value if hasattr(self.column, "value") else ""
+        if "CODE_ID" in str(column_value):
+            from core.code.code_filter_service import code_filter_service
+
+            if not isinstance(self.value, str):
+                raise ValueError("Code filters require a portable token")
+            self.value = code_filter_service.import_filter_value(
+                db, project_id=project_id, value=self.value
+            )
             return self
 
         # Resolve names for IDOperator
@@ -257,6 +309,42 @@ def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
     resolved_items = []
     for item in filter.items:
         if isinstance(item, FilterExpression):
+            column_value = (
+                item.column.value
+                if not isinstance(item.column, int) and hasattr(item.column, "value")
+                else ""
+            )
+            if "CODE_ID" in str(column_value):
+                from core.code.code_filter_service import (
+                    InvalidCodeFilterError,
+                    code_filter_service,
+                    parse_code_concept_filter_value,
+                    parse_code_snapshot_filter_value,
+                )
+
+                if not isinstance(item.value, str):
+                    raise InvalidCodeFilterError(
+                        "Code filters require a concept or snapshot token"
+                    )
+                selection = parse_code_concept_filter_value(item.value)
+                if selection is not None and not isinstance(item.operator, IDOperator):
+                    expr = item.model_copy(deep=True)
+                    expr.value = code_filter_service.resolve_concept_snapshot_ids(
+                        db,
+                        selection=selection,
+                        include_descendants=(
+                            item.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE
+                        ),
+                    )
+                    resolved_items.append(expr)
+                    continue
+                if (
+                    selection is not None
+                    or parse_code_snapshot_filter_value(item.value) is not None
+                ):
+                    resolved_items.append(item)
+                    continue
+                raise InvalidCodeFilterError("Invalid code filter token")
             if item.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE:
                 expr = item.model_copy(deep=True)
                 if isinstance(expr.column, int):

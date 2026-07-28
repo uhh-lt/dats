@@ -2,7 +2,8 @@ import traceback
 from collections.abc import Callable
 
 from fastapi import Request
-from fastapi.responses import PlainTextResponse
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, PlainTextResponse
 from loguru import logger
 
 exception_handlers = []
@@ -11,6 +12,7 @@ exception_handlers = []
 def exception_handler(
     http_status_code: int | Callable[[Exception], int],
     extract_message: Callable[[Exception], str] = lambda exc: str(exc),
+    extract_content: Callable[[Exception], object] | None = None,
 ):
     def decorator(exception_class):
         def handle_exception(req: Request, exc: Exception):
@@ -39,6 +41,11 @@ def exception_handler(
             else:
                 status_code = 500  # type: ignore
 
+            if extract_content is not None:
+                return JSONResponse(
+                    content=jsonable_encoder(extract_content(exc)),
+                    status_code=status_code,
+                )
             return PlainTextResponse(extract_message(exc), status_code)
 
         exception_handlers.append((exception_class, handle_exception))

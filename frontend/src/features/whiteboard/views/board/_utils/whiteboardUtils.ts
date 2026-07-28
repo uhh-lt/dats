@@ -1,6 +1,6 @@
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BorderStyle } from "@models/BorderStyle";
-import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent } from "@core/code";
 import { HorizontalAlign } from "@models/HorizontalAlign";
 import { MemoRead } from "@models/MemoRead";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
@@ -237,7 +237,13 @@ export const createSdocNodes = ({
   }));
 };
 
-export const createCodeNodes = ({ codes, position }: { codes: CodeRead[]; position?: XYPosition }): CodeNode[] => {
+export const createCodeNodes = ({
+  codes,
+  position,
+}: {
+  codes: CodeReadWithParent[];
+  position?: XYPosition;
+}): CodeNode[] => {
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
     type: WhiteboardNodeType.CODE,

@@ -7,6 +7,9 @@ import { queryClient } from "@api/queryClient";
 import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
+import { primeCodeSnapshots } from "./CodeHooks";
+import { useAppSelector } from "@store/storeHooks";
+import { useAnnotationBranchVisibility } from "./useAnnotationBranchVisibility";
 
 export const FAKE_BBOX_ID = -1;
 
@@ -32,16 +35,36 @@ const useGetByCodeAndUser = (codeId: number | undefined) =>
     enabled: !!codeId,
   });
 
-const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<BBoxAnnotationRead[], Error>({
+const useGetBBoxAnnotationsBatch = (
+  sdocId: number | null | undefined,
+  userId: number | null | undefined,
+  enabled = true,
+) => {
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const query = useQuery<BBoxAnnotationRead[], Error>({
     queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, sdocId, userId],
-    queryFn: () =>
-      BboxAnnotationService.getBySdocAndUser({
+    queryFn: async () => {
+      const annotations = await BboxAnnotationService.getBySdocAndUser({
         sdocId: sdocId!,
         userId: userId!,
-      }) as Promise<BBoxAnnotationRead[]>,
-    enabled: !!sdocId && !!userId,
+      });
+      if (projectId)
+        await primeCodeSnapshots(
+          projectId,
+          annotations.map((annotation) => annotation.code_id),
+        );
+      return annotations;
+    },
+    enabled: enabled && !!sdocId && !!userId,
   });
+  const visibility = useAnnotationBranchVisibility(query.data);
+  return {
+    ...query,
+    data: visibility.data,
+    externalCount: visibility.externalCount,
+    isLoading: query.isLoading || visibility.isLoading,
+  };
+};
 
 // BBOX MUTATIONS
 const useCreateBBoxAnnotation = (user: UserRead | undefined) =>
@@ -129,6 +152,8 @@ const useUpdateBBoxAnnotation = () =>
         [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
         (old) => (old ? old.map((bbox) => (bbox.id === data.id ? data : bbox)) : [data]),
       );
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
     },
     meta: {
       successMessage: (bbox: BBoxAnnotationRead) => `Updated Bounding Box Annotation ${bbox.id}`,
@@ -146,6 +171,8 @@ const useUpdateBulkBBoxAnnotation = () =>
         });
         queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
       });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEWS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ANNOTATION_REVIEW_COUNTS] });
     },
     meta: {
       successMessage: (data: BBoxAnnotationRead[]) => `Updated ${data.length} BBox Annotations`,

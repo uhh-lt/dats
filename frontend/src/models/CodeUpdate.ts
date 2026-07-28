@@ -16,11 +16,13 @@ export type CodeUpdate = {
    */
   description?: string | null;
   /**
-   * Parent of the Code
+   * Logical parent concept of the Code
    */
-  parent_id?: number | null;
-  /**
-   * While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)
-   */
+  parent_concept_id?: string | null;
   enabled?: boolean | null;
+  /**
+   * Target branch; null targets Main
+   */
+  branch_id?: number | null;
+  commit_message?: string | null;
 };

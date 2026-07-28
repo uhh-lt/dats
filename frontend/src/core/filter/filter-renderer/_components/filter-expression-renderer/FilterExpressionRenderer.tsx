@@ -31,7 +31,18 @@ const CustomContent = ({
   }, [onDeleteFilter, filterExpression.id]);
 
   return (
-    <Stack direction="row" alignItems="end" py={1} pl={4} pr={1} ref={ref}>
+    <Stack
+      direction="row"
+      alignItems="flex-start"
+      flexWrap="wrap"
+      useFlexGap
+      gap={1}
+      py={1}
+      pl={4}
+      pr={1}
+      ref={ref}
+      sx={{ "& > .MuiFormControl-root": { flex: "1 1 170px", minWidth: 150 } }}
+    >
       <Tooltip title="Delete Filter Expression">
         <span>
           <IconButton size="small" onClick={handleDeleteClick} sx={{ color: "inherit", mr: 1 }}>

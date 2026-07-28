@@ -1,4 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { CodeBranchHooks } from "@api/hooks/CodeBranchHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { contrastiveColors } from "@utils/colors/colors";
 
 interface CodeIndicatorProps {
@@ -18,6 +20,8 @@ interface CodeIndicatorProps {
  */
 export function CodeIndicator({ codeId, annotationId, isSelected, groups }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
+  const branchLabel = CodeBranchHooks.useCodeOriginBranchLabel(code.data?.branch_id);
+  const requiresReview = useAnnotationRequiresReview(codeId);
 
   if (code.data) {
     let text: string;
@@ -43,6 +47,8 @@ export function CodeIndicator({ codeId, annotationId, isSelected, groups }: Code
       >
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
+        {branchLabel && <span className="code-indicator__branch">{branchLabel}</span>}
+        {requiresReview && <span className="code-indicator__review">Review</span>}
       </span>
     );
   }

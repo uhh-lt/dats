@@ -7,45 +7,41 @@ from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_text_orm import SpanTextORM
+from core.code.code_crud import crud_code
 from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
+from core.code.code_service import code_service
 from core.doc.source_document_data_dto import SourceDocumentDataRead
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
-from core.project.project_crud import crud_project
 from modules.analysis.analysis_dto import CodeFrequency, CodeOccurrence
 
 
 def __find_code_children(
     db: Session, project_id: int, code_ids: list[int]
 ) -> list[list[int]]:
-    # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
-    proj_db_obj = crud_project.read(db=db, id=project_id)
-    all_codes = [code for code in proj_db_obj.codes if code.enabled]
+    selected = crud_code.read_by_ids(db, code_ids)
+    visible = code_service.read_visible_map(db, project_id=project_id)
+    children_by_parent = {}
+    for code in visible.values():
+        children_by_parent.setdefault(code.parent_concept_id, []).append(code)
 
-    # build a parent_id to child_ids mapping
-    parent_code_id2child_code_ids = {}
-    for code in all_codes:
-        if code.parent_id not in parent_code_id2child_code_ids:
-            parent_code_id2child_code_ids[code.parent_id] = []
-        parent_code_id2child_code_ids[code.parent_id].append(code.id)
-
-    # bfs to find all children of the given codes
-    child_code_id_groups = []
-    for code_id in code_ids:
-        group = []
-        a = [code_id]
-        while len(a) > 0:
-            b = []
-            for code_id in a:
-                if code_id in parent_code_id2child_code_ids:
-                    b.extend(parent_code_id2child_code_ids[code_id])
-            group.extend(b)
-            a = b
-        child_code_id_groups.append(group)
-
-    return child_code_id_groups
+    groups: list[list[int]] = []
+    for code in selected:
+        descendants = code_service._subtree(code, children_by_parent)[1:]
+        descendant_concepts = [item.concept_id for item in descendants]
+        snapshot_ids = [
+            row[0]
+            for row in db.query(CodeORM.id)
+            .filter(
+                CodeORM.project_id == project_id,
+                CodeORM.concept_id.in_(descendant_concepts),
+            )
+            .all()
+        ]
+        groups.append(snapshot_ids)
+    return groups
 
 
 def find_code_frequencies(
@@ -59,9 +55,21 @@ def find_code_frequencies(
     child_code_id_groups = __find_code_children(db, project_id, code_ids)
 
     # 2. query all span annotation occurrences of the codes of interest
-    codes_of_interest = [
+    current_ids = [
         code_id for group in child_code_id_groups for code_id in group
     ] + code_ids
+    selected_concepts = {
+        code.concept_id for code in crud_code.read_by_ids(db, current_ids)
+    }
+    codes_of_interest = [
+        row[0]
+        for row in db.query(CodeORM.id)
+        .filter(
+            CodeORM.project_id == project_id,
+            CodeORM.concept_id.in_(selected_concepts),
+        )
+        .all()
+    ]
     query = (
         db.query(
             SpanAnnotationORM.code_id,
@@ -135,11 +143,23 @@ def find_code_frequencies(
 
     # 4. count & aggregate the occurrences of each code and their children
     res = span_res + bbox_res + sent_res
-    res_dict = {code_id: count for code_id, count in res}
+    res_dict: dict[int, int] = {}
+    for snapshot_id, count in res:
+        res_dict[snapshot_id] = res_dict.get(snapshot_id, 0) + count
 
     results: list[CodeFrequency] = []
-    for code_id, group in zip(code_ids, child_code_id_groups):
-        count = res_dict.get(code_id, 0)
+    requested_codes = crud_code.read_by_ids(db, code_ids)
+    for code_id, code, group in zip(code_ids, requested_codes, child_code_id_groups):
+        own_snapshot_ids = [
+            row[0]
+            for row in db.query(CodeORM.id)
+            .filter(
+                CodeORM.project_id == project_id,
+                CodeORM.concept_id == code.concept_id,
+            )
+            .all()
+        ]
+        count = sum(res_dict.get(snapshot_id, 0) for snapshot_id in own_snapshot_ids)
         child_count = sum([res_dict.get(cid, 0) for cid in group])
         results.append(
             CodeFrequency(
@@ -166,6 +186,9 @@ def find_code_occurrences(
         # 1. find the children of all codes of interest
         child_codes = __find_code_children(db, project_id, [code_id])[0]
         filter_code_ids.extend(child_codes)
+    filter_concepts = {
+        code.concept_id for code in crud_code.read_by_ids(db, filter_code_ids)
+    }
 
     # 2. query all span annotation occurrences of the code
     query = (
@@ -191,7 +214,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id.in_(filter_code_ids),
+            CodeORM.concept_id.in_(filter_concepts),
             SourceDocumentORM.doctype.in_(doctypes),
         )
     )
@@ -236,7 +259,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id.in_(filter_code_ids),
+            CodeORM.concept_id.in_(filter_concepts),
             SourceDocumentORM.doctype.in_(doctypes),
         )
     )
@@ -289,7 +312,7 @@ def find_code_occurrences(
         and_(
             SourceDocumentORM.project_id == project_id,
             AnnotationDocumentORM.user_id.in_(user_ids),
-            CodeORM.id.in_(filter_code_ids),
+            CodeORM.concept_id.in_(filter_concepts),
             SourceDocumentORM.doctype.in_(doctypes),
         )
     )

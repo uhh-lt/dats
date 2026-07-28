@@ -4,7 +4,7 @@ import { AnnotationRead } from "./AnnotationRead";
 
 export interface AnnotationCardProps<T extends AnnotationRead> {
   annotation: T;
-  code: CodeRead;
+  code: CodeRead | undefined;
   onClick: () => void;
   cardProps?: CardProps;
   isSelected: boolean;

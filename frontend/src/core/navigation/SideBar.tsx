@@ -1,4 +1,6 @@
 import { OpenAPI } from "@api/core/OpenAPI";
+import { AnnotationGovernanceHooks } from "@api/hooks/AnnotationGovernanceHooks";
+import { CodeHooks } from "@api/hooks/CodeHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { useAuth } from "@core/auth";
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -6,8 +8,13 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeIcon from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
+import NewReleasesIcon from "@mui/icons-material/NewReleases";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import {
   Box,
+  Badge,
   Card,
   CardContent,
   Divider,
@@ -84,6 +91,41 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
       handleSearchMenuClose();
     },
     [handleSearchMenuClose, projectId, tabNavigate],
+  );
+
+  const branchId = CodeHooks.useSelectedCodeBranchId();
+  const reviewCounts = AnnotationGovernanceHooks.useReviewCounts(projectId, branchId);
+  const pendingReviewCount =
+    (reviewCounts.data?.span ?? 0) + (reviewCounts.data?.sentence ?? 0) + (reviewCounts.data?.bbox ?? 0);
+  const [annotationMenuAnchorEl, setAnnotationMenuAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleAnnotationMenuClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setAnnotationMenuAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleAnnotationMenuClose = useCallback(() => setAnnotationMenuAnchorEl(null), []);
+
+  const handleOpenAnnotationTab = useCallback(
+    (
+      to:
+        | "/project/$projectId/annotation"
+        | "/project/$projectId/annotation/review"
+        | "/project/$projectId/annotation/codebook"
+        | "/project/$projectId/annotation/codebook/releases",
+    ) => {
+      if (!projectId) return;
+      if (to === "/project/$projectId/annotation/review") {
+        tabNavigate({
+          to,
+          params: { projectId },
+          search: { branch_id: branchId ?? undefined },
+        });
+      } else {
+        tabNavigate({ to, params: { projectId } });
+      }
+      handleAnnotationMenuClose();
+    },
+    [branchId, handleAnnotationMenuClose, projectId, tabNavigate],
   );
 
   // User menu state and handlers
@@ -240,9 +282,8 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
 
             <ListItem disablePadding sx={{ display: "block" }}>
               <Tooltip title="Annotation (⌘⇧A)" placement="right" arrow disableHoverListener={isExpanded}>
-                <LinkListItemButton
-                  to="/project/$projectId/annotation"
-                  params={{ projectId }}
+                <ListItemButton
+                  onClick={handleAnnotationMenuClick}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
@@ -258,15 +299,51 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                       color: "primary.contrastText",
                     }}
                   >
-                    {getIconComponent(Icon.ANNOTATION)}
+                    <Badge badgeContent={pendingReviewCount} color="warning" max={99}>
+                      {getIconComponent(Icon.ANNOTATION)}
+                    </Badge>
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
                       <span style={{ textDecoration: "underline" }}>A</span>nnotation
                     </ListItemText>
                   )}
-                </LinkListItemButton>
+                </ListItemButton>
               </Tooltip>
+              <Menu
+                anchorEl={annotationMenuAnchorEl}
+                open={Boolean(annotationMenuAnchorEl)}
+                onClose={handleAnnotationMenuClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+              >
+                <MenuItem onClick={() => handleOpenAnnotationTab("/project/$projectId/annotation")}>
+                  <ListItemIcon>
+                    <DashboardIcon />
+                  </ListItemIcon>
+                  <ListItemText>Annotation Dashboard</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenAnnotationTab("/project/$projectId/annotation/review")}>
+                  <ListItemIcon>
+                    <Badge badgeContent={pendingReviewCount} color="warning">
+                      <FactCheckIcon />
+                    </Badge>
+                  </ListItemIcon>
+                  <ListItemText>Review Queue</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenAnnotationTab("/project/$projectId/annotation/codebook")}>
+                  <ListItemIcon>
+                    <AccountTreeIcon />
+                  </ListItemIcon>
+                  <ListItemText>Codebook Changes</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenAnnotationTab("/project/$projectId/annotation/codebook/releases")}>
+                  <ListItemIcon>
+                    <NewReleasesIcon />
+                  </ListItemIcon>
+                  <ListItemText>Codebook Releases</ListItemText>
+                </MenuItem>
+              </Menu>
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>

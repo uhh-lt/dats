@@ -17,6 +17,7 @@ from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_text_crud import crud_span_text
 from core.annotation.span_text_dto import SpanTextCreate
 from core.code.code_orm import CodeORM
+from core.code.code_service import code_service
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from repos.db.crud_base import CRUDBase
@@ -31,6 +32,9 @@ class CRUDSpanAnnotation(
         # get or create the annotation document
         adoc = crud_adoc.exists_or_create(
             db=db, user_id=user_id, sdoc_id=create_dto.sdoc_id
+        )
+        code_service.validate_annotation_code(
+            db, code_id=create_dto.code_id, project_id=adoc.source_document.project_id
         )
 
         # first create the SpanText
@@ -69,6 +73,12 @@ class CRUDSpanAnnotation(
         *,
         create_dtos: list[SpanAnnotationCreateIntern],
     ) -> list[SpanAnnotationORM]:
+        for create_dto in create_dtos:
+            code_service.validate_annotation_code(
+                db,
+                code_id=create_dto.code_id,
+                project_id=create_dto.project_id,
+            )
         # first create the SpanText
         span_texts_orm = crud_span_text.create_multi(
             db=db,
@@ -221,11 +231,13 @@ class CRUDSpanAnnotation(
         user_id: int,
         exclude_disabled_codes: bool = True,
     ) -> list[SpanAnnotationORM]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
             .filter(
-                self.model.code_id == code_id, AnnotationDocumentORM.user_id == user_id
+                self.model.code_id.in_(snapshot_ids),
+                AnnotationDocumentORM.user_id == user_id,
             )
         )
         if exclude_disabled_codes:
@@ -242,19 +254,21 @@ class CRUDSpanAnnotation(
         if not code_ids:
             return []
 
-        query = db.query(self.model).filter(self.model.code_id.in_(code_ids))
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
+        query = db.query(self.model).filter(self.model.code_id.in_(snapshot_ids))
         return query.all()
 
     def read_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[SpanAnnotationORM]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
         query = (
             db.query(self.model)
             .join(self.model.annotation_document)
             .filter(
                 AnnotationDocumentORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
             )
         )
         return query.all()
@@ -262,6 +276,11 @@ class CRUDSpanAnnotation(
     def update(
         self, db: Session, *, id: int, update_dto: SpanAnnotationUpdate
     ) -> SpanAnnotationORM:
+        current = self.read(db, id)
+        if update_dto.code_id is not None:
+            code_service.validate_annotation_code(
+                db, code_id=update_dto.code_id, project_id=current.project_id
+            )
         span_anno = super().update(db, id=id, update_dto=update_dto)
 
         # update the annotation document's timestamp
@@ -346,6 +365,7 @@ class CRUDSpanAnnotation(
     def remove_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]
     ) -> list[int]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=code_ids)
         # find all span annotations to be removed
         query = (
             db.query(self.model.id, AnnotationDocumentORM.id)
@@ -353,7 +373,7 @@ class CRUDSpanAnnotation(
             .filter(
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
                 AnnotationDocumentORM.user_id == user_id,
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
             )
         )
         removed_orms = query.all()
@@ -405,17 +425,28 @@ class CRUDSpanAnnotation(
         sdoc_ids: list[int],
         user_id: int,
     ) -> dict[int, int]:
+        snapshots_by_requested = {
+            code_id: code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
+            for code_id in code_ids
+        }
+        snapshot_ids = list(
+            {item for items in snapshots_by_requested.values() for item in items}
+        )
         result = (
             db.query(self.model.code_id, func.count(self.model.id))
             .join(self.model.annotation_document)
             .where(
-                self.model.code_id.in_(code_ids),
+                self.model.code_id.in_(snapshot_ids),
                 AnnotationDocumentORM.source_document_id.in_(sdoc_ids),
                 AnnotationDocumentORM.user_id == user_id,
             )
             .group_by(self.model.code_id)
         )
-        return {code_id: count for code_id, count in result.all()}
+        counts = {snapshot_id: count for snapshot_id, count in result.all()}
+        return {
+            code_id: sum(counts.get(snapshot_id, 0) for snapshot_id in ids)
+            for code_id, ids in snapshots_by_requested.items()
+        }
 
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)

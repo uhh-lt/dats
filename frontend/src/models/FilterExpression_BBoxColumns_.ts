@@ -23,5 +23,5 @@ export type FilterExpression_BBoxColumns_ = {
     | ListOperator
     | DateOperator
     | BooleanOperator;
-  value: boolean | string | number | Array<string> | Array<Array<string>>;
+  value: boolean | string | number | Array<string> | Array<number> | Array<Array<string>>;
 };

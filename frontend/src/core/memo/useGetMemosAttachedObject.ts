@@ -6,6 +6,7 @@ import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
+import { EMPTY_CODE } from "@core/code";
 
 /**
  * Hook to fetch the attached object of a memo based on its type.
@@ -41,17 +42,7 @@ export const useGetMemosAttachedObject = (type: AttachedObjectType | undefined, 
       return sentenceQuery;
     default: {
       // Return a "disabled" query-like object when type is undefined
-      const placeholder: CodeRead = {
-        id: 0,
-        name: "",
-        color: "",
-        description: "",
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-        project_id: 0,
-        is_system: false,
-        memo_ids: [],
-      };
+      const placeholder: CodeRead = { ...EMPTY_CODE, id: 0 };
       return {
         data: placeholder,
         isLoading: false,

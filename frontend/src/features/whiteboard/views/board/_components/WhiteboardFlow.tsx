@@ -169,6 +169,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // mutations
   const bulkLinkTagsMutation = TagHooks.useBulkLinkTags();
   const updateCodeMutation = CodeHooks.useUpdateCode();
+  const projectCodes = CodeHooks.useGetAllCodesList();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const updateSentenceAnnotationMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
@@ -232,11 +233,13 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // code can be manually connected to other code
         if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
+          const targetCode = projectCodes.data?.find((code) => code.id === targetNode.data.codeId);
+          if (!targetCode) return;
           const mutation = updateCodeMutation.mutate;
           mutation({
             codeId: sourceNode.data.codeId,
             requestBody: {
-              parent_id: targetNode.data.codeId,
+              parent_concept_id: targetCode.concept_id,
             },
           });
         }
@@ -281,6 +284,7 @@ export function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       reactFlowInstance,
       bulkLinkTagsMutation.mutate,
       updateCodeMutation.mutate,
+      projectCodes.data,
       updateSpanAnnotationMutation.mutate,
       updateBBoxAnnotationMutation.mutate,
       updateSentenceAnnotationMutation.mutate,

@@ -1,11 +1,11 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent } from "../../codeTypes";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { MouseEvent, memo, useCallback } from "react";
 
 interface CodeEditMenuItemProps {
-  code: CodeRead;
+  code: CodeReadWithParent;
   onClick: () => void;
 }
 

@@ -1,8 +1,10 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { contrastiveColors } from "@utils/colors/colors";
 
 interface MarkProps {
-  codeId: number;
+  annotation: ContextualAnnotation<SpanAnnotationRead>;
   isStart: boolean;
   isEnd: boolean;
   height: string;
@@ -24,8 +26,16 @@ export function Mark({ codeId, isStart, isEnd, height, top, groups }: MarkProps)
     return (
       <span
         className={"mark" + (isStart ? " start" : "") + (isEnd ? " end" : "")}
-        style={{ backgroundColor: color, height: height, top: top }}
-      />
+        style={{
+          backgroundColor: color,
+          height: height,
+          top: top,
+          outline: annotation.requires_review ? "2px dashed #ed6c02" : undefined,
+        }}
+        title={annotation.requires_review ? "This annotation needs review" : undefined}
+      >
+        {resizeHandles}
+      </span>
     );
   }
   return (

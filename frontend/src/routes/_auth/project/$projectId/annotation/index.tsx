@@ -1,5 +1,5 @@
 import { Icon } from "@components/icons";
-import { AnnotationFallbackView } from "@features/annotation";
+import { AnnotationDashboardView } from "@features/annotation";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/project/$projectId/annotation/")({
@@ -8,5 +8,10 @@ export const Route = createFileRoute("/_auth/project/$projectId/annotation/")({
     icon: Icon.ANNOTATION,
     getTitle: () => "Annotation",
   },
-  component: AnnotationFallbackView,
+  component: AnnotationDashboardRoute,
 });
+
+function AnnotationDashboardRoute() {
+  const { projectId } = Route.useParams();
+  return <AnnotationDashboardView projectId={projectId} />;
+}

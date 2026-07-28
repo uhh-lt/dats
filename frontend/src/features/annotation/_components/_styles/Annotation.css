@@ -104,6 +104,26 @@ A code indicator (.code-indicator) can be selected (code-indicator--selected) an
   vertical-align: middle;
 }
 
+.code-indicator__branch {
+  border-left: 1px solid color-mix(in srgb, var(--indicator-color) 35%, transparent);
+  color: #555;
+  font-size: 0.65rem;
+  font-style: normal;
+  margin-left: 4px;
+  padding-left: 4px;
+  vertical-align: middle;
+}
+
+.code-indicator__review {
+  color: #b45309;
+  font-size: 0.65rem;
+  font-style: normal;
+  font-weight: bold;
+  margin-left: 4px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
 .code-indicator--selected {
   background: color-mix(in srgb, var(--indicator-color) 20%, white);
   box-shadow:

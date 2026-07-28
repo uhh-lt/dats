@@ -47,7 +47,7 @@ def project_with_bbox_annotation(
             name="Test Code",
             color="Red",
             description="Test code for bbox annotation",
-            parent_id=None,
+            parent_concept_id=None,
             enabled=True,
             project_id=test_project.id,
             is_system=False,

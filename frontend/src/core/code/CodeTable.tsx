@@ -1,4 +1,4 @@
-import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent } from "./codeTypes";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
@@ -12,7 +12,7 @@ import { memo, useCallback, useMemo } from "react";
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import SquareIcon from "@mui/icons-material/Square";
 
-const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
+const createDataTree = (dataset: CodeReadWithParent[]): CodeTableRow[] => {
   const hashTable: Record<number, CodeTableRow> = Object.create(null);
   dataset.forEach((data) => (hashTable[data.id] = { ...data, subRows: [] }));
 
@@ -24,7 +24,7 @@ const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
   return dataTree;
 };
 
-interface CodeTableRow extends CodeRead {
+interface CodeTableRow extends CodeReadWithParent {
   subRows: CodeTableRow[];
 }
 
@@ -57,7 +57,7 @@ const columns: MRT_ColumnDef<CodeTableRow>[] = [
 
 interface CodeTableActionProps {
   table: MRT_TableInstance<CodeTableRow>;
-  selectedCodes: CodeRead[];
+  selectedCodes: CodeReadWithParent[];
 }
 
 export interface CodeTableProps {
@@ -94,7 +94,7 @@ export const CodeTable = memo(
           acc[projectCode.id.toString()] = projectCode;
           return acc;
         },
-        {} as Record<string, CodeRead>,
+        {} as Record<string, CodeReadWithParent>,
       );
 
       const projectCodesRows = createDataTree(projectCodes.data);

@@ -95,7 +95,7 @@ const InternalFilterDialog = memo(
           slotProps={{
             paper: {
               sx: {
-                width: "50%",
+                width: "min(1400px, 90vw)",
                 p: 1,
               },
             },

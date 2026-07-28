@@ -30,20 +30,22 @@ export function AnnotationExplorer<T extends AnnotationRead>({
 
   // code filtering
   const projectCodes = CodeHooks.useGetAllCodesList();
+  const annotationCodeIds = useMemo(
+    () => [...new Set(annotations?.map((annotation) => annotation.code_id) ?? [])],
+    [annotations],
+  );
+  const codeSnapshots = CodeHooks.useGetCodeSnapshots(annotationCodeIds);
   const [filterCodeIds, setFilterCodeIds] = useState<number[]>([]);
   const codes = useMemo(() => {
-    const annotationCodeIds = new Set(annotations?.map((annotation) => annotation.code_id));
+    if (!projectCodes.data) return undefined;
     const relevantCodeIds = new Set([...annotationCodeIds, ...filterCodeIds]);
-    return projectCodes.data
-      ?.filter((code) => relevantCodeIds.has(code.id))
-      ?.reduce(
-        (acc, code) => {
-          acc[code.id] = code;
-          return acc;
-        },
-        {} as Record<number, CodeRead>,
-      );
-  }, [projectCodes.data, annotations, filterCodeIds]);
+    return [...projectCodes.data, ...codeSnapshots.data]
+      .filter((code) => relevantCodeIds.has(code.id))
+      .reduce<Record<number, CodeRead>>((acc, code) => {
+        acc[code.id] = code;
+        return acc;
+      }, {});
+  }, [projectCodes.data, codeSnapshots.data, annotationCodeIds, filterCodeIds]);
 
   const toggleFilterCodeId = (codeId: number) => {
     if (filterCodeIds.includes(codeId)) {
@@ -107,13 +109,14 @@ export function AnnotationExplorer<T extends AnnotationRead>({
             position: "relative",
           }}
         >
-          {annotations && codes ? (
+          {annotations && codes && !codeSnapshots.isLoading ? (
             <>
               {annotations.length > 0
                 ? filteredAnnotations.length > 0
                   ? virtualizer.getVirtualItems().map((virtualItem) => {
                       const annotation = filteredAnnotations[virtualItem.index];
                       const isSelected = selectedAnnotationId === annotation.id;
+                      const code = codes[annotation.code_id];
                       return (
                         <div
                           key={virtualItem.key}
@@ -130,7 +133,7 @@ export function AnnotationExplorer<T extends AnnotationRead>({
                         >
                           {renderAnnotationCard({
                             annotation,
-                            code: codes[annotation.code_id],
+                            code,
                             isSelected,
                             cardProps: {
                               variant: "outlined",

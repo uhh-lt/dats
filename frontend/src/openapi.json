@@ -230,6 +230,243 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/annotation-dashboard/project/{project_id}/recent-documents": {
+      "get": {
+        "tags": ["annotationDashboard"],
+        "summary": "Lists the current user's recently annotated documents.",
+        "operationId": "get_recent_documents",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "maximum": 50, "minimum": 1, "default": 10, "title": "Limit" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RecentAnnotatedDocument" },
+                  "title": "Response Annotationdashboard-Get Recent Documents"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/annotation-review/project/{project_id}/counts": {
+      "get": {
+        "tags": ["annotationReview"],
+        "summary": "Counts pending reviews by annotation type.",
+        "operationId": "get_review_counts",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          },
+          {
+            "name": "code_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Code Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationReviewCounts" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/annotation-review/project/{project_id}": {
+      "get": {
+        "tags": ["annotationReview"],
+        "summary": "Lists pending reviews for one annotation type.",
+        "operationId": "list_reviews",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "annotation_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AnnotationReviewType" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "maximum": 200, "minimum": 1, "default": 50, "title": "Page Size" }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "User Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          },
+          {
+            "name": "code_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Code Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedAnnotationReviews" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/annotation-review/project/{project_id}/bulk": {
+      "post": {
+        "tags": ["annotationReview"],
+        "summary": "Resolves every pending review using one assigned Code snapshot.",
+        "operationId": "resolve_reviews_bulk",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationReviewBulkResolve" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationReviewBulkResult" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/annotation-review/project/{project_id}/{annotation_type}/{annotation_id}": {
+      "post": {
+        "tags": ["annotationReview"],
+        "summary": "Resolves or deletes a pending annotation review.",
+        "operationId": "resolve_review",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "annotation_type",
+            "in": "path",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/AnnotationReviewType" }
+          },
+          {
+            "name": "annotation_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Annotation Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationReviewResolve" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [{ "$ref": "#/components/schemas/AnnotationReviewItem" }, { "type": "null" }],
+                  "title": "Response Annotationreview-Resolve Review"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/authentication/register": {
       "post": {
         "tags": ["authentication"],
@@ -924,10 +1161,321 @@
         }
       }
     },
+    "/code-branch": {
+      "put": {
+        "tags": ["codeBranch"],
+        "summary": "Creates a collaborative branch.",
+        "operationId": "create_branch",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeBranchCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeBranchRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/code-branch/project/{project_id}": {
+      "get": {
+        "tags": ["codeBranch"],
+        "summary": "Lists project branches.",
+        "operationId": "list_branches",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false, "title": "Include Archived" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeBranchRead" },
+                  "title": "Response Codebranch-List Branches"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code-branch/{branch_id}/merge": {
+      "post": {
+        "tags": ["codeBranch"],
+        "summary": "Merges selected or all active branch changes into Main.",
+        "operationId": "merge_branch",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "branch_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Branch Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeMerge" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeMergeResult" } } }
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CodeMergeConflictResponse" } }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code-branch/{branch_id}/changes": {
+      "get": {
+        "tags": ["codeBranch"],
+        "summary": "Lists active branch changes and their Main comparison snapshots.",
+        "operationId": "list_branch_changes",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "branch_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Branch Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeBranchChangeRead" },
+                  "title": "Response Codebranch-List Branch Changes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code-branch/{branch_id}/resolve-conflict": {
+      "post": {
+        "tags": ["codeBranch"],
+        "summary": "Keeps or discards one conflicting branch change.",
+        "operationId": "resolve_conflict",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "branch_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Branch Id" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeResolveConflict" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }],
+                  "title": "Response Codebranch-Resolve Conflict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code-branch/{branch_id}": {
+      "delete": {
+        "tags": ["codeBranch"],
+        "summary": "Archives a branch and discards its active changes.",
+        "operationId": "archive_branch",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "branch_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Branch Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeBranchRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/project/{project_id}/filter-concepts": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Lists all concepts and historical aliases in one codebook context.",
+        "operationId": "get_filter_concepts",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeFilterConceptRead" },
+                  "title": "Response Code-Get Filter Concepts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/project/{project_id}/concept/{concept_id}/filter-version-summary": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns current, released, and recent versions of a code concept.",
+        "operationId": "get_filter_version_summary",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Concept Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeFilterVersionSummary" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/project/{project_id}/concept/{concept_id}/filter-versions": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Searches the complete version history of a code concept.",
+        "operationId": "get_filter_versions",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Concept Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string", "maxLength": 200 }, { "type": "null" }], "title": "Query" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "maximum": 100, "minimum": 1, "default": 20, "title": "Page Size" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedCodeFilterVersions" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/code": {
       "put": {
         "tags": ["code"],
-        "summary": "Creates a new Code and returns it with the generated ID.",
+        "summary": "Creates a versioned Code.",
         "operationId": "create_new_code",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreate" } } },
@@ -946,10 +1494,164 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/code/project/{project_id}/concept/{concept_id}/history": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns the complete history of one logical Code.",
+        "operationId": "get_history",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "concept_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid", "title": "Concept Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
+                  "title": "Response Code-Get History"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/project/{project_id}/changelog": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns paginated code changes for the selected codebook.",
+        "operationId": "get_changelog",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "maximum": 100, "minimum": 1, "default": 10, "title": "Page Size" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedCodeChangelog" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/code/snapshots/batch": {
+      "post": {
+        "tags": ["code"],
+        "summary": "Returns current or historical Code snapshots in one request.",
+        "operationId": "get_snapshots",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeSnapshotsRequest" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
+                  "type": "array",
+                  "title": "Response Code-Get Snapshots"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/code/project/{project_id}": {
+      "get": {
+        "tags": ["code"],
+        "summary": "Returns the visible Main or branch Code tree.",
+        "operationId": "get_by_project",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "branch_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeRead" },
+                  "title": "Response Code-Get By Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/code/{code_id}": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Code with the given ID.",
+        "summary": "Returns a specific current or historical Code snapshot.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -968,7 +1670,7 @@
       },
       "patch": {
         "tags": ["code"],
-        "summary": "Updates the Code with the given ID.",
+        "summary": "Creates an updated snapshot of a Code.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -991,33 +1693,16 @@
       },
       "delete": {
         "tags": ["code"],
-        "summary": "Deletes the Code with the given ID.",
+        "summary": "Tombstones a Code, optionally cascading to its subtree.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "code_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Code Id" } }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/code/project/{proj_id}": {
-      "get": {
-        "tags": ["code"],
-        "summary": "Returns all Codes of the Project with the given ID",
-        "operationId": "get_by_project",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
-        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeDelete" } } }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1026,10 +1711,138 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/CodeRead" },
-                  "title": "Response Code-Get By Project"
+                  "title": "Response Code-Delete By Id"
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/codebook-release": {
+      "put": {
+        "tags": ["codebookRelease"],
+        "summary": "Creates an immutable release from the current non-system Main tree.",
+        "operationId": "create_release",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodebookReleaseCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodebookReleaseTreeRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/codebook-release/project/{project_id}": {
+      "get": {
+        "tags": ["codebookRelease"],
+        "summary": "Lists immutable codebook releases newest first.",
+        "operationId": "list_releases",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "maximum": 100, "minimum": 1, "default": 20, "title": "Page Size" }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "string", "maxLength": 200 }, { "type": "null" }], "title": "Query" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedCodebookReleases" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/codebook-release/{release_id}/compare": {
+      "get": {
+        "tags": ["codebookRelease"],
+        "summary": "Compares a release with another release or current Main.",
+        "operationId": "compare_release",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Release Id" }
+          },
+          {
+            "name": "target_release_id",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Target Release Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CodebookReleaseComparisonRead" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/codebook-release/{release_id}": {
+      "get": {
+        "tags": ["codebookRelease"],
+        "summary": "Returns one release and its exact read-only historical code tree.",
+        "operationId": "get_release",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "release_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Release Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodebookReleaseTreeRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6704,6 +7517,83 @@
         "required": ["status", "status_message", "sdoc_id", "suggested_annotations"],
         "title": "AnnotationResult"
       },
+      "AnnotationReviewAction": {
+        "type": "string",
+        "enum": ["update_current", "reassign", "delete"],
+        "title": "AnnotationReviewAction"
+      },
+      "AnnotationReviewBulkResolve": {
+        "properties": {
+          "action": { "$ref": "#/components/schemas/AnnotationReviewAction" },
+          "replacement_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Replacement Code Id"
+          },
+          "source_code_id": {
+            "type": "integer",
+            "title": "Source Code Id",
+            "description": "Code snapshot used by affected annotations"
+          }
+        },
+        "type": "object",
+        "required": ["action", "source_code_id"],
+        "title": "AnnotationReviewBulkResolve"
+      },
+      "AnnotationReviewBulkResult": {
+        "properties": {
+          "span": { "type": "integer", "title": "Span" },
+          "sentence": { "type": "integer", "title": "Sentence" },
+          "bbox": { "type": "integer", "title": "Bbox" }
+        },
+        "type": "object",
+        "required": ["span", "sentence", "bbox"],
+        "title": "AnnotationReviewBulkResult"
+      },
+      "AnnotationReviewCounts": {
+        "properties": {
+          "span": { "type": "integer", "title": "Span" },
+          "sentence": { "type": "integer", "title": "Sentence" },
+          "bbox": { "type": "integer", "title": "Bbox" }
+        },
+        "type": "object",
+        "required": ["span", "sentence", "bbox"],
+        "title": "AnnotationReviewCounts"
+      },
+      "AnnotationReviewItem": {
+        "properties": {
+          "annotation_type": { "$ref": "#/components/schemas/AnnotationReviewType" },
+          "annotation": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/SpanAnnotationRead" },
+              { "$ref": "#/components/schemas/SentenceAnnotationRead" },
+              { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+            ],
+            "title": "Annotation"
+          },
+          "assigned_code": { "$ref": "#/components/schemas/CodeRead" },
+          "current_code": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] }
+        },
+        "type": "object",
+        "required": ["annotation_type", "annotation", "assigned_code", "current_code"],
+        "title": "AnnotationReviewItem"
+      },
+      "AnnotationReviewResolve": {
+        "properties": {
+          "action": { "$ref": "#/components/schemas/AnnotationReviewAction" },
+          "replacement_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Replacement Code Id"
+          }
+        },
+        "type": "object",
+        "required": ["action"],
+        "title": "AnnotationReviewResolve"
+      },
+      "AnnotationReviewType": {
+        "type": "string",
+        "enum": ["span", "sentence", "bbox"],
+        "title": "AnnotationReviewType"
+      },
       "ApproachRecommendation": {
         "properties": {
           "recommended_approach": {
@@ -8312,6 +9202,126 @@
         "type": "object",
         "title": "ClusterUpdate"
       },
+      "CodeBranchChangeRead": {
+        "properties": {
+          "concept_id": { "type": "string", "format": "uuid", "title": "Concept Id" },
+          "change_type": { "$ref": "#/components/schemas/CodeBranchChangeType" },
+          "changed_fields": {
+            "items": { "$ref": "#/components/schemas/CodeChangedField" },
+            "type": "array",
+            "title": "Changed Fields"
+          },
+          "branch_code": { "$ref": "#/components/schemas/CodeRead" },
+          "base_main_code": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "current_main_code": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "is_conflict": { "type": "boolean", "title": "Is Conflict" }
+        },
+        "type": "object",
+        "required": [
+          "concept_id",
+          "change_type",
+          "changed_fields",
+          "branch_code",
+          "base_main_code",
+          "current_main_code",
+          "is_conflict"
+        ],
+        "title": "CodeBranchChangeRead"
+      },
+      "CodeBranchChangeType": {
+        "type": "string",
+        "enum": ["added", "modified", "deleted"],
+        "title": "CodeBranchChangeType"
+      },
+      "CodeBranchCreate": {
+        "properties": {
+          "project_id": { "type": "integer", "title": "Project Id" },
+          "name": { "type": "string", "minLength": 1, "title": "Name" }
+        },
+        "type": "object",
+        "required": ["project_id", "name"],
+        "title": "CodeBranchCreate"
+      },
+      "CodeBranchRead": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "project_id": { "type": "integer", "title": "Project Id" },
+          "name": { "type": "string", "title": "Name" },
+          "is_archived": { "type": "boolean", "title": "Is Archived" },
+          "created_by_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Created By Id" },
+          "created": { "type": "string", "format": "date-time", "title": "Created" },
+          "updated": { "type": "string", "format": "date-time", "title": "Updated" }
+        },
+        "type": "object",
+        "required": ["id", "project_id", "name", "is_archived", "created_by_id", "created", "updated"],
+        "title": "CodeBranchRead"
+      },
+      "CodeChangeKind": {
+        "type": "string",
+        "enum": ["create", "update", "delete", "merge", "conflict_resolution"],
+        "title": "CodeChangeKind"
+      },
+      "CodeChangedField": {
+        "type": "string",
+        "enum": ["name", "color", "description", "parent_concept_id", "enabled", "is_deleted"],
+        "title": "CodeChangedField"
+      },
+      "CodeChangelogChange": {
+        "properties": {
+          "before": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "after": { "$ref": "#/components/schemas/CodeRead" },
+          "merged_from": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "changed_fields": {
+            "items": { "$ref": "#/components/schemas/CodeChangedField" },
+            "type": "array",
+            "title": "Changed Fields"
+          }
+        },
+        "type": "object",
+        "required": ["before", "after", "merged_from", "changed_fields"],
+        "title": "CodeChangelogChange"
+      },
+      "CodeChangelogEntry": {
+        "properties": {
+          "change_set_id": { "type": "string", "format": "uuid", "title": "Change Set Id" },
+          "change_kind": { "$ref": "#/components/schemas/CodeChangeKind" },
+          "message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Message" },
+          "author_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Author Id" },
+          "created": { "type": "string", "format": "date-time", "title": "Created" },
+          "branch_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Branch Id",
+            "description": "Target branch; null means Main"
+          },
+          "source_branch_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Source Branch Id",
+            "description": "Source branch for a merge into Main"
+          },
+          "changes": {
+            "items": { "$ref": "#/components/schemas/CodeChangelogChange" },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "change_set_id",
+          "change_kind",
+          "message",
+          "author_id",
+          "created",
+          "branch_id",
+          "source_branch_id",
+          "changes"
+        ],
+        "title": "CodeChangelogEntry"
+      },
+      "CodeConflictResolution": {
+        "type": "string",
+        "enum": ["keep_branch", "discard_branch"],
+        "title": "CodeConflictResolution"
+      },
       "CodeCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
@@ -8322,23 +9332,107 @@
             "description": "Description of the Code",
             "default": ""
           },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the Code"
+          "parent_concept_id": {
+            "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+            "title": "Parent Concept Id",
+            "description": "Logical parent concept of the Code"
           },
           "enabled": {
             "type": "boolean",
             "title": "Enabled",
-            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+            "description": "Whether the code is available for annotation and preprocessing",
             "default": true
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
-          "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" }
+          "is_system": {
+            "type": "boolean",
+            "title": "Is System",
+            "description": "Is the Code a system code",
+            "default": false
+          },
+          "branch_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Branch Id",
+            "description": "Target branch; null creates the Code on Main"
+          },
+          "commit_message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Commit Message" }
         },
         "type": "object",
-        "required": ["name", "project_id", "is_system"],
+        "required": ["name", "project_id"],
         "title": "CodeCreate"
+      },
+      "CodeDelete": {
+        "properties": {
+          "branch_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Branch Id" },
+          "strategy": { "$ref": "#/components/schemas/CodeDeleteStrategy" },
+          "commit_message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Commit Message" }
+        },
+        "type": "object",
+        "required": ["strategy"],
+        "title": "CodeDelete"
+      },
+      "CodeDeleteStrategy": { "type": "string", "enum": ["cascade", "lift_children"], "title": "CodeDeleteStrategy" },
+      "CodeFilterConceptRead": {
+        "properties": {
+          "concept_id": { "type": "string", "format": "uuid", "title": "Concept Id" },
+          "current": { "$ref": "#/components/schemas/CodeRead" },
+          "path": { "items": { "type": "string" }, "type": "array", "title": "Path" },
+          "historical_names": { "items": { "type": "string" }, "type": "array", "title": "Historical Names" },
+          "historical_descriptions": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Historical Descriptions"
+          },
+          "filter_value": { "type": "string", "title": "Filter Value" }
+        },
+        "type": "object",
+        "required": ["concept_id", "current", "path", "historical_names", "historical_descriptions", "filter_value"],
+        "title": "CodeFilterConceptRead"
+      },
+      "CodeFilterReleaseTag": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "version": { "type": "string", "title": "Version" },
+          "created": { "type": "string", "format": "date-time", "title": "Created" }
+        },
+        "type": "object",
+        "required": ["id", "version", "created"],
+        "title": "CodeFilterReleaseTag"
+      },
+      "CodeFilterVersionRead": {
+        "properties": {
+          "code": { "$ref": "#/components/schemas/CodeRead" },
+          "is_current": { "type": "boolean", "title": "Is Current" },
+          "releases": {
+            "items": { "$ref": "#/components/schemas/CodeFilterReleaseTag" },
+            "type": "array",
+            "title": "Releases"
+          },
+          "filter_value": { "type": "string", "title": "Filter Value" }
+        },
+        "type": "object",
+        "required": ["code", "is_current", "releases", "filter_value"],
+        "title": "CodeFilterVersionRead"
+      },
+      "CodeFilterVersionSummary": {
+        "properties": {
+          "concept_id": { "type": "string", "format": "uuid", "title": "Concept Id" },
+          "current": { "$ref": "#/components/schemas/CodeFilterVersionRead" },
+          "released": {
+            "items": { "$ref": "#/components/schemas/CodeFilterVersionRead" },
+            "type": "array",
+            "title": "Released"
+          },
+          "recent": {
+            "items": { "$ref": "#/components/schemas/CodeFilterVersionRead" },
+            "type": "array",
+            "title": "Recent"
+          },
+          "total": { "type": "integer", "title": "Total" }
+        },
+        "type": "object",
+        "required": ["concept_id", "current", "released", "recent", "total"],
+        "title": "CodeFilterVersionSummary"
       },
       "CodeFrequency": {
         "properties": {
@@ -8358,6 +9452,40 @@
         "type": "object",
         "required": ["code_id", "count", "child_count", "total_count"],
         "title": "CodeFrequency"
+      },
+      "CodeMerge": {
+        "properties": {
+          "concept_ids": {
+            "anyOf": [{ "items": { "type": "string", "format": "uuid" }, "type": "array" }, { "type": "null" }],
+            "title": "Concept Ids",
+            "description": "Concepts to merge; null merges every active branch change"
+          },
+          "commit_message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Commit Message" }
+        },
+        "type": "object",
+        "title": "CodeMerge"
+      },
+      "CodeMergeConflictResponse": {
+        "properties": {
+          "message": { "type": "string", "title": "Message" },
+          "concept_ids": { "items": { "type": "string", "format": "uuid" }, "type": "array", "title": "Concept Ids" }
+        },
+        "type": "object",
+        "required": ["message", "concept_ids"],
+        "title": "CodeMergeConflictResponse"
+      },
+      "CodeMergeResult": {
+        "properties": {
+          "merged": { "items": { "$ref": "#/components/schemas/CodeRead" }, "type": "array", "title": "Merged" },
+          "discarded_concept_ids": {
+            "items": { "type": "string", "format": "uuid" },
+            "type": "array",
+            "title": "Discarded Concept Ids"
+          }
+        },
+        "type": "object",
+        "required": ["merged"],
+        "title": "CodeMergeResult"
       },
       "CodeNodeData": {
         "properties": {
@@ -8411,42 +9539,140 @@
             "description": "Description of the Code",
             "default": ""
           },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the Code"
+          "parent_concept_id": {
+            "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+            "title": "Parent Concept Id",
+            "description": "Logical parent concept of the Code"
           },
           "enabled": {
             "type": "boolean",
             "title": "Enabled",
-            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)",
+            "description": "Whether the code is available for annotation and preprocessing",
             "default": true
           },
-          "id": { "type": "integer", "title": "Id", "description": "ID of the Code" },
+          "id": { "type": "integer", "title": "Id", "description": "Snapshot ID of the Code" },
+          "concept_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Concept Id",
+            "description": "Logical identity of the Code"
+          },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
+          "branch_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Branch Id",
+            "description": "Branch containing this snapshot"
+          },
+          "base_main_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Base Main Code Id",
+            "description": "Main merge base snapshot"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this is the active scope snapshot"
+          },
+          "is_deleted": {
+            "type": "boolean",
+            "title": "Is Deleted",
+            "description": "Whether this snapshot is a tombstone"
+          },
+          "author_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Author Id",
+            "description": "Author of this snapshot"
+          },
+          "commit_message": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Commit Message",
+            "description": "Optional change note"
+          },
+          "change_set_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Change Set Id",
+            "description": "Operation that produced this snapshot"
+          },
+          "change_kind": { "$ref": "#/components/schemas/CodeChangeKind", "description": "Kind of codebook operation" },
+          "previous_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Previous Code Id",
+            "description": "Snapshot used as the before state for this change"
+          },
+          "merged_from_code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Merged From Code Id",
+            "description": "Branch snapshot promoted by this Main merge snapshot"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
             "title": "Created",
-            "description": "Created timestamp of the Code"
+            "description": "Created timestamp of the snapshot"
           },
           "updated": {
             "type": "string",
             "format": "date-time",
             "title": "Updated",
-            "description": "Updated timestamp of the Code"
+            "description": "Updated timestamp of the snapshot"
           },
           "is_system": { "type": "boolean", "title": "Is System", "description": "Is the Code a system code" },
           "memo_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "Memo Ids",
-            "description": "Memo IDs attached to the Code"
+            "description": "Memo IDs attached to this snapshot"
           }
         },
         "type": "object",
-        "required": ["name", "color", "id", "project_id", "created", "updated", "is_system", "memo_ids"],
+        "required": [
+          "name",
+          "color",
+          "id",
+          "concept_id",
+          "project_id",
+          "branch_id",
+          "base_main_code_id",
+          "is_active",
+          "is_deleted",
+          "author_id",
+          "commit_message",
+          "change_set_id",
+          "change_kind",
+          "previous_code_id",
+          "merged_from_code_id",
+          "created",
+          "updated",
+          "is_system",
+          "memo_ids"
+        ],
         "title": "CodeRead"
+      },
+      "CodeResolveConflict": {
+        "properties": {
+          "concept_id": { "type": "string", "format": "uuid", "title": "Concept Id" },
+          "resolution": { "$ref": "#/components/schemas/CodeConflictResolution" },
+          "commit_message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Commit Message" }
+        },
+        "type": "object",
+        "required": ["concept_id", "resolution"],
+        "title": "CodeResolveConflict"
+      },
+      "CodeSnapshotsRequest": {
+        "properties": {
+          "project_id": { "type": "integer", "title": "Project Id" },
+          "code_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Code Ids"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "code_ids"],
+        "title": "CodeSnapshotsRequest"
       },
       "CodeUpdate": {
         "properties": {
@@ -8465,19 +9691,110 @@
             "title": "Description",
             "description": "Description of the Code"
           },
-          "parent_id": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Id",
-            "description": "Parent of the Code"
+          "parent_concept_id": {
+            "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }],
+            "title": "Parent Concept Id",
+            "description": "Logical parent concept of the Code"
           },
-          "enabled": {
-            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
-            "title": "Enabled",
-            "description": "While false, the code is neither created in pre-processing nor shown in the UI (except in settings to enable it again)"
-          }
+          "enabled": { "anyOf": [{ "type": "boolean" }, { "type": "null" }], "title": "Enabled" },
+          "branch_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Branch Id",
+            "description": "Target branch; null targets Main"
+          },
+          "commit_message": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Commit Message" }
         },
         "type": "object",
         "title": "CodeUpdate"
+      },
+      "CodebookReleaseChangeType": {
+        "type": "string",
+        "enum": ["added", "modified", "removed"],
+        "title": "CodebookReleaseChangeType"
+      },
+      "CodebookReleaseComparisonChange": {
+        "properties": {
+          "concept_id": { "type": "string", "format": "uuid", "title": "Concept Id" },
+          "change_type": { "$ref": "#/components/schemas/CodebookReleaseChangeType" },
+          "before": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "after": { "anyOf": [{ "$ref": "#/components/schemas/CodeRead" }, { "type": "null" }] },
+          "changed_fields": {
+            "items": { "$ref": "#/components/schemas/CodeChangedField" },
+            "type": "array",
+            "title": "Changed Fields"
+          }
+        },
+        "type": "object",
+        "required": ["concept_id", "change_type", "before", "after", "changed_fields"],
+        "title": "CodebookReleaseComparisonChange"
+      },
+      "CodebookReleaseComparisonRead": {
+        "properties": {
+          "base_release": { "$ref": "#/components/schemas/CodebookReleaseRead" },
+          "target_release": { "anyOf": [{ "$ref": "#/components/schemas/CodebookReleaseRead" }, { "type": "null" }] },
+          "target_is_latest": { "type": "boolean", "title": "Target Is Latest" },
+          "added_count": { "type": "integer", "title": "Added Count" },
+          "modified_count": { "type": "integer", "title": "Modified Count" },
+          "removed_count": { "type": "integer", "title": "Removed Count" },
+          "unchanged_count": { "type": "integer", "title": "Unchanged Count" },
+          "changes": {
+            "items": { "$ref": "#/components/schemas/CodebookReleaseComparisonChange" },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_release",
+          "target_release",
+          "target_is_latest",
+          "added_count",
+          "modified_count",
+          "removed_count",
+          "unchanged_count",
+          "changes"
+        ],
+        "title": "CodebookReleaseComparisonRead"
+      },
+      "CodebookReleaseCreate": {
+        "properties": {
+          "project_id": { "type": "integer", "title": "Project Id" },
+          "version": { "type": "string", "maxLength": 100, "minLength": 1, "title": "Version" },
+          "description": {
+            "anyOf": [{ "type": "string", "maxLength": 10000 }, { "type": "null" }],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": ["project_id", "version"],
+        "title": "CodebookReleaseCreate"
+      },
+      "CodebookReleaseRead": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "project_id": { "type": "integer", "title": "Project Id" },
+          "version": { "type": "string", "title": "Version" },
+          "description": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Description" },
+          "created": { "type": "string", "format": "date-time", "title": "Created" },
+          "code_count": { "type": "integer", "title": "Code Count" },
+          "previous_release_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Previous Release Id",
+            "description": "Immediately preceding release in project chronology"
+          }
+        },
+        "type": "object",
+        "required": ["id", "project_id", "version", "description", "created", "code_count", "previous_release_id"],
+        "title": "CodebookReleaseRead"
+      },
+      "CodebookReleaseTreeRead": {
+        "properties": {
+          "release": { "$ref": "#/components/schemas/CodebookReleaseRead" },
+          "codes": { "items": { "$ref": "#/components/schemas/CodeRead" }, "type": "array", "title": "Codes" }
+        },
+        "type": "object",
+        "required": ["release", "codes"],
+        "title": "CodebookReleaseTreeRead"
       },
       "ColumnInfo_BBoxColumns_": {
         "properties": {
@@ -9146,7 +10463,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -9181,7 +10500,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -9216,7 +10537,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -9251,7 +10574,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -9286,7 +10611,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -9321,7 +10648,9 @@
               { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
+              { "type": "string", "format": "uuid" },
               { "items": { "type": "string" }, "type": "array" },
+              { "items": { "type": "integer" }, "type": "array" },
               { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
             ],
             "title": "Value"
@@ -10332,6 +11661,62 @@
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "title": "NumberOperator"
       },
+      "PaginatedAnnotationReviews": {
+        "properties": {
+          "total": { "type": "integer", "title": "Total" },
+          "page": { "type": "integer", "title": "Page" },
+          "page_size": { "type": "integer", "title": "Page Size" },
+          "items": {
+            "items": { "$ref": "#/components/schemas/AnnotationReviewItem" },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["total", "page", "page_size", "items"],
+        "title": "PaginatedAnnotationReviews"
+      },
+      "PaginatedCodeChangelog": {
+        "properties": {
+          "total": { "type": "integer", "title": "Total" },
+          "page": { "type": "integer", "title": "Page" },
+          "page_size": { "type": "integer", "title": "Page Size" },
+          "items": { "items": { "$ref": "#/components/schemas/CodeChangelogEntry" }, "type": "array", "title": "Items" }
+        },
+        "type": "object",
+        "required": ["total", "page", "page_size", "items"],
+        "title": "PaginatedCodeChangelog"
+      },
+      "PaginatedCodeFilterVersions": {
+        "properties": {
+          "total": { "type": "integer", "title": "Total" },
+          "page": { "type": "integer", "title": "Page" },
+          "page_size": { "type": "integer", "title": "Page Size" },
+          "items": {
+            "items": { "$ref": "#/components/schemas/CodeFilterVersionRead" },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["total", "page", "page_size", "items"],
+        "title": "PaginatedCodeFilterVersions"
+      },
+      "PaginatedCodebookReleases": {
+        "properties": {
+          "total": { "type": "integer", "title": "Total" },
+          "page": { "type": "integer", "title": "Page" },
+          "page_size": { "type": "integer", "title": "Page Size" },
+          "items": {
+            "items": { "$ref": "#/components/schemas/CodebookReleaseRead" },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["total", "page", "page_size", "items"],
+        "title": "PaginatedCodebookReleases"
+      },
       "PaginatedElasticSearchHits": {
         "properties": {
           "hits": {
@@ -10867,6 +12252,16 @@
         "type": "object",
         "required": ["ml_job_type"],
         "title": "QuotationAttributionParams"
+      },
+      "RecentAnnotatedDocument": {
+        "properties": {
+          "document": { "$ref": "#/components/schemas/SourceDocumentRead" },
+          "last_annotated_at": { "type": "string", "format": "date-time", "title": "Last Annotated At" },
+          "annotation_count": { "type": "integer", "title": "Annotation Count" }
+        },
+        "type": "object",
+        "required": ["document", "last_annotated_at", "annotation_count"],
+        "title": "RecentAnnotatedDocument"
       },
       "RecomputeClusterTitleAndDescriptionParams": {
         "properties": {

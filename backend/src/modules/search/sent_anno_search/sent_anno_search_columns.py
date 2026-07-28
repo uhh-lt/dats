@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.code.code_crud import crud_code
 from core.code.code_orm import CodeORM
 from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
@@ -38,7 +37,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE.value]
             case SentAnnoColumns.CODE_ID:
-                return SentenceAnnotationORM.code_id
+                return CodeORM.concept_id
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:
@@ -191,9 +190,6 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case SentAnnoColumns.CODE_ID:
-                codes = crud_code.read_by_ids(db, ids=ids)
-                return [code.name for code in codes]
             case SentAnnoColumns.USER_ID:
                 users = crud_user.read_by_ids(db, ids=ids)
                 return [user.email for user in users]
@@ -215,9 +211,6 @@ class SentAnnoColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case SentAnnoColumns.CODE_ID:
-                result = crud_code.read_by_names(db, project_id=project_id, names=names)
-                return [code.id for code in result]
             case SentAnnoColumns.USER_ID:
                 result = crud_user.read_by_emails(db, emails=names)
                 return [user.id for user in result]

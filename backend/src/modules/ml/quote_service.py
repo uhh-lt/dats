@@ -17,6 +17,7 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.annotation.span_group_crud import crud_span_group
 from core.annotation.span_group_dto import SpanGroupCreateIntern
 from core.code.code_crud import crud_code
+from core.code.code_service import code_service
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_orm import SourceDocumentMetadataORM
@@ -167,6 +168,9 @@ class QuoteService(metaclass=SingletonMeta):
         quote_output = self.ray.quote_prediction(quote_input)
 
         if recompute:
+            code_snapshot_ids = code_service.snapshot_ids_for_code_ids(
+                db, code_ids=list(code)
+            )
             subquery = (
                 db.query(SpanAnnotationORM.id)
                 .join(SpanAnnotationORM.annotation_document)
@@ -175,7 +179,7 @@ class QuoteService(metaclass=SingletonMeta):
                     AnnotationDocumentORM.source_document_id.in_(
                         [sdoc.id for sdoc in sdoc_data]
                     ),
-                    SpanAnnotationORM.code_id.in_(list(code)),
+                    SpanAnnotationORM.code_id.in_(code_snapshot_ids),
                 )
                 .scalar_subquery()
             )

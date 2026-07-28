@@ -466,7 +466,11 @@ def transform_nodes_for_import(
 
         case WhiteboardNodeType.CODE:
             # Resolve code_name to codeId
-            project_codes = crud_project.read(db=db, id=project_id).codes
+            project_codes = [
+                code
+                for code in crud_project.read(db=db, id=project_id).codes
+                if code.branch_id is None and code.is_active and not code.is_deleted
+            ]
             code_name_to_id: dict[str, int] = {
                 code.name: code.id for code in project_codes
             }

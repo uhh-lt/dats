@@ -1,4 +1,5 @@
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
 import { useCallback, useEffect, useMemo } from "react";
@@ -15,7 +16,7 @@ interface DocumentRendererProps {
   html: string;
   tokenData: IToken[] | undefined;
   annotationsPerToken: Map<number, number[]> | undefined;
-  annotationMap: Map<number, SpanAnnotationRead> | undefined;
+  annotationMap: Map<number, ContextualAnnotation<SpanAnnotationRead>> | undefined;
   isViewer: boolean;
   projectId: number;
 }

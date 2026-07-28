@@ -75,7 +75,7 @@ export const DatabaseEdgeEditMenu = ({ ref }: DatabaseEdgeEditMenuProps) => {
         updateCodeMutation.mutate({
           codeId: sourceNode.data.codeId,
           requestBody: {
-            parent_id: null,
+            parent_concept_id: null,
           },
         });
       }

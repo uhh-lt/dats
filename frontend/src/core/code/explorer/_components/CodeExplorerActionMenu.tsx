@@ -2,20 +2,23 @@ import { Icon, getIconComponent } from "@components/icons";
 import { ITree } from "@components/tree-explorer";
 import { MemoMenuItem } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { CodeRead } from "@models/CodeRead";
+import { CodeReadWithParent } from "../../codeTypes";
+import { CodeHistoryDialog } from "../../history/CodeHistoryDialog";
+import { CodeHistoryMenuItem } from "../../history/CodeHistoryMenuItem";
 import { IconButton, Menu } from "@mui/material";
 import { useCallback, useState } from "react";
 import { CodeEditMenuItem } from "./CodeEditMenuItem";
 import { CodeToggleVisibilityMenuItem } from "./CodeToggleVisibilityMenuItem";
 
 interface CodeExplorerActionMenuProps {
-  node: ITree<CodeRead>;
+  node: ITree<CodeReadWithParent>;
   isHidden: boolean;
   onToggleVisibility: (codeIds: number[]) => void;
 }
 
 export function CodeExplorerActionMenu({ node, isHidden, onToggleVisibility }: CodeExplorerActionMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const open = Boolean(anchorEl);
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -37,13 +40,20 @@ export function CodeExplorerActionMenu({ node, isHidden, onToggleVisibility }: C
           onToggleVisibility={onToggleVisibility}
           onClick={handleClose}
         />
-        <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
+        <CodeEditMenuItem code={node.data} onClick={handleClose} />
+        <CodeHistoryMenuItem
+          onClick={() => {
+            handleClose();
+            setHistoryOpen(true);
+          }}
+        />
         <MemoMenuItem
           attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.CODE}
           onClick={handleClose}
         />
       </Menu>
+      <CodeHistoryDialog code={node.data} open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
   );
 }

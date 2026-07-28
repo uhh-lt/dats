@@ -1,9 +1,10 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
+import { useAnnotationRequiresReview } from "@api/hooks/useAnnotationBranchVisibility";
 import { CodeRenderer } from "@core/code";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { Stack } from "@mui/material";
+import { Chip, Stack } from "@mui/material";
 import { Link } from "@tanstack/react-router";
 
 interface BBoxAnnotationRendererSharedProps {
@@ -77,6 +78,7 @@ function BBoxAnnotationRendererWithData({
   sdocRendererProps,
   link,
 }: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) {
+  const requiresReview = useAnnotationRequiresReview(bboxAnnotation.code_id);
   return (
     <LinkWrapper to="/annotation/$sdocId" sdocId={bboxAnnotation.sdoc_id} link={!!link}>
       <Stack direction="row" alignItems="center">
@@ -85,10 +87,11 @@ function BBoxAnnotationRendererWithData({
         {showSdocProjectMetadataId && (
           <SdocMetadataRenderer sdocId={bboxAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
         )}
-        {showCode && <CodeRenderer code={bboxAnnotation.code_id} />}
+        {showCode && <CodeRenderer code={bboxAnnotation.code_id} showOriginBranch />}
         {showCode && showSpanText && ": "}
         {showSpanText &&
           `${bboxAnnotation.x_min}, ${bboxAnnotation.y_min}, ${bboxAnnotation.x_max}, ${bboxAnnotation.y_max}`}
+        {requiresReview && <Chip size="small" color="warning" label="Needs review" sx={{ ml: 0.5 }} />}
       </Stack>
     </LinkWrapper>
   );

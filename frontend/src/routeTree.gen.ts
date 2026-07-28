@@ -31,6 +31,8 @@ import { Route as AuthProjectProjectIdToolsMlAutomationRouteImport } from './rou
 import { Route as AuthProjectProjectIdToolsHealthRouteImport } from './routes/_auth/project/$projectId/tools/health'
 import { Route as AuthProjectProjectIdToolsDuplicateFinderRouteImport } from './routes/_auth/project/$projectId/tools/duplicate-finder'
 import { Route as AuthProjectProjectIdToolsDocumentSamplerRouteImport } from './routes/_auth/project/$projectId/tools/document-sampler'
+import { Route as AuthProjectProjectIdAnnotationReviewRouteImport } from './routes/_auth/project/$projectId/annotation/review'
+import { Route as AuthProjectProjectIdAnnotationCodebookRouteImport } from './routes/_auth/project/$projectId/annotation/codebook'
 import { Route as AuthProjectProjectIdAnnotationSdocIdRouteImport } from './routes/_auth/project/$projectId/annotation/$sdocId'
 import { Route as AuthProjectProjectIdAnalysisWordFrequencyRouteImport } from './routes/_auth/project/$projectId/analysis/word-frequency'
 import { Route as AuthProjectProjectIdAnalysisTagRecommendationsRouteImport } from './routes/_auth/project/$projectId/analysis/tag-recommendations'
@@ -44,6 +46,7 @@ import { Route as AuthProjectProjectIdPerspectivesAspectIdIndexRouteImport } fro
 import { Route as AuthProjectProjectIdAnalysisTimelineIndexRouteImport } from './routes/_auth/project/$projectId/analysis/timeline/index'
 import { Route as AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRouteImport } from './routes/_auth/project/$projectId/analysis/concepts-over-time-analysis/index'
 import { Route as AuthProjectProjectIdPerspectivesAspectIdMapRouteImport } from './routes/_auth/project/$projectId/perspectives/$aspectId/map'
+import { Route as AuthProjectProjectIdAnnotationCodebookReleasesRouteImport } from './routes/_auth/project/$projectId/annotation/codebook_.releases'
 import { Route as AuthProjectProjectIdAnalysisTimelineAnalysisIdRouteImport } from './routes/_auth/project/$projectId/analysis/timeline/$analysisId'
 import { Route as AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRouteImport } from './routes/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
 
@@ -170,6 +173,18 @@ const AuthProjectProjectIdToolsDocumentSamplerRoute =
     path: '/tools/document-sampler',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
+const AuthProjectProjectIdAnnotationReviewRoute =
+  AuthProjectProjectIdAnnotationReviewRouteImport.update({
+    id: '/annotation/review',
+    path: '/annotation/review',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
+const AuthProjectProjectIdAnnotationCodebookRoute =
+  AuthProjectProjectIdAnnotationCodebookRouteImport.update({
+    id: '/annotation/codebook',
+    path: '/annotation/codebook',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
 const AuthProjectProjectIdAnnotationSdocIdRoute =
   AuthProjectProjectIdAnnotationSdocIdRouteImport.update({
     id: '/annotation/$sdocId',
@@ -248,6 +263,12 @@ const AuthProjectProjectIdPerspectivesAspectIdMapRoute =
     path: '/map',
     getParentRoute: () => AuthProjectProjectIdPerspectivesAspectIdRouteRoute,
   } as any)
+const AuthProjectProjectIdAnnotationCodebookReleasesRoute =
+  AuthProjectProjectIdAnnotationCodebookReleasesRouteImport.update({
+    id: '/annotation/codebook_/releases',
+    path: '/annotation/codebook/releases',
+    getParentRoute: () => AuthProjectProjectIdRouteRoute,
+  } as any)
 const AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute =
   AuthProjectProjectIdAnalysisTimelineAnalysisIdRouteImport.update({
     id: '/analysis/timeline/$analysisId',
@@ -282,6 +303,8 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/project/$projectId/annotation/codebook': typeof AuthProjectProjectIdAnnotationCodebookRoute
+  '/project/$projectId/annotation/review': typeof AuthProjectProjectIdAnnotationReviewRoute
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -293,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/whiteboard/': typeof AuthProjectProjectIdWhiteboardIndexRoute
   '/project/$projectId/analysis/concepts-over-time-analysis/$cotaId': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
   '/project/$projectId/analysis/timeline/$analysisId': typeof AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute
+  '/project/$projectId/annotation/codebook/releases': typeof AuthProjectProjectIdAnnotationCodebookReleasesRoute
   '/project/$projectId/perspectives/$aspectId/map': typeof AuthProjectProjectIdPerspectivesAspectIdMapRoute
   '/project/$projectId/analysis/concepts-over-time-analysis/': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
   '/project/$projectId/analysis/timeline/': typeof AuthProjectProjectIdAnalysisTimelineIndexRoute
@@ -318,6 +342,8 @@ export interface FileRoutesByTo {
   '/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/project/$projectId/annotation/codebook': typeof AuthProjectProjectIdAnnotationCodebookRoute
+  '/project/$projectId/annotation/review': typeof AuthProjectProjectIdAnnotationReviewRoute
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -329,6 +355,7 @@ export interface FileRoutesByTo {
   '/project/$projectId/whiteboard': typeof AuthProjectProjectIdWhiteboardIndexRoute
   '/project/$projectId/analysis/concepts-over-time-analysis/$cotaId': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
   '/project/$projectId/analysis/timeline/$analysisId': typeof AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute
+  '/project/$projectId/annotation/codebook/releases': typeof AuthProjectProjectIdAnnotationCodebookReleasesRoute
   '/project/$projectId/perspectives/$aspectId/map': typeof AuthProjectProjectIdPerspectivesAspectIdMapRoute
   '/project/$projectId/analysis/concepts-over-time-analysis': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
   '/project/$projectId/analysis/timeline': typeof AuthProjectProjectIdAnalysisTimelineIndexRoute
@@ -358,6 +385,8 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/_auth/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/_auth/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/_auth/project/$projectId/annotation/codebook': typeof AuthProjectProjectIdAnnotationCodebookRoute
+  '/_auth/project/$projectId/annotation/review': typeof AuthProjectProjectIdAnnotationReviewRoute
   '/_auth/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/_auth/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/_auth/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -369,6 +398,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/whiteboard/': typeof AuthProjectProjectIdWhiteboardIndexRoute
   '/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
   '/_auth/project/$projectId/analysis/timeline/$analysisId': typeof AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute
+  '/_auth/project/$projectId/annotation/codebook_/releases': typeof AuthProjectProjectIdAnnotationCodebookReleasesRoute
   '/_auth/project/$projectId/perspectives/$aspectId/map': typeof AuthProjectProjectIdPerspectivesAspectIdMapRoute
   '/_auth/project/$projectId/analysis/concepts-over-time-analysis/': typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
   '/_auth/project/$projectId/analysis/timeline/': typeof AuthProjectProjectIdAnalysisTimelineIndexRoute
@@ -397,6 +427,8 @@ export interface FileRouteTypes {
     | '/project/$projectId/analysis/tag-recommendations'
     | '/project/$projectId/analysis/word-frequency'
     | '/project/$projectId/annotation/$sdocId'
+    | '/project/$projectId/annotation/codebook'
+    | '/project/$projectId/annotation/review'
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
@@ -408,6 +440,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/whiteboard/'
     | '/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
     | '/project/$projectId/analysis/timeline/$analysisId'
+    | '/project/$projectId/annotation/codebook/releases'
     | '/project/$projectId/perspectives/$aspectId/map'
     | '/project/$projectId/analysis/concepts-over-time-analysis/'
     | '/project/$projectId/analysis/timeline/'
@@ -433,6 +466,8 @@ export interface FileRouteTypes {
     | '/project/$projectId/analysis/tag-recommendations'
     | '/project/$projectId/analysis/word-frequency'
     | '/project/$projectId/annotation/$sdocId'
+    | '/project/$projectId/annotation/codebook'
+    | '/project/$projectId/annotation/review'
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
@@ -444,6 +479,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/whiteboard'
     | '/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
     | '/project/$projectId/analysis/timeline/$analysisId'
+    | '/project/$projectId/annotation/codebook/releases'
     | '/project/$projectId/perspectives/$aspectId/map'
     | '/project/$projectId/analysis/concepts-over-time-analysis'
     | '/project/$projectId/analysis/timeline'
@@ -472,6 +508,8 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/analysis/tag-recommendations'
     | '/_auth/project/$projectId/analysis/word-frequency'
     | '/_auth/project/$projectId/annotation/$sdocId'
+    | '/_auth/project/$projectId/annotation/codebook'
+    | '/_auth/project/$projectId/annotation/review'
     | '/_auth/project/$projectId/tools/document-sampler'
     | '/_auth/project/$projectId/tools/duplicate-finder'
     | '/_auth/project/$projectId/tools/health'
@@ -483,6 +521,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/whiteboard/'
     | '/_auth/project/$projectId/analysis/concepts-over-time-analysis/$cotaId'
     | '/_auth/project/$projectId/analysis/timeline/$analysisId'
+    | '/_auth/project/$projectId/annotation/codebook_/releases'
     | '/_auth/project/$projectId/perspectives/$aspectId/map'
     | '/_auth/project/$projectId/analysis/concepts-over-time-analysis/'
     | '/_auth/project/$projectId/analysis/timeline/'
@@ -650,6 +689,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdToolsDocumentSamplerRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
+    '/_auth/project/$projectId/annotation/review': {
+      id: '/_auth/project/$projectId/annotation/review'
+      path: '/annotation/review'
+      fullPath: '/project/$projectId/annotation/review'
+      preLoaderRoute: typeof AuthProjectProjectIdAnnotationReviewRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
+    '/_auth/project/$projectId/annotation/codebook': {
+      id: '/_auth/project/$projectId/annotation/codebook'
+      path: '/annotation/codebook'
+      fullPath: '/project/$projectId/annotation/codebook'
+      preLoaderRoute: typeof AuthProjectProjectIdAnnotationCodebookRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
     '/_auth/project/$projectId/annotation/$sdocId': {
       id: '/_auth/project/$projectId/annotation/$sdocId'
       path: '/annotation/$sdocId'
@@ -741,6 +794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdPerspectivesAspectIdMapRouteImport
       parentRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRoute
     }
+    '/_auth/project/$projectId/annotation/codebook_/releases': {
+      id: '/_auth/project/$projectId/annotation/codebook_/releases'
+      path: '/annotation/codebook/releases'
+      fullPath: '/project/$projectId/annotation/codebook/releases'
+      preLoaderRoute: typeof AuthProjectProjectIdAnnotationCodebookReleasesRouteImport
+      parentRoute: typeof AuthProjectProjectIdRouteRoute
+    }
     '/_auth/project/$projectId/analysis/timeline/$analysisId': {
       id: '/_auth/project/$projectId/analysis/timeline/$analysisId'
       path: '/analysis/timeline/$analysisId'
@@ -791,6 +851,8 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdAnalysisTagRecommendationsRoute: typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   AuthProjectProjectIdAnalysisWordFrequencyRoute: typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   AuthProjectProjectIdAnnotationSdocIdRoute: typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  AuthProjectProjectIdAnnotationCodebookRoute: typeof AuthProjectProjectIdAnnotationCodebookRoute
+  AuthProjectProjectIdAnnotationReviewRoute: typeof AuthProjectProjectIdAnnotationReviewRoute
   AuthProjectProjectIdToolsDocumentSamplerRoute: typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   AuthProjectProjectIdToolsDuplicateFinderRoute: typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   AuthProjectProjectIdToolsHealthRoute: typeof AuthProjectProjectIdToolsHealthRoute
@@ -802,6 +864,7 @@ interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdWhiteboardIndexRoute: typeof AuthProjectProjectIdWhiteboardIndexRoute
   AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute
   AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute: typeof AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute
+  AuthProjectProjectIdAnnotationCodebookReleasesRoute: typeof AuthProjectProjectIdAnnotationCodebookReleasesRoute
   AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute: typeof AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute
   AuthProjectProjectIdAnalysisTimelineIndexRoute: typeof AuthProjectProjectIdAnalysisTimelineIndexRoute
 }
@@ -832,6 +895,10 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
       AuthProjectProjectIdAnalysisWordFrequencyRoute,
     AuthProjectProjectIdAnnotationSdocIdRoute:
       AuthProjectProjectIdAnnotationSdocIdRoute,
+    AuthProjectProjectIdAnnotationCodebookRoute:
+      AuthProjectProjectIdAnnotationCodebookRoute,
+    AuthProjectProjectIdAnnotationReviewRoute:
+      AuthProjectProjectIdAnnotationReviewRoute,
     AuthProjectProjectIdToolsDocumentSamplerRoute:
       AuthProjectProjectIdToolsDocumentSamplerRoute,
     AuthProjectProjectIdToolsDuplicateFinderRoute:
@@ -853,6 +920,8 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
       AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisCotaIdRoute,
     AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute:
       AuthProjectProjectIdAnalysisTimelineAnalysisIdRoute,
+    AuthProjectProjectIdAnnotationCodebookReleasesRoute:
+      AuthProjectProjectIdAnnotationCodebookReleasesRoute,
     AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute:
       AuthProjectProjectIdAnalysisConceptsOverTimeAnalysisIndexRoute,
     AuthProjectProjectIdAnalysisTimelineIndexRoute:

@@ -25,6 +25,7 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_crud import crud_code
+from core.code.code_service import code_service
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
@@ -267,6 +268,10 @@ class SpanClassificationModelService(TextClassificationModelService):
         user_id2sdoc_id2annotations: dict[int, dict[int, list[SpanAnnotationORM]]] = (
             defaultdict(lambda: defaultdict(list))
         )
+        canonical_code_id = code_service.canonical_code_id_by_snapshot(
+            db, code_ids=class_ids
+        )
+        snapshot_ids = list(canonical_code_id)
 
         # 2. retrieve annotations from the database, in batches
         for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
@@ -282,7 +287,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 .where(
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
-                    SpanAnnotationORM.code_id.in_(class_ids),
+                    SpanAnnotationORM.code_id.in_(snapshot_ids),
                 )
             )
 
@@ -310,7 +315,12 @@ class SpanClassificationModelService(TextClassificationModelService):
                 labels = [0 for word in words]
                 for annotation in annotations:
                     labels[annotation.begin_token : annotation.end_token] = [
-                        classid2labelid.get(annotation.code_id, 0)
+                        classid2labelid.get(
+                            canonical_code_id.get(
+                                annotation.code_id, annotation.code_id
+                            ),
+                            0,
+                        )
                     ] * (annotation.end_token - annotation.begin_token)
                 dataset.append(
                     {
@@ -493,19 +503,26 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # Dataset statistics (number of annotations per code)
+        canonical_code_id = code_service.canonical_code_id_by_snapshot(
+            db, code_ids=list(code2parent)
+        )
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[code2parent[annotation.code_id]] += 1
+                train_dataset_stats[
+                    code2parent[canonical_code_id[annotation.code_id]]
+                ] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[code2parent[annotation.code_id]] += 1
+                eval_dataset_stats[
+                    code2parent[canonical_code_id[annotation.code_id]]
+                ] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -714,9 +731,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         eval_dataset_stats: dict[int, int] = {
             code_id: 0 for code_id, label_id in classid2labelid.items() if label_id != 0
         }
+        canonical_code_id = code_service.canonical_code_id_by_snapshot(
+            db, code_ids=list(eval_dataset_stats)
+        )
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[annotation.code_id] += 1
+                eval_dataset_stats[canonical_code_id[annotation.code_id]] += 1
 
         # 3. Load the model
         job.update(current_step=3)

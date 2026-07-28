@@ -169,10 +169,15 @@ class CodeImporter:
             self.code_id_mapping[code.code_name] = existing_code.id
             return None
         else:
+            parent_concept_id = (
+                crud_code.read(db=self.db, id=parent_id).concept_id
+                if parent_id is not None
+                else None
+            )
             return CodeCreate(
                 name=code.code_name,
                 description=code.description,
-                parent_id=parent_id,
+                parent_concept_id=parent_concept_id,
                 project_id=self.project_id,
                 is_system=False,
                 enabled=True,
@@ -191,10 +196,14 @@ class CodeImporter:
         Raises:
             ValueError: If validation fails
         """
-        if existing_code.parent_id != expected_parent_id:
+        expected_parent_concept_id = (
+            crud_code.read(db=self.db, id=expected_parent_id).concept_id
+            if expected_parent_id is not None
+            else None
+        )
+        if existing_code.parent_concept_id != expected_parent_concept_id:
             raise ValueError(
-                f"Code '{imported_code.code_name}' already exists with different parent ID. "
-                f"Expected parent ID: {expected_parent_id}, actual: {existing_code.parent_id}"
+                f"Code '{imported_code.code_name}' already exists with a different parent."
             )
 
         # if existing_code.description != imported_code.description:

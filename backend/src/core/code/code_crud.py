@@ -1,85 +1,102 @@
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from config import conf
 from config_schema import SystemCodeConfig
 from core.code.code_dto import CodeCreate, CodeUpdate
 from core.code.code_orm import CodeORM
+from core.code.code_service import code_service
 from repos.db.crud_base import CRUDBase
 from utils.color_utils import get_next_color
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
-    ### CREATE OPERATIONS ###
-
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
-        dto_obj_data = jsonable_encoder(create_dto)
-        # first create the code
-        # noinspection PyArgumentList
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.flush()
+        return code_service.create(db, create_dto=create_dto, author_id=None)
 
-        return db_obj
+    def create_multi(
+        self, db: Session, *, create_dtos: list[CodeCreate]
+    ) -> list[CodeORM]:
+        return [self.create(db, create_dto=create_dto) for create_dto in create_dtos]
+
+    def update(self, db: Session, *, id: int, update_dto: CodeUpdate) -> CodeORM:
+        return code_service.update(
+            db, code_id=id, update_dto=update_dto, author_id=None
+        )
+
+    def delete(self, db: Session, *, id: int) -> CodeORM:
+        raise RuntimeError("Codes must be tombstoned through CodeService")
+
+    def remove_multi(self, db: Session, *, ids: list[int]) -> int:
+        raise RuntimeError("Codes must be tombstoned through CodeService")
 
     def create_system_codes_for_project(
         self, db: Session, proj_id: int
     ) -> list[CodeORM]:
         created: list[CodeORM] = []
 
-        def __create_recursively(
-            code_list: list[SystemCodeConfig], parent_code_id: int | None = None
-        ):
+        def create_recursively(
+            code_list: list[SystemCodeConfig], parent_concept_id=None
+        ) -> None:
             for system_code in code_list:
-                create_dto = CodeCreate(
-                    name=system_code.name,
-                    color=get_next_color(),
-                    description=system_code.desc,
-                    project_id=proj_id,
-                    parent_id=parent_code_id,
-                    is_system=True,
-                    enabled=system_code.enabled,
+                existing = self.read_by_name_and_project(
+                    db, code_name=system_code.name, proj_id=proj_id
                 )
-
-                existing_code_id = self.read_id_by_name_and_project(
-                    db,
-                    code_name=create_dto.name,
-                    proj_id=create_dto.project_id,
-                )
-
-                if existing_code_id is None:
-                    db_code = self.create(db=db, create_dto=create_dto)
-                    existing_code_id = db_code.id
-                    created.append(db_code)
-
-                if len(system_code.children) > 0:
-                    __create_recursively(
-                        system_code.children,
-                        parent_code_id=existing_code_id,
+                if existing is None:
+                    existing = self.create(
+                        db=db,
+                        create_dto=CodeCreate(
+                            name=system_code.name,
+                            color=get_next_color(),
+                            description=system_code.desc,
+                            project_id=proj_id,
+                            parent_concept_id=parent_concept_id,
+                            is_system=True,
+                            enabled=system_code.enabled,
+                        ),
                     )
+                    created.append(existing)
+                if system_code.children:
+                    create_recursively(system_code.children, existing.concept_id)
 
-        __create_recursively(conf.system_codes)
-
+        create_recursively(conf.system_codes)
         return created
 
-    ### READ OPERATIONS ###
-
     def read_by_name(self, db: Session, code_name: str) -> list[CodeORM]:
-        return db.query(self.model).filter(self.model.name == code_name).all()
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.name == code_name,
+                self.model.is_active == True,  # noqa: E712
+                self.model.is_deleted == False,  # noqa: E712
+            )
+            .all()
+        )
 
     def read_by_names(
         self, db: Session, project_id: int, names: list[str]
     ) -> list[CodeORM]:
         return (
             db.query(self.model)
-            .filter(self.model.project_id == project_id, self.model.name.in_(names))
+            .filter(
+                self.model.project_id == project_id,
+                self.model.branch_id.is_(None),
+                self.model.name.in_(names),
+                self.model.is_active == True,  # noqa: E712
+                self.model.is_deleted == False,  # noqa: E712
+            )
             .all()
         )
 
     def read_system_codes_by_project(self, db: Session, proj_id: int) -> list[CodeORM]:
         return (
             db.query(self.model)
-            .filter(self.model.project_id == proj_id, self.model.is_system == True)  # noqa: E712
+            .filter(
+                self.model.project_id == proj_id,
+                self.model.branch_id.is_(None),
+                self.model.is_system == True,  # noqa: E712
+                self.model.is_active == True,  # noqa: E712
+                self.model.is_deleted == False,  # noqa: E712
+            )
             .all()
         )
 
@@ -88,60 +105,34 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     ) -> CodeORM | None:
         return (
             db.query(self.model)
-            .filter(self.model.name == code_name, self.model.project_id == proj_id)
+            .filter(
+                self.model.name == code_name,
+                self.model.project_id == proj_id,
+                self.model.branch_id.is_(None),
+                self.model.is_active == True,  # noqa: E712
+                self.model.is_deleted == False,  # noqa: E712
+            )
             .first()
         )
 
     def read_id_by_name_and_project(
         self, db: Session, *, code_name: str, proj_id: int
     ) -> int | None:
-        code_id = (
-            db.query(self.model.id)
-            .filter(self.model.name == code_name, self.model.project_id == proj_id)
-            .first()
-        )
-        return code_id[0] if code_id else None
+        code = self.read_by_name_and_project(db, code_name, proj_id)
+        return code.id if code else None
 
-    def read_with_children(self, db: Session, *, code_id) -> list[CodeORM]:
-        topq = (
-            db.query(self.model.id)
-            .filter(self.model.id == code_id)
-            .cte("cte", recursive=True)
-        )
-        bottomq = db.query(self.model.id).join(topq, self.model.parent_id == topq.c.id)
-        recursive_q = topq.union(bottomq)  # type: ignore
-        return (
-            db.query(self.model)
-            .filter(self.model.id.in_(db.query(recursive_q.c.id)))
-            .all()
-        )
-
-    ### UPDATE OPERATIONS ###
-
-    def update_with_children(
-        self, db: Session, *, code_id, update_dto: CodeUpdate
-    ) -> CodeORM:
-        if update_dto.enabled is None:
-            return self.update(db, id=code_id, update_dto=update_dto)
-        codes = self.read_with_children(db, code_id=code_id)
-        obj_data = jsonable_encoder(codes[0].as_dict())
-        update_data = update_dto.model_dump(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(codes[0], field, update_data[field])
-        for code in codes:
-            code.enabled = update_dto.enabled
-        db.add_all(codes)
-        db.flush()
-        return codes[0]
-
-    ### OTHER OPERATIONS ###
+    def read_with_children(self, db: Session, *, code_id: int) -> list[CodeORM]:
+        code = self.read(db, code_id)
+        visible = code_service.read_visible_map(db, project_id=code.project_id)
+        children_by_parent: dict = {}
+        for candidate in visible.values():
+            children_by_parent.setdefault(candidate.parent_concept_id, []).append(
+                candidate
+            )
+        return code_service._subtree(code, children_by_parent)
 
     def exists_by_name(self, db: Session, *, code_name: str) -> bool:
-        return (
-            db.query(self.model.id).filter(self.model.name == code_name).first()
-            is not None
-        )
+        return bool(self.read_by_name(db, code_name))
 
 
 crud_code = CRUDCode(CodeORM)

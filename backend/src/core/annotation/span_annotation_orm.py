@@ -28,7 +28,6 @@ class SpanAnnotationORM(ORMBase):
     updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
-
     # one to one
     object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",

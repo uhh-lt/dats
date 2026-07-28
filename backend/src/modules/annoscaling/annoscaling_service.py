@@ -9,6 +9,7 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.code.code_service import code_service
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
 from core.doc.sentence_embedding_dto import SentenceObjectIdentifier
 from core.doc.source_document_data_crud import crud_sdoc_data
@@ -229,6 +230,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
     def __get_annotations(
         self, db: Session, project_id: int, user_ids: list[int], code_id: int
     ) -> list[tuple[int, int, int]]:
+        snapshot_ids = code_service.snapshot_ids_for_code_ids(db, code_ids=[code_id])
         query = (
             db.query(
                 SpanAnnotationORM.begin,
@@ -246,7 +248,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
             .filter(
                 SourceDocumentORM.project_id == project_id,
                 AnnotationDocumentORM.user_id.in_(user_ids),
-                SpanAnnotationORM.code_id == code_id,
+                SpanAnnotationORM.code_id.in_(snapshot_ids),
             )
         )
         res = query.all()
