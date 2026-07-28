@@ -5,5 +5,4 @@ class InstanceInfo(BaseModel):
     is_oidc_enabled: bool = Field(description="Is OIDC enabled")
     oidc_provider_names: list[str] = Field(description="OIDC provider names")
     is_stable: bool = Field(description="Is stable")
-    glitchtip_public_key: str | None = Field(description="Glitchtip public key")
-    glitchtip_project_id: int | None = Field(description="Glitchtip project ID")
+    glitchtip_dsn: str | None = Field(description="Glitchtip DSN")
