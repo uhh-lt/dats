@@ -1,6 +1,7 @@
 services:
   glitchtip-db:
     image: postgres:18
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${GLITCHTIP_DB_PASS?glitchtip-db-pass-required!}
       POSTGRES_USER: ${GLITCHTIP_DB_USER?glitchtip-db-user-required!}
@@ -11,7 +12,6 @@ services:
       interval: 30s
       retries: 5
       timeout: 5s
-    restart: unless-stopped
     volumes:
       - glitchtip-pg-data:/var/lib/postgresql
     networks:
@@ -20,6 +20,7 @@ services:
   # TODO: add a healthcheck
   glitchtip:
     image: glitchtip/glitchtip:6 # Check https://glitchtip.com/blog/ for new major versions
+    restart: unless-stopped
     depends_on:
       - glitchtip-db
     ports:
@@ -39,7 +40,6 @@ services:
       # GLITCHTIP_ENABLE_LOGS: "False" # Disable log ingestion
       # GLITCHTIP_ENABLE_UPTIME: "False" # Disable uptime monitoring
       SERVER_ROLE: all_in_one
-    restart: unless-stopped
     volumes:
       - glitchtip-data:/code/uploads
     networks:

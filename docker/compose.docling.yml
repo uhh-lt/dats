@@ -1,6 +1,7 @@
 services:
   docling:
     image: ghcr.io/docling-project/docling-serve-cu126:main
+    restart: unless-stopped
     # user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
     # group_add:
     #   - "1001"
@@ -44,10 +45,3 @@ services:
     #volumes:
     #  - ./docling_cache/cache:/opt/app-root/src/.cache
     #  - ./docling/data:/doclingdata
-    restart: always
-    networks:
-      - docling_network
-
-networks:
-  docling_network:
-    name: docling_network

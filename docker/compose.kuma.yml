@@ -1,6 +1,7 @@
 services:
   mariadb:
     image: mariadb
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 10s
@@ -19,6 +20,7 @@ services:
 
   kuma:
     image: louislam/uptime-kuma:1
+    restart: unless-stopped
     group_add:
       - "${DOCKER_GROUP_ID:-999}"
     environment:
