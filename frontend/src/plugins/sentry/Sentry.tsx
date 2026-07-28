@@ -19,16 +19,13 @@ export const SentryProvider = ({ children }: { children: React.ReactNode }) => {
     return null;
   }
 
-  const { glitchtip_public_key: publicKey, glitchtip_project_id: projectId } = instanceInfo;
-
-  if (!instanceInfo.glitchtip_public_key || !instanceInfo.glitchtip_project_id) {
+  if (!instanceInfo.glitchtip_dsn) {
     console.warn("Glitchtip configuration not available. Sentry tracking is disabled.");
     return <>{children}</>;
   }
 
   Sentry.init({
-    dsn: `http://${publicKey}@dummy:12345/${projectId}`,
-    tunnel: `/sentry-api/api/${projectId}/envelope/?sentry_key=${publicKey}`,
+    dsn: instanceInfo.glitchtip_dsn,
     environment: import.meta.env.MODE,
     integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: import.meta.env.MODE === "development" ? 1.0 : 0.01,
