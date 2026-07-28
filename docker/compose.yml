@@ -241,6 +241,7 @@ services:
     environment:
       <<: *dats-common-env
       LOG_LEVEL: ${API_LOG_LEVEL?api-log-level-required!}
+      API_WORKERS: ${API_WORKERS?api-workers-required!}
     command: src/backend_api_entrypoint.sh
     volumes:
       - ./backend_repo:/dats/docker/backend_repo
