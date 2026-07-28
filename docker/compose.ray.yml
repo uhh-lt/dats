@@ -3,6 +3,7 @@
 services:
   ray:
     image: uhhlt/dats_ray:${DATS_RAY_DOCKER_VERSION?dats-ray-docker-version-required!}
+    restart: unless-stopped
     ports:
       - ${RAY_API_EXPOSED?ray-api-exposed-required!}:8000
       - ${RAY_DASHBOARD_EXPOSED?ray-dashboard-exposed-required!}:8265
@@ -42,9 +43,3 @@ services:
             - driver: nvidia
               device_ids: ["${RAY_DEVICE_IDS?ray-device-ids-required!}"]
               capabilities: [gpu]
-    networks:
-      - ray_network
-
-networks:
-  ray_network:
-    name: ray_network

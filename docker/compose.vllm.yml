@@ -2,13 +2,13 @@
 
 x-vllm-common: &vllm-common
   image: vllm/vllm-openai:v0.25.1
+  restart: unless-stopped
   environment:
     - HUGGING_FACE_HUB_TOKEN=${HF_HUB_TOKEN?hf-hub-token-required!}
     - VLLM_LOGGING_LEVEL=INFO
     - TORCHINDUCTOR_CACHE_DIR=/.cache/torch_inductor_cache
     - TRITON_CACHE_DIR=/.cache/triton_cache
     - USER=vllm
-  restart: unless-stopped
   ipc: host
   user: ${DOCKER_UID?docker-uid-required!}:${DOCKER_GID?docker-gid-required!}
   volumes:
@@ -20,8 +20,6 @@ x-vllm-common: &vllm-common
     interval: 60s
     timeout: 10s
     retries: 5
-  networks:
-    - vllm_network
 
 services:
   vllm-llm:
@@ -48,7 +46,3 @@ services:
             - driver: nvidia
               device_ids: ["${VLLM_EMB_DEVICE_ID?vllm-emb-device-id-required!}"]
               capabilities: [gpu]
-
-networks:
-  vllm_network:
-    name: vllm_network

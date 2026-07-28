@@ -63,10 +63,6 @@ x-dats-common: &dats-common
       restart: true
   networks:
     - dats_network
-    - ray_network
-    - vllm_network
-    - docling_network
-    - glitchtip_network
 
 services:
   postgres:
@@ -282,21 +278,8 @@ services:
       - "${FRONTEND_EXPOSED?frontend-exposed-required!}:3000"
     networks:
       - dats_network
-      - glitchtip_network
     profiles:
       - frontend
 
 networks:
   dats_network:
-  ray_network:
-    name: ray_network
-    external: true
-  vllm_network:
-    name: vllm_network
-    external: true
-  docling_network:
-    name: docling_network
-    external: true
-  glitchtip_network:
-    name: glitchtip_network
-    external: true
