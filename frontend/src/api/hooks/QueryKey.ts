@@ -258,4 +258,7 @@ export const QueryKey = {
   // all classifiers of a project (by project id)
   // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts
   PROJECT_CLASSIFIERS: "projectClassifiers",
+  // classifier dataset statistics (by project id, model, classes, tags, users, merge-children setting)
+  // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts
+  CLASSIFIER_DATASET_STATISTICS: "classifierDatasetStatistics",
 };
