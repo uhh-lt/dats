@@ -50,7 +50,7 @@ export const StatusStep = memo(() => {
             sx={{ ml: 5 }}
             variant={llmJob.isSuccess ? "determinate" : "indeterminate"}
             current={llmJob.isSuccess ? llmJob.data.current_step : 0}
-            max={llmJob.isSuccess ? llmJob.data.steps.length - 1 : 0}
+            max={Math.max(llmJob.isSuccess ? llmJob.data.steps.length - 1 : 0, 1)}
             tooltip={progressTooltip}
           />
           {llmJob.isSuccess && (

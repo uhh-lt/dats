@@ -22,7 +22,7 @@ export function ClassifierJobProgressBar({ classifierJob }: { classifierJob: Cla
         sx={{ ml: 5 }}
         variant={classifierJob ? "determinate" : "indeterminate"}
         current={classifierJob ? classifierJob.current_step : 0}
-        max={classifierJob ? classifierJob.steps.length - 1 : 0}
+        max={Math.max(classifierJob ? classifierJob.steps.length - 1 : 0, 1)}
         tooltip={progressTooltip}
       />
       {classifierJob && (
