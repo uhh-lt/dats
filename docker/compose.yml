@@ -12,6 +12,9 @@ x-dats-common: &dats-common
     API_UUID_NAMESPACE: ${API_UUID_NAMESPACE:?api-uuid-namespace-required!}
     AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?auth-jwt-secret-required!}
     AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?auth-session-secret-required!}
+    # User
+    USER: dats
+    HOME: /cache
     # DB Connections
     WEAVIATE_HOST: weaviate
     WEAVIATE_PORT: 8080
