@@ -22,13 +22,12 @@ import { selectSelectedIds } from "@store/generic/tableSlice";
 import { useAppDispatch, useAppSelector, useReduxConnector } from "@store/storeHooks";
 import {
   MRT_ColumnDef,
-  MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_TableContainer,
   MRT_ToggleDensePaddingButton,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useInitSearchFilterSlice } from "../../../_hooks/useInitSearchFilterSlice";
 import { SearchActions } from "../../../store/documentSearchSlice";
 import { SentenceSearchActions } from "../../../store/sentenceSearchSlice";
@@ -90,7 +89,6 @@ export function SentenceSimilaritySearchTable({
 
   // virtualization
   const [toolbarEl, setToolbarEl] = useState<HTMLDivElement | null>(null);
-  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
   const tableInfo = useInitSearchFilterSlice({ projectId });
@@ -205,7 +203,6 @@ export function SentenceSimilaritySearchTable({
     onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
-    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
     rowVirtualizerOptions: { overscan: 4 },
     // filtering
     enableColumnFilters: false,
