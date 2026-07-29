@@ -8,7 +8,6 @@ import { DocType } from "@models/DocType";
 import { CardContent, CardHeader, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import {
   MRT_ColumnDef,
-  MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_ToggleDensePaddingButton,
   MRT_ToggleFiltersButton,
@@ -69,7 +68,6 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: Co
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table
   const table = useMaterialReactTable<CodeOccurrence>({
@@ -88,7 +86,6 @@ export function CodeOccurrenceTable({ projectId, codeId, userIds, docTypes }: Co
     enablePagination: false,
     // virtualization
     enableRowVirtualization: true,
-    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
     rowVirtualizerOptions: { overscan: 2 },
     // toolbars
     enableBottomToolbar: false,

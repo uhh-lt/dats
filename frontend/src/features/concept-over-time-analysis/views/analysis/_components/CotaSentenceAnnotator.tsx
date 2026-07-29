@@ -19,13 +19,12 @@ import { padStart } from "lodash";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
-  MRT_RowVirtualizer,
   MRT_ShowHideColumnsButton,
   MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { MouseEventHandler, useMemo, useRef, useState } from "react";
+import { MouseEventHandler, useMemo, useState } from "react";
 import { useAnnotateCotaSentences, useRemoveCotaSentences } from "../../../_api/cotaQueryOptions";
 import { CotaActions } from "../../../store/cotaSlice";
 
@@ -92,9 +91,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     CotaActions.onRowSelectionChange,
   );
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
-
-  // virtualization
-  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // compute search space
   const searchSpace = useMemo(() => {
@@ -199,28 +195,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     ] as MRT_ColumnDef<COTASentenceRow>[];
   }, [cota.concepts]);
 
-  // scroll
-  // useEffect(() => {
-  //   provenanceSdocIdSentenceId &&
-  //     requestIdleCallback(() => {
-  //       const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
-  //       const sdocId = parseInt(sdocIdStr);
-  //       const sentenceId = parseInt(sentenceIdStr);
-  //       const scrollToIndex = searchSpace.findIndex(
-  //         (cotaSentence) => cotaSentence.sdocId === sdocId && cotaSentence.sentenceId === sentenceId,
-  //       );
-  //       try {
-  //         if (scrollToIndex !== -1) {
-  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
-  //         } else {
-  //           rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-  //         }
-  //       } catch (error) {
-  //         console.error(error);
-  //       }
-  //     });
-  // }, [provenanceSdocIdSentenceId, searchSpace]);
-
   // actions
   const annotateCotaSentences = useAnnotateCotaSentences();
   const handleAnnotateSentences = (sentences: COTASentenceID[], conceptId: string | null) => {
@@ -278,7 +252,6 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     onRowSelectionChange: setRowSelectionModel,
     // virtualization
     enableRowVirtualization: true,
-    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
     rowVirtualizerOptions: { overscan: 4 },
     // filtering
     enableColumnFilters: false,
