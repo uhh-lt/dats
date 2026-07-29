@@ -21,7 +21,7 @@ import {
   MRT_ToolbarAlertBanner,
   useMaterialReactTable,
 } from "material-react-table";
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierDetails } from "../../../_components/ClassifierDetails";
 import { ClassifierActions } from "../../../store/classifierSlice";
@@ -245,6 +245,11 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
       : undefined,
   });
 
+  // this fixes a bug where the table does not show anything on first render
+  useLayoutEffect(() => {
+    rowVirtualizerInstanceRef.current?.measure();
+  }, [classifiers]);
+
   return (
     <Card className="h100 myFlexContainer" variant="outlined">
       <DATSToolbar variant="dense">
@@ -302,7 +307,7 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
         </Tooltip>
       </DATSToolbar>
       <MRT_ToolbarAlertBanner stackAlertBanner table={table} />
-      <CardContainer sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <CardContainer sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
         <MRT_TableContainer table={table} style={{ flexGrow: 1 }} />
       </CardContainer>
     </Card>
