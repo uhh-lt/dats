@@ -17,34 +17,22 @@ export function DataSelection() {
   const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
 
   // global server state
-  const datasetStats = ClassifierHooks.useComputeDatasetStatistics2();
+  const datasetStats = ClassifierHooks.useComputeDatasetStatistics2({
+    projectId,
+    model,
+    classIds,
+    userIds,
+    tagIds,
+    mergeChildren,
+  });
 
   // selection actions
   const dispatch = useAppDispatch();
   const handleUserSelection = (userIds: number[]) => {
     dispatch(ClassifierActions.onClassifierDialogSelectAnnotators(userIds));
-    datasetStats.mutate({
-      projId: projectId,
-      model: model!,
-      mergeChildrenIntoParent: mergeChildren,
-      requestBody: {
-        tag_ids: tagIds,
-        user_ids: userIds,
-        class_ids: classIds,
-      },
-    });
   };
   const handleTagSelection = (tagIds: number[]) => {
     dispatch(ClassifierActions.onClassifierDialogSelectTags(tagIds));
-    datasetStats.mutate({
-      projId: projectId,
-      model: model!,
-      requestBody: {
-        tag_ids: tagIds,
-        user_ids: userIds,
-        class_ids: classIds,
-      },
-    });
   };
 
   return (
@@ -103,15 +91,24 @@ export function DataSelection() {
           sx={{ py: 1 }}
         />
         <Divider />
-        <CardContent className="myFlexFillAllContainer">
-          {datasetStats.isPending ? (
-            <CircularProgress />
-          ) : datasetStats.isError ? (
+        <CardContent className="myFlexFillAllContainer" sx={{ minHeight: 182, position: "relative" }}>
+          {datasetStats.isError ? (
             <div>{datasetStats.error.message}</div>
-          ) : datasetStats.isSuccess && model ? (
+          ) : datasetStats.data && model ? (
             <ClassifierDataPlot data={datasetStats.data} classifierModel={model} minHeight={150} />
-          ) : (
+          ) : !datasetStats.isFetching ? (
             <Box>Select data first!</Box>
+          ) : null}
+          {datasetStats.isFetching && (
+            <Box
+              alignItems="center"
+              aria-label="Updating dataset statistics"
+              display="flex"
+              justifyContent="center"
+              sx={{ inset: 0, pointerEvents: "none", position: "absolute" }}
+            >
+              <CircularProgress />
+            </Box>
           )}
         </CardContent>
       </Card>

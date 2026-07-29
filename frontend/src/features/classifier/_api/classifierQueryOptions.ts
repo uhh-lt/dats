@@ -133,9 +133,43 @@ const useDeleteClassifier = () =>
     },
   });
 
-const useComputeDatasetStatistics2 = () =>
-  useMutation({
-    mutationFn: ClassifierService.computeDatasetStatistics2,
+interface DatasetStatisticsParams {
+  projectId: number;
+  model: ClassifierModel | undefined;
+  classIds: number[];
+  userIds: number[];
+  tagIds: number[];
+  mergeChildren: boolean;
+}
+
+const useComputeDatasetStatistics2 = ({
+  projectId,
+  model,
+  classIds,
+  userIds,
+  tagIds,
+  mergeChildren,
+}: DatasetStatisticsParams) =>
+  useQuery({
+    queryKey: [QueryKey.CLASSIFIER_DATASET_STATISTICS, projectId, model, classIds, userIds, tagIds, mergeChildren],
+    queryFn: () => {
+      if (model === undefined) {
+        throw new Error("Cannot compute dataset statistics without a classifier model.");
+      }
+
+      return ClassifierService.computeDatasetStatistics2({
+        projId: projectId,
+        model,
+        mergeChildrenIntoParent: mergeChildren,
+        requestBody: {
+          tag_ids: tagIds,
+          user_ids: userIds,
+          class_ids: classIds,
+        },
+      });
+    },
+    enabled: projectId >= 0 && model !== undefined && (tagIds.length > 0 || userIds.length > 0),
+    placeholderData: (previousData) => previousData,
   });
 
 export const ClassifierHooks = {
