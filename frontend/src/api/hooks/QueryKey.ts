@@ -13,6 +13,10 @@ export const QueryKey = {
   // managed by frontend/src/api/hooks/GeneralHooks.ts
   INSTANCE_INFO: "instanceInfo",
 
+  // GitHub release notes (by release tag)
+  // managed by frontend/src/features/whats-new/WhatsNewDialog.tsx
+  GITHUB_RELEASE: "githubRelease",
+
   // all UserRead[] of a Project (by project id)
   // managed by frontend/src/api/hooks/UserHooks.ts
   PROJECT_USERS: "projectUsers",
