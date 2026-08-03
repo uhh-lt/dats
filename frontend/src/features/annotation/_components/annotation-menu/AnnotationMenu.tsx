@@ -2,6 +2,7 @@ import { CodeHooks } from "@api/hooks/CodeHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
 import { MemoButton } from "@core/memo";
+import { useAuth } from "@core/auth";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -18,11 +19,14 @@ import {
   PopoverPosition,
   TextField,
   Tooltip,
+  Typography,
   UseAutocompleteProps,
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { useAppSelector } from "@store/storeHooks";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";
+import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../../store/codeShortcutSlice";
 import { useComputeCodesForSelection } from "./_hooks/useComputeCodesForSelection";
 
 const filter = createFilterOptions<ICodeFilterWithLevel>();
@@ -43,10 +47,15 @@ export interface AnnotationMenuHandle {
 
 interface ICodeFilterWithLevel extends NamedObjWithParentWithLevel<CodeRead> {
   title: string;
+  shortcutKey?: CodeShortcutKey;
 }
 
 export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplicate }: AnnotationMenuProps) => {
   const openCodeCreate = useOpenDialog("codeCreate");
+  const { user } = useAuth();
+  const projectId = useAppSelector((state) => state.project.projectId);
+  const bindings = useAppSelector((state) => selectCodeShortcuts(state, user?.id, projectId));
+  const submissionLockedRef = useRef(false);
 
   // local client state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -60,16 +69,31 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 
   // computed
   const codes = useComputeCodesForSelection();
+  const enabledCodes = CodeHooks.useGetEnabledCodes();
   const codeTree = useWithLevel(codes, codes[0]?.parent_id ?? null);
   const codeOptions: ICodeFilterWithLevel[] = useMemo(() => {
-    return codeTree.map((c) => ({
+    const scopedOptions = codeTree.map((c) => ({
       ...c,
       title: c.data.name,
     }));
-  }, [codeTree]);
+    const enabledCodesById = new Map((enabledCodes.data ?? []).map((code) => [code.id, code]));
+    const shortcutOptions = CODE_SHORTCUT_KEYS.flatMap((shortcutKey) => {
+      const codeId = bindings[shortcutKey];
+      const code = codeId === undefined ? undefined : enabledCodesById.get(codeId);
+      if (!code) {
+        return [];
+      }
+
+      return [{ data: code, title: code.name, level: 0, shortcutKey }];
+    });
+    const shortcutCodeIds = new Set(shortcutOptions.map((option) => option.data.id));
+
+    return [...shortcutOptions, ...scopedOptions.filter((option) => !shortcutCodeIds.has(option.data.id))];
+  }, [bindings, codeTree, enabledCodes.data]);
 
   // methods
   const openAnnotationMenu = (position: PopoverPosition, annotations?: Annotations) => {
+    submissionLockedRef.current = false;
     setEditingAnnotation(undefined);
     setDuplicatingAnnotation(undefined);
     setAnnotationsToEdit(annotations);
@@ -144,6 +168,11 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 
   // submit the code selector (either we edited or created a new code)
   const submit = (code: CodeRead, isNewCode: boolean) => {
+    if (submissionLockedRef.current) {
+      return;
+    }
+    submissionLockedRef.current = true;
+
     // when the user selected an annotation to edit, we were editing
     if (editingAnnotation !== undefined) {
       onEdit(editingAnnotation, code.id);
@@ -154,6 +183,35 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
       onAdd(code.id, isNewCode);
     }
     closeAnnotationMenu();
+  };
+
+  const handleShortcutKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (
+      !showCodeSelection ||
+      event.repeat ||
+      event.nativeEvent.isComposing ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      event.shiftKey
+    ) {
+      return;
+    }
+
+    const shortcutKey = CODE_SHORTCUT_KEYS.find((candidate) => candidate === event.key);
+    if (!shortcutKey) {
+      return;
+    }
+
+    const codeId = bindings[shortcutKey];
+    const code = codeId === undefined ? undefined : enabledCodes.data?.find((candidate) => candidate.id === codeId);
+    if (!code) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    submit(code, false);
   };
 
   return (
@@ -170,6 +228,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
         vertical: "top",
         horizontal: "left",
       }}
+      onKeyDownCapture={handleShortcutKeyDown}
     >
       {!showCodeSelection && annotationsToEdit ? (
         <List dense>
@@ -191,7 +250,11 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
             value={autoCompleteValue}
             onChange={handleChange}
             filterOptions={(options, params) => {
-              const filtered = filter(options, params);
+              const shortcutOptions = options.filter((option) => option.shortcutKey !== undefined);
+              const filtered = filter(
+                options.filter((option) => option.shortcutKey === undefined),
+                params,
+              );
 
               const { inputValue } = params;
               // Suggest the creation of a new value
@@ -214,7 +277,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
                 });
               }
 
-              return filtered;
+              return [...shortcutOptions, ...filtered];
             }}
             options={codeOptions}
             getOptionLabel={(option) => {
@@ -228,8 +291,27 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
               const indent = option.level * 10 + 10;
               return (
                 <li {...props} key={option.data.id} style={{ paddingLeft: indent }}>
-                  <Box style={{ width: 20, height: 20, backgroundColor: option.data.color, marginRight: 8 }}></Box>{" "}
-                  {option.title}
+                  <Box sx={{ display: "flex", alignItems: "center", width: "100%", minWidth: 0 }}>
+                    <Box sx={{ width: 20, height: 20, backgroundColor: option.data.color, mr: 1, flexShrink: 0 }} />
+                    <Typography noWrap>{option.title}</Typography>
+                    {option.shortcutKey !== undefined ? (
+                      <Box
+                        component="kbd"
+                        sx={{
+                          ml: "auto",
+                          px: 1,
+                          py: 0.25,
+                          border: 1,
+                          borderColor: "divider",
+                          borderRadius: 1,
+                          bgcolor: "action.hover",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {option.shortcutKey}
+                      </Box>
+                    ) : null}
+                  </Box>
                 </li>
               );
             }}

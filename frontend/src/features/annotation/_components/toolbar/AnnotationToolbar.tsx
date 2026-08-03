@@ -9,7 +9,9 @@ import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
 import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
-import { ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import KeyboardIcon from "@mui/icons-material/Keyboard";
+import { IconButton, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import { useOpenDialog } from "@store/global/dialogBusSlice";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { AnnotationMode } from "../../_types/AnnotationMode";
@@ -24,6 +26,7 @@ interface AnnotationToolbarProps {
 }
 
 export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
+  const openCodeShortcutManager = useOpenDialog("codeShortcutManager");
   // global client state (URL search params)
   const { compareWithUserId } = AnnotationRouteAPI.useSearch();
   const isCompareMode = compareWithUserId !== undefined;
@@ -95,6 +98,11 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
             </ToggleButtonGroup>
           )}
           <LLMAssistanceButton sdocIds={[sdoc.id]} projectId={sdoc.project_id} />
+          <Tooltip title="Manage code shortcuts" placement="bottom">
+            <IconButton onClick={() => openCodeShortcutManager()}>
+              <KeyboardIcon />
+            </IconButton>
+          </Tooltip>
         </>
       ) : null}
     </DATSToolbar>
