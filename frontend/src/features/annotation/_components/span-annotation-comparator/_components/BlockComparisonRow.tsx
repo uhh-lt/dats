@@ -7,6 +7,7 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box, IconButton, Stack } from "@mui/material";
 import { memo, MouseEvent, useMemo } from "react";
 import { IToken } from "../../../_types/IToken";
+import { SpanAnnotationResizeStartHandler } from "../../../_hooks/useSpanAnnotationResize";
 import { BlockContent } from "./BlockContent";
 import { RenderBlock } from "../_hooks/useBlockPartition";
 
@@ -30,6 +31,8 @@ interface BlockComparisonRowProps {
   handleRightMouseUp: (event: MouseEvent) => void;
   codeMap: CodeMap;
   projectId: number;
+  handleLeftResizeStart: SpanAnnotationResizeStartHandler;
+  handleRightResizeStart: SpanAnnotationResizeStartHandler;
 }
 
 /**
@@ -61,6 +64,8 @@ export const BlockComparisonRow = memo(
     handleRightMouseUp,
     codeMap,
     projectId,
+    handleLeftResizeStart,
+    handleRightResizeStart,
   }: BlockComparisonRowProps) => {
     const blockTokenIds = useMemo(() => {
       return block.sentenceIds.flatMap((sentId) => sentenceTokenIds[sentId] || []);
@@ -157,6 +162,7 @@ export const BlockComparisonRow = memo(
             annotationsPerToken={leftAnnotationsPerToken}
             annotationMap={leftAnnotationMap}
             projectId={projectId}
+            onResizeStart={handleLeftResizeStart}
           />
         </Box>
 
@@ -258,6 +264,7 @@ export const BlockComparisonRow = memo(
             annotationsPerToken={rightAnnotationsPerToken}
             annotationMap={rightAnnotationMap}
             projectId={projectId}
+            onResizeStart={handleRightResizeStart}
           />
         </Box>
       </Box>

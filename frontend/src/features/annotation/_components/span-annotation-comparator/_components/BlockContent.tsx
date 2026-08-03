@@ -2,6 +2,7 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import parse, { DOMNode, domToReact, Element, HTMLReactParserOptions } from "html-react-parser";
 import { memo, useMemo } from "react";
 import { IToken } from "../../../_types/IToken";
+import { SpanAnnotationResizeStartHandler } from "../../../_hooks/useSpanAnnotationResize";
 import { SdocAudioLink } from "../../_components/SdocAudioLink";
 import { SdocImage } from "../../_components/SdocImage";
 import { SdocVideoLink } from "../../_components/SdocVideoLink";
@@ -13,6 +14,7 @@ interface BlockContentProps {
   annotationsPerToken: Map<number, number[]> | undefined;
   annotationMap: Map<number, SpanAnnotationRead> | undefined;
   projectId: number;
+  onResizeStart?: SpanAnnotationResizeStartHandler;
 }
 
 /**
@@ -25,7 +27,7 @@ interface BlockContentProps {
  * - Media tags (`<img>`, `<video>`, `<audio>`) with customized application components.
  */
 export const BlockContent = memo(
-  ({ html, tokenData, annotationsPerToken, annotationMap, projectId }: BlockContentProps) => {
+  ({ html, tokenData, annotationsPerToken, annotationMap, projectId, onResizeStart }: BlockContentProps) => {
     const options = useMemo<HTMLReactParserOptions>(() => {
       const parserOpts: HTMLReactParserOptions = {
         replace(domNode: DOMNode): React.ReactElement | string | null | boolean | object | void {
@@ -61,13 +63,20 @@ export const BlockContent = memo(
               const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
                 (annotationId) => annotationMap.get(annotationId)!,
               );
-              return <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
+              return (
+                <Token
+                  key={`token-${tokenId}`}
+                  token={token}
+                  spanAnnotations={spanAnnotations}
+                  onResizeStart={onResizeStart}
+                />
+              );
             }
           }
         },
       };
       return parserOpts;
-    }, [tokenData, annotationsPerToken, annotationMap, projectId]);
+    }, [tokenData, annotationsPerToken, annotationMap, projectId, onResizeStart]);
 
     const parsed = useMemo(() => {
       return parse(html, options);

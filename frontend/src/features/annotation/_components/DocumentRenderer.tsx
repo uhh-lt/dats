@@ -3,6 +3,7 @@ import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
 import { useCallback, useEffect, useMemo } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { SpanAnnotationResizeStartHandler } from "../_hooks/useSpanAnnotationResize";
 import { IToken } from "../_types/IToken";
 import { DocumentPage } from "./_components/DocumentPage";
 import { SdocAudioLink } from "./_components/SdocAudioLink";
@@ -18,6 +19,7 @@ interface DocumentRendererProps {
   annotationMap: Map<number, SpanAnnotationRead> | undefined;
   isViewer: boolean;
   projectId: number;
+  onResizeStart?: SpanAnnotationResizeStartHandler;
 }
 
 // needs data from useComputeTokenData
@@ -28,6 +30,7 @@ export function DocumentRenderer({
   annotationMap,
   isViewer,
   projectId,
+  onResizeStart,
   ...props
 }: DocumentRendererProps & BoxProps) {
   // jump to annotations
@@ -131,7 +134,14 @@ export function DocumentRenderer({
               const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
                 (annotationId) => annotationMap.get(annotationId)!,
               );
-              return <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
+              return (
+                <Token
+                  key={`token-${tokenId}`}
+                  token={token}
+                  spanAnnotations={spanAnnotations}
+                  onResizeStart={onResizeStart}
+                />
+              );
               // fallback case
             } else {
               return domToReact(domNode.children as DOMNode[], options);
@@ -141,7 +151,7 @@ export function DocumentRenderer({
       };
       return options;
     }
-  }, [annotationMap, annotationsPerToken, tokenData, basicProcessingInstructions]);
+  }, [annotationMap, annotationsPerToken, tokenData, basicProcessingInstructions, onResizeStart]);
 
   return (
     <Box {...props}>
