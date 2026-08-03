@@ -14,7 +14,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
 import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
-import { useComputeTokenData } from "../../_hooks/useComputeTokenData";
+import { useComputeTokenData, useTokenData } from "../../_hooks/useComputeTokenData";
+import { useSpanAnnotationResize } from "../../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../_types/Annotation";
 import { AnnoActions } from "../../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../annotation-menu";
@@ -80,17 +81,28 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const deleteBulkMutation = SpanAnnotationHooks.useDeleteBulkSpanAnnotation();
 
   // Compute token data and maps
+  const resizeTokenData = useTokenData(sdocData);
+  const leftResizeController = useSpanAnnotationResize(resizeTokenData);
+  const rightResizeController = useSpanAnnotationResize(resizeTokenData);
   const {
     tokenData: leftTokenData,
     annotationsPerToken: leftAnnotationsPerToken,
     annotationMap: leftAnnotationMap,
-  } = useComputeTokenData({ sdocData, userId: effectiveLeftUserId });
+  } = useComputeTokenData({
+    sdocData,
+    userId: effectiveLeftUserId,
+    annotationOverride: leftResizeController.previewAnnotation,
+  });
 
   const {
     tokenData: rightTokenData,
     annotationsPerToken: rightAnnotationsPerToken,
     annotationMap: rightAnnotationMap,
-  } = useComputeTokenData({ sdocData, userId: effectiveRightUserId });
+  } = useComputeTokenData({
+    sdocData,
+    userId: effectiveRightUserId,
+    annotationOverride: rightResizeController.previewAnnotation,
+  });
 
   const codeMap = CodeHooks.useGetAllCodesMap();
 
@@ -250,6 +262,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
 
   const handleLeftMouseUp = useCallback(
     async (event: MouseEvent) => {
+      if (leftResizeController.shouldIgnoreMouseUp()) return;
       if (event.button === 2 || !leftTokenData || !isAnnotationAllowedLeft) return;
 
       const selection = window.getSelection();
@@ -345,6 +358,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       effectiveLeftUserId,
       handleLeftMenu,
       openSnackbar,
+      leftResizeController,
       user?.id,
     ],
   );
@@ -563,6 +577,8 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
                     setHoveredControlKey={setHoveredControlKey}
                     handleLeftMouseUp={handleLeftMouseUp}
                     handleRightMouseUp={() => {}}
+                    handleLeftResizeStart={leftResizeController.handleResizeStart}
+                    handleRightResizeStart={rightResizeController.handleResizeStart}
                     codeMap={codeMap.data || {}}
                     projectId={projectId}
                   />

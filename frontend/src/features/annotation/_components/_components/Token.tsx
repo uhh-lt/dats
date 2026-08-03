@@ -3,6 +3,7 @@ import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
+import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";
 import { IToken } from "../../_types/IToken";
 import { TagStyle } from "../../_types/TagStyle";
 import { CodeIndicator } from "./CodeIndicator";
@@ -11,9 +12,10 @@ import { Mark } from "./Mark";
 interface TokenProps {
   spanAnnotations: SpanAnnotationRead[];
   token: IToken;
+  onResizeStart?: SpanAnnotationResizeStartHandler;
 }
 
-export function Token({ token, spanAnnotations }: TokenProps) {
+export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
   // global client state (URL search params)
   const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
 
@@ -29,20 +31,18 @@ export function Token({ token, spanAnnotations }: TokenProps) {
   const marks = useMemo(() => {
     const markCount = spans.length;
     const h = 100 / markCount + "%";
-    const isStart = spans.every((annotation) => annotation.begin_token === token.index);
-    const isEnd = spans.every((annotation) => annotation.end_token === token.index + 1);
     return spans.map((spanAnnotation, index) => (
       <Mark
         key={spanAnnotation.id}
-        codeId={spanAnnotation.code_id}
-        isStart={isStart}
-        isEnd={isEnd}
+        annotation={spanAnnotation}
+        isStart={spanAnnotation.begin_token === token.index}
+        isEnd={spanAnnotation.end_token === token.index + 1}
         height={h}
         top={(100 / markCount) * index + "%"}
-        groups={spanAnnotation.group_ids}
+        onResizeStart={onResizeStart}
       />
     ));
-  }, [token, spans]);
+  }, [onResizeStart, token, spans]);
 
   const codeIndicator = useMemo(() => {
     const startingSpans = spans.filter((spanAnnotation) => spanAnnotation.begin_token === token.index);
