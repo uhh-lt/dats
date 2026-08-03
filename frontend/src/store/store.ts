@@ -9,7 +9,7 @@ import { confirmationReducer, snackbarReducer } from "@core/notification";
 import { seatFilterReducer } from "@core/sentence-annotation";
 import { documentTableFilterReducer } from "@core/source-document";
 import { satFilterReducer } from "@core/span-annotation";
-import { annoReducer } from "@features/annotation";
+import { annoReducer, codeShortcutReducer } from "@features/annotation";
 import { bboxAnnotationAnalysisReducer } from "@features/bbox-annotation-analysis";
 import { classifierReducer } from "@features/classifier";
 import { cotaReducer } from "@features/concept-over-time-analysis";
@@ -34,6 +34,7 @@ export const store = configureStore({
   reducer: {
     // persisted reducers
     ...annoReducer,
+    ...codeShortcutReducer,
     ...searchReducer,
     ...imageSearchReducer,
     ...sentenceSearchReducer,

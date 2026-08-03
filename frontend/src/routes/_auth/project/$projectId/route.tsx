@@ -4,6 +4,7 @@ import { MemoDialog } from "@core/memo";
 import { QuickCommandMenu, ShortcutManager } from "@core/navigation";
 import { ConfirmationDialog } from "@core/notification";
 import { TagCreateDialog, TagEditDialog } from "@core/tag";
+import { CodeShortcutManagerDialog, CodeShortcutSynchronizer } from "@features/annotation";
 // eslint-disable-next-line local/no-internal-modules-public-entry
 import { AnnoActions } from "@features/annotation/store/annoSlice";
 import { ClassifierDialog } from "@features/classifier";
@@ -76,6 +77,8 @@ function ProjectRouteLayout() {
       <FolderEditDialog />
       <CodeCreateDialog projectId={projectId} onCodesCreated={handleCodesCreated} />
       <CodeEditDialog onCodeUpdated={handleCodeUpdated} onCodeDeleted={handleCodeDeleted} />
+      <CodeShortcutManagerDialog projectId={projectId} />
+      <CodeShortcutSynchronizer projectId={projectId} />
       <ConfirmationDialog />
       <ProjectSettingsDialog
         projectId={projectId}
