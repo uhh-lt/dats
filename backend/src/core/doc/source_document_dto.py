@@ -106,6 +106,10 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
     folder_id: int = Field(
         description="ID of the Folder this SourceDocument belongs to"
     )
+    memo_ids: list[int] = Field(
+        description="IDs of the Memos attached to the SourceDocument",
+        default_factory=list,
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

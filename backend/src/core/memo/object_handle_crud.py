@@ -1,7 +1,9 @@
 from psycopg2.errors import UniqueViolation
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
@@ -15,6 +17,7 @@ from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
+from core.memo.memo_dto import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
@@ -25,6 +28,9 @@ from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.crud_base import CRUDBase, NoSuchElementError, UpdateNotAllowed
+from repos.db.sql_utils import aggregate_ids
+
+BATCH_SIZE = conf.postgres.batch_size
 
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAllowed]):
@@ -52,6 +58,17 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         "span_group_id": SpanGroupORM,
         "user_id": UserORM,
         "memo_id": MemoORM,
+    }
+
+    __attached_obj_type_2_obj_id_key = {
+        AttachedObjectType.source_document: "source_document_id",
+        AttachedObjectType.code: "code_id",
+        AttachedObjectType.tag: "tag_id",
+        AttachedObjectType.span_annotation: "span_annotation_id",
+        AttachedObjectType.sentence_annotation: "sentence_annotation_id",
+        AttachedObjectType.bbox_annotation: "bbox_annotation_id",
+        AttachedObjectType.span_group: "span_group_id",
+        AttachedObjectType.project: "project_id",
     }
 
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
@@ -95,6 +112,55 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, UpdateNotAl
         if db_obj is None:
             raise NoSuchElementError(obj_type, id=obj_id_val)
         return db_obj
+
+    def read_memo_ids_by_objects(
+        self,
+        db: Session,
+        *,
+        attached_object_type: AttachedObjectType,
+        object_ids: list[int],
+    ) -> dict[int, list[int]]:
+        """
+        Returns a mapping of object ID -> list of attached memo IDs for all given
+        objects of the given type, in one batched query (no N+1).
+        """
+        # Pre-check: If the list is empty, return an empty dictionary immediately.
+        if not object_ids:
+            return {}
+
+        obj_id_key = self.__attached_obj_type_2_obj_id_key.get(attached_object_type)
+        if obj_id_key is None:
+            raise ValueError(f"Unknown AttachedObjectType: {attached_object_type}")
+        obj_id_column = getattr(self.model, obj_id_key)
+
+        # Dictionary to store the final results: {object_id: [memo_ids]}
+        results: dict[int, list[int]] = {}
+
+        # 1. Process in Batches
+        memo_ids_agg = aggregate_ids(MemoORM.id, label="memo_ids")
+        for i in range(0, len(object_ids), BATCH_SIZE):
+            batch_ids = object_ids[i : i + BATCH_SIZE]
+
+            # 2. Build the SELECT Statement
+            stmt = (
+                select(obj_id_column, memo_ids_agg)
+                .join(
+                    MemoORM,
+                    MemoORM.attached_to_id == self.model.id,
+                    isouter=True,
+                )
+                .filter(obj_id_column.in_(batch_ids))
+                .group_by(obj_id_column)
+            )
+
+            # 3. Execute the statement and fetch the results
+            batch_rows = db.execute(stmt).all()
+
+            # 4. Aggregate the results
+            for row in batch_rows:
+                results[row[0]] = row[1] if row[1] is not None else []
+
+        return results
 
     def resolve_handled_object(
         self, db: Session, handle: ObjectHandleORM

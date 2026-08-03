@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
-from core.memo.memo_dto import MemoRead
 from repos.elastic.elastic_dto_base import ElasticSearchHit
 
 
@@ -16,7 +15,9 @@ class SpanAnnotationRow(BaseModel):
         description="SourceDocument the SpanAnnotation refers to"
     )
     tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
-    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
+    memo_ids: list[int] = Field(
+        description="The IDs of the Memos attached to the Annotation."
+    )
 
 
 class SpanAnnotationSearchResult(BaseModel):
@@ -35,7 +36,9 @@ class SentenceAnnotationRow(BaseModel):
         description="SourceDocument the SentenceAnnotation refers to"
     )
     tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
-    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
+    memo_ids: list[int] = Field(
+        description="The IDs of the Memos attached to the Annotation."
+    )
 
 
 class SentenceAnnotationSearchResult(BaseModel):
@@ -58,7 +61,9 @@ class BBoxAnnotationRow(BaseModel):
         description="SourceDocument the BBoxAnnotation refers to"
     )
     tag_ids: list[int] = Field(description="The TagIDs of the SourceDocument.")
-    memo: MemoRead | None = Field(description="The Memo of the Annotation.")
+    memo_ids: list[int] = Field(
+        description="The IDs of the Memos attached to the Annotation."
+    )
 
 
 class BBoxAnnotationSearchResult(BaseModel):
@@ -98,6 +103,11 @@ class PaginatedSDocHits(BaseModel):
     tags: dict[int, list[int]] = Field(
         description=(
             "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
+        )
+    )
+    memos: dict[int, list[int]] = Field(
+        description=(
+            "A dictionary of sdoc_id and a list of memo IDs that are attached to the document."
         )
     )
 
