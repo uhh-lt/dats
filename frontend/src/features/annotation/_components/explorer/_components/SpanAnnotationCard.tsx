@@ -1,4 +1,5 @@
 import { CodeRenderer } from "@core/code";
+import { MemoIndicator } from "@core/memo";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -19,11 +20,18 @@ export function SpanAnnotationCard({
       <CardHeader
         title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
-          <AnnotationCardActionsMenu
-            annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
-            iconButtonProps={{ size: "small" }}
-          />
+          <Stack direction="row" alignItems="center">
+            <MemoIndicator
+              memoIds={annotation.memo_ids}
+              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+              attachedObjectId={annotation.id}
+            />
+            <AnnotationCardActionsMenu
+              annotationId={annotation.id}
+              annotationType={AttachedObjectType.SPAN_ANNOTATION}
+              iconButtonProps={{ size: "small" }}
+            />
+          </Stack>
         }
         titleTypographyProps={{
           variant: "body1",

@@ -1,6 +1,7 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ImageCropper } from "@components/ImageCropper";
 import { CodeRenderer } from "@core/code";
+import { MemoIndicator } from "@core/memo";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
@@ -28,11 +29,18 @@ export const BBoxAnnotationCard = memo(
         <CardHeader
           title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
           action={
-            <AnnotationCardActionsMenu
-              annotationId={annotation.id}
-              annotationType={AttachedObjectType.BBOX_ANNOTATION}
-              iconButtonProps={{ size: "small" }}
-            />
+            <Stack direction="row" alignItems="center">
+              <MemoIndicator
+                memoIds={annotation.memo_ids}
+                attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
+                attachedObjectId={annotation.id}
+              />
+              <AnnotationCardActionsMenu
+                annotationId={annotation.id}
+                annotationType={AttachedObjectType.BBOX_ANNOTATION}
+                iconButtonProps={{ size: "small" }}
+              />
+            </Stack>
           }
           titleTypographyProps={{
             variant: "body1",
