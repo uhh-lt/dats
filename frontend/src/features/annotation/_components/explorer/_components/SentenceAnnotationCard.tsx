@@ -1,4 +1,5 @@
 import { CodeRenderer } from "@core/code";
+import { MemoIndicator } from "@core/memo";
 import { UserRenderer } from "@core/user";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
@@ -19,11 +20,18 @@ export function SentenceAnnotationCard({
       <CardHeader
         title={<CodeRenderer key={annotation.code_id} code={annotation.code_id} />}
         action={
-          <AnnotationCardActionsMenu
-            annotationId={annotation.id}
-            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
-            iconButtonProps={{ size: "small" }}
-          />
+          <Stack direction="row" alignItems="center">
+            <MemoIndicator
+              memoIds={annotation.memo_ids}
+              attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
+              attachedObjectId={annotation.id}
+            />
+            <AnnotationCardActionsMenu
+              annotationId={annotation.id}
+              annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
+              iconButtonProps={{ size: "small" }}
+            />
+          </Stack>
         }
         titleTypographyProps={{
           variant: "body1",
