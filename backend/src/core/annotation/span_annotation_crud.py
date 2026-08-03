@@ -264,6 +264,15 @@ class CRUDSpanAnnotation(
     ) -> SpanAnnotationORM:
         span_anno = super().update(db, id=id, update_dto=update_dto)
 
+        if update_dto.span_text is not None:
+            span_text = crud_span_text.create(
+                db=db, create_dto=SpanTextCreate(text=update_dto.span_text)
+            )
+            span_anno.span_text = span_text
+            db.add(span_anno)
+            db.flush()
+            db.refresh(span_anno)
+
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
 
