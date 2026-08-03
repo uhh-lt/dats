@@ -19,7 +19,7 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
 } from "@core/filter";
-import { MemoRenderer2 } from "@core/memo";
+import { MemoIndicator, MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
@@ -29,6 +29,7 @@ import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
 import { BBoxAnnotationSearchResult } from "@models/BBoxAnnotationSearchResult";
 import { BBoxColumns } from "@models/BBoxColumns";
 import { SortDirection } from "@models/SortDirection";
+import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -92,7 +93,16 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
         case BBoxColumns.BB_CODE_ID:
           return {
             ...colDef,
-            Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
+            Cell: ({ row }) => (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <CodeRenderer code={row.original.code} />
+                <MemoIndicator
+                  memoIds={row.original.memo_ids}
+                  attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
+                  attachedObjectId={row.original.id}
+                />
+              </Stack>
+            ),
           } as MRT_ColumnDef<BBoxAnnotationRow>;
         case BBoxColumns.BB_MEMO_CONTENT:
           return {
