@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
-import { MemoEvent } from "../_types/MemoEvent";
+import { MemoEvent } from "../types/MemoEvent";
 
 interface MemoDialogState {
   isMemoDialogOpen: boolean;

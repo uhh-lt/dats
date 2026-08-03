@@ -1,7 +1,7 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import { memo } from "react";
-import { MemoEvent } from "./_types/MemoEvent";
+import { MemoEvent } from "./types/MemoEvent";
 import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 export const MemoEditButton = memo(

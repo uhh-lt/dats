@@ -10,7 +10,7 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { memo, useCallback } from "react";
 import { SubmitHandler } from "react-hook-form";
-import { MemoCreateSuccessHandler } from "../_types/MemoCreateSuccessHandler";
+import { MemoCreateSuccessHandler } from "../types/MemoCreateSuccessHandler";
 import { MemoDialogForm, MemoFormValues } from "./MemoDialogForm";
 
 interface MemoDialogContentProps {

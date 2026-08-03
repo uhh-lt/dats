@@ -6,3 +6,5 @@ export * from "./MemoListItemButton";
 export * from "./MemoMenuItem";
 export { memoDialogReducer } from "./store/memoDialogSlice";
 export * from "./useOpenMemoDialog";
+export * from "./types/MemoEvent";
+export * from "./types/MemoCreateSuccessHandler";
