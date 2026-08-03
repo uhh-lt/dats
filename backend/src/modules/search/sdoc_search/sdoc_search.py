@@ -10,6 +10,8 @@ from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.memo_dto import AttachedObjectType
+from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
@@ -232,6 +234,13 @@ def find_sdocs(
     # 4. the tags
     tags = crud_sdoc.read_tags(db=db, sdoc_ids=sdoc_ids)
 
+    # 5. the memos
+    memos = crud_object_handle.read_memo_ids_by_objects(
+        db=db,
+        attached_object_type=AttachedObjectType.source_document,
+        object_ids=sdoc_ids,
+    )
+
     # construct the nested result object
     hierarchical_hits: list[HierarchicalElasticSearchHit] = []
 
@@ -276,6 +285,7 @@ def find_sdocs(
         sdocs=sdocs,
         annotators=annotators,
         tags=tags,
+        memos=memos,
         sdoc_folders={
             folder.id: FolderRead.model_validate(folder) for folder in folders
         },

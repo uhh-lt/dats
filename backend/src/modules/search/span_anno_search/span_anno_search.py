@@ -8,6 +8,8 @@ from core.code.code_dto import CodeRead
 from core.code.code_orm import CodeORM
 from core.doc.source_document_dto import SourceDocumentRead
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.memo_dto import AttachedObjectType
+from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.search_dto import SpanAnnotationRow, SpanAnnotationSearchResult
@@ -83,6 +85,12 @@ def find_span_annotations(
         page_size=page_size,
     )
 
+    memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
+        db=db,
+        attached_object_type=AttachedObjectType.span_annotation,
+        object_ids=[row[0] for row in result_rows],
+    )
+
     data = []
     for row in result_rows:
         sdoc_orm: SourceDocumentORM = row[4]
@@ -94,7 +102,7 @@ def find_span_annotations(
                 code=CodeRead.model_validate(row[3]),
                 sdoc=SourceDocumentRead.model_validate(sdoc_orm),
                 tag_ids=[tag.id for tag in sdoc_orm.tags],
-                memo=None,
+                memo_ids=memo_ids_by_annotation.get(row[0], []),
             )
         )
     return SpanAnnotationSearchResult(total_results=total_results, data=data)
