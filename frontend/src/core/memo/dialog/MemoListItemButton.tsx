@@ -1,7 +1,7 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { memo, useCallback } from "react";
-import { MemoEvent } from "./_types/MemoEvent";
+import { MemoEvent } from "./types/MemoEvent";
 import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoMenuItemProps {
