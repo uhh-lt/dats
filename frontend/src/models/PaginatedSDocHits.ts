@@ -27,6 +27,10 @@ export type PaginatedSDocHits = {
    */
   tags: Record<string, Array<number>>;
   /**
+   * A dictionary of sdoc_id and a list of memo IDs that are attached to the document.
+   */
+  memos: Record<string, Array<number>>;
+  /**
    * The total number of hits. Used for pagination.
    */
   total_results: number;

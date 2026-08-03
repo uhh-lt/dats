@@ -63,6 +63,9 @@ export const QueryKey = {
   // annotators (user ids) of a document (by sdoc id)
   // managed by frontend/src/api/hooks/SdocHooks.ts
   SDOC_ANNOTATORS: "sdocAnnotators",
+  // memo ids attached to a document (by sdoc id)
+  // managed by frontend/src/features/search/views/document-search/_api/documentSearchQueryOptions.ts
+  SDOC_MEMOS: "sdocMemos",
 
   // a single MemoRead (by memo id)
   // managed by frontend/src/api/hooks/MemoHooks.ts

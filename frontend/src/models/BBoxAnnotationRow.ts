@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CodeRead } from "./CodeRead";
-import type { MemoRead } from "./MemoRead";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
 export type BBoxAnnotationRow = {
   /**
@@ -47,7 +46,7 @@ export type BBoxAnnotationRow = {
    */
   tag_ids: Array<number>;
   /**
-   * The Memo of the Annotation.
+   * The IDs of the Memos attached to the Annotation.
    */
-  memo: MemoRead | null;
+  memo_ids: Array<number>;
 };
