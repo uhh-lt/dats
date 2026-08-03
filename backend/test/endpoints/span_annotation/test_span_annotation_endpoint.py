@@ -191,6 +191,150 @@ def test_update_by_id(
     assert updated.sdoc_id == sdoc.id
 
 
+def test_resize_span_annotation(
+    client: TestClient,
+    db_session,
+    project_with_span_annotation,
+) -> None:
+    span_annotation = project_with_span_annotation["span_annotation"]
+    original_span_text_id = span_annotation.span_text_id
+    payload = {
+        "begin": 5,
+        "end": 24,
+        "begin_token": 1,
+        "end_token": 5,
+        "span_text": "resized annotation text",
+    }
+
+    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    updated = SpanAnnotationRead.model_validate(resp.json())
+    assert updated.begin == payload["begin"]
+    assert updated.end == payload["end"]
+    assert updated.begin_token == payload["begin_token"]
+    assert updated.end_token == payload["end_token"]
+    assert updated.text == payload["span_text"]
+    assert updated.code_id == span_annotation.code_id
+
+    db_session.refresh(span_annotation)
+    assert span_annotation.begin == payload["begin"]
+    assert span_annotation.end == payload["end"]
+    assert span_annotation.begin_token == payload["begin_token"]
+    assert span_annotation.end_token == payload["end_token"]
+    assert span_annotation.text == payload["span_text"]
+    assert span_annotation.span_text_id != original_span_text_id
+
+
+def test_resize_span_annotation_and_update_code(
+    client: TestClient,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+    code2 = project_with_span_annotations_for_bulk_test["code2"]
+    payload = {
+        "code_id": code2.id,
+        "begin": 2,
+        "end": 18,
+        "begin_token": 1,
+        "end_token": 4,
+        "span_text": "combined update",
+    }
+
+    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    updated = SpanAnnotationRead.model_validate(resp.json())
+    assert updated.code_id == code2.id
+    assert updated.begin == payload["begin"]
+    assert updated.end == payload["end"]
+    assert updated.begin_token == payload["begin_token"]
+    assert updated.end_token == payload["end_token"]
+    assert updated.text == payload["span_text"]
+
+
+def test_resize_span_annotation_reuses_span_text(
+    client: TestClient,
+    db_session,
+    project_with_span_annotations_for_bulk_test,
+) -> None:
+    span_annotation = project_with_span_annotations_for_bulk_test["span_annotation"]
+    span_annotation2 = project_with_span_annotations_for_bulk_test["span_annotation2"]
+    payload = {
+        "begin": 0,
+        "end": 14,
+        "begin_token": 0,
+        "end_token": 3,
+        "span_text": span_annotation.text,
+    }
+
+    resp = client.patch(f"/span/{span_annotation2.id}", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    db_session.refresh(span_annotation2)
+    assert span_annotation2.span_text_id == span_annotation.span_text_id
+    assert span_annotation2.text == span_annotation.text
+
+
+invalid_resize_payloads = [
+    pytest.param({"begin": 1}, id="partial_resize_bundle"),
+    pytest.param(
+        {
+            "begin": -1,
+            "end": 4,
+            "begin_token": 0,
+            "end_token": 1,
+            "span_text": "negative character offset",
+        },
+        id="negative_character_offset",
+    ),
+    pytest.param(
+        {
+            "begin": 4,
+            "end": 4,
+            "begin_token": 1,
+            "end_token": 2,
+            "span_text": "invalid character range",
+        },
+        id="empty_character_range",
+    ),
+    pytest.param(
+        {
+            "begin": 4,
+            "end": 8,
+            "begin_token": 2,
+            "end_token": 2,
+            "span_text": "invalid token range",
+        },
+        id="empty_token_range",
+    ),
+    pytest.param(
+        {
+            "begin": 4,
+            "end": 8,
+            "begin_token": 1,
+            "end_token": 2,
+            "span_text": "",
+        },
+        id="empty_span_text",
+    ),
+    pytest.param({}, id="empty_update"),
+]
+
+
+@pytest.mark.parametrize("payload", invalid_resize_payloads)
+def test_resize_span_annotation_rejects_invalid_payload(
+    client: TestClient,
+    project_with_span_annotation,
+    payload,
+) -> None:
+    span_annotation = project_with_span_annotation["span_annotation"]
+
+    resp = client.patch(f"/span/{span_annotation.id}", json=payload)
+
+    assert resp.status_code == 422, resp.text
+
+
 def test_update_by_id_if_not_exists(client: TestClient) -> None:
     non_existing_span_anno_id = 9999
     payload = SpanAnnotationUpdate(code_id=1)
@@ -199,6 +343,20 @@ def test_update_by_id_if_not_exists(client: TestClient) -> None:
         f"/span/{non_existing_span_anno_id}",
         json=payload.model_dump(exclude_none=True),
     )
+
+    assert resp.status_code == 403, resp.text
+
+
+def test_resize_span_annotation_if_not_exists(client: TestClient) -> None:
+    payload = {
+        "begin": 5,
+        "end": 24,
+        "begin_token": 1,
+        "end_token": 5,
+        "span_text": "resized annotation text",
+    }
+
+    resp = client.patch("/span/9999", json=payload)
 
     assert resp.status_code == 403, resp.text
 
