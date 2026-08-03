@@ -11,6 +11,7 @@ import {
   SdocAnnotatorsRenderer,
   SdocExportButton,
   SdocFolderRenderer,
+  SdocMemoIndicator,
   SdocRenderer,
   SdocTagsRenderer,
 } from "@core/source-document";
@@ -202,7 +203,10 @@ export function SearchDocumentTable({
               row.original.is_folder ? (
                 <FolderRenderer folder={row.original.id} folderType={FolderType.SDOC_FOLDER} renderName />
               ) : (
-                <SdocRenderer sdoc={row.original.id} renderName />
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <SdocRenderer sdoc={row.original.id} renderName />
+                  <SdocMemoIndicator sdocId={row.original.id} />
+                </Stack>
               ),
           } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
