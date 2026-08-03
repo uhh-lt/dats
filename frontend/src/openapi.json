@@ -7006,13 +7006,15 @@
             "title": "Tag Ids",
             "description": "The TagIDs of the SourceDocument."
           },
-          "memo": {
-            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
-            "description": "The Memo of the Annotation."
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "The IDs of the Memos attached to the Annotation."
           }
         },
         "type": "object",
-        "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tag_ids", "memo"],
+        "required": ["id", "x", "y", "width", "height", "url", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
         "title": "BBoxAnnotationRow"
       },
       "BBoxAnnotationSearchResult": {
@@ -10405,6 +10407,12 @@
             "title": "Tags",
             "description": "A dictionary of sdoc_id and a list of tag IDs that are associated with the document."
           },
+          "memos": {
+            "additionalProperties": { "items": { "type": "integer" }, "type": "array" },
+            "type": "object",
+            "title": "Memos",
+            "description": "A dictionary of sdoc_id and a list of memo IDs that are attached to the document."
+          },
           "total_results": {
             "type": "integer",
             "title": "Total Results",
@@ -10412,7 +10420,7 @@
           }
         },
         "type": "object",
-        "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "total_results"],
+        "required": ["hits", "sdocs", "sdoc_folders", "annotators", "tags", "memos", "total_results"],
         "title": "PaginatedSDocHits"
       },
       "PaginatedSpanAnnotationHits": {
@@ -11321,13 +11329,15 @@
             "title": "Tag Ids",
             "description": "The TagIDs of the SourceDocument."
           },
-          "memo": {
-            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
-            "description": "The Memo of the Annotation."
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "The IDs of the Memos attached to the Annotation."
           }
         },
         "type": "object",
-        "required": ["id", "text", "code", "user_id", "sdoc", "tag_ids", "memo"],
+        "required": ["id", "text", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
         "title": "SentenceAnnotationRow"
       },
       "SentenceAnnotationSearchResult": {
@@ -11779,6 +11789,12 @@
             "type": "integer",
             "title": "Folder Id",
             "description": "ID of the Folder this SourceDocument belongs to"
+          },
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "IDs of the Memos attached to the SourceDocument"
           }
         },
         "type": "object",
@@ -12184,13 +12200,15 @@
             "title": "Tag Ids",
             "description": "The TagIDs of the SourceDocument."
           },
-          "memo": {
-            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
-            "description": "The Memo of the Annotation."
+          "memo_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Memo Ids",
+            "description": "The IDs of the Memos attached to the Annotation."
           }
         },
         "type": "object",
-        "required": ["id", "span_text", "code", "user_id", "sdoc", "tag_ids", "memo"],
+        "required": ["id", "span_text", "code", "user_id", "sdoc", "tag_ids", "memo_ids"],
         "title": "SpanAnnotationRow"
       },
       "SpanAnnotationSearchResult": {

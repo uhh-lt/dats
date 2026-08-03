@@ -36,4 +36,8 @@ export type SourceDocumentRead = {
    * ID of the Folder this SourceDocument belongs to
    */
   folder_id: number;
+  /**
+   * IDs of the Memos attached to the SourceDocument
+   */
+  memo_ids?: Array<number>;
 };

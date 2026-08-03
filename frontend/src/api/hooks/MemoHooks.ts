@@ -31,6 +31,38 @@ const useGetObjectMemos = (attachedObjType: AttachedObjectType, attachedObjId: n
     retry: false,
   });
 
+// Invalidate the caches that hold the memo_ids of the attached object,
+// so that memo indicators across the UI react to memo creation/deletion.
+const invalidateAttachedObjectMemoIds = (attachedObjectType: AttachedObjectType, attachedObjectId: number) => {
+  switch (attachedObjectType) {
+    case AttachedObjectType.SOURCE_DOCUMENT:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC, attachedObjectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_MEMOS, attachedObjectId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+    case AttachedObjectType.TAG:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS] });
+      break;
+    case AttachedObjectType.CODE:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES] });
+      break;
+    case AttachedObjectType.SPAN_ANNOTATION:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+    case AttachedObjectType.SENTENCE_ANNOTATION:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+    case AttachedObjectType.BBOX_ANNOTATION:
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE] });
+      break;
+    default:
+      break;
+  }
+};
+
 // MEMO MUTATIONS
 const useCreateMemo = () =>
   useMutation({
@@ -45,6 +77,7 @@ const useCreateMemo = () =>
         [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
         (oldData) => (oldData ? [...oldData, data] : [data]),
       );
+      invalidateAttachedObjectMemoIds(data.attached_object_type, data.attached_object_id);
     },
     meta: {
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
@@ -97,6 +130,7 @@ const deleteInvalidation = (data: MemoRead) => {
     [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
     (oldData) => (oldData ? oldData.filter((memo) => memo.id !== data.id) : oldData),
   );
+  invalidateAttachedObjectMemoIds(data.attached_object_type, data.attached_object_id);
 };
 
 const useDeleteMemo = () =>
