@@ -1,4 +1,6 @@
 import { ITree, TreeExplorer } from "@components/tree-explorer";
+import { MemoIndicator } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps, Typography } from "@mui/material";
@@ -56,18 +58,25 @@ export function CodeExplorer({
 
   const renderNode = useCallback(
     (node: ITree<CodeRead>) => (
-      <Typography
-        variant="body2"
-        sx={{
-          fontWeight: "inherit",
-          flexGrow: 1,
-          ...(hiddenCodeIds.includes(node.data.id) && { textDecoration: "line-through" }),
-        }}
-        onMouseEnter={() => onHoverCodeIdChange(node.data.id)}
-        onMouseLeave={() => onHoverCodeIdChange(undefined)}
-      >
-        {node.data.name}
-      </Typography>
+      <>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: "inherit",
+            flexGrow: 1,
+            ...(hiddenCodeIds.includes(node.data.id) && { textDecoration: "line-through" }),
+          }}
+          onMouseEnter={() => onHoverCodeIdChange(node.data.id)}
+          onMouseLeave={() => onHoverCodeIdChange(undefined)}
+        >
+          {node.data.name}
+        </Typography>
+        <MemoIndicator
+          memoIds={node.data.memo_ids}
+          attachedObjectType={AttachedObjectType.CODE}
+          attachedObjectId={node.data.id}
+        />
+      </>
     ),
     [onHoverCodeIdChange, hiddenCodeIds],
   );
