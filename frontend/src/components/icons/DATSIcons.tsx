@@ -11,6 +11,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import BubbleChartIcon from "@mui/icons-material/BubbleChart";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ChatIcon from "@mui/icons-material/Chat";
 import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CircleIcon from "@mui/icons-material/Circle";
 import CloseIcon from "@mui/icons-material/Close";
@@ -69,6 +70,7 @@ export enum Icon {
   CODE = "code",
   TAG = "tag",
   MEMO = "memo",
+  MEMO_ALT = "memo_alt",
   DOCUMENT = "document",
   SPAN_ANNOTATION = "span_annotation",
   SENTENCE_ANNOTATION = "sentence_annotation",
@@ -195,6 +197,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.CODE]: (iconProps) => <SquareIcon {...iconProps} />,
   [Icon.TAG]: (iconProps) => <LabelIcon {...iconProps} />,
   [Icon.MEMO]: (iconProps) => <CommentIcon {...iconProps} />,
+  [Icon.MEMO_ALT]: (iconProps) => <ChatIcon {...iconProps} />,
   [Icon.DOCUMENT]: (iconProps) => <ArticleIcon {...iconProps} />,
   [Icon.SPAN_ANNOTATION]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
