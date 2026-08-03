@@ -19,7 +19,7 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
 } from "@core/filter";
-import { MemoRenderer2 } from "@core/memo";
+import { MemoIndicator, MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
@@ -30,6 +30,7 @@ import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { SentenceAnnotationSearchResult } from "@models/SentenceAnnotationSearchResult";
 import { SortDirection } from "@models/SortDirection";
+import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -100,7 +101,16 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
           return {
             ...colDef,
             accessorFn: (row) => row.code,
-            Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
+            Cell: ({ row }) => (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <CodeRenderer code={row.original.code} />
+                <MemoIndicator
+                  memoIds={row.original.memo_ids}
+                  attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
+                  attachedObjectId={row.original.id}
+                />
+              </Stack>
+            ),
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         case SentAnnoColumns.SENT_ANNO_USER_ID:
           return {
@@ -111,7 +121,6 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
         case SentAnnoColumns.SENT_ANNO_MEMO_CONTENT:
           return {
             ...colDef,
-            accessorFn: (row) => row.memo,
             Cell: ({ row }) =>
               user ? (
                 <MemoRenderer2

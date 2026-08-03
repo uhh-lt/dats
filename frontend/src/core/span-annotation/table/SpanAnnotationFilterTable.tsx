@@ -19,7 +19,7 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
 } from "@core/filter";
-import { MemoRenderer2 } from "@core/memo";
+import { MemoIndicator, MemoRenderer2 } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
@@ -30,6 +30,7 @@ import { SortDirection } from "@models/SortDirection";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanAnnotationSearchResult } from "@models/SpanAnnotationSearchResult";
 import { SpanColumns } from "@models/SpanColumns";
+import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -100,7 +101,16 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             accessorFn: (row) => row.code,
-            Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
+            Cell: ({ row }) => (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <CodeRenderer code={row.original.code} />
+                <MemoIndicator
+                  memoIds={row.original.memo_ids}
+                  attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+                  attachedObjectId={row.original.id}
+                />
+              </Stack>
+            ),
           } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_USER_ID:
           return {
@@ -111,7 +121,6 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
         case SpanColumns.SP_MEMO_CONTENT:
           return {
             ...colDef,
-            accessorFn: (row) => row.memo,
             Cell: ({ row }) =>
               user ? (
                 <MemoRenderer2
