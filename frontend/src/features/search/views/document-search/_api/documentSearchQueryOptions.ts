@@ -78,6 +78,10 @@ export const documentSearchQueryOptions = ({
         queryClient.setQueryData<number[]>([QueryKey.SDOC_TAGS, parseInt(sdocId)], tags);
       });
 
+      Object.entries(data.memos).forEach(([sdocId, memoIds]) => {
+        queryClient.setQueryData<number[]>([QueryKey.SDOC_MEMOS, parseInt(sdocId)], memoIds);
+      });
+
       queryClient.setQueryData<FolderMap>([QueryKey.PROJECT_FOLDERS, projectId, FolderType.SDOC_FOLDER], (prev) => {
         prev = prev || {};
         Object.entries(data.sdoc_folders).forEach(([folderId, folder]) => {
