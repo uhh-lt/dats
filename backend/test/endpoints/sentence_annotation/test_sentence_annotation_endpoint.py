@@ -182,6 +182,101 @@ def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient):
     assert resp.status_code == 403, resp.text
 
 
+def test_resize_sentence_annotation(
+    client: TestClient,
+    db_session,
+    project_with_sentence_annotation,
+) -> None:
+    sent_anno = project_with_sentence_annotation["sentence_annotation"]
+    payload = {
+        "sentence_id_start": 0,
+        "sentence_id_end": 1,
+    }
+
+    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    updated = SentenceAnnotationRead.model_validate(resp.json())
+    assert updated.id == sent_anno.id
+    assert updated.sentence_id_start == payload["sentence_id_start"]
+    assert updated.sentence_id_end == payload["sentence_id_end"]
+    assert updated.code_id == sent_anno.code_id
+
+    db_session.refresh(sent_anno)
+    assert sent_anno.sentence_id_start == payload["sentence_id_start"]
+    assert sent_anno.sentence_id_end == payload["sentence_id_end"]
+
+
+def test_resize_sentence_annotation_and_update_code(
+    client: TestClient,
+    project_with_multiple_sentence_annotations_and_new_code,
+) -> None:
+    sent_anno = project_with_multiple_sentence_annotations_and_new_code[
+        "sentence_annotations"
+    ][0]
+    new_code = project_with_multiple_sentence_annotations_and_new_code["new_code"]
+    payload = {
+        "code_id": new_code.id,
+        "sentence_id_start": 0,
+        "sentence_id_end": 1,
+    }
+
+    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+
+    assert resp.status_code == 200, resp.text
+    updated = SentenceAnnotationRead.model_validate(resp.json())
+    assert updated.id == sent_anno.id
+    assert updated.code_id == new_code.id
+    assert updated.sentence_id_start == payload["sentence_id_start"]
+    assert updated.sentence_id_end == payload["sentence_id_end"]
+
+
+invalid_resize_payloads = [
+    pytest.param({"sentence_id_start": 0}, id="partial_resize_bundle"),
+    pytest.param(
+        {"sentence_id_start": -1, "sentence_id_end": 1},
+        id="negative_sentence_index",
+    ),
+    pytest.param(
+        {"sentence_id_start": 1, "sentence_id_end": 0},
+        id="start_larger_than_end",
+    ),
+    pytest.param(
+        {"sentence_id_start": None, "sentence_id_end": 1},
+        id="null_resize_field",
+    ),
+    pytest.param({}, id="empty_update"),
+]
+
+
+@pytest.mark.parametrize("payload", invalid_resize_payloads)
+def test_resize_sentence_annotation_rejects_invalid_payload(
+    client: TestClient,
+    project_with_sentence_annotation,
+    payload,
+) -> None:
+    sent_anno = project_with_sentence_annotation["sentence_annotation"]
+
+    resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
+
+    assert resp.status_code == 422, resp.text
+
+
+def test_resize_sentence_annotation_if_not_exists(client: TestClient) -> None:
+    non_existing_sentence_anno_id = 9999
+    payload = {
+        "sentence_id_start": 0,
+        "sentence_id_end": 1,
+    }
+
+    resp = client.patch(
+        f"/sentence/{non_existing_sentence_anno_id}",
+        json=payload,
+    )
+
+    assert resp.status_code == 403, resp.text
+
+
 testdata_bulk = [
     pytest.param({"target": "sa1", "code_mode": "new"}, id="update_sa1_new_code"),
     pytest.param({"target": "sa1", "code_mode": "old"}, id="update_sa1_old_code"),
