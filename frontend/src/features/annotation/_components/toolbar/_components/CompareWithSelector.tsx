@@ -22,6 +22,12 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   const annotatorUserIds = SdocHooks.useGetAnnotators(sdocId);
   const userIds = Array.from(new Set([...(user ? [user.id] : []), ...(annotatorUserIds.data || [])]));
 
+  // when no comparison is active, exclude the currently visible user (cannot compare with yourself)
+  // when a comparison is active, keep all users to allow swapping
+  const effectiveVisibleUserId = visibleUserId ?? user?.id;
+  const selectableUserIds =
+    compareWithUserId === undefined ? userIds.filter((userId) => userId !== effectiveVisibleUserId) : userIds;
+
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number>) => {
     const value = event.target.value as number;
@@ -44,9 +50,10 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
   // render
   return (
     <FormControl size="small">
-      <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
+      <InputLabel id="compare-with-user-select-label">Compare with ...</InputLabel>
       <Select
-        labelId="annotation-user-select-label"
+        labelId="compare-with-user-select-label"
+        label="Compare with ..."
         fullWidth
         sx={{ minWidth: 150 }}
         value={compareWithUserId || -1}
@@ -54,21 +61,21 @@ export function CompareWithSelector({ sdocId }: CompareWithSelector) {
         disabled={!annotatorUserIds.isSuccess}
         renderValue={(selected) => (
           <React.Fragment key={selected}>
-            {selected === -1 ? "Stop comparison" : <UserRenderer user={selected} />}
+            {selected === -1 ? "No comparison" : <UserRenderer user={selected} />}
           </React.Fragment>
         )}
       >
-        {userIds.map((userId) => (
+        <MenuItem value={-1}>
+          <ListItemText>No comparison</ListItemText>
+        </MenuItem>
+        <Divider />
+        {selectableUserIds.map((userId) => (
           <MenuItem key={userId} value={userId}>
             <ListItemText>
               <UserRenderer user={userId} />
             </ListItemText>
           </MenuItem>
         ))}
-        <Divider />
-        <MenuItem value={-1}>
-          <ListItemText>Stop comparison</ListItemText>
-        </MenuItem>
       </Select>
     </FormControl>
   );
