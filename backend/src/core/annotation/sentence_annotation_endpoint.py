@@ -146,9 +146,19 @@ def update_by_id(
     sentence_anno_id: int,
     sentence_annotation_anno: SentenceAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> SentenceAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.SENTENCE_ANNOTATION, sentence_anno_id)
-    authz_user.assert_in_same_project_as(Crud.CODE, sentence_annotation_anno.code_id)
+    if sentence_annotation_anno.code_id is not None:
+        authz_user.assert_in_same_project_as(
+            Crud.CODE, sentence_annotation_anno.code_id
+        )
+        validate.validate_objects_in_same_project(
+            [
+                (Crud.SENTENCE_ANNOTATION, sentence_anno_id),
+                (Crud.CODE, sentence_annotation_anno.code_id),
+            ]
+        )
 
     db_obj = crud_sentence_anno.update(
         db=db, id=sentence_anno_id, update_dto=sentence_annotation_anno

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from repos.db.dto_base import UpdateDTOBase
 
@@ -32,7 +32,49 @@ class SentenceAnnotationCreate(SentenceAnnotationBaseDTO):
 
 # Properties for updating
 class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
-    code_id: int = Field(description="Code the SentenceAnnotation refers to")
+    code_id: int | None = Field(
+        default=None, description="Code the SentenceAnnotation refers to"
+    )
+    sentence_id_start: int | None = Field(
+        default=None,
+        ge=0,
+        description="Start sentence ID of the SentenceAnnotation",
+    )
+    sentence_id_end: int | None = Field(
+        default=None,
+        ge=0,
+        description="End sentence ID of the SentenceAnnotation",
+    )
+
+    @model_validator(mode="after")
+    def validate_update(self):
+        resize_fields = {
+            "sentence_id_start",
+            "sentence_id_end",
+        }
+        provided_resize_fields = resize_fields.intersection(self.model_fields_set)
+
+        if provided_resize_fields and provided_resize_fields != resize_fields:
+            raise ValueError(
+                "All sentence resize fields must be provided together: "
+                "sentence_id_start and sentence_id_end."
+            )
+
+        if provided_resize_fields:
+            if self.sentence_id_start is None or self.sentence_id_end is None:
+                raise ValueError("Sentence resize fields must not be null.")
+
+            if self.sentence_id_start > self.sentence_id_end:
+                raise ValueError(
+                    "Sentence ID start must not be larger than sentence ID end."
+                )
+
+        if self.code_id is None and not provided_resize_fields:
+            raise ValueError(
+                "At least one sentence annotation update must be provided."
+            )
+
+        return self
 
 
 class SentenceAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
