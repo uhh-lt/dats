@@ -6,5 +6,13 @@ export type SentenceAnnotationUpdate = {
   /**
    * Code the SentenceAnnotation refers to
    */
-  code_id: number;
+  code_id?: number | null;
+  /**
+   * Start sentence ID of the SentenceAnnotation
+   */
+  sentence_id_start?: number | null;
+  /**
+   * End sentence ID of the SentenceAnnotation
+   */
+  sentence_id_end?: number | null;
 };
