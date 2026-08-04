@@ -7,8 +7,6 @@ import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { LLMAssistanceButton } from "@features/llm-assistant";
 import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
-import FormatOverlineIcon from "@mui/icons-material/FormatOverline";
-import FormatStrikethroughIcon from "@mui/icons-material/FormatStrikethrough";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import { Box, IconButton, Theme, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
@@ -18,6 +16,8 @@ import { TagStyle } from "../../_types/TagStyle";
 import { AnnoActions } from "../../store/annoSlice";
 import { AnnotatorSelector } from "./_components/AnnotatorSelector";
 import { CompareWithSelector } from "./_components/CompareWithSelector";
+import { TagStyleAboveIcon } from "./_components/TagStyleAboveIcon";
+import { TagStyleInlineIcon } from "./_components/TagStyleInlineIcon";
 
 interface AnnotationToolbarProps {
   sdoc?: SourceDocumentRead;
@@ -121,12 +121,12 @@ export function AnnotationToolbar({ sdoc }: AnnotationToolbarProps) {
                 </Tooltip>
                 <Tooltip title="Inline" placement="bottom">
                   <ToggleButton value={TagStyle.Inline}>
-                    <FormatStrikethroughIcon />
+                    <TagStyleInlineIcon />
                   </ToggleButton>
                 </Tooltip>
                 <Tooltip title="Above" placement="bottom">
                   <ToggleButton value={TagStyle.Above}>
-                    <FormatOverlineIcon />
+                    <TagStyleAboveIcon />
                   </ToggleButton>
                 </Tooltip>
               </ToggleButtonGroup>
