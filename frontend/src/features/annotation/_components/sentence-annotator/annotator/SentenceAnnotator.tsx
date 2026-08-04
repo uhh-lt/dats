@@ -9,6 +9,7 @@ import { memo, useMemo, useRef, useState } from "react";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { useAuth } from "@core/auth";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
+import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
@@ -31,7 +32,6 @@ export const SentenceAnnotator = memo(
 
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
-    const annotator = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: visibleUserId });
 
     // selection
     const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
@@ -50,6 +50,19 @@ export const SentenceAnnotator = memo(
     const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation(user);
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+
+    // resize
+    const resizeController = useSentenceAnnotationResize(sdocData.sentences.length);
+    const previewAnnotation = resizeController.previewAnnotation;
+
+    // pass the preview annotation as an override so that lane assignment
+    // reflects the drag state and stays consistent with the post-update layout
+    const annotator = useGetSentenceAnnotator({
+      sdocId: sdocData.id,
+      userId: visibleUserId,
+      annotationOverride: previewAnnotation,
+    });
+
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
       deleteMutation.mutate(annotation as SentenceAnnotationRead);
     };
@@ -173,6 +186,10 @@ export const SentenceAnnotator = memo(
       if (event.button !== 0) {
         return;
       }
+      // ignore mouse down during/after a resize drag
+      if (resizeController.shouldIgnoreMouseUp()) {
+        return;
+      }
       setIsDragging(true);
       setSelectedSentences((selectedSentences) => {
         if (selectedSentences.includes(index)) {
@@ -185,6 +202,10 @@ export const SentenceAnnotator = memo(
 
     const handleMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       setIsDragging(false);
+      // ignore the mouse up that ends a resize drag
+      if (resizeController.shouldIgnoreMouseUp()) {
+        return;
+      }
       if (selectedSentences.length === 0) {
         return;
       }
@@ -268,7 +289,7 @@ export const SentenceAnnotator = memo(
                   >
                     <DocumentSentence
                       sentenceId={item.index}
-                      sentenceAnnotations={annotator.annotatorResult!.sentence_annotations[item.index]}
+                      sentenceAnnotations={annotator.sentenceAnnotations[item.index] ?? []}
                       sentence={sentence}
                       isSelected={selectedSentences.includes(item.index)}
                       selectedCodeId={mostRecentCodeId}
@@ -277,7 +298,8 @@ export const SentenceAnnotator = memo(
                       onAnnotationMouseLeave={handleAnnotationMouseLeave}
                       onSentenceMouseDown={handleSentenceMouseDown}
                       onSentenceMouseEnter={handleSentenceMouseEnter}
-                      hoveredSentAnnoId={hoverSentAnnoId}
+                      onResizeStart={resizeController.handleResizeStart}
+                      hoveredSentAnnoId={previewAnnotation ? previewAnnotation.id : hoverSentAnnoId}
                       annotationPositions={annotator.annotationPositions[item.index]}
                       numPositions={annotator.numPositions}
                       numSentenceDigits={numSentenceDigits}

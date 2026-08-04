@@ -3,6 +3,9 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { ListItemButton, Stack, StackProps, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
+import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
+import "../../../_styles/Annotation.css";
+import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
 
 interface DocumentSentenceProps {
   sentenceId: number;
@@ -18,6 +21,7 @@ interface DocumentSentenceProps {
   onAnnotationMouseLeave: (sentAnnoId: number) => void;
   onSentenceMouseDown?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
   onSentenceMouseEnter?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
+  onResizeStart?: SentenceAnnotationResizeStartHandler;
   numPositions: number;
   numSentenceDigits: number;
   annotationPositions: Record<number, number>;
@@ -38,6 +42,7 @@ export function DocumentSentence({
   onAnnotationMouseLeave,
   onSentenceMouseEnter,
   onSentenceMouseDown,
+  onResizeStart,
   numPositions,
   annotationPositions,
   numSentenceDigits,
@@ -84,7 +89,7 @@ export function DocumentSentence({
   ]);
 
   return (
-    <Stack direction="row" {...props}>
+    <Stack direction="row" data-sent-id={sentenceId} {...props}>
       <div
         style={{
           paddingRight: "8px",
@@ -147,11 +152,17 @@ export function DocumentSentence({
         const key = `${sentenceId}-${annoPosition}`;
         if (annoId) {
           const annotation = sentAnnoMap[annoId];
+          if (!annotation) {
+            return (
+              <div key={key} style={{ flexShrink: 0, borderRight: "4px solid transparent", paddingLeft: "16px" }} />
+            );
+          }
           const code = codeMap[annotation.code_id];
           const isStartOfAnnotation = sentenceId === annotation.sentence_id_start;
           const isEndOfAnnotation = sentenceId === annotation.sentence_id_end;
+          const isHovered = hoveredSentAnnoId === annotation.id;
           return (
-            <Tooltip key={key} title={code.name} placement="top">
+            <Tooltip key={key} title={code.name} placement="right">
               <div
                 onClick={(event) => onAnnotationClick(event, annoId)}
                 onMouseEnter={() => onAnnotationMouseEnter(annoId)}
@@ -166,6 +177,7 @@ export function DocumentSentence({
               >
                 <div
                   style={{
+                    position: "relative",
                     height: "100%",
                     borderTopRightRadius: isStartOfAnnotation ? "8px" : undefined,
                     borderBottomRightRadius: isEndOfAnnotation ? "8px" : undefined,
@@ -174,7 +186,18 @@ export function DocumentSentence({
                     borderRight: `4px solid ${code.color}`,
                     paddingLeft: "8px",
                   }}
-                />
+                >
+                  {onResizeStart && (
+                    <SentenceAnnotationResizeHandles
+                      annotation={annotation}
+                      isStartOfAnnotation={isStartOfAnnotation}
+                      isEndOfAnnotation={isEndOfAnnotation}
+                      isHovered={isHovered}
+                      color={code.color}
+                      onResizeStart={onResizeStart}
+                    />
+                  )}
+                </div>
               </div>
             </Tooltip>
           );

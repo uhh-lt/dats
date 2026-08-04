@@ -17,6 +17,10 @@ interface ResizeState {
   previewAnnotation: SpanAnnotationRead;
 }
 
+/**
+ * Resolves the token index under the mouse pointer by hit-testing the DOM
+ * for the nearest element with class `tok` and a `data-tokenid` attribute.
+ */
 const findTokenIndex = (event: PointerEvent): number | undefined => {
   const target = document.elementFromPoint(event.clientX, event.clientY);
   const tokenElement = target?.closest<HTMLElement>(".tok[data-tokenid]");
@@ -27,6 +31,10 @@ const findTokenIndex = (event: PointerEvent): number | undefined => {
   return Number.isInteger(tokenIndex) ? tokenIndex : undefined;
 };
 
+/**
+ * Creates a preview annotation with updated token boundaries, character offsets,
+ * and span text based on the token index under the pointer.
+ */
 const createPreviewAnnotation = (state: ResizeState, tokenIndex: number, tokenData: IToken[]): SpanAnnotationRead => {
   const lastTokenIndex = tokenData.length - 1;
   if (lastTokenIndex < 0) return state.previewAnnotation;
@@ -55,6 +63,10 @@ const createPreviewAnnotation = (state: ResizeState, tokenIndex: number, tokenDa
   };
 };
 
+/**
+ * Checks whether the drag actually changed any of the annotation's boundaries
+ * (character offsets, token indices, or text).
+ */
 const hasChangedBoundaries = (state: ResizeState): boolean => {
   return (
     state.originalAnnotation.begin !== state.previewAnnotation.begin ||
@@ -65,6 +77,24 @@ const hasChangedBoundaries = (state: ResizeState): boolean => {
   );
 };
 
+/**
+ * Hook that enables drag-to-resize interaction for span annotations.
+ *
+ * Provides a `handleResizeStart` callback to initiate a drag (typically from a
+ * resize handle on the annotation), a `previewAnnotation` that reflects the
+ * in-progress drag state for live visual feedback, and a `shouldIgnoreMouseUp`
+ * guard to suppress click events that fire immediately after a drag ends.
+ *
+ * While dragging, the hook:
+ * - Listens for global pointermove/pointerup/pointercancel/Escape events
+ * - Disables text selection
+ * - Computes a preview annotation with updated token boundaries, character
+ *   offsets, and span text on each pointer move
+ * - Commits the resize via `useUpdateSpanAnnotation` on pointer up
+ *
+ * @param tokenData - The token array for the current document (used to resolve
+ *   character offsets and span text from token indices)
+ */
 export function useSpanAnnotationResize(tokenData: IToken[] | undefined) {
   const { mutate: updateSpanAnnotation } = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const resizeStateRef = useRef<ResizeState | undefined>(undefined);

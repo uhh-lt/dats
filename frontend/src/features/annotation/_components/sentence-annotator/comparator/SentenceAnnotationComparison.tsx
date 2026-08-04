@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
+import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "../../annotation-menu";
@@ -33,10 +34,22 @@ export const SentenceAnnotationComparison = memo(
     // global client state (URL search params)
     const { visibleUserId: leftUserId, compareWithUserId: rightUserId } = AnnotationRouteAPI.useSearch();
 
+    // resize controllers (left + right)
+    const leftResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
+    const rightResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
+
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
-    const annotatorLeft = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: leftUserId });
-    const annotatorRight = useGetSentenceAnnotator({ sdocId: sdocData.id, userId: rightUserId });
+    const annotatorLeft = useGetSentenceAnnotator({
+      sdocId: sdocData.id,
+      userId: leftUserId,
+      annotationOverride: leftResizeController.previewAnnotation,
+    });
+    const annotatorRight = useGetSentenceAnnotator({
+      sdocId: sdocData.id,
+      userId: rightUserId,
+      annotationOverride: rightResizeController.previewAnnotation,
+    });
 
     // selection
     const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
@@ -250,6 +263,10 @@ export const SentenceAnnotationComparison = memo(
     };
 
     const handleSentenceMouseDown = (_: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => {
+      // ignore mouse down during/after a resize drag
+      if (leftResizeController.shouldIgnoreMouseUp() || rightResizeController.shouldIgnoreMouseUp()) {
+        return;
+      }
       setIsDragging(true);
       setSelectedSentences((selectedSentences) => {
         if (selectedSentences.includes(sentenceId)) {
@@ -262,6 +279,10 @@ export const SentenceAnnotationComparison = memo(
 
     const handleMouseUp = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       setIsDragging(false);
+      // ignore the mouse up that ends a resize drag
+      if (leftResizeController.shouldIgnoreMouseUp() || rightResizeController.shouldIgnoreMouseUp()) {
+        return;
+      }
       if (selectedSentences.length === 0) {
         return;
       }
@@ -386,13 +407,21 @@ export const SentenceAnnotationComparison = memo(
                     onAnnotationMouseLeave={handleAnnotationMouseLeave}
                     onApplyAnnotation={handleApplyAnnotation}
                     onRevertAnnotation={handleRevertAnnotation}
-                    hoveredSentAnnoId={hoverSentAnnoId}
+                    hoveredSentAnnoId={
+                      leftResizeController.previewAnnotation
+                        ? leftResizeController.previewAnnotation.id
+                        : rightResizeController.previewAnnotation
+                          ? rightResizeController.previewAnnotation.id
+                          : hoverSentAnnoId
+                    }
                     numSentenceDigits={numSentenceDigits}
                     hoveredCodeId={hoveredCodeId}
                     annotatorLeft={annotatorLeft}
                     annotatorRight={annotatorRight}
                     isAnnotationAllowedLeft={leftUserId === user!.id}
                     isAnnotationAllowedRight={rightUserId === user!.id}
+                    onResizeStartLeft={leftResizeController.handleResizeStart}
+                    onResizeStartRight={rightResizeController.handleResizeStart}
                     codeMap={codeMap.data}
                   />
                 </div>
