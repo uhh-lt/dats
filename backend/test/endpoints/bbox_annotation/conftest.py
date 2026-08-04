@@ -19,6 +19,7 @@ class ProjectWithBBoxAnnotation(TypedDict):
     project: ProjectORM
     source_document: SourceDocumentORM
     code: CodeORM
+    code2: CodeORM
     bbox_annotation: BBoxAnnotationORM
 
 
@@ -54,6 +55,20 @@ def project_with_bbox_annotation(
         ),
     )
 
+    # Create a second code in the project (for update tests)
+    code2 = crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="Test Code 2",
+            color="Blue",
+            description="Second test code for bbox annotation",
+            parent_id=None,
+            enabled=True,
+            project_id=test_project.id,
+            is_system=False,
+        ),
+    )
+
     # Create a bounding box annotation
     bbox_annotation = crud_bbox_anno.create(
         db=db_session,
@@ -71,11 +86,13 @@ def project_with_bbox_annotation(
     db_session.refresh(test_project)
     db_session.refresh(sdoc)
     db_session.refresh(code)
+    db_session.refresh(code2)
     db_session.refresh(bbox_annotation)
 
     return {
         "project": test_project,
         "source_document": sdoc,
         "code": code,
+        "code2": code2,
         "bbox_annotation": bbox_annotation,
     }

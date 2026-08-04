@@ -52,6 +52,7 @@ def project_with_sdoc_and_code(db_session, project_with_sdoc) -> ProjectWithSdoc
 
 class ProjectWithSentenceAnnotation(ProjectWithSdocAndCode):
     sentence_annotation: SentenceAnnotationORM
+    code2: CodeORM
 
 
 @pytest.fixture(scope="function")
@@ -63,6 +64,20 @@ def project_with_sentence_annotation(
     project = project_with_sdoc_and_code["project"]
     sdoc = project_with_sdoc_and_code["source_document"]
     code = project_with_sdoc_and_code["code"]
+
+    # Create a second code in the project (for update tests)
+    code2 = crud_code.create(
+        db=db_session,
+        create_dto=CodeCreate(
+            name="Test Code 2",
+            color="Blue",
+            description="Second test code for sentence annotation",
+            parent_id=None,
+            enabled=True,
+            project_id=project.id,
+            is_system=False,
+        ),
+    )
 
     # Create a sentence annotation
     sentence_annotation = crud_sentence_anno.create(
@@ -81,12 +96,14 @@ def project_with_sentence_annotation(
     db_session.refresh(project)
     db_session.refresh(sdoc)
     db_session.refresh(code)
+    db_session.refresh(code2)
     db_session.refresh(sentence_annotation)
 
     return {
         "project": project,
         "source_document": sdoc,
         "code": code,
+        "code2": code2,
         "sentence_annotation": sentence_annotation,
     }
 

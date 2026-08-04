@@ -85,6 +85,9 @@ class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
             if self.y_min > self.y_max:
                 raise ValueError("y_min must not be larger than y_max.")
 
+        if "code_id" in self.model_fields_set and self.code_id is None:
+            raise ValueError("code_id must not be null.")
+
         if self.code_id is None and not provided_resize_fields:
             raise ValueError("At least one bbox annotation update must be provided.")
 

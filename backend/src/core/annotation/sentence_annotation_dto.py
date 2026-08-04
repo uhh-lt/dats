@@ -69,6 +69,9 @@ class SentenceAnnotationUpdate(BaseModel, UpdateDTOBase):
                     "Sentence ID start must not be larger than sentence ID end."
                 )
 
+        if "code_id" in self.model_fields_set and self.code_id is None:
+            raise ValueError("code_id must not be null.")
+
         if self.code_id is None and not provided_resize_fields:
             raise ValueError(
                 "At least one sentence annotation update must be provided."

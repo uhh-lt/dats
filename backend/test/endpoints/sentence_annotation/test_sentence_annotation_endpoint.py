@@ -156,19 +156,17 @@ def test_update_sentence_annotation_code(
     project_with_sentence_annotation,
 ):
     sdoc = project_with_sentence_annotation["source_document"]
-    code = project_with_sentence_annotation["code"]
+    code2 = project_with_sentence_annotation["code2"]
     sent_anno = project_with_sentence_annotation["sentence_annotation"]
 
-    payload = {
-        "code_id": code.id - 1
-    }  # This should be a valid SYSTEM code_id that already exist in the DB
+    payload = {"code_id": code2.id}
     resp = client.patch(f"/sentence/{sent_anno.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
     updated = SentenceAnnotationRead.model_validate(resp.json())
     assert updated.id == sent_anno.id
     assert updated.sdoc_id == sdoc.id
-    assert updated.code_id == payload.get("code_id", code.id)
+    assert updated.code_id == payload["code_id"]
 
 
 def test_update_sentence_annotation_by_id_if_not_exists(client: TestClient):
