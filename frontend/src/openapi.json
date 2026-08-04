@@ -11327,10 +11327,23 @@
       },
       "SentenceAnnotationUpdate": {
         "properties": {
-          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the SentenceAnnotation refers to" }
+          "code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Code Id",
+            "description": "Code the SentenceAnnotation refers to"
+          },
+          "sentence_id_start": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Sentence Id Start",
+            "description": "Start sentence ID of the SentenceAnnotation"
+          },
+          "sentence_id_end": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Sentence Id End",
+            "description": "End sentence ID of the SentenceAnnotation"
+          }
         },
         "type": "object",
-        "required": ["code_id"],
         "title": "SentenceAnnotationUpdate"
       },
       "SentenceAnnotationUpdateBulk": {
