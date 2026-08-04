@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from repos.db.dto_base import UpdateDTOBase
 
@@ -30,7 +30,65 @@ class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
 
 # Properties for updating
 class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
-    code_id: int = Field(description="Code the BBoxAnnotation refers to")
+    code_id: int | None = Field(
+        default=None, description="Code the BBoxAnnotation refers to"
+    )
+    x_min: int | None = Field(
+        default=None,
+        ge=0,
+        description="Absolute x_min coordinate of the BBoxAnnotation",
+    )
+    x_max: int | None = Field(
+        default=None,
+        ge=0,
+        description="Absolute x_max coordinate of the BBoxAnnotation",
+    )
+    y_min: int | None = Field(
+        default=None,
+        ge=0,
+        description="Absolute y_min coordinate of the BBoxAnnotation",
+    )
+    y_max: int | None = Field(
+        default=None,
+        ge=0,
+        description="Absolute y_max coordinate of the BBoxAnnotation",
+    )
+
+    @model_validator(mode="after")
+    def validate_update(self):
+        resize_fields = {
+            "x_min",
+            "x_max",
+            "y_min",
+            "y_max",
+        }
+        provided_resize_fields = resize_fields.intersection(self.model_fields_set)
+
+        if provided_resize_fields and provided_resize_fields != resize_fields:
+            raise ValueError(
+                "All bbox resize fields must be provided together: "
+                "x_min, x_max, y_min and y_max."
+            )
+
+        if provided_resize_fields:
+            if (
+                self.x_min is None
+                or self.x_max is None
+                or self.y_min is None
+                or self.y_max is None
+            ):
+                raise ValueError("BBox resize fields must not be null.")
+
+            if self.x_min > self.x_max:
+                raise ValueError("x_min must not be larger than x_max.")
+
+            if self.y_min > self.y_max:
+                raise ValueError("y_min must not be larger than y_max.")
+
+        if self.code_id is None and not provided_resize_fields:
+            raise ValueError("At least one bbox annotation update must be provided.")
+
+        return self
 
 
 class BBoxAnnotationUpdateBulk(BaseModel, UpdateDTOBase):
