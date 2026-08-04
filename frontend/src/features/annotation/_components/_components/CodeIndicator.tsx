@@ -1,4 +1,7 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { Icon, getIconComponent } from "@components/icons";
+import { useOpenMemoDialog } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { contrastiveColors } from "@utils/colors/colors";
 
 interface CodeIndicatorProps {
@@ -6,6 +9,8 @@ interface CodeIndicatorProps {
   annotationId: number;
   isSelected?: boolean;
   groups?: number[];
+  /** When > 0, a memo count is rendered inside the pill and opens the memo dialog on click. */
+  memoCount?: number;
 }
 
 /**
@@ -15,9 +20,19 @@ interface CodeIndicatorProps {
  * @param annotationId - The ID of the annotation this indicator belongs to
  * @param isSelected - Whether this annotation is currently selected
  * @param groups - Optional group IDs for coreference annotations
+ * @param memoCount - Number of memos attached to this annotation (renders a memo section in the pill)
  */
-export function CodeIndicator({ codeId, annotationId, isSelected, groups }: CodeIndicatorProps) {
+export function CodeIndicator({ codeId, annotationId, isSelected, groups, memoCount = 0 }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
+  const openMemoDialog = useOpenMemoDialog();
+
+  const handleMemoClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    openMemoDialog({
+      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
+      attachedObjectId: annotationId,
+    });
+  };
 
   if (code.data) {
     let text: string;
@@ -43,6 +58,12 @@ export function CodeIndicator({ codeId, annotationId, isSelected, groups }: Code
       >
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
+        {memoCount > 0 && (
+          <span className="code-indicator__memo" onClick={handleMemoClick} title="Has memo — click to open">
+            {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
+            <span className="code-indicator__memo-count">{memoCount}</span>
+          </span>
+        )}
       </span>
     );
   }
