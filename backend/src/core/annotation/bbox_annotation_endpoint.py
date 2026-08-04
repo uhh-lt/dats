@@ -84,10 +84,14 @@ def update_by_id(
     bbox_id: int,
     bbox_anno: BBoxAnnotationUpdate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> BBoxAnnotationRead:
     authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
     if bbox_anno.code_id is not None:
         authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
+        validate.validate_objects_in_same_project(
+            [(Crud.BBOX_ANNOTATION, bbox_id), (Crud.CODE, bbox_anno.code_id)]
+        )
 
     db_obj = crud_bbox_anno.update(db=db, id=bbox_id, update_dto=bbox_anno)
     return BBoxAnnotationRead.model_validate(db_obj)

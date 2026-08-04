@@ -12,10 +12,9 @@ def test_update_bbox_annotation_code(
     project_with_bbox_annotation,
 ):
     bbox_anno = project_with_bbox_annotation["bbox_annotation"]
+    code2 = project_with_bbox_annotation["code2"]
 
-    payload = {
-        "code_id": bbox_anno.code_id - 1
-    }  # This should be a valid SYSTEM code_id that already exist in the DB
+    payload = {"code_id": code2.id}
     resp = client.patch(f"/bbox/{bbox_anno.id}", json=payload)
 
     assert resp.status_code == 200, resp.text
@@ -75,8 +74,9 @@ def test_resize_bbox_annotation_and_update_code(
     project_with_bbox_annotation,
 ) -> None:
     bbox_anno = project_with_bbox_annotation["bbox_annotation"]
+    code2 = project_with_bbox_annotation["code2"]
     payload = {
-        "code_id": bbox_anno.code_id - 1,  # valid SYSTEM code_id
+        "code_id": code2.id,
         "x_min": 10,
         "x_max": 50,
         "y_min": 20,
