@@ -1,18 +1,19 @@
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { useMemo } from "react";
 
 export type SentAnnoMap = Record<number, SentenceAnnotationRead>;
 
 export function useComputeSentAnnoMap(
-  annotatorResult: SentenceAnnotatorResult | undefined,
+  sentenceAnnotations: Record<number, SentenceAnnotationRead[]> | undefined,
   sentenceId: number,
 ): SentAnnoMap {
   return useMemo(() => {
-    if (!annotatorResult) return { sentAnnoId2sentAnnoMap: {} };
-    return annotatorResult.sentence_annotations[sentenceId].reduce((acc, anno) => {
+    if (!sentenceAnnotations) return {};
+    const annotations = sentenceAnnotations[sentenceId];
+    if (!annotations) return {};
+    return annotations.reduce((acc, anno) => {
       acc[anno.id] = anno;
       return acc;
     }, {} as SentAnnoMap);
-  }, [annotatorResult, sentenceId]);
+  }, [sentenceAnnotations, sentenceId]);
 }

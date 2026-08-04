@@ -1,10 +1,10 @@
 import { CancelablePromise } from "@api/core/CancelablePromise";
+import { queryClient } from "@api/queryClient";
+import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
 import { UserRead } from "@models/UserRead";
-import { queryClient } from "@api/queryClient";
-import { SentenceAnnotationService } from "@api/services/SentenceAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -168,7 +168,20 @@ const useUpdateSentenceAnnotation = () =>
             : variables.sentenceAnnoToUpdate.id,
         requestBody: variables.update,
       }),
-    // optimistic update if sentenceAnnoToUpdate is a SentenceAnnotationRead
+    // Optimistic update: immediately reflect the resize/code change in the cached
+    // SentenceAnnotatorResult so the UI updates without waiting for the server.
+    //
+    // The cache stores annotations grouped by sentence index, with each annotation
+    // duplicated across every sentence it covers. When boundaries change, the
+    // annotation must be added to newly covered sentences, removed from sentences
+    // it no longer covers, and replaced in sentences it still covers.
+    //
+    // We compute the union of old and new ranges, then for each affected sentence:
+    //   - coversSentence && !isListed  → annotation grew into this sentence: add it
+    //   - !coversSentence && isListed  → annotation shrank away: remove it
+    //   - isListed (still covers)      → update in place (e.g. code_id changed)
+    //
+    // On error, the previous cache snapshot is restored (rollback).
     onMutate: async ({ sentenceAnnoToUpdate, update }) => {
       if (typeof sentenceAnnoToUpdate === "number") return;
       const affectedQueryKey = [
@@ -181,18 +194,41 @@ const useUpdateSentenceAnnotation = () =>
       queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
         if (!old) return old;
         const sentAnnos = { ...old.sentence_annotations };
-        for (
-          let sentenceId = sentenceAnnoToUpdate.sentence_id_start;
-          sentenceId <= sentenceAnnoToUpdate.sentence_id_end;
-          sentenceId++
-        ) {
+        const newStart = update.sentence_id_start ?? sentenceAnnoToUpdate.sentence_id_start;
+        const newEnd = update.sentence_id_end ?? sentenceAnnoToUpdate.sentence_id_end;
+        const oldStart = sentenceAnnoToUpdate.sentence_id_start;
+        const oldEnd = sentenceAnnoToUpdate.sentence_id_end;
+        const updatedAnnotation: SentenceAnnotationRead = {
+          ...sentenceAnnoToUpdate,
+          code_id: update.code_id ?? sentenceAnnoToUpdate.code_id,
+          sentence_id_start: newStart,
+          sentence_id_end: newEnd,
+        };
+        const affectedSentenceIds = new Set<number>();
+        for (let sentenceId = oldStart; sentenceId <= oldEnd; sentenceId++) {
+          affectedSentenceIds.add(sentenceId);
+        }
+        for (let sentenceId = newStart; sentenceId <= newEnd; sentenceId++) {
+          affectedSentenceIds.add(sentenceId);
+        }
+        affectedSentenceIds.forEach((sentenceId) => {
           if (!sentAnnos[sentenceId]) {
             sentAnnos[sentenceId] = [];
           }
-          sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
-            annotation.id === sentenceAnnoToUpdate.id ? { ...annotation, ...update } : annotation,
-          );
-        }
+          const coversSentence = newStart <= sentenceId && sentenceId <= newEnd;
+          const isListed = sentAnnos[sentenceId].some((annotation) => annotation.id === sentenceAnnoToUpdate.id);
+          if (coversSentence && !isListed) {
+            sentAnnos[sentenceId] = [...sentAnnos[sentenceId], updatedAnnotation];
+          } else if (!coversSentence && isListed) {
+            sentAnnos[sentenceId] = sentAnnos[sentenceId].filter(
+              (annotation) => annotation.id !== sentenceAnnoToUpdate.id,
+            );
+          } else {
+            sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
+              annotation.id === sentenceAnnoToUpdate.id ? updatedAnnotation : annotation,
+            );
+          }
+        });
         return { sentence_annotations: sentAnnos };
       });
       return { previousAnnos, affectedQueryKey };
@@ -210,14 +246,20 @@ const useUpdateSentenceAnnotation = () =>
         (old) => {
           if (!old) return old;
           const sentAnnos = { ...old.sentence_annotations };
-          for (let sentenceId = data.sentence_id_start; sentenceId <= data.sentence_id_end; sentenceId++) {
-            if (!sentAnnos[sentenceId]) {
-              sentAnnos[sentenceId] = [];
+          Object.keys(sentAnnos).forEach((key) => {
+            const sentenceId = Number(key);
+            const coversSentence = data.sentence_id_start <= sentenceId && sentenceId <= data.sentence_id_end;
+            const isListed = sentAnnos[sentenceId].some((annotation) => annotation.id === data.id);
+            if (coversSentence && !isListed) {
+              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], data];
+            } else if (!coversSentence && isListed) {
+              sentAnnos[sentenceId] = sentAnnos[sentenceId].filter((annotation) => annotation.id !== data.id);
+            } else if (isListed) {
+              sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
+                annotation.id === data.id ? data : annotation,
+              );
             }
-            sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
-              annotation.id === data.id ? data : annotation,
-            );
-          }
+          });
           return { sentence_annotations: sentAnnos };
         },
       );

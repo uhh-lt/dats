@@ -7,6 +7,8 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box, IconButton, ListItemButton, Stack, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
+import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
+import { SentenceAnnotationResizeHandles } from "../../../sentence-annotator/_components/SentenceAnnotationResizeHandles";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
 import { SentAnnoMap, useComputeSentAnnoMap } from "../_hooks/useComputeSentAnnoMap";
 import { isAnnotationSame } from "../_utils/comparisonUtils";
@@ -33,6 +35,8 @@ interface DocumentSentenceProps {
   annotatorRight: UseGetSentenceAnnotator;
   isAnnotationAllowedLeft: boolean;
   isAnnotationAllowedRight: boolean;
+  onResizeStartLeft?: SentenceAnnotationResizeStartHandler;
+  onResizeStartRight?: SentenceAnnotationResizeStartHandler;
   codeMap: CodeMap;
 }
 
@@ -55,13 +59,15 @@ export function DocumentSentence({
   annotatorRight,
   isAnnotationAllowedLeft,
   isAnnotationAllowedRight,
+  onResizeStartLeft,
+  onResizeStartRight,
   codeMap,
 }: DocumentSentenceProps) {
-  const leftSentAnnoMap = useComputeSentAnnoMap(annotatorLeft.annotatorResult, sentenceId);
-  const rightSentAnnoMap = useComputeSentAnnoMap(annotatorRight.annotatorResult, sentenceId);
+  const leftSentAnnoMap = useComputeSentAnnoMap(annotatorLeft.sentenceAnnotations, sentenceId);
+  const rightSentAnnoMap = useComputeSentAnnoMap(annotatorRight.sentenceAnnotations, sentenceId);
 
   return (
-    <Stack direction="row" width="100%">
+    <Stack direction="row" width="100%" data-sent-id={sentenceId}>
       <DocumentSentencePart
         sentenceId={sentenceId}
         isSelected={isAnnotationAllowedLeft && isSelected}
@@ -74,6 +80,7 @@ export function DocumentSentence({
         onAnnotationMouseLeave={onAnnotationMouseLeave}
         onSentenceMouseDown={isAnnotationAllowedLeft ? onSentenceMouseDown : undefined}
         onSentenceMouseEnter={isAnnotationAllowedLeft ? onSentenceMouseEnter : undefined}
+        onResizeStart={isAnnotationAllowedLeft ? onResizeStartLeft : undefined}
         numSentenceDigits={numSentenceDigits}
         annotator={annotatorLeft}
         sentAnnoMap={leftSentAnnoMap}
@@ -108,6 +115,7 @@ export function DocumentSentence({
         onAnnotationMouseLeave={onAnnotationMouseLeave}
         onSentenceMouseDown={isAnnotationAllowedRight ? onSentenceMouseDown : undefined}
         onSentenceMouseEnter={isAnnotationAllowedRight ? onSentenceMouseEnter : undefined}
+        onResizeStart={isAnnotationAllowedRight ? onResizeStartRight : undefined}
         numSentenceDigits={numSentenceDigits}
         annotator={annotatorRight}
         sentAnnoMap={rightSentAnnoMap}
@@ -132,6 +140,7 @@ interface DocumentSentencePartProps {
   onAnnotationMouseLeave: (sentAnnoId: number) => void;
   onSentenceMouseDown?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
   onSentenceMouseEnter?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
+  onResizeStart?: SentenceAnnotationResizeStartHandler;
   numSentenceDigits: number;
   annotator: UseGetSentenceAnnotator;
   sentAnnoMap: SentAnnoMap;
@@ -150,6 +159,7 @@ function DocumentSentencePart({
   onAnnotationMouseLeave,
   onSentenceMouseEnter,
   onSentenceMouseDown,
+  onResizeStart,
   numSentenceDigits,
   annotator,
   sentAnnoMap,
@@ -237,11 +247,17 @@ function DocumentSentencePart({
         const key = `${sentenceId}-${annoPosition}`;
         if (annoId) {
           const annotation = sentAnnoMap[annoId];
+          if (!annotation) {
+            return (
+              <div key={key} style={{ flexShrink: 0, borderRight: "4px solid transparent", paddingLeft: "16px" }} />
+            );
+          }
           const code = codeMap[annotation.code_id];
           const isStartOfAnnotation = sentenceId === annotation.sentence_id_start;
           const isEndOfAnnotation = sentenceId === annotation.sentence_id_end;
+          const isHovered = hoveredSentAnnoId === annotation.id;
           return (
-            <Tooltip key={key} title={code.name} placement="top">
+            <Tooltip key={key} title={code.name} placement="right">
               <div
                 onClick={(event) => onAnnotationClick(event, annotation)}
                 onMouseEnter={() => onAnnotationMouseEnter(annoId)}
@@ -256,6 +272,7 @@ function DocumentSentencePart({
               >
                 <div
                   style={{
+                    position: "relative",
                     height: "100%",
                     borderTopRightRadius: isStartOfAnnotation ? "8px" : undefined,
                     borderBottomRightRadius: isEndOfAnnotation ? "8px" : undefined,
@@ -264,7 +281,18 @@ function DocumentSentencePart({
                     borderRight: `4px solid ${code.color}`,
                     paddingLeft: "8px",
                   }}
-                />
+                >
+                  {onResizeStart && (
+                    <SentenceAnnotationResizeHandles
+                      annotation={annotation}
+                      isStartOfAnnotation={isStartOfAnnotation}
+                      isEndOfAnnotation={isEndOfAnnotation}
+                      isHovered={isHovered}
+                      color={code.color}
+                      onResizeStart={onResizeStart}
+                    />
+                  )}
+                </div>
               </div>
             </Tooltip>
           );
