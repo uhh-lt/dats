@@ -52,7 +52,7 @@ export const MemoIndicator = memo(
         color="inherit"
         onClick={handleClick}
         startIcon={getIconComponent(Icon.MEMO_ALT)}
-        sx={{ minWidth: 0 }}
+        sx={{ minWidth: 0, "& .MuiButton-startIcon": { mr: 0.5 } }}
         {...props}
       >
         {memoIds.length}

@@ -1,3 +1,7 @@
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { Icon, getIconComponent } from "@components/icons";
+import { useOpenMemoDialog } from "@core/memo";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
@@ -44,28 +48,41 @@ export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
     ));
   }, [onResizeStart, token, spans]);
 
-  const codeIndicator = useMemo(() => {
+  // indicators for spans starting at this token: the memo count is rendered inside the code pill,
+  // or — when code pills are hidden — as a standalone pill in the annotation's code color
+  const indicators = useMemo(() => {
     const startingSpans = spans.filter((spanAnnotation) => spanAnnotation.begin_token === token.index);
 
-    return startingSpans.length > 0 && tagStyle !== TagStyle.None ? (
-      <span className={`spangroup ${tagStyle}`}>
-        {startingSpans.map((spanAnnotation) => (
-          <CodeIndicator
-            key={spanAnnotation.id}
-            codeId={spanAnnotation.code_id}
-            annotationId={spanAnnotation.id}
-            isSelected={selectedAnnotationId === spanAnnotation.id}
-            groups={spanAnnotation.group_ids}
-          />
-        ))}{" "}
+    if (startingSpans.length === 0) {
+      return null;
+    }
+
+    const showCodeIndicators = tagStyle !== TagStyle.None;
+
+    return (
+      <span className={`spangroup ${showCodeIndicators ? tagStyle : ""}`}>
+        {startingSpans.map((spanAnnotation) =>
+          showCodeIndicators ? (
+            <CodeIndicator
+              key={spanAnnotation.id}
+              codeId={spanAnnotation.code_id}
+              annotationId={spanAnnotation.id}
+              isSelected={selectedAnnotationId === spanAnnotation.id}
+              groups={spanAnnotation.group_ids}
+              memoCount={spanAnnotation.memo_ids.length}
+            />
+          ) : (
+            spanAnnotation.memo_ids.length > 0 && <MemoTokenBadge key={spanAnnotation.id} annotation={spanAnnotation} />
+          ),
+        )}{" "}
       </span>
-    ) : null;
+    );
   }, [tagStyle, token, spans, selectedAnnotationId]);
 
   return (
     <>
       <span className={`tok ${spans.map((s) => `span-${s.id}`).join(" ")}`} data-tokenid={token.index}>
-        {codeIndicator}
+        {indicators}
         <span id={"token" + token.index} className={"text"}>
           {token.text}
         </span>
@@ -74,5 +91,45 @@ export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
       </span>
       {token.newLine > 0 && range(token.newLine).map((i) => <br key={i}></br>)}
     </>
+  );
+}
+
+interface MemoTokenBadgeProps {
+  annotation: SpanAnnotationRead;
+}
+
+/**
+ * A memo badge styled exactly like a code pill, in the annotation's code color.
+ * Shown only when code pills are hidden (TagStyle.None), so the color tells you
+ * which annotation the memo belongs to.
+ */
+function MemoTokenBadge({ annotation }: MemoTokenBadgeProps) {
+  const code = CodeHooks.useGetCode(annotation.code_id);
+  const openMemoDialog = useOpenMemoDialog();
+
+  const handleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    openMemoDialog({
+      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
+      attachedObjectId: annotation.id,
+    });
+  };
+
+  if (!code.data) {
+    return null;
+  }
+
+  return (
+    <span
+      className="code-indicator memo-badge"
+      style={{ "--indicator-color": code.data.color } as React.CSSProperties}
+      onClick={handleClick}
+      title="Has memo — click to open"
+    >
+      <span className="code-indicator__text memo-badge__content">
+        {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
+        <span className="memo-badge__count">{annotation.memo_ids.length}</span>
+      </span>
+    </span>
   );
 }

@@ -63,6 +63,58 @@ A token (.tok) consists of:
 }
 
 /*
+MEMO INDICATORS: CodeIndicator.tsx / Token.tsx
+When code pills are shown, the memo count is a section inside the pill,
+separated by a divider. When pills are hidden (TagStyle.None), a standalone
+memo badge is rendered as a code-pill variant in the annotation's code color,
+so the color identifies the owning annotation.
+*/
+
+.code-indicator__memo {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 4px;
+  border-left: 1px solid color-mix(in srgb, var(--indicator-color) 40%, transparent);
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  color: color-mix(in srgb, var(--indicator-color) 50%, #222);
+}
+
+.code-indicator__memo:hover {
+  color: var(--indicator-color);
+}
+
+.code-indicator__memo-count {
+  font-weight: bold;
+}
+
+/* standalone memo badge: same pill as a code indicator, but without the
+   color dot (dots are reserved for actual codes). Horizontal padding matches
+   the minimal 4px inset a code pill keeps between its dot and the border. */
+.code-indicator.memo-badge {
+  cursor: pointer;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.code-indicator.memo-badge:hover {
+  background: color-mix(in srgb, var(--indicator-color) 30%, white);
+}
+
+.code-indicator.memo-badge .memo-badge__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.code-indicator.memo-badge .memo-badge__count {
+  font-weight: bold;
+}
+
+/*
 CODE INDICATOR: CodeIndicator.tsx
 This is the styling of the code indicators that show NER tags above or inline with tokens.
 A code indicator (.code-indicator) can be selected (code-indicator--selected) and contains:
@@ -76,13 +128,15 @@ A code indicator (.code-indicator) can be selected (code-indicator--selected) an
   background: color-mix(in srgb, var(--indicator-color) 15%, white);
   border: 1px solid var(--indicator-color);
   cursor: default;
-  display: inline-block;
-  line-height: 0.9;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
   margin-left: 4px;
-  padding-left: 14px;
-  padding-right: 4px;
+  padding: 2px 4px;
   position: relative;
-  transform: translateY(0px);
+  vertical-align: middle;
+  transform: translateY(-1.5px);
 }
 
 .code-indicator__color-dot {
@@ -90,18 +144,16 @@ A code indicator (.code-indicator) can be selected (code-indicator--selected) an
   height: 6px;
   border-radius: 50%;
   background-color: var(--indicator-color);
-  position: absolute;
-  left: 4px;
-  top: calc(50% - 3px);
+  flex-shrink: 0;
 }
 
 .code-indicator__text {
   font-size: 0.75rem;
   font-weight: bold;
   font-style: normal;
+  line-height: 1;
   color: color-mix(in srgb, var(--indicator-color) 50%, #222);
   text-transform: uppercase;
-  vertical-align: middle;
 }
 
 .code-indicator--selected {
