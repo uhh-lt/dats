@@ -110,7 +110,11 @@ const useUpdateBBoxAnnotation = () =>
               anno.id === bboxToUpdate.id
                 ? {
                     ...anno,
-                    code_id: requestBody.code_id,
+                    code_id: requestBody.code_id ?? anno.code_id,
+                    x_min: requestBody.x_min ?? anno.x_min,
+                    x_max: requestBody.x_max ?? anno.x_max,
+                    y_min: requestBody.y_min ?? anno.y_min,
+                    y_max: requestBody.y_max ?? anno.y_max,
                   }
                 : anno,
             )

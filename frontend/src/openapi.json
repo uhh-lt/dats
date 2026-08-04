@@ -7035,10 +7035,33 @@
       },
       "BBoxAnnotationUpdate": {
         "properties": {
-          "code_id": { "type": "integer", "title": "Code Id", "description": "Code the BBoxAnnotation refers to" }
+          "code_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Code Id",
+            "description": "Code the BBoxAnnotation refers to"
+          },
+          "x_min": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "X Min",
+            "description": "Absolute x_min coordinate of the BBoxAnnotation"
+          },
+          "x_max": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "X Max",
+            "description": "Absolute x_max coordinate of the BBoxAnnotation"
+          },
+          "y_min": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Y Min",
+            "description": "Absolute y_min coordinate of the BBoxAnnotation"
+          },
+          "y_max": {
+            "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }],
+            "title": "Y Max",
+            "description": "Absolute y_max coordinate of the BBoxAnnotation"
+          }
         },
         "type": "object",
-        "required": ["code_id"],
         "title": "BBoxAnnotationUpdate"
       },
       "BBoxAnnotationUpdateBulk": {
