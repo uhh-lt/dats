@@ -10,6 +10,7 @@ import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
 import { Annotation } from "../_types/Annotation";
 import { AnnoActions } from "../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
@@ -57,14 +58,21 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   // global server state (react query)
   const annotations = BboxAnnotationHooks.useGetBBoxAnnotationsBatch(sdocData.id, visibleUserId);
 
-  // computed (filter hidden code ids)
+  // resize controller
+  const resizeController = useBboxAnnotationResize(imgRef);
+
+  // computed (filter hidden code ids, apply resize preview override)
   const data = useMemo(() => {
-    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
-  }, [annotations.data, hiddenCodeIds]);
+    const filtered = (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
+    const preview = resizeController.previewAnnotation;
+    if (!preview) return filtered;
+    return filtered.map((bbox) => (bbox.id === preview.id ? preview : bbox));
+  }, [annotations.data, hiddenCodeIds, resizeController.previewAnnotation]);
 
   // local client state
   const [isZooming, setIsZooming] = useState(true);
   const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationRead | null>(null);
+  const [hoveredBboxId, setHoveredBboxId] = useState<number | null>(null);
 
   // mutations for create, update, delete
   const { user } = useAuth();
@@ -78,6 +86,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
       event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
       bbox: BBoxAnnotationRead,
     ) => {
+      if (resizeController.shouldIgnoreMouseUp()) return;
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
       const position = {
@@ -87,7 +96,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
       codeSelectorRef.current!.open(position, [bbox]);
       setSelectedBbox(bbox);
     },
-    [codeSelectorRef],
+    [codeSelectorRef, resizeController],
   );
 
   // drag handling
@@ -341,6 +350,10 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
                 key={bbox.id}
                 bbox={bbox}
                 onClick={(event) => handleClick(event, bbox)}
+                onMouseEnter={() => setHoveredBboxId(bbox.id)}
+                onMouseLeave={() => setHoveredBboxId(null)}
+                isHovered={hoveredBboxId === bbox.id || resizeController.previewAnnotation?.id === bbox.id}
+                onResizeStart={resizeController.handleResizeStart}
                 style={{ cursor: "pointer" }}
               />
             ))}
