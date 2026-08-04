@@ -9,7 +9,7 @@ import * as d3 from "d3";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
 import { SVGBBox } from "./SVGBBox";
-import { SVGBBoxText } from "./SVGBBoxText";
+import { SVGBBoxText } from "./SVGBBoxCodeIndicator";
 
 interface ImageViewerProps {
   sdocData: SourceDocumentDataRead;
@@ -125,14 +125,7 @@ function ImageViewerWithData({ sdocData, height, width }: ImageViewerProps & { h
           </g>
           <g>
             {annotationData.map((bbox) => (
-              <SVGBBoxText
-                key={bbox.id}
-                bbox={bbox}
-                fontSize={`${Math.max(21, height / 17)}px`}
-                style={{ cursor: "pointer" }}
-                scaledRatio={scaledRatio}
-                xCentering={xCentering}
-              />
+              <SVGBBoxText key={bbox.id} bbox={bbox} scaledRatio={scaledRatio} xCentering={xCentering} />
             ))}
           </g>
         </g>

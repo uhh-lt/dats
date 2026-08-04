@@ -11,6 +11,8 @@ interface CodeIndicatorProps {
   groups?: number[];
   /** When > 0, a memo count is rendered inside the pill and opens the memo dialog on click. */
   memoCount?: number;
+  /** The attached object type for the memo dialog. Defaults to SPAN_ANNOTATION. */
+  attachedObjectType?: AttachedObjectType;
 }
 
 /**
@@ -22,14 +24,21 @@ interface CodeIndicatorProps {
  * @param groups - Optional group IDs for coreference annotations
  * @param memoCount - Number of memos attached to this annotation (renders a memo section in the pill)
  */
-export function CodeIndicator({ codeId, annotationId, isSelected, groups, memoCount = 0 }: CodeIndicatorProps) {
+export function CodeIndicator({
+  codeId,
+  annotationId,
+  isSelected,
+  groups,
+  memoCount = 0,
+  attachedObjectType = AttachedObjectType.SPAN_ANNOTATION,
+}: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
   const openMemoDialog = useOpenMemoDialog();
 
   const handleMemoClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     openMemoDialog({
-      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
+      attachedObjectType,
       attachedObjectId: annotationId,
     });
   };

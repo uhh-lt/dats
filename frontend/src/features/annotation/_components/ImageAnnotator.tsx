@@ -15,7 +15,7 @@ import { Annotation } from "../_types/Annotation";
 import { AnnoActions } from "../store/annoSlice";
 import { AnnotationMenu, AnnotationMenuHandle } from "./annotation-menu/AnnotationMenu";
 import { SVGBBox } from "./SVGBBox";
-import { SVGBBoxText } from "./SVGBBoxText";
+import { SVGBBoxText } from "./SVGBBoxCodeIndicator";
 
 interface ImageAnnotatorProps {
   sdocData: SourceDocumentDataRead;
@@ -82,10 +82,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // click handling
   const handleClick = useCallback(
-    (
-      event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
-      bbox: BBoxAnnotationRead,
-    ) => {
+    (event: React.MouseEvent, bbox: BBoxAnnotationRead) => {
       if (resizeController.shouldIgnoreMouseUp()) return;
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
@@ -360,13 +357,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
           </g>
           <g>
             {data.map((bbox) => (
-              <SVGBBoxText
-                key={bbox.id}
-                bbox={bbox}
-                onClick={(event) => handleClick(event, bbox)}
-                fontSize={`${Math.max(21, height / 17)}px`}
-                style={{ cursor: "pointer" }}
-              />
+              <SVGBBoxText key={bbox.id} bbox={bbox} onClick={(event) => handleClick(event, bbox)} />
             ))}
           </g>
         </g>
