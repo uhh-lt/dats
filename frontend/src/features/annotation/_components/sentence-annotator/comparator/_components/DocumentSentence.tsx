@@ -9,6 +9,7 @@ import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
 import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
 import { SentenceAnnotationResizeHandles } from "../../../sentence-annotator/_components/SentenceAnnotationResizeHandles";
+import { SentenceMemoBadge } from "../../../sentence-annotator/_components/SentenceMemoBadge";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
 import { SentAnnoMap, useComputeSentAnnoMap } from "../_hooks/useComputeSentAnnoMap";
 import { isAnnotationSame } from "../_utils/comparisonUtils";
@@ -265,6 +266,8 @@ function DocumentSentencePart({
                 style={{
                   flexShrink: 0,
                   cursor: "pointer",
+                  position: "relative",
+                  zIndex: isHovered ? 100 : undefined,
                   paddingRight: "8px",
                   paddingTop: isStartOfAnnotation ? "4px" : undefined,
                   paddingBottom: isEndOfAnnotation ? "4px" : undefined,
@@ -291,6 +294,9 @@ function DocumentSentencePart({
                       color={code.color}
                       onResizeStart={onResizeStart}
                     />
+                  )}
+                  {isStartOfAnnotation && annotation.memo_ids.length > 0 && (
+                    <SentenceMemoBadge annotation={annotation} color={code.color} />
                   )}
                 </div>
               </div>

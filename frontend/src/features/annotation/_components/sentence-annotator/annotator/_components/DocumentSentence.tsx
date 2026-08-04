@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
 import "../../../_styles/Annotation.css";
 import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
+import { SentenceMemoBadge } from "../../_components/SentenceMemoBadge";
 
 interface DocumentSentenceProps {
   sentenceId: number;
@@ -170,6 +171,8 @@ export function DocumentSentence({
                 style={{
                   flexShrink: 0,
                   cursor: "pointer",
+                  position: "relative",
+                  zIndex: isHovered ? 100 : undefined,
                   paddingRight: "8px",
                   paddingTop: isStartOfAnnotation ? "4px" : undefined,
                   paddingBottom: isEndOfAnnotation ? "4px" : undefined,
@@ -196,6 +199,9 @@ export function DocumentSentence({
                       color={code.color}
                       onResizeStart={onResizeStart}
                     />
+                  )}
+                  {isStartOfAnnotation && annotation.memo_ids.length > 0 && (
+                    <SentenceMemoBadge annotation={annotation} color={code.color} />
                   )}
                 </div>
               </div>
