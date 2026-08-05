@@ -40,6 +40,9 @@ export const SentenceAnnotationComparison = memo(
     const leftResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
     const rightResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
 
+    // pending annotations (not yet persisted, rendered from local state only)
+    const [pendingAnnotations, setPendingAnnotations] = useState<SentenceAnnotationRead[]>([]);
+
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
     const annotatorLeft = useGetSentenceAnnotator({
@@ -63,9 +66,6 @@ export const SentenceAnnotationComparison = memo(
     // highlighting
     const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
     const [hoverSentAnnoId, setHoverSentAnnoId] = useState<number | null>(null);
-
-    // pending annotations (not yet persisted, rendered from local state only)
-    const [pendingAnnotations, setPendingAnnotations] = useState<SentenceAnnotationRead[]>([]);
 
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
