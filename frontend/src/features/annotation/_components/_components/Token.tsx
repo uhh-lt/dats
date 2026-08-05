@@ -6,7 +6,6 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
-import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { SpanAnnotationResizeStartHandler } from "../../_hooks/useSpanAnnotationResize";
 import { IToken } from "../../_types/IToken";
 import { TagStyle } from "../../_types/TagStyle";
@@ -20,9 +19,6 @@ interface TokenProps {
 }
 
 export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
-  // global client state (URL search params)
-  const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
-
   // global client state (redux)
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
   const tagStyle = useAppSelector((state) => state.annotations.tagStyle);
@@ -67,7 +63,6 @@ export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
               key={spanAnnotation.id}
               codeId={spanAnnotation.code_id}
               annotationId={spanAnnotation.id}
-              isSelected={selectedAnnotationId === spanAnnotation.id}
               groups={spanAnnotation.group_ids}
               memoCount={spanAnnotation.memo_ids.length}
             />
@@ -77,7 +72,7 @@ export function Token({ token, spanAnnotations, onResizeStart }: TokenProps) {
         )}{" "}
       </span>
     );
-  }, [tagStyle, token, spans, selectedAnnotationId]);
+  }, [tagStyle, token, spans]);
 
   return (
     <>

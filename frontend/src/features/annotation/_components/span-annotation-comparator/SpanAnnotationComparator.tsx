@@ -9,10 +9,11 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Box, BoxProps, Button, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { toPendingSpanAnnotation } from "../../_hooks/pendingSpanAnnotation";
 import { useComputeTokenData, useTokenData } from "../../_hooks/useComputeTokenData";
+import { useSpanAnnotationHighlight } from "../../_hooks/useSpanAnnotationHighlight";
 import { useSpanAnnotationResize } from "../../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../_types/Annotation";
 import { AnnoActions } from "../../store/annoSlice";
@@ -143,24 +144,11 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     return Array.from(rightAnnotationMap.values());
   }, [rightAnnotationMap]);
 
-  // Synchronize hover state to target actual span annotations on both sides
-  useEffect(() => {
-    const previous = document.querySelectorAll(".span-hovered");
-    previous.forEach((el) => el.classList.remove("span-hovered"));
-
-    if (hoveredControlKey) {
-      const leftId = hoveredControlKey.startsWith("l-") ? parseInt(hoveredControlKey.substring(2)) : null;
-      const rightId = hoveredControlKey.startsWith("r-") ? parseInt(hoveredControlKey.substring(2)) : null;
-
-      if (leftId) {
-        const leftEls = document.querySelectorAll(`.span-${leftId}`);
-        leftEls.forEach((el) => el.classList.add("span-hovered"));
-      } else if (rightId) {
-        const rightEls = document.querySelectorAll(`.span-${rightId}`);
-        rightEls.forEach((el) => el.classList.add("span-hovered"));
-      }
-    }
-  }, [hoveredControlKey]);
+  // Synchronize hover state to target actual span annotations on both sides.
+  // Derive the hovered annotation id from the control key (l-<id> / r-<id>) and
+  // highlight its tokens via the shared span highlight.
+  const hoveredAnnotationId = hoveredControlKey ? parseInt(hoveredControlKey.substring(2)) : null;
+  useSpanAnnotationHighlight(hoveredAnnotationId);
 
   // Single annotation actions
   const handleApplyAnnotation = useCallback(
@@ -436,13 +424,6 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
 
   return (
     <>
-      <style>{`
-          .span-hovered {
-            background-color: rgba(25, 118, 210, 0.2) !important;
-            border-bottom: 2px solid #1976d2 !important;
-            transition: background-color 0.15s ease;
-          }
-        `}</style>
       <AnnotationMenu
         ref={leftSpanMenuRef}
         onAdd={handleLeftCodeSelectorAddCode}
