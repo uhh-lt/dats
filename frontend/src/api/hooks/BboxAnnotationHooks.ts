@@ -1,14 +1,11 @@
 import { CancelablePromise } from "@api/core/CancelablePromise";
+import { queryClient } from "@api/queryClient";
+import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { BBoxAnnotationUpdate } from "@models/BBoxAnnotationUpdate";
-import { UserRead } from "@models/UserRead";
-import { queryClient } from "@api/queryClient";
-import { BboxAnnotationService } from "@api/services/BboxAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
-
-export const FAKE_BBOX_ID = -1;
 
 // BBOX QUERIES
 const useGetAnnotation = (bboxId: number | undefined) =>
@@ -44,45 +41,18 @@ const useGetBBoxAnnotationsBatch = (sdocId: number | null | undefined, userId: n
   });
 
 // BBOX MUTATIONS
-const useCreateBBoxAnnotation = (user: UserRead | undefined) =>
+const useCreateBBoxAnnotation = () =>
   useMutation({
     mutationFn: (variables: BBoxAnnotationCreate) =>
       BboxAnnotationService.addBboxAnnotation({ requestBody: variables }),
-    // optimistic update:
-    // 1. Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-    // 2. Snapshot the previous value
-    // 3. Optimistically update to the new value
-    // 4. Return a context object with the snapshotted value
-    onMutate: async (newBbox) => {
-      if (!user) return;
-      const affectedQueryKey = [QueryKey.SDOC_BBOX_ANNOTATIONS, newBbox.sdoc_id, user.id];
-      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousBboxes = queryClient.getQueryData<BBoxAnnotationRead[]>(affectedQueryKey);
-      const bbox: BBoxAnnotationRead = {
-        ...newBbox,
-        id: FAKE_BBOX_ID,
-        code_id: newBbox.code_id,
-        created: "",
-        updated: "",
-        user_id: user.id,
-        memo_ids: [],
-      };
-      queryClient.setQueryData<BBoxAnnotationRead[]>(affectedQueryKey, (old) => {
-        return old ? [...old, bbox] : [bbox];
-      });
-      return { previousBboxes, affectedQueryKey };
-    },
-    onError: (_error, _newBbox, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (!context) return;
-      queryClient.setQueryData<BBoxAnnotationRead[]>(context.affectedQueryKey, context.previousBboxes);
-    },
     onSuccess: (data) => {
       queryClient.setQueryData<BBoxAnnotationRead>([QueryKey.BBOX_ANNOTATION, data.id], data);
-      // Replace the fake bbox with the real one
       queryClient.setQueryData<BBoxAnnotationRead[]>(
         [QueryKey.SDOC_BBOX_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.map((bbox) => (bbox.id === FAKE_BBOX_ID ? data : bbox)) : [data]),
+        (old) => {
+          if (!old) return [data];
+          return old.some((bbox) => bbox.id === data.id) ? old : [...old, data];
+        },
       );
     },
     meta: {
