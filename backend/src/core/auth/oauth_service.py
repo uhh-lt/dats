@@ -64,6 +64,8 @@ class OAuthService(metaclass=SingletonMeta):
 
         try:
             userinfo = token.get("userinfo")
+            if "email" not in userinfo:
+                userinfo = await client.userinfo(token=token)
             print(f"Userinfo: {userinfo}")
 
             try:
