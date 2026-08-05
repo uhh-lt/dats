@@ -6,10 +6,12 @@ import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog } from "@core/notification";
+import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { toPendingBboxAnnotation } from "../_hooks/pendingBboxAnnotation";
 import { useBboxAnnotationResize } from "../_hooks/useBboxAnnotationResize";
 import { Annotation } from "../_types/Annotation";
 import { AnnoActions } from "../store/annoSlice";
@@ -61,13 +63,17 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
   // resize controller
   const resizeController = useBboxAnnotationResize(imgRef);
 
-  // computed (filter hidden code ids, apply resize preview override)
+  // annotations already sent to the server but not yet persisted; kept visible until the real
+  // annotation lands in the cache so the highlight never flickers. Keyed by unique negative ids.
+  const [pendingAnnotations, setPendingAnnotations] = useState<BBoxAnnotationRead[]>([]);
+
+  // computed (filter hidden code ids, apply resize preview override, append pending annotations)
   const data = useMemo(() => {
     const filtered = (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code_id));
     const preview = resizeController.previewAnnotation;
-    if (!preview) return filtered;
-    return filtered.map((bbox) => (bbox.id === preview.id ? preview : bbox));
-  }, [annotations.data, hiddenCodeIds, resizeController.previewAnnotation]);
+    const withPreview = preview ? filtered.map((bbox) => (bbox.id === preview.id ? preview : bbox)) : filtered;
+    return pendingAnnotations.length > 0 ? [...withPreview, ...pendingAnnotations] : withPreview;
+  }, [annotations.data, hiddenCodeIds, resizeController.previewAnnotation, pendingAnnotations]);
 
   // local client state
   const [isZooming, setIsZooming] = useState(true);
@@ -76,7 +82,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // mutations for create, update, delete
   const { user } = useAuth();
-  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation(user);
+  const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
   const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
   const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
 
@@ -217,6 +223,17 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
   };
 
+  // send a create request and keep the annotation visible (pending) until the real one is cached.
+  const startCreate = (requestBody: BBoxAnnotationCreate, onSuccess?: () => void) => {
+    const pending = toPendingBboxAnnotation(requestBody, user?.id);
+    setPendingAnnotations((prev) => [...prev, pending]);
+    createMutation.mutate(requestBody, {
+      onSuccess,
+      // remove the pending preview once the real annotation is in the cache (or the request failed)
+      onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
+    });
+  };
+
   // code selector events
   const onCodeSelectorAddCode = (codeId: number) => {
     const myRect = d3.select(rectRef.current);
@@ -224,7 +241,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     const y = parseInt(myRect.attr("y"));
     const width = parseInt(myRect.attr("width"));
     const height = parseInt(myRect.attr("height"));
-    createMutation.mutate({
+    startCreate({
       code_id: codeId,
       sdoc_id: sdocData.id,
       x_min: x,
@@ -270,7 +287,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
     if (!isBboxAnnotation(annotationToDuplicate)) {
       return;
     }
-    createMutation.mutate(
+    startCreate(
       {
         code_id: codeId,
         sdoc_id: annotationToDuplicate.sdoc_id,
@@ -279,11 +296,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
         y_min: annotationToDuplicate.y_min,
         y_max: annotationToDuplicate.y_max,
       },
-      {
-        onSuccess: () => {
-          dispatch(AnnoActions.moveCodeToTop(codeId));
-        },
-      },
+      () => dispatch(AnnoActions.moveCodeToTop(codeId)),
     );
   };
 

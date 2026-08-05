@@ -30,6 +30,9 @@ export const SVGBBox = memo(
   }: SVGBBoxProps & CustomSVGProps) => {
     const code = CodeHooks.useGetCode(bbox.code_id);
 
+    // pending (not yet persisted) annotations have negative ids and never offer resize handles.
+    const isPending = bbox.id < 0;
+
     return (
       <>
         {code.data && (
@@ -46,7 +49,7 @@ export const SVGBBox = memo(
               fill={"transparent"}
               {...props}
             />
-            {onResizeStart && (
+            {onResizeStart && !isPending && (
               <BboxAnnotationResizeHandles
                 bbox={bbox}
                 isHovered={isHovered}
