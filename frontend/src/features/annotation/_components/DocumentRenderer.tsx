@@ -3,6 +3,7 @@ import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
 import { useCallback, useEffect, useMemo } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { useSpanAnnotationHighlight } from "../_hooks/useSpanAnnotationHighlight";
 import { SpanAnnotationResizeStartHandler } from "../_hooks/useSpanAnnotationResize";
 import { IToken } from "../_types/IToken";
 import { DocumentPage } from "./_components/DocumentPage";
@@ -50,8 +51,12 @@ export function DocumentRenderer({
           clearInterval(intervalHandle);
         }
       }, 500);
+      return () => clearInterval(intervalHandle);
     }
   }, [selectedAnnotationId]);
+
+  // highlight the selected annotation's tokens (shared span highlight)
+  useSpanAnnotationHighlight(selectedAnnotationId);
 
   const basicProcessingInstructions = useCallback(
     (options: HTMLReactParserOptions) => (domNode: Element) => {

@@ -7,7 +7,6 @@ import { contrastiveColors } from "@utils/colors/colors";
 interface CodeIndicatorProps {
   codeId: number;
   annotationId: number;
-  isSelected?: boolean;
   groups?: number[];
   /** When > 0, a memo count is rendered inside the pill and opens the memo dialog on click. */
   memoCount?: number;
@@ -20,14 +19,12 @@ interface CodeIndicatorProps {
  * Displays the code name with a colored pill design for better visual recognition.
  * @param codeId - The ID of the code to display
  * @param annotationId - The ID of the annotation this indicator belongs to
- * @param isSelected - Whether this annotation is currently selected
  * @param groups - Optional group IDs for coreference annotations
  * @param memoCount - Number of memos attached to this annotation (renders a memo section in the pill)
  */
 export function CodeIndicator({
   codeId,
   annotationId,
-  isSelected,
   groups,
   memoCount = 0,
   attachedObjectType = AttachedObjectType.SPAN_ANNOTATION,
@@ -62,7 +59,7 @@ export function CodeIndicator({
     return (
       <span
         id={"span-annotation-" + annotationId}
-        className={`code-indicator ${isSelected ? "code-indicator--selected" : ""} ${isPending ? "code-indicator--pending" : ""}`}
+        className={`code-indicator ${isPending ? "code-indicator--pending" : ""}`}
         title={isPending ? "Saving annotation…" : undefined}
         style={
           {

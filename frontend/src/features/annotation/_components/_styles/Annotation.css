@@ -11,12 +11,17 @@ rect.hovered {
   cursor: pointer;
 }
 
-.filterhighlight {
-  background-color: yellow;
-}
+/*
+SPAN HIGHLIGHT: useSpanAnnotationHighlight.ts
+Shared highlight applied to all tokens (.tok) of a span annotation. Used both
+for the selected annotation (selectedAnnotationId) and for the comparator's
+hover-sync. Tokens carry a `span-<id>` class per annotation (see Token.tsx).
+*/
 
-.jumphighlight {
-  background-color: lightgreen;
+.span-highlighted {
+  background-color: rgba(25, 118, 210, 0.2) !important;
+  border-bottom: 2px solid #1976d2 !important;
+  transition: background-color 0.15s ease;
 }
 
 /*
@@ -117,7 +122,7 @@ so the color identifies the owning annotation.
 /*
 CODE INDICATOR: CodeIndicator.tsx
 This is the styling of the code indicators that show NER tags above or inline with tokens.
-A code indicator (.code-indicator) can be selected (code-indicator--selected) and contains:
+A code indicator (.code-indicator) contains:
 - A color dot (.code-indicator__color-dot)
 - Text (.code-indicator__text)
 */
@@ -154,13 +159,6 @@ A code indicator (.code-indicator) can be selected (code-indicator--selected) an
   line-height: 1;
   color: color-mix(in srgb, var(--indicator-color) 50%, #222);
   text-transform: uppercase;
-}
-
-.code-indicator--selected {
-  background: color-mix(in srgb, var(--indicator-color) 20%, white);
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--indicator-color) 25%, transparent),
-    0 2px 8px color-mix(in srgb, var(--indicator-color) 30%, transparent);
 }
 
 /* A pending (not yet persisted) annotation: keeps its real code color, but is dashed,
