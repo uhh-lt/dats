@@ -4,11 +4,8 @@ import { SentenceAnnotationService } from "@api/services/SentenceAnnotationServi
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SentenceAnnotationUpdate } from "@models/SentenceAnnotationUpdate";
 import { SentenceAnnotatorResult } from "@models/SentenceAnnotatorResult";
-import { UserRead } from "@models/UserRead";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
-
-export const FAKE_SENTENCE_ANNOTATION_ID = -1;
 
 // SENTENCE QUERIES
 // TODO: filter out all disabled code ids
@@ -35,48 +32,11 @@ const useGetAnnotation = (sentenceAnnoId: number | undefined) =>
   });
 
 // SENTENCE MUTATIONS
-const useCreateSentenceAnnotation = (user: UserRead | undefined) =>
+const useCreateSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.addSentenceAnnotation,
-    // optimistic update:
-    // 1. Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-    // 2. Snapshot the previous value
-    // 3. Optimistically update to the new value
-    // 4. Return a context object with the snapshotted value
-    onMutate: async ({ requestBody: newSentAnno }) => {
-      if (!user) return;
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, newSentAnno.sdoc_id, user.id];
-      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
-      const sentAnno: SentenceAnnotationRead = {
-        ...newSentAnno,
-        id: FAKE_SENTENCE_ANNOTATION_ID,
-        user_id: user.id,
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-        memo_ids: [],
-      };
-      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
-        if (!old) return old;
-        const sentAnnos = { ...old.sentence_annotations };
-        for (let sentenceId = newSentAnno.sentence_id_start; sentenceId <= newSentAnno.sentence_id_end; sentenceId++) {
-          if (!sentAnnos[sentenceId]) {
-            sentAnnos[sentenceId] = [];
-          }
-          sentAnnos[sentenceId].push(sentAnno);
-        }
-        return { sentence_annotations: sentAnnos };
-      });
-      return { previousSentenceAnnotator, affectedQueryKey };
-    },
-    onError: (_error: Error, _newSentAnnotation, context) => {
-      if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SentenceAnnotatorResult>(context.affectedQueryKey, context.previousSentenceAnnotator);
-    },
     onSuccess: (data) => {
       queryClient.setQueryData<SentenceAnnotationRead>([QueryKey.SENTENCE_ANNOTATION, data.id], data);
-      // Replace the fake sentence annotation with the real one
       queryClient.setQueryData<SentenceAnnotatorResult>(
         [QueryKey.SDOC_SENTENCE_ANNOTATOR, data.sdoc_id, data.user_id],
         (old) => {
@@ -86,9 +46,9 @@ const useCreateSentenceAnnotation = (user: UserRead | undefined) =>
             if (!sentAnnos[sentenceId]) {
               sentAnnos[sentenceId] = [];
             }
-            sentAnnos[sentenceId] = sentAnnos[sentenceId].map((annotation) =>
-              annotation.id === FAKE_SENTENCE_ANNOTATION_ID ? data : annotation,
-            );
+            if (!sentAnnos[sentenceId].some((a) => a.id === data.id)) {
+              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], data];
+            }
           }
           return { sentence_annotations: sentAnnos };
         },
@@ -99,56 +59,28 @@ const useCreateSentenceAnnotation = (user: UserRead | undefined) =>
     },
   });
 
-const useCreateBulkSentenceAnnotation = (user: UserRead | undefined) =>
+const useCreateBulkSentenceAnnotation = () =>
   useMutation({
     mutationFn: SentenceAnnotationService.addSentenceAnnotationsBulk,
-    // optimistic updates
-    onMutate: async ({ requestBody: annotationsToCreate }) => {
-      if (!user) return;
-      if (annotationsToCreate.length === 0) return;
-      const sdocId = annotationsToCreate[0].sdoc_id;
-      if (annotationsToCreate.some((annotation) => annotation.sdoc_id !== sdocId)) {
-        console.error("All annotations to create must belong to the same source document");
-        return;
-      }
-
-      const affectedQueryKey = [QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, user.id];
-      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousSentenceAnnotator = queryClient.getQueryData<SentenceAnnotatorResult>(affectedQueryKey);
-      let fakeID = FAKE_SENTENCE_ANNOTATION_ID;
-      queryClient.setQueryData<SentenceAnnotatorResult>(affectedQueryKey, (old) => {
+    onSuccess: (data) => {
+      if (data.length === 0) return;
+      const sdocId = data[0].sdoc_id;
+      const userId = data[0].user_id;
+      queryClient.setQueryData<SentenceAnnotatorResult>([QueryKey.SDOC_SENTENCE_ANNOTATOR, sdocId, userId], (old) => {
         if (!old) return old;
         const sentAnnos = { ...old.sentence_annotations };
-        annotationsToCreate.forEach((data) => {
-          const sentAnno: SentenceAnnotationRead = {
-            ...data,
-            id: fakeID,
-            user_id: user.id,
-            created: new Date().toISOString(),
-            updated: new Date().toISOString(),
-            memo_ids: [],
-          };
-          for (let sentenceId = data.sentence_id_start; sentenceId <= data.sentence_id_end; sentenceId++) {
+        data.forEach((annotation) => {
+          for (let sentenceId = annotation.sentence_id_start; sentenceId <= annotation.sentence_id_end; sentenceId++) {
             if (!sentAnnos[sentenceId]) {
               sentAnnos[sentenceId] = [];
             }
-            sentAnnos[sentenceId].push(sentAnno);
+            if (!sentAnnos[sentenceId].some((a) => a.id === annotation.id)) {
+              sentAnnos[sentenceId] = [...sentAnnos[sentenceId], annotation];
+            }
           }
-          fakeID = fakeID - 1;
         });
         return { sentence_annotations: sentAnnos };
       });
-      return { previousSentenceAnnotator, affectedQueryKey };
-    },
-    onError: (_error: Error, _newSentAnnotation, context) => {
-      if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData(context.affectedQueryKey, context.previousSentenceAnnotator);
-    },
-    // Always re-fetch after error or success:
-    onSettled: (_data, _error, _variables, context) => {
-      if (!context) return;
-      queryClient.invalidateQueries({ queryKey: context.affectedQueryKey });
     },
     meta: {
       successMessage: (data: SentenceAnnotationRead[]) => `Created ${data.length} Sentence Annotations`,
