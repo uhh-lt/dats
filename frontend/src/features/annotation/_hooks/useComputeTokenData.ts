@@ -32,16 +32,20 @@ export function useTokenData(sdocData: SourceDocumentDataRead): IToken[] | undef
  * @param sdocData The source document data containing tokens and their character offsets.
  * @param userId The user whose span annotations should be loaded. The query remains disabled when no user ID is set.
  * @param annotationOverride An optional temporary annotation state used to render a live resize preview.
+ * @param pendingAnnotations Optional not-yet-persisted annotations (e.g. while the user picks a code, or
+ *   while a create mutation is in flight) that are rendered without being written to the query cache.
  * @returns Token metadata, a token-to-annotation-ID map, and an annotation-ID-to-annotation map.
  */
 export function useComputeTokenData({
   sdocData,
   userId,
   annotationOverride,
+  pendingAnnotations,
 }: {
   sdocData: SourceDocumentDataRead;
   userId: number | null | undefined;
   annotationOverride?: SpanAnnotationRead;
+  pendingAnnotations?: SpanAnnotationRead[];
 }) {
   // global server state (react query)
   const annotations = SpanAnnotationHooks.useGetSpanAnnotationsBatch(sdocData.id, userId);
@@ -57,8 +61,8 @@ export function useComputeTokenData({
     const spanGroupIdMapping = new Map<number, number>();
     const annotationMap = new Map<number, SpanAnnotationRead>();
     const annotationsPerToken = new Map<number, number[]>();
-    annotations.data.forEach((storedAnnotation) => {
-      const selectedAnnotation = storedAnnotation.id === annotationOverride?.id ? annotationOverride : storedAnnotation;
+
+    const addAnnotation = (selectedAnnotation: SpanAnnotationRead) => {
       const groupIds = selectedAnnotation.group_ids.map((id) => {
         let mapped = spanGroupIdMapping.get(id);
         if (mapped === undefined) {
@@ -78,9 +82,17 @@ export function useComputeTokenData({
         annotationsPerToken.set(i, tokenAnnotations);
       }
       annotationMap.set(annotation.id, annotation);
+    };
+
+    annotations.data.forEach((storedAnnotation) => {
+      addAnnotation(storedAnnotation.id === annotationOverride?.id ? annotationOverride : storedAnnotation);
+    });
+    // render pending (not yet persisted) annotations without touching the query cache
+    pendingAnnotations?.forEach((pendingAnnotation) => {
+      addAnnotation(pendingAnnotation);
     });
     return { annotationMap, annotationsPerToken };
-  }, [annotationOverride, annotations.data]);
+  }, [annotationOverride, pendingAnnotations, annotations.data]);
 
   return { tokenData, annotationsPerToken, annotationMap };
 }

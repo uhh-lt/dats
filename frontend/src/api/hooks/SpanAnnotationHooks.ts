@@ -1,14 +1,11 @@
+import { queryClient } from "@api/queryClient";
+import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationDeleted } from "@models/SpanAnnotationDeleted";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { SpanAnnotationUpdate } from "@models/SpanAnnotationUpdate";
-import { UserRead } from "@models/UserRead";
-import { queryClient } from "@api/queryClient";
-import { SpanAnnotationService } from "@api/services/SpanAnnotationService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
-
-export const FAKE_ANNOTATION_ID = -1;
 
 // SPAN QUERIES
 const useGetAnnotation = (spanId: number | null | undefined) =>
@@ -53,55 +50,18 @@ const useCreateBulkAnnotations = () =>
     },
   });
 
-const useCreateSpanAnnotation = (user: UserRead | undefined) =>
+const useCreateSpanAnnotation = () =>
   useMutation({
     mutationFn: (variables: SpanAnnotationCreate) =>
       SpanAnnotationService.addSpanAnnotation({ requestBody: variables }),
-    // optimistic update:
-    // 1. Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-    // 2. Snapshot the previous value
-    // 3. Optimistically update to the new value
-    // 4. Return a context object with the snapshotted value
-    onMutate: async (newSpanAnnotation) => {
-      if (!user) return;
-      const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, newSpanAnnotation.sdoc_id, user.id];
-      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-      const previousSpanAnnotations = queryClient.getQueryData<SpanAnnotationRead[]>(affectedQueryKey);
-      const spanAnno: SpanAnnotationRead = {
-        ...newSpanAnnotation,
-        id: FAKE_ANNOTATION_ID,
-        code_id: newSpanAnnotation.code_id,
-        user_id: user.id,
-        text: "",
-        created: "",
-        updated: "",
-        group_ids: [],
-        memo_ids: [],
-      };
-      queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
-        // check if there is already a fake annotation, if so, replace it with the new one
-        const fakeAnnotationIndex = old?.findIndex((a) => a.id === FAKE_ANNOTATION_ID);
-        if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
-          const result = Array.from(old!);
-          result[fakeAnnotationIndex] = spanAnno;
-          return result;
-        }
-        // if there is no fake annotation, add the new one
-        return old ? [...old, spanAnno] : [spanAnno];
-      });
-      return { previousSpanAnnotations, affectedQueryKey };
-    },
-    onError: (_error: Error, _newSpanAnnotation, context) => {
-      if (!context) return;
-      // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData<SpanAnnotationRead[]>(context.affectedQueryKey, context.previousSpanAnnotations);
-    },
     onSuccess: (data) => {
       queryClient.setQueryData<SpanAnnotationRead>([QueryKey.SPAN_ANNOTATION, data.id], data);
-      // Replace the fake span with the real one
       queryClient.setQueryData<SpanAnnotationRead[]>(
         [QueryKey.SDOC_SPAN_ANNOTATIONS, data.sdoc_id, data.user_id],
-        (old) => (old ? old.map((span) => (span.id === FAKE_ANNOTATION_ID ? data : span)) : [data]),
+        (old) => {
+          if (!old) return [data];
+          return old.some((span) => span.id === data.id) ? old : [...old, data];
+        },
       );
     },
     meta: {

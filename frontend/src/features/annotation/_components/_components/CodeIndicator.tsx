@@ -35,6 +35,10 @@ export function CodeIndicator({
   const code = CodeHooks.useGetCode(codeId);
   const openMemoDialog = useOpenMemoDialog();
 
+  // pending (not yet persisted) annotations have negative ids. They render their real code pill
+  // (so the label never flickers), but are styled as pending and made non-interactive until saved.
+  const isPending = annotationId < 0;
+
   const handleMemoClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     openMemoDialog({
@@ -58,7 +62,8 @@ export function CodeIndicator({
     return (
       <span
         id={"span-annotation-" + annotationId}
-        className={`code-indicator ${isSelected ? "code-indicator--selected" : ""}`}
+        className={`code-indicator ${isSelected ? "code-indicator--selected" : ""} ${isPending ? "code-indicator--pending" : ""}`}
+        title={isPending ? "Saving annotation…" : undefined}
         style={
           {
             "--indicator-color": color,
@@ -67,7 +72,7 @@ export function CodeIndicator({
       >
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
-        {memoCount > 0 && (
+        {memoCount > 0 && !isPending && (
           <span className="code-indicator__memo" onClick={handleMemoClick} title="Has memo — click to open">
             {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
             <span className="code-indicator__memo-count">{memoCount}</span>
