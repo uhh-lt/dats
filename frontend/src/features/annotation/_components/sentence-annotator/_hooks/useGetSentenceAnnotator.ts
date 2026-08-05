@@ -31,6 +31,8 @@ export interface UseGetSentenceAnnotator {
  * @param userId - The user whose annotations to fetch
  * @param annotationOverride - Optional annotation to substitute in the data
  *   before computing lanes (used for live preview during resize drags)
+ * @param pendingAnnotations - Optional pending annotations (not yet persisted)
+ *   to include in the lane computation (rendered from local state only)
  * @returns The raw annotator result, the (possibly overridden) per-sentence
  *   annotations, per-sentence lane maps (position → annotation ID), and the
  *   maximum lane index used
@@ -39,51 +41,76 @@ export function useGetSentenceAnnotator({
   sdocId,
   userId,
   annotationOverride,
+  pendingAnnotations,
 }: {
   sdocId: number;
   userId: number | undefined;
   annotationOverride?: SentenceAnnotationRead;
+  pendingAnnotations?: SentenceAnnotationRead[];
 }): UseGetSentenceAnnotator {
   const annotatorResult = SentenceAnnotationHooks.useGetSentenceAnnotator(sdocId, userId);
+
+  // Three-layer memoization to avoid recomputing lane assignments on every change:
+  // 1. Base sentence annotations from server data (rare changes)
+  // 2. + pending annotations (rare changes, purely additive)
+  // 3. + annotation override (frequent during resize drag, targeted patch)
+
+  // Layer 1: extract base sentence annotations from server data
+  const baseSentenceAnnotations = useMemo(() => {
+    if (!annotatorResult.data?.sentence_annotations) return undefined;
+    const values = Object.values(annotatorResult.data.sentence_annotations);
+    return values.length > 0 ? values : undefined;
+  }, [annotatorResult.data]);
+
+  // Layer 2: patch pending annotations on top (purely additive, short-circuits when empty)
+  const withPendings = useMemo(() => {
+    if (!baseSentenceAnnotations) return baseSentenceAnnotations;
+    if (!pendingAnnotations || pendingAnnotations.length === 0) return baseSentenceAnnotations;
+
+    const result = baseSentenceAnnotations.map((annotations) => [...annotations]);
+    pendingAnnotations.forEach((pending) => {
+      for (let i = pending.sentence_id_start; i <= pending.sentence_id_end; i++) {
+        if (!result[i]) result[i] = [];
+        result[i].push(pending);
+      }
+    });
+    return result;
+  }, [baseSentenceAnnotations, pendingAnnotations]);
+
+  // Layer 3: patch the resize override on top (short-circuits when idle)
+  const withOverride = useMemo(() => {
+    if (!withPendings) return withPendings;
+    if (!annotationOverride) return withPendings;
+
+    const override = annotationOverride;
+    return withPendings.map((annotations, sentenceIndex) => {
+      const coversSentence = override.sentence_id_start <= sentenceIndex && sentenceIndex <= override.sentence_id_end;
+      const isListed = annotations.some((a) => a.id === override.id);
+      if (coversSentence && !isListed) return [...annotations, override];
+      if (!coversSentence && isListed) return annotations.filter((a) => a.id !== override.id);
+      if (isListed) return annotations.map((a) => (a.id === override.id ? override : a));
+      return annotations;
+    });
+  }, [withPendings, annotationOverride]);
+
+  // Compute lane assignments from the final sentence annotations
   const {
     sentenceAnnotations: overriddenSentenceAnnotations,
     annotationPositions,
     numPositions,
   } = useMemo(() => {
-    if (!annotatorResult.data?.sentence_annotations)
+    if (!withOverride)
       return {
         sentenceAnnotations: {} as Record<number, SentenceAnnotationRead[]>,
         annotationPositions: [],
         numPositions: 0,
       };
-    let sentenceAnnotations = Object.values(annotatorResult.data.sentence_annotations);
-
-    if (sentenceAnnotations.length === 0)
-      return {
-        sentenceAnnotations: {} as Record<number, SentenceAnnotationRead[]>,
-        annotationPositions: [],
-        numPositions: 0,
-      };
-
-    // apply the annotation override (e.g. preview during resize) so that lane
-    // assignment reflects the override's boundaries
-    if (annotationOverride) {
-      const override = annotationOverride;
-      sentenceAnnotations = sentenceAnnotations.map((annotations, sentenceIndex) => {
-        const coversSentence = override.sentence_id_start <= sentenceIndex && sentenceIndex <= override.sentence_id_end;
-        const isListed = annotations.some((a) => a.id === override.id);
-        if (coversSentence && !isListed) return [...annotations, override];
-        if (!coversSentence && isListed) return annotations.filter((a) => a.id !== override.id);
-        if (isListed) return annotations.map((a) => (a.id === override.id ? override : a));
-        return annotations;
-      });
-    }
 
     // collect unique annotations (the backend includes each annotation once per covered sentence)
     // and sort them by (start, end, id) so that lane assignment is deterministic:
     // annotations that start earlier always get lower lanes
     const seen = new Set<number>();
-    const allAnnotations = sentenceAnnotations.flat().filter((a) => {
+    const allAnnotations = withOverride.flat().filter((a) => {
       if (seen.has(a.id)) return false;
       seen.add(a.id);
       return true;
@@ -108,7 +135,7 @@ export function useGetSentenceAnnotator({
 
     // build per-sentence position maps (key: position, value: annotation id)
     let numPositions = 0;
-    const annotationPositions: Record<number, number>[] = sentenceAnnotations.map((annotations) => {
+    const annotationPositions: Record<number, number>[] = withOverride.map((annotations) => {
       const positions: Record<number, number> = {};
       for (const annotation of annotations) {
         const lane = laneByAnnotationId.get(annotation.id);
@@ -122,12 +149,12 @@ export function useGetSentenceAnnotator({
 
     // build the overridden sentence annotations record (sentence index → annotations)
     const sentenceAnnotationsRecord: Record<number, SentenceAnnotationRead[]> = {};
-    sentenceAnnotations.forEach((annotations, index) => {
+    withOverride.forEach((annotations, index) => {
       sentenceAnnotationsRecord[index] = annotations;
     });
 
     return { sentenceAnnotations: sentenceAnnotationsRecord, annotationPositions, numPositions };
-  }, [annotatorResult.data, annotationOverride]);
+  }, [withOverride]);
 
   return {
     annotatorResult: annotatorResult.data,

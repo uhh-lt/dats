@@ -8,7 +8,9 @@ import { memo, useMemo, useRef, useState } from "react";
 
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { useAuth } from "@core/auth";
+import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
+import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
 import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
@@ -43,11 +45,14 @@ export const SentenceAnnotator = memo(
     const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
     const [hoverSentAnnoId, setHoverSentAnnoId] = useState<number | null>(null);
 
+    // pending annotations (not yet persisted, rendered from local state only)
+    const [pendingAnnotations, setPendingAnnotations] = useState<SentenceAnnotationRead[]>([]);
+
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
     const { user } = useAuth();
-    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation(user);
+    const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
 
@@ -61,6 +66,7 @@ export const SentenceAnnotator = memo(
       sdocId: sdocData.id,
       userId: visibleUserId,
       annotationOverride: previewAnnotation,
+      pendingAnnotations,
     });
 
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
@@ -74,25 +80,34 @@ export const SentenceAnnotator = memo(
         },
       });
     };
+    const startCreate = (requestBody: SentenceAnnotationCreate, onSuccess?: () => void) => {
+      const pending = toPendingSentenceAnnotation(requestBody, user?.id);
+      setPendingAnnotations((prev) => [...prev, pending]);
+      createMutation.mutate(
+        { requestBody },
+        {
+          onSuccess,
+          onSettled: () => {
+            setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id));
+          },
+        },
+      );
+    };
     const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
       setSelectedSentences([]);
       setLastClickedIndex(null);
-      createMutation.mutate(
+      startCreate(
         {
-          requestBody: {
-            code_id: codeId,
-            sdoc_id: sdocData.id,
-            sentence_id_start: selectedSentences[0],
-            sentence_id_end: selectedSentences[selectedSentences.length - 1],
-          },
+          code_id: codeId,
+          sdoc_id: sdocData.id,
+          sentence_id_start: selectedSentences[0],
+          sentence_id_end: selectedSentences[selectedSentences.length - 1],
         },
-        {
-          onSuccess: () => {
-            if (!isNewCode) {
-              // if we use an existing code to annotate, we move it to the top
-              dispatch(AnnoActions.moveCodeToTop(codeId));
-            }
-          },
+        () => {
+          if (!isNewCode) {
+            // if we use an existing code to annotate, we move it to the top
+            dispatch(AnnoActions.moveCodeToTop(codeId));
+          }
         },
       );
     };
@@ -100,32 +115,26 @@ export const SentenceAnnotator = memo(
       if (!isSentenceAnnotation(annotation)) {
         return;
       }
-      createMutation.mutate(
+      startCreate(
         {
-          requestBody: {
-            code_id: codeId,
-            sdoc_id: annotation.sdoc_id,
-            sentence_id_start: annotation.sentence_id_start,
-            sentence_id_end: annotation.sentence_id_end,
-          },
+          code_id: codeId,
+          sdoc_id: annotation.sdoc_id,
+          sentence_id_start: annotation.sentence_id_start,
+          sentence_id_end: annotation.sentence_id_end,
         },
-        {
-          onSuccess: () => {
-            dispatch(AnnoActions.moveCodeToTop(codeId));
-          },
+        () => {
+          dispatch(AnnoActions.moveCodeToTop(codeId));
         },
       );
     };
     const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
       // i clicked away because i like the annotation as is
       if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCodeId) {
-        createMutation.mutate({
-          requestBody: {
-            code_id: mostRecentCodeId,
-            sdoc_id: sdocData.id,
-            sentence_id_start: selectedSentences[0],
-            sentence_id_end: selectedSentences[selectedSentences.length - 1],
-          },
+        startCreate({
+          code_id: mostRecentCodeId,
+          sdoc_id: sdocData.id,
+          sentence_id_start: selectedSentences[0],
+          sentence_id_end: selectedSentences[selectedSentences.length - 1],
         });
       }
       // i clicked escape because i want to cancel the annotation
