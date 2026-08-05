@@ -15,28 +15,32 @@ interface MarkProps {
 export function Mark({ annotation, isStart, isEnd, height, top, onResizeStart }: MarkProps) {
   const code = CodeHooks.useGetCode(annotation.code_id);
 
-  const resizeHandles = onResizeStart ? (
-    <>
-      {isStart && (
-        <span
-          className="span-resize-handle span-resize-handle--start"
-          data-span-resize-handle
-          onPointerDown={(event) => onResizeStart(annotation, "start", event)}
-          onClick={(event) => event.stopPropagation()}
-          onMouseUp={(event) => event.stopPropagation()}
-        />
-      )}
-      {isEnd && (
-        <span
-          className="span-resize-handle span-resize-handle--end"
-          data-span-resize-handle
-          onPointerDown={(event) => onResizeStart(annotation, "end", event)}
-          onClick={(event) => event.stopPropagation()}
-          onMouseUp={(event) => event.stopPropagation()}
-        />
-      )}
-    </>
-  ) : null;
+  // pending (not yet persisted) annotations have negative ids and never offer resize handles.
+  const isPending = annotation.id < 0;
+
+  const resizeHandles =
+    onResizeStart && !isPending ? (
+      <>
+        {isStart && (
+          <span
+            className="span-resize-handle span-resize-handle--start"
+            data-span-resize-handle
+            onPointerDown={(event) => onResizeStart(annotation, "start", event)}
+            onClick={(event) => event.stopPropagation()}
+            onMouseUp={(event) => event.stopPropagation()}
+          />
+        )}
+        {isEnd && (
+          <span
+            className="span-resize-handle span-resize-handle--end"
+            data-span-resize-handle
+            onPointerDown={(event) => onResizeStart(annotation, "end", event)}
+            onClick={(event) => event.stopPropagation()}
+            onMouseUp={(event) => event.stopPropagation()}
+          />
+        )}
+      </>
+    ) : null;
 
   if (code.data) {
     let color: string;

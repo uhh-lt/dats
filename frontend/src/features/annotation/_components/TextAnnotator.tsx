@@ -1,15 +1,13 @@
-import { QueryKey } from "@api/hooks/QueryKey";
-import { FAKE_ANNOTATION_ID, SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { useAuth } from "@core/auth";
 import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useQueryClient } from "@tanstack/react-query";
-import { SYSTEM_USER_ID } from "@utils/GlobalConstants";
-import { MouseEvent, MouseEventHandler, useRef, useState } from "react";
+import { MouseEvent, MouseEventHandler, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { toPendingSpanAnnotation } from "../_hooks/pendingSpanAnnotation";
 import { useComputeTokenData, useTokenData } from "../_hooks/useComputeTokenData";
 import { useSpanAnnotationResize } from "../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../_types/Annotation";
@@ -31,7 +29,12 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
 
   // local state
   const spanMenuRef = useRef<AnnotationMenuHandle>(null);
-  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
+  // the draft annotation whose code-selector menu is currently open (not yet sent to the server).
+  // Rendered as a preview via its negative pending id.
+  const [draftAnnotation, setDraftAnnotation] = useState<SpanAnnotationRead | undefined>(undefined);
+  // annotations already sent to the server but not yet persisted; kept visible until the real
+  // annotation lands in the cache so the highlight never flickers. Keyed by unique negative ids.
+  const [pendingAnnotations, setPendingAnnotations] = useState<SpanAnnotationRead[]>([]);
 
   // global client state (URL search params)
   const { visibleUserId } = AnnotationRouteAPI.useSearch();
@@ -45,6 +48,12 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
   // snackbar
   const openSnackbar = useOpenSnackbar();
 
+  // the draft (menu open) is rendered as a preview alongside the in-flight pending annotations
+  const allPendingAnnotations = useMemo<SpanAnnotationRead[]>(
+    () => (draftAnnotation ? [...pendingAnnotations, draftAnnotation] : pendingAnnotations),
+    [pendingAnnotations, draftAnnotation],
+  );
+
   // computed / custom hooks
   const resizeTokenData = useTokenData(sdocData);
   const resizeController = useSpanAnnotationResize(resizeTokenData);
@@ -52,11 +61,11 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     sdocData,
     userId: visibleUserId,
     annotationOverride: resizeController.previewAnnotation,
+    pendingAnnotations: allPendingAnnotations,
   });
 
   // mutations for create, update, delete
-  const queryClient = useQueryClient();
-  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation(user);
+  const createMutation = SpanAnnotationHooks.useCreateSpanAnnotation();
   const updateMutation = SpanAnnotationHooks.useUpdateSpanAnnotation();
   const deleteMutation = SpanAnnotationHooks.useDeleteSpanAnnotation();
 
@@ -104,7 +113,7 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
   };
 
-  const handleMouseUp = async (event: MouseEvent) => {
+  const handleMouseUp = (event: MouseEvent) => {
     if (resizeController.shouldIgnoreMouseUp()) return;
     if (event.button === 2) return;
     if (!tokenData) return;
@@ -175,31 +184,8 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       span_text: span_text,
     };
 
-    // create a fake annotation
-    setFakeAnnotation(requestBody);
-
-    // when we create a new span annotation, we add a new annotation to a certain document
-    // thus, we only affect the annotation document that we are adding to
-    const affectedQueryKey = [QueryKey.SDOC_SPAN_ANNOTATIONS, requestBody.sdoc_id, visibleUserId];
-
-    // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-    await queryClient.cancelQueries({ queryKey: affectedQueryKey });
-
-    // Add a fake annotation
-    queryClient.setQueryData<SpanAnnotationRead[]>(affectedQueryKey, (old) => {
-      const spanAnnotation: SpanAnnotationRead = {
-        ...requestBody,
-        id: FAKE_ANNOTATION_ID,
-        text: requestBody.span_text,
-        code_id: requestBody.code_id,
-        created: "",
-        updated: "",
-        user_id: user?.id || SYSTEM_USER_ID,
-        group_ids: [],
-        memo_ids: [],
-      };
-      return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
-    });
+    // store the draft annotation in local state; it is rendered via the pendingAnnotations override
+    setDraftAnnotation(toPendingSpanAnnotation(requestBody, user?.id));
 
     // open code selector
     const target = selectionStartElement;
@@ -238,26 +224,38 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
       },
     });
   };
+  // send a create request and keep the annotation visible (pending) until the real one is cached.
+  // `pending` is the local preview annotation; only its create-payload fields are sent to the server.
+  const startCreate = (pending: SpanAnnotationRead, codeId: number, onSuccess?: () => void) => {
+    const requestBody: SpanAnnotationCreate = {
+      code_id: codeId,
+      sdoc_id: pending.sdoc_id,
+      begin: pending.begin,
+      end: pending.end,
+      begin_token: pending.begin_token,
+      end_token: pending.end_token,
+      span_text: pending.text,
+    };
+    setPendingAnnotations((prev) => [...prev, { ...pending, code_id: codeId }]);
+    createMutation.mutate(requestBody, {
+      onSuccess,
+      // remove the pending preview once the real annotation is in the cache (or the request failed)
+      onSettled: () => setPendingAnnotations((prev) => prev.filter((a) => a.id !== pending.id)),
+    });
+  };
+
   const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
-    if (!fakeAnnotation) return;
-    createMutation.mutate(
-      {
-        ...fakeAnnotation,
-        code_id: codeId,
-      },
-      {
-        onSuccess: () => {
-          if (!isNewCode) {
-            // if we use an existing code to annotate, we move it to the top
-            dispatch(AnnoActions.moveCodeToTop(codeId));
-          }
-        },
-      },
-    );
+    if (!draftAnnotation) return;
+    startCreate(draftAnnotation, codeId, () => {
+      if (!isNewCode) {
+        // if we use an existing code to annotate, we move it to the top
+        dispatch(AnnoActions.moveCodeToTop(codeId));
+      }
+    });
   };
   const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, codeId: number) => {
     if ("id" in annotation && "begin_token" in annotation && "end_token" in annotation) {
-      const fakeAnnotation: SpanAnnotationCreate = {
+      const requestBody: SpanAnnotationCreate = {
         begin: annotation.begin,
         end: annotation.end,
         begin_token: annotation.begin_token,
@@ -266,38 +264,22 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
         sdoc_id: annotation.sdoc_id,
         code_id: codeId,
       };
-      createMutation.mutate(fakeAnnotation, {
-        onSuccess: () => {
-          dispatch(AnnoActions.moveCodeToTop(codeId));
-        },
-      });
+      const pending = toPendingSpanAnnotation(requestBody, user?.id);
+      startCreate(pending, codeId, () => dispatch(AnnoActions.moveCodeToTop(codeId)));
     }
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
     // i am about to create an annotation
-    if (fakeAnnotation) {
+    if (draftAnnotation) {
       // i clicked away because i like the annotation as is
       if (reason === "backdropClick") {
         // add the annotation as is
-        createMutation.mutate(
-          { ...fakeAnnotation },
-          {
-            onSuccess: () => {
-              dispatch(AnnoActions.moveCodeToTop(fakeAnnotation.code_id));
-            },
-          },
-        );
-      }
-      // i clicked escape because i want to cancel the annotation
-      if (reason === "escapeKeyDown") {
-        // delete the fake annotation (that always has id -1)
-        queryClient.setQueryData<SpanAnnotationRead[]>(
-          [QueryKey.SDOC_SPAN_ANNOTATIONS, fakeAnnotation.sdoc_id, visibleUserId],
-          (old) => old?.filter((spanAnnotation) => spanAnnotation.id !== -1),
+        startCreate(draftAnnotation, draftAnnotation.code_id, () =>
+          dispatch(AnnoActions.moveCodeToTop(draftAnnotation.code_id)),
         );
       }
     }
-    setFakeAnnotation(undefined);
+    setDraftAnnotation(undefined);
   };
 
   return (

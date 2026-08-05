@@ -163,6 +163,25 @@ A code indicator (.code-indicator) can be selected (code-indicator--selected) an
     0 2px 8px color-mix(in srgb, var(--indicator-color) 30%, transparent);
 }
 
+/* A pending (not yet persisted) annotation: keeps its real code color, but is dashed,
+   non-interactive, and gently pulses until it has been saved. */
+.code-indicator--pending {
+  border-style: dashed;
+  cursor: default;
+  pointer-events: none;
+  animation: code-indicator-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes code-indicator-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 /*
 MARKER: Mark.tsx
 This is the styling of the "background" marks that indicate the span boundaries.
