@@ -64,6 +64,9 @@ export function DocumentSentence({
   );
   const sentAnnoCodeIds = useMemo(() => sentenceAnnotations.map((anno) => anno.code_id), [sentenceAnnotations]);
 
+  // space-separated annotation IDs for the data-annotation-ids attribute (used by useSentenceAnnotationHighlight / useJumpToSentenceAnnotation)
+  const annotationIdsAttr = useMemo(() => sentenceAnnotations.map((anno) => anno.id).join(" "), [sentenceAnnotations]);
+
   // the color of an existing/hovered/selected annotation highlight (gradient mark). Not used for the selection.
   const highlightedColor = useMemo(() => {
     if (hoveredSentAnnoId) {
@@ -80,7 +83,7 @@ export function DocumentSentence({
   }, [hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, selectedSentAnnoId, sentAnnoMap, codeMap]);
 
   return (
-    <Stack direction="row" data-sent-id={sentenceId} {...props}>
+    <Stack direction="row" data-sent-id={sentenceId} data-annotation-ids={annotationIdsAttr} {...props}>
       <div
         style={{
           paddingRight: "8px",

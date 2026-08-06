@@ -8,6 +8,7 @@ import { Box, IconButton, ListItemButton, Stack, Tooltip } from "@mui/material";
 import { ColorUtils } from "@utils/colors/ColorUtils";
 import { useMemo } from "react";
 import { SentenceAnnotationResizeStartHandler } from "../../../../_hooks/useSentenceAnnotationResize";
+import "../../../_styles/Annotation.css";
 import { SentenceAnnotationResizeHandles } from "../../../sentence-annotator/_components/SentenceAnnotationResizeHandles";
 import { SentenceMemoBadge } from "../../../sentence-annotator/_components/SentenceMemoBadge";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
@@ -173,6 +174,16 @@ function DocumentSentencePart({
 }: DocumentSentencePartProps) {
   const sentAnnoCodeIds = useMemo(() => Object.values(sentAnnoMap).map((anno) => anno.code_id), [sentAnnoMap]);
 
+  // space-separated annotation IDs for the data-annotation-ids attribute (used by useSentenceAnnotationHighlight / useJumpToSentenceAnnotation).
+  // Placed on this side's wrapper so the highlight only affects the side that actually owns the annotation.
+  const annotationIdsAttr = useMemo(
+    () =>
+      Object.values(sentAnnoMap)
+        .map((anno) => anno.id)
+        .join(" "),
+    [sentAnnoMap],
+  );
+
   // the color of an existing/hovered annotation highlight (gradient mark). Not used for the selection.
   const highlightedColor = useMemo(() => {
     if (hoveredSentAnnoId) {
@@ -185,7 +196,10 @@ function DocumentSentencePart({
   }, [hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, sentAnnoMap, codeMap]);
 
   return (
-    <>
+    <div
+      style={{ display: "flex", flexDirection: "row", flexGrow: 1, flexBasis: 0, minWidth: 0, alignSelf: "stretch" }}
+      data-annotation-ids={annotationIdsAttr}
+    >
       <div
         style={{
           paddingRight: "8px",
@@ -313,7 +327,7 @@ function DocumentSentencePart({
         }
         return <div key={key} style={{ flexShrink: 0, borderRight: "4px solid transparent", paddingLeft: "16px" }} />;
       })}
-    </>
+    </div>
   );
 }
 

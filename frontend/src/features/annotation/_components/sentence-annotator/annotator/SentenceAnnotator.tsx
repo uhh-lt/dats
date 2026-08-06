@@ -12,6 +12,8 @@ import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
+import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
+import { useSentenceAnnotationHighlight } from "../../../_hooks/useSentenceAnnotationHighlight";
 import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
@@ -79,6 +81,18 @@ export const SentenceAnnotator = memo(
       annotationOverride: previewAnnotation,
       pendingAnnotations: allPendingAnnotations,
     });
+
+    // virtualization
+    const virtualizer = useVirtualizer({
+      count: sdocData.sentences.length,
+      getScrollElement: () => virtualizerScrollElement,
+      estimateSize: () => 35,
+      overscan: 2,
+    });
+
+    // jump to & highlight the selected annotation (needs virtualizer + annotator data)
+    useJumpToSentenceAnnotation(selectedAnnotationId, virtualizer, annotator.annotatorResult?.sentence_annotations);
+    useSentenceAnnotationHighlight(selectedAnnotationId);
 
     const openConfirmationDialog = useOpenConfirmationDialog();
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
@@ -302,14 +316,6 @@ export const SentenceAnnotator = memo(
         });
       }
     };
-
-    // virtualization
-    const virtualizer = useVirtualizer({
-      count: sdocData.sentences.length,
-      getScrollElement: () => virtualizerScrollElement,
-      estimateSize: () => 35,
-      overscan: 2,
-    });
 
     // rendering
     const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);
