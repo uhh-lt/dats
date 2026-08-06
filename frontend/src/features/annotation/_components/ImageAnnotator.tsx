@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { MetadataHooks } from "@api/hooks/MetadataHooks";
 import { useAuth } from "@core/auth";
-import { useOpenConfirmationDialog } from "@core/notification";
+import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { BBoxAnnotationCreate } from "@models/BBoxAnnotationCreate";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
@@ -82,6 +82,7 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
   // mutations for create, update, delete
   const { user } = useAuth();
+  const openSnackbar = useOpenSnackbar();
   const createMutation = BboxAnnotationHooks.useCreateBBoxAnnotation();
   const updateMutation = BboxAnnotationHooks.useUpdateBBoxAnnotation();
   const deleteMutation = BboxAnnotationHooks.useDeleteBBoxAnnotation();
@@ -165,6 +166,16 @@ function ImageAnnotatorWithHeight({ sdocData, height }: ImageAnnotatorProps & { 
 
     // only open the code selector if the rect is big enough
     if (width > 10 && height > 10) {
+      // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
+      if (user?.id !== visibleUserId) {
+        openSnackbar({
+          severity: "warning",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+        });
+        resetRect();
+        return;
+      }
+
       const boundingBox = myRect.node()!.getBoundingClientRect();
       const position = {
         left: boundingBox.left,

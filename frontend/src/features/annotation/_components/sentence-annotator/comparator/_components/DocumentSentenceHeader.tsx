@@ -1,5 +1,5 @@
 import { UserRenderer } from "@core/user";
-import { Button, Stack, Typography } from "@mui/material";
+import { Button, Stack, Tooltip, Typography } from "@mui/material";
 import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
 
 interface DocumentSentenceHeaderProps {
@@ -12,6 +12,8 @@ interface DocumentSentenceHeaderProps {
   onClickRevertAll: () => void;
   onClickApplyAll: () => void;
   isDirectionLeft: boolean;
+  isApplyAllLoading: boolean;
+  isRevertAllLoading: boolean;
 }
 
 export function DocumentSentenceHeader({
@@ -24,6 +26,8 @@ export function DocumentSentenceHeader({
   onClickApplyAll,
   onClickRevertAll,
   isDirectionLeft,
+  isApplyAllLoading,
+  isRevertAllLoading,
 }: DocumentSentenceHeaderProps) {
   return (
     <Stack direction="row" width="100%">
@@ -45,17 +49,41 @@ export function DocumentSentenceHeader({
           >
             <Stack direction="row" alignItems="center">
               {isDirectionLeft ? (
-                <Button onClick={onClickApplyAll}>Apply</Button>
+                <Tooltip title="Copy all annotations from the other user to mine" placement="top">
+                  <span>
+                    <Button onClick={onClickApplyAll} loading={isApplyAllLoading}>
+                      Apply
+                    </Button>
+                  </span>
+                </Tooltip>
               ) : (
-                <Button onClick={onClickRevertAll}>Revert</Button>
+                <Tooltip title="Remove all copied annotations from mine" placement="top">
+                  <span>
+                    <Button onClick={onClickRevertAll} loading={isRevertAllLoading}>
+                      Revert
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
               <Typography variant="button" color="primary">
                 |
               </Typography>
               {isDirectionLeft ? (
-                <Button onClick={onClickRevertAll}>Revert</Button>
+                <Tooltip title="Remove all copied annotations from mine" placement="top">
+                  <span>
+                    <Button onClick={onClickRevertAll} loading={isRevertAllLoading}>
+                      Revert
+                    </Button>
+                  </span>
+                </Tooltip>
               ) : (
-                <Button onClick={onClickApplyAll}>Apply</Button>
+                <Tooltip title="Copy all annotations from the other user to mine" placement="top">
+                  <span>
+                    <Button onClick={onClickApplyAll} loading={isApplyAllLoading}>
+                      Apply
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
               <Typography variant="button" color="primary" sx={{ pr: 1 }}>
                 All

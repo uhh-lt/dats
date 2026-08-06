@@ -6,7 +6,7 @@ import { UserRenderer } from "@core/user";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationCreate } from "@models/SpanAnnotationCreate";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { Box, BoxProps, Button, Stack, Typography } from "@mui/material";
+import { Box, BoxProps, Button, Stack, Tooltip, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, MouseEvent, useCallback, useMemo, useRef, useState } from "react";
@@ -70,6 +70,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
 
   // Popover menu refs
   const leftSpanMenuRef = useRef<AnnotationMenuHandle>(null);
+  const rightSpanMenuRef = useRef<AnnotationMenuHandle>(null);
 
   // State for hover sync
   const [hoveredControlKey, setHoveredControlKey] = useState<string | null>(null);
@@ -88,18 +89,23 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const resizeTokenData = useTokenData(sdocData);
   const leftResizeController = useSpanAnnotationResize(resizeTokenData);
   const rightResizeController = useSpanAnnotationResize(resizeTokenData);
-  // the draft annotation whose code-selector menu is currently open in the left panel (not yet sent).
-  // Rendered as a preview via its negative pending id.
-  const [draftAnnotation, setDraftAnnotation] = useState<SpanAnnotationRead | undefined>(undefined);
+  // the draft annotation whose code-selector menu is currently open (not yet sent), and the side it
+  // was created on. Rendered as a preview via its negative pending id on that side only.
+  const [draft, setDraft] = useState<{ side: "left" | "right"; annotation: SpanAnnotationRead } | undefined>(undefined);
   // annotations already sent to the server but not yet persisted; kept visible until the real
   // annotation lands in the cache so the highlight never flickers. Keyed by unique negative ids.
+  // Only one side is ever editable (the current user's), so all pending annotations belong to it.
   const [pendingAnnotations, setPendingAnnotations] = useState<SpanAnnotationRead[]>([]);
 
-  // the draft (menu open) is rendered as a preview alongside the in-flight pending annotations
+  // the in-flight pending annotations and the draft (menu open) are rendered as previews, but only
+  // on the editable side (the current user's side)
   const allPendingAnnotations = useMemo<SpanAnnotationRead[]>(
-    () => (draftAnnotation ? [...pendingAnnotations, draftAnnotation] : pendingAnnotations),
-    [pendingAnnotations, draftAnnotation],
+    () => (draft ? [...pendingAnnotations, draft.annotation] : pendingAnnotations),
+    [pendingAnnotations, draft],
   );
+  const editableSide: "left" | "right" = isAnnotationAllowedRight && !isAnnotationAllowedLeft ? "right" : "left";
+  const leftPendingAnnotations = editableSide === "left" ? allPendingAnnotations : undefined;
+  const rightPendingAnnotations = editableSide === "right" ? allPendingAnnotations : undefined;
 
   const {
     tokenData: leftTokenData,
@@ -109,7 +115,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     sdocData,
     userId: effectiveLeftUserId,
     annotationOverride: leftResizeController.previewAnnotation,
-    pendingAnnotations: allPendingAnnotations,
+    pendingAnnotations: leftPendingAnnotations,
   });
 
   const {
@@ -120,6 +126,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     sdocData,
     userId: effectiveRightUserId,
     annotationOverride: rightResizeController.previewAnnotation,
+    pendingAnnotations: rightPendingAnnotations,
   });
 
   const codeMap = CodeHooks.useGetAllCodesMap();
@@ -225,10 +232,16 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     deleteBulkMutation.mutate({ requestBody: idsToDelete });
   };
 
-  // Left pane menu click and selection handlers (for editing left user's annotations)
-  const handleLeftMenu = useCallback(
-    (event: MouseEvent) => {
-      if (!leftAnnotationsPerToken || !leftAnnotationMap) return;
+  // Menu click handler (right-click on a token) for editing a side's annotations.
+  // Opens the menu for the annotations under the clicked token on the given side.
+  const handleMenu = useCallback(
+    (
+      event: MouseEvent,
+      annotationsPerToken: Map<number, number[]> | undefined,
+      annotationMap: Map<number, SpanAnnotationRead> | undefined,
+      menuRef: React.RefObject<AnnotationMenuHandle | null>,
+    ) => {
+      if (!annotationsPerToken || !annotationMap) return;
 
       let target: HTMLElement = event.target as HTMLElement;
       let found = false;
@@ -248,7 +261,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       event.preventDefault();
 
       const tokenIndex = parseInt(target.getAttribute("data-tokenid")!);
-      const annos = leftAnnotationsPerToken.get(tokenIndex);
+      const annos = annotationsPerToken.get(tokenIndex);
 
       if (annos) {
         const boundingBox = target.getBoundingClientRect();
@@ -257,23 +270,47 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
           top: boundingBox.top + boundingBox.height,
         };
 
-        leftSpanMenuRef.current!.open(
+        menuRef.current!.open(
           position,
-          annos.map((a) => leftAnnotationMap.get(a)!),
+          annos.map((a) => annotationMap.get(a)!),
         );
       }
     },
-    [leftAnnotationMap, leftAnnotationsPerToken],
+    [],
   );
 
-  const handleLeftMouseUp = useCallback(
-    (event: MouseEvent) => {
-      if (leftResizeController.shouldIgnoreMouseUp()) return;
-      if (event.button === 2 || !leftTokenData || !isAnnotationAllowedLeft) return;
+  // Builds a mouseup handler for one side ("left" | "right") of the comparator. Both sides support
+  // creating annotations on the current user's own annotations; the side determines which token data,
+  // resize controller, menu ref and pending-preview are used.
+  const createMouseUpHandler = (side: "left" | "right") => {
+    const isLeft = side === "left";
+    const tokenData = isLeft ? leftTokenData : rightTokenData;
+    const annotationsPerToken = isLeft ? leftAnnotationsPerToken : rightAnnotationsPerToken;
+    const annotationMap = isLeft ? leftAnnotationMap : rightAnnotationMap;
+    const resizeController = isLeft ? leftResizeController : rightResizeController;
+    const menuRef = isLeft ? leftSpanMenuRef : rightSpanMenuRef;
+    const isAllowed = isLeft ? isAnnotationAllowedLeft : isAnnotationAllowedRight;
+
+    return (event: MouseEvent) => {
+      if (resizeController.shouldIgnoreMouseUp()) return;
+      if (event.button === 2 || !tokenData) return;
 
       const selection = window.getSelection();
       if (!selection || selectionIsEmpty(selection)) {
-        handleLeftMenu(event);
+        // right-click / no selection: open the annotation menu for this side's annotations.
+        // allowed on both sides so the other user's annotations can be edited via the menu.
+        handleMenu(event, annotationsPerToken, annotationMap, menuRef);
+        return;
+      }
+
+      // a text selection exists: this is annotation creation, only allowed on the current user's side.
+      // warn and clear the selection when attempting to annotate on the other user's side.
+      if (!isAllowed) {
+        openSnackbar({
+          severity: "warning",
+          text: "You cannot create annotations on another user's document. Switch to your user in the Annotator Selector (top) to create annotations.",
+        });
+        selection.empty();
         return;
       }
 
@@ -308,7 +345,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       const begin_token = end < begin ? end : begin;
       const end_token = end < begin ? begin : end;
 
-      const span_text = leftTokenData
+      const span_text = tokenData
         .slice(begin_token, end_token + 1)
         .map((t) => t.text)
         .join(" ");
@@ -316,15 +353,15 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
       const requestBody: SpanAnnotationCreate = {
         code_id: mostRecentCodeId || selectedCodeId || -1,
         sdoc_id: sdocData.id,
-        begin: leftTokenData[begin_token].beginChar,
-        end: leftTokenData[end_token].endChar,
+        begin: tokenData[begin_token].beginChar,
+        end: tokenData[end_token].endChar,
         begin_token: begin_token,
         end_token: end_token + 1,
         span_text: span_text,
       };
 
       // store the draft annotation in local state; it is rendered via the pendingAnnotations override
-      setDraftAnnotation(toPendingSpanAnnotation(requestBody, user?.id));
+      setDraft({ side, annotation: toPendingSpanAnnotation(requestBody, user?.id) });
 
       const target = selectionStartElement;
       if (target) {
@@ -333,26 +370,19 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
           left: boundingBox.left,
           top: boundingBox.top + boundingBox.height,
         };
-        leftSpanMenuRef.current!.open(position);
+        menuRef.current!.open(position);
       }
 
       selection.empty();
-    },
-    [
-      leftTokenData,
-      isAnnotationAllowedLeft,
-      mostRecentCodeId,
-      selectedCodeId,
-      sdocData.id,
-      handleLeftMenu,
-      openSnackbar,
-      leftResizeController,
-      user?.id,
-    ],
-  );
+    };
+  };
 
-  // Left pane menu action handlers
-  const handleLeftCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
+  const handleLeftMouseUp = createMouseUpHandler("left");
+  const handleRightMouseUp = createMouseUpHandler("right");
+
+  // Menu action handlers (shared by both panes; the menu operates on whichever side's annotations
+  // were clicked, and on the draft of whichever side opened it)
+  const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
     openConfirmationDialog({
       text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       type: "DELETE",
@@ -362,7 +392,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     });
   };
 
-  const handleLeftCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
+  const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
     updateMutation.mutate({
       spanAnnotationToUpdate: annotation as SpanAnnotationRead,
       requestBody: {
@@ -391,16 +421,16 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     });
   };
 
-  const handleLeftCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
-    if (!draftAnnotation) return;
-    startCreate(draftAnnotation, codeId, () => {
+  const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
+    if (!draft) return;
+    startCreate(draft.annotation, codeId, () => {
       if (!isNewCode) {
         dispatch(AnnoActions.moveCodeToTop(codeId));
       }
     });
   };
 
-  const handleLeftCodeSelectorDuplicateAnnotation = (annotation: Annotation, codeId: number) => {
+  const handleCodeSelectorDuplicateAnnotation = (annotation: Annotation, codeId: number) => {
     if ("id" in annotation && "begin_token" in annotation && "end_token" in annotation) {
       const requestBody: SpanAnnotationCreate = {
         begin: annotation.begin,
@@ -416,18 +446,18 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     }
   };
 
-  const handleLeftCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
-    if (draftAnnotation) {
+  const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
+    if (draft) {
       if (reason === "backdropClick") {
-        startCreate(draftAnnotation, draftAnnotation.code_id, () =>
-          dispatch(AnnoActions.moveCodeToTop(draftAnnotation.code_id)),
+        startCreate(draft.annotation, draft.annotation.code_id, () =>
+          dispatch(AnnoActions.moveCodeToTop(draft.annotation.code_id)),
         );
       }
     }
-    setDraftAnnotation(undefined);
+    setDraft(undefined);
   };
 
-  const showBulkActions = isAnnotationAllowedLeft && effectiveRightUserId !== undefined;
+  const showBulkActions = (isAnnotationAllowedLeft || isAnnotationAllowedRight) && effectiveRightUserId !== undefined;
 
   if (!codeMap.data) return null;
 
@@ -435,11 +465,19 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
     <>
       <AnnotationMenu
         ref={leftSpanMenuRef}
-        onAdd={handleLeftCodeSelectorAddCode}
-        onClose={handleLeftCodeSelectorClose}
-        onEdit={handleLeftCodeSelectorEditCode}
-        onDelete={handleLeftCodeSelectorDeleteAnnotation}
-        onDuplicate={handleLeftCodeSelectorDuplicateAnnotation}
+        onAdd={handleCodeSelectorAddCode}
+        onClose={handleCodeSelectorClose}
+        onEdit={handleCodeSelectorEditCode}
+        onDelete={handleCodeSelectorDeleteAnnotation}
+        onDuplicate={handleCodeSelectorDuplicateAnnotation}
+      />
+      <AnnotationMenu
+        ref={rightSpanMenuRef}
+        onAdd={handleCodeSelectorAddCode}
+        onClose={handleCodeSelectorClose}
+        onEdit={handleCodeSelectorEditCode}
+        onDelete={handleCodeSelectorDeleteAnnotation}
+        onDuplicate={handleCodeSelectorDuplicateAnnotation}
       />
       <Box {...props} display="flex" flexDirection="column" height="100%">
         {/* Header Row */}
@@ -463,25 +501,41 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
             <Box sx={{ width: 164, flexShrink: 0, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <Stack direction="row" alignItems="center">
                 {isAnnotationAllowedLeft ? (
-                  <Button size="small" onClick={handleApplyAll}>
-                    Apply
-                  </Button>
+                  <Tooltip title="Copy all annotations from the other user to mine" placement="top">
+                    <span>
+                      <Button size="small" onClick={handleApplyAll} loading={createBulkMutation.isPending}>
+                        Apply
+                      </Button>
+                    </span>
+                  </Tooltip>
                 ) : (
-                  <Button size="small" onClick={handleRevertAll}>
-                    Revert
-                  </Button>
+                  <Tooltip title="Remove all copied annotations from mine" placement="top">
+                    <span>
+                      <Button size="small" onClick={handleRevertAll} loading={deleteBulkMutation.isPending}>
+                        Revert
+                      </Button>
+                    </span>
+                  </Tooltip>
                 )}
                 <Typography variant="button" color="primary">
                   |
                 </Typography>
                 {isAnnotationAllowedLeft ? (
-                  <Button size="small" onClick={handleRevertAll}>
-                    Revert
-                  </Button>
+                  <Tooltip title="Remove all copied annotations from mine" placement="top">
+                    <span>
+                      <Button size="small" onClick={handleRevertAll} loading={deleteBulkMutation.isPending}>
+                        Revert
+                      </Button>
+                    </span>
+                  </Tooltip>
                 ) : (
-                  <Button size="small" onClick={handleApplyAll}>
-                    Apply
-                  </Button>
+                  <Tooltip title="Copy all annotations from the other user to mine" placement="top">
+                    <span>
+                      <Button size="small" onClick={handleApplyAll} loading={createBulkMutation.isPending}>
+                        Apply
+                      </Button>
+                    </span>
+                  </Tooltip>
                 )}
                 <Typography variant="button" color="primary" sx={{ pr: 1 }}>
                   All
@@ -555,7 +609,7 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
                     handleRevertAnnotation={handleRevertAnnotation}
                     setHoveredControlKey={setHoveredControlKey}
                     handleLeftMouseUp={handleLeftMouseUp}
-                    handleRightMouseUp={() => {}}
+                    handleRightMouseUp={handleRightMouseUp}
                     handleLeftResizeStart={leftResizeController.handleResizeStart}
                     handleRightResizeStart={rightResizeController.handleResizeStart}
                     codeMap={codeMap.data || {}}

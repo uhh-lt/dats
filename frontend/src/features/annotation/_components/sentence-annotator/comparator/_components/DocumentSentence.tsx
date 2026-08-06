@@ -14,10 +14,14 @@ import { UseGetSentenceAnnotator } from "../../_hooks/useGetSentenceAnnotator";
 import { SentAnnoMap, useComputeSentAnnoMap } from "../_hooks/useComputeSentAnnoMap";
 import { isAnnotationSame } from "../_utils/comparisonUtils";
 
+// the browser-native selection color, used for the flat in-progress sentence selection (matches the span annotator)
+const SELECTION_COLOR = "rgba(0, 120, 215, 0.3)";
+
 interface DocumentSentenceProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCodeId: number | undefined;
+  // the side on which the current selection started; the highlight is shown only on that side
+  selectionSide: "left" | "right" | null;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -27,7 +31,12 @@ interface DocumentSentenceProps {
   ) => void;
   onAnnotationMouseEnter: (sentAnnoId: number) => void;
   onAnnotationMouseLeave: (sentAnnoId: number) => void;
-  onSentenceMouseDown: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
+  onSentenceMouseDown: (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    sentenceId: number,
+    side: "left" | "right",
+    isAllowed: boolean,
+  ) => void;
   onSentenceMouseEnter: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => void;
   onApplyAnnotation: (annotation: SentenceAnnotationRead) => void;
   onRevertAnnotation: (annotation: SentenceAnnotationRead) => void;
@@ -44,7 +53,7 @@ interface DocumentSentenceProps {
 export function DocumentSentence({
   sentenceId,
   isSelected,
-  selectedCodeId,
+  selectionSide,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -71,16 +80,15 @@ export function DocumentSentence({
     <Stack direction="row" width="100%" data-sent-id={sentenceId}>
       <DocumentSentencePart
         sentenceId={sentenceId}
-        isSelected={isAnnotationAllowedLeft && isSelected}
-        selectedCodeId={selectedCodeId}
+        isSelected={selectionSide === "left" && isSelected}
         hoveredSentAnnoId={hoveredSentAnnoId}
         hoveredCodeId={hoveredCodeId}
         sentence={sentence}
         onAnnotationClick={onAnnotationClick}
         onAnnotationMouseEnter={onAnnotationMouseEnter}
         onAnnotationMouseLeave={onAnnotationMouseLeave}
-        onSentenceMouseDown={isAnnotationAllowedLeft ? onSentenceMouseDown : undefined}
-        onSentenceMouseEnter={isAnnotationAllowedLeft ? onSentenceMouseEnter : undefined}
+        onSentenceMouseDown={(event, sid) => onSentenceMouseDown(event, sid, "left", isAnnotationAllowedLeft)}
+        onSentenceMouseEnter={onSentenceMouseEnter}
         onResizeStart={isAnnotationAllowedLeft ? onResizeStartLeft : undefined}
         numSentenceDigits={numSentenceDigits}
         annotator={annotatorLeft}
@@ -106,16 +114,15 @@ export function DocumentSentence({
 
       <DocumentSentencePart
         sentenceId={sentenceId}
-        isSelected={isAnnotationAllowedRight && isSelected}
-        selectedCodeId={selectedCodeId}
+        isSelected={selectionSide === "right" && isSelected}
         hoveredSentAnnoId={hoveredSentAnnoId}
         hoveredCodeId={hoveredCodeId}
         sentence={sentence}
         onAnnotationClick={onAnnotationClick}
         onAnnotationMouseEnter={onAnnotationMouseEnter}
         onAnnotationMouseLeave={onAnnotationMouseLeave}
-        onSentenceMouseDown={isAnnotationAllowedRight ? onSentenceMouseDown : undefined}
-        onSentenceMouseEnter={isAnnotationAllowedRight ? onSentenceMouseEnter : undefined}
+        onSentenceMouseDown={(event, sid) => onSentenceMouseDown(event, sid, "right", isAnnotationAllowedRight)}
+        onSentenceMouseEnter={onSentenceMouseEnter}
         onResizeStart={isAnnotationAllowedRight ? onResizeStartRight : undefined}
         numSentenceDigits={numSentenceDigits}
         annotator={annotatorRight}
@@ -129,7 +136,6 @@ export function DocumentSentence({
 interface DocumentSentencePartProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCodeId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
   sentence: string;
@@ -151,7 +157,6 @@ interface DocumentSentencePartProps {
 function DocumentSentencePart({
   sentenceId,
   isSelected,
-  selectedCodeId,
   hoveredSentAnnoId,
   hoveredCodeId,
   sentence,
@@ -168,10 +173,8 @@ function DocumentSentencePart({
 }: DocumentSentencePartProps) {
   const sentAnnoCodeIds = useMemo(() => Object.values(sentAnnoMap).map((anno) => anno.code_id), [sentAnnoMap]);
 
+  // the color of an existing/hovered annotation highlight (gradient mark). Not used for the selection.
   const highlightedColor = useMemo(() => {
-    if (isSelected && selectedCodeId) {
-      return codeMap[selectedCodeId]?.color || "rgb(255, 0, 0)";
-    }
     if (hoveredSentAnnoId) {
       const sa = sentAnnoMap[hoveredSentAnnoId];
       return codeMap[sa?.code_id]?.color;
@@ -179,7 +182,7 @@ function DocumentSentencePart({
     if (hoveredCodeId && sentAnnoCodeIds.includes(hoveredCodeId)) {
       return codeMap[hoveredCodeId]?.color;
     }
-  }, [isSelected, hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, selectedCodeId, sentAnnoMap, codeMap]);
+  }, [hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, sentAnnoMap, codeMap]);
 
   return (
     <>
@@ -210,7 +213,7 @@ function DocumentSentencePart({
       <ListItemButton
         onMouseDown={onSentenceMouseDown ? (event) => onSentenceMouseDown(event, sentenceId) : undefined}
         onMouseEnter={onSentenceMouseEnter ? (event) => onSentenceMouseEnter(event, sentenceId) : undefined}
-        style={{ flexGrow: 1 }}
+        style={{ flexGrow: 1, cursor: "text" }}
         data-sent-id={sentenceId}
         onFocus={(event) => {
           // prevent focus
@@ -218,7 +221,12 @@ function DocumentSentencePart({
         }}
       >
         <div data-sent-id={sentenceId}>
-          {highlightedColor ? (
+          {isSelected ? (
+            // the in-progress selection uses the flat browser-native selection style (no gradient/mark)
+            <span data-sent-id={sentenceId} style={{ backgroundColor: SELECTION_COLOR }}>
+              {sentence}
+            </span>
+          ) : highlightedColor ? (
             <mark
               data-sent-id={sentenceId}
               style={{

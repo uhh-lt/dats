@@ -8,10 +8,12 @@ import "../../../_styles/Annotation.css";
 import { SentenceAnnotationResizeHandles } from "../../_components/SentenceAnnotationResizeHandles";
 import { SentenceMemoBadge } from "../../_components/SentenceMemoBadge";
 
+// the browser-native selection color, used for the flat in-progress sentence selection (matches the span annotator)
+const SELECTION_COLOR = "rgba(0, 120, 215, 0.3)";
+
 interface DocumentSentenceProps {
   sentenceId: number;
   isSelected: boolean;
-  selectedCodeId: number | undefined;
   selectedSentAnnoId: number | undefined;
   hoveredSentAnnoId: number | null;
   hoveredCodeId: number | undefined;
@@ -32,7 +34,6 @@ interface DocumentSentenceProps {
 export function DocumentSentence({
   sentenceId,
   isSelected,
-  selectedCodeId,
   selectedSentAnnoId,
   hoveredSentAnnoId,
   hoveredCodeId,
@@ -63,10 +64,8 @@ export function DocumentSentence({
   );
   const sentAnnoCodeIds = useMemo(() => sentenceAnnotations.map((anno) => anno.code_id), [sentenceAnnotations]);
 
+  // the color of an existing/hovered/selected annotation highlight (gradient mark). Not used for the selection.
   const highlightedColor = useMemo(() => {
-    if (isSelected && selectedCodeId) {
-      return codeMap[selectedCodeId]?.color || "rgb(255, 0, 0)";
-    }
     if (hoveredSentAnnoId) {
       const sa = sentAnnoMap[hoveredSentAnnoId];
       return codeMap[sa?.code_id]?.color;
@@ -78,16 +77,7 @@ export function DocumentSentence({
       const sa = sentAnnoMap[selectedSentAnnoId];
       return codeMap[sa?.code_id]?.color;
     }
-  }, [
-    isSelected,
-    hoveredSentAnnoId,
-    hoveredCodeId,
-    sentAnnoCodeIds,
-    selectedSentAnnoId,
-    sentAnnoMap,
-    selectedCodeId,
-    codeMap,
-  ]);
+  }, [hoveredSentAnnoId, hoveredCodeId, sentAnnoCodeIds, selectedSentAnnoId, sentAnnoMap, codeMap]);
 
   return (
     <Stack direction="row" data-sent-id={sentenceId} {...props}>
@@ -118,7 +108,7 @@ export function DocumentSentence({
       <ListItemButton
         onMouseDown={onSentenceMouseDown ? (event) => onSentenceMouseDown(event, sentenceId) : undefined}
         onMouseEnter={onSentenceMouseEnter ? (event) => onSentenceMouseEnter(event, sentenceId) : undefined}
-        style={{ ...props.style, flexGrow: 1 }}
+        style={{ ...props.style, flexGrow: 1, cursor: "text" }}
         data-sent-id={sentenceId}
         onFocus={(event) => {
           // prevent focus
@@ -126,7 +116,12 @@ export function DocumentSentence({
         }}
       >
         <div data-sent-id={sentenceId}>
-          {highlightedColor ? (
+          {isSelected ? (
+            // the in-progress selection uses the flat browser-native selection style (no gradient/mark)
+            <span data-sent-id={sentenceId} style={{ backgroundColor: SELECTION_COLOR }}>
+              {sentence}
+            </span>
+          ) : highlightedColor ? (
             <mark
               data-sent-id={sentenceId}
               style={{
