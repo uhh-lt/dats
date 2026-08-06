@@ -1,5 +1,5 @@
 api:
-  max_upload_file_size: ${oc.env:API_MAX_UPLOAD_FILE_SIZE, 104857600} # 100 MB in bytes
+  max_upload_file_size: ${oc.env:API_MAX_UPLOAD_FILE_SIZE, 1073741824} # 1 GB in bytes
   production_mode: ${oc.env:API_PRODUCTION_MODE, 0}
   is_stable: ${oc.env:API_IS_STABLE, False}
   uuid_namespace: ${oc.env:API_UUID_NAMESPACE, ""}
