@@ -38,7 +38,7 @@ export function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: allowedFileTypes,
-    maxSize: 100 * 1024 * 1024, // 100MB max file size
+    maxSize: 1024 * 1024 * 1024, // 1GB max file size
     multiple: false, // Only allow single file selection
   });
 
@@ -73,7 +73,7 @@ export function ImportDropzone({ onFileChanged, file }: ImportDropzoneProps) {
               Accepted formats: {allowedFileExtensions.join(", ")}
             </Typography>
             <Typography variant="caption" color="textSecondary" sx={{ display: "block" }}>
-              Maximum file size: 100MB
+              Maximum file size: 1GB
             </Typography>
             {file && (
               <Typography variant="body2" color="primary" sx={{ mt: 1, fontWeight: "bold" }}>
