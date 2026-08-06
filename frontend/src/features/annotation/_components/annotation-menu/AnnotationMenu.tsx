@@ -1,8 +1,8 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { getIconComponent, Icon } from "@components/icons";
 import { NamedObjWithParentWithLevel, useWithLevel } from "@components/tree-explorer";
-import { MemoButton } from "@core/memo";
 import { useAuth } from "@core/auth";
+import { MemoDialogActions } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -23,7 +23,7 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { useOpenDialog } from "@store/global/dialogBusSlice";
-import { useAppSelector } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Annotation, Annotations } from "../../_types/Annotation";
 import { CODE_SHORTCUT_KEYS, CodeShortcutKey, selectCodeShortcuts } from "../../store/codeShortcutSlice";
@@ -56,6 +56,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
   const projectId = useAppSelector((state) => state.project.projectId);
   const bindings = useAppSelector((state) => selectCodeShortcuts(state, user?.id, projectId));
   const submissionLockedRef = useRef(false);
+  const dispatch = useAppDispatch();
 
   // local client state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -166,6 +167,21 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     setDuplicatingAnnotation(annotation);
   };
 
+  const handleOpenMemo = (annotation: Annotation) => {
+    const attachedObjectType = isBboxAnnotation(annotation)
+      ? AttachedObjectType.BBOX_ANNOTATION
+      : isSentenceAnnotation(annotation)
+        ? AttachedObjectType.SENTENCE_ANNOTATION
+        : AttachedObjectType.SPAN_ANNOTATION;
+    dispatch(
+      MemoDialogActions.openMemoDialog({
+        attachedObjectId: annotation.id,
+        attachedObjectType,
+      }),
+    );
+    closeAnnotationMenu();
+  };
+
   // submit the code selector (either we edited or created a new code)
   const submit = (code: CodeRead, isNewCode: boolean) => {
     if (submissionLockedRef.current) {
@@ -214,6 +230,44 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     submit(code, false);
   };
 
+  // keyboard shortcuts for the edit mode (annotation list, not code selection)
+  const handleEditModeKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (showCodeSelection || !annotationsToEdit || annotationsToEdit.length === 0) {
+      return;
+    }
+    if (event.repeat || event.nativeEvent.isComposing || event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+
+    const annotation = annotationsToEdit[0];
+    switch (event.key) {
+      case "m":
+      case "M":
+        event.preventDefault();
+        event.stopPropagation();
+        handleOpenMemo(annotation);
+        break;
+      case "Delete":
+      case "Backspace":
+        event.preventDefault();
+        event.stopPropagation();
+        handleDelete(annotation);
+        break;
+      case "d":
+      case "D":
+        event.preventDefault();
+        event.stopPropagation();
+        handleDuplicate(annotation);
+        break;
+      case "e":
+      case "E":
+        event.preventDefault();
+        event.stopPropagation();
+        handleEdit(annotation);
+        break;
+    }
+  };
+
   return (
     <Popover
       open={isPopoverOpen}
@@ -228,7 +282,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
         vertical: "top",
         horizontal: "left",
       }}
-      onKeyDownCapture={handleShortcutKeyDown}
+      onKeyDownCapture={showCodeSelection ? handleShortcutKeyDown : handleEditModeKeyDown}
     >
       {!showCodeSelection && annotationsToEdit ? (
         <List dense>
@@ -239,7 +293,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
               annotation={annotation}
               handleDelete={handleDelete}
               handleEdit={handleEdit}
-              handleOpenMemo={closeAnnotationMenu}
+              handleOpenMemo={handleOpenMemo}
               handleDuplicate={handleDuplicate}
             />
           ))}
@@ -334,7 +388,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
 interface CodeSelectorListItemProps {
   codeId: number;
   annotation: Annotation;
-  handleOpenMemo: () => void;
+  handleOpenMemo: (annotation: Annotation) => void;
   handleDelete: (annotationToDelete: Annotation) => void;
   handleEdit: (annotationToEdit: Annotation) => void;
   handleDuplicate: (annotationToEdit: Annotation) => void;
@@ -365,35 +419,16 @@ function CodeSelectorListItem({
         <ListItem>
           <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
           <ListItemText primary={code.data.name} />
-          {isBboxAnnotation(annotation) ? (
-            <MemoButton
-              attachedObjectId={annotation.id}
-              attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
-              sx={{ ml: 1 }}
-              onClick={() => handleOpenMemo()}
-            />
-          ) : isSentenceAnnotation(annotation) ? (
-            <MemoButton
-              attachedObjectId={annotation.id}
-              attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
-              sx={{ ml: 1 }}
-              onClick={() => handleOpenMemo()}
-            />
-          ) : (
-            <MemoButton
-              attachedObjectId={annotation.id}
-              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
-              sx={{ ml: 1 }}
-              onClick={() => handleOpenMemo()}
-            />
-          )}
-          <Tooltip title="Delete">
+          <Tooltip title="Memo (M)">
+            <IconButton onClick={() => handleOpenMemo(annotation)}>{getIconComponent(Icon.MEMO)}</IconButton>
+          </Tooltip>
+          <Tooltip title="Delete (Del)">
             <IconButton onClick={() => handleDelete(annotation)}>{getIconComponent(Icon.DELETE)}</IconButton>
           </Tooltip>
-          <Tooltip title="Edit">
+          <Tooltip title="Edit (E)">
             <IconButton onClick={() => handleEdit(annotation)}>{getIconComponent(Icon.EDIT)}</IconButton>
           </Tooltip>
-          <Tooltip title="Duplicate">
+          <Tooltip title="Duplicate (D)">
             <IconButton edge="end" onClick={() => handleDuplicate(annotation)}>
               {getIconComponent(Icon.DUPLICATE)}
             </IconButton>
