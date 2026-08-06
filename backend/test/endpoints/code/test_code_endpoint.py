@@ -196,3 +196,81 @@ def test_get_by_project_not_existing(
     response = client.get(f"/code/project/{non_existing_project_id}")
 
     assert response.status_code == 403, response.text
+
+
+def test_disable_parent_code_disables_children(
+    client: TestClient,
+    project_with_code_hierarchy,
+):
+    """Disabling a code must disable all its descendants."""
+    grandparent = project_with_code_hierarchy["grandparent_code"]
+    parent = project_with_code_hierarchy["parent_code"]
+    child = project_with_code_hierarchy["child_code"]
+
+    response = client.patch(f"/code/{grandparent.id}", json={"enabled": False})
+
+    assert response.status_code == 200, response.text
+    updated = CodeRead.model_validate(response.json())
+    assert updated.enabled is False
+
+    # descendants must be disabled as well
+    response = client.get(f"/code/{parent.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is False
+
+    response = client.get(f"/code/{child.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is False
+
+
+def test_enable_child_code_enables_disabled_ancestors(
+    client: TestClient,
+    project_with_code_hierarchy,
+):
+    """Enabling a code must enable all its disabled ancestors, so that the
+    code is reachable from the top of the hierarchy."""
+    grandparent = project_with_code_hierarchy["grandparent_code"]
+    parent = project_with_code_hierarchy["parent_code"]
+    child = project_with_code_hierarchy["child_code"]
+
+    # disable the grandparent, which disables the whole subtree
+    response = client.patch(f"/code/{grandparent.id}", json={"enabled": False})
+    assert response.status_code == 200, response.text
+
+    # now enable the child code
+    response = client.patch(f"/code/{child.id}", json={"enabled": True})
+    assert response.status_code == 200, response.text
+    updated = CodeRead.model_validate(response.json())
+    assert updated.enabled is True
+
+    # all ancestors must be enabled as well
+    response = client.get(f"/code/{parent.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is True
+
+    response = client.get(f"/code/{grandparent.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is True
+
+
+def test_enable_child_code_keeps_enabled_ancestors(
+    client: TestClient,
+    project_with_code_hierarchy,
+):
+    """Enabling a code whose ancestors are already enabled must not change them."""
+    parent = project_with_code_hierarchy["parent_code"]
+    child = project_with_code_hierarchy["child_code"]
+
+    # disable only the child
+    response = client.patch(f"/code/{child.id}", json={"enabled": False})
+    assert response.status_code == 200, response.text
+
+    # re-enable the child
+    response = client.patch(f"/code/{child.id}", json={"enabled": True})
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is True
+
+    # the parent must still be enabled
+    response = client.get(f"/code/{parent.id}")
+    assert response.status_code == 200, response.text
+    assert CodeRead.model_validate(response.json()).enabled is True
