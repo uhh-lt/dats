@@ -132,6 +132,17 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         for code in codes:
             code.enabled = update_dto.enabled
         db.add_all(codes)
+
+        # when enabling a code, all ancestors must be enabled as well,
+        # so that the code is reachable from the top of the hierarchy
+        if update_dto.enabled:
+            parent = codes[0].parent
+            while parent is not None:
+                if not parent.enabled:
+                    parent.enabled = True
+                    db.add(parent)
+                parent = parent.parent
+
         db.flush()
         return codes[0]
 
