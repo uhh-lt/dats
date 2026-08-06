@@ -23,6 +23,20 @@ hover-sync. Tokens carry a `span-<id>` class per annotation (see Token.tsx).
 }
 
 /*
+SENTENCE ANNOTATION HIGHLIGHT: useSentenceAnnotationHighlight.ts
+Shared highlight applied to all sentences of a sentence annotation. Used both
+for the selected annotation (selectedAnnotationId) and for hover-sync.
+Sentences carry a `data-annotation-ids` attribute with space-separated IDs.
+*/
+
+.sentence-annotation-highlighted {
+  background-color: rgba(25, 118, 210, 0.15) !important;
+  /* inset box-shadow instead of border-left: visually identical, but does not affect layout (no shifting of annotation lanes) */
+  box-shadow: inset 3px 0 0 0 #1976d2 !important;
+  transition: background-color 0.15s ease;
+}
+
+/*
 TOKEN: Token.tsx
 A token (.tok) consists of:
 - A group (.spangroup) of CodeIndicator(s) (for NER tags) -> CodeIndicator.tsx

@@ -11,6 +11,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useMemo, useRef, useState } from "react";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
+import { useJumpToSentenceAnnotation } from "../../../_hooks/useJumpToSentenceAnnotation";
+import { useSentenceAnnotationHighlight } from "../../../_hooks/useSentenceAnnotationHighlight";
 import { useSentenceAnnotationResize } from "../../../_hooks/useSentenceAnnotationResize";
 import { Annotation } from "../../../_types/Annotation";
 import { AnnoActions } from "../../../store/annoSlice";
@@ -35,7 +37,11 @@ export const SentenceAnnotationComparison = memo(
     const user = useAuth().user;
 
     // global client state (URL search params)
-    const { visibleUserId: leftUserId, compareWithUserId: rightUserId } = AnnotationRouteAPI.useSearch();
+    const {
+      visibleUserId: leftUserId,
+      compareWithUserId: rightUserId,
+      selectedAnnotationId,
+    } = AnnotationRouteAPI.useSearch();
 
     const isAnnotationAllowedLeft = leftUserId === user?.id;
     const isAnnotationAllowedRight = rightUserId === user?.id;
@@ -412,6 +418,30 @@ export const SentenceAnnotationComparison = memo(
       estimateSize: () => 35,
       overscan: 2,
     });
+
+    // jump to & highlight the selected annotation (needs virtualizer + annotator data)
+    // for the comparator, we search both left and right annotations
+    const allAnnotations = useMemo(() => {
+      const result: Record<number, SentenceAnnotationRead[]> = {};
+      if (annotatorLeft.annotatorResult?.sentence_annotations) {
+        Object.entries(annotatorLeft.annotatorResult.sentence_annotations).forEach(([sentId, annos]) => {
+          const idx = parseInt(sentId);
+          if (!result[idx]) result[idx] = [];
+          result[idx].push(...annos);
+        });
+      }
+      if (annotatorRight.annotatorResult?.sentence_annotations) {
+        Object.entries(annotatorRight.annotatorResult.sentence_annotations).forEach(([sentId, annos]) => {
+          const idx = parseInt(sentId);
+          if (!result[idx]) result[idx] = [];
+          result[idx].push(...annos);
+        });
+      }
+      return result;
+    }, [annotatorLeft.annotatorResult?.sentence_annotations, annotatorRight.annotatorResult?.sentence_annotations]);
+
+    useJumpToSentenceAnnotation(selectedAnnotationId, virtualizer, allAnnotations, { block: "center" });
+    useSentenceAnnotationHighlight(selectedAnnotationId);
 
     // rendering
     const numSentenceDigits = useMemo(() => Math.ceil(Math.log10(sdocData.sentences.length + 1)), [sdocData.sentences]);
