@@ -164,11 +164,19 @@ const useDeleteBulkBBoxAnnotation = () =>
   useMutation({
     mutationFn: BboxAnnotationService.deleteBulkById,
     onSuccess(data) {
+      if (data.length === 0) return;
       queryClient.invalidateQueries({ queryKey: [QueryKey.BBOX_TABLE] }); // TODO: This is not optimal, should be projectId, selectedUserId... We do this because of BBoxAnnotationTable
+
+      // Invalidate each unique (sdoc_id, user_id) pair once
+      const uniquePairs = new Set<string>();
       data.forEach((annotation) => {
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-        });
+        const key = `${annotation.sdoc_id}-${annotation.user_id}`;
+        if (!uniquePairs.has(key)) {
+          uniquePairs.add(key);
+          queryClient.invalidateQueries({
+            queryKey: [QueryKey.SDOC_BBOX_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+          });
+        }
         queryClient.removeQueries({ queryKey: [QueryKey.BBOX_ANNOTATION, annotation.id] });
       });
     },
