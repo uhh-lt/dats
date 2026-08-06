@@ -1,8 +1,9 @@
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Box, BoxProps } from "@mui/material";
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { AnnotationRouteAPI } from "../_hooks/annotationRouteAPI";
+import { useJumpToSpanAnnotation } from "../_hooks/useJumpToSpanAnnotation";
 import { useSpanAnnotationHighlight } from "../_hooks/useSpanAnnotationHighlight";
 import { SpanAnnotationResizeStartHandler } from "../_hooks/useSpanAnnotationResize";
 import { IToken } from "../_types/IToken";
@@ -34,28 +35,9 @@ export function DocumentRenderer({
   onResizeStart,
   ...props
 }: DocumentRendererProps & BoxProps) {
-  // jump to annotations
+  // jump to & highlight the selected annotation
   const { selectedAnnotationId } = AnnotationRouteAPI.useSearch();
-  useEffect(() => {
-    const scrollIntoView = () => {
-      const annotation = document.getElementById("span-annotation-" + selectedAnnotationId);
-      if (annotation) {
-        annotation.scrollIntoView({ behavior: "smooth" });
-        return true;
-      }
-      return false;
-    };
-    if (!scrollIntoView()) {
-      const intervalHandle = setInterval(() => {
-        if (scrollIntoView()) {
-          clearInterval(intervalHandle);
-        }
-      }, 500);
-      return () => clearInterval(intervalHandle);
-    }
-  }, [selectedAnnotationId]);
-
-  // highlight the selected annotation's tokens (shared span highlight)
+  useJumpToSpanAnnotation(selectedAnnotationId);
   useSpanAnnotationHighlight(selectedAnnotationId);
 
   const basicProcessingInstructions = useCallback(

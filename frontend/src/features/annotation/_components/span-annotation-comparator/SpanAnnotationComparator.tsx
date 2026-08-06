@@ -13,6 +13,7 @@ import { memo, MouseEvent, useCallback, useMemo, useRef, useState } from "react"
 import { AnnotationRouteAPI } from "../../_hooks/annotationRouteAPI";
 import { toPendingSpanAnnotation } from "../../_hooks/pendingSpanAnnotation";
 import { useComputeTokenData, useTokenData } from "../../_hooks/useComputeTokenData";
+import { useJumpToSpanAnnotation } from "../../_hooks/useJumpToSpanAnnotation";
 import { useSpanAnnotationHighlight } from "../../_hooks/useSpanAnnotationHighlight";
 import { useSpanAnnotationResize } from "../../_hooks/useSpanAnnotationResize";
 import { Annotation } from "../../_types/Annotation";
@@ -52,7 +53,11 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   const openConfirmationDialog = useOpenConfirmationDialog();
 
   // global client state (URL search params)
-  const { visibleUserId: leftUserId, compareWithUserId: rightUserId } = AnnotationRouteAPI.useSearch();
+  const {
+    visibleUserId: leftUserId,
+    compareWithUserId: rightUserId,
+    selectedAnnotationId,
+  } = AnnotationRouteAPI.useSearch();
   const effectiveLeftUserId = leftUserId ?? user?.id;
   const effectiveRightUserId = rightUserId;
 
@@ -149,6 +154,10 @@ export const SpanAnnotationComparison = memo(({ sdocData, ...props }: SpanAnnota
   // highlight its tokens via the shared span highlight.
   const hoveredAnnotationId = hoveredControlKey ? parseInt(hoveredControlKey.substring(2)) : null;
   useSpanAnnotationHighlight(hoveredAnnotationId);
+
+  // jump to & highlight the selected annotation
+  useSpanAnnotationHighlight(selectedAnnotationId);
+  useJumpToSpanAnnotation(selectedAnnotationId, { block: "center" });
 
   // Single annotation actions
   const handleApplyAnnotation = useCallback(
