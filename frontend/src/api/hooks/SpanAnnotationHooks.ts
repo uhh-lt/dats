@@ -45,6 +45,14 @@ const useGetSpanAnnotationsBatch = (sdocId: number | null | undefined, userId: n
 const useCreateBulkAnnotations = () =>
   useMutation({
     mutationFn: SpanAnnotationService.addSpanAnnotationsBulk,
+    onSuccess: (data) => {
+      if (data.length === 0) return;
+      const sdocId = data[0].sdoc_id;
+      const userId = data[0].user_id;
+      queryClient.invalidateQueries({
+        queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, sdocId, userId],
+      });
+    },
     meta: {
       successMessage: (data: SpanAnnotationRead[]) => `Created ${data.length} Span Annotations`,
     },
@@ -214,11 +222,19 @@ const useDeleteBulkSpanAnnotation = () =>
   useMutation({
     mutationFn: SpanAnnotationService.deleteBulkById,
     onSuccess(data) {
+      if (data.length === 0) return;
       queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNO_TABLE] });
+
+      // Invalidate each unique (sdoc_id, user_id) pair once
+      const uniquePairs = new Set<string>();
       data.forEach((annotation) => {
-        queryClient.invalidateQueries({
-          queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
-        });
+        const key = `${annotation.sdoc_id}-${annotation.user_id}`;
+        if (!uniquePairs.has(key)) {
+          uniquePairs.add(key);
+          queryClient.invalidateQueries({
+            queryKey: [QueryKey.SDOC_SPAN_ANNOTATIONS, annotation.sdoc_id, annotation.user_id],
+          });
+        }
         queryClient.removeQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, annotation.id] });
       });
     },
