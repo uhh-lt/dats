@@ -58,7 +58,6 @@ export function CodeIndicator({
 
     return (
       <span
-        id={"span-annotation-" + annotationId}
         className={`code-indicator ${isPending ? "code-indicator--pending" : ""}`}
         title={isPending ? "Saving annotation…" : undefined}
         style={
@@ -79,7 +78,7 @@ export function CodeIndicator({
     );
   }
   return (
-    <span id={"span-annotation-" + annotationId} className="code-indicator code-indicator--loading">
+    <span className="code-indicator code-indicator--loading">
       <span className="code-indicator__text">...</span>
     </span>
   );
