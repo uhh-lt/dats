@@ -8,6 +8,7 @@ import { memo, useMemo, useRef, useState } from "react";
 
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { useAuth } from "@core/auth";
+import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { AnnotationRouteAPI } from "../../../_hooks/annotationRouteAPI";
 import { toPendingSentenceAnnotation } from "../../../_hooks/pendingSentenceAnnotation";
@@ -37,6 +38,7 @@ export const SentenceAnnotator = memo(
 
     // selection
     const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
+    const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
     const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
     const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -47,11 +49,20 @@ export const SentenceAnnotator = memo(
 
     // pending annotations (not yet persisted, rendered from local state only)
     const [pendingAnnotations, setPendingAnnotations] = useState<SentenceAnnotationRead[]>([]);
+    // the draft annotation whose code-selector menu is currently open (not yet sent to the server)
+    const [draftAnnotation, setDraftAnnotation] = useState<SentenceAnnotationRead | undefined>(undefined);
+
+    // the draft (menu open) is rendered as a preview alongside the in-flight pending annotations
+    const allPendingAnnotations = useMemo<SentenceAnnotationRead[]>(
+      () => (draftAnnotation ? [...pendingAnnotations, draftAnnotation] : pendingAnnotations),
+      [pendingAnnotations, draftAnnotation],
+    );
 
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
     const { user } = useAuth();
+    const openSnackbar = useOpenSnackbar();
     const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
@@ -66,11 +77,18 @@ export const SentenceAnnotator = memo(
       sdocId: sdocData.id,
       userId: visibleUserId,
       annotationOverride: previewAnnotation,
-      pendingAnnotations,
+      pendingAnnotations: allPendingAnnotations,
     });
 
+    const openConfirmationDialog = useOpenConfirmationDialog();
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
-      deleteMutation.mutate(annotation as SentenceAnnotationRead);
+      openConfirmationDialog({
+        text: `Do you really want to remove the SentenceAnnotation ${annotation.id}? You can reassign it later!`,
+        type: "DELETE",
+        onAccept: () => {
+          deleteMutation.mutate(annotation as SentenceAnnotationRead);
+        },
+      });
     };
     const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
       updateMutation.mutate({
@@ -94,14 +112,16 @@ export const SentenceAnnotator = memo(
       );
     };
     const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
+      if (!draftAnnotation) return;
       setSelectedSentences([]);
       setLastClickedIndex(null);
+      setDraftAnnotation(undefined);
       startCreate(
         {
           code_id: codeId,
-          sdoc_id: sdocData.id,
-          sentence_id_start: selectedSentences[0],
-          sentence_id_end: selectedSentences[selectedSentences.length - 1],
+          sdoc_id: draftAnnotation.sdoc_id,
+          sentence_id_start: draftAnnotation.sentence_id_start,
+          sentence_id_end: draftAnnotation.sentence_id_end,
         },
         () => {
           if (!isNewCode) {
@@ -129,12 +149,12 @@ export const SentenceAnnotator = memo(
     };
     const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
       // i clicked away because i like the annotation as is
-      if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCodeId) {
+      if (draftAnnotation && reason === "backdropClick") {
         startCreate({
-          code_id: mostRecentCodeId,
-          sdoc_id: sdocData.id,
-          sentence_id_start: selectedSentences[0],
-          sentence_id_end: selectedSentences[selectedSentences.length - 1],
+          code_id: draftAnnotation.code_id,
+          sdoc_id: draftAnnotation.sdoc_id,
+          sentence_id_start: draftAnnotation.sentence_id_start,
+          sentence_id_end: draftAnnotation.sentence_id_end,
         });
       }
       // i clicked escape because i want to cancel the annotation
@@ -144,6 +164,7 @@ export const SentenceAnnotator = memo(
 
       setSelectedSentences([]);
       setLastClickedIndex(null);
+      setDraftAnnotation(undefined);
       setHoverSentAnnoId(null);
     };
 
@@ -224,7 +245,39 @@ export const SentenceAnnotator = memo(
         return;
       }
 
-      // open annotation menu
+      // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
+      if (user?.id !== visibleUserId) {
+        openSnackbar({
+          severity: "warning",
+          text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+        });
+        setSelectedSentences([]);
+        setLastClickedIndex(null);
+        return;
+      }
+
+      // a code must be selected before creating an annotation
+      if (!mostRecentCodeId && !selectedCodeId) {
+        openSnackbar({
+          severity: "warning",
+          text: "Select a code in the Code Explorer (left) first!",
+        });
+        setSelectedSentences([]);
+        setLastClickedIndex(null);
+        return;
+      }
+
+      // create a draft annotation for visual preview (rendered via pendingAnnotations)
+      const requestBody: SentenceAnnotationCreate = {
+        code_id: mostRecentCodeId || selectedCodeId || -1,
+        sdoc_id: sdocData.id,
+        sentence_id_start: selectedSentences[0],
+        sentence_id_end: selectedSentences[selectedSentences.length - 1],
+      };
+      const draft = toPendingSentenceAnnotation(requestBody, user?.id);
+      setDraftAnnotation(draft);
+
+      // open annotation menu in add mode (code selector visible immediately)
       const target: HTMLElement = event.target as HTMLElement;
       const boundingBox = target.getBoundingClientRect();
       const position = {
@@ -301,7 +354,6 @@ export const SentenceAnnotator = memo(
                       sentenceAnnotations={annotator.sentenceAnnotations[item.index] ?? []}
                       sentence={sentence}
                       isSelected={selectedSentences.includes(item.index)}
-                      selectedCodeId={mostRecentCodeId}
                       onAnnotationClick={(event, sentAnnoId) => handleAnnotationClick(event, sentAnnoId, item.index)}
                       onAnnotationMouseEnter={handleAnnotationMouseEnter}
                       onAnnotationMouseLeave={handleAnnotationMouseLeave}

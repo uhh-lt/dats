@@ -126,20 +126,21 @@ export function TextAnnotator({ sdocData }: TextAnnotatorProps) {
     }
     // the selection is valid
 
-    if (!mostRecentCodeId && !selectedCodeId) {
+    // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params).
+    // warn and clear the selection when viewing another user's document.
+    if (user?.id !== visibleUserId) {
       openSnackbar({
         severity: "warning",
-        text: "Select a code in the Code Explorer (left) first!",
+        text: "You cannot create annotations on another user's document. Switch to your user in the Annotator Selector (top) to create annotations.",
       });
       selection.empty();
       return;
     }
 
-    // only allow annotation creation if the current user is the same as the visibleUserId (from URL search params)
-    if (user?.id !== visibleUserId) {
+    if (!mostRecentCodeId && !selectedCodeId) {
       openSnackbar({
         severity: "warning",
-        text: "You cannot create annotations while viewing another user's annotation! Switch to your user in the Annotator Selector (top) to create annotations.",
+        text: "Select a code in the Code Explorer (left) first!",
       });
       selection.empty();
       return;

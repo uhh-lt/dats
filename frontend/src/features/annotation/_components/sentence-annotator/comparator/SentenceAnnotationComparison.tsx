@@ -1,6 +1,7 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { useAuth } from "@core/auth";
+import { useOpenConfirmationDialog, useOpenSnackbar } from "@core/notification";
 import { SentenceAnnotationCreate } from "@models/SentenceAnnotationCreate";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
@@ -36,12 +37,26 @@ export const SentenceAnnotationComparison = memo(
     // global client state (URL search params)
     const { visibleUserId: leftUserId, compareWithUserId: rightUserId } = AnnotationRouteAPI.useSearch();
 
+    const isAnnotationAllowedLeft = leftUserId === user?.id;
+    const isAnnotationAllowedRight = rightUserId === user?.id;
+
     // resize controllers (left + right)
     const leftResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
     const rightResizeController = useSentenceAnnotationResize(sdocData.sentences.length);
 
-    // pending annotations (not yet persisted, rendered from local state only)
+    // pending annotations (not yet persisted, rendered from local state only).
+    // Only one side is ever editable (the current user's), so all pending annotations belong to it
+    // and are routed to that side's annotator only.
     const [pendingAnnotations, setPendingAnnotations] = useState<SentenceAnnotationRead[]>([]);
+    // the draft annotation whose code-selector menu is currently open (not yet sent to the server)
+    const [draftAnnotation, setDraftAnnotation] = useState<SentenceAnnotationRead | undefined>(undefined);
+
+    // the draft (menu open) is rendered as a preview alongside the in-flight pending annotations
+    const allPendingAnnotations = useMemo<SentenceAnnotationRead[]>(
+      () => (draftAnnotation ? [...pendingAnnotations, draftAnnotation] : pendingAnnotations),
+      [pendingAnnotations, draftAnnotation],
+    );
+    const editableSide: "left" | "right" = isAnnotationAllowedRight && !isAnnotationAllowedLeft ? "right" : "left";
 
     // global server state (react-query)
     const codeMap = CodeHooks.useGetAllCodesMap();
@@ -49,19 +64,25 @@ export const SentenceAnnotationComparison = memo(
       sdocId: sdocData.id,
       userId: leftUserId,
       annotationOverride: leftResizeController.previewAnnotation,
-      pendingAnnotations,
+      pendingAnnotations: editableSide === "left" ? allPendingAnnotations : undefined,
     });
     const annotatorRight = useGetSentenceAnnotator({
       sdocId: sdocData.id,
       userId: rightUserId,
       annotationOverride: rightResizeController.previewAnnotation,
+      pendingAnnotations: editableSide === "right" ? allPendingAnnotations : undefined,
     });
 
     // selection
     const mostRecentCodeId = useAppSelector((state) => state.annotations.mostRecentCodeId);
+    const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
     const [selectedSentences, setSelectedSentences] = useState<number[]>([]);
     const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState<boolean>(false);
+    // the side on which the current selection attempt started; used to warn when it is not the user's side
+    // and to highlight the selection only on the side where it was started (never on the other side)
+    const [selectionAllowed, setSelectionAllowed] = useState<boolean>(false);
+    const [selectionSide, setSelectionSide] = useState<"left" | "right" | null>(null);
 
     // highlighting
     const hoveredCodeId = useAppSelector((state) => state.annotations.hoveredCodeId);
@@ -70,13 +91,21 @@ export const SentenceAnnotationComparison = memo(
     // annotation menu
     const annotationMenuRef = useRef<AnnotationMenuHandle>(null);
     const dispatch = useAppDispatch();
+    const openSnackbar = useOpenSnackbar();
     const createMutation = SentenceAnnotationHooks.useCreateSentenceAnnotation();
     const createBulkMutation = SentenceAnnotationHooks.useCreateBulkSentenceAnnotation();
     const deleteMutation = SentenceAnnotationHooks.useDeleteSentenceAnnotation();
     const deleteBulkMutation = SentenceAnnotationHooks.useDeleteBulkSentenceAnnotationSingleSdoc();
     const updateMutation = SentenceAnnotationHooks.useUpdateSentenceAnnotation();
+    const openConfirmationDialog = useOpenConfirmationDialog();
     const handleCodeSelectorDeleteAnnotation = (annotation: Annotation) => {
-      deleteMutation.mutate(annotation as SentenceAnnotationRead);
+      openConfirmationDialog({
+        text: `Do you really want to remove the SentenceAnnotation ${annotation.id}? You can reassign it later!`,
+        type: "DELETE",
+        onAccept: () => {
+          deleteMutation.mutate(annotation as SentenceAnnotationRead);
+        },
+      });
     };
     const handleCodeSelectorEditCode = (annotation: Annotation, codeId: number) => {
       updateMutation.mutate({
@@ -100,14 +129,17 @@ export const SentenceAnnotationComparison = memo(
       );
     };
     const handleCodeSelectorAddCode = (codeId: number, isNewCode: boolean) => {
+      if (!draftAnnotation) return;
       setSelectedSentences([]);
       setLastClickedIndex(null);
+      setSelectionSide(null);
+      setDraftAnnotation(undefined);
       startCreate(
         {
           code_id: codeId,
-          sdoc_id: sdocData.id,
-          sentence_id_start: selectedSentences[0],
-          sentence_id_end: selectedSentences[selectedSentences.length - 1],
+          sdoc_id: draftAnnotation.sdoc_id,
+          sentence_id_start: draftAnnotation.sentence_id_start,
+          sentence_id_end: draftAnnotation.sentence_id_end,
         },
         () => {
           if (!isNewCode) {
@@ -135,12 +167,12 @@ export const SentenceAnnotationComparison = memo(
     };
     const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
       // i clicked away because i like the annotation as is
-      if (selectedSentences.length > 0 && reason === "backdropClick" && mostRecentCodeId) {
+      if (draftAnnotation && reason === "backdropClick") {
         startCreate({
-          code_id: mostRecentCodeId,
-          sdoc_id: sdocData.id,
-          sentence_id_start: selectedSentences[0],
-          sentence_id_end: selectedSentences[selectedSentences.length - 1],
+          code_id: draftAnnotation.code_id,
+          sdoc_id: draftAnnotation.sdoc_id,
+          sentence_id_start: draftAnnotation.sentence_id_start,
+          sentence_id_end: draftAnnotation.sentence_id_end,
         });
       }
       // i clicked escape because i want to cancel the annotation
@@ -150,6 +182,8 @@ export const SentenceAnnotationComparison = memo(
 
       setSelectedSentences([]);
       setLastClickedIndex(null);
+      setSelectionSide(null);
+      setDraftAnnotation(undefined);
       setHoverSentAnnoId(null);
     };
 
@@ -271,12 +305,22 @@ export const SentenceAnnotationComparison = memo(
       setHoverSentAnnoId(null);
     };
 
-    const handleSentenceMouseDown = (_: React.MouseEvent<HTMLDivElement, MouseEvent>, sentenceId: number) => {
+    const handleSentenceMouseDown = (
+      _: React.MouseEvent<HTMLDivElement, MouseEvent>,
+      sentenceId: number,
+      side: "left" | "right",
+      isAllowed: boolean,
+    ) => {
       // ignore mouse down during/after a resize drag
       if (leftResizeController.shouldIgnoreMouseUp() || rightResizeController.shouldIgnoreMouseUp()) {
         return;
       }
+      // start a drag-selection on both sides (like the native text selection in the span comparator);
+      // the highlight is shown only on the side where the drag started (selectionSide), and handleMouseUp
+      // warns when that side is not the current user's side.
       setIsDragging(true);
+      setSelectionAllowed(isAllowed);
+      setSelectionSide(side);
       setSelectedSentences((selectedSentences) => {
         if (selectedSentences.includes(sentenceId)) {
           return [];
@@ -301,7 +345,41 @@ export const SentenceAnnotationComparison = memo(
         return;
       }
 
-      // open annotation menu
+      // a sentence selection exists: this is annotation creation, only allowed on the current user's side.
+      // warn and clear the selection when the selection was started on the other user's side.
+      if (!selectionAllowed) {
+        openSnackbar({
+          severity: "warning",
+          text: "You cannot create annotations on another user's document. Switch to your user in the Annotator Selector (top) to create annotations.",
+        });
+        setSelectedSentences([]);
+        setLastClickedIndex(null);
+        setSelectionSide(null);
+        return;
+      }
+
+      if (!mostRecentCodeId && !selectedCodeId) {
+        openSnackbar({
+          severity: "warning",
+          text: "Select a code in the Code Explorer (left) first!",
+        });
+        setSelectedSentences([]);
+        setLastClickedIndex(null);
+        setSelectionSide(null);
+        return;
+      }
+
+      // create a draft annotation for visual preview (rendered via pendingAnnotations)
+      const requestBody: SentenceAnnotationCreate = {
+        code_id: mostRecentCodeId || selectedCodeId || -1,
+        sdoc_id: sdocData.id,
+        sentence_id_start: selectedSentences[0],
+        sentence_id_end: selectedSentences[selectedSentences.length - 1],
+      };
+      const draft = toPendingSentenceAnnotation(requestBody, user?.id);
+      setDraftAnnotation(draft);
+
+      // open annotation menu in add mode (code selector visible immediately)
       const target: HTMLElement = event.target as HTMLElement;
       const boundingBox = target.getBoundingClientRect();
       const position = {
@@ -384,6 +462,8 @@ export const SentenceAnnotationComparison = memo(
                       onClickRevertAll={handleClickRevertAll}
                       onClickApplyAll={handleClickApplyAll}
                       isDirectionLeft={leftUserId === user!.id}
+                      isApplyAllLoading={createBulkMutation.isPending}
+                      isRevertAllLoading={deleteBulkMutation.isPending}
                     />
                   </div>
                 );
@@ -408,7 +488,7 @@ export const SentenceAnnotationComparison = memo(
                     sentenceId={sentId}
                     sentence={sentence}
                     isSelected={selectedSentences.includes(sentId)}
-                    selectedCodeId={mostRecentCodeId}
+                    selectionSide={selectionSide}
                     onSentenceMouseDown={handleSentenceMouseDown}
                     onSentenceMouseEnter={handleSentenceMouseEnter}
                     onAnnotationClick={handleAnnotationClick}
@@ -427,8 +507,8 @@ export const SentenceAnnotationComparison = memo(
                     hoveredCodeId={hoveredCodeId}
                     annotatorLeft={annotatorLeft}
                     annotatorRight={annotatorRight}
-                    isAnnotationAllowedLeft={leftUserId === user!.id}
-                    isAnnotationAllowedRight={rightUserId === user!.id}
+                    isAnnotationAllowedLeft={isAnnotationAllowedLeft}
+                    isAnnotationAllowedRight={isAnnotationAllowedRight}
                     onResizeStartLeft={leftResizeController.handleResizeStart}
                     onResizeStartRight={rightResizeController.handleResizeStart}
                     codeMap={codeMap.data}
