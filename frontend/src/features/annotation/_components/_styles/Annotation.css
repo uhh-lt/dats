@@ -1,10 +1,8 @@
-.hovered .text {
-  font-weight: bold;
-}
-
-rect.hovered {
-  fill: #ffff0088;
-}
+/*
+SENTENCE HOVER: DocumentRenderer.tsx
+In viewer mode, each sentence is wrapped in a `.hoversentence` element.
+Hovering it highlights the whole sentence and shows a pointer cursor.
+*/
 
 .hoversentence:hover {
   background-color: rgba(0, 255, 255, 0.5);
@@ -201,6 +199,15 @@ This is the styling of the "background" marks that indicate the span boundaries.
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
+
+/*
+SPAN RESIZE HANDLES: Mark.tsx
+The draggable handles at the start/end of a span annotation that let the user
+resize it. Hidden by default; they fade in when the token (.tok) is hovered.
+A handle is absolutely positioned over its token's edge:
+- .span-resize-handle--start: the left/start handle
+- .span-resize-handle--end:   the right/end handle
+*/
 
 .span-resize-handle {
   position: absolute;
