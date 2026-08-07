@@ -32,5 +32,6 @@ export namespace MetadataExtractionResult {
   export enum status {
     ERROR = "error",
     FINISHED = "finished",
+    PARTIAL = "partial",
   }
 }

@@ -35,5 +35,6 @@ export namespace TaggingResult {
   export enum status {
     ERROR = "error",
     FINISHED = "finished",
+    PARTIAL = "partial",
   }
 }

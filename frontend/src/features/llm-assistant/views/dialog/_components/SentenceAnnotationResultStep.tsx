@@ -7,8 +7,9 @@ import { SentenceAnnotationLLMJobResult } from "@models/SentenceAnnotationLLMJob
 import { Button, CircularProgress, DialogActions, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID } from "@utils/GlobalConstants";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
+import { AnnotationResultSummary } from "./AnnotationResultSummary";
 import { LLMUtterance } from "./LLMUtterance";
 
 const approach2AssistantID: Record<ApproachType, number> = {
@@ -56,14 +57,19 @@ function SentenceAnnotationResultStepContent({
 
   const projectId = useAppSelector((state) => state.project.projectId);
   const tabNavigate = useTabNavigate();
-  const handleOpenFirstDocument = () => {
-    if (!projectId) return;
 
-    const firstSdocId = jobResult.results[0].sdoc_id;
+  // the first document that actually got annotations
+  const firstAnnotatedSdocId = useMemo(
+    () => jobResult.results.find((r) => r.suggested_annotations.length > 0)?.sdoc_id,
+    [jobResult.results],
+  );
+
+  const handleOpenFirstDocument = () => {
+    if (!projectId || firstAnnotatedSdocId === undefined) return;
 
     dispatch(LLMAssistantActions.closeLLMDialog());
     tabNavigate({
-      params: { projectId, sdocId: firstSdocId },
+      params: { projectId, sdocId: firstAnnotatedSdocId },
       to: "/project/$projectId/annotation/$sdocId",
       search: {
         compareWithUserId: approach2AssistantID[approachType],
@@ -74,28 +80,33 @@ function SentenceAnnotationResultStepContent({
 
     // reload annotations
     queryClient.invalidateQueries({
-      queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstSdocId, approach2AssistantID[approachType]],
+      queryKey: [QueryKey.SDOC_SENTENCE_ANNOTATOR, firstAnnotatedSdocId, approach2AssistantID[approachType]],
     });
   };
 
   return (
     <>
       <LLMUtterance p={3}>
-        <Typography>
-          I am done with annotating the sentences. You can now view the results in the Sentence Annotator. My
-          suggestions for the next steps are the following:
-        </Typography>
-        <ul style={{ margin: 0 }}>
-          <li>Open a document in the Annotator</li>
-          <li>Change to the sentence annotation mode</li>
-          <li>Use the "Compare with" feature to compare your annotations with mine</li>
-          <li>Apply correct & validated annotations to your document, so that I can learn from your feedback</li>
-        </ul>
-        <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
+        <AnnotationResultSummary results={jobResult.results} annotationWording="sentence" />
+        {firstAnnotatedSdocId !== undefined && (
+          <>
+            <Typography mt={1}>
+              You can now view the results in the Sentence Annotator. My suggestions for the next steps are the
+              following:
+            </Typography>
+            <ul style={{ margin: 0 }}>
+              <li>Open a document in the Annotator</li>
+              <li>Change to the sentence annotation mode</li>
+              <li>Use the "Compare with" feature to compare your annotations with mine</li>
+              <li>Apply correct & validated annotations to your document, so that I can learn from your feedback</li>
+            </ul>
+            <Typography mt={0.5}>You should look through all documents I annotated.</Typography>
+          </>
+        )}
       </LLMUtterance>
       <DialogActions>
         <Button onClick={handleClose}>Close dialog</Button>
-        <Button variant="contained" onClick={handleOpenFirstDocument}>
+        <Button variant="contained" onClick={handleOpenFirstDocument} disabled={firstAnnotatedSdocId === undefined}>
           Open first document
         </Button>
       </DialogActions>

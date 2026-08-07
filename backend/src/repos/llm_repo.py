@@ -1,6 +1,6 @@
 import time
 from enum import Enum
-from typing import Type, TypeVar
+from typing import Generic, Type, TypeVar
 from uuid import uuid4
 
 import numpy as np
@@ -19,6 +19,29 @@ T = TypeVar("T", bound=BaseModel)
 class LLMMessage(BaseModel):
     system_prompt: str
     user_prompt: str
+
+
+class LLMBatchChatResponse(Generic[T]):
+    """Result of a single LLM batch chat request.
+
+    Either `parsed` (the validated response model) or `error` is set.
+    `raw` always contains the raw response content (or error details).
+    """
+
+    def __init__(
+        self,
+        *,
+        raw: str | None,
+        parsed: T | None = None,
+        error: str | None = None,
+    ):
+        self.raw = raw
+        self.parsed = parsed
+        self.error = error
+
+    @property
+    def is_error(self) -> bool:
+        return self.error is not None
 
 
 class ProviderType(str, Enum):
@@ -271,7 +294,18 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         model: str,
         messages: list[LLMMessage],
         response_model: Type[T],
-    ) -> list[T]:
+        *,
+        capture_raw: bool = False,
+    ) -> list[LLMBatchChatResponse[T]]:
+        """Prompts the LLM in batch mode.
+
+        Always returns one LLMBatchChatResponse per input message.
+
+        If capture_raw is False (default), any invalid/unparseable response raises
+        an exception and successful items are returned with raw=None.
+        If capture_raw is True, failed items are returned as LLMBatchChatResponse
+        with error set (and raw populated when available) instead of raising.
+        """
         if self.__llm_conn is None:
             raise RuntimeError("LLMRepo is not connected. Call connect() first.")
 
@@ -310,14 +344,44 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         )
 
         # parse responses
-        responses: list[T] = []
+        responses: list[LLMBatchChatResponse[T]] = []
         for response in batch_responses:
             if response.get("choices", None) is None:
+                if capture_raw:
+                    responses.append(
+                        LLMBatchChatResponse(
+                            raw=None, error=f"LLM response is invalid: {response}"
+                        )
+                    )
+                    continue
                 raise Exception(f"LLM response is invalid: {response}")
             msg = response.choices[0].message
             if msg.content is None:
+                if capture_raw:
+                    responses.append(
+                        LLMBatchChatResponse(
+                            raw=None, error=f"LLM response is None: {response}"
+                        )
+                    )
+                    continue
                 raise Exception(f"LLM response is None: {response}")
-            responses.append(response_model.model_validate_json(msg.content))
+            try:
+                responses.append(
+                    LLMBatchChatResponse(
+                        raw=msg.content if capture_raw else None,
+                        parsed=response_model.model_validate_json(msg.content),
+                    )
+                )
+            except Exception as e:
+                if capture_raw:
+                    responses.append(
+                        LLMBatchChatResponse(
+                            raw=msg.content,
+                            error=f"Failed to parse LLM response: {e}",
+                        )
+                    )
+                    continue
+                raise
 
         return responses
 

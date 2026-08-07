@@ -20,6 +20,10 @@ export type SentenceAnnotationResult = {
    * Suggested annotations
    */
   suggested_annotations: Array<SentenceAnnotationRead>;
+  /**
+   * Raw LLM response (only set if no annotations were suggested or an error occurred)
+   */
+  raw_response?: string | null;
 };
 export namespace SentenceAnnotationResult {
   /**
@@ -28,5 +32,6 @@ export namespace SentenceAnnotationResult {
   export enum status {
     ERROR = "error",
     FINISHED = "finished",
+    PARTIAL = "partial",
   }
 }
