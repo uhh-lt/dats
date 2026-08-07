@@ -17,3 +17,4 @@
 /mariadb_data/*
 
 .env
+.env.backend
