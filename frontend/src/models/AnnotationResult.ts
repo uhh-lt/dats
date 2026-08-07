@@ -20,6 +20,10 @@ export type AnnotationResult = {
    * Suggested annotations
    */
   suggested_annotations: Array<SpanAnnotationRead>;
+  /**
+   * Raw LLM response (only set if no annotations were suggested or an error occurred)
+   */
+  raw_response?: string | null;
 };
 export namespace AnnotationResult {
   /**
@@ -28,5 +32,6 @@ export namespace AnnotationResult {
   export enum status {
     ERROR = "error",
     FINISHED = "finished",
+    PARTIAL = "partial",
   }
 }

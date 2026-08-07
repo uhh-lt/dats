@@ -132,7 +132,7 @@ class LLMJobInput(LLMJobParameters):
 
 
 class LLMResultWithStatus(BaseModel):
-    status: Literal["error", "finished"] = Field(
+    status: Literal["error", "finished", "partial"] = Field(
         description="Status of the Result",
     )
     status_message: str = Field(description="Status message of the result")
@@ -174,6 +174,10 @@ class AnnotationResult(LLMResultWithStatus):
     suggested_annotations: list[SpanAnnotationRead] = Field(
         description="Suggested annotations"
     )
+    raw_response: str | None = Field(
+        description="Raw LLM response (only set if no annotations were suggested or an error occurred)",
+        default=None,
+    )
 
 
 class AnnotationLLMJobResult(BaseModel):
@@ -185,6 +189,10 @@ class SentenceAnnotationResult(LLMResultWithStatus):
     sdoc_id: int = Field(description="ID of the source document")
     suggested_annotations: list[SentenceAnnotationRead] = Field(
         description="Suggested annotations"
+    )
+    raw_response: str | None = Field(
+        description="Raw LLM response (only set if no annotations were suggested or an error occurred)",
+        default=None,
     )
 
 

@@ -69,7 +69,7 @@ from modules.llm_assistant.prompts.tagging_prompt_builder import (
     LLMTaggingResult,
     TaggingPromptBuilder,
 )
-from repos.llm_repo import LLMMessage, LLMRepo
+from repos.llm_repo import LLMBatchChatResponse, LLMMessage, LLMRepo
 from repos.ray.ray_repo import RayRepo
 from repos.vector.weaviate_repo import WeaviateRepo
 from systems.job_system.job_dto import Job
@@ -78,6 +78,27 @@ lac = conf.llm_assistant
 BATCH_SIZE = 32
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class BatchProcessingError(Exception):
+    """Error during batch processing of a single document.
+
+    Carries the raw LLM response (if available) for transparency.
+    """
+
+    def __init__(self, message: str, raw_response: str | None = None):
+        super().__init__(message)
+        self.raw_response = raw_response
+
+
+def _aggregate_raw_responses(raw_responses: list[str]) -> str:
+    """Joins multiple raw LLM responses (e.g. one per sentence) into one string."""
+    if len(raw_responses) == 1:
+        return raw_responses[0]
+    return "\n---\n".join(
+        f"Response {i + 1} of {len(raw_responses)}:\n{raw}"
+        for i, raw in enumerate(raw_responses)
+    )
 
 
 class LLMAssistantService(metaclass=SingletonMeta):
@@ -327,28 +348,38 @@ class LLMAssistantService(metaclass=SingletonMeta):
         sdoc_ids: list[int],
         approach_type: ApproachType,
     ) -> dict[int, int]:
+        approachtype2userid = {
+            ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
+            ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
+        }
+        user_id = approachtype2userid[approach_type]
+
         match task_type:
             case TaskType.SENTENCE_ANNOTATION:
                 # 1. Find existing annotations
-                approachtype2userid = {
-                    ApproachType.LLM_ZERO_SHOT: ASSISTANT_ZEROSHOT_ID,
-                    ApproachType.LLM_FEW_SHOT: ASSISTANT_FEWSHOT_ID,
-                }
                 existing_annotations = crud_sentence_anno.read_by_user_sdocs_codes(
                     db=db,
-                    user_id=approachtype2userid[approach_type],
+                    user_id=user_id,
                     sdoc_ids=sdoc_ids,
                     code_ids=code_ids,
                 )
-
-                # 2. Count the number of existing annotations per code
-                code_id2num_existing_annos = {code_id: 0 for code_id in code_ids}
-                for existing_anno in existing_annotations:
-                    code_id2num_existing_annos[existing_anno.code_id] += 1
-
-                return code_id2num_existing_annos
+            case TaskType.ANNOTATION:
+                # 1. Find existing annotations
+                existing_annotations = crud_span_anno.read_by_user_sdocs_codes(
+                    db=db,
+                    user_id=user_id,
+                    sdoc_ids=sdoc_ids,
+                    code_ids=code_ids,
+                )
             case _:
                 return {}
+
+        # 2. Count the number of existing annotations per code
+        code_id2num_existing_annos = {code_id: 0 for code_id in code_ids}
+        for existing_anno in existing_annotations:
+            code_id2num_existing_annos[existing_anno.code_id] += 1
+
+        return code_id2num_existing_annos
 
     def create_prompt_templates(
         self,
@@ -383,7 +414,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
         sdoc_ids: list[int],
         sdoc_datas: list[SourceDocumentDataORM],
         response_model: Type[T],
-    ) -> tuple[list[T], list[int], list[int]]:
+    ) -> tuple[list[LLMBatchChatResponse[T]], list[int], list[int]]:
         # prepare batch messages
         batch_messages: list[LLMMessage] = []
         bm_sids: list[int] = []  # sdoc_id corresponding to each batch_message
@@ -394,7 +425,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 db=db, sdoc_id=sdoc_data.id, key="language"
             ).str_value
             if language is None:
-                raise ValueError(f"Document with ID {sdoc_id} has no language!")
+                raise BatchProcessingError(
+                    f"Document with ID {sdoc_id} has no language!"
+                )
 
             # construct prompts
             prompts = prompt_builder.build_prompt(
@@ -410,6 +443,7 @@ class LLMAssistantService(metaclass=SingletonMeta):
             model=model,
             messages=batch_messages,
             response_model=response_model,
+            capture_raw=True,
         )
 
         return responses, bm_sids, bm_ids
@@ -479,8 +513,14 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
 
+                if response.is_error or response.parsed is None:
+                    raise BatchProcessingError(
+                        response.error or "Unknown LLM error",
+                        raw_response=response.raw,
+                    )
+
                 # parse the response
-                parsed_result = prompt_builder.parse_result(result=response)
+                parsed_result = prompt_builder.parse_result(result=response.parsed)
 
                 # get current tag ids
                 current_tag_ids = [
@@ -573,10 +613,16 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
 
+                if response.is_error or response.parsed is None:
+                    raise BatchProcessingError(
+                        response.error or "Unknown LLM error",
+                        raw_response=response.raw,
+                    )
+
                 suggested_metadata: list[SourceDocumentMetadataReadResolved] = []
 
                 # parse the response
-                parsed_response = prompt_builder.parse_result(result=response)
+                parsed_response = prompt_builder.parse_result(result=response.parsed)
 
                 # get current metadata values
                 current_metadata = [
@@ -702,22 +748,61 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
-                model=approach_parameters.model,
-                prompt_builder=prompt_builder,
-                db=db,
-                sdoc_ids=sids,
-                sdoc_datas=sdata,
-                response_model=LLMHighlightedAnnotationResult,
-            )
+            try:
+                responses, response_sdoc_ids, response_sentence_ids = (
+                    self.__process_batch(
+                        model=approach_parameters.model,
+                        prompt_builder=prompt_builder,
+                        db=db,
+                        sdoc_ids=sids,
+                        sdoc_datas=sdata,
+                        response_model=LLMHighlightedAnnotationResult,
+                    )
+                )
+            except BatchProcessingError as e:
+                logger.error(f"Batch processing failed: {e}")
+                result.extend(
+                    [
+                        AnnotationResult(
+                            status="error",
+                            status_message=str(e),
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=[],
+                            raw_response=e.raw_response,
+                        )
+                        for sdoc_id in sids
+                    ]
+                )
+                continue
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SpanAnnotationCreate] = []
+            # raw responses per sdoc (only kept for docs without annotations)
+            # note: a document can have multiple responses (one per sentence)
+            sdoc_id2raw_responses: dict[int, list[str]] = {}
+            # errors per sdoc
+            sdoc_id2errors: dict[int, list[tuple[str, str | None]]] = {}
             for response, sdoc_id, sentence_id in zip(
                 responses, response_sdoc_ids, response_sentence_ids
             ):
                 sdoc_data = sid2sdata.get(sdoc_id, None)
                 assert sdoc_data is not None
+
+                if response.is_error or response.parsed is None:
+                    if sdoc_id not in sdoc_id2errors:
+                        sdoc_id2errors[sdoc_id] = []
+                    sdoc_id2errors[sdoc_id].append(
+                        (
+                            response.error or "Unknown LLM error",
+                            response.raw,
+                        )
+                    )
+                    continue
+
+                if response.raw is not None:
+                    if sdoc_id not in sdoc_id2raw_responses:
+                        sdoc_id2raw_responses[sdoc_id] = []
+                    sdoc_id2raw_responses[sdoc_id].append(response.raw)
 
                 match prompt_builder.data_tag:
                     case DataTag.SENTENCE:
@@ -732,7 +817,9 @@ class LLMAssistantService(metaclass=SingletonMeta):
                         raise ValueError("Unknown DataTag!")  # type: ignore
 
                 # parse highlighted response
-                clean_text, parsed_spans = prompt_builder.parse_result(response.text)
+                clean_text, parsed_spans = prompt_builder.parse_result(
+                    response.parsed.text
+                )
 
                 document_token_map = {}
                 last_character_offset = 0
@@ -786,17 +873,72 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 sdoc_id2created_annos[anno.sdoc_id].append(
                     SpanAnnotationRead.model_validate(anno)
                 )
-            result.extend(
-                [
-                    AnnotationResult(
-                        status="finished",
-                        status_message="Annotation successful",
-                        sdoc_id=sdoc_id,
-                        suggested_annotations=created_annos,
+
+            # create a result for EVERY processed document
+            for sdoc_id in sids:
+                created_annos_for_sdoc = sdoc_id2created_annos.get(sdoc_id, [])
+                errors = sdoc_id2errors.get(sdoc_id, [])
+
+                if errors:
+                    # aggregate the raw responses of the failed requests
+                    raw_response = _aggregate_raw_responses(
+                        [raw for _, raw in errors if raw is not None]
                     )
-                    for sdoc_id, created_annos in sdoc_id2created_annos.items()
-                ]
-            )
+                    error_msg = (
+                        errors[0][0]
+                        if len(errors) == 1
+                        else f"{len(errors)} requests failed. First error: {errors[0][0]}"
+                    )
+                    if created_annos_for_sdoc:
+                        # partial success: some requests failed, but annotations exist
+                        result.append(
+                            AnnotationResult(
+                                status="partial",
+                                status_message=f"Annotation partially successful. {error_msg}",
+                                sdoc_id=sdoc_id,
+                                suggested_annotations=created_annos_for_sdoc,
+                                raw_response=raw_response if raw_response else None,
+                            )
+                        )
+                    else:
+                        # complete failure: no annotations created
+                        result.append(
+                            AnnotationResult(
+                                status="error",
+                                status_message=error_msg,
+                                sdoc_id=sdoc_id,
+                                suggested_annotations=[],
+                                raw_response=raw_response if raw_response else None,
+                            )
+                        )
+                    continue
+
+                if len(created_annos_for_sdoc) > 0:
+                    # success results
+                    result.append(
+                        AnnotationResult(
+                            status="finished",
+                            status_message="Annotation successful",
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=created_annos_for_sdoc,
+                        )
+                    )
+                else:
+                    # no annotations suggested -> keep raw responses for transparency
+                    raw_responses = sdoc_id2raw_responses.get(sdoc_id, [])
+                    result.append(
+                        AnnotationResult(
+                            status="finished",
+                            status_message="No annotations suggested",
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=[],
+                            raw_response=(
+                                _aggregate_raw_responses(raw_responses)
+                                if raw_responses
+                                else None
+                            ),
+                        )
+                    )
 
         return LLMJobOutput(
             llm_job_type=TaskType.ANNOTATION,
@@ -876,17 +1018,40 @@ class LLMAssistantService(metaclass=SingletonMeta):
             }
 
             # process the batch with LLM
-            responses, response_sdoc_ids, response_sentence_ids = self.__process_batch(
-                model=approach_parameters.model,
-                prompt_builder=prompt_builder,
-                db=db,
-                sdoc_ids=sids,
-                sdoc_datas=sdata,
-                response_model=LLMSentenceAnnotationResults,
-            )
+            try:
+                responses, response_sdoc_ids, response_sentence_ids = (
+                    self.__process_batch(
+                        model=approach_parameters.model,
+                        prompt_builder=prompt_builder,
+                        db=db,
+                        sdoc_ids=sids,
+                        sdoc_datas=sdata,
+                        response_model=LLMSentenceAnnotationResults,
+                    )
+                )
+            except BatchProcessingError as e:
+                logger.error(f"Batch processing failed: {e}")
+                results.extend(
+                    [
+                        SentenceAnnotationResult(
+                            status="error",
+                            status_message=str(e),
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=[],
+                            raw_response=e.raw_response,
+                        )
+                        for sdoc_id in sids
+                    ]
+                )
+                continue
 
             # parse the responses, preparing the suggested annotation creation
             suggested_annotations: list[SentenceAnnotationCreate] = []
+            # raw responses per sdoc (only kept for docs without annotations)
+            # note: a document can have multiple responses (one per sentence)
+            sdoc_id2raw_responses: dict[int, list[str]] = {}
+            # errors per sdoc
+            sdoc_id2errors: dict[int, list[tuple[str, str | None]]] = {}
             for response, sdoc_id, sentence_id in zip(
                 responses, response_sdoc_ids, response_sentence_ids
             ):
@@ -894,8 +1059,24 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 assert sdoc_data is not None
                 num_sentences = len(sdoc_data.sentences)
 
+                if response.is_error or response.parsed is None:
+                    if sdoc_id not in sdoc_id2errors:
+                        sdoc_id2errors[sdoc_id] = []
+                    sdoc_id2errors[sdoc_id].append(
+                        (
+                            response.error or "Unknown LLM error",
+                            response.raw,
+                        )
+                    )
+                    continue
+
+                if response.raw is not None:
+                    if sdoc_id not in sdoc_id2raw_responses:
+                        sdoc_id2raw_responses[sdoc_id] = []
+                    sdoc_id2raw_responses[sdoc_id].append(response.raw)
+
                 # parse the response
-                parsed_response = prompt_builder.parse_result(result=response)
+                parsed_response = prompt_builder.parse_result(result=response.parsed)
                 match prompt_builder.data_tag:
                     case DataTag.SENTENCE:
                         # the prompt was constructed per sentence, so we know the sentence id
@@ -982,17 +1163,72 @@ class LLMAssistantService(metaclass=SingletonMeta):
                 sdoc_id2created_annos[anno.sdoc_id].append(
                     SentenceAnnotationRead.model_validate(anno)
                 )
-            results.extend(
-                [
-                    SentenceAnnotationResult(
-                        status="finished",
-                        status_message="Sentence annotation successful",
-                        sdoc_id=sdoc_id,
-                        suggested_annotations=created_annos,
+
+            # create a result for EVERY processed document
+            for sdoc_id in sids:
+                created_annos_for_sdoc = sdoc_id2created_annos.get(sdoc_id, [])
+                errors = sdoc_id2errors.get(sdoc_id, [])
+
+                if errors:
+                    # aggregate the raw responses of the failed requests
+                    raw_response = _aggregate_raw_responses(
+                        [raw for _, raw in errors if raw is not None]
                     )
-                    for sdoc_id, created_annos in sdoc_id2created_annos.items()
-                ]
-            )
+                    error_msg = (
+                        errors[0][0]
+                        if len(errors) == 1
+                        else f"{len(errors)} requests failed. First error: {errors[0][0]}"
+                    )
+                    if created_annos_for_sdoc:
+                        # partial success: some requests failed, but annotations exist
+                        results.append(
+                            SentenceAnnotationResult(
+                                status="partial",
+                                status_message=f"Sentence annotation partially successful. {error_msg}",
+                                sdoc_id=sdoc_id,
+                                suggested_annotations=created_annos_for_sdoc,
+                                raw_response=raw_response if raw_response else None,
+                            )
+                        )
+                    else:
+                        # complete failure: no annotations created
+                        results.append(
+                            SentenceAnnotationResult(
+                                status="error",
+                                status_message=error_msg,
+                                sdoc_id=sdoc_id,
+                                suggested_annotations=[],
+                                raw_response=raw_response if raw_response else None,
+                            )
+                        )
+                    continue
+
+                if len(created_annos_for_sdoc) > 0:
+                    # success results
+                    results.append(
+                        SentenceAnnotationResult(
+                            status="finished",
+                            status_message="Sentence annotation successful",
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=created_annos_for_sdoc,
+                        )
+                    )
+                else:
+                    # no annotations suggested -> keep raw responses for transparency
+                    raw_responses = sdoc_id2raw_responses.get(sdoc_id, [])
+                    results.append(
+                        SentenceAnnotationResult(
+                            status="finished",
+                            status_message="No annotations suggested",
+                            sdoc_id=sdoc_id,
+                            suggested_annotations=[],
+                            raw_response=(
+                                _aggregate_raw_responses(raw_responses)
+                                if raw_responses
+                                else None
+                            ),
+                        )
+                    )
 
         return LLMJobOutput(
             llm_job_type=TaskType.SENTENCE_ANNOTATION,

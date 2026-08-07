@@ -6634,7 +6634,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["error", "finished"],
+            "enum": ["error", "finished", "partial"],
             "title": "Status",
             "description": "Status of the Result"
           },
@@ -6649,6 +6649,11 @@
             "type": "array",
             "title": "Suggested Annotations",
             "description": "Suggested annotations"
+          },
+          "raw_response": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Raw Response",
+            "description": "Raw LLM response (only set if no annotations were suggested or an error occurred)"
           }
         },
         "type": "object",
@@ -10259,7 +10264,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["error", "finished"],
+            "enum": ["error", "finished", "partial"],
             "title": "Status",
             "description": "Status of the Result"
           },
@@ -11341,7 +11346,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["error", "finished"],
+            "enum": ["error", "finished", "partial"],
             "title": "Status",
             "description": "Status of the Result"
           },
@@ -11356,6 +11361,11 @@
             "type": "array",
             "title": "Suggested Annotations",
             "description": "Suggested annotations"
+          },
+          "raw_response": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Raw Response",
+            "description": "Raw LLM response (only set if no annotations were suggested or an error occurred)"
           }
         },
         "type": "object",
@@ -12690,7 +12700,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["error", "finished"],
+            "enum": ["error", "finished", "partial"],
             "title": "Status",
             "description": "Status of the Result"
           },

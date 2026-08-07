@@ -1,10 +1,10 @@
+import { queryClient } from "@api/queryClient";
+import { LlmService } from "@api/services/LlmService";
+import { RagService } from "@api/services/RagService";
 import { ApproachType } from "@models/ApproachType";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { TaskType } from "@models/TaskType";
-import { queryClient } from "@api/queryClient";
-import { LlmService } from "@api/services/LlmService";
-import { RagService } from "@api/services/RagService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
@@ -100,7 +100,7 @@ const useCountExistingAssistantAnnotations = ({
           code_ids: codeIds,
         },
       }),
-    enabled: taskType === TaskType.SENTENCE_ANNOTATION,
+    enabled: taskType === TaskType.SENTENCE_ANNOTATION || taskType === TaskType.ANNOTATION,
   });
 };
 

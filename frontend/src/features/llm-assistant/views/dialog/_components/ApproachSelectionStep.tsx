@@ -209,36 +209,38 @@ export const ApproachSelectionStep = memo(() => {
         <LLMUtterance>
           <Typography>{explanations[approachType as ApproachType]}</Typography>
         </LLMUtterance>
-        {llmMethod === TaskType.SENTENCE_ANNOTATION && existingAssistantAnnotations.data && hasExistingAnnotations && (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <LLMUtterance>
-              <Typography>
-                <b>Warning!</b> I noticed that I already annotated the documents you selected. I checked the number of
-                my annotations for each code and found:
-              </Typography>
-              {Object.entries(existingAssistantAnnotations.data).map(([code, count]) => (
-                <Stack direction="row" key={code}>
-                  <CodeRenderer code={parseInt(code)} />: {count}
-                </Stack>
-              ))}
-              <Typography>How should we deal with my existing annotations?</Typography>
-            </LLMUtterance>
-            <FormControl sx={{ ml: 12.5, my: 2 }}>
-              <InputLabel id="deletion-strategy">Deletion</InputLabel>
-              <Select
-                labelId="deletion-strategy"
-                id="deletion-strategy"
-                value={deleteExistingAnnotations}
-                label="Delete"
-                onChange={handleChangeDeletionStrategy}
-              >
-                <MenuItem value={DeletionStrategy.DELETE_EXISTING}>Delete existing annotations</MenuItem>
-                <MenuItem value={DeletionStrategy.KEEP_EXISTING}>Keep existing annotations</MenuItem>
-              </Select>
-            </FormControl>
-          </>
-        )}
+        {(llmMethod === TaskType.SENTENCE_ANNOTATION || llmMethod === TaskType.ANNOTATION) &&
+          existingAssistantAnnotations.data &&
+          hasExistingAnnotations && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <LLMUtterance>
+                <Typography>
+                  <b>Warning!</b> I noticed that I already annotated the documents you selected. I checked the number of
+                  my annotations for each code and found:
+                </Typography>
+                {Object.entries(existingAssistantAnnotations.data).map(([code, count]) => (
+                  <Stack direction="row" key={code}>
+                    <CodeRenderer code={parseInt(code)} />: {count}
+                  </Stack>
+                ))}
+                <Typography>How should we deal with my existing annotations?</Typography>
+              </LLMUtterance>
+              <FormControl sx={{ ml: 12.5, my: 2 }}>
+                <InputLabel id="deletion-strategy">Deletion</InputLabel>
+                <Select
+                  labelId="deletion-strategy"
+                  id="deletion-strategy"
+                  value={deleteExistingAnnotations}
+                  label="Delete"
+                  onChange={handleChangeDeletionStrategy}
+                >
+                  <MenuItem value={DeletionStrategy.DELETE_EXISTING}>Delete existing annotations</MenuItem>
+                  <MenuItem value={DeletionStrategy.KEEP_EXISTING}>Keep existing annotations</MenuItem>
+                </Select>
+              </FormControl>
+            </>
+          )}
       </DialogContent>
       <DialogActions>
         <Box flexGrow={1} />

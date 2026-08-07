@@ -211,6 +211,7 @@ class PerspectivesService:
                     )
 
                 # 2.2 prompt the model (batchwise)
+                # capture_raw=False: invalid responses raise, so parsed is always set
                 responses = self.llm.llm_batch_chat(
                     model=aspect_dto.pipeline_settings.rewriting_model,
                     messages=batch_messages,
@@ -219,11 +220,12 @@ class PerspectivesService:
 
                 # 2.3 store the results
                 for response, (sdoc_id, sdoc_content) in zip(responses, sdata):
+                    assert response.parsed is not None
                     create_dtos.append(
                         DocumentAspectCreate(
                             aspect_id=aspect_id,
                             sdoc_id=sdoc_id,
-                            content=response.content,
+                            content=response.parsed.content,
                         )
                     )
         else:
@@ -833,6 +835,7 @@ class PerspectivesService:
             )
 
         # 2. prompt the model (batch)
+        # capture_raw=False: invalid responses raise, so parsed is always set
         responses = self.llm.llm_batch_chat(
             model=aspect_dto.pipeline_settings.rewriting_model,
             messages=batch_messages,
@@ -841,8 +844,9 @@ class PerspectivesService:
 
         # 3. store the results
         for response, cluster_id in zip(responses, cluster_ids):
-            cluster_name[cluster_id] = response.title
-            cluster_description[cluster_id] = response.description
+            assert response.parsed is not None
+            cluster_name[cluster_id] = response.parsed.title
+            cluster_description[cluster_id] = response.parsed.description
 
         return cluster_name, cluster_description
 

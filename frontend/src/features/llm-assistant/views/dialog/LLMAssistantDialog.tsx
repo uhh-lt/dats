@@ -5,7 +5,7 @@ import { Dialog, Divider, Step, StepLabel, Stepper } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { memo, useCallback, useMemo } from "react";
 import { LLMAssistantActions } from "../../store/llmAssistantSlice";
-import { AnnotationResultStep } from "./_components/annotation-result-step/AnnotationResultStep";
+import { AnnotationResultStep } from "./_components/AnnotationResultStep";
 import { ApproachSelectionStep } from "./_components/ApproachSelectionStep";
 import { CodeSelectionStep } from "./_components/CodeSelectionStep";
 import { DocumentTagResultStep } from "./_components/document-tagging-result-step/DocumentTagResultStep";
