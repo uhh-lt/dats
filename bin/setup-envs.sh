@@ -43,6 +43,7 @@ SESSION_SECRET=$(pwgen 32 1)
 UUID_NAMESPACE=$(uv run python -c "import uuid; print(uuid.uuid4())")
 
 cp docker/.env.example docker/.env
+cp docker/.env.backend.example docker/.env.backend
 cp backend/.env.example backend/.env
 cp ray/.env.example ray/.env
 cp frontend/.env.example frontend/.env
