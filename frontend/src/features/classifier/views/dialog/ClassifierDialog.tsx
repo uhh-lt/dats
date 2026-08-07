@@ -30,8 +30,8 @@ const modelTitle: Record<ClassifierModel, string> = {
 const steps: Record<ClassifierTask, string[]> = {
   [ClassifierTask.TRAINING]: [
     "Select classes", // show code / tag selection
+    "Training settings", // show training settings (incl. base model)
     "Select data", // show document selection, annotator selection & statistics.
-    "Training settings", // show training settings
     "Wait", // start job & show training process
     "View results", // show the training results, finished!
   ],
@@ -51,8 +51,8 @@ const steps: Record<ClassifierTask, string[]> = {
 const content: Record<ClassifierTask, React.ReactNode[]> = {
   [ClassifierTask.TRAINING]: [
     <ClassSelectionStep />,
-    <TrainingDataSelectionStep />,
     <TrainingSettingsStep />,
+    <TrainingDataSelectionStep />,
     <StatusStep />,
     <ResultStep />,
   ],

@@ -2,6 +2,21 @@ import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 
+export interface ClassifierTrainingSettings {
+  classifierName: string;
+  baseModelName: string;
+  adapterName: string;
+  batchSize: number;
+  epochs: number;
+  earlyStopping: boolean;
+  learningRate: number;
+  weightDecay: number;
+  dropout: number;
+  chunkSize: number;
+  precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
+  isBio: boolean;
+}
+
 interface ClassifierState {
   isClassifierDialogOpen: boolean;
   classifierProjectId: number;
@@ -14,6 +29,7 @@ interface ClassifierState {
   classifierUserIds: number[];
   classifierTagIds: number[];
   classifierMergeChildren: boolean;
+  classifierTrainingSettings?: ClassifierTrainingSettings;
   classifierJobId?: string;
 }
 
@@ -29,6 +45,7 @@ const initialState: ClassifierState = {
   classifierUserIds: [],
   classifierTagIds: [],
   classifierMergeChildren: false,
+  classifierTrainingSettings: undefined,
   classifierJobId: undefined,
 };
 
@@ -78,6 +95,10 @@ const classifierSlice = createSlice({
     onClassifierDialogSelectTags: (state, action: PayloadAction<number[]>) => {
       state.classifierTagIds = action.payload;
     },
+    onClassifierDialogSetTrainingSettings: (state, action: PayloadAction<ClassifierTrainingSettings>) => {
+      state.classifierTrainingSettings = action.payload;
+      state.classifierStep += 1;
+    },
     onClassifierDialogStartJob: (state, action: PayloadAction<string>) => {
       state.classifierJobId = action.payload;
       state.classifierStep += 1;
@@ -109,6 +130,7 @@ const classifierSlice = createSlice({
       state.classifierSdocIds = initialState.classifierSdocIds;
       state.classifierTagIds = initialState.classifierTagIds;
       state.classifierClassIds = initialState.classifierClassIds;
+      state.classifierTrainingSettings = initialState.classifierTrainingSettings;
       state.classifierJobId = initialState.classifierJobId;
     },
   },

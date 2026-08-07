@@ -7,7 +7,7 @@ from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
-    ClassifierData,
+    ClassifierDatasetStatistics,
     ClassifierModel,
     ClassifierRead,
     ClassifierUpdate,
@@ -74,37 +74,8 @@ def delete_by_id(
 
 
 @router.post(
-    "/project/{proj_id}/datasetstatistics",
-    response_model=list[ClassifierData],
-    summary="Returns statistics of the dataset that would be created with these parameters",
-)
-def compute_dataset_statistics(
-    *,
-    proj_id: int,
-    sdoc_ids: list[int],
-    user_ids: list[int],
-    class_ids: list[int],
-    model: ClassifierModel,
-    merge_children_into_parent: bool = False,
-    db: Session = Depends(get_db_session),
-    authz_user: AuthzUser = Depends(),
-) -> list[ClassifierData]:
-    authz_user.assert_in_project(proj_id)
-
-    dataset = crud_classifier.read_dataset(
-        db=db,
-        model=model,
-        sdoc_ids=sdoc_ids,
-        user_ids=user_ids,
-        class_ids=class_ids,
-        merge_children_into_parent=merge_children_into_parent,
-    )
-    return [ClassifierData.model_validate(d) for d in dataset]
-
-
-@router.post(
     "/project/{proj_id}/datasetstatistics2",
-    response_model=list[ClassifierData],
+    response_model=ClassifierDatasetStatistics,
     summary="Returns statistics of the dataset that would be created with these parameters",
 )
 def compute_dataset_statistics2(
@@ -114,18 +85,20 @@ def compute_dataset_statistics2(
     user_ids: list[int],
     class_ids: list[int],
     model: ClassifierModel,
+    base_model_name: str,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
     merge_children_into_parent: bool = False,
-) -> list[ClassifierData]:
+) -> ClassifierDatasetStatistics:
     authz_user.assert_in_project(proj_id)
 
-    dataset = crud_classifier.read_dataset2(
+    tcs = ClassifierService().get_model_service(model)
+    return tcs.compute_dataset_statistics(
         db=db,
-        model=model,
+        project_id=proj_id,
         tag_ids=tag_ids,
         user_ids=user_ids,
         class_ids=class_ids,
         merge_children_into_parent=merge_children_into_parent,
+        base_model_name=base_model_name,
     )
-    return [ClassifierData.model_validate(d) for d in dataset]

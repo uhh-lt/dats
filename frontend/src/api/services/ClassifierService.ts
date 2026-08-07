@@ -2,9 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_classifier_compute_dataset_statistics } from "@models/Body_classifier_compute_dataset_statistics";
 import type { Body_classifier_compute_dataset_statistics2 } from "@models/Body_classifier_compute_dataset_statistics2";
-import type { ClassifierData } from "@models/ClassifierData";
+import type { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
 import type { ClassifierJobInput } from "@models/ClassifierJobInput";
 import type { ClassifierJobRead } from "@models/ClassifierJobRead";
 import type { ClassifierModel } from "@models/ClassifierModel";
@@ -75,53 +74,22 @@ export class ClassifierService {
   }
   /**
    * Returns statistics of the dataset that would be created with these parameters
-   * @returns ClassifierData Successful Response
-   * @throws ApiError
-   */
-  public static computeDatasetStatistics({
-    projId,
-    model,
-    requestBody,
-    mergeChildrenIntoParent = false,
-  }: {
-    projId: number;
-    model: ClassifierModel;
-    requestBody: Body_classifier_compute_dataset_statistics;
-    mergeChildrenIntoParent?: boolean;
-  }): CancelablePromise<Array<ClassifierData>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/classifier/project/{proj_id}/datasetstatistics",
-      path: {
-        proj_id: projId,
-      },
-      query: {
-        model: model,
-        merge_children_into_parent: mergeChildrenIntoParent,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Returns statistics of the dataset that would be created with these parameters
-   * @returns ClassifierData Successful Response
+   * @returns ClassifierDatasetStatistics Successful Response
    * @throws ApiError
    */
   public static computeDatasetStatistics2({
     projId,
     model,
+    baseModelName,
     requestBody,
     mergeChildrenIntoParent = false,
   }: {
     projId: number;
     model: ClassifierModel;
+    baseModelName: string;
     requestBody: Body_classifier_compute_dataset_statistics2;
     mergeChildrenIntoParent?: boolean;
-  }): CancelablePromise<Array<ClassifierData>> {
+  }): CancelablePromise<ClassifierDatasetStatistics> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/classifier/project/{proj_id}/datasetstatistics2",
@@ -130,6 +98,7 @@ export class ClassifierService {
       },
       query: {
         model: model,
+        base_model_name: baseModelName,
         merge_children_into_parent: mergeChildrenIntoParent,
       },
       body: requestBody,

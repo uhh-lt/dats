@@ -699,55 +699,6 @@
         }
       }
     },
-    "/classifier/project/{proj_id}/datasetstatistics": {
-      "post": {
-        "tags": ["classifier"],
-        "summary": "Returns statistics of the dataset that would be created with these parameters",
-        "operationId": "compute_dataset_statistics",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "model",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/ClassifierModel" }
-          },
-          {
-            "name": "merge_children_into_parent",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Merge Children Into Parent" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_classifier-compute_dataset_statistics" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ClassifierData" },
-                  "title": "Response Classifier-Compute Dataset Statistics"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/classifier/project/{proj_id}/datasetstatistics2": {
       "post": {
         "tags": ["classifier"],
@@ -761,6 +712,12 @@
             "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/ClassifierModel" }
+          },
+          {
+            "name": "base_model_name",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "title": "Base Model Name" }
           },
           {
             "name": "merge_children_into_parent",
@@ -781,13 +738,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ClassifierData" },
-                  "title": "Response Classifier-Compute Dataset Statistics2"
-                }
-              }
+              "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierDatasetStatistics" } }
             }
           },
           "422": {
@@ -7129,16 +7080,6 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
-      "Body_classifier-compute_dataset_statistics": {
-        "properties": {
-          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
-          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
-        },
-        "type": "object",
-        "required": ["sdoc_ids", "user_ids", "class_ids"],
-        "title": "Body_classifier-compute_dataset_statistics"
-      },
       "Body_classifier-compute_dataset_statistics2": {
         "properties": {
           "tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Tag Ids" },
@@ -7794,6 +7735,29 @@
         "required": ["response", "session_id"],
         "title": "ChatSessionResponse"
       },
+      "ClassifierClassStatistics": {
+        "properties": {
+          "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
+          "num_examples": {
+            "type": "integer",
+            "title": "Num Examples",
+            "description": "Number of examples for the class (annotations / tagged docs)"
+          },
+          "num_units": {
+            "type": "integer",
+            "title": "Num Units",
+            "description": "Number of units (tokens / sentences / documents) of the class"
+          },
+          "unit_percentage": {
+            "type": "number",
+            "title": "Unit Percentage",
+            "description": "Percentage of units of the class relative to all units"
+          }
+        },
+        "type": "object",
+        "required": ["class_id", "num_examples", "num_units", "unit_percentage"],
+        "title": "ClassifierClassStatistics"
+      },
       "ClassifierData": {
         "properties": {
           "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
@@ -7806,6 +7770,63 @@
         "type": "object",
         "required": ["class_id", "num_examples"],
         "title": "ClassifierData"
+      },
+      "ClassifierDatasetStatistics": {
+        "properties": {
+          "total_units": {
+            "type": "integer",
+            "title": "Total Units",
+            "description": "Total number of units (tokens / sentences / documents) in the dataset"
+          },
+          "labeled_units": {
+            "type": "integer",
+            "title": "Labeled Units",
+            "description": "Number of units with a non-O label in the dataset"
+          },
+          "signal_percentage": {
+            "type": "number",
+            "title": "Signal Percentage",
+            "description": "Percentage of labeled units relative to all units (training signal)"
+          },
+          "signal_strength": {
+            "$ref": "#/components/schemas/ClassifierSignalStrength",
+            "description": "Strength of the training signal derived from the signal percentage"
+          },
+          "weak_signal_threshold": {
+            "type": "number",
+            "title": "Weak Signal Threshold",
+            "description": "Signal percentage below which the training signal is considered weak"
+          },
+          "strong_signal_threshold": {
+            "type": "number",
+            "title": "Strong Signal Threshold",
+            "description": "Signal percentage above which the training signal is considered strong"
+          },
+          "classes": {
+            "items": { "$ref": "#/components/schemas/ClassifierClassStatistics" },
+            "type": "array",
+            "title": "Classes",
+            "description": "Statistics per class (tag or code)"
+          },
+          "problematic_sdocs": {
+            "items": { "$ref": "#/components/schemas/ProblematicSdoc" },
+            "type": "array",
+            "title": "Problematic Sdocs",
+            "description": "Documents with a low share of labeled units, sorted by severity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_units",
+          "labeled_units",
+          "signal_percentage",
+          "signal_strength",
+          "weak_signal_threshold",
+          "strong_signal_threshold",
+          "classes",
+          "problematic_sdocs"
+        ],
+        "title": "ClassifierDatasetStatistics"
       },
       "ClassifierEvaluationOutput": {
         "properties": {
@@ -8113,6 +8134,11 @@
           "evaluations"
         ],
         "title": "ClassifierRead"
+      },
+      "ClassifierSignalStrength": {
+        "type": "string",
+        "enum": ["weak", "ok", "strong"],
+        "title": "ClassifierSignalStrength"
       },
       "ClassifierTask": {
         "type": "string",
@@ -10694,6 +10720,29 @@
         "required": ["rewriting_model"],
         "title": "PipelineSettings",
         "description": "Settings for the perspective creation pipeline.\nWhen updating these settings, make sure to also update the frontend default settings! (PerspectiveCreationDialog.tsx)"
+      },
+      "ProblematicSdoc": {
+        "properties": {
+          "sdoc_id": { "type": "integer", "title": "Sdoc Id", "description": "ID of the source document" },
+          "total_units": {
+            "type": "integer",
+            "title": "Total Units",
+            "description": "Total number of units (tokens / sentences / documents)"
+          },
+          "labeled_units": {
+            "type": "integer",
+            "title": "Labeled Units",
+            "description": "Number of units with a non-O label"
+          },
+          "labeled_percentage": {
+            "type": "number",
+            "title": "Labeled Percentage",
+            "description": "Percentage of labeled units relative to all units of the document"
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id", "total_units", "labeled_units", "labeled_percentage"],
+        "title": "ProblematicSdoc"
       },
       "ProcessingSettings": {
         "properties": {

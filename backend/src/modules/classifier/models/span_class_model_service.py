@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 from uuid import uuid4
 
 import evaluate
@@ -9,6 +9,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from datasets import Dataset
+from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sqlalchemy import select
@@ -25,13 +26,16 @@ from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_crud import crud_code
+from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierClassStatistics,
     ClassifierCreate,
     ClassifierData,
+    ClassifierDatasetStatistics,
     ClassifierEvaluationCreate,
     ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
@@ -43,11 +47,16 @@ from modules.classifier.classifier_dto import (
     ClassifierLoss,
     ClassifierModel,
     ClassifierRead,
+    ClassifierSignalStrength,
     ClassifierTask,
     ClassifierTrainingOutput,
     ClassifierTrainingParams,
+    ProblematicSdoc,
 )
-from modules.classifier.classifier_exceptions import BaseModelDoesNotExistError
+from modules.classifier.classifier_exceptions import (
+    BaseModelDoesNotExistError,
+    EmptyDatasetError,
+)
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import check_hf_model_exists
 from modules.classifier.models.text_class_model_service import (
@@ -241,6 +250,146 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
 
 class SpanClassificationModelService(TextClassificationModelService):
+    def _build_label_mappings(
+        self,
+        db: Session,
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+    ) -> tuple[list[CodeORM], dict[int, int], dict[int, int], dict[int, str]]:
+        """Builds the class/label mappings exactly as used for training.
+
+        Returns (codes, classid2labelid, code2parent, id2label).
+        """
+        codes = crud_code.read_by_ids(db=db, ids=class_ids)
+
+        if merge_children_into_parent:
+            child_codes = [
+                crud_code.read_with_children(db, code_id=id) for id in class_ids
+            ]
+            classid2labelid: dict[int, int] = {
+                c.id: i + 1
+                for code, (i, parent) in zip(child_codes, enumerate(class_ids))
+                for c in code
+            }
+            code2parent = {
+                code.id: parent
+                for children, parent in zip(child_codes, class_ids)
+                for code in children
+            }
+        else:
+            classid2labelid = {code.id: i + 1 for i, code in enumerate(codes)}
+            code2parent = {code: code for code in class_ids}
+
+        classid2labelid[0] = 0
+        id2label = {i + 1: code.name for i, code in enumerate(codes)}
+        id2label[0] = "O"
+        code2parent[0] = 0
+
+        return codes, classid2labelid, code2parent, id2label
+
+    def compute_dataset_statistics(
+        self,
+        db: Session,
+        project_id: int,
+        tag_ids: list[int],
+        user_ids: list[int],
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+        base_model_name: str,
+    ) -> ClassifierDatasetStatistics:
+        # Build the label mappings exactly as in training
+        codes, classid2labelid, code2parent, _ = self._build_label_mappings(
+            db=db,
+            class_ids=class_ids,
+            merge_children_into_parent=merge_children_into_parent,
+        )
+
+        # Build the dataset exactly as in training
+        tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+        _, dataset = self._retrieve_and_build_dataset(
+            db=db,
+            project_id=project_id,
+            tag_ids=tag_ids,
+            user_ids=user_ids,
+            class_ids=list(classid2labelid.keys()),
+            classid2labelid=classid2labelid,
+            tokenizer=tokenizer,
+            use_chunking=True,
+        )
+
+        # Compute statistics from the word-level labels (before splitting/chunking)
+        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        class_units: dict[int, int] = {code.id: 0 for code in codes}
+        class_examples: dict[int, int] = {code.id: 0 for code in codes}
+        total_units = 0
+        labeled_units = 0
+        problematic_sdocs: list[ProblematicSdoc] = []
+
+        for row in cast(list[DatasetRow], dataset):
+            labels: list[int] = row["labels"]
+            row_total = 0
+            row_labeled = 0
+            seen_classes: set[int] = set()
+            for label in labels:
+                if label == -100:
+                    continue
+                row_total += 1
+                if label != 0:
+                    row_labeled += 1
+                    class_id = code2parent[labelid2classid[label]]
+                    class_units[class_id] += 1
+                    seen_classes.add(class_id)
+            for class_id in seen_classes:
+                class_examples[class_id] += 1
+
+            total_units += row_total
+            labeled_units += row_labeled
+            if (
+                row_total > 0
+                and row_labeled / row_total < conf.classifier.weak_signal_threshold
+            ):
+                problematic_sdocs.append(
+                    ProblematicSdoc(
+                        sdoc_id=row["sdoc_id"],
+                        total_units=row_total,
+                        labeled_units=row_labeled,
+                        labeled_percentage=row_labeled / row_total,
+                    )
+                )
+
+        problematic_sdocs.sort(key=lambda p: p.labeled_percentage)
+
+        signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
+        weak_threshold = conf.classifier.weak_signal_threshold
+        strong_threshold = conf.classifier.strong_signal_threshold
+        if signal_percentage < weak_threshold:
+            signal_strength = ClassifierSignalStrength.WEAK
+        elif signal_percentage <= strong_threshold:
+            signal_strength = ClassifierSignalStrength.OK
+        else:
+            signal_strength = ClassifierSignalStrength.STRONG
+
+        return ClassifierDatasetStatistics(
+            total_units=total_units,
+            labeled_units=labeled_units,
+            signal_percentage=signal_percentage,
+            signal_strength=signal_strength,
+            weak_signal_threshold=weak_threshold,
+            strong_signal_threshold=strong_threshold,
+            classes=[
+                ClassifierClassStatistics(
+                    class_id=code.id,
+                    num_examples=class_examples[code.id],
+                    num_units=class_units[code.id],
+                    unit_percentage=(
+                        class_units[code.id] / total_units if total_units > 0 else 0.0
+                    ),
+                )
+                for code in codes
+            ],
+            problematic_sdocs=problematic_sdocs,
+        )
+
     def _retrieve_and_build_dataset(
         self,
         db: Session,
@@ -322,6 +471,20 @@ class SpanClassificationModelService(TextClassificationModelService):
                 )
 
         # Construct a tokenized huggingface dataset
+        if len(dataset) == 0:
+            logger.warning(
+                "The span classification dataset is empty (no matching documents or annotations)."
+            )
+            empty_hf_dataset = Dataset.from_dict(
+                {
+                    "sdoc_id": [],
+                    "user_id": [],
+                    "words": [],
+                    "labels": [],
+                }
+            )
+            return user_id2sdoc_id2annotations, empty_hf_dataset
+
         def tokenize_and_align_labels(examples: dict):
             tokenized_inputs = tokenizer(
                 examples["words"],
@@ -394,37 +557,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get codes and create mapping
-        codes = crud_code.read_by_ids(db=db, ids=parameters.class_ids)
-
-        if merge_children_into_parent:
-            child_codes = [
-                crud_code.read_with_children(db, code_id=id)
-                for id in parameters.class_ids
-            ]
-            classid2labelid: dict[int, int] = {
-                c.id: i + 1
-                for code, (i, parent) in zip(
-                    child_codes, enumerate(parameters.class_ids)
-                )
-                for c in code
-            }
-            class_ids = list(set(c.id for children in child_codes for c in children))
-            code2parent = {
-                code.id: parent
-                for children, parent in zip(child_codes, parameters.class_ids)
-                for code in children
-            }
-        else:
-            classid2labelid: dict[int, int] = {
-                code.id: i + 1 for i, code in enumerate(codes)
-            }
-            class_ids = parameters.class_ids
-            code2parent = {code: code for code in class_ids}
-
-        classid2labelid[0] = 0
-        id2label = {i + 1: code.name for i, code in enumerate(codes)}
-        id2label[0] = "O"
-        code2parent[0] = 0
+        codes, classid2labelid, code2parent, id2label = self._build_label_mappings(
+            db=db,
+            class_ids=parameters.class_ids,
+            merge_children_into_parent=merge_children_into_parent,
+        )
+        class_ids = list(classid2labelid.keys())
 
         # Build dataset
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
@@ -437,6 +575,8 @@ class SpanClassificationModelService(TextClassificationModelService):
             tokenizer=tokenizer,
             use_chunking=True,
         )
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Train test split
         split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
@@ -701,6 +841,8 @@ class SpanClassificationModelService(TextClassificationModelService):
             tokenizer=tokenizer,
             use_chunking=False,
         )
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Build dataloader
         test_dataloader = DataLoader(

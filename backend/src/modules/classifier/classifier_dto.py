@@ -45,6 +45,66 @@ class ClassifierDataset(ClassifierData):
     )
 
 
+# ----- DATASET STATISTICS DTOS -----
+
+
+class ClassifierSignalStrength(str, Enum):
+    WEAK = "weak"
+    OK = "ok"
+    STRONG = "strong"
+
+
+class ClassifierClassStatistics(BaseModel):
+    class_id: int = Field(description="ID of the class (tag or code)")
+    num_examples: int = Field(
+        description="Number of examples for the class (annotations / tagged docs)"
+    )
+    num_units: int = Field(
+        description="Number of units (tokens / sentences / documents) of the class"
+    )
+    unit_percentage: float = Field(
+        description="Percentage of units of the class relative to all units"
+    )
+
+
+class ProblematicSdoc(BaseModel):
+    sdoc_id: int = Field(description="ID of the source document")
+    total_units: int = Field(
+        description="Total number of units (tokens / sentences / documents)"
+    )
+    labeled_units: int = Field(description="Number of units with a non-O label")
+    labeled_percentage: float = Field(
+        description="Percentage of labeled units relative to all units of the document"
+    )
+
+
+class ClassifierDatasetStatistics(BaseModel):
+    total_units: int = Field(
+        description="Total number of units (tokens / sentences / documents) in the dataset"
+    )
+    labeled_units: int = Field(
+        description="Number of units with a non-O label in the dataset"
+    )
+    signal_percentage: float = Field(
+        description="Percentage of labeled units relative to all units (training signal)"
+    )
+    signal_strength: ClassifierSignalStrength = Field(
+        description="Strength of the training signal derived from the signal percentage"
+    )
+    weak_signal_threshold: float = Field(
+        description="Signal percentage below which the training signal is considered weak"
+    )
+    strong_signal_threshold: float = Field(
+        description="Signal percentage above which the training signal is considered strong"
+    )
+    classes: list[ClassifierClassStatistics] = Field(
+        description="Statistics per class (tag or code)"
+    )
+    problematic_sdocs: list[ProblematicSdoc] = Field(
+        description="Documents with a low share of labeled units, sorted by severity"
+    )
+
+
 # ----- CRUD DTOS -----
 
 

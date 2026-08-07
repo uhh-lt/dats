@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 from uuid import uuid4
 
 import evaluate
@@ -27,8 +27,10 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import SourceDocumentTagLinkTable
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierClassStatistics,
     ClassifierCreate,
     ClassifierData,
+    ClassifierDatasetStatistics,
     ClassifierEvaluationCreate,
     ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
@@ -40,11 +42,16 @@ from modules.classifier.classifier_dto import (
     ClassifierLoss,
     ClassifierModel,
     ClassifierRead,
+    ClassifierSignalStrength,
     ClassifierTask,
     ClassifierTrainingOutput,
     ClassifierTrainingParams,
+    ProblematicSdoc,
 )
-from modules.classifier.classifier_exceptions import BaseModelDoesNotExistError
+from modules.classifier.classifier_exceptions import (
+    BaseModelDoesNotExistError,
+    EmptyDatasetError,
+)
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import check_hf_model_exists
 from modules.classifier.models.text_class_model_service import (
@@ -227,6 +234,86 @@ class DocClassificationLightningModel(pl.LightningModule):
 
 
 class DocClassificationModelService(TextClassificationModelService):
+    def compute_dataset_statistics(
+        self,
+        db: Session,
+        project_id: int,
+        tag_ids: list[int],
+        user_ids: list[int],
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+        base_model_name: str,
+    ) -> ClassifierDatasetStatistics:
+        # Build the label mapping exactly as in training
+        tags = crud_tag.read_by_ids(db=db, ids=class_ids)
+        classid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
+        classid2labelid[0] = 0
+
+        # Build the dataset exactly as in training, but skip tokenization
+        _, dataset = self._retrieve_and_build_dataset(
+            db=db,
+            project_id=project_id,
+            tag_ids=tag_ids,
+            class_ids=class_ids,
+            classid2labelid=classid2labelid,
+            tokenizer=None,
+            use_chunking=False,
+        )
+
+        # Compute statistics from the document-level labels (before splitting)
+        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        class_units: dict[int, int] = {tag.id: 0 for tag in tags}
+        total_units = 0
+        labeled_units = 0
+        problematic_sdocs: list[ProblematicSdoc] = []
+
+        for row in cast(list[DatasetRow], dataset):
+            label: int = row["labels"]
+            total_units += 1
+            if label != 0:
+                labeled_units += 1
+                class_units[labelid2classid[label]] += 1
+            else:
+                problematic_sdocs.append(
+                    ProblematicSdoc(
+                        sdoc_id=row["sdoc_id"],
+                        total_units=1,
+                        labeled_units=0,
+                        labeled_percentage=0.0,
+                    )
+                )
+
+        signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
+        weak_threshold = conf.classifier.weak_signal_threshold
+        strong_threshold = conf.classifier.strong_signal_threshold
+        if signal_percentage < weak_threshold:
+            signal_strength = ClassifierSignalStrength.WEAK
+        elif signal_percentage <= strong_threshold:
+            signal_strength = ClassifierSignalStrength.OK
+        else:
+            signal_strength = ClassifierSignalStrength.STRONG
+
+        return ClassifierDatasetStatistics(
+            total_units=total_units,
+            labeled_units=labeled_units,
+            signal_percentage=signal_percentage,
+            signal_strength=signal_strength,
+            weak_signal_threshold=weak_threshold,
+            strong_signal_threshold=strong_threshold,
+            classes=[
+                ClassifierClassStatistics(
+                    class_id=tag.id,
+                    num_examples=class_units[tag.id],
+                    num_units=class_units[tag.id],
+                    unit_percentage=(
+                        class_units[tag.id] / total_units if total_units > 0 else 0.0
+                    ),
+                )
+                for tag in tags
+            ],
+            problematic_sdocs=problematic_sdocs,
+        )
+
     def _retrieve_and_build_dataset(
         self,
         db: Session,
@@ -304,6 +391,24 @@ class DocClassificationModelService(TextClassificationModelService):
         )
 
         # Construct a tokenized huggingface dataset
+        if len(dataset) == 0:
+            logger.warning(
+                "The document classification dataset is empty (no matching documents or tags)."
+            )
+            empty_hf_dataset = Dataset.from_dict(
+                {
+                    "sdoc_id": [],
+                    "text": [],
+                    "labels": [],
+                }
+            )
+            return sdoc_id2annotation_ids, empty_hf_dataset
+
+        hf_dataset = Dataset.from_list(dataset)  # type: ignore
+        if tokenizer is None:
+            # No tokenization requested (e.g. for dataset statistics)
+            return sdoc_id2annotation_ids, hf_dataset
+
         def tokenize_text(examples):
             tokenized_inputs = tokenizer(
                 examples["text"],
@@ -313,7 +418,6 @@ class DocClassificationModelService(TextClassificationModelService):
             )
             return tokenized_inputs
 
-        hf_dataset = Dataset.from_list(dataset)  # type: ignore
         tokenized_hf_dataset = hf_dataset.map(tokenize_text, batched=True)
         tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["text"])
 
@@ -371,6 +475,8 @@ class DocClassificationModelService(TextClassificationModelService):
             tokenizer=tokenizer,
             use_chunking=True,
         )
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Train test split
         split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
@@ -631,6 +737,8 @@ class DocClassificationModelService(TextClassificationModelService):
             tokenizer=tokenizer,
             use_chunking=False,
         )
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Build dataloader
         test_dataloader = DataLoader(
