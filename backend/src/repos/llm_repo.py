@@ -346,6 +346,16 @@ class LLMRepo(RepoBase, metaclass=SingletonMeta):
         # parse responses
         responses: list[LLMBatchChatResponse[T]] = []
         for response in batch_responses:
+            # litellm returns exception objects for failed requests (e.g. Timeout)
+            if isinstance(response, Exception):
+                if capture_raw:
+                    responses.append(
+                        LLMBatchChatResponse(
+                            raw=None, error=f"LLM request failed: {response}"
+                        )
+                    )
+                    continue
+                raise Exception(f"LLM request failed: {response}") from response
             if response.get("choices", None) is None:
                 if capture_raw:
                     responses.append(
