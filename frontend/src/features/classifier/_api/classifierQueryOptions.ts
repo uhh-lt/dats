@@ -140,6 +140,7 @@ interface DatasetStatisticsParams {
   userIds: number[];
   tagIds: number[];
   mergeChildren: boolean;
+  baseModelName: string;
 }
 
 const useComputeDatasetStatistics2 = ({
@@ -149,9 +150,19 @@ const useComputeDatasetStatistics2 = ({
   userIds,
   tagIds,
   mergeChildren,
+  baseModelName,
 }: DatasetStatisticsParams) =>
   useQuery({
-    queryKey: [QueryKey.CLASSIFIER_DATASET_STATISTICS, projectId, model, classIds, userIds, tagIds, mergeChildren],
+    queryKey: [
+      QueryKey.CLASSIFIER_DATASET_STATISTICS,
+      projectId,
+      model,
+      classIds,
+      userIds,
+      tagIds,
+      mergeChildren,
+      baseModelName,
+    ],
     queryFn: () => {
       if (model === undefined) {
         throw new Error("Cannot compute dataset statistics without a classifier model.");
@@ -160,6 +171,7 @@ const useComputeDatasetStatistics2 = ({
       return ClassifierService.computeDatasetStatistics2({
         projId: projectId,
         model,
+        baseModelName,
         mergeChildrenIntoParent: mergeChildren,
         requestBody: {
           tag_ids: tagIds,
@@ -168,7 +180,12 @@ const useComputeDatasetStatistics2 = ({
         },
       });
     },
-    enabled: projectId >= 0 && model !== undefined && (tagIds.length > 0 || userIds.length > 0),
+    enabled:
+      projectId >= 0 &&
+      model !== undefined &&
+      baseModelName.length > 0 &&
+      tagIds.length > 0 &&
+      (model === ClassifierModel.DOCUMENT || userIds.length > 0),
     placeholderData: (previousData) => previousData,
   });
 

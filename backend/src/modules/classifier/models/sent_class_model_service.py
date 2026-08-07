@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 from uuid import uuid4
 
 import evaluate
@@ -9,6 +9,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from datasets import Dataset
+from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sentence_transformers import SentenceTransformer
@@ -17,6 +18,7 @@ from sqlalchemy.orm import Session
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 from torch.utils.data import DataLoader
 from torchcrf import CRF
+from typing_extensions import NotRequired
 
 from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -24,13 +26,16 @@ from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
 from core.code.code_crud import crud_code
+from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierClassStatistics,
     ClassifierCreate,
     ClassifierData,
+    ClassifierDatasetStatistics,
     ClassifierEvaluationCreate,
     ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
@@ -42,11 +47,16 @@ from modules.classifier.classifier_dto import (
     ClassifierLoss,
     ClassifierModel,
     ClassifierRead,
+    ClassifierSignalStrength,
     ClassifierTask,
     ClassifierTrainingOutput,
     ClassifierTrainingParams,
+    ProblematicSdoc,
 )
-from modules.classifier.classifier_exceptions import BaseModelDoesNotExistError
+from modules.classifier.classifier_exceptions import (
+    BaseModelDoesNotExistError,
+    EmptyDatasetError,
+)
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import check_hf_model_exists
 from modules.classifier.models.text_class_model_service import (
@@ -62,7 +72,7 @@ class DatasetRow(TypedDict):
     user_id: int
     labels: list[int]
     sdoc_id: int
-    sentences: torch.Tensor
+    sentences: NotRequired[torch.Tensor]
 
 
 class AnnotationResult(TypedDict):
@@ -241,6 +251,141 @@ class SentClassificationLightningModel(pl.LightningModule):
 
 
 class SentClassificationModelService(TextClassificationModelService):
+    def _build_label_mappings(
+        self,
+        db: Session,
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+    ) -> tuple[list[CodeORM], dict[int, int], dict[int, int], dict[int, str]]:
+        """Builds the class/label mappings exactly as used for training.
+
+        Returns (codes, classid2labelid, code2parent, id2label).
+        """
+        codes = crud_code.read_by_ids(db=db, ids=class_ids)
+
+        if merge_children_into_parent:
+            child_codes = [
+                crud_code.read_with_children(db, code_id=id) for id in class_ids
+            ]
+            classid2labelid: dict[int, int] = {
+                c.id: i + 1
+                for code, (i, parent) in zip(child_codes, enumerate(class_ids))
+                for c in code
+            }
+            code2parent = {
+                code.id: parent
+                for children, parent in zip(child_codes, class_ids)
+                for code in children
+            }
+        else:
+            classid2labelid = {code.id: i + 1 for i, code in enumerate(codes)}
+            code2parent = {code: code for code in class_ids}
+
+        classid2labelid[0] = 0
+        id2label = {i + 1: code.name for i, code in enumerate(codes)}
+        id2label[0] = "O"
+        code2parent[0] = 0
+
+        return codes, classid2labelid, code2parent, id2label
+
+    def compute_dataset_statistics(
+        self,
+        db: Session,
+        project_id: int,
+        tag_ids: list[int],
+        user_ids: list[int],
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+        base_model_name: str,
+    ) -> ClassifierDatasetStatistics:
+        # Build the label mappings exactly as in training
+        codes, classid2labelid, code2parent, _ = self._build_label_mappings(
+            db=db,
+            class_ids=class_ids,
+            merge_children_into_parent=merge_children_into_parent,
+        )
+
+        # Build the dataset exactly as in training, but skip the expensive embedding
+        _, dataset = self._retrieve_build_embedd_dataset(
+            db=db,
+            project_id=project_id,
+            tag_ids=tag_ids,
+            user_ids=user_ids,
+            class_ids=list(classid2labelid.keys()),
+            classid2labelid=classid2labelid,
+            embedding_model=None,
+        )
+
+        # Compute statistics from the sentence-level labels (before splitting)
+        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        class_units: dict[int, int] = {code.id: 0 for code in codes}
+        class_examples: dict[int, int] = {code.id: 0 for code in codes}
+        total_units = 0
+        labeled_units = 0
+        problematic_sdocs: list[ProblematicSdoc] = []
+
+        for row in cast(list[DatasetRow], dataset):
+            labels: list[int] = row["labels"]
+            row_total = len(labels)
+            row_labeled = 0
+            seen_classes: set[int] = set()
+            for label in labels:
+                if label != 0:
+                    row_labeled += 1
+                    class_id = code2parent[labelid2classid[label]]
+                    class_units[class_id] += 1
+                    seen_classes.add(class_id)
+            for class_id in seen_classes:
+                class_examples[class_id] += 1
+
+            total_units += row_total
+            labeled_units += row_labeled
+            if (
+                row_total > 0
+                and row_labeled / row_total < conf.classifier.weak_signal_threshold
+            ):
+                problematic_sdocs.append(
+                    ProblematicSdoc(
+                        sdoc_id=row["sdoc_id"],
+                        total_units=row_total,
+                        labeled_units=row_labeled,
+                        labeled_percentage=row_labeled / row_total,
+                    )
+                )
+
+        problematic_sdocs.sort(key=lambda p: p.labeled_percentage)
+
+        signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
+        weak_threshold = conf.classifier.weak_signal_threshold
+        strong_threshold = conf.classifier.strong_signal_threshold
+        if signal_percentage < weak_threshold:
+            signal_strength = ClassifierSignalStrength.WEAK
+        elif signal_percentage <= strong_threshold:
+            signal_strength = ClassifierSignalStrength.OK
+        else:
+            signal_strength = ClassifierSignalStrength.STRONG
+
+        return ClassifierDatasetStatistics(
+            total_units=total_units,
+            labeled_units=labeled_units,
+            signal_percentage=signal_percentage,
+            signal_strength=signal_strength,
+            weak_signal_threshold=weak_threshold,
+            strong_signal_threshold=strong_threshold,
+            classes=[
+                ClassifierClassStatistics(
+                    class_id=code.id,
+                    num_examples=class_examples[code.id],
+                    num_units=class_units[code.id],
+                    unit_percentage=(
+                        class_units[code.id] / total_units if total_units > 0 else 0.0
+                    ),
+                )
+                for code in codes
+            ],
+            problematic_sdocs=problematic_sdocs,
+        )
+
     def _retrieve_build_embedd_dataset(
         self,
         db: Session,
@@ -249,7 +394,7 @@ class SentClassificationModelService(TextClassificationModelService):
         user_ids: list[int],
         class_ids: list[int],
         classid2labelid: dict[int, int],
-        embedding_model: SentenceTransformer,
+        embedding_model: SentenceTransformer | None,
     ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset]:
         # Find documents
         sdoc_ids = [
@@ -287,8 +432,8 @@ class SentClassificationModelService(TextClassificationModelService):
 
             # 4. Execute the statement and fetch the results
             batch_result = db.execute(stmt).all()
-            for row in batch_result:
-                annotation, adoc = row._tuple()
+            for result_row in batch_result:
+                annotation, adoc = result_row._tuple()
                 user_id2sdoc_id2annotations[adoc.user_id][
                     adoc.source_document_id
                 ].append(annotation)
@@ -314,19 +459,31 @@ class SentClassificationModelService(TextClassificationModelService):
                         annotation.sentence_id_end - annotation.sentence_id_start
                     )
 
-                embedded_sentences = embedding_model.encode(
-                    sentences, convert_to_tensor=True
-                )
-                dataset.append(
-                    {
-                        "sdoc_id": sdoc_data.id,
-                        "user_id": user_id,
-                        "sentences": embedded_sentences,
-                        "labels": labels,
-                    }
-                )
+                row: DatasetRow = {
+                    "sdoc_id": sdoc_data.id,
+                    "user_id": user_id,
+                    "labels": labels,
+                }
+                if embedding_model is not None:
+                    row["sentences"] = embedding_model.encode(
+                        sentences, convert_to_tensor=True
+                    )
+                dataset.append(row)
 
         # Construct an embedded huggingface dataset
+        if len(dataset) == 0:
+            logger.warning(
+                "The sentence classification dataset is empty (no matching documents or annotations)."
+            )
+            empty_columns: dict[str, list] = {
+                "sdoc_id": [],
+                "user_id": [],
+                "labels": [],
+            }
+            if embedding_model is not None:
+                empty_columns["sentences"] = []
+            return user_id2sdoc_id2annotations, Dataset.from_dict(empty_columns)
+
         hf_dataset = Dataset.from_list(dataset)  # type: ignore
 
         return user_id2sdoc_id2annotations, hf_dataset
@@ -423,13 +580,12 @@ class SentClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get codes and create mapping
-        codes = crud_code.read_by_ids(db=db, ids=parameters.class_ids)
-        classid2labelid: dict[int, int] = {
-            code.id: i + 1 for i, code in enumerate(codes)
-        }
-        classid2labelid[0] = 0
-        id2label = {i + 1: code.name for i, code in enumerate(codes)}
-        id2label[0] = "O"
+        codes, classid2labelid, code2parent, id2label = self._build_label_mappings(
+            db=db,
+            class_ids=parameters.class_ids,
+            merge_children_into_parent=parameters.merge_children_into_parent,
+        )
+        class_ids = list(classid2labelid.keys())
 
         # Build dataset
         embedding_model = SentenceTransformer(parameters.base_name)
@@ -443,7 +599,7 @@ class SentClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=parameters.class_ids,
+            class_ids=class_ids,
             classid2labelid=classid2labelid,
             embedding_model=embedding_model,
         )
@@ -451,6 +607,9 @@ class SentClassificationModelService(TextClassificationModelService):
         # Free the embedding model memory
         del embedding_model
         torch.cuda.empty_cache()
+
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Train test split
         split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
@@ -473,14 +632,14 @@ class SentClassificationModelService(TextClassificationModelService):
             split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[annotation.code_id] += 1
+                train_dataset_stats[code2parent[annotation.code_id]] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[annotation.code_id] += 1
+                eval_dataset_stats[code2parent[annotation.code_id]] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -602,7 +761,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path or "ERROR!",
                 project_id=payload.project_id,
-                labelid2classid={v: k for k, v in classid2labelid.items()},
+                labelid2classid={v: code2parent[k] for k, v in classid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -686,6 +845,9 @@ class SentClassificationModelService(TextClassificationModelService):
         # Free the embedding model memory
         del embedding_model
         torch.cuda.empty_cache()
+
+        if len(dataset) == 0:
+            raise EmptyDatasetError()
 
         # Build dataloader
         test_dataloader = DataLoader(

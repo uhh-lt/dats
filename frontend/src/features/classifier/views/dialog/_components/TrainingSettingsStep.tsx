@@ -1,7 +1,6 @@
-import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText, FreeSoloOptions } from "@components/form-inputs";
+import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { ClassifierModel } from "@models/ClassifierModel";
-import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
 import {
   Alert,
   Box,
@@ -17,8 +16,8 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
+import { embeddingModelOptions, transformerModelOptions } from "./baseModelOptions";
 
 interface TrainingSettings {
   // required
@@ -38,27 +37,6 @@ interface TrainingSettings {
   isBio: boolean;
 }
 
-const transformerModelOptions: FreeSoloOptions[] = [
-  { value: "answerdotai/ModernBERT-base", label: "ModernBERT-base (EN)" },
-  { value: "answerdotai/ModernBERT-large", label: "ModernBERT-large (EN)" },
-  { value: "LSX-UniWue/ModernGBERT_134M", label: "ModernGBERT_134M (DE)" },
-  { value: "LSX-UniWue/ModernGBERT_1B", label: "ModernGBERT_1B (DE)" },
-  { value: "microsoft/mdeberta-v3-base", label: "mdeberta-v3-base (MULTI)" },
-];
-
-const embeddingModelOptions: FreeSoloOptions[] = [
-  { value: "Alibaba-NLP/gte-modernbert-base", label: "gte-modernbert-base (EN)" },
-  { value: "intfloat/multilingual-e5-small", label: "multilingual-e5-small (MULTI)" },
-  { value: "intfloat/multilingual-e5-large", label: "multilingual-e5-large (MULTI)" },
-  {
-    value: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
-    label: "paraphrase-multilingual-mpnet-base-v2 (MULTI)",
-  },
-  // { value: "google/embeddinggemma-300m", label: "embeddinggemma-300m (MULTI)" }, TODO: update hf library
-  // { value: "jinaai/jina-embeddings-v3", label: "jina-embeddings-v3 (MULTI)" }, TODO: update st library
-  // { value: "Qwen/Qwen3-Embedding-0.6B", label: "Qwen3-Embedding-0.6B (MULTI)" }, TODO: update hf library
-];
-
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
 
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
@@ -66,12 +44,6 @@ const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-m
 export function TrainingSettingsStep() {
   // dialog state
   const model = useAppSelector((state) => state.classifier.classifierModel);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
   const dispatch = useAppDispatch();
 
   // form state
@@ -82,7 +54,9 @@ export function TrainingSettingsStep() {
   } = useForm<TrainingSettings>({
     defaultValues: {
       classifierName: "",
-      baseModelName: "",
+      // default base model depends on the classifier model type
+      baseModelName:
+        model === ClassifierModel.SENTENCE ? "Alibaba-NLP/gte-modernbert-base" : "answerdotai/ModernBERT-base",
       adapterName: "No Adapter",
       batchSize: 8,
       epochs: 10,
@@ -100,48 +74,22 @@ export function TrainingSettingsStep() {
   const handlePrev = () => {
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
-  const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: TrainingSettings) => {
-    if (model === undefined || task === undefined) return;
-
-    const trainingParams: ClassifierTrainingParams = {
-      task_type: task,
-      // required
-      classifier_name: data.classifierName,
-      base_name: data.baseModelName,
-      adapter_name: data.adapterName === "No Adapter" ? null : data.adapterName,
-      class_ids: classIds,
-      // training data
-      tag_ids: tagIds,
-      user_ids: userIds,
-      merge_children_into_parent: mergeChildren,
-      // training settings
-      batch_size: data.batchSize,
-      epochs: data.epochs,
-      early_stopping: data.earlyStopping,
-      learning_rate: data.learningRate,
-      weight_decay: data.weightDecay,
-      dropout: data.dropout,
-      chunk_size: data.chunkSize,
-      precision: data.precision,
-      // specific training settings
-      is_bio: false,
-    };
-
-    startClassifierJobMutation(
-      {
-        requestBody: {
-          model_type: model,
-          task_type: task,
-          project_id: projectId,
-          task_parameters: trainingParams,
-        },
-      },
-      {
-        onSuccess: (data) => {
-          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
-        },
-      },
+    dispatch(
+      ClassifierActions.onClassifierDialogSetTrainingSettings({
+        classifierName: data.classifierName,
+        baseModelName: data.baseModelName,
+        adapterName: data.adapterName,
+        batchSize: data.batchSize,
+        epochs: data.epochs,
+        earlyStopping: data.earlyStopping,
+        learningRate: data.learningRate,
+        weightDecay: data.weightDecay,
+        dropout: data.dropout,
+        chunkSize: data.chunkSize,
+        precision: data.precision,
+        isBio: data.isBio,
+      }),
     );
   };
   const onError: SubmitErrorHandler<TrainingSettings> = (data) => console.error(data);
@@ -375,9 +323,7 @@ export function TrainingSettingsStep() {
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handlePrev}>Back</Button>
-        <Button loading={isPending} loadingPosition="start" type="submit">
-          Next
-        </Button>
+        <Button type="submit">Next</Button>
       </DialogActions>
     </form>
   );

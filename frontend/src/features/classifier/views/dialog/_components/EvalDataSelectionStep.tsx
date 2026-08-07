@@ -4,6 +4,7 @@ import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
+import { useDatasetStatistics } from "../../../_api/useDatasetStatistics";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
 
@@ -24,6 +25,10 @@ export function EvalDataSelectionStep() {
   }, [dispatch]);
 
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
+
+  // dataset statistics (shared with DataSelection via props)
+  const { datasetStats } = useDatasetStatistics();
+
   const handleNext = () => {
     if (model === undefined || classifierId === undefined || task === undefined) return;
 
@@ -53,12 +58,14 @@ export function EvalDataSelectionStep() {
 
   const isNextDisabled =
     model === undefined ||
+    datasetStats.data === undefined ||
+    datasetStats.data.total_units === 0 ||
     (model === ClassifierModel.DOCUMENT
       ? tagIds.length === 0 || classIds.length === 0
       : tagIds.length === 0 || classIds.length === 0 || userIds.length === 0);
   return (
     <>
-      <DataSelection />
+      <DataSelection model={model} datasetStats={datasetStats} />
       <Divider />
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />

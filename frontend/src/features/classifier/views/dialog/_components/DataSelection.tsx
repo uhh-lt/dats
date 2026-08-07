@@ -1,30 +1,24 @@
 import { TagSelector } from "@core/tag";
 import { UserSelectorMulti } from "@core/user";
+import { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { Alert, Box, Card, CardContent, CardHeader, CircularProgress, Divider, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
+import { UseQueryResult } from "@tanstack/react-query";
 import { ClassifierDataPlot } from "../../../_components/ClassifierDataPlot";
+import { ClassifierSignalStats } from "../../../_components/ClassifierSignalStats";
+import { ProblematicSdocsTable } from "../../../_components/ProblematicSdocsTable";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
-export function DataSelection() {
+interface DataSelectionProps {
+  model: ClassifierModel | undefined;
+  datasetStats: UseQueryResult<ClassifierDatasetStatistics, Error>;
+}
+
+export function DataSelection({ model, datasetStats }: DataSelectionProps) {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
   const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
-
-  // global server state
-  const datasetStats = ClassifierHooks.useComputeDatasetStatistics2({
-    projectId,
-    model,
-    classIds,
-    userIds,
-    tagIds,
-    mergeChildren,
-  });
 
   // selection actions
   const dispatch = useAppDispatch();
@@ -95,7 +89,19 @@ export function DataSelection() {
           {datasetStats.isError ? (
             <div>{datasetStats.error.message}</div>
           ) : datasetStats.data && model ? (
-            <ClassifierDataPlot data={datasetStats.data} classifierModel={model} minHeight={150} />
+            datasetStats.data.total_units === 0 ? (
+              <Alert variant="standard" severity="warning" sx={{ border: "1px solid", borderColor: "warning.main" }}>
+                The dataset is empty! No documents with annotations were found for the current selection. Training or
+                evaluation is not possible with an empty dataset. Please select different tags
+                {model !== ClassifierModel.DOCUMENT && ", annotators,"} or classes.
+              </Alert>
+            ) : (
+              <Stack spacing={2}>
+                <ClassifierDataPlot data={datasetStats.data.classes} classifierModel={model} minHeight={150} />
+                <ClassifierSignalStats statistics={datasetStats.data} classifierModel={model} />
+                <ProblematicSdocsTable problematicSdocs={datasetStats.data.problematic_sdocs} classifierModel={model} />
+              </Stack>
+            )
           ) : !datasetStats.isFetching ? (
             <Box>Select data first!</Box>
           ) : null}

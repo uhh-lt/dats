@@ -13,3 +13,12 @@ class BaseModelDoesNotExistError(Exception):
         super().__init__(
             f"Base model '{base_model_name}' does not exist on Hugging Face!"
         )
+
+
+class EmptyDatasetError(Exception):
+    def __init__(self) -> None:
+        super().__init__(
+            "The dataset is empty! No training data could be created with the "
+            "given parameters (tags, annotators, classes). Please select data "
+            "that contains annotations."
+        )

@@ -33,6 +33,17 @@ class ClassifierService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         return super(ClassifierService, cls).__new__(cls)
 
+    def get_model_service(
+        self, model_type: ClassifierModel
+    ) -> TextClassificationModelService:
+        match model_type:
+            case ClassifierModel.DOCUMENT:
+                return DocClassificationModelService()
+            case ClassifierModel.SENTENCE:
+                return SentClassificationModelService()
+            case ClassifierModel.SPAN:
+                return SpanClassificationModelService()
+
     def _next_llm_job_step(self, job: Job, description: str) -> None:
         job.update(current_step=job.get_current_step() + 1, status_message=description)
 
@@ -66,18 +77,7 @@ class ClassifierService(metaclass=SingletonMeta):
         )
 
         # get the correct classifier service
-        tcs: TextClassificationModelService
-        match payload.model_type:
-            case ClassifierModel.DOCUMENT:
-                tcs = DocClassificationModelService()
-            case ClassifierModel.SENTENCE:
-                tcs = SentClassificationModelService()
-            case ClassifierModel.SPAN:
-                tcs = SpanClassificationModelService()
-            case _:
-                raise UnsupportedClassifierJobError(  # type: ignore
-                    payload.task_type, payload.model_type
-                )
+        tcs = self.get_model_service(payload.model_type)
 
         # execute the correct function
         try:

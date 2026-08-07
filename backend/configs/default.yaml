@@ -115,6 +115,14 @@ cota:
   model: ${oc.env:COTA_MODEL, "paraphrase-multilingual-mpnet-base-v2"}
   batch_size: ${oc.env:COTA_BATCH_SIZE, 16}
 
+classifier:
+  # The training signal (share of labeled units in the dataset) is considered
+  # weak below this threshold and strong above the strong threshold.
+  # A document is considered problematic if its share of labeled units
+  # (tokens / sentences) is below the weak threshold.
+  weak_signal_threshold: ${oc.env:CLASSIFIER_WEAK_SIGNAL_THRESHOLD, 0.1}
+  strong_signal_threshold: ${oc.env:CLASSIFIER_STRONG_SIGNAL_THRESHOLD, 0.3}
+
 promptembedder:
   text:
     model: ${oc.env:PROMPT_EMBEDDER_TEXT_MODEL, "intfloat/multilingual-e5-large-instruct"}

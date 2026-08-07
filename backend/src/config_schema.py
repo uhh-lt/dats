@@ -323,6 +323,13 @@ class CotaConfig(BaseModel):
     batch_size: int = Field(gt=0)
 
 
+class ClassifierConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    weak_signal_threshold: float = Field(ge=0.0, le=1.0)
+    strong_signal_threshold: float = Field(ge=0.0, le=1.0)
+
+
 class PromptEmbedderBranchConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -367,6 +374,7 @@ class BackendConfigSchema(BaseModel):
     rq: RqConfig
     llm_assistant: LlmAssistantConfig
     cota: CotaConfig
+    classifier: ClassifierConfig
     promptembedder: PromptEmbedderConfig
     chunking: ChunkingConfig
     project_metadata: list[ProjectMetadataConfig]
