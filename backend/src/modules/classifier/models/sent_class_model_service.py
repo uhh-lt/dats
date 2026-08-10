@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 from uuid import uuid4
 
 import numpy as np
@@ -100,7 +100,7 @@ class SentClassificationLightningModel(pl.LightningModule):
         use_lstm: bool,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
-        averaging: ClassifierAveraging = ClassifierAveraging.MICRO,
+        averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
     ):
         super().__init__()
         # Saves hyperparameters to the checkpoint
@@ -137,7 +137,7 @@ class SentClassificationLightningModel(pl.LightningModule):
         self.use_lstm = use_lstm
         self.id2label = id2label
         self.label2id = label2id
-        self.averaging = averaging
+        self.averaging: Literal["micro", "macro"] = averaging
 
         # Buffers to accumulate token-level predictions/labels across batches
         # so that evaluation metrics are computed over the whole epoch instead
@@ -235,7 +235,7 @@ class SentClassificationLightningModel(pl.LightningModule):
             labels,
             preds,
             labels=entity_labels,
-            average=self.averaging.value,
+            average=self.averaging,
             # sklearn's stub types zero_division as str only, but 0 is valid.
             zero_division=0,  # pyright: ignore[reportArgumentType]
         )
@@ -793,7 +793,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 class_weights=class_weights,
                 id2label=id2label,
                 label2id={v: k for k, v in id2label.items()},
-                averaging=parameters.averaging,
+                averaging=parameters.averaging.value,
             )
 
         # 3. Train the model
@@ -943,8 +943,12 @@ class SentClassificationModelService(TextClassificationModelService):
         model = SentClassificationLightningModel.load_from_checkpoint(classifier.path)
         # Resolve the averaging strategy: eval param overrides the model's stored
         # training setting (default micro for older models).
-        model.averaging = parameters.averaging or ClassifierAveraging(
-            classifier.train_params.get("averaging", ClassifierAveraging.MICRO.value)
+        model.averaging = (
+            parameters.averaging.value
+            if parameters.averaging is not None
+            else classifier.train_params.get(
+                "averaging", ClassifierAveraging.MICRO.value
+            )
         )
         model.eval()
 
