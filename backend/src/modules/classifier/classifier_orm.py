@@ -96,6 +96,9 @@ class ClassifierEvaluationORM(ORMBase):
     eval_data_stats: Mapped[list[dict]] = mapped_column(
         JSON, nullable=False
     )  # todo: needs to be validated in DTO
+    class_metrics: Mapped[list[dict]] = mapped_column(
+        JSON, nullable=False, server_default="[]"
+    )
 
     # many to one
     classifier_id: Mapped[int] = mapped_column(

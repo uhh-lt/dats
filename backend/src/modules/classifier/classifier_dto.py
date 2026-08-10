@@ -23,6 +23,11 @@ class ClassifierTask(str, Enum):
     INFERENCE = "inference"
 
 
+class ClassifierAveraging(str, Enum):
+    MICRO = "micro"
+    MACRO = "macro"
+
+
 class ClassifierLoss(BaseModel):
     step: int = Field(description="Training step")
     value: float = Field(description="Loss value")
@@ -127,6 +132,14 @@ class ClassifierUpdate(BaseModel, UpdateDTOBase):
     name: str | None = Field(default=None, description="Updated name of the classifier")
 
 
+class ClassifierClassMetrics(BaseModel):
+    class_id: int = Field(description="ID of the class (tag or code)")
+    precision: float = Field(description="Precision score for the class")
+    recall: float = Field(description="Recall score for the class")
+    f1: float = Field(description="F1 score for the class")
+    support: int = Field(description="Number of gold instances of the class")
+
+
 class ClassifierEvaluationCreate(BaseModel):
     classifier_id: int = Field(description="ID of the Classifier")
     f1: float = Field(description="F1 score")
@@ -135,6 +148,10 @@ class ClassifierEvaluationCreate(BaseModel):
     accuracy: float = Field(description="Accuracy score")
     eval_data_stats: list[ClassifierData] = Field(
         description="Evaluation data statistics"
+    )
+    class_metrics: list[ClassifierClassMetrics] = Field(
+        default_factory=list,
+        description="Per-class evaluation metrics (empty for older evaluations)",
     )
 
 
@@ -193,6 +210,10 @@ class ClassifierTrainingParams(BaseModel):
     )
     # specific training settings
     is_bio: bool = Field(description="Whether to use BIO or IO tagging")
+    averaging: ClassifierAveraging = Field(
+        default=ClassifierAveraging.MICRO,
+        description="Averaging strategy for evaluation metrics (micro or macro)",
+    )
 
     def get_train_params(self):
         return {
@@ -203,6 +224,7 @@ class ClassifierTrainingParams(BaseModel):
             "weight_decay": self.weight_decay,
             "dropout": self.dropout,
             "is_bio": self.is_bio,
+            "averaging": self.averaging.value,
         }
 
 
@@ -212,6 +234,10 @@ class ClassifierEvaluationParams(BaseModel):
     tag_ids: list[int] = Field(description="List of Tag IDs to evaluate on")
     user_ids: list[int] = Field(
         description="User IDs whose annotations serve as gold labels"
+    )
+    averaging: ClassifierAveraging | None = Field(
+        default=None,
+        description="Averaging strategy for evaluation metrics. If None, the model's stored training setting is used.",
     )
 
 
