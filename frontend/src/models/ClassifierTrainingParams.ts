@@ -82,10 +82,6 @@ export type ClassifierTrainingParams = {
     | "bf16"
     | null;
   /**
-   * Whether to use BIO or IO tagging
-   */
-  is_bio: boolean;
-  /**
    * Averaging strategy for evaluation metrics (micro or macro)
    */
   averaging?: ClassifierAveraging;

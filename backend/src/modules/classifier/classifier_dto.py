@@ -208,8 +208,7 @@ class ClassifierTrainingParams(BaseModel):
     precision: _PRECISION_INPUT | None = Field(
         description="Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
     )
-    # specific training settings
-    is_bio: bool = Field(description="Whether to use BIO or IO tagging")
+    # evaluation settings
     averaging: ClassifierAveraging = Field(
         default=ClassifierAveraging.MICRO,
         description="Averaging strategy for evaluation metrics (micro or macro)",
@@ -223,7 +222,6 @@ class ClassifierTrainingParams(BaseModel):
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
             "dropout": self.dropout,
-            "is_bio": self.is_bio,
             "averaging": self.averaging.value,
         }
 
