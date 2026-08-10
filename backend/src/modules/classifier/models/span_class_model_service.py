@@ -56,7 +56,9 @@ from modules.classifier.classifier_dto import (
 )
 from modules.classifier.classifier_exceptions import (
     BaseModelDoesNotExistError,
+    ClassifierProjectMismatchError,
     EmptyDatasetError,
+    NoCheckpointError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import (
@@ -142,22 +144,18 @@ class SpanClassificationLightningModel(pl.LightningModule):
         self.weight_decay = weight_decay
         self.averaging: Literal["micro", "macro"] = averaging
 
-        # Buffers to accumulate token-level predictions/labels across batches
-        # so that evaluation metrics are computed over the whole epoch instead
-        # of being averaged from per-batch scores.
+        # Buffers to accumulate token-level predictions/labels across batches so that evaluation metrics are computed over the whole epoch
         self._val_preds: list[int] = []
         self._val_labels: list[int] = []
         self._test_preds: list[int] = []
         self._test_labels: list[int] = []
-        # Per-class metrics of the most recent test epoch (label id -> metrics).
+        # Per-class metrics of the most recent eval/test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
 
-        # Define custom loss function. ignore_index=IGNORE_LABEL_ID makes the
-        # padding / special-token / subword labels (which are set to
-        # IGNORE_LABEL_ID) not contribute to the loss. (This is the default,
-        # but we set it explicitly.)
+        # Define custom loss function. ignore_index=IGNORE_LABEL_ID makes the padding / special-token / subword labels (which are set to IGNORE_LABEL_ID) not contribute to the loss.
         self.loss_fn = nn.CrossEntropyLoss(
-            weight=torch.tensor(class_weights), ignore_index=IGNORE_LABEL_ID
+            weight=torch.tensor(class_weights, dtype=torch.float),
+            ignore_index=IGNORE_LABEL_ID,
         )
 
     def forward(
@@ -173,10 +171,6 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
     def training_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
         outputs = self(**batch)
-        # the standard Cross Entropy Loss computed by HF model
-        # hf_loss = outputs.loss
-
-        # our weighted Cross Entropy Loss
         logits = outputs.logits
         labels = batch["labels"]
         loss = self.loss_fn(logits.view(-1, self.num_labels), labels.view(-1))
@@ -226,10 +220,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         if len(labels) == 0:
             return
 
-        # Token-level metrics. A token counts as correct when its predicted
-        # label matches the gold label. P/R/F1 use the configured averaging
-        # strategy over the entity classes (label != O_LABEL_ID), excluding the
-        # "O" class.
+        # Token-level metrics. A token counts as correct when its predicted label matches the gold label.
         entity_labels = [i for i in range(self.num_labels) if i != O_LABEL_ID]
         accuracy = float(accuracy_score(labels, preds))
         precision, recall, f1, _ = precision_recall_fscore_support(
@@ -237,7 +228,6 @@ class SpanClassificationLightningModel(pl.LightningModule):
             preds,
             labels=entity_labels,
             average=self.averaging,
-            # sklearn's stub types zero_division as str only, but 0 is valid.
             zero_division=0,  # pyright: ignore[reportArgumentType]
         )
 
@@ -253,9 +243,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
             prog_bar=True,
         )
 
-        # Per-class metrics over the entity classes (stored for both the
-        # validation and test epochs so the post-training evaluation can persist
-        # them).
+        # Per-class metrics over the entity classes.
         if prefix in ("eval", "test"):
             pc_precision, pc_recall, pc_f1, pc_support = cast(
                 tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
@@ -264,7 +252,6 @@ class SpanClassificationLightningModel(pl.LightningModule):
                     preds,
                     labels=entity_labels,
                     average=None,
-                    # sklearn's stub types zero_division as str only, but 0 is valid.
                     zero_division=0,  # pyright: ignore[reportArgumentType]
                 ),
             )
@@ -278,6 +265,10 @@ class SpanClassificationLightningModel(pl.LightningModule):
                 }
                 for i, label_id in enumerate(entity_labels)
             ]
+
+    def get_last_class_metrics(self) -> list[dict]:
+        """Per-class metrics of the most recent eval/test epoch."""
+        return self._last_class_metrics
 
     def on_validation_epoch_end(self) -> None:
         self._compute_and_log_token_metrics("eval")
@@ -329,108 +320,26 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
 
 class SpanClassificationModelService(TextClassificationModelService):
-    def compute_dataset_statistics(
-        self,
-        db: Session,
-        project_id: int,
-        tag_ids: list[int],
-        user_ids: list[int],
-        class_ids: list[int],
-        merge_children_into_parent: bool,
-        base_model_name: str,
-    ) -> ClassifierDatasetStatistics:
-        # Build the label mappings
-        codes, classid2labelid, code2parent, _ = build_code_label_mappings(
-            db=db,
-            class_ids=class_ids,
-            merge_children_into_parent=merge_children_into_parent,
-        )
+    @staticmethod
+    def _grouped_train_test_split(
+        dataset: Dataset, test_size: float = 0.2, seed: int = 42
+    ) -> tuple[list[int], list[int]]:
+        """Splits row indices into train/test, grouping by ``sdoc_id``.
 
-        # Build the dataset exactly as in training
-        tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-        _, dataset = self._retrieve_and_build_dataset(
-            db=db,
-            project_id=project_id,
-            tag_ids=tag_ids,
-            user_ids=user_ids,
-            class_ids=list(classid2labelid.keys()),
-            classid2labelid=classid2labelid,
-            tokenizer=tokenizer,
-            use_chunking=True,
-        )
-
-        # Compute statistics from the word-level labels (before splitting/chunking)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
-        class_units: dict[int, int] = {code.id: 0 for code in codes}
-        class_examples: dict[int, int] = {code.id: 0 for code in codes}
-        total_units = 0
-        labeled_units = 0
-        problematic_sdocs: list[ProblematicSdoc] = []
-
-        for row in cast(list[DatasetRow], dataset):
-            labels: list[int] = row["labels"]
-            row_total = 0
-            row_labeled = 0
-            seen_classes: set[int] = set()
-            for label in labels:
-                if label == IGNORE_LABEL_ID:
-                    continue
-                row_total += 1
-                if label != O_LABEL_ID:
-                    row_labeled += 1
-                    class_id = code2parent[labelid2classid[label]]
-                    class_units[class_id] += 1
-                    seen_classes.add(class_id)
-            for class_id in seen_classes:
-                class_examples[class_id] += 1
-
-            total_units += row_total
-            labeled_units += row_labeled
-            if (
-                row_total > 0
-                and row_labeled / row_total < conf.classifier.weak_signal_threshold
-            ):
-                problematic_sdocs.append(
-                    ProblematicSdoc(
-                        sdoc_id=row["sdoc_id"],
-                        total_units=row_total,
-                        labeled_units=row_labeled,
-                        labeled_percentage=row_labeled / row_total,
-                    )
-                )
-
-        problematic_sdocs.sort(key=lambda p: p.labeled_percentage)
-
-        signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
-        weak_threshold = conf.classifier.weak_signal_threshold
-        strong_threshold = conf.classifier.strong_signal_threshold
-        if signal_percentage < weak_threshold:
-            signal_strength = ClassifierSignalStrength.WEAK
-        elif signal_percentage <= strong_threshold:
-            signal_strength = ClassifierSignalStrength.OK
-        else:
-            signal_strength = ClassifierSignalStrength.STRONG
-
-        return ClassifierDatasetStatistics(
-            total_units=total_units,
-            labeled_units=labeled_units,
-            signal_percentage=signal_percentage,
-            signal_strength=signal_strength,
-            weak_signal_threshold=weak_threshold,
-            strong_signal_threshold=strong_threshold,
-            classes=[
-                ClassifierClassStatistics(
-                    class_id=code.id,
-                    num_examples=class_examples[code.id],
-                    num_units=class_units[code.id],
-                    unit_percentage=(
-                        class_units[code.id] / total_units if total_units > 0 else 0.0
-                    ),
-                )
-                for code in codes
-            ],
-            problematic_sdocs=problematic_sdocs,
-        )
+        The same source document can appear multiple times (once per
+        annotator). Splitting by row would leak a document into both train and
+        test, inflating the evaluation. Splitting by ``sdoc_id`` keeps all
+        rows of a document on the same side of the split.
+        """
+        sdoc_ids = dataset["sdoc_id"]
+        unique_sdocs = sorted(set(sdoc_ids))
+        rng = np.random.default_rng(seed)
+        shuffled = rng.permutation(unique_sdocs)
+        n_test = max(1, int(round(len(unique_sdocs) * test_size)))
+        test_sdocs = set(shuffled[:n_test].tolist())
+        train_idx = [i for i, s in enumerate(sdoc_ids) if s not in test_sdocs]
+        test_idx = [i for i, s in enumerate(sdoc_ids) if s in test_sdocs]
+        return train_idx, test_idx
 
     def _retrieve_and_build_dataset(
         self,
@@ -439,9 +348,10 @@ class SpanClassificationModelService(TextClassificationModelService):
         tag_ids: list[int],
         user_ids: list[int],
         class_ids: list[int],
-        classid2labelid: dict[int, int],
+        codeid2labelid: dict[int, int],
         tokenizer,
         use_chunking: bool,
+        chunk_stride: int = 0,
     ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset]:
         # Find documents
         sdoc_ids = [
@@ -501,7 +411,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 labels = [O_LABEL_ID for word in words]
                 for annotation in annotations:
                     labels[annotation.begin_token : annotation.end_token] = [
-                        classid2labelid.get(annotation.code_id, O_LABEL_ID)
+                        codeid2labelid.get(annotation.code_id, O_LABEL_ID)
                     ] * (annotation.end_token - annotation.begin_token)
                 dataset.append(
                     {
@@ -528,40 +438,169 @@ class SpanClassificationModelService(TextClassificationModelService):
             return user_id2sdoc_id2annotations, empty_hf_dataset
 
         def tokenize_and_align_labels(examples: dict):
+            # When chunking, split long documents into overlapping windows via
+            # the tokenizer (return_overflowing_tokens); each chunk re-adds
+            # special tokens and bounds its own length. When not chunking
+            # (dataset statistics), keep whole documents untruncated.
             tokenized_inputs = tokenizer(
                 examples["words"],
-                truncation=not use_chunking,
                 is_split_into_words=True,
-                add_special_tokens=not use_chunking,
+                truncation=use_chunking,
+                return_overflowing_tokens=use_chunking,
+                stride=chunk_stride if use_chunking else 0,
+            )
+
+            # Map each chunk's tokens back to their source example so we label
+            # the correct per-example labels array.
+            overflow_mapping = (
+                tokenized_inputs.pop("overflow_to_sample_mapping")
+                if use_chunking
+                else list(range(len(examples["labels"])))
             )
 
             labels = []
-            for i, label in enumerate(examples["labels"]):
-                word_ids = tokenized_inputs.word_ids(
-                    batch_index=i
-                )  # Map tokens to their respective word.
+            for i in range(len(tokenized_inputs["input_ids"])):
+                word_label = examples["labels"][overflow_mapping[i]]
+                word_ids = tokenized_inputs.word_ids(batch_index=i)
                 previous_word_idx = None
                 label_ids = []
-                for word_idx in word_ids:  # Set the special tokens to IGNORE_LABEL_ID.
-                    if word_idx is None:
+                for word_idx in word_ids:
+                    if word_idx is None:  # special token
                         label_ids.append(IGNORE_LABEL_ID)
-                    elif (
-                        word_idx != previous_word_idx
-                    ):  # Only label the first token of a given word.
-                        label_ids.append(label[word_idx])
-                    else:
+                    elif word_idx != previous_word_idx:  # first subword of a word
+                        label_ids.append(word_label[word_idx])
+                    else:  # subsequent subword of the same word
                         label_ids.append(IGNORE_LABEL_ID)
                     previous_word_idx = word_idx
                 labels.append(label_ids)
 
             tokenized_inputs["labels"] = labels
+            # Replicate the per-example metadata onto each chunk so every row
+            # (one per chunk) stays aligned with its source document/user.
+            tokenized_inputs["sdoc_id"] = [
+                examples["sdoc_id"][overflow_mapping[i]]
+                for i in range(len(tokenized_inputs["input_ids"]))
+            ]
+            tokenized_inputs["user_id"] = [
+                examples["user_id"][overflow_mapping[i]]
+                for i in range(len(tokenized_inputs["input_ids"]))
+            ]
             return tokenized_inputs
 
         hf_dataset = Dataset.from_list(dataset)  # type: ignore
-        tokenized_hf_dataset = hf_dataset.map(tokenize_and_align_labels, batched=True)
-        tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["words"])
+        tokenized_hf_dataset = hf_dataset.map(
+            tokenize_and_align_labels,
+            batched=True,
+            remove_columns=hf_dataset.column_names,
+        )
 
         return user_id2sdoc_id2annotations, tokenized_hf_dataset
+
+    def compute_dataset_statistics(
+        self,
+        db: Session,
+        project_id: int,
+        tag_ids: list[int],
+        user_ids: list[int],
+        class_ids: list[int],
+        merge_children_into_parent: bool,
+        base_model_name: str,
+    ) -> ClassifierDatasetStatistics:
+        # Build the label mappings
+        codes, codeid2labelid, codeid2parentid, _ = build_code_label_mappings(
+            db=db,
+            code_ids=class_ids,
+            merge_children_into_parent=merge_children_into_parent,
+        )
+
+        # Build the dataset without chunking: the
+        # statistics are computed over whole documents (one row per
+        # user/document), and chunking would split and double-count them.
+        tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+        _, dataset = self._retrieve_and_build_dataset(
+            db=db,
+            project_id=project_id,
+            tag_ids=tag_ids,
+            user_ids=user_ids,
+            # Exclude the "O" sentinel (label 0); it is not a real code id.
+            class_ids=[c for c in codeid2labelid.keys() if c != O_LABEL_ID],
+            codeid2labelid=codeid2labelid,
+            tokenizer=tokenizer,
+            use_chunking=False,
+        )
+
+        # Compute statistics from the word-level labels (one row per user/doc)
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
+        class_units: dict[int, int] = {code.id: 0 for code in codes}
+        class_examples: dict[int, int] = {code.id: 0 for code in codes}
+        total_units = 0
+        labeled_units = 0
+        problematic_sdocs: list[ProblematicSdoc] = []
+
+        for row in cast(list[DatasetRow], dataset):
+            labels: list[int] = row["labels"]
+            row_total = 0
+            row_labeled = 0
+            seen_classes: set[int] = set()
+            for label in labels:
+                if label == IGNORE_LABEL_ID:
+                    continue
+                row_total += 1
+                if label != O_LABEL_ID:
+                    row_labeled += 1
+                    class_id = codeid2parentid[labelid2codeid[label]]
+                    class_units[class_id] += 1
+                    seen_classes.add(class_id)
+            for class_id in seen_classes:
+                class_examples[class_id] += 1
+
+            total_units += row_total
+            labeled_units += row_labeled
+            if (
+                row_total > 0
+                and row_labeled / row_total < conf.classifier.weak_signal_threshold
+            ):
+                problematic_sdocs.append(
+                    ProblematicSdoc(
+                        sdoc_id=row["sdoc_id"],
+                        total_units=row_total,
+                        labeled_units=row_labeled,
+                        labeled_percentage=row_labeled / row_total,
+                    )
+                )
+
+        problematic_sdocs.sort(key=lambda p: p.labeled_percentage)
+
+        signal_percentage = labeled_units / total_units if total_units > 0 else 0.0
+        weak_threshold = conf.classifier.weak_signal_threshold
+        strong_threshold = conf.classifier.strong_signal_threshold
+        if signal_percentage < weak_threshold:
+            signal_strength = ClassifierSignalStrength.WEAK
+        elif signal_percentage <= strong_threshold:
+            signal_strength = ClassifierSignalStrength.OK
+        else:
+            signal_strength = ClassifierSignalStrength.STRONG
+
+        return ClassifierDatasetStatistics(
+            total_units=total_units,
+            labeled_units=labeled_units,
+            signal_percentage=signal_percentage,
+            signal_strength=signal_strength,
+            weak_signal_threshold=weak_threshold,
+            strong_signal_threshold=strong_threshold,
+            classes=[
+                ClassifierClassStatistics(
+                    class_id=code.id,
+                    num_examples=class_examples[code.id],
+                    num_units=class_units[code.id],
+                    unit_percentage=(
+                        class_units[code.id] / total_units if total_units > 0 else 0.0
+                    ),
+                )
+                for code in codes
+            ],
+            problematic_sdocs=problematic_sdocs,
+        )
 
     def train(
         self, db: Session, job: Job, payload: ClassifierJobInput
@@ -577,12 +616,9 @@ class SpanClassificationModelService(TextClassificationModelService):
         if not check_hf_model_exists(parameters.base_name):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
-        merge_children_into_parent = parameters.merge_children_into_parent
-
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
         if parameters.chunk_size:
             tokenizer.model_max_length = parameters.chunk_size
-        data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
         job.update(
             steps=[
@@ -598,67 +634,40 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 1. Create dataset
         job.update(current_step=1)
-        # Get codes and create mapping
-        codes, classid2labelid, code2parent, id2label = build_code_label_mappings(
-            db=db,
-            class_ids=parameters.class_ids,
-            merge_children_into_parent=merge_children_into_parent,
-        )
-        class_ids = list(classid2labelid.keys())
 
-        # Build dataset
+        # 1.1 Build the label mappings
+        codes, codeid2labelid, codeid2parentid, labelid2name = (
+            build_code_label_mappings(
+                db=db,
+                code_ids=parameters.class_ids,
+                merge_children_into_parent=parameters.merge_children_into_parent,
+            )
+        )
+
+        # 1.2 Build dataset (already chunked, with overlap, by the builder)
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=class_ids,
-            classid2labelid=classid2labelid,
+            # Exclude the "O" sentinel (label 0); it is not a real code id.
+            class_ids=[c for c in codeid2labelid.keys() if c != O_LABEL_ID],
+            codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
+            chunk_stride=max(1, tokenizer.model_max_length // 4),
         )
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
-        # Train test split
-        split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
+        # 1.3 Train/test split, grouped by sdoc_id so the same document (annotated
+        # by several users) never appears in both train and eval.
+        train_idx, test_idx = self._grouped_train_test_split(dataset)
+        train_dataset = dataset.select(train_idx).remove_columns(["sdoc_id", "user_id"])
+        val_dataset = dataset.select(test_idx).remove_columns(["sdoc_id", "user_id"])
 
-        def split_in_chunks(examples: dict):
-            chunk_len = tokenizer.model_max_length - 2
-            for key, values in examples.items():
-                if "labels" == key:
-                    pre = [IGNORE_LABEL_ID]
-                    post = [IGNORE_LABEL_ID]
-                elif "attention_mask" == key:
-                    pre = [1]
-                    post = [1]
-                elif "input_ids" == key:
-                    pre = [tokenizer.added_tokens_encoder["[CLS]"]]
-                    post = [tokenizer.added_tokens_encoder["[SEP]"]]
-                else:
-                    raise ValueError(f"Unsupported {key} in batch examples dict")
-
-                result = []
-                for val in values:
-                    chunks = [
-                        pre + val[i : i + chunk_len] + post
-                        for i in range(0, len(val), chunk_len)
-                    ]
-                    result.extend(chunks)
-                examples[key] = result
-            return examples
-
-        train_dataset = (
-            split_dataset["train"]
-            .remove_columns(["sdoc_id", "user_id"])
-            .map(split_in_chunks, batched=True)
-        )
-        val_dataset = (
-            split_dataset["test"]
-            .remove_columns(["sdoc_id", "user_id"])
-            .map(split_in_chunks, batched=True)
-        )
-
+        # 1.4 Create dataloaders
+        data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
         train_dataloader = DataLoader(
             train_dataset,  # type: ignore
             shuffle=True,
@@ -674,54 +683,50 @@ class SpanClassificationModelService(TextClassificationModelService):
             pin_memory=True,
         )
 
-        # Dataset statistics (number of annotations per code)
+        # 1.5 Compute dataset statistics (number of annotations per code)
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
-        for sdoc_id, user_id in zip(
-            split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
-        ):
+        for i in train_idx:
+            sdoc_id = dataset[i]["sdoc_id"]
+            user_id = dataset[i]["user_id"]
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[code2parent[annotation.code_id]] += 1
+                train_dataset_stats[codeid2parentid[annotation.code_id]] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
-        for sdoc_id, user_id in zip(
-            split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
-        ):
+        for i in test_idx:
+            sdoc_id = dataset[i]["sdoc_id"]
+            user_id = dataset[i]["user_id"]
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[code2parent[annotation.code_id]] += 1
+                eval_dataset_stats[codeid2parentid[annotation.code_id]] += 1
 
-        # Calculate class weights
-        # Count the occurrences of each label in the training set
-        label_counts = defaultdict(int)
-        for labels in split_dataset["train"]["labels"]:
-            for label in labels:
-                if label != IGNORE_LABEL_ID:  # Ignore padding tokens
+        # 1.6 Calculate class weights (inverse token frequency over the train set).
+        label_counts: dict[int, int] = defaultdict(int)
+        for i in train_idx:
+            for label in dataset[i]["labels"]:
+                if label != IGNORE_LABEL_ID:  # Ignore padding/subword tokens
                     label_counts[label] += 1
 
-        # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
-        num_labels = len(id2label)
-        class_weights = [0.0] * num_labels
-        for label, count in label_counts.items():
-            if count > 0:
-                class_weights[label] = total_tokens / (num_labels * count)
-            else:
-                raise ValueError(f"Label '{label}' has zero count in training data!")
+        num_labels = len(labelid2name)
+        class_weights = [
+            total_tokens / (num_labels * label_counts[label])
+            if label_counts.get(label, 0) > 0
+            else 1.0
+            for label in range(num_labels)
+        ]
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
 
-        # Create the Trainer
+        # 2.1 Add callbacks
+        callbacks = []
+
+        # Checkpoint callback
         model_name: str = str(uuid4())
         model_dir = FilesystemRepo().get_model_dir(
             proj_id=payload.project_id,
             model_name=model_name,
             model_prefix="span_classifier_",
         )
-
-        log_dir = model_dir / "train_logs"
-        csv_logger = CSVLogger(log_dir, name=f"span_classifier_{model_name}")
-
-        callbacks = []
         checkpoint_callback = ModelCheckpoint(
             dirpath=str(model_dir.absolute()),
             monitor="eval_f1",
@@ -730,6 +735,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
         callbacks.append(checkpoint_callback)
 
+        # Early stopping callback
         if parameters.early_stopping:
             early_stopping_callback = EarlyStopping(
                 monitor="eval_f1",
@@ -738,9 +744,15 @@ class SpanClassificationModelService(TextClassificationModelService):
             )
             callbacks.append(early_stopping_callback)
 
-        # append our own, custom callback to update the job progress
+        # Job progress callback
         callbacks.append(JobProgressCallback(job=job))
 
+        # 2.2 Configure CSV logger
+        csv_logger = CSVLogger(
+            model_dir / "train_logs", name=f"span_classifier_{model_name}"
+        )
+
+        # 2.3 Configure the PyTorch Lightning trainer
         trainer = pl.Trainer(
             logger=csv_logger,
             max_epochs=parameters.epochs,
@@ -752,22 +764,23 @@ class SpanClassificationModelService(TextClassificationModelService):
             # gradient_clip_val=1.0,  # Gradient clipping
         )
 
+        # 2.4 Initialize the Lightning Model
         with trainer.init_module():
-            # Initialize the Lightning Model
             lightning_model = SpanClassificationLightningModel(
                 base_name=parameters.base_name,
-                num_labels=len(id2label),
+                num_labels=len(labelid2name),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
-                id2label=id2label,
-                label2id={v: k for k, v in id2label.items()},
+                id2label=labelid2name,
+                label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
             )
 
         # 3. Train the model
         job.update(current_step=3)
+
         lightning_model.train()
         trainer.fit(
             lightning_model,
@@ -777,6 +790,9 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 4. Evaluate the best model
         job.update(current_step=4)
+
+        if not checkpoint_callback.best_model_path:
+            raise NoCheckpointError()
         best_model = SpanClassificationLightningModel.load_from_checkpoint(
             checkpoint_callback.best_model_path
         )
@@ -785,6 +801,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 5. Retrieve training statistics from the logs
         job.update(current_step=5)
+
         metrics_df = pd.read_csv(csv_logger.log_dir + "/metrics.csv")
         # filter out all rows where train_loss is NaN
         train_df = metrics_df[metrics_df["train_loss"].notna()]
@@ -795,6 +812,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 6. Store results
         job.update(current_step=6)
+
         # 6.1 store the classifier in the db
         classifier = crud_classifier.create(
             db=db,
@@ -802,9 +820,11 @@ class SpanClassificationModelService(TextClassificationModelService):
                 name=parameters.classifier_name,
                 base_model=parameters.base_name,
                 type=payload.model_type,
-                path=checkpoint_callback.best_model_path or "ERROR!",
+                path=checkpoint_callback.best_model_path,
                 project_id=payload.project_id,
-                labelid2classid={v: code2parent[k] for k, v in classid2labelid.items()},
+                labelid2classid={
+                    v: codeid2parentid[k] for k, v in codeid2labelid.items()
+                },
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -820,7 +840,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
-        labelid2classid = {v: code2parent[k] for k, v in classid2labelid.items()}
+        labelid2codeid = {v: codeid2parentid[k] for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -835,13 +855,13 @@ class SpanClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2codeid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
                         support=m["support"],
                     )
-                    for m in best_model._last_class_metrics
+                    for m in best_model.get_last_class_metrics()
                 ],
             ),
         )
@@ -876,29 +896,39 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
+
+        # load classifier
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        classid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
+        if classifier.project_id != payload.project_id:
+            raise ClassifierProjectMismatchError(classifier.id, payload.project_id)
+        codeid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
+
+        # init tokenizer, restoring the chunk size used during training so that eval sees the same input distribution
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
-        data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+        train_chunk_size = classifier.train_params.get("chunk_size")
+        if train_chunk_size:
+            tokenizer.model_max_length = train_chunk_size
 
         # 2. Create dataset
         job.update(current_step=2)
 
-        # Build dataset
+        # Build dataset, chunked exactly like training (no truncation).
         user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             class_ids=classifier.class_ids,
-            classid2labelid=classid2labelid,
+            codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
-            use_chunking=False,
+            use_chunking=True,
+            chunk_stride=max(1, tokenizer.model_max_length // 4),
         )
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
         # Build dataloader
+        data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
         test_dataloader = DataLoader(
             dataset,  # type: ignore
             shuffle=False,
@@ -906,15 +936,22 @@ class SpanClassificationModelService(TextClassificationModelService):
             batch_size=classifier.train_params.get("batch_size", 4),
         )
 
-        # Dataset statistics (number of annotations per code)
+        # Dataset statistics (number of annotations per code), keyed by the
+        # effective (parent) code id, consistent with training. The stored
+        # labelid2classid maps each label id to its effective code id, so we
+        # translate an annotation's code id via its label id.
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         eval_dataset_stats: dict[int, int] = {
             code_id: 0
-            for code_id, label_id in classid2labelid.items()
+            for code_id, label_id in codeid2labelid.items()
             if label_id != O_LABEL_ID
         }
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[annotation.code_id] += 1
+                label_id = codeid2labelid.get(annotation.code_id)
+                if label_id is None or label_id == O_LABEL_ID:
+                    continue
+                eval_dataset_stats[labelid2codeid[label_id]] += 1
 
         # 3. Load the model
         job.update(current_step=3)
@@ -942,7 +979,6 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -957,13 +993,13 @@ class SpanClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2codeid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
                         support=m["support"],
                     )
-                    for m in model._last_class_metrics
+                    for m in model.get_last_class_metrics()
                 ],
             ),
         )
@@ -1002,11 +1038,17 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        labelid2classid = {
+        if classifier.project_id != payload.project_id:
+            raise ClassifierProjectMismatchError(classifier.id, payload.project_id)
+        labelid2codeid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }
 
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
+        # Restore the tokenization window used during training.
+        train_chunk_size = classifier.train_params.get("chunk_size")
+        if train_chunk_size:
+            tokenizer.model_max_length = train_chunk_size
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
         # Delete existing annotations (if requested by the user)
@@ -1027,7 +1069,6 @@ class SpanClassificationModelService(TextClassificationModelService):
             {"sdoc_id": sdoc_data.id, "words": sdoc_data.tokens}
             for sdoc_data in sdoc_datas
         ]
-
         # Construct a tokenized huggingface dataset. Long documents are split
         # into overlapping chunks (return_overflowing_tokens) so that no tokens
         # are silently dropped; per-chunk predictions are merged back below.
@@ -1038,17 +1079,13 @@ class SpanClassificationModelService(TextClassificationModelService):
             sdoc_data.id: len(sdoc_data.tokens) for sdoc_data in sdoc_datas
         }
 
-        # Stride between consecutive chunks (in tokens) so spans near a chunk
-        # boundary are fully visible in at least one chunk.
-        chunk_stride = max(1, tokenizer.model_max_length // 4)
-
         def tokenize_for_inference(examples):
             tokenized_inputs = tokenizer(
                 examples["words"],
                 truncation=True,
                 is_split_into_words=True,
                 return_overflowing_tokens=True,
-                stride=chunk_stride,
+                stride=max(1, tokenizer.model_max_length // 4),
             )
 
             overflow_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
@@ -1111,21 +1148,32 @@ class SpanClassificationModelService(TextClassificationModelService):
             flat_predictions.extend(pred["predictions"])  # type: ignore
 
         # Merge the overlapping per-chunk token predictions into one word-level
-        # label array per document. The first chunk that covers a word wins.
+        # label array per document. Each word is labeled by the chunk in which
+        # it appears at the earliest token position, because that chunk sees
+        # the most right-context for the word (the overlap guarantees such a
+        # chunk exists). This is strictly better than "first chunk wins", which
+        # labels boundary words from a chunk that only saw their left context.
         sdoc_id2word_labels: dict[int, list[int]] = {
             sdoc_id: [O_LABEL_ID] * num_words
             for sdoc_id, num_words in sdoc_id2num_words.items()
         }
-        sdoc_id2word_seen: dict[int, set[int]] = defaultdict(set)
+        # word_id -> (earliest token position at which the word was seen, label)
+        sdoc_id2best: dict[int, dict[int, tuple[int, int]]] = defaultdict(dict)
         for chunk_idx, chunk_preds in zip(flat_chunk_idxs, flat_predictions):
             sdoc_id, word_ids = chunk_meta[chunk_idx]
-            word_labels = sdoc_id2word_labels[sdoc_id]
-            seen = sdoc_id2word_seen[sdoc_id]
-            for word_id, label in zip(word_ids, chunk_preds):
-                # Skip special tokens and already-covered words.
-                if word_id is None or word_id in seen:
+            best = sdoc_id2best[sdoc_id]
+            for pos, (word_id, label) in enumerate(zip(word_ids, chunk_preds)):
+                if word_id is None:
                     continue
-                seen.add(word_id)
+                # Only consider the first subword token of each word.
+                if pos > 0 and word_ids[pos - 1] == word_id:
+                    continue
+                current = best.get(word_id)
+                if current is None or pos < current[0]:
+                    best[word_id] = (pos, label)
+        for sdoc_id, best in sdoc_id2best.items():
+            word_labels = sdoc_id2word_labels[sdoc_id]
+            for word_id, (_, label) in best.items():
                 word_labels[word_id] = label
 
         # Extract spans from the merged word-level labels of each document.
@@ -1150,7 +1198,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                         current_annotation = {
                             "sdoc_id": sdoc_id,
                             "begin_token": word_id,
-                            "class_id": labelid2classid[label],
+                            "class_id": labelid2codeid[label],
                             "end_token": -1,
                         }
 

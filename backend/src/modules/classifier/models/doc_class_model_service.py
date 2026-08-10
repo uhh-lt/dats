@@ -317,7 +317,7 @@ class DocClassificationModelService(TextClassificationModelService):
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
         # Build the label mappings
-        tags, classid2labelid, _ = build_tag_label_mappings(db=db, class_ids=class_ids)
+        tags, tagid2labelid, _ = build_tag_label_mappings(db=db, class_ids=class_ids)
 
         # Build the dataset exactly as in training, but skip tokenization
         _, dataset = self._retrieve_and_build_dataset(
@@ -325,13 +325,13 @@ class DocClassificationModelService(TextClassificationModelService):
             project_id=project_id,
             tag_ids=tag_ids,
             class_ids=class_ids,
-            classid2labelid=classid2labelid,
+            tagid2labelid=tagid2labelid,
             tokenizer=None,
             use_chunking=False,
         )
 
         # Compute statistics from the document-level labels (before splitting)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        labelid2tagid = {v: k for k, v in tagid2labelid.items()}
         class_units: dict[int, int] = {tag.id: 0 for tag in tags}
         total_units = 0
         labeled_units = 0
@@ -342,7 +342,7 @@ class DocClassificationModelService(TextClassificationModelService):
             total_units += 1
             if label != O_LABEL_ID:
                 labeled_units += 1
-                class_units[labelid2classid[label]] += 1
+                class_units[labelid2tagid[label]] += 1
             else:
                 problematic_sdocs.append(
                     ProblematicSdoc(
@@ -390,7 +390,7 @@ class DocClassificationModelService(TextClassificationModelService):
         project_id: int,
         tag_ids: list[int],
         class_ids: list[int],
-        classid2labelid: dict[int, int],
+        tagid2labelid: dict[int, int],
         tokenizer,
         use_chunking: bool,
     ) -> tuple[dict[int, list[int]], Dataset]:
@@ -453,7 +453,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 {
                     "sdoc_id": sdoc_data.id,
                     "text": sdoc_data.content,
-                    "labels": classid2labelid[annotation],
+                    "labels": tagid2labelid[annotation],
                 }
             )
         logger.info(
@@ -529,7 +529,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get tags and create mapping
-        tags, classid2labelid, id2label = build_tag_label_mappings(
+        tags, tagid2labelid, labelid2name = build_tag_label_mappings(
             db=db, class_ids=parameters.class_ids
         )
 
@@ -539,7 +539,7 @@ class DocClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=parameters.class_ids,
-            classid2labelid=classid2labelid,
+            tagid2labelid=tagid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
         )
@@ -620,7 +620,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
-        num_labels = len(classid2labelid)
+        num_labels = len(tagid2labelid)
         class_weights = [0.0] * num_labels
         for label, count in label_counts.items():
             if count > 0:
@@ -677,13 +677,13 @@ class DocClassificationModelService(TextClassificationModelService):
             # Initialize the Lightning Model
             lightning_model = DocClassificationLightningModel(
                 base_name=parameters.base_name,
-                num_labels=len(classid2labelid),
+                num_labels=len(tagid2labelid),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
-                id2label=id2label,
-                label2id={v: k for k, v in id2label.items()},
+                id2label=labelid2name,
+                label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
             )
 
@@ -725,7 +725,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path or "ERROR!",
                 project_id=payload.project_id,
-                labelid2classid={v: k for k, v in classid2labelid.items()},
+                labelid2classid={v: k for k, v in tagid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -741,7 +741,7 @@ class DocClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        labelid2tagid = {v: k for k, v in tagid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -756,7 +756,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2tagid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
@@ -800,7 +800,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        classid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
+        tagid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
@@ -813,7 +813,7 @@ class DocClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=classifier.class_ids,
-            classid2labelid=classid2labelid,
+            tagid2labelid=tagid2labelid,
             tokenizer=tokenizer,
             use_chunking=False,
         )
@@ -831,7 +831,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # Dataset statistics (number of annotations per tag)
         eval_dataset_stats: dict[int, int] = {
             tag_id: 0
-            for tag_id, label_id in classid2labelid.items()
+            for tag_id, label_id in tagid2labelid.items()
             if label_id != O_LABEL_ID
         }
         for sdoc_id in dataset["sdoc_id"]:
@@ -864,7 +864,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        labelid2tagid = {v: k for k, v in tagid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -879,7 +879,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2tagid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
@@ -926,7 +926,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        labelid2classid = {
+        labelid2tagid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }
 
@@ -1003,7 +1003,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 results.append(
                     {
                         "sdoc_id": sdoc_id,
-                        "class_id": labelid2classid[label],
+                        "class_id": labelid2tagid[label],
                     }
                 )
 
