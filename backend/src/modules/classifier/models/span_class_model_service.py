@@ -61,7 +61,12 @@ from modules.classifier.classifier_exceptions import (
     EmptyDatasetError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
-from modules.classifier.models.model_utils import check_hf_model_exists
+from modules.classifier.models.model_utils import (
+    IGNORE_LABEL_ID,
+    O_LABEL_ID,
+    O_LABEL_NAME,
+    check_hf_model_exists,
+)
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
@@ -149,11 +154,12 @@ class SpanClassificationLightningModel(pl.LightningModule):
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
 
-        # Define custom loss function. ignore_index=-100 makes the padding /
-        # special-token / subword labels (which are set to -100) not contribute
-        # to the loss. (This is the default, but we set it explicitly.)
+        # Define custom loss function. ignore_index=IGNORE_LABEL_ID makes the
+        # padding / special-token / subword labels (which are set to
+        # IGNORE_LABEL_ID) not contribute to the loss. (This is the default,
+        # but we set it explicitly.)
         self.loss_fn = nn.CrossEntropyLoss(
-            weight=torch.tensor(class_weights), ignore_index=-100
+            weight=torch.tensor(class_weights), ignore_index=IGNORE_LABEL_ID
         )
 
     def forward(
@@ -187,17 +193,20 @@ class SpanClassificationLightningModel(pl.LightningModule):
         outputs = self(**batch)
         predictions = torch.argmax(outputs.logits, dim=2).tolist()
 
-        # Accumulate token-level predictions/labels (ignoring -100 padding) so
-        # that metrics can be computed once over the whole epoch.
+        # Accumulate token-level predictions/labels (ignoring IGNORE_LABEL_ID
+        # padding) so that metrics can be computed once over the whole epoch.
         labels = batch["labels"].tolist()
         flat_preds = [
             pred_tok
             for prediction, label in zip(predictions, labels)
             for (pred_tok, gold_tok) in zip(prediction, label)
-            if gold_tok != -100
+            if gold_tok != IGNORE_LABEL_ID
         ]
         flat_labels = [
-            gold_tok for label in labels for gold_tok in label if gold_tok != -100
+            gold_tok
+            for label in labels
+            for gold_tok in label
+            if gold_tok != IGNORE_LABEL_ID
         ]
         if prefix == "eval":
             self._val_preds.extend(flat_preds)
@@ -221,11 +230,9 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
         # Token-level metrics. A token counts as correct when its predicted
         # label matches the gold label. P/R/F1 use the configured averaging
-        # strategy over the entity classes (label != 0), excluding the
-        # majority "O" class.
-        # Cast to plain float: sklearn returns numpy scalars, which
-        # Lightning's log_dict does not accept.
-        entity_labels = [i for i in range(self.num_labels) if i != 0]
+        # strategy over the entity classes (label != O_LABEL_ID), excluding the
+        # "O" class.
+        entity_labels = [i for i in range(self.num_labels) if i != O_LABEL_ID]
         accuracy = float(accuracy_score(labels, preds))
         precision, recall, f1, _ = precision_recall_fscore_support(
             labels,
@@ -354,10 +361,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             classid2labelid = {code.id: i + 1 for i, code in enumerate(codes)}
             code2parent = {code: code for code in class_ids}
 
-        classid2labelid[0] = 0
+        classid2labelid[O_LABEL_ID] = O_LABEL_ID
         id2label = {i + 1: code.name for i, code in enumerate(codes)}
-        id2label[0] = "O"
-        code2parent[0] = 0
+        id2label[O_LABEL_ID] = O_LABEL_NAME
+        code2parent[O_LABEL_ID] = O_LABEL_ID
 
         return codes, classid2labelid, code2parent, id2label
 
@@ -405,10 +412,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             row_labeled = 0
             seen_classes: set[int] = set()
             for label in labels:
-                if label == -100:
+                if label == IGNORE_LABEL_ID:
                     continue
                 row_total += 1
-                if label != 0:
+                if label != O_LABEL_ID:
                     row_labeled += 1
                     class_id = code2parent[labelid2classid[label]]
                     class_units[class_id] += 1
@@ -530,10 +537,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             for sdoc_id, annotations in sdoc_id2annotations.items():
                 sdoc_data = sdocid2data[sdoc_id]
                 words = sdoc_data.tokens
-                labels = [0 for word in words]
+                labels = [O_LABEL_ID for word in words]
                 for annotation in annotations:
                     labels[annotation.begin_token : annotation.end_token] = [
-                        classid2labelid.get(annotation.code_id, 0)
+                        classid2labelid.get(annotation.code_id, O_LABEL_ID)
                     ] * (annotation.end_token - annotation.begin_token)
                 dataset.append(
                     {
@@ -574,15 +581,15 @@ class SpanClassificationModelService(TextClassificationModelService):
                 )  # Map tokens to their respective word.
                 previous_word_idx = None
                 label_ids = []
-                for word_idx in word_ids:  # Set the special tokens to -100.
+                for word_idx in word_ids:  # Set the special tokens to IGNORE_LABEL_ID.
                     if word_idx is None:
-                        label_ids.append(-100)
+                        label_ids.append(IGNORE_LABEL_ID)
                     elif (
                         word_idx != previous_word_idx
                     ):  # Only label the first token of a given word.
                         label_ids.append(label[word_idx])
                     else:
-                        label_ids.append(-100)
+                        label_ids.append(IGNORE_LABEL_ID)
                     previous_word_idx = word_idx
                 labels.append(label_ids)
 
@@ -659,8 +666,8 @@ class SpanClassificationModelService(TextClassificationModelService):
             chunk_len = tokenizer.model_max_length - 2
             for key, values in examples.items():
                 if "labels" == key:
-                    pre = [-100]
-                    post = [-100]
+                    pre = [IGNORE_LABEL_ID]
+                    post = [IGNORE_LABEL_ID]
                 elif "attention_mask" == key:
                     pre = [1]
                     post = [1]
@@ -726,7 +733,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         label_counts = defaultdict(int)
         for labels in split_dataset["train"]["labels"]:
             for label in labels:
-                if label != -100:  # Ignore padding tokens
+                if label != IGNORE_LABEL_ID:  # Ignore padding tokens
                     label_counts[label] += 1
 
         # Calculate the weight for each label: A simple inverse frequency weighting
@@ -940,7 +947,9 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # Dataset statistics (number of annotations per code)
         eval_dataset_stats: dict[int, int] = {
-            code_id: 0 for code_id, label_id in classid2labelid.items() if label_id != 0
+            code_id: 0
+            for code_id, label_id in classid2labelid.items()
+            if label_id != O_LABEL_ID
         }
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
@@ -1143,7 +1152,8 @@ class SpanClassificationModelService(TextClassificationModelService):
         # Merge the overlapping per-chunk token predictions into one word-level
         # label array per document. The first chunk that covers a word wins.
         sdoc_id2word_labels: dict[int, list[int]] = {
-            sdoc_id: [0] * num_words for sdoc_id, num_words in sdoc_id2num_words.items()
+            sdoc_id: [O_LABEL_ID] * num_words
+            for sdoc_id, num_words in sdoc_id2num_words.items()
         }
         sdoc_id2word_seen: dict[int, set[int]] = defaultdict(set)
         for chunk_idx, chunk_preds in zip(flat_chunk_idxs, flat_predictions):
@@ -1162,7 +1172,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         # convention and SpanAnnotation.end_token semantics).
         results: list[AnnotationResult] = []
         for sdoc_id, word_labels in sdoc_id2word_labels.items():
-            prev_label = 0
+            prev_label = O_LABEL_ID
             current_annotation: AnnotationResult | None = None
 
             for word_id, label in enumerate(word_labels):
@@ -1175,7 +1185,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                         current_annotation = None
 
                     # A new annotation starts
-                    if label != 0:
+                    if label != O_LABEL_ID:
                         current_annotation = {
                             "sdoc_id": sdoc_id,
                             "begin_token": word_id,

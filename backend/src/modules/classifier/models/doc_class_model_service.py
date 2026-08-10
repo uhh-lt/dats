@@ -56,7 +56,11 @@ from modules.classifier.classifier_exceptions import (
     EmptyDatasetError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
-from modules.classifier.models.model_utils import check_hf_model_exists
+from modules.classifier.models.model_utils import (
+    O_LABEL_ID,
+    O_LABEL_NAME,
+    check_hf_model_exists,
+)
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
@@ -201,14 +205,14 @@ class DocClassificationLightningModel(pl.LightningModule):
 
         # Document-level metrics. A document counts as correct when its
         # predicted label matches the gold label. P/R/F1 use the configured
-        # averaging strategy over all classes (the doc classifier has no "O"
-        # class, so no label is excluded).
-        # Cast to plain float: sklearn returns numpy scalars, which Lightning's
-        # log_dict does not accept.
+        # averaging strategy over the entity classes (label != O_LABEL_ID),
+        # excluding the "O" class (untagged documents).
+        entity_labels = [i for i in range(self.num_labels) if i != O_LABEL_ID]
         accuracy = float(accuracy_score(labels, preds))
         precision, recall, f1, _ = precision_recall_fscore_support(
             labels,
             preds,
+            labels=entity_labels,
             average=self.averaging,
             # sklearn's stub types zero_division as str only, but 0 is valid.
             zero_division=0,  # pyright: ignore[reportArgumentType]
@@ -226,20 +230,21 @@ class DocClassificationLightningModel(pl.LightningModule):
             prog_bar=True,
         )
 
-        # Per-class metrics (stored for both the validation and test epochs so
-        # that the post-training evaluation can persist them).
+        # Per-class metrics over the entity classes (stored for both the
+        # validation and test epochs so the post-training evaluation can persist
+        # them).
         if prefix in ("eval", "test"):
             pc_precision, pc_recall, pc_f1, pc_support = cast(
                 tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
                 precision_recall_fscore_support(
                     labels,
                     preds,
+                    labels=entity_labels,
                     average=None,
                     # sklearn's stub types zero_division as str only, but 0 is valid.
                     zero_division=0,  # pyright: ignore[reportArgumentType]
                 ),
             )
-            all_labels = sorted(set(labels) | set(preds))
             self._last_class_metrics = [
                 {
                     "label_id": label_id,
@@ -248,7 +253,7 @@ class DocClassificationLightningModel(pl.LightningModule):
                     "f1": float(pc_f1[i]),
                     "support": int(pc_support[i]),
                 }
-                for i, label_id in enumerate(all_labels)
+                for i, label_id in enumerate(entity_labels)
             ]
 
     def on_validation_epoch_end(self) -> None:
@@ -314,7 +319,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # Build the label mapping exactly as in training
         tags = crud_tag.read_by_ids(db=db, ids=class_ids)
         classid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
-        classid2labelid[0] = 0
+        classid2labelid[O_LABEL_ID] = O_LABEL_ID
 
         # Build the dataset exactly as in training, but skip tokenization
         _, dataset = self._retrieve_and_build_dataset(
@@ -337,7 +342,7 @@ class DocClassificationModelService(TextClassificationModelService):
         for row in cast(list[DatasetRow], dataset):
             label: int = row["labels"]
             total_units += 1
-            if label != 0:
+            if label != O_LABEL_ID:
                 labeled_units += 1
                 class_units[labelid2classid[label]] += 1
             else:
@@ -445,7 +450,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
             # We only use the first annotation (if multiple exist)
             annotations = sdoc_id2annotation_ids[sdoc_id]
-            annotation = annotations[0] if len(annotations) > 0 else 0
+            annotation = annotations[0] if len(annotations) > 0 else O_LABEL_ID
             dataset.append(
                 {
                     "sdoc_id": sdoc_data.id,
@@ -528,9 +533,9 @@ class DocClassificationModelService(TextClassificationModelService):
         # Get tags and create mapping
         tags = crud_tag.read_by_ids(db=db, ids=parameters.class_ids)
         classid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
-        classid2labelid[0] = 0
+        classid2labelid[O_LABEL_ID] = O_LABEL_ID
         id2label = {i + 1: tag.name for i, tag in enumerate(tags)}
-        id2label[0] = "O"
+        id2label[O_LABEL_ID] = O_LABEL_NAME
 
         # Build dataset
         sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
@@ -829,7 +834,9 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # Dataset statistics (number of annotations per tag)
         eval_dataset_stats: dict[int, int] = {
-            tag_id: 0 for tag_id, label_id in classid2labelid.items() if label_id != 0
+            tag_id: 0
+            for tag_id, label_id in classid2labelid.items()
+            if label_id != O_LABEL_ID
         }
         for sdoc_id in dataset["sdoc_id"]:
             for annotation in sdoc_id2annotation_ids[sdoc_id]:
@@ -994,7 +1001,9 @@ class DocClassificationModelService(TextClassificationModelService):
         # Map predictions
         results: list[AnnotationResult] = []
         for sdoc_id, label in zip(flat_sdoc_ids, flat_predictions):
-            if label != 0:  # 0 is the "O" label, i.e. no classification
+            if (
+                label != O_LABEL_ID
+            ):  # O_LABEL_ID is the "O" label, i.e. no classification
                 results.append(
                     {
                         "sdoc_id": sdoc_id,
