@@ -122,6 +122,12 @@ classifier:
   # (tokens / sentences) is below the weak threshold.
   weak_signal_threshold: ${oc.env:CLASSIFIER_WEAK_SIGNAL_THRESHOLD, 0.1}
   strong_signal_threshold: ${oc.env:CLASSIFIER_STRONG_SIGNAL_THRESHOLD, 0.3}
+  # Pre-built selection of base models shown in the frontend.
+  # Comma-separated list of "huggingface-model:Display Label" pairs.
+  # Override via the CLASSIFIER_TRANSFORMER_MODELS / CLASSIFIER_EMBEDDING_MODELS
+  # environment variables to fully configure the selectable base models.
+  transformer_models: ${oc.env:CLASSIFIER_TRANSFORMER_MODELS, "answerdotai/ModernBERT-base:ModernBERT-base (EN),answerdotai/ModernBERT-large:ModernBERT-large (EN),LSX-UniWue/ModernGBERT_134M:ModernGBERT_134M (DE),LSX-UniWue/ModernGBERT_1B:ModernGBERT_1B (DE),microsoft/mdeberta-v3-base:mdeberta-v3-base (MULTI)"}
+  embedding_models: ${oc.env:CLASSIFIER_EMBEDDING_MODELS, "Alibaba-NLP/gte-modernbert-base:gte-modernbert-base (EN),intfloat/multilingual-e5-small:multilingual-e5-small (MULTI),intfloat/multilingual-e5-large:multilingual-e5-large (MULTI),sentence-transformers/paraphrase-multilingual-mpnet-base-v2:paraphrase-multilingual-mpnet-base-v2 (MULTI)"}
 
 promptembedder:
   text:

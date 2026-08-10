@@ -616,6 +616,20 @@
         }
       }
     },
+    "/classifier/base-models": {
+      "get": {
+        "tags": ["classifier"],
+        "summary": "Returns the pre-built selection of base models for classifier training",
+        "operationId": "get_base_models",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierBaseModels" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/classifier/project/{proj_id}": {
       "get": {
         "tags": ["classifier"],
@@ -7741,6 +7755,34 @@
         "title": "ChatSessionResponse"
       },
       "ClassifierAveraging": { "type": "string", "enum": ["micro", "macro"], "title": "ClassifierAveraging" },
+      "ClassifierBaseModelOption": {
+        "properties": {
+          "value": { "type": "string", "title": "Value", "description": "HuggingFace model name" },
+          "label": { "type": "string", "title": "Label", "description": "Display label for the model" }
+        },
+        "type": "object",
+        "required": ["value", "label"],
+        "title": "ClassifierBaseModelOption"
+      },
+      "ClassifierBaseModels": {
+        "properties": {
+          "transformer_models": {
+            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
+            "type": "array",
+            "title": "Transformer Models",
+            "description": "Selectable transformer base models (span & document classification)"
+          },
+          "embedding_models": {
+            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
+            "type": "array",
+            "title": "Embedding Models",
+            "description": "Selectable embedding base models (sentence classification)"
+          }
+        },
+        "type": "object",
+        "required": ["transformer_models", "embedding_models"],
+        "title": "ClassifierBaseModels"
+      },
       "ClassifierClassMetrics": {
         "properties": {
           "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },

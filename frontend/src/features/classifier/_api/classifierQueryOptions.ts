@@ -1,6 +1,7 @@
 import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
+import { ClassifierBaseModels } from "@models/ClassifierBaseModels";
 import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
@@ -36,6 +37,17 @@ export const projectClassifierJobsQueryOptions = (projectId: number) =>
         projectId,
       }),
   });
+
+export const classifierBaseModelsQueryOptions = () =>
+  queryOptions<ClassifierBaseModels>({
+    queryKey: [QueryKey.CLASSIFIER_BASE_MODELS],
+    queryFn: () => ClassifierService.getBaseModels(),
+    // the base model selection is configured in the backend and never changes
+    // at runtime, so we fetch it once and keep it fresh indefinitely.
+    staleTime: Infinity,
+  });
+
+const useGetBaseModels = () => useQuery(classifierBaseModelsQueryOptions());
 
 const useStartClassifierJob = () =>
   useMutation({
@@ -196,4 +208,5 @@ export const ClassifierHooks = {
   useUpdateClassifier,
   useDeleteClassifier,
   useComputeDatasetStatistics2,
+  useGetBaseModels,
 };

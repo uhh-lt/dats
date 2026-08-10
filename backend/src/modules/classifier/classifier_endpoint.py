@@ -3,10 +3,13 @@ from sqlalchemy.orm import Session
 
 from common.crud_enum import Crud
 from common.dependencies import get_current_user, get_db_session
+from config import conf
 from core.auth.authz_user import AuthzUser
 from core.project.project_crud import crud_project
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierBaseModelOption,
+    ClassifierBaseModels,
     ClassifierDatasetStatistics,
     ClassifierModel,
     ClassifierRead,
@@ -17,6 +20,26 @@ from modules.classifier.classifier_service import ClassifierService
 router = APIRouter(
     prefix="/classifier", dependencies=[Depends(get_current_user)], tags=["classifier"]
 )
+
+
+@router.get(
+    "/base-models",
+    response_model=ClassifierBaseModels,
+    summary="Returns the pre-built selection of base models for classifier training",
+)
+def get_base_models(
+    authz_user: AuthzUser = Depends(),
+) -> ClassifierBaseModels:
+    return ClassifierBaseModels(
+        transformer_models=[
+            ClassifierBaseModelOption(value=m.value, label=m.label)
+            for m in conf.classifier.transformer_models
+        ],
+        embedding_models=[
+            ClassifierBaseModelOption(value=m.value, label=m.label)
+            for m in conf.classifier.embedding_models
+        ],
+    )
 
 
 @router.get(

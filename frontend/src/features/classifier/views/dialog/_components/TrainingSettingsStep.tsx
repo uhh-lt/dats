@@ -17,8 +17,8 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
+import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
-import { embeddingModelOptions, transformerModelOptions } from "./baseModelOptions";
 
 interface TrainingSettings {
   // required
@@ -49,6 +49,12 @@ export function TrainingSettingsStep() {
   const model = useAppSelector((state) => state.classifier.classifierModel);
   const dispatch = useAppDispatch();
 
+  // global server state
+  // the selectable base models are configured in the backend and fetched once.
+  const baseModels = ClassifierHooks.useGetBaseModels();
+  const baseModelOptions =
+    model === ClassifierModel.SENTENCE ? baseModels.data?.embedding_models : baseModels.data?.transformer_models;
+
   // form state
   const {
     control,
@@ -58,8 +64,7 @@ export function TrainingSettingsStep() {
     defaultValues: {
       classifierName: "",
       // default base model depends on the classifier model type
-      baseModelName:
-        model === ClassifierModel.SENTENCE ? "Alibaba-NLP/gte-modernbert-base" : "answerdotai/ModernBERT-base",
+      baseModelName: baseModelOptions?.[0]?.value ?? "",
       adapterName: "No Adapter",
       batchSize: 8,
       epochs: 10,
@@ -137,7 +142,7 @@ export function TrainingSettingsStep() {
                 name="baseModelName"
                 control={control}
                 rules={{ required: "Base Model is required" }}
-                options={model === ClassifierModel.SENTENCE ? embeddingModelOptions : transformerModelOptions}
+                options={baseModelOptions ?? []}
                 textFieldProps={{
                   label: "Base Model",
                   error: Boolean(errors.baseModelName),
