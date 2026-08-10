@@ -1,4 +1,5 @@
 import { LinearProgressWithLabel } from "@components/progress-bars";
+import { jobStatusToSimple } from "@core/job";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
@@ -10,6 +11,8 @@ export function ClassifierJobProgressBar({ classifierJob }: { classifierJob: Cla
       ? `Status: All ${classifierJob.steps.length} steps are done.`
       : `Status: ${classifierJob.current_step} of ${classifierJob.steps.length} steps are done.`;
   }, [classifierJob]);
+
+  const failed = classifierJob ? jobStatusToSimple[classifierJob.status] === "error" : false;
 
   return (
     <Stack gap={2}>
@@ -24,6 +27,7 @@ export function ClassifierJobProgressBar({ classifierJob }: { classifierJob: Cla
         current={classifierJob ? classifierJob.current_step : 0}
         max={Math.max(classifierJob ? classifierJob.steps.length - 1 : 0, 1)}
         tooltip={progressTooltip}
+        failed={failed}
       />
       {classifierJob && (
         <Typography variant="caption" color="textSecondary" textAlign="center" mt={-3}>

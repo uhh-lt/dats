@@ -5,9 +5,10 @@ interface LinearProgressWithLabelProps extends Omit<LinearProgressProps, "value"
   current: number;
   max: number;
   tooltip: React.ReactNode;
+  failed?: boolean;
 }
 
-export function LinearProgressWithLabel({ current, max, tooltip, ...props }: LinearProgressWithLabelProps) {
+export function LinearProgressWithLabel({ current, max, tooltip, failed, ...props }: LinearProgressWithLabelProps) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", px: 3 }}>
       <Box sx={{ width: "100%", mr: 1 }}>
@@ -15,11 +16,12 @@ export function LinearProgressWithLabel({ current, max, tooltip, ...props }: Lin
           <LinearProgress
             style={{ height: 6, borderRadius: 5, ...props.style }}
             value={(current / max) * 100}
+            color={failed ? "error" : "primary"}
             {...props}
           />
         </Tooltip>
       </Box>
-      <CircularProgressWithLabel current={current} max={max} tooltip={`${current} / ${max}`} />
+      <CircularProgressWithLabel current={current} max={max} tooltip={`${current} / ${max}`} failed={failed} />
     </Box>
   );
 }
