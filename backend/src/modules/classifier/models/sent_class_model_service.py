@@ -341,10 +341,10 @@ class SentClassificationModelService(TextClassificationModelService):
             child_codes = [
                 crud_code.read_with_children(db, code_id=id) for id in class_ids
             ]
+            # All children of a parent share the parent's single label id, so
+            # that the number of labels equals the number of parent classes.
             classid2labelid: dict[int, int] = {
-                c.id: i + 1
-                for code, (i, parent) in zip(child_codes, enumerate(class_ids))
-                for c in code
+                c.id: i + 1 for i, children in enumerate(child_codes) for c in children
             }
             code2parent = {
                 code.id: parent
@@ -527,10 +527,11 @@ class SentClassificationModelService(TextClassificationModelService):
                 sentences = sdoc_data.sentences
                 labels = [0 for sentence in sentences]
                 for annotation in annotations:
+                    # sentence_id_end is INCLUSIVE, so the slice end is +1.
                     labels[
-                        annotation.sentence_id_start : annotation.sentence_id_end
+                        annotation.sentence_id_start : annotation.sentence_id_end + 1
                     ] = [classid2labelid.get(annotation.code_id, 0)] * (
-                        annotation.sentence_id_end - annotation.sentence_id_start
+                        annotation.sentence_id_end - annotation.sentence_id_start + 1
                     )
 
                 row: DatasetRow = {
@@ -579,46 +580,10 @@ class SentClassificationModelService(TextClassificationModelService):
         # Pad embeddings
         padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)  # type: ignore
 
-        # switch first sentence (0) with longest sentence (longest_idx)
-        longest_idx = max(range(len(labels)), key=lambda k: len(labels[k]))
-
-        padded_embeddings = padded_embeddings.tolist()
-        padded_labels = padded_labels.tolist()
-        mask = mask.tolist()
-
-        new_padded_embeddings = padded_embeddings.copy()
-        new_padded_labels = padded_labels.copy()
-        new_mask = mask.copy()
-        new_sdoc_ids = sdoc_ids.copy()
-        new_user_ids = user_ids.copy()
-
-        new_padded_embeddings[0] = padded_embeddings[longest_idx]
-        new_padded_labels[0] = padded_labels[longest_idx]
-        new_mask[0] = mask[longest_idx]
-        new_sdoc_ids[0] = sdoc_ids[longest_idx]
-        new_user_ids[0] = user_ids[longest_idx]
-
-        new_padded_embeddings[longest_idx] = padded_embeddings[0]
-        new_padded_labels[longest_idx] = padded_labels[0]
-        new_mask[longest_idx] = mask[0]
-        new_sdoc_ids[longest_idx] = sdoc_ids[0]
-        new_user_ids[longest_idx] = user_ids[0]
-
-        assert (
-            len(padded_embeddings)
-            == len(padded_labels)
-            == len(mask)
-            == len(new_padded_embeddings)
-            == len(new_padded_labels)
-            == len(new_mask)
-        ), (
-            f"Lengths must match: {len(padded_embeddings)}, {len(padded_labels)}, {len(mask)}, {len(new_padded_embeddings)}, {len(new_padded_labels)}, {len(new_mask)}"
-        )
-
         return {
-            "sentences": torch.tensor(new_padded_embeddings),
-            "labels": torch.tensor(new_padded_labels),
-            "mask": torch.tensor(new_mask, dtype=torch.bool),
+            "sentences": padded_embeddings,
+            "labels": padded_labels,
+            "mask": mask,
             "sdoc_id": torch.tensor(sdoc_ids),
             "user_id": torch.tensor(user_ids),
         }
@@ -725,7 +690,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
-        num_labels = len(classid2labelid)
+        num_labels = len(id2label)
         class_weights = [0.0] * num_labels
         for label, count in label_counts.items():
             if count > 0:
@@ -788,7 +753,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 hidden_dim=int(embedding_dim / 2),
                 use_lstm=True,
                 # training params
-                num_labels=len(classid2labelid),
+                num_labels=len(id2label),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
@@ -1112,16 +1077,20 @@ class SentClassificationModelService(TextClassificationModelService):
             flat_sdoc_ids.extend([x.item() for x in pred["sdoc_ids"]])  # type: ignore
             flat_predictions.extend(pred["predictions"])  # type: ignore
 
-        # Parse predictions to sent annotations
-        prev_label = 0
+        # Parse predictions to sent annotations.
+        # sentence_id_end is INCLUSIVE (matches SentenceAnnotation semantics).
         results: list[AnnotationResult] = []
-        current_annotation: AnnotationResult | None = None
         for sdoc_id, predictions in zip(flat_sdoc_ids, flat_predictions):
+            # Reset per-document state so annotations never leak across docs.
+            prev_label = 0
+            current_annotation: AnnotationResult | None = None
+
             for sent_id, label in enumerate(predictions):
                 if label != prev_label:
-                    # The current annotation ends
+                    # The current annotation ends. sent_id is the first sentence
+                    # after the span, so the inclusive end is sent_id - 1.
                     if current_annotation is not None:
-                        current_annotation["end"] = sent_id
+                        current_annotation["end"] = sent_id - 1
                         results.append(current_annotation)
                         current_annotation = None
 
@@ -1136,11 +1105,11 @@ class SentClassificationModelService(TextClassificationModelService):
 
                 prev_label = label
 
-            # Finish the current annotation
+            # Finish the current annotation. The inclusive end is the last
+            # sentence index.
             if current_annotation is not None:
                 current_annotation["end"] = len(predictions) - 1
                 results.append(current_annotation)
-                current_annotation = None
 
         # 6. Store annotations in DB
         job.update(current_step=6)
