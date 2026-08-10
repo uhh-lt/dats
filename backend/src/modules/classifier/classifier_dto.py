@@ -28,6 +28,20 @@ class ClassifierAveraging(str, Enum):
     MACRO = "macro"
 
 
+class ClassifierBaseModelOption(BaseModel):
+    value: str = Field(description="HuggingFace model name")
+    label: str = Field(description="Display label for the model")
+
+
+class ClassifierBaseModels(BaseModel):
+    transformer_models: list[ClassifierBaseModelOption] = Field(
+        description="Selectable transformer base models (span & document classification)"
+    )
+    embedding_models: list[ClassifierBaseModelOption] = Field(
+        description="Selectable embedding base models (sentence classification)"
+    )
+
+
 class ClassifierLoss(BaseModel):
     step: int = Field(description="Training step")
     value: float = Field(description="Loss value")

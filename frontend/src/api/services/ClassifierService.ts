@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_classifier_compute_dataset_statistics2 } from "@models/Body_classifier_compute_dataset_statistics2";
+import type { ClassifierBaseModels } from "@models/ClassifierBaseModels";
 import type { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
 import type { ClassifierJobInput } from "@models/ClassifierJobInput";
 import type { ClassifierJobRead } from "@models/ClassifierJobRead";
@@ -13,6 +14,17 @@ import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class ClassifierService {
+  /**
+   * Returns the pre-built selection of base models for classifier training
+   * @returns ClassifierBaseModels Successful Response
+   * @throws ApiError
+   */
+  public static getBaseModels(): CancelablePromise<ClassifierBaseModels> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/classifier/base-models",
+    });
+  }
   /**
    * Returns all Classifiers of the Project with the given ID
    * @returns ClassifierRead Successful Response

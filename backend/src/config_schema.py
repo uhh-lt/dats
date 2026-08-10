@@ -323,11 +323,46 @@ class CotaConfig(BaseModel):
     batch_size: int = Field(gt=0)
 
 
+class BaseModelOption(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    value: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+
+
 class ClassifierConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     weak_signal_threshold: float = Field(ge=0.0, le=1.0)
     strong_signal_threshold: float = Field(ge=0.0, le=1.0)
+    transformer_models: list[BaseModelOption] = Field(default_factory=list)
+    embedding_models: list[BaseModelOption] = Field(default_factory=list)
+
+    @field_validator("transformer_models", "embedding_models", mode="before")
+    @classmethod
+    def _parse_models(cls, value: Any) -> Any:
+        # The model lists can be provided either as a list of objects (YAML default)
+        # or as a comma-separated string of "value:label" pairs (ENV variable).
+        if not isinstance(value, str):
+            return value
+
+        value = value.strip()
+        if not value:
+            return []
+
+        options = []
+        for item in value.split(","):
+            item = item.strip()
+            if not item:
+                continue
+            model_value, sep, label = item.partition(":")
+            options.append(
+                {
+                    "value": model_value.strip(),
+                    "label": label.strip() if sep else model_value.strip(),
+                }
+            )
+        return options
 
 
 class PromptEmbedderBranchConfig(BaseModel):
