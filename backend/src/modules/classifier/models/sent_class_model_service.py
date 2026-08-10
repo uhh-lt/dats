@@ -61,7 +61,11 @@ from modules.classifier.classifier_exceptions import (
     EmptyDatasetError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
-from modules.classifier.models.model_utils import check_hf_model_exists
+from modules.classifier.models.model_utils import (
+    O_LABEL_ID,
+    O_LABEL_NAME,
+    check_hf_model_exists,
+)
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
@@ -225,11 +229,9 @@ class SentClassificationLightningModel(pl.LightningModule):
 
         # Token-level metrics. A token counts as correct when its predicted
         # label matches the gold label. P/R/F1 use the configured averaging
-        # strategy over the entity classes (label != 0), excluding the
-        # majority "O" class.
-        # Cast to plain float: sklearn returns numpy scalars, which
-        # Lightning's log_dict does not accept.
-        entity_labels = [i for i in range(self.num_labels) if i != 0]
+        # strategy over the entity classes (label != O_LABEL_ID), excluding the
+        # "O" class.
+        entity_labels = [i for i in range(self.num_labels) if i != O_LABEL_ID]
         accuracy = float(accuracy_score(labels, preds))
         precision, recall, f1, _ = precision_recall_fscore_support(
             labels,
@@ -355,10 +357,10 @@ class SentClassificationModelService(TextClassificationModelService):
             classid2labelid = {code.id: i + 1 for i, code in enumerate(codes)}
             code2parent = {code: code for code in class_ids}
 
-        classid2labelid[0] = 0
+        classid2labelid[O_LABEL_ID] = O_LABEL_ID
         id2label = {i + 1: code.name for i, code in enumerate(codes)}
-        id2label[0] = "O"
-        code2parent[0] = 0
+        id2label[O_LABEL_ID] = O_LABEL_NAME
+        code2parent[O_LABEL_ID] = O_LABEL_ID
 
         return codes, classid2labelid, code2parent, id2label
 
@@ -404,7 +406,7 @@ class SentClassificationModelService(TextClassificationModelService):
             row_labeled = 0
             seen_classes: set[int] = set()
             for label in labels:
-                if label != 0:
+                if label != O_LABEL_ID:
                     row_labeled += 1
                     class_id = code2parent[labelid2classid[label]]
                     class_units[class_id] += 1
@@ -525,12 +527,12 @@ class SentClassificationModelService(TextClassificationModelService):
             for sdoc_id, annotations in sdoc_id2annotations.items():
                 sdoc_data = sdocid2data[sdoc_id]
                 sentences = sdoc_data.sentences
-                labels = [0 for sentence in sentences]
+                labels = [O_LABEL_ID for sentence in sentences]
                 for annotation in annotations:
                     # sentence_id_end is INCLUSIVE, so the slice end is +1.
                     labels[
                         annotation.sentence_id_start : annotation.sentence_id_end + 1
-                    ] = [classid2labelid.get(annotation.code_id, 0)] * (
+                    ] = [classid2labelid.get(annotation.code_id, O_LABEL_ID)] * (
                         annotation.sentence_id_end - annotation.sentence_id_start + 1
                     )
 
@@ -570,7 +572,7 @@ class SentClassificationModelService(TextClassificationModelService):
         user_ids = [b["user_id"] for b in batch]
 
         # Pad labels
-        padded_labels = pad_sequence(labels, batch_first=True, padding_value=0)
+        padded_labels = pad_sequence(labels, batch_first=True, padding_value=O_LABEL_ID)
 
         # Create mask
         mask = torch.zeros(padded_labels.shape, dtype=torch.bool)
@@ -685,8 +687,7 @@ class SentClassificationModelService(TextClassificationModelService):
         label_counts = defaultdict(int)
         for labels in split_dataset["train"]["labels"]:
             for label in labels:
-                if label != -100:  # Ignore padding tokens
-                    label_counts[label] += 1
+                label_counts[label] += 1
 
         # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
@@ -910,7 +911,9 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Dataset statistics (number of annotations per code)
         eval_dataset_stats: dict[int, int] = {
-            code_id: 0 for code_id, label_id in classid2labelid.items() if label_id != 0
+            code_id: 0
+            for code_id, label_id in classid2labelid.items()
+            if label_id != O_LABEL_ID
         }
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
@@ -1032,7 +1035,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 {
                     "sdoc_id": sdoc_data.id,
                     "sentences": sentences,
-                    "labels": [0] * len(sdoc_data.sentences),  # Dummy labels
+                    "labels": [O_LABEL_ID] * len(sdoc_data.sentences),  # Dummy labels
                     "user_id": ASSISTANT_TRAINED_ID,  # Dummy user_id
                 }
             )
@@ -1082,7 +1085,7 @@ class SentClassificationModelService(TextClassificationModelService):
         results: list[AnnotationResult] = []
         for sdoc_id, predictions in zip(flat_sdoc_ids, flat_predictions):
             # Reset per-document state so annotations never leak across docs.
-            prev_label = 0
+            prev_label = O_LABEL_ID
             current_annotation: AnnotationResult | None = None
 
             for sent_id, label in enumerate(predictions):
@@ -1095,7 +1098,7 @@ class SentClassificationModelService(TextClassificationModelService):
                         current_annotation = None
 
                     # A new annotation starts
-                    if label != 0:
+                    if label != O_LABEL_ID:
                         current_annotation = {
                             "sdoc_id": sdoc_id,
                             "begin": sent_id,
