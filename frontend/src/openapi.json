@@ -7740,6 +7740,19 @@
         "required": ["response", "session_id"],
         "title": "ChatSessionResponse"
       },
+      "ClassifierAveraging": { "type": "string", "enum": ["micro", "macro"], "title": "ClassifierAveraging" },
+      "ClassifierClassMetrics": {
+        "properties": {
+          "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
+          "precision": { "type": "number", "title": "Precision", "description": "Precision score for the class" },
+          "recall": { "type": "number", "title": "Recall", "description": "Recall score for the class" },
+          "f1": { "type": "number", "title": "F1", "description": "F1 score for the class" },
+          "support": { "type": "integer", "title": "Support", "description": "Number of gold instances of the class" }
+        },
+        "type": "object",
+        "required": ["class_id", "precision", "recall", "f1", "support"],
+        "title": "ClassifierClassMetrics"
+      },
       "ClassifierClassStatistics": {
         "properties": {
           "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
@@ -7864,6 +7877,10 @@
             "type": "array",
             "title": "User Ids",
             "description": "User IDs whose annotations serve as gold labels"
+          },
+          "averaging": {
+            "anyOf": [{ "$ref": "#/components/schemas/ClassifierAveraging" }, { "type": "null" }],
+            "description": "Averaging strategy for evaluation metrics. If None, the model's stored training setting is used."
           }
         },
         "type": "object",
@@ -7882,6 +7899,12 @@
             "type": "array",
             "title": "Eval Data Stats",
             "description": "Evaluation data statistics"
+          },
+          "class_metrics": {
+            "items": { "$ref": "#/components/schemas/ClassifierClassMetrics" },
+            "type": "array",
+            "title": "Class Metrics",
+            "description": "Per-class evaluation metrics (empty for older evaluations)"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Classifier Evaluation" },
           "created": {
@@ -8241,7 +8264,12 @@
             "title": "Precision",
             "description": "Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
           },
-          "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" }
+          "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" },
+          "averaging": {
+            "$ref": "#/components/schemas/ClassifierAveraging",
+            "description": "Averaging strategy for evaluation metrics (micro or macro)",
+            "default": "micro"
+          }
         },
         "type": "object",
         "required": [
