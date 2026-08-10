@@ -244,9 +244,10 @@ class SpanClassificationLightningModel(pl.LightningModule):
             prog_bar=True,
         )
 
-        # Per-class metrics over the entity classes (only stored for the test
-        # epoch).
-        if prefix == "test":
+        # Per-class metrics over the entity classes (stored for both the
+        # validation and test epochs so the post-training evaluation can persist
+        # them).
+        if prefix in ("eval", "test"):
             pc_precision, pc_recall, pc_f1, pc_support = cast(
                 tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
                 precision_recall_fscore_support(
@@ -847,6 +848,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
+        labelid2classid = {v: code2parent[k] for k, v in classid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -858,6 +860,16 @@ class SpanClassificationModelService(TextClassificationModelService):
                 eval_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in eval_dataset_stats.items()
+                ],
+                class_metrics=[
+                    ClassifierClassMetrics(
+                        class_id=labelid2classid[m["label_id"]],
+                        precision=m["precision"],
+                        recall=m["recall"],
+                        f1=m["f1"],
+                        support=m["support"],
+                    )
+                    for m in best_model._last_class_metrics
                 ],
             ),
         )
