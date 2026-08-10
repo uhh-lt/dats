@@ -58,6 +58,8 @@ from modules.classifier.classifier_dto import (
 from modules.classifier.classifier_exceptions import (
     BaseModelDoesNotExistError,
     EmptyDatasetError,
+    EmptyEvaluationError,
+    InvalidChunkSizeError,
     NoCheckpointError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
@@ -314,7 +316,8 @@ class SpanClassificationLightningModel(pl.LightningModule):
             self.parameters(),
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
-            fused=True,
+            # fused kernels only exist for CUDA; fall back on CPU/MPS.
+            fused=torch.cuda.is_available(),
         )
         return optimizer
 
@@ -636,6 +639,15 @@ class SpanClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
+        # chunk_size must not exceed the base model's maximum input length,
+        # otherwise tokens are silently truncated / position ids overflow.
+        max_chunk_size = tokenizer.model_max_length
+        if parameters.chunk_size > max_chunk_size:
+            raise InvalidChunkSizeError(
+                chunk_size=parameters.chunk_size,
+                max_chunk_size=max_chunk_size,
+                base_model_name=parameters.base_name,
+            )
         tokenizer.model_max_length = parameters.chunk_size
 
         job.update(
@@ -698,24 +710,29 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 1.5 Compute dataset statistics (number of annotations per code).
+        # Pull the columns once; per-row `dataset[i]` access on a HF Dataset is slow.
+        dataset_sdoc_ids = dataset["sdoc_id"]
+        dataset_user_ids = dataset["user_id"]
+        dataset_labels = dataset["labels"]
+
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in train_idx:
-            sdoc_id = dataset[i]["sdoc_id"]
-            user_id = dataset[i]["user_id"]
-            for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
+            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
+                dataset_sdoc_ids[i]
+            ]:
                 train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in test_idx:
-            sdoc_id = dataset[i]["sdoc_id"]
-            user_id = dataset[i]["user_id"]
-            for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
+            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
+                dataset_sdoc_ids[i]
+            ]:
                 eval_dataset_stats[annotation.code_id] += 1
 
         # 1.6 Calculate class weights (inverse token frequency over the train set).
         label_counts: dict[int, int] = defaultdict(int)
         for i in train_idx:
-            for label in dataset[i]["labels"]:
+            for label in dataset_labels[i]:
                 if label != IGNORE_LABEL_ID:  # Ignore padding/subword tokens
                     label_counts[label] += 1
 
@@ -812,6 +829,10 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
         best_model.eval()
         eval_results = trainer.validate(best_model, dataloaders=val_dataloader)[0]
+        # When the eval split contains no entity tokens, no metrics are logged
+        # (the metric hook returns early), so the keys are missing.
+        if "eval_f1" not in eval_results:
+            raise EmptyEvaluationError()
 
         # 5. Retrieve training statistics from the logs
         job.update(current_step=5)
@@ -929,6 +950,9 @@ class SpanClassificationModelService(TextClassificationModelService):
             codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
+            merge_children_into_parent=classifier.train_params.get(
+                "merge_children_into_parent", False
+            ),
             chunk_stride=max(1, tokenizer.model_max_length // 4),
         )
         if len(dataset) == 0:
@@ -976,6 +1000,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             devices=[torch.cuda.current_device()],
         )
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
+        # When the eval data contains no entity tokens, no metrics are logged
+        # (the metric hook returns early), so the keys are missing.
+        if "test_f1" not in eval_results:
+            raise EmptyEvaluationError()
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
@@ -1107,6 +1135,13 @@ class SpanClassificationModelService(TextClassificationModelService):
         # Align each chunk with its metadata via a positional index.
         tokenized_hf_dataset = tokenized_hf_dataset.add_column(
             "chunk_idx", list(range(len(tokenized_hf_dataset)))
+        )
+        # chunk_meta is populated as a side effect of the map above (with
+        # caching disabled); it must cover every chunk exactly once.
+        assert len(chunk_meta) == len(tokenized_hf_dataset), (
+            f"chunk_meta has {len(chunk_meta)} entries but the tokenized dataset "
+            f"has {len(tokenized_hf_dataset)} chunks - the map side effect did "
+            "not run for every chunk (was caching re-enabled?)."
         )
 
         # Build dataloader
