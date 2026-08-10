@@ -30,3 +30,23 @@ class NoCheckpointError(Exception):
             "Training did not produce a model checkpoint. This usually means "
             "the validation set was empty or no validation metric was logged."
         )
+
+
+class EmptyEvaluationError(Exception):
+    def __init__(self) -> None:
+        super().__init__(
+            "The evaluation set contains no entity tokens, so no evaluation "
+            "metrics could be computed. Please evaluate on data that contains "
+            "annotations of the trained classes."
+        )
+
+
+class InvalidChunkSizeError(Exception):
+    def __init__(
+        self, chunk_size: int, max_chunk_size: int, base_model_name: str
+    ) -> None:
+        super().__init__(
+            f"chunk_size={chunk_size} exceeds the maximum input length "
+            f"({max_chunk_size}) of base model '{base_model_name}'. Please choose "
+            f"a chunk_size of at most {max_chunk_size}."
+        )

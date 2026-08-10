@@ -54,6 +54,9 @@ from modules.classifier.classifier_dto import (
 from modules.classifier.classifier_exceptions import (
     BaseModelDoesNotExistError,
     EmptyDatasetError,
+    EmptyEvaluationError,
+    InvalidChunkSizeError,
+    NoCheckpointError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import (
@@ -300,7 +303,8 @@ class DocClassificationLightningModel(pl.LightningModule):
             self.parameters(),
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
-            fused=True,
+            # fused kernels only exist for CUDA; fall back on CPU/MPS.
+            fused=torch.cuda.is_available(),
         )
         return optimizer
 
@@ -510,6 +514,15 @@ class DocClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
+        # chunk_size must not exceed the base model's maximum input length,
+        # otherwise tokens are silently truncated / position ids overflow.
+        max_chunk_size = tokenizer.model_max_length
+        if parameters.chunk_size > max_chunk_size:
+            raise InvalidChunkSizeError(
+                chunk_size=parameters.chunk_size,
+                max_chunk_size=max_chunk_size,
+                base_model_name=parameters.base_name,
+            )
         tokenizer.model_max_length = parameters.chunk_size
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
@@ -697,11 +710,17 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 4. Evaluate the best model
         job.update(current_step=4)
+        if not checkpoint_callback.best_model_path:
+            raise NoCheckpointError()
         best_model = DocClassificationLightningModel.load_from_checkpoint(
             checkpoint_callback.best_model_path
         )
         best_model.eval()
         eval_results = trainer.validate(best_model, dataloaders=val_dataloader)[0]
+        # When the eval split contains no entity tokens, no metrics are logged
+        # (the metric hook returns early), so the keys are missing.
+        if "eval_f1" not in eval_results:
+            raise EmptyEvaluationError()
 
         # 5. Retrieve training statistics from the logs
         job.update(current_step=5)
@@ -722,7 +741,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 name=parameters.classifier_name,
                 base_model=parameters.base_name,
                 type=payload.model_type,
-                path=checkpoint_callback.best_model_path or "ERROR!",
+                path=checkpoint_callback.best_model_path,
                 project_id=payload.project_id,
                 labelid2classid={v: k for k, v in tagid2labelid.items()},
                 train_data_stats=[
@@ -860,6 +879,10 @@ class DocClassificationModelService(TextClassificationModelService):
             devices=[torch.cuda.current_device()],
         )
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
+        # When the eval data contains no entity tokens, no metrics are logged
+        # (the metric hook returns early), so the keys are missing.
+        if "test_f1" not in eval_results:
+            raise EmptyEvaluationError()
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
