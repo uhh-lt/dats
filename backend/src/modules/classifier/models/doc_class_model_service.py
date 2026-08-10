@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, TypedDict, cast
 from uuid import uuid4
 
-import evaluate
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
@@ -11,6 +11,7 @@ from datasets import Dataset
 from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.utils.data import DataLoader
@@ -27,6 +28,8 @@ from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import SourceDocumentTagLinkTable
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierAveraging,
+    ClassifierClassMetrics,
     ClassifierClassStatistics,
     ClassifierCreate,
     ClassifierData,
@@ -88,6 +91,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         class_weights: list[float],
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
+        averaging: ClassifierAveraging = ClassifierAveraging.MICRO,
     ):
         super().__init__()
         # Saves hyperparameters to the checkpoint
@@ -126,12 +130,17 @@ class DocClassificationLightningModel(pl.LightningModule):
         self.num_labels = num_labels
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
+        self.averaging = averaging
 
-        # Load the evaluation metric
-        self.accuracy = evaluate.load("accuracy")
-        self.precision = evaluate.load("precision")
-        self.recall = evaluate.load("recall")
-        self.f1 = evaluate.load("f1")
+        # Buffers to accumulate predictions/labels across batches so that
+        # evaluation metrics are computed once over the whole epoch instead of
+        # being averaged from per-batch scores.
+        self._val_preds: list[int] = []
+        self._val_labels: list[int] = []
+        self._test_preds: list[int] = []
+        self._test_labels: list[int] = []
+        # Per-class metrics of the most recent test epoch (label id -> metrics).
+        self._last_class_metrics: list[dict] = []
 
         # Define custom loss function
         # self.loss_fn = nn.CrossEntropyLoss(weight=class_weights)
@@ -167,32 +176,89 @@ class DocClassificationLightningModel(pl.LightningModule):
         outputs = self(**batch)
         predictions = torch.argmax(outputs.logits, dim=1).tolist()
 
-        # Compute metrics
+        # Accumulate predictions/labels so that metrics can be computed once
+        # over the whole epoch.
         golds = batch["labels"].tolist()
-        a = self.accuracy.compute(predictions=predictions, references=golds)
-        p = self.precision.compute(
-            predictions=predictions, references=golds, average="macro"
-        )
-        r = self.recall.compute(
-            predictions=predictions, references=golds, average="macro"
-        )
-        f = self.f1.compute(predictions=predictions, references=golds, average="macro")
-        assert p is not None and r is not None and f is not None and a is not None
+        if prefix == "eval":
+            self._val_preds.extend(predictions)
+            self._val_labels.extend(golds)
+        else:
+            self._test_preds.extend(predictions)
+            self._test_labels.extend(golds)
 
-        # Log metrics
+        # Log loss
         self.log(f"{prefix}_loss", outputs.loss, on_step=False, on_epoch=True)
+        return outputs.loss
+
+    def _compute_and_log_token_metrics(self, prefix: str) -> None:
+        if prefix == "eval":
+            preds, labels = self._val_preds, self._val_labels
+        else:
+            preds, labels = self._test_preds, self._test_labels
+
+        if len(labels) == 0:
+            return
+
+        # Document-level metrics. A document counts as correct when its
+        # predicted label matches the gold label. P/R/F1 use the configured
+        # averaging strategy over all classes (the doc classifier has no "O"
+        # class, so no label is excluded).
+        # Cast to plain float: sklearn returns numpy scalars, which Lightning's
+        # log_dict does not accept.
+        accuracy = float(accuracy_score(labels, preds))
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            labels,
+            preds,
+            average=self.averaging.value,
+            # sklearn's stub types zero_division as str only, but 0 is valid.
+            zero_division=0,  # pyright: ignore[reportArgumentType]
+        )
+
         self.log_dict(
             {
-                f"{prefix}_precision": p["precision"],
-                f"{prefix}_recall": r["recall"],
-                f"{prefix}_f1": f["f1"],
-                f"{prefix}_accuracy": a["accuracy"],
+                f"{prefix}_precision": float(precision),
+                f"{prefix}_recall": float(recall),
+                f"{prefix}_f1": float(f1),
+                f"{prefix}_accuracy": accuracy,
             },
             on_step=False,
             on_epoch=True,
             prog_bar=True,
         )
-        return outputs.loss
+
+        # Per-class metrics (only stored for the test epoch).
+        if prefix == "test":
+            pc_precision, pc_recall, pc_f1, pc_support = cast(
+                tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+                precision_recall_fscore_support(
+                    labels,
+                    preds,
+                    average=None,
+                    # sklearn's stub types zero_division as str only, but 0 is valid.
+                    zero_division=0,  # pyright: ignore[reportArgumentType]
+                ),
+            )
+            all_labels = sorted(set(labels) | set(preds))
+            self._last_class_metrics = [
+                {
+                    "label_id": label_id,
+                    "precision": float(pc_precision[i]),
+                    "recall": float(pc_recall[i]),
+                    "f1": float(pc_f1[i]),
+                    "support": int(pc_support[i]),
+                }
+                for i, label_id in enumerate(all_labels)
+            ]
+
+    def on_validation_epoch_end(self) -> None:
+        self._compute_and_log_token_metrics("eval")
+        self._val_preds.clear()
+        self._val_labels.clear()
+
+    def on_test_epoch_end(self) -> None:
+        self._compute_and_log_token_metrics("test")
+        self._test_preds.clear()
+        self._test_labels.clear()
 
     @torch.no_grad()
     def validation_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
@@ -616,6 +682,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 class_weights=class_weights,
                 id2label=id2label,
                 label2id={v: k for k, v in id2label.items()},
+                averaging=parameters.averaging,
             )
 
         # 3. Train the model
@@ -759,6 +826,11 @@ class DocClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = DocClassificationLightningModel.load_from_checkpoint(classifier.path)
+        # Resolve the averaging strategy: eval param overrides the model's stored
+        # training setting (default micro for older models).
+        model.averaging = parameters.averaging or ClassifierAveraging(
+            classifier.train_params.get("averaging", ClassifierAveraging.MICRO.value)
+        )
         model.eval()
 
         # 4. Eval model
@@ -773,6 +845,7 @@ class DocClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
+        labelid2classid = {v: k for k, v in classid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -784,6 +857,16 @@ class DocClassificationModelService(TextClassificationModelService):
                 eval_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in eval_dataset_stats.items()
+                ],
+                class_metrics=[
+                    ClassifierClassMetrics(
+                        class_id=labelid2classid[m["label_id"]],
+                        precision=m["precision"],
+                        recall=m["recall"],
+                        f1=m["f1"],
+                        support=m["support"],
+                    )
+                    for m in model._last_class_metrics
                 ],
             ),
         )

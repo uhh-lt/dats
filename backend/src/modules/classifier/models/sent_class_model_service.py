@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, TypedDict, cast
 from uuid import uuid4
 
-import evaluate
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
@@ -13,6 +13,7 @@ from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
@@ -32,6 +33,8 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
+    ClassifierAveraging,
+    ClassifierClassMetrics,
     ClassifierClassStatistics,
     ClassifierCreate,
     ClassifierData,
@@ -97,6 +100,7 @@ class SentClassificationLightningModel(pl.LightningModule):
         use_lstm: bool,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
+        averaging: ClassifierAveraging = ClassifierAveraging.MICRO,
     ):
         super().__init__()
         # Saves hyperparameters to the checkpoint
@@ -133,9 +137,17 @@ class SentClassificationLightningModel(pl.LightningModule):
         self.use_lstm = use_lstm
         self.id2label = id2label
         self.label2id = label2id
+        self.averaging = averaging
 
-        # Load the evaluation metric
-        self.seqeval = evaluate.load("seqeval")
+        # Buffers to accumulate token-level predictions/labels across batches
+        # so that evaluation metrics are computed over the whole epoch instead
+        # of being averaged from per-batch scores.
+        self._val_preds: list[int] = []
+        self._val_labels: list[int] = []
+        self._test_preds: list[int] = []
+        self._test_labels: list[int] = []
+        # Per-class metrics of the most recent test epoch (label id -> metrics).
+        self._last_class_metrics: list[dict] = []
 
     def forward(
         self,
@@ -187,32 +199,92 @@ class SentClassificationLightningModel(pl.LightningModule):
         for i in range(len(labels)):  # Iterate over the batch
             golds.append(labels[i][mask[i] == 1].tolist())
 
-        # Post-process for seqeval
-        true_predictions = [
-            [f"I-{p}" if p != 0 else "O" for p in prediction]
-            for prediction in predictions
-        ]
-        true_labels = [[f"I-{g}" if g != 0 else "O" for g in gold] for gold in golds]
+        # Accumulate token-level predictions/labels so that metrics can be
+        # computed once over the whole epoch.
+        flat_preds = [p for prediction in predictions for p in prediction]
+        flat_labels = [g for gold in golds for g in gold]
+        if prefix == "eval":
+            self._val_preds.extend(flat_preds)
+            self._val_labels.extend(flat_labels)
+        else:
+            self._test_preds.extend(flat_preds)
+            self._test_labels.extend(flat_labels)
 
-        results = self.seqeval.compute(
-            predictions=true_predictions, references=true_labels, scheme="IOB1"
-        )
-        assert results is not None, "SeqEval results are None"
-
-        # Log metrics
+        # Log loss
         self.log(f"{prefix}_loss", loss, on_step=False, on_epoch=True)
+        return loss
+
+    def _compute_and_log_token_metrics(self, prefix: str) -> None:
+        if prefix == "eval":
+            preds, labels = self._val_preds, self._val_labels
+        else:
+            preds, labels = self._test_preds, self._test_labels
+
+        if len(labels) == 0:
+            return
+
+        # Token-level metrics. A token counts as correct when its predicted
+        # label matches the gold label. P/R/F1 use the configured averaging
+        # strategy over the entity classes (label != 0), excluding the
+        # majority "O" class.
+        # Cast to plain float: sklearn returns numpy scalars, which
+        # Lightning's log_dict does not accept.
+        entity_labels = [i for i in range(self.num_labels) if i != 0]
+        accuracy = float(accuracy_score(labels, preds))
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            labels,
+            preds,
+            labels=entity_labels,
+            average=self.averaging.value,
+            # sklearn's stub types zero_division as str only, but 0 is valid.
+            zero_division=0,  # pyright: ignore[reportArgumentType]
+        )
+
         self.log_dict(
             {
-                f"{prefix}_precision": results["overall_precision"],
-                f"{prefix}_recall": results["overall_recall"],
-                f"{prefix}_f1": results["overall_f1"],
-                f"{prefix}_accuracy": results["overall_accuracy"],
+                f"{prefix}_precision": float(precision),
+                f"{prefix}_recall": float(recall),
+                f"{prefix}_f1": float(f1),
+                f"{prefix}_accuracy": accuracy,
             },
             on_step=False,
             on_epoch=True,
             prog_bar=True,
         )
-        return loss
+
+        # Per-class metrics over the entity classes (only stored for the test epoch).
+        if prefix == "test":
+            pc_precision, pc_recall, pc_f1, pc_support = cast(
+                tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+                precision_recall_fscore_support(
+                    labels,
+                    preds,
+                    labels=entity_labels,
+                    average=None,
+                    # sklearn's stub types zero_division as str only, but 0 is valid.
+                    zero_division=0,  # pyright: ignore[reportArgumentType]
+                ),
+            )
+            self._last_class_metrics = [
+                {
+                    "label_id": label_id,
+                    "precision": float(pc_precision[i]),
+                    "recall": float(pc_recall[i]),
+                    "f1": float(pc_f1[i]),
+                    "support": int(pc_support[i]),
+                }
+                for i, label_id in enumerate(entity_labels)
+            ]
+
+    def on_validation_epoch_end(self) -> None:
+        self._compute_and_log_token_metrics("eval")
+        self._val_preds.clear()
+        self._val_labels.clear()
+
+    def on_test_epoch_end(self) -> None:
+        self._compute_and_log_token_metrics("test")
+        self._test_preds.clear()
+        self._test_labels.clear()
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
@@ -721,6 +793,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 class_weights=class_weights,
                 id2label=id2label,
                 label2id={v: k for k, v in id2label.items()},
+                averaging=parameters.averaging,
             )
 
         # 3. Train the model
@@ -868,6 +941,11 @@ class SentClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = SentClassificationLightningModel.load_from_checkpoint(classifier.path)
+        # Resolve the averaging strategy: eval param overrides the model's stored
+        # training setting (default micro for older models).
+        model.averaging = parameters.averaging or ClassifierAveraging(
+            classifier.train_params.get("averaging", ClassifierAveraging.MICRO.value)
+        )
         model.eval()
 
         # 4. Eval model
@@ -882,6 +960,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
+        labelid2classid = {v: k for k, v in classid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -893,6 +972,16 @@ class SentClassificationModelService(TextClassificationModelService):
                 eval_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in eval_dataset_stats.items()
+                ],
+                class_metrics=[
+                    ClassifierClassMetrics(
+                        class_id=labelid2classid[m["label_id"]],
+                        precision=m["precision"],
+                        recall=m["recall"],
+                        f1=m["f1"],
+                        support=m["support"],
+                    )
+                    for m in model._last_class_metrics
                 ],
             ),
         )
