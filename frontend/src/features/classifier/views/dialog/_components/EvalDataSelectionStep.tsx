@@ -1,9 +1,7 @@
-import { ClassifierEvaluationParams } from "@models/ClassifierEvaluationParams";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { Box, Button, DialogActions, Divider } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { useDatasetStatistics } from "../../../_api/useDatasetStatistics";
 import { ClassifierActions } from "../../../store/classifierSlice";
 import { DataSelection } from "./DataSelection";
@@ -11,9 +9,6 @@ import { DataSelection } from "./DataSelection";
 export function EvalDataSelectionStep() {
   // dialog state
   const model = useAppSelector((state) => state.classifier.classifierModel);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const classifierId = useAppSelector((state) => state.classifier.classifierId);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
   const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
   const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
@@ -24,36 +19,11 @@ export function EvalDataSelectionStep() {
     dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
 
-  const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
-
   // dataset statistics (shared with DataSelection via props)
   const { datasetStats } = useDatasetStatistics();
 
   const handleNext = () => {
-    if (model === undefined || classifierId === undefined || task === undefined) return;
-
-    const evalParams: ClassifierEvaluationParams = {
-      task_type: task,
-      classifier_id: classifierId,
-      tag_ids: tagIds,
-      user_ids: userIds,
-    };
-
-    startClassifierJobMutation(
-      {
-        requestBody: {
-          model_type: model,
-          task_type: task,
-          project_id: projectId,
-          task_parameters: evalParams,
-        },
-      },
-      {
-        onSuccess: (data) => {
-          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
-        },
-      },
-    );
+    dispatch(ClassifierActions.nextClassifierDialogStep());
   };
 
   const isNextDisabled =
@@ -70,7 +40,7 @@ export function EvalDataSelectionStep() {
       <DialogActions sx={{ width: "100%" }}>
         <Box flexGrow={1} />
         <Button onClick={handleClose}>Close</Button>
-        <Button onClick={handleNext} disabled={isNextDisabled} loading={isPending} loadingPosition="start">
+        <Button onClick={handleNext} disabled={isNextDisabled}>
           Next
         </Button>
       </DialogActions>
