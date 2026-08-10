@@ -8,6 +8,7 @@ import { memo, useCallback, useMemo } from "react";
 import { ClassifierActions } from "../../store/classifierSlice";
 import { ClassSelectionStep } from "./_components/ClassSelectionStep";
 import { EvalDataSelectionStep } from "./_components/EvalDataSelectionStep";
+import { EvalSettingsStep } from "./_components/EvalSettingsStep";
 import { InferDataSelectionStep } from "./_components/InferDataSelectionStep";
 import { InferenceSettingsStep } from "./_components/InferSettingsStep";
 import { ResultStep } from "./_components/ResultStep";
@@ -37,6 +38,7 @@ const steps: Record<ClassifierTask, string[]> = {
   ],
   [ClassifierTask.EVALUATION]: [
     "Select data", // show document selection, annotator selection & statistics.
+    "Evaluation settings", // show evaluation settings (averaging strategy)
     "Wait", // start job & show eval process
     "View results", // show the evaluation results, finished!
   ],
@@ -56,7 +58,7 @@ const content: Record<ClassifierTask, React.ReactNode[]> = {
     <StatusStep />,
     <ResultStep />,
   ],
-  [ClassifierTask.EVALUATION]: [<EvalDataSelectionStep />, <StatusStep />, <ResultStep />],
+  [ClassifierTask.EVALUATION]: [<EvalDataSelectionStep />, <EvalSettingsStep />, <StatusStep />, <ResultStep />],
   [ClassifierTask.INFERENCE]: [<InferDataSelectionStep />, <InferenceSettingsStep />, <StatusStep />, <ResultStep />],
 };
 

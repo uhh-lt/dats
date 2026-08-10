@@ -55,6 +55,8 @@ export function TrainingDataSelectionStep() {
       precision: trainingSettings.precision,
       // specific training settings
       is_bio: trainingSettings.isBio,
+      // evaluation settings
+      averaging: trainingSettings.averaging,
     };
 
     startClassifierJobMutation(

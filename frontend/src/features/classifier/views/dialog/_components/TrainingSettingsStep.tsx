@@ -1,5 +1,6 @@
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
+import { ClassifierAveraging } from "@models/ClassifierAveraging";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
   Alert,
@@ -35,11 +36,15 @@ interface TrainingSettings {
   precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
   // sequence classification settings
   isBio: boolean;
+  // evaluation settings
+  averaging: ClassifierAveraging;
 }
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
 
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
+
+const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 
 export function TrainingSettingsStep() {
   // dialog state
@@ -50,6 +55,7 @@ export function TrainingSettingsStep() {
   const {
     control,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<TrainingSettings>({
     defaultValues: {
@@ -67,6 +73,7 @@ export function TrainingSettingsStep() {
       chunkSize: 1024,
       precision: "bf16-mixed",
       isBio: false,
+      averaging: ClassifierAveraging.MICRO,
     },
   });
 
@@ -88,7 +95,10 @@ export function TrainingSettingsStep() {
         dropout: data.dropout,
         chunkSize: data.chunkSize,
         precision: data.precision,
-        isBio: data.isBio,
+        // isBio is a disabled switch, so it is omitted from the submitted form
+        // data; read it via getValues to fall back to its default value.
+        isBio: getValues("isBio"),
+        averaging: data.averaging,
       }),
     );
   };
@@ -295,6 +305,28 @@ export function TrainingSettingsStep() {
                 }}
               >
                 {precisionOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </FormMenu>
+            </FormItem>
+            <FormItem
+              title="Averaging"
+              subtitle="Choose the averaging strategy for evaluation metrics (precision, recall, F1)."
+            >
+              <FormMenu
+                name="averaging"
+                control={control}
+                textFieldProps={{
+                  label: "Averaging",
+                  error: Boolean(errors.averaging),
+                  helperText: <ErrorMessage errors={errors} name="averaging" />,
+                  variant: "filled",
+                  fullWidth: true,
+                }}
+              >
+                {averagingOptions.map((option) => (
                   <MenuItem key={option} value={option}>
                     {option}
                   </MenuItem>

@@ -1,3 +1,4 @@
+import { ClassifierAveraging } from "@models/ClassifierAveraging";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
@@ -15,6 +16,11 @@ export interface ClassifierTrainingSettings {
   chunkSize: number;
   precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
   isBio: boolean;
+  averaging: ClassifierAveraging;
+}
+
+export interface ClassifierEvaluationSettings {
+  averaging: ClassifierAveraging;
 }
 
 interface ClassifierState {
@@ -30,6 +36,7 @@ interface ClassifierState {
   classifierTagIds: number[];
   classifierMergeChildren: boolean;
   classifierTrainingSettings?: ClassifierTrainingSettings;
+  classifierEvaluationSettings?: ClassifierEvaluationSettings;
   classifierJobId?: string;
 }
 
@@ -46,6 +53,7 @@ const initialState: ClassifierState = {
   classifierTagIds: [],
   classifierMergeChildren: false,
   classifierTrainingSettings: undefined,
+  classifierEvaluationSettings: undefined,
   classifierJobId: undefined,
 };
 
@@ -99,6 +107,10 @@ const classifierSlice = createSlice({
       state.classifierTrainingSettings = action.payload;
       state.classifierStep += 1;
     },
+    onClassifierDialogSetEvaluationSettings: (state, action: PayloadAction<ClassifierEvaluationSettings>) => {
+      state.classifierEvaluationSettings = action.payload;
+      state.classifierStep += 1;
+    },
     onClassifierDialogStartJob: (state, action: PayloadAction<string>) => {
       state.classifierJobId = action.payload;
       state.classifierStep += 1;
@@ -131,6 +143,7 @@ const classifierSlice = createSlice({
       state.classifierTagIds = initialState.classifierTagIds;
       state.classifierClassIds = initialState.classifierClassIds;
       state.classifierTrainingSettings = initialState.classifierTrainingSettings;
+      state.classifierEvaluationSettings = initialState.classifierEvaluationSettings;
       state.classifierJobId = initialState.classifierJobId;
     },
   },
