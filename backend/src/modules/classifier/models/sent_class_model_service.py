@@ -336,9 +336,9 @@ class SentClassificationModelService(TextClassificationModelService):
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
         # Build the label mappings
-        codes, classid2labelid, code2parent, _ = build_code_label_mappings(
+        codes, codeid2labelid, codeid2parentid, _ = build_code_label_mappings(
             db=db,
-            class_ids=class_ids,
+            code_ids=class_ids,
             merge_children_into_parent=merge_children_into_parent,
         )
 
@@ -348,13 +348,13 @@ class SentClassificationModelService(TextClassificationModelService):
             project_id=project_id,
             tag_ids=tag_ids,
             user_ids=user_ids,
-            class_ids=list(classid2labelid.keys()),
-            classid2labelid=classid2labelid,
+            class_ids=list(codeid2labelid.keys()),
+            codeid2labelid=codeid2labelid,
             embedding_model=None,
         )
 
         # Compute statistics from the sentence-level labels (before splitting)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         class_units: dict[int, int] = {code.id: 0 for code in codes}
         class_examples: dict[int, int] = {code.id: 0 for code in codes}
         total_units = 0
@@ -369,7 +369,7 @@ class SentClassificationModelService(TextClassificationModelService):
             for label in labels:
                 if label != O_LABEL_ID:
                     row_labeled += 1
-                    class_id = code2parent[labelid2classid[label]]
+                    class_id = codeid2parentid[labelid2codeid[label]]
                     class_units[class_id] += 1
                     seen_classes.add(class_id)
             for class_id in seen_classes:
@@ -430,7 +430,7 @@ class SentClassificationModelService(TextClassificationModelService):
         tag_ids: list[int],
         user_ids: list[int],
         class_ids: list[int],
-        classid2labelid: dict[int, int],
+        codeid2labelid: dict[int, int],
         embedding_model: SentenceTransformer | None,
     ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset]:
         # Find documents
@@ -493,7 +493,7 @@ class SentClassificationModelService(TextClassificationModelService):
                     # sentence_id_end is INCLUSIVE, so the slice end is +1.
                     labels[
                         annotation.sentence_id_start : annotation.sentence_id_end + 1
-                    ] = [classid2labelid.get(annotation.code_id, O_LABEL_ID)] * (
+                    ] = [codeid2labelid.get(annotation.code_id, O_LABEL_ID)] * (
                         annotation.sentence_id_end - annotation.sentence_id_start + 1
                     )
 
@@ -582,12 +582,14 @@ class SentClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get codes and create mapping
-        codes, classid2labelid, code2parent, id2label = build_code_label_mappings(
-            db=db,
-            class_ids=parameters.class_ids,
-            merge_children_into_parent=parameters.merge_children_into_parent,
+        codes, codeid2labelid, codeid2parentid, labelid2name = (
+            build_code_label_mappings(
+                db=db,
+                code_ids=parameters.class_ids,
+                merge_children_into_parent=parameters.merge_children_into_parent,
+            )
         )
-        class_ids = list(classid2labelid.keys())
+        class_ids = list(codeid2labelid.keys())
 
         # Build dataset
         embedding_model = SentenceTransformer(parameters.base_name)
@@ -602,7 +604,7 @@ class SentClassificationModelService(TextClassificationModelService):
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             class_ids=class_ids,
-            classid2labelid=classid2labelid,
+            codeid2labelid=codeid2labelid,
             embedding_model=embedding_model,
         )
 
@@ -634,14 +636,14 @@ class SentClassificationModelService(TextClassificationModelService):
             split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[code2parent[annotation.code_id]] += 1
+                train_dataset_stats[codeid2parentid[annotation.code_id]] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[code2parent[annotation.code_id]] += 1
+                eval_dataset_stats[codeid2parentid[annotation.code_id]] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -652,7 +654,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Calculate the weight for each label: A simple inverse frequency weighting
         total_tokens = sum(label_counts.values())
-        num_labels = len(id2label)
+        num_labels = len(labelid2name)
         class_weights = [0.0] * num_labels
         for label, count in label_counts.items():
             if count > 0:
@@ -715,13 +717,13 @@ class SentClassificationModelService(TextClassificationModelService):
                 hidden_dim=int(embedding_dim / 2),
                 use_lstm=True,
                 # training params
-                num_labels=len(id2label),
+                num_labels=len(labelid2name),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
-                id2label=id2label,
-                label2id={v: k for k, v in id2label.items()},
+                id2label=labelid2name,
+                label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
             )
 
@@ -763,7 +765,9 @@ class SentClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path or "ERROR!",
                 project_id=payload.project_id,
-                labelid2classid={v: code2parent[k] for k, v in classid2labelid.items()},
+                labelid2classid={
+                    v: codeid2parentid[k] for k, v in codeid2labelid.items()
+                },
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -779,7 +783,7 @@ class SentClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
-        labelid2classid = {v: code2parent[k] for k, v in classid2labelid.items()}
+        labelid2codeid = {v: codeid2parentid[k] for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -794,7 +798,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2codeid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
@@ -838,7 +842,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        classid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
+        codeid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
 
         # 2. Create dataset
         job.update(current_step=2)
@@ -851,7 +855,7 @@ class SentClassificationModelService(TextClassificationModelService):
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             class_ids=classifier.class_ids,
-            classid2labelid=classid2labelid,
+            codeid2labelid=codeid2labelid,
             embedding_model=embedding_model,
         )
 
@@ -873,7 +877,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # Dataset statistics (number of annotations per code)
         eval_dataset_stats: dict[int, int] = {
             code_id: 0
-            for code_id, label_id in classid2labelid.items()
+            for code_id, label_id in codeid2labelid.items()
             if label_id != O_LABEL_ID
         }
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
@@ -906,7 +910,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
-        labelid2classid = {v: k for k, v in classid2labelid.items()}
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -921,7 +925,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 ],
                 class_metrics=[
                     ClassifierClassMetrics(
-                        class_id=labelid2classid[m["label_id"]],
+                        class_id=labelid2codeid[m["label_id"]],
                         precision=m["precision"],
                         recall=m["recall"],
                         f1=m["f1"],
@@ -967,7 +971,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        labelid2classid = {
+        labelid2codeid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }
 
@@ -1063,7 +1067,7 @@ class SentClassificationModelService(TextClassificationModelService):
                         current_annotation = {
                             "sdoc_id": sdoc_id,
                             "begin": sent_id,
-                            "class_id": labelid2classid[label],
+                            "class_id": labelid2codeid[label],
                             "end": -1,
                         }
 

@@ -237,6 +237,10 @@ class ClassifierTrainingParams(BaseModel):
             "weight_decay": self.weight_decay,
             "dropout": self.dropout,
             "averaging": self.averaging.value,
+            # Persisted so that eval/inference can rebuild the exact same
+            # tokenization window that was used during training.
+            "chunk_size": self.chunk_size,
+            "merge_children_into_parent": self.merge_children_into_parent,
         }
 
 
