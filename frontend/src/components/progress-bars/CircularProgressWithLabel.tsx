@@ -5,14 +5,21 @@ interface CircularProgressWithLabelProps extends Omit<CircularProgressProps, "va
   current: number;
   max: number;
   tooltip: ReactNode;
+  failed?: boolean;
 }
 
-export function CircularProgressWithLabel({ current, max, tooltip, ...props }: CircularProgressWithLabelProps) {
-  const value = max > 0 ? Math.round((current / max) * 100) : 100;
+export function CircularProgressWithLabel({ current, max, tooltip, failed, ...props }: CircularProgressWithLabelProps) {
+  const value = failed ? 100 : max > 0 ? Math.round((current / max) * 100) : 100;
 
   return (
     <Box sx={{ position: "relative", display: "inline-flex" }}>
-      <CircularProgress variant={current === max ? "determinate" : "indeterminate"} {...props} />
+      <CircularProgress
+        // a failed job must not keep spinning; show a static, full ring instead
+        variant={failed || current === max ? "determinate" : "indeterminate"}
+        value={failed ? 100 : undefined}
+        color={failed ? "error" : "primary"}
+        {...props}
+      />
       <Box
         sx={{
           top: 0,

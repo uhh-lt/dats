@@ -1,5 +1,6 @@
 import { LLMHooks } from "@api/hooks/LLMHooks";
 import { LinearProgressWithLabel } from "@components/progress-bars";
+import { jobStatusToSimple } from "@core/job";
 import { JobStatus } from "@models/JobStatus";
 import { Button, DialogActions, DialogContent, Stack, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -52,6 +53,7 @@ export const StatusStep = memo(() => {
             current={llmJob.isSuccess ? llmJob.data.current_step : 0}
             max={Math.max(llmJob.isSuccess ? llmJob.data.steps.length - 1 : 0, 1)}
             tooltip={progressTooltip}
+            failed={llmJob.isSuccess && jobStatusToSimple[llmJob.data.status] === "error"}
           />
           {llmJob.isSuccess && (
             <>
