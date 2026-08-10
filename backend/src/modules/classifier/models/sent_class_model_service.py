@@ -26,8 +26,6 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
-from core.code.code_crud import crud_code
-from core.code.code_orm import CodeORM
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
@@ -63,7 +61,7 @@ from modules.classifier.classifier_exceptions import (
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import (
     O_LABEL_ID,
-    O_LABEL_NAME,
+    build_code_label_mappings,
     check_hf_model_exists,
 )
 from modules.classifier.models.text_class_model_service import (
@@ -327,43 +325,6 @@ class SentClassificationLightningModel(pl.LightningModule):
 
 
 class SentClassificationModelService(TextClassificationModelService):
-    def _build_label_mappings(
-        self,
-        db: Session,
-        class_ids: list[int],
-        merge_children_into_parent: bool,
-    ) -> tuple[list[CodeORM], dict[int, int], dict[int, int], dict[int, str]]:
-        """Builds the class/label mappings exactly as used for training.
-
-        Returns (codes, classid2labelid, code2parent, id2label).
-        """
-        codes = crud_code.read_by_ids(db=db, ids=class_ids)
-
-        if merge_children_into_parent:
-            child_codes = [
-                crud_code.read_with_children(db, code_id=id) for id in class_ids
-            ]
-            # All children of a parent share the parent's single label id, so
-            # that the number of labels equals the number of parent classes.
-            classid2labelid: dict[int, int] = {
-                c.id: i + 1 for i, children in enumerate(child_codes) for c in children
-            }
-            code2parent = {
-                code.id: parent
-                for children, parent in zip(child_codes, class_ids)
-                for code in children
-            }
-        else:
-            classid2labelid = {code.id: i + 1 for i, code in enumerate(codes)}
-            code2parent = {code: code for code in class_ids}
-
-        classid2labelid[O_LABEL_ID] = O_LABEL_ID
-        id2label = {i + 1: code.name for i, code in enumerate(codes)}
-        id2label[O_LABEL_ID] = O_LABEL_NAME
-        code2parent[O_LABEL_ID] = O_LABEL_ID
-
-        return codes, classid2labelid, code2parent, id2label
-
     def compute_dataset_statistics(
         self,
         db: Session,
@@ -374,8 +335,8 @@ class SentClassificationModelService(TextClassificationModelService):
         merge_children_into_parent: bool,
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
-        # Build the label mappings exactly as in training
-        codes, classid2labelid, code2parent, _ = self._build_label_mappings(
+        # Build the label mappings
+        codes, classid2labelid, code2parent, _ = build_code_label_mappings(
             db=db,
             class_ids=class_ids,
             merge_children_into_parent=merge_children_into_parent,
@@ -621,7 +582,7 @@ class SentClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get codes and create mapping
-        codes, classid2labelid, code2parent, id2label = self._build_label_mappings(
+        codes, classid2labelid, code2parent, id2label = build_code_label_mappings(
             db=db,
             class_ids=parameters.class_ids,
             merge_children_into_parent=parameters.merge_children_into_parent,

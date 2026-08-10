@@ -58,7 +58,7 @@ from modules.classifier.classifier_exceptions import (
 from modules.classifier.models.job_progress_callback import JobProgressCallback
 from modules.classifier.models.model_utils import (
     O_LABEL_ID,
-    O_LABEL_NAME,
+    build_tag_label_mappings,
     check_hf_model_exists,
 )
 from modules.classifier.models.text_class_model_service import (
@@ -316,10 +316,8 @@ class DocClassificationModelService(TextClassificationModelService):
         merge_children_into_parent: bool,
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
-        # Build the label mapping exactly as in training
-        tags = crud_tag.read_by_ids(db=db, ids=class_ids)
-        classid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
-        classid2labelid[O_LABEL_ID] = O_LABEL_ID
+        # Build the label mappings
+        tags, classid2labelid, _ = build_tag_label_mappings(db=db, class_ids=class_ids)
 
         # Build the dataset exactly as in training, but skip tokenization
         _, dataset = self._retrieve_and_build_dataset(
@@ -531,11 +529,9 @@ class DocClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
         # Get tags and create mapping
-        tags = crud_tag.read_by_ids(db=db, ids=parameters.class_ids)
-        classid2labelid: dict[int, int] = {tag.id: i + 1 for i, tag in enumerate(tags)}
-        classid2labelid[O_LABEL_ID] = O_LABEL_ID
-        id2label = {i + 1: tag.name for i, tag in enumerate(tags)}
-        id2label[O_LABEL_ID] = O_LABEL_NAME
+        tags, classid2labelid, id2label = build_tag_label_mappings(
+            db=db, class_ids=parameters.class_ids
+        )
 
         # Build dataset
         sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
