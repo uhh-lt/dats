@@ -30,10 +30,3 @@ class NoCheckpointError(Exception):
             "Training did not produce a model checkpoint. This usually means "
             "the validation set was empty or no validation metric was logged."
         )
-
-
-class ClassifierProjectMismatchError(Exception):
-    def __init__(self, classifier_id: int, project_id: int) -> None:
-        super().__init__(
-            f"Classifier {classifier_id} does not belong to project {project_id}!"
-        )

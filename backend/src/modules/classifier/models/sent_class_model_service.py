@@ -26,6 +26,7 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import SentenceAnnotationCreate
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
+from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
@@ -335,11 +336,10 @@ class SentClassificationModelService(TextClassificationModelService):
         merge_children_into_parent: bool,
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
-        # Build the label mappings
-        codes, codeid2labelid, codeid2parentid, _ = build_code_label_mappings(
+        # Build the flat label mappings over the user-selected classes.
+        codes, codeid2labelid, _ = build_code_label_mappings(
             db=db,
             code_ids=class_ids,
-            merge_children_into_parent=merge_children_into_parent,
         )
 
         # Build the dataset exactly as in training, but skip the expensive embedding
@@ -348,9 +348,9 @@ class SentClassificationModelService(TextClassificationModelService):
             project_id=project_id,
             tag_ids=tag_ids,
             user_ids=user_ids,
-            class_ids=list(codeid2labelid.keys()),
             codeid2labelid=codeid2labelid,
             embedding_model=None,
+            merge_children_into_parent=merge_children_into_parent,
         )
 
         # Compute statistics from the sentence-level labels (before splitting)
@@ -369,7 +369,7 @@ class SentClassificationModelService(TextClassificationModelService):
             for label in labels:
                 if label != O_LABEL_ID:
                     row_labeled += 1
-                    class_id = codeid2parentid[labelid2codeid[label]]
+                    class_id = labelid2codeid[label]
                     class_units[class_id] += 1
                     seen_classes.add(class_id)
             for class_id in seen_classes:
@@ -429,10 +429,29 @@ class SentClassificationModelService(TextClassificationModelService):
         project_id: int,
         tag_ids: list[int],
         user_ids: list[int],
-        class_ids: list[int],
         codeid2labelid: dict[int, int],
         embedding_model: SentenceTransformer | None,
+        merge_children_into_parent: bool = False,
     ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset]:
+        """Fetches sentence annotations and builds the embedded dataset.
+
+        Annotations are fetched for the codes in ``codeid2labelid``. If
+        ``merge_children_into_parent`` is True, annotations of all descendant
+        codes are fetched as well and remapped to their parent code.
+        """
+
+        # Expand which code ids to fetch:
+        # If merge_children_into_parent is True, fetch all descendants of the selected classes and remap their annotations to the parent class.
+        # If merge_children_into_parent is False, fetch only the selected classes and keep their annotations as-is.
+        code_ids = [c for c in codeid2labelid.keys() if c != O_LABEL_ID]
+        if merge_children_into_parent:
+            codeid2parentid: dict[int, int] = {}
+            for code_id in code_ids:
+                for code in crud_code.read_with_children(db, code_id=code_id):
+                    codeid2parentid[code.id] = code_id
+        else:
+            codeid2parentid = {code_id: code_id for code_id in code_ids}
+
         # Find documents
         sdoc_ids = [
             sdoc.id
@@ -450,6 +469,7 @@ class SentClassificationModelService(TextClassificationModelService):
         ] = defaultdict(lambda: defaultdict(list))
 
         # 2. retrieve annotations from the database, in batches
+        fetch_code_ids = list(codeid2parentid.keys())
         for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
             batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
 
@@ -463,14 +483,16 @@ class SentClassificationModelService(TextClassificationModelService):
                 .where(
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
-                    SentenceAnnotationORM.code_id.in_(class_ids),
+                    SentenceAnnotationORM.code_id.in_(fetch_code_ids),
                 )
             )
 
-            # 4. Execute the statement and fetch the results
+            # 4. Execute the statement and fetch the results, remapping each
+            # annotation's code id to its parent (class) code.
             batch_result = db.execute(stmt).all()
             for result_row in batch_result:
                 annotation, adoc = result_row._tuple()
+                annotation.code_id = codeid2parentid[annotation.code_id]
                 user_id2sdoc_id2annotations[adoc.user_id][
                     adoc.source_document_id
                 ].append(annotation)
@@ -581,15 +603,11 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # 1. Create dataset
         job.update(current_step=1)
-        # Get codes and create mapping
-        codes, codeid2labelid, codeid2parentid, labelid2name = (
-            build_code_label_mappings(
-                db=db,
-                code_ids=parameters.class_ids,
-                merge_children_into_parent=parameters.merge_children_into_parent,
-            )
+        # Build the flat label mappings over the user-selected classes.
+        codes, codeid2labelid, labelid2name = build_code_label_mappings(
+            db=db,
+            code_ids=parameters.class_ids,
         )
-        class_ids = list(codeid2labelid.keys())
 
         # Build dataset
         embedding_model = SentenceTransformer(parameters.base_name)
@@ -603,9 +621,9 @@ class SentClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=class_ids,
             codeid2labelid=codeid2labelid,
             embedding_model=embedding_model,
+            merge_children_into_parent=parameters.merge_children_into_parent,
         )
 
         # Free the embedding model memory
@@ -630,20 +648,20 @@ class SentClassificationModelService(TextClassificationModelService):
             batch_size=parameters.batch_size,
         )
 
-        # Dataset statistics (number of annotations per code)
+        # Dataset statistics (number of annotations per code).
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[codeid2parentid[annotation.code_id]] += 1
+                train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for sdoc_id, user_id in zip(
             split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
         ):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[codeid2parentid[annotation.code_id]] += 1
+                eval_dataset_stats[annotation.code_id] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
@@ -765,9 +783,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path or "ERROR!",
                 project_id=payload.project_id,
-                labelid2classid={
-                    v: codeid2parentid[k] for k, v in codeid2labelid.items()
-                },
+                labelid2classid={v: k for k, v in codeid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -783,7 +799,7 @@ class SentClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
-        labelid2codeid = {v: codeid2parentid[k] for k, v in codeid2labelid.items()}
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -847,14 +863,13 @@ class SentClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
 
-        # Build dataset
+        # Build dataset.
         embedding_model = SentenceTransformer(classifier.base_model)
         user_id2sdoc_id2annotations, dataset = self._retrieve_build_embedd_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=classifier.class_ids,
             codeid2labelid=codeid2labelid,
             embedding_model=embedding_model,
         )
@@ -874,7 +889,7 @@ class SentClassificationModelService(TextClassificationModelService):
             batch_size=classifier.train_params.get("batch_size", 4),
         )
 
-        # Dataset statistics (number of annotations per code)
+        # Dataset statistics (number of annotations per code).
         eval_dataset_stats: dict[int, int] = {
             code_id: 0
             for code_id, label_id in codeid2labelid.items()

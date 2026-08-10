@@ -26,6 +26,7 @@ from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import SpanAnnotationCreate
 from core.annotation.span_annotation_orm import SpanAnnotationORM
+from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.user.user_crud import ASSISTANT_TRAINED_ID
@@ -56,7 +57,6 @@ from modules.classifier.classifier_dto import (
 )
 from modules.classifier.classifier_exceptions import (
     BaseModelDoesNotExistError,
-    ClassifierProjectMismatchError,
     EmptyDatasetError,
     NoCheckpointError,
 )
@@ -347,12 +347,31 @@ class SpanClassificationModelService(TextClassificationModelService):
         project_id: int,
         tag_ids: list[int],
         user_ids: list[int],
-        class_ids: list[int],
         codeid2labelid: dict[int, int],
         tokenizer,
         use_chunking: bool,
+        merge_children_into_parent: bool = False,
         chunk_stride: int = 0,
     ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset]:
+        """Fetches span annotations and builds the tokenized dataset.
+
+        Annotations are fetched for the codes in ``codeid2labelid``. If
+        ``merge_children_into_parent`` is True, annotations of all descendant
+        codes are fetched as well and remapped to their parent code.
+        """
+
+        # Expand which code ids to fetch:
+        # If merge_children_into_parent is True, fetch all descendants of the selected classes and remap their annotations to the parent class.
+        # If merge_children_into_parent is False, fetch only the selected classes and keep their annotations as-is.
+        code_ids = [c for c in codeid2labelid.keys() if c != O_LABEL_ID]
+        if merge_children_into_parent:
+            codeid2parentid: dict[int, int] = {}
+            for code_id in code_ids:
+                for code in crud_code.read_with_children(db, code_id=code_id):
+                    codeid2parentid[code.id] = code_id
+        else:
+            codeid2parentid = {code_id: code_id for code_id in code_ids}
+
         # Find documents
         sdoc_ids = [
             sdoc.id
@@ -383,14 +402,16 @@ class SpanClassificationModelService(TextClassificationModelService):
                 .where(
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
-                    SpanAnnotationORM.code_id.in_(class_ids),
+                    SpanAnnotationORM.code_id.in_(list(codeid2parentid.keys())),
                 )
             )
 
-            # 4. Execute the statement and fetch the results
+            # 4. Execute the statement and fetch the results, remapping each
+            # annotation's code id to its parent (class) code.
             batch_result = db.execute(stmt).all()
             for row in batch_result:
                 annotation, adoc = row._tuple()
+                annotation.code_id = codeid2parentid[annotation.code_id]
                 user_id2sdoc_id2annotations[adoc.user_id][
                     adoc.source_document_id
                 ].append(annotation)
@@ -506,11 +527,10 @@ class SpanClassificationModelService(TextClassificationModelService):
         merge_children_into_parent: bool,
         base_model_name: str,
     ) -> ClassifierDatasetStatistics:
-        # Build the label mappings
-        codes, codeid2labelid, codeid2parentid, _ = build_code_label_mappings(
+        # Build the flat label mappings over the user-selected classes.
+        codes, codeid2labelid, _ = build_code_label_mappings(
             db=db,
             code_ids=class_ids,
-            merge_children_into_parent=merge_children_into_parent,
         )
 
         # Build the dataset without chunking: the
@@ -522,11 +542,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             project_id=project_id,
             tag_ids=tag_ids,
             user_ids=user_ids,
-            # Exclude the "O" sentinel (label 0); it is not a real code id.
-            class_ids=[c for c in codeid2labelid.keys() if c != O_LABEL_ID],
             codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=False,
+            merge_children_into_parent=merge_children_into_parent,
         )
 
         # Compute statistics from the word-level labels (one row per user/doc)
@@ -548,7 +567,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 row_total += 1
                 if label != O_LABEL_ID:
                     row_labeled += 1
-                    class_id = codeid2parentid[labelid2codeid[label]]
+                    class_id = labelid2codeid[label]
                     class_units[class_id] += 1
                     seen_classes.add(class_id)
             for class_id in seen_classes:
@@ -617,8 +636,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
-        if parameters.chunk_size:
-            tokenizer.model_max_length = parameters.chunk_size
+        tokenizer.model_max_length = parameters.chunk_size
 
         job.update(
             steps=[
@@ -635,13 +653,10 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 1. Create dataset
         job.update(current_step=1)
 
-        # 1.1 Build the label mappings
-        codes, codeid2labelid, codeid2parentid, labelid2name = (
-            build_code_label_mappings(
-                db=db,
-                code_ids=parameters.class_ids,
-                merge_children_into_parent=parameters.merge_children_into_parent,
-            )
+        # 1.1 Build the flat label mappings over the user-selected classes.
+        codes, codeid2labelid, labelid2name = build_code_label_mappings(
+            db=db,
+            code_ids=parameters.class_ids,
         )
 
         # 1.2 Build dataset (already chunked, with overlap, by the builder)
@@ -650,11 +665,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            # Exclude the "O" sentinel (label 0); it is not a real code id.
-            class_ids=[c for c in codeid2labelid.keys() if c != O_LABEL_ID],
             codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
+            merge_children_into_parent=parameters.merge_children_into_parent,
             chunk_stride=max(1, tokenizer.model_max_length // 4),
         )
         if len(dataset) == 0:
@@ -683,20 +697,20 @@ class SpanClassificationModelService(TextClassificationModelService):
             pin_memory=True,
         )
 
-        # 1.5 Compute dataset statistics (number of annotations per code)
+        # 1.5 Compute dataset statistics (number of annotations per code).
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in train_idx:
             sdoc_id = dataset[i]["sdoc_id"]
             user_id = dataset[i]["user_id"]
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                train_dataset_stats[codeid2parentid[annotation.code_id]] += 1
+                train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in test_idx:
             sdoc_id = dataset[i]["sdoc_id"]
             user_id = dataset[i]["user_id"]
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                eval_dataset_stats[codeid2parentid[annotation.code_id]] += 1
+                eval_dataset_stats[annotation.code_id] += 1
 
         # 1.6 Calculate class weights (inverse token frequency over the train set).
         label_counts: dict[int, int] = defaultdict(int)
@@ -822,9 +836,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 type=payload.model_type,
                 path=checkpoint_callback.best_model_path,
                 project_id=payload.project_id,
-                labelid2classid={
-                    v: codeid2parentid[k] for k, v in codeid2labelid.items()
-                },
+                labelid2classid={v: k for k, v in codeid2labelid.items()},
                 train_data_stats=[
                     ClassifierData(class_id=code_id, num_examples=count)
                     for code_id, count in train_dataset_stats.items()
@@ -840,7 +852,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 6.2 store the evaluation in the db
-        labelid2codeid = {v: codeid2parentid[k] for k, v in codeid2labelid.items()}
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -899,15 +911,11 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # load classifier
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        if classifier.project_id != payload.project_id:
-            raise ClassifierProjectMismatchError(classifier.id, payload.project_id)
         codeid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
 
         # init tokenizer, restoring the chunk size used during training so that eval sees the same input distribution
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
-        train_chunk_size = classifier.train_params.get("chunk_size")
-        if train_chunk_size:
-            tokenizer.model_max_length = train_chunk_size
+        tokenizer.model_max_length = classifier.train_params["chunk_size"]
 
         # 2. Create dataset
         job.update(current_step=2)
@@ -918,7 +926,6 @@ class SpanClassificationModelService(TextClassificationModelService):
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
-            class_ids=classifier.class_ids,
             codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
@@ -936,11 +943,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             batch_size=classifier.train_params.get("batch_size", 4),
         )
 
-        # Dataset statistics (number of annotations per code), keyed by the
-        # effective (parent) code id, consistent with training. The stored
-        # labelid2classid maps each label id to its effective code id, so we
-        # translate an annotation's code id via its label id.
-        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
+        # Dataset statistics (number of annotations per code).
         eval_dataset_stats: dict[int, int] = {
             code_id: 0
             for code_id, label_id in codeid2labelid.items()
@@ -948,10 +951,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         }
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
-                label_id = codeid2labelid.get(annotation.code_id)
-                if label_id is None or label_id == O_LABEL_ID:
-                    continue
-                eval_dataset_stats[labelid2codeid[label_id]] += 1
+                eval_dataset_stats[annotation.code_id] += 1
 
         # 3. Load the model
         job.update(current_step=3)
@@ -979,6 +979,7 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 5. Store the evaluation in the DB
         job.update(current_step=5)
+        labelid2codeid = {v: k for k, v in codeid2labelid.items()}
         classifier_db_obj = crud_classifier.add_evaluation(
             db=db,
             create_dto=ClassifierEvaluationCreate(
@@ -1038,17 +1039,13 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 1. Get the trained classifier and its label mappings from the database
         job.update(current_step=1)
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
-        if classifier.project_id != payload.project_id:
-            raise ClassifierProjectMismatchError(classifier.id, payload.project_id)
         labelid2codeid = {
             int(label): c for label, c in classifier.labelid2classid.items()
         }
 
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
         # Restore the tokenization window used during training.
-        train_chunk_size = classifier.train_params.get("chunk_size")
-        if train_chunk_size:
-            tokenizer.model_max_length = train_chunk_size
+        tokenizer.model_max_length = classifier.train_params["chunk_size"]
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
 
         # Delete existing annotations (if requested by the user)
@@ -1151,8 +1148,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         # label array per document. Each word is labeled by the chunk in which
         # it appears at the earliest token position, because that chunk sees
         # the most right-context for the word (the overlap guarantees such a
-        # chunk exists). This is strictly better than "first chunk wins", which
-        # labels boundary words from a chunk that only saw their left context.
+        # chunk exists).
         sdoc_id2word_labels: dict[int, list[int]] = {
             sdoc_id: [O_LABEL_ID] * num_words
             for sdoc_id, num_words in sdoc_id2num_words.items()

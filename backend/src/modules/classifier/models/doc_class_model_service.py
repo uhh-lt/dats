@@ -510,8 +510,7 @@ class DocClassificationModelService(TextClassificationModelService):
             raise BaseModelDoesNotExistError(parameters.base_name)
 
         tokenizer = AutoTokenizer.from_pretrained(parameters.base_name)
-        if parameters.chunk_size:
-            tokenizer.model_max_length = parameters.chunk_size
+        tokenizer.model_max_length = parameters.chunk_size
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         job.update(
