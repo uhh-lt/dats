@@ -6,18 +6,15 @@ class JobProgressCallback(pl.Callback):
         super().__init__()
         self.job = job
 
-    def on_validation_epoch_end(self, trainer, pl_module):
-        # Get metrics from trainer.callback_metrics
+    def on_validation_end(self, trainer):
         metrics = trainer.callback_metrics
-        # These keys should match what you log in your LightningModule
         precision = metrics.get("eval_precision", None)
         recall = metrics.get("eval_recall", None)
         f1 = metrics.get("eval_f1", None)
         accuracy = metrics.get("eval_accuracy", None)
 
-        # During the sanity-check validation run (and depending on hook
-        # ordering) the metrics are not logged yet, so there is nothing to
-        # report. Skip the update in that case.
+        # During the sanity-check validation run the metrics are not logged
+        # yet, so there is nothing to report. Skip the update in that case.
         if precision is None or recall is None or f1 is None or accuracy is None:
             return
 
