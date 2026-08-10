@@ -34,8 +34,6 @@ interface TrainingSettings {
   dropout: number;
   chunkSize: number;
   precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
-  // sequence classification settings
-  isBio: boolean;
   // evaluation settings
   averaging: ClassifierAveraging;
 }
@@ -55,7 +53,6 @@ export function TrainingSettingsStep() {
   const {
     control,
     handleSubmit,
-    getValues,
     formState: { errors },
   } = useForm<TrainingSettings>({
     defaultValues: {
@@ -72,7 +69,6 @@ export function TrainingSettingsStep() {
       dropout: 0.3,
       chunkSize: 1024,
       precision: "bf16-mixed",
-      isBio: false,
       averaging: ClassifierAveraging.MICRO,
     },
   });
@@ -95,9 +91,6 @@ export function TrainingSettingsStep() {
         dropout: data.dropout,
         chunkSize: data.chunkSize,
         precision: data.precision,
-        // isBio is a disabled switch, so it is omitted from the submitted form
-        // data; read it via getValues to fall back to its default value.
-        isBio: getValues("isBio"),
         averaging: data.averaging,
       }),
     );
@@ -334,22 +327,6 @@ export function TrainingSettingsStep() {
               </FormMenu>
             </FormItem>
           </FormBox>
-          {model === ClassifierModel.SPAN && (
-            <FormBox title="Sequence classification configuration">
-              <FormItem
-                title="BIO Tagging"
-                subtitle="Use BIO tagging for span classification. If false, uses IO tagging."
-              >
-                <FormSwitch
-                  name="isBio"
-                  control={control}
-                  boxProps={{ sx: { ml: 2 } }}
-                  switchProps={{ size: "medium", color: "primary" }}
-                  disabled={true}
-                />
-              </FormItem>
-            </FormBox>
-          )}
         </Stack>
       </Stack>
       <DialogActions sx={{ width: "100%" }}>

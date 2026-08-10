@@ -8264,7 +8264,6 @@
             "title": "Precision",
             "description": "Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
           },
-          "is_bio": { "type": "boolean", "title": "Is Bio", "description": "Whether to use BIO or IO tagging" },
           "averaging": {
             "$ref": "#/components/schemas/ClassifierAveraging",
             "description": "Averaging strategy for evaluation metrics (micro or macro)",
@@ -8288,8 +8287,7 @@
           "weight_decay",
           "dropout",
           "chunk_size",
-          "precision",
-          "is_bio"
+          "precision"
         ],
         "title": "ClassifierTrainingParams"
       },

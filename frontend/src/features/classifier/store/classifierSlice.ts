@@ -15,7 +15,6 @@ export interface ClassifierTrainingSettings {
   dropout: number;
   chunkSize: number;
   precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
-  isBio: boolean;
   averaging: ClassifierAveraging;
 }
 

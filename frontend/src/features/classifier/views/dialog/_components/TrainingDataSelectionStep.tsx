@@ -53,8 +53,6 @@ export function TrainingDataSelectionStep() {
       dropout: trainingSettings.dropout,
       chunk_size: trainingSettings.chunkSize,
       precision: trainingSettings.precision,
-      // specific training settings
-      is_bio: trainingSettings.isBio,
       // evaluation settings
       averaging: trainingSettings.averaging,
     };
