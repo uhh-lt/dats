@@ -216,9 +216,7 @@ class ClassifierTrainingParams(BaseModel):
     learning_rate: float = Field(description="Learning rate to use for training")
     weight_decay: float = Field(description="Weight decay to use for training")
     dropout: float = Field(description="Dropout rate to use in the model")
-    chunk_size: int | None = Field(
-        description="Slice long documents into chunks of size x"
-    )
+    chunk_size: int = Field(description="Slice long documents into chunks of size x")
     precision: _PRECISION_INPUT | None = Field(
         description="Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
     )
