@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 from uuid import uuid4
 
 import numpy as np
@@ -91,7 +91,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         class_weights: list[float],
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
-        averaging: ClassifierAveraging = ClassifierAveraging.MICRO,
+        averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
     ):
         super().__init__()
         # Saves hyperparameters to the checkpoint
@@ -130,7 +130,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         self.num_labels = num_labels
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.averaging = averaging
+        self.averaging: Literal["micro", "macro"] = averaging
 
         # Buffers to accumulate predictions/labels across batches so that
         # evaluation metrics are computed once over the whole epoch instead of
@@ -209,7 +209,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         precision, recall, f1, _ = precision_recall_fscore_support(
             labels,
             preds,
-            average=self.averaging.value,
+            average=self.averaging,
             # sklearn's stub types zero_division as str only, but 0 is valid.
             zero_division=0,  # pyright: ignore[reportArgumentType]
         )
@@ -682,7 +682,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 class_weights=class_weights,
                 id2label=id2label,
                 label2id={v: k for k, v in id2label.items()},
-                averaging=parameters.averaging,
+                averaging=parameters.averaging.value,
             )
 
         # 3. Train the model
@@ -828,8 +828,12 @@ class DocClassificationModelService(TextClassificationModelService):
         model = DocClassificationLightningModel.load_from_checkpoint(classifier.path)
         # Resolve the averaging strategy: eval param overrides the model's stored
         # training setting (default micro for older models).
-        model.averaging = parameters.averaging or ClassifierAveraging(
-            classifier.train_params.get("averaging", ClassifierAveraging.MICRO.value)
+        model.averaging = (
+            parameters.averaging.value
+            if parameters.averaging is not None
+            else classifier.train_params.get(
+                "averaging", ClassifierAveraging.MICRO.value
+            )
         )
         model.eval()
 
