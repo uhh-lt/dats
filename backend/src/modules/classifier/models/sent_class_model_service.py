@@ -66,6 +66,7 @@ from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_code_label_mappings,
     check_hf_model_exists,
+    grouped_train_test_split,
 )
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
@@ -636,40 +637,48 @@ class SentClassificationModelService(TextClassificationModelService):
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
-        # Train test split
-        split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
+        # Train/test split, grouped by sdoc_id so the same document (annotated
+        # by several users) never appears in both train and eval.
+        train_idx, test_idx = grouped_train_test_split(dataset)
+        train_dataset = dataset.select(train_idx)
+        val_dataset = dataset.select(test_idx)
+
         train_dataloader = DataLoader(
-            split_dataset["train"],  # type: ignore
+            train_dataset,  # type: ignore
             shuffle=True,
             collate_fn=self._collate_fn,
             batch_size=parameters.batch_size,
         )
         val_dataloader = DataLoader(
-            split_dataset["test"],  # type: ignore
+            val_dataset,  # type: ignore
             shuffle=False,
             collate_fn=self._collate_fn,
             batch_size=parameters.batch_size,
         )
 
         # Dataset statistics (number of annotations per code).
+        # Pull the columns once; per-row `dataset[i]` access on a HF Dataset is slow.
+        dataset_sdoc_ids = dataset["sdoc_id"]
+        dataset_user_ids = dataset["user_id"]
+
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
-        for sdoc_id, user_id in zip(
-            split_dataset["train"]["sdoc_id"], split_dataset["train"]["user_id"]
-        ):
-            for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
+        for i in train_idx:
+            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
+                dataset_sdoc_ids[i]
+            ]:
                 train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
-        for sdoc_id, user_id in zip(
-            split_dataset["test"]["sdoc_id"], split_dataset["test"]["user_id"]
-        ):
-            for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
+        for i in test_idx:
+            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
+                dataset_sdoc_ids[i]
+            ]:
                 eval_dataset_stats[annotation.code_id] += 1
 
         # Calculate class weights
         # Count the occurrences of each label in the training set
         label_counts = defaultdict(int)
-        for labels in split_dataset["train"]["labels"]:
+        for labels in train_dataset["labels"]:
             for label in labels:
                 label_counts[label] += 1
 

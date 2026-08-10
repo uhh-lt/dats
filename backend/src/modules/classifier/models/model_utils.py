@@ -1,3 +1,5 @@
+import numpy as np
+from datasets import Dataset
 from huggingface_hub import model_info
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,27 @@ def check_hf_model_exists(model_name: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def grouped_train_test_split(
+    dataset: Dataset, test_size: float = 0.2, seed: int = 42
+) -> tuple[list[int], list[int]]:
+    """Splits row indices into train/test, grouping by ``sdoc_id``.
+
+    The same source document can appear multiple times (once per
+    annotator). Splitting by row would leak a document into both train and
+    test, inflating the evaluation. Splitting by ``sdoc_id`` keeps all
+    rows of a document on the same side of the split.
+    """
+    sdoc_ids = dataset["sdoc_id"]
+    unique_sdocs = sorted(set(sdoc_ids))
+    rng = np.random.default_rng(seed)
+    shuffled = rng.permutation(unique_sdocs)
+    n_test = max(1, int(round(len(unique_sdocs) * test_size)))
+    test_sdocs = set(shuffled[:n_test].tolist())
+    train_idx = [i for i, s in enumerate(sdoc_ids) if s not in test_sdocs]
+    test_idx = [i for i, s in enumerate(sdoc_ids) if s in test_sdocs]
+    return train_idx, test_idx
 
 
 def build_code_label_mappings(
