@@ -149,8 +149,12 @@ class SpanClassificationLightningModel(pl.LightningModule):
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
 
-        # Define custom loss function
-        self.loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(class_weights))
+        # Define custom loss function. ignore_index=-100 makes the padding /
+        # special-token / subword labels (which are set to -100) not contribute
+        # to the loss. (This is the default, but we set it explicitly.)
+        self.loss_fn = nn.CrossEntropyLoss(
+            weight=torch.tensor(class_weights), ignore_index=-100
+        )
 
     def forward(
         self,
@@ -305,7 +309,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         predictions = torch.argmax(outputs.logits, dim=2).tolist()
 
         return {
-            "sdoc_ids": batch["sdoc_id"],
+            "chunk_idxs": batch["chunk_idx"],
             "predictions": predictions,
         }
 
@@ -336,10 +340,10 @@ class SpanClassificationModelService(TextClassificationModelService):
             child_codes = [
                 crud_code.read_with_children(db, code_id=id) for id in class_ids
             ]
+            # All children of a parent share the parent's single label id, so
+            # that the number of labels equals the number of parent classes.
             classid2labelid: dict[int, int] = {
-                c.id: i + 1
-                for code, (i, parent) in zip(child_codes, enumerate(class_ids))
-                for c in code
+                c.id: i + 1 for i, children in enumerate(child_codes) for c in children
             }
             code2parent = {
                 code.id: parent
@@ -1054,23 +1058,52 @@ class SpanClassificationModelService(TextClassificationModelService):
             for sdoc_data in sdoc_datas
         ]
 
-        # Construct a tokenized huggingface dataset
-        sdoc_id2word_ids: dict[int, list[int | None]] = {}
+        # Construct a tokenized huggingface dataset. Long documents are split
+        # into overlapping chunks (return_overflowing_tokens) so that no tokens
+        # are silently dropped; per-chunk predictions are merged back below.
+        # chunk_index -> (sdoc_id, word_ids of that chunk)
+        chunk_meta: list[tuple[int, list[int | None]]] = []
+        # Number of words per sdoc, to size the merged prediction arrays.
+        sdoc_id2num_words: dict[int, int] = {
+            sdoc_data.id: len(sdoc_data.tokens) for sdoc_data in sdoc_datas
+        }
+
+        # Stride between consecutive chunks (in tokens) so spans near a chunk
+        # boundary are fully visible in at least one chunk.
+        chunk_stride = max(1, tokenizer.model_max_length // 4)
 
         def tokenize_for_inference(examples):
             tokenized_inputs = tokenizer(
-                examples["words"], truncation=True, is_split_into_words=True
+                examples["words"],
+                truncation=True,
+                is_split_into_words=True,
+                return_overflowing_tokens=True,
+                stride=chunk_stride,
             )
 
-            for i, sdoc_id in enumerate(examples["sdoc_id"]):
-                word_ids = tokenized_inputs.word_ids(batch_index=i)
-                sdoc_id2word_ids[sdoc_id] = word_ids
+            overflow_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
+            num_chunks = len(tokenized_inputs["input_ids"])
+            for chunk_i in range(num_chunks):
+                sample_i = overflow_mapping[chunk_i]
+                sdoc_id = examples["sdoc_id"][sample_i]
+                word_ids = tokenized_inputs.word_ids(batch_index=chunk_i)
+                chunk_meta.append((sdoc_id, word_ids))
 
             return tokenized_inputs
 
         hf_dataset = Dataset.from_list(inference_dataset)  # type: ignore
-        tokenized_hf_dataset = hf_dataset.map(tokenize_for_inference, batched=True)
-        tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["words"])
+        tokenized_hf_dataset = hf_dataset.map(
+            tokenize_for_inference,
+            batched=True,
+            remove_columns=hf_dataset.column_names,
+            # chunk_meta is populated as a side effect, so caching must be off
+            # (a cache hit would skip the function and leave chunk_meta empty).
+            load_from_cache_file=False,
+        )
+        # Align each chunk with its metadata via a positional index.
+        tokenized_hf_dataset = tokenized_hf_dataset.add_column(
+            "chunk_idx", list(range(len(tokenized_hf_dataset)))
+        )
 
         # Build dataloader
         inference_dataloader = DataLoader(
@@ -1100,29 +1133,42 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 5. Post-process the predictions to extract annotations
         job.update(current_step=5)
-        # Flatten outputs
+        # Flatten the per-chunk outputs.
+        flat_chunk_idxs: list[int] = []
         flat_predictions: list[list[int]] = []
-        flat_sdoc_ids: list[int] = []
         for pred in predictions:
-            flat_sdoc_ids.extend([x.item() for x in pred["sdoc_ids"]])  # type: ignore
+            flat_chunk_idxs.extend([x.item() for x in pred["chunk_idxs"]])  # type: ignore
             flat_predictions.extend(pred["predictions"])  # type: ignore
 
-        # Map labels to words
-        # word_ids: [None, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6 None]
-        # labels:      [0, 0, 5, 5, 5, 5, 0, 0, 7, 7, 7, 0]
-        prev_label = 0
-        results: list[AnnotationResult] = []
-        current_annotation: AnnotationResult | None = None
-        for sdoc_id, labels in zip(flat_sdoc_ids, flat_predictions):
-            word_ids = sdoc_id2word_ids[sdoc_id]
-
-            for word_id, label in zip(word_ids, labels):
-                # Skip special tokens
-                if word_id is None:
+        # Merge the overlapping per-chunk token predictions into one word-level
+        # label array per document. The first chunk that covers a word wins.
+        sdoc_id2word_labels: dict[int, list[int]] = {
+            sdoc_id: [0] * num_words for sdoc_id, num_words in sdoc_id2num_words.items()
+        }
+        sdoc_id2word_seen: dict[int, set[int]] = defaultdict(set)
+        for chunk_idx, chunk_preds in zip(flat_chunk_idxs, flat_predictions):
+            sdoc_id, word_ids = chunk_meta[chunk_idx]
+            word_labels = sdoc_id2word_labels[sdoc_id]
+            seen = sdoc_id2word_seen[sdoc_id]
+            for word_id, label in zip(word_ids, chunk_preds):
+                # Skip special tokens and already-covered words.
+                if word_id is None or word_id in seen:
                     continue
+                seen.add(word_id)
+                word_labels[word_id] = label
 
+        # Extract spans from the merged word-level labels of each document.
+        # end_token is EXCLUSIVE (matches the training labels[begin:end] slice
+        # convention and SpanAnnotation.end_token semantics).
+        results: list[AnnotationResult] = []
+        for sdoc_id, word_labels in sdoc_id2word_labels.items():
+            prev_label = 0
+            current_annotation: AnnotationResult | None = None
+
+            for word_id, label in enumerate(word_labels):
                 if label != prev_label:
-                    # The current annotation ends
+                    # The current annotation ends (word_id is the first word
+                    # after the span -> exclusive end).
                     if current_annotation is not None:
                         current_annotation["end_token"] = word_id
                         results.append(current_annotation)
@@ -1139,11 +1185,11 @@ class SpanClassificationModelService(TextClassificationModelService):
 
                 prev_label = label
 
-            # Finish the current annotation
-            if current_annotation is not None and word_ids[-1] is not None:
-                current_annotation["end_token"] = word_ids[-1]
+            # Finish the current annotation at the end of the document. The
+            # exclusive end is one past the last word.
+            if current_annotation is not None:
+                current_annotation["end_token"] = len(word_labels)
                 results.append(current_annotation)
-                current_annotation = None
 
         # 6. Store annotations in DB
         job.update(current_step=6)
@@ -1156,7 +1202,8 @@ class SpanClassificationModelService(TextClassificationModelService):
         for annotation in results:
             sdoc_data = sdoc_id2data[annotation["sdoc_id"]]
             begin_char = sdoc_data.token_starts[annotation["begin_token"]]
-            end_char = sdoc_data.token_ends[annotation["end_token"]]
+            # end_token is exclusive, so the last covered word is end_token - 1.
+            end_char = sdoc_data.token_ends[annotation["end_token"] - 1]
             create_dtos.append(
                 SpanAnnotationCreate(
                     begin=begin_char,
