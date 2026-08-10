@@ -496,6 +496,8 @@ class SentClassificationModelService(TextClassificationModelService):
             batch_result = db.execute(stmt).all()
             for result_row in batch_result:
                 annotation, adoc = result_row._tuple()
+                # Detach the ORM object from the session before mutating it.
+                db.expunge(annotation)
                 annotation.code_id = codeid2parentid[annotation.code_id]
                 user_id2sdoc_id2annotations[adoc.user_id][
                     adoc.source_document_id

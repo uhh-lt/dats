@@ -184,8 +184,14 @@ class SpanClassificationLightningModel(pl.LightningModule):
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
     ) -> torch.Tensor:
-        # Predict
-        outputs = self(**batch)
+        # Predict. Labels are NOT passed into the HF model on purpose: its
+        # internal loss is an unweighted cross-entropy, whereas training uses
+        # the class-weighted self.loss_fn. Computing the loss here with
+        # self.loss_fn keeps eval/test loss consistent with train_loss.
+        outputs = self(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+        )
         predictions = torch.argmax(outputs.logits, dim=2).tolist()
 
         # Accumulate token-level predictions/labels (ignoring IGNORE_LABEL_ID
@@ -210,9 +216,13 @@ class SpanClassificationLightningModel(pl.LightningModule):
             self._test_preds.extend(flat_preds)
             self._test_labels.extend(flat_labels)
 
-        # Log loss
-        self.log(f"{prefix}_loss", outputs.loss.detach(), on_step=False, on_epoch=True)
-        return outputs.loss.detach()
+        # Log the class-weighted loss (same loss function as in training).
+        label_tensor = batch["labels"]
+        loss = self.loss_fn(
+            outputs.logits.view(-1, self.num_labels), label_tensor.view(-1)
+        )
+        self.log(f"{prefix}_loss", loss.detach(), on_step=False, on_epoch=True)
+        return loss.detach()
 
     def _compute_and_log_token_metrics(self, prefix: str) -> None:
         if prefix == "eval":
@@ -394,6 +404,8 @@ class SpanClassificationModelService(TextClassificationModelService):
             batch_result = db.execute(stmt).all()
             for row in batch_result:
                 annotation, adoc = row._tuple()
+                # Detach the ORM object from the session before mutating it.
+                db.expunge(annotation)
                 annotation.code_id = codeid2parentid[annotation.code_id]
                 user_id2sdoc_id2annotations[adoc.user_id][
                     adoc.source_document_id
@@ -695,15 +707,26 @@ class SpanClassificationModelService(TextClassificationModelService):
         dataset_user_ids = dataset["user_id"]
         dataset_labels = dataset["labels"]
 
+        # The dataset is chunked: count each annotated document only once.
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
+        seen_train_rows: set[tuple[int, int]] = set()
         for i in train_idx:
+            row_key = (dataset_user_ids[i], dataset_sdoc_ids[i])
+            if row_key in seen_train_rows:
+                continue
+            seen_train_rows.add(row_key)
             for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
                 dataset_sdoc_ids[i]
             ]:
                 train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
+        seen_eval_rows: set[tuple[int, int]] = set()
         for i in test_idx:
+            row_key = (dataset_user_ids[i], dataset_sdoc_ids[i])
+            if row_key in seen_eval_rows:
+                continue
+            seen_eval_rows.add(row_key)
             for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
                 dataset_sdoc_ids[i]
             ]:
@@ -953,7 +976,13 @@ class SpanClassificationModelService(TextClassificationModelService):
             for code_id, label_id in codeid2labelid.items()
             if label_id != O_LABEL_ID
         }
+        # The dataset is chunked: count each annotated document only once.
+        seen_rows: set[tuple[int, int]] = set()
         for sdoc_id, user_id in zip(dataset["sdoc_id"], dataset["user_id"]):
+            row_key = (user_id, sdoc_id)
+            if row_key in seen_rows:
+                continue
+            seen_rows.add(row_key)
             for annotation in user_id2sdoc_id2annotations[user_id][sdoc_id]:
                 eval_dataset_stats[annotation.code_id] += 1
 
