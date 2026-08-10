@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ClassifierAveraging } from "./ClassifierAveraging";
 export type ClassifierTrainingParams = {
   task_type: string;
   /**
@@ -84,4 +85,8 @@ export type ClassifierTrainingParams = {
    * Whether to use BIO or IO tagging
    */
   is_bio: boolean;
+  /**
+   * Averaging strategy for evaluation metrics (micro or macro)
+   */
+  averaging?: ClassifierAveraging;
 };

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ClassifierAveraging } from "./ClassifierAveraging";
 export type ClassifierEvaluationParams = {
   task_type: string;
   /**
@@ -16,4 +17,8 @@ export type ClassifierEvaluationParams = {
    * User IDs whose annotations serve as gold labels
    */
   user_ids: Array<number>;
+  /**
+   * Averaging strategy for evaluation metrics. If None, the model's stored training setting is used.
+   */
+  averaging?: ClassifierAveraging | null;
 };

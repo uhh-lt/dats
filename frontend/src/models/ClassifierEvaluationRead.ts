@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ClassifierClassMetrics } from "./ClassifierClassMetrics";
 import type { ClassifierData } from "./ClassifierData";
 export type ClassifierEvaluationRead = {
   /**
@@ -28,6 +29,10 @@ export type ClassifierEvaluationRead = {
    * Evaluation data statistics
    */
   eval_data_stats: Array<ClassifierData>;
+  /**
+   * Per-class evaluation metrics (empty for older evaluations)
+   */
+  class_metrics?: Array<ClassifierClassMetrics>;
   /**
    * ID of the Classifier Evaluation
    */
