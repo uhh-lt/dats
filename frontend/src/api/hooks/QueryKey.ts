@@ -268,7 +268,7 @@ export const QueryKey = {
   // classifier dataset statistics (by project id, model, classes, tags, users, merge-children setting)
   // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts
   CLASSIFIER_DATASET_STATISTICS: "classifierDatasetStatistics",
-  // the selectable base models for classifier training (no parameters)
+  // backend-configured classifier models, thresholds, and training defaults
   // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts
-  CLASSIFIER_BASE_MODELS: "classifierBaseModels",
+  CLASSIFIER_INFO: "classifierInfo",
 };

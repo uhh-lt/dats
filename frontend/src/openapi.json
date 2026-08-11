@@ -616,15 +616,15 @@
         }
       }
     },
-    "/classifier/base-models": {
+    "/classifier/info": {
       "get": {
         "tags": ["classifier"],
-        "summary": "Returns the pre-built selection of base models for classifier training",
-        "operationId": "get_base_models",
+        "summary": "Returns classifier models, thresholds, and training defaults",
+        "operationId": "get_classifier_info",
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierBaseModels" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierInfo" } } }
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
@@ -7764,25 +7764,6 @@
         "required": ["value", "label"],
         "title": "ClassifierBaseModelOption"
       },
-      "ClassifierBaseModels": {
-        "properties": {
-          "transformer_models": {
-            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
-            "type": "array",
-            "title": "Transformer Models",
-            "description": "Selectable transformer base models (span & document classification)"
-          },
-          "embedding_models": {
-            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
-            "type": "array",
-            "title": "Embedding Models",
-            "description": "Selectable embedding base models (sentence classification)"
-          }
-        },
-        "type": "object",
-        "required": ["transformer_models", "embedding_models"],
-        "title": "ClassifierBaseModels"
-      },
       "ClassifierClassMetrics": {
         "properties": {
           "class_id": { "type": "integer", "title": "Class Id", "description": "ID of the class (tag or code)" },
@@ -8010,6 +7991,45 @@
         "required": ["task_type", "classifier_id", "sdoc_ids", "delete_existing_work"],
         "title": "ClassifierInferenceParams"
       },
+      "ClassifierInfo": {
+        "properties": {
+          "weak_signal_threshold": {
+            "type": "number",
+            "title": "Weak Signal Threshold",
+            "description": "Signal percentage below which training signal is weak"
+          },
+          "strong_signal_threshold": {
+            "type": "number",
+            "title": "Strong Signal Threshold",
+            "description": "Signal percentage above which training signal is strong"
+          },
+          "transformer_models": {
+            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
+            "type": "array",
+            "title": "Transformer Models",
+            "description": "Selectable transformer base models (span & document classification)"
+          },
+          "embedding_models": {
+            "items": { "$ref": "#/components/schemas/ClassifierBaseModelOption" },
+            "type": "array",
+            "title": "Embedding Models",
+            "description": "Selectable embedding base models (sentence classification)"
+          },
+          "training_params": {
+            "$ref": "#/components/schemas/ClassifierTrainingDefaults",
+            "description": "Backend-configured defaults for classifier training"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weak_signal_threshold",
+          "strong_signal_threshold",
+          "transformer_models",
+          "embedding_models",
+          "training_params"
+        ],
+        "title": "ClassifierInfo"
+      },
       "ClassifierJobInput": {
         "properties": {
           "project_id": {
@@ -8221,6 +8241,78 @@
         "type": "string",
         "enum": ["training", "evaluation", "inference"],
         "title": "ClassifierTask"
+      },
+      "ClassifierTrainingDefaults": {
+        "properties": {
+          "adapter_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Adapter Name",
+            "description": "Default adapter to use, or null to train without an adapter"
+          },
+          "epochs": { "type": "integer", "title": "Epochs", "description": "Default number of training epochs" },
+          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Default training batch size" },
+          "early_stopping": {
+            "type": "boolean",
+            "title": "Early Stopping",
+            "description": "Whether early stopping is enabled"
+          },
+          "early_stopping_patience": {
+            "type": "integer",
+            "title": "Early Stopping Patience",
+            "description": "Default validation patience for early stopping"
+          },
+          "train_test_split": {
+            "type": "number",
+            "title": "Train Test Split",
+            "description": "Default fraction of training data reserved for validation"
+          },
+          "learning_rate": { "type": "number", "title": "Learning Rate", "description": "Default learning rate" },
+          "weight_decay": { "type": "number", "title": "Weight Decay", "description": "Default weight decay" },
+          "dropout": { "type": "number", "title": "Dropout", "description": "Default dropout rate" },
+          "chunk_size": { "type": "integer", "title": "Chunk Size", "description": "Default token chunk size" },
+          "precision": {
+            "anyOf": [
+              { "type": "integer", "enum": [64, 32, 16] },
+              {
+                "type": "string",
+                "enum": [
+                  "transformer-engine",
+                  "transformer-engine-float16",
+                  "16-true",
+                  "16-mixed",
+                  "bf16-true",
+                  "bf16-mixed",
+                  "32-true",
+                  "64-true"
+                ]
+              },
+              { "type": "string", "enum": ["64", "32", "16", "bf16"] },
+              { "type": "null" }
+            ],
+            "title": "Precision",
+            "description": "Default Lightning training precision"
+          },
+          "averaging": {
+            "$ref": "#/components/schemas/ClassifierAveraging",
+            "description": "Default evaluation metric averaging strategy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "adapter_name",
+          "epochs",
+          "batch_size",
+          "early_stopping",
+          "early_stopping_patience",
+          "train_test_split",
+          "learning_rate",
+          "weight_decay",
+          "dropout",
+          "chunk_size",
+          "precision",
+          "averaging"
+        ],
+        "title": "ClassifierTrainingDefaults"
       },
       "ClassifierTrainingOutput": {
         "properties": {

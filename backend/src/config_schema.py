@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from itertools import repeat
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import (
     BaseModel,
@@ -330,6 +330,23 @@ class BaseModelOption(BaseModel):
     label: str = Field(min_length=1)
 
 
+class ClassifierTrainingParamsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    adapter_name: str | None
+    epochs: int = Field(gt=0)
+    batch_size: int = Field(gt=0)
+    early_stopping: bool
+    early_stopping_patience: int = Field(ge=0)
+    train_test_split: float = Field(gt=0.0, lt=1.0)
+    learning_rate: float = Field(gt=0.0)
+    weight_decay: float = Field(ge=0.0, le=1.0)
+    dropout: float = Field(ge=0.0, le=1.0)
+    chunk_size: int = Field(gt=0)
+    precision: Literal["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"]
+    averaging: Literal["micro", "macro"]
+
+
 class ClassifierConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -337,6 +354,7 @@ class ClassifierConfig(BaseModel):
     strong_signal_threshold: float = Field(ge=0.0, le=1.0)
     transformer_models: list[BaseModelOption] = Field(default_factory=list)
     embedding_models: list[BaseModelOption] = Field(default_factory=list)
+    training_params: ClassifierTrainingParamsConfig
 
     @field_validator("transformer_models", "embedding_models", mode="before")
     @classmethod
