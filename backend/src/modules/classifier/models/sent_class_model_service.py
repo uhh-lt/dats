@@ -65,6 +65,7 @@ from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_code_label_mappings,
     check_hf_model_exists,
+    compute_balanced_class_weights,
     grouped_train_test_split,
 )
 from modules.classifier.models.text_class_model_service import (
@@ -216,6 +217,8 @@ class SentClassificationLightningModel(pl.LightningModule):
             )  # Unpack the output
 
         emissions = self.linear(padded_embeddings)
+        # TODO: Incorporate self.class_weights into the training objective.
+        # torchcrf does not support class-weighted likelihoods directly.
         loss = (
             -self.crf(
                 emissions,
@@ -761,22 +764,13 @@ class SentClassificationModelService(TextClassificationModelService):
             for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 eval_dataset_stats[annotation.code_id] += 1
 
-        # Calculate class weights
-        # Count the occurrences of each label in the training set
-        label_counts = defaultdict(int)
-        for labels in train_dataset["labels"]:
-            for label in labels:
-                label_counts[label] += 1
-
-        # Calculate the weight for each label: A simple inverse frequency weighting
-        total_tokens = sum(label_counts.values())
-        num_labels = len(labelid2name)
-        class_weights = [0.0] * num_labels
-        for label, count in label_counts.items():
-            if count > 0:
-                class_weights[label] = total_tokens / (num_labels * count)
-            else:
-                raise ValueError(f"Label '{label}' has zero count in training data!")
+        # Compute and persist sentence-level weights even though the current CRF
+        # objective cannot consume them yet.
+        train_labels = cast(list[list[int]], train_dataset["labels"])
+        class_weights = compute_balanced_class_weights(
+            (label for labels in train_labels for label in labels),
+            num_labels=len(labelid2name),
+        )
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)

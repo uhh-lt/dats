@@ -68,6 +68,7 @@ from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_code_label_mappings,
     check_hf_model_exists,
+    compute_balanced_class_weights,
     grouped_train_test_split,
 )
 from modules.classifier.models.text_class_model_service import (
@@ -173,15 +174,20 @@ class SpanClassificationLightningModel(pl.LightningModule):
         labels: torch.Tensor | None = None,
         **kwargs,
     ) -> Any:
-        return self.model(
-            input_ids=input_ids, attention_mask=attention_mask, labels=labels
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            **kwargs,
         )
+        if labels is not None:
+            outputs.loss = self.loss_fn(
+                outputs.logits.view(-1, self.num_labels), labels.view(-1)
+            )
+        return outputs
 
     def training_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
-        outputs = self(**batch)
-        logits = outputs.logits
-        labels = batch["labels"]
-        loss = self.loss_fn(logits.view(-1, self.num_labels), labels.view(-1))
+        outputs = self.forward(**batch)
+        loss = outputs.loss
 
         self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
@@ -195,14 +201,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
     ) -> torch.Tensor:
-        # Predict. Labels are NOT passed into the HF model on purpose: its
-        # internal loss is an unweighted cross-entropy, whereas training uses
-        # the class-weighted self.loss_fn. Computing the loss here with
-        # self.loss_fn keeps eval/test loss consistent with train_loss.
-        outputs = self(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-        )
+        outputs = self.forward(**batch)
         predictions = torch.argmax(outputs.logits, dim=2).tolist()
 
         # Accumulate token-level predictions/labels (ignoring IGNORE_LABEL_ID
@@ -227,11 +226,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
             self._test_preds.extend(flat_preds)
             self._test_labels.extend(flat_labels)
 
-        # Log the class-weighted loss (same loss function as in training).
-        label_tensor = batch["labels"]
-        loss = self.loss_fn(
-            outputs.logits.view(-1, self.num_labels), label_tensor.view(-1)
-        )
+        loss = outputs.loss
         self.log(f"{prefix}_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss.detach()
 
@@ -775,21 +770,13 @@ class SpanClassificationModelService(TextClassificationModelService):
             for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 eval_dataset_stats[annotation.code_id] += 1
 
-        # 1.6 Calculate class weights (inverse token frequency over the train set).
-        label_counts: dict[int, int] = defaultdict(int)
-        for i in train_idx:
-            for label in dataset_labels[i]:
-                if label != IGNORE_LABEL_ID:  # Ignore padding/subword tokens
-                    label_counts[label] += 1
-
-        total_tokens = sum(label_counts.values())
-        num_labels = len(labelid2name)
-        class_weights = [
-            total_tokens / (num_labels * label_counts[label])
-            if label_counts.get(label, 0) > 0
-            else 1.0
-            for label in range(num_labels)
-        ]
+        # Calculate inverse-frequency weights over the token labels that
+        # actually contribute to the training loss.
+        class_weights = compute_balanced_class_weights(
+            (label for i in train_idx for label in dataset_labels[i]),
+            num_labels=len(labelid2name),
+            ignored_label_ids=frozenset({IGNORE_LABEL_ID}),
+        )
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)

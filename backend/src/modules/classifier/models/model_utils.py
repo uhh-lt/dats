@@ -1,3 +1,6 @@
+from collections import Counter
+from collections.abc import Iterable
+
 import numpy as np
 from datasets import Dataset
 from huggingface_hub import model_info
@@ -20,6 +23,43 @@ O_LABEL_NAME = "O"
 # tokens, non-first subwords). PyTorch's default ignore_index.
 IGNORE_LABEL_ID = -100
 GROUPED_SPLIT_CANDIDATES = 100
+
+
+def compute_balanced_class_weights(
+    labels: Iterable[int],
+    num_labels: int,
+    ignored_label_ids: frozenset[int] = frozenset(),
+) -> list[float]:
+    """Compute inverse-frequency weights for a classification loss.
+
+    Each observed class receives ``N / (K * class_count)``, where ``N`` is the
+    number of contributing training labels and ``K`` is the model's number of
+    classes. Ignored labels do not contribute. Classes absent from the training
+    data receive the neutral weight ``1.0``.
+    """
+    if num_labels <= 0:
+        raise ValueError("The number of labels must be positive.")
+
+    label_counts = Counter(label for label in labels if label not in ignored_label_ids)
+    invalid_label_ids = sorted(
+        label for label in label_counts if label < 0 or label >= num_labels
+    )
+    if invalid_label_ids:
+        raise ValueError(
+            f"Training labels contain ids outside [0, {num_labels}): "
+            f"{invalid_label_ids}"
+        )
+
+    total_labels = sum(label_counts.values())
+    if total_labels == 0:
+        raise ValueError("Cannot compute class weights without training labels.")
+
+    return [
+        total_labels / (num_labels * label_counts[label])
+        if label_counts[label] > 0
+        else 1.0
+        for label in range(num_labels)
+    ]
 
 
 def check_hf_model_exists(model_name: str) -> bool:
