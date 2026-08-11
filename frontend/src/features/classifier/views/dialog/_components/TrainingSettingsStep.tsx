@@ -1,6 +1,7 @@
 import { FormFreeSolo, FormMenu, FormNumber, FormSwitch, FormText } from "@components/form-inputs";
 import { ErrorMessage } from "@hookform/error-message";
 import { ClassifierAveraging } from "@models/ClassifierAveraging";
+import { ClassifierInfo } from "@models/ClassifierInfo";
 import { ClassifierModel } from "@models/ClassifierModel";
 import {
   Alert,
@@ -9,6 +10,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CircularProgress,
   DialogActions,
   Divider,
   MenuItem,
@@ -27,15 +29,34 @@ const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-m
 const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 
 export function TrainingSettingsStep() {
-  // dialog state
   const model = useAppSelector((state) => state.classifier.classifierModel);
-  const dispatch = useAppDispatch();
+  const classifierInfo = ClassifierHooks.useGetClassifierInfo();
 
-  // global server state
-  // the selectable base models are configured in the backend and fetched once.
-  const baseModels = ClassifierHooks.useGetBaseModels();
+  if (classifierInfo.isError) {
+    return <Alert severity="error">Could not load classifier settings: {classifierInfo.error.message}</Alert>;
+  }
+
+  if (!classifierInfo.data) {
+    return (
+      <Box alignItems="center" display="flex" flexGrow={1} justifyContent="center">
+        <CircularProgress aria-label="Loading classifier settings" />
+      </Box>
+    );
+  }
+
+  return <TrainingSettingsForm classifierInfo={classifierInfo.data} model={model} />;
+}
+
+interface TrainingSettingsFormProps {
+  classifierInfo: ClassifierInfo;
+  model?: ClassifierModel;
+}
+
+function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormProps) {
+  const dispatch = useAppDispatch();
   const baseModelOptions =
-    model === ClassifierModel.SENTENCE ? baseModels.data?.embedding_models : baseModels.data?.transformer_models;
+    model === ClassifierModel.SENTENCE ? classifierInfo.embedding_models : classifierInfo.transformer_models;
+  const trainingDefaults = classifierInfo.training_params;
 
   // form state
   const {
@@ -47,18 +68,18 @@ export function TrainingSettingsStep() {
       classifier_name: "",
       // default base model depends on the classifier model type
       base_name: baseModelOptions?.[0]?.value ?? "",
-      adapter_name: "No Adapter",
-      batch_size: 8,
-      epochs: 10,
-      early_stopping: true,
-      early_stopping_patience: 3,
-      train_test_split: 0.2,
-      learning_rate: 0.001,
-      weight_decay: 0.01,
-      dropout: 0.3,
-      chunk_size: 1024,
-      precision: "bf16-mixed",
-      averaging: ClassifierAveraging.MICRO,
+      adapter_name: trainingDefaults.adapter_name ?? "No Adapter",
+      epochs: trainingDefaults.epochs,
+      batch_size: trainingDefaults.batch_size,
+      early_stopping: trainingDefaults.early_stopping,
+      early_stopping_patience: trainingDefaults.early_stopping_patience,
+      train_test_split: trainingDefaults.train_test_split,
+      learning_rate: trainingDefaults.learning_rate,
+      weight_decay: trainingDefaults.weight_decay,
+      dropout: trainingDefaults.dropout,
+      chunk_size: trainingDefaults.chunk_size,
+      precision: trainingDefaults.precision,
+      averaging: trainingDefaults.averaging,
     },
   });
 

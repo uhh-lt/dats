@@ -128,6 +128,20 @@ classifier:
   # environment variables to fully configure the selectable base models.
   transformer_models: ${oc.env:CLASSIFIER_TRANSFORMER_MODELS, "answerdotai/ModernBERT-base:ModernBERT-base (EN),answerdotai/ModernBERT-large:ModernBERT-large (EN),LSX-UniWue/ModernGBERT_134M:ModernGBERT_134M (DE),LSX-UniWue/ModernGBERT_1B:ModernGBERT_1B (DE),microsoft/mdeberta-v3-base:mdeberta-v3-base (MULTI)"}
   embedding_models: ${oc.env:CLASSIFIER_EMBEDDING_MODELS, "Alibaba-NLP/gte-modernbert-base:gte-modernbert-base (EN),intfloat/multilingual-e5-small:multilingual-e5-small (MULTI),intfloat/multilingual-e5-large:multilingual-e5-large (MULTI),sentence-transformers/paraphrase-multilingual-mpnet-base-v2:paraphrase-multilingual-mpnet-base-v2 (MULTI)"}
+  # Defaults used to initialize the classifier training dialog.
+  training_params:
+    adapter_name: ${oc.env:CLASSIFIER_TRAINING_PARAMS_ADAPTER_NAME, null}
+    epochs: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EPOCHS, 10}
+    batch_size: ${oc.env:CLASSIFIER_TRAINING_PARAMS_BATCH_SIZE, 4}
+    early_stopping: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EARLY_STOPPING, true}
+    early_stopping_patience: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EARLY_STOPPING_PATIENCE, 3}
+    train_test_split: ${oc.env:CLASSIFIER_TRAINING_PARAMS_TRAIN_TEST_SPLIT, 0.2}
+    learning_rate: ${oc.env:CLASSIFIER_TRAINING_PARAMS_LEARNING_RATE, 0.00001}
+    weight_decay: ${oc.env:CLASSIFIER_TRAINING_PARAMS_WEIGHT_DECAY, 0.01}
+    dropout: ${oc.env:CLASSIFIER_TRAINING_PARAMS_DROPOUT, 0.1}
+    chunk_size: ${oc.env:CLASSIFIER_TRAINING_PARAMS_CHUNK_SIZE, 1024}
+    precision: ${oc.env:CLASSIFIER_TRAINING_PARAMS_PRECISION, "bf16-mixed"}
+    averaging: ${oc.env:CLASSIFIER_TRAINING_PARAMS_AVERAGING, "micro"}
 
 promptembedder:
   text:

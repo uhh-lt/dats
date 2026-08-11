@@ -9,6 +9,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CircularProgress,
   DialogActions,
   Divider,
   MenuItem,
@@ -37,9 +38,13 @@ export function EvalSettingsStep() {
 
   // read the classifier to pre-fill the averaging strategy from its training settings
   const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);
+  const classifierInfo = ClassifierHooks.useGetClassifierInfo();
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
+  const configuredAveraging = classifier?.train_params["averaging"];
   const storedAveraging =
-    (classifier?.train_params["averaging"] as ClassifierAveraging | undefined) ?? ClassifierAveraging.MICRO;
+    configuredAveraging === ClassifierAveraging.MICRO || configuredAveraging === ClassifierAveraging.MACRO
+      ? configuredAveraging
+      : classifierInfo.data?.training_params.averaging;
 
   // form state
   const {
@@ -47,9 +52,7 @@ export function EvalSettingsStep() {
     handleSubmit,
     formState: { errors },
   } = useForm<EvaluationSettings>({
-    defaultValues: {
-      averaging: storedAveraging,
-    },
+    values: storedAveraging === undefined ? undefined : { averaging: storedAveraging },
   });
 
   // dialog actions
@@ -85,6 +88,18 @@ export function EvalSettingsStep() {
     );
   };
   const onError: SubmitErrorHandler<EvaluationSettings> = (data) => console.error(data);
+
+  if (classifierInfo.isError) {
+    return <Alert severity="error">Could not load classifier settings: {classifierInfo.error.message}</Alert>;
+  }
+
+  if (!classifierInfo.data || classifiers.isLoading) {
+    return (
+      <Box alignItems="center" display="flex" flexGrow={1} justifyContent="center">
+        <CircularProgress aria-label="Loading classifier settings" />
+      </Box>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onError)} className="myFlexContainer myFlexFillAllContainer">

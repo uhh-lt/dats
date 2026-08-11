@@ -9,10 +9,11 @@ from core.project.project_crud import crud_project
 from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierBaseModelOption,
-    ClassifierBaseModels,
     ClassifierDatasetStatistics,
+    ClassifierInfo,
     ClassifierModel,
     ClassifierRead,
+    ClassifierTrainingDefaults,
     ClassifierUpdate,
 )
 from modules.classifier.classifier_service import ClassifierService
@@ -23,14 +24,16 @@ router = APIRouter(
 
 
 @router.get(
-    "/base-models",
-    response_model=ClassifierBaseModels,
-    summary="Returns the pre-built selection of base models for classifier training",
+    "/info",
+    response_model=ClassifierInfo,
+    summary="Returns classifier models, thresholds, and training defaults",
 )
-def get_base_models(
+def get_classifier_info(
     authz_user: AuthzUser = Depends(),
-) -> ClassifierBaseModels:
-    return ClassifierBaseModels(
+) -> ClassifierInfo:
+    return ClassifierInfo(
+        weak_signal_threshold=conf.classifier.weak_signal_threshold,
+        strong_signal_threshold=conf.classifier.strong_signal_threshold,
         transformer_models=[
             ClassifierBaseModelOption(value=m.value, label=m.label)
             for m in conf.classifier.transformer_models
@@ -39,6 +42,9 @@ def get_base_models(
             ClassifierBaseModelOption(value=m.value, label=m.label)
             for m in conf.classifier.embedding_models
         ],
+        training_params=ClassifierTrainingDefaults.model_validate(
+            conf.classifier.training_params.model_dump()
+        ),
     )
 
 

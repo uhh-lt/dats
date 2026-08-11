@@ -12,22 +12,24 @@ from modules.classifier.classifier_dto import (
 )
 
 # ---------------------------------------------------------------------------
-# BASE MODELS
+# CLASSIFIER INFO
 # ---------------------------------------------------------------------------
 
 
-def test_get_base_models(client: TestClient):
-    """GET /classifier/base-models returns exactly the transformer and embedding
-    models from the server config."""
-    response = client.get("/classifier/base-models")
+def test_get_classifier_info(client: TestClient):
+    """Classifier info exposes every frontend setting from server configuration."""
+    response = client.get("/classifier/info")
     assert response.status_code == 200, response.text
     data = response.json()
-    assert "transformer_models" in data
-    assert "embedding_models" in data
     expected_transformer = [m.value for m in conf.classifier.transformer_models]
     expected_embedding = [m.value for m in conf.classifier.embedding_models]
     assert [m["value"] for m in data["transformer_models"]] == expected_transformer
     assert [m["value"] for m in data["embedding_models"]] == expected_embedding
+    assert data["weak_signal_threshold"] == conf.classifier.weak_signal_threshold
+    assert data["strong_signal_threshold"] == conf.classifier.strong_signal_threshold
+    assert data["training_params"] == conf.classifier.training_params.model_dump(
+        mode="json"
+    )
 
 
 # ---------------------------------------------------------------------------

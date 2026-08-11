@@ -33,12 +33,46 @@ class ClassifierBaseModelOption(BaseModel):
     label: str = Field(description="Display label for the model")
 
 
-class ClassifierBaseModels(BaseModel):
+class ClassifierTrainingDefaults(BaseModel):
+    adapter_name: str | None = Field(
+        description="Default adapter to use, or null to train without an adapter"
+    )
+    epochs: int = Field(description="Default number of training epochs")
+    batch_size: int = Field(description="Default training batch size")
+    early_stopping: bool = Field(description="Whether early stopping is enabled")
+    early_stopping_patience: int = Field(
+        description="Default validation patience for early stopping"
+    )
+    train_test_split: float = Field(
+        description="Default fraction of training data reserved for validation"
+    )
+    learning_rate: float = Field(description="Default learning rate")
+    weight_decay: float = Field(description="Default weight decay")
+    dropout: float = Field(description="Default dropout rate")
+    chunk_size: int = Field(description="Default token chunk size")
+    precision: _PRECISION_INPUT | None = Field(
+        description="Default Lightning training precision"
+    )
+    averaging: ClassifierAveraging = Field(
+        description="Default evaluation metric averaging strategy"
+    )
+
+
+class ClassifierInfo(BaseModel):
+    weak_signal_threshold: float = Field(
+        description="Signal percentage below which training signal is weak"
+    )
+    strong_signal_threshold: float = Field(
+        description="Signal percentage above which training signal is strong"
+    )
     transformer_models: list[ClassifierBaseModelOption] = Field(
         description="Selectable transformer base models (span & document classification)"
     )
     embedding_models: list[ClassifierBaseModelOption] = Field(
         description="Selectable embedding base models (sentence classification)"
+    )
+    training_params: ClassifierTrainingDefaults = Field(
+        description="Backend-configured defaults for classifier training"
     )
 
 
