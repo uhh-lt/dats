@@ -16,27 +16,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { SubmitErrorHandler, useForm } from "react-hook-form";
+import { SubmitErrorHandler, useForm, useWatch } from "react-hook-form";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
-import { ClassifierActions } from "../../../store/classifierSlice";
-
-interface TrainingSettings {
-  // required
-  classifierName: string;
-  baseModelName: string;
-  adapterName: string;
-  // train settings
-  batchSize: number;
-  epochs: number;
-  earlyStopping: boolean;
-  learningRate: number;
-  weightDecay: number;
-  dropout: number;
-  chunkSize: number;
-  precision: "32-true" | "16-true" | "16-mixed" | "bf16-true" | "bf16-mixed";
-  // evaluation settings
-  averaging: ClassifierAveraging;
-}
+import { ClassifierActions, ClassifierTrainingSettings } from "../../../store/classifierSlice";
 
 const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
 
@@ -60,19 +42,21 @@ export function TrainingSettingsStep() {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<TrainingSettings>({
+  } = useForm<ClassifierTrainingSettings>({
     defaultValues: {
-      classifierName: "",
+      classifier_name: "",
       // default base model depends on the classifier model type
-      baseModelName: baseModelOptions?.[0]?.value ?? "",
-      adapterName: "No Adapter",
-      batchSize: 8,
+      base_name: baseModelOptions?.[0]?.value ?? "",
+      adapter_name: "No Adapter",
+      batch_size: 8,
       epochs: 10,
-      earlyStopping: true,
-      learningRate: 0.001,
-      weightDecay: 0.01,
+      early_stopping: true,
+      early_stopping_patience: 3,
+      train_test_split: 0.2,
+      learning_rate: 0.001,
+      weight_decay: 0.01,
       dropout: 0.3,
-      chunkSize: 1024,
+      chunk_size: 1024,
       precision: "bf16-mixed",
       averaging: ClassifierAveraging.MICRO,
     },
@@ -82,25 +66,16 @@ export function TrainingSettingsStep() {
   const handlePrev = () => {
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
-  const onSubmit = (data: TrainingSettings) => {
+  const onSubmit = (data: ClassifierTrainingSettings) => {
     dispatch(
       ClassifierActions.onClassifierDialogSetTrainingSettings({
-        classifierName: data.classifierName,
-        baseModelName: data.baseModelName,
-        adapterName: data.adapterName,
-        batchSize: data.batchSize,
-        epochs: data.epochs,
-        earlyStopping: data.earlyStopping,
-        learningRate: data.learningRate,
-        weightDecay: data.weightDecay,
-        dropout: data.dropout,
-        chunkSize: data.chunkSize,
-        precision: data.precision,
-        averaging: data.averaging,
+        ...data,
+        adapter_name: data.adapter_name === "No Adapter" ? null : data.adapter_name,
       }),
     );
   };
-  const onError: SubmitErrorHandler<TrainingSettings> = (data) => console.error(data);
+  const onError: SubmitErrorHandler<ClassifierTrainingSettings> = (data) => console.error(data);
+  const earlyStoppingEnabled = useWatch({ control, name: "early_stopping" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onError)} className="myFlexContainer myFlexFillAllContainer">
@@ -113,13 +88,13 @@ export function TrainingSettingsStep() {
           <FormBox title="Required configuration">
             <FormItem title="Classifier Name" subtitle="Specify the name of your new classifier.">
               <FormText
-                name="classifierName"
+                name="classifier_name"
                 control={control}
                 rules={{ required: "Name is required" }}
                 textFieldProps={{
                   label: "Name",
-                  error: Boolean(errors.classifierName),
-                  helperText: <ErrorMessage errors={errors} name="classifierName" />,
+                  error: Boolean(errors.classifier_name),
+                  helperText: <ErrorMessage errors={errors} name="classifier_name" />,
                   variant: "filled",
                   fullWidth: true,
                 }}
@@ -139,26 +114,26 @@ export function TrainingSettingsStep() {
               }
             >
               <FormFreeSolo
-                name="baseModelName"
+                name="base_name"
                 control={control}
                 rules={{ required: "Base Model is required" }}
                 options={baseModelOptions ?? []}
                 textFieldProps={{
                   label: "Base Model",
-                  error: Boolean(errors.baseModelName),
-                  helperText: <ErrorMessage errors={errors} name="baseModelName" />,
+                  error: Boolean(errors.base_name),
+                  helperText: <ErrorMessage errors={errors} name="base_name" />,
                   variant: "filled",
                 }}
               />
             </FormItem>
             <FormItem title="Adapter Name" subtitle="Choose a PEFT method to optimize number of trainable parameters.">
               <FormMenu
-                name="adapterName"
+                name="adapter_name"
                 control={control}
                 textFieldProps={{
                   label: "Adapter",
-                  error: Boolean(errors.adapterName),
-                  helperText: <ErrorMessage errors={errors} name="adapterName" />,
+                  error: Boolean(errors.adapter_name),
+                  helperText: <ErrorMessage errors={errors} name="adapter_name" />,
                   variant: "filled",
                   fullWidth: true,
                   disabled: true,
@@ -194,15 +169,58 @@ export function TrainingSettingsStep() {
             </FormItem>
             <FormItem title="Early Stopping" subtitle="Enable early stopping to prevent overfitting.">
               <FormSwitch
-                name="earlyStopping"
+                name="early_stopping"
                 control={control}
                 switchProps={{ size: "medium", color: "primary" }}
                 boxProps={{ sx: { ml: 2 } }}
               />
             </FormItem>
+            <FormItem
+              title="Early Stopping Patience"
+              subtitle="Choose how many validation epochs without improvement are allowed before training stops."
+            >
+              <FormNumber
+                name="early_stopping_patience"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 0, message: "Must be at least 0" },
+                  max: { value: 100, message: "Must be at most 100" },
+                }}
+                textFieldProps={{
+                  label: "Patience",
+                  variant: "filled",
+                  inputProps: { min: 0, max: 100, step: 1 },
+                  size: "small",
+                  fullWidth: true,
+                  disabled: !earlyStoppingEnabled,
+                }}
+              />
+            </FormItem>
+            <FormItem
+              title="Train/Validation Split"
+              subtitle="Choose the fraction of selected data reserved for validation (0.2 means 20%)."
+            >
+              <FormNumber
+                name="train_test_split"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 0.01, message: "Must be at least 0.01" },
+                  max: { value: 0.99, message: "Must be at most 0.99" },
+                }}
+                textFieldProps={{
+                  label: "Validation Fraction",
+                  variant: "filled",
+                  inputProps: { min: 0.01, max: 0.99, step: 0.05 },
+                  size: "small",
+                  fullWidth: true,
+                }}
+              />
+            </FormItem>
             <FormItem title="Batch Size" subtitle="Choose the batch size for training.">
               <FormNumber
-                name="batchSize"
+                name="batch_size"
                 control={control}
                 rules={{
                   required: "Required",
@@ -220,7 +238,7 @@ export function TrainingSettingsStep() {
             </FormItem>
             <FormItem title="Learning Rate" subtitle="Choose the learning rate for training.">
               <FormNumber
-                name="learningRate"
+                name="learning_rate"
                 control={control}
                 rules={{
                   required: "Required",
@@ -238,7 +256,7 @@ export function TrainingSettingsStep() {
             </FormItem>
             <FormItem title="Weight Decay" subtitle="Choose the weight decay for training.">
               <FormNumber
-                name="weightDecay"
+                name="weight_decay"
                 control={control}
                 rules={{
                   required: "Required",
@@ -274,7 +292,7 @@ export function TrainingSettingsStep() {
             </FormItem>
             <FormItem title="Chunk Size" subtitle="Choose the chunk size for training.">
               <FormNumber
-                name="chunkSize"
+                name="chunk_size"
                 control={control}
                 rules={{
                   required: "Required",

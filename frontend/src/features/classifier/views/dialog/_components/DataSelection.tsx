@@ -8,6 +8,7 @@ import { UseQueryResult } from "@tanstack/react-query";
 import { ClassifierDataPlot } from "../../../_components/ClassifierDataPlot";
 import { ClassifierSignalStats } from "../../../_components/ClassifierSignalStats";
 import { ProblematicSdocsTable } from "../../../_components/ProblematicSdocsTable";
+import { UnannotatedSdocsNotice } from "../../../_components/UnannotatedSdocsNotice";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
 interface DataSelectionProps {
@@ -89,19 +90,25 @@ export function DataSelection({ model, datasetStats }: DataSelectionProps) {
           {datasetStats.isError ? (
             <div>{datasetStats.error.message}</div>
           ) : datasetStats.data && model ? (
-            datasetStats.data.total_units === 0 ? (
-              <Alert variant="standard" severity="warning" sx={{ border: "1px solid", borderColor: "warning.main" }}>
-                The dataset is empty! No documents with annotations were found for the current selection. Training or
-                evaluation is not possible with an empty dataset. Please select different tags
-                {model !== ClassifierModel.DOCUMENT && ", annotators,"} or classes.
-              </Alert>
-            ) : (
-              <Stack spacing={2}>
-                <ClassifierDataPlot data={datasetStats.data.classes} classifierModel={model} minHeight={150} />
-                <ClassifierSignalStats statistics={datasetStats.data} classifierModel={model} />
-                <ProblematicSdocsTable problematicSdocs={datasetStats.data.problematic_sdocs} classifierModel={model} />
-              </Stack>
-            )
+            <Stack spacing={2}>
+              <UnannotatedSdocsNotice unannotatedSdocs={datasetStats.data.unannotated_sdocs} classifierModel={model} />
+              {datasetStats.data.total_units === 0 ? (
+                <Alert variant="standard" severity="warning" sx={{ border: "1px solid", borderColor: "warning.main" }}>
+                  The dataset is empty! No documents with annotations were found for the current selection. Training or
+                  evaluation is not possible with an empty dataset. Please select different tags
+                  {model !== ClassifierModel.DOCUMENT && ", annotators,"} or classes.
+                </Alert>
+              ) : (
+                <>
+                  <ClassifierDataPlot data={datasetStats.data.classes} classifierModel={model} minHeight={150} />
+                  <ClassifierSignalStats statistics={datasetStats.data} classifierModel={model} />
+                  <ProblematicSdocsTable
+                    problematicSdocs={datasetStats.data.problematic_sdocs}
+                    classifierModel={model}
+                  />
+                </>
+              )}
+            </Stack>
           ) : !datasetStats.isFetching ? (
             <Box>Select data first!</Box>
           ) : null}

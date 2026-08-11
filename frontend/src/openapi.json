@@ -7873,6 +7873,12 @@
             "type": "array",
             "title": "Problematic Sdocs",
             "description": "Documents with a low share of labeled units, sorted by severity"
+          },
+          "unannotated_sdocs": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Unannotated Sdocs",
+            "description": "IDs of tag-selected documents without a matching selected class. Span and sentence datasets exclude them; document datasets retain them as O examples"
           }
         },
         "type": "object",
@@ -7884,7 +7890,8 @@
           "weak_signal_threshold",
           "strong_signal_threshold",
           "classes",
-          "problematic_sdocs"
+          "problematic_sdocs",
+          "unannotated_sdocs"
         ],
         "title": "ClassifierDatasetStatistics"
       },
@@ -8268,6 +8275,19 @@
             "title": "Early Stopping",
             "description": "Whether to use early stopping"
           },
+          "early_stopping_patience": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Early Stopping Patience",
+            "description": "Number of validation epochs without improvement before stopping"
+          },
+          "train_test_split": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Train Test Split",
+            "description": "Fraction of selected training data reserved for validation"
+          },
           "learning_rate": {
             "type": "number",
             "title": "Learning Rate",
@@ -8280,7 +8300,7 @@
           },
           "dropout": { "type": "number", "title": "Dropout", "description": "Dropout rate to use in the model" },
           "chunk_size": {
-            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "type": "integer",
             "title": "Chunk Size",
             "description": "Slice long documents into chunks of size x"
           },
@@ -8308,8 +8328,7 @@
           },
           "averaging": {
             "$ref": "#/components/schemas/ClassifierAveraging",
-            "description": "Averaging strategy for evaluation metrics (micro or macro)",
-            "default": "micro"
+            "description": "Averaging strategy for evaluation metrics (micro or macro)"
           }
         },
         "type": "object",
@@ -8325,11 +8344,14 @@
           "epochs",
           "batch_size",
           "early_stopping",
+          "early_stopping_patience",
+          "train_test_split",
           "learning_rate",
           "weight_decay",
           "dropout",
           "chunk_size",
-          "precision"
+          "precision",
+          "averaging"
         ],
         "title": "ClassifierTrainingParams"
       },
