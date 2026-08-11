@@ -46,6 +46,14 @@ export type ClassifierTrainingParams = {
    */
   early_stopping: boolean;
   /**
+   * Number of validation epochs without improvement before stopping
+   */
+  early_stopping_patience: number;
+  /**
+   * Fraction of selected training data reserved for validation
+   */
+  train_test_split: number;
+  /**
    * Learning rate to use for training
    */
   learning_rate: number;
@@ -60,7 +68,7 @@ export type ClassifierTrainingParams = {
   /**
    * Slice long documents into chunks of size x
    */
-  chunk_size: number | null;
+  chunk_size: number;
   /**
    * Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed
    */
@@ -84,5 +92,5 @@ export type ClassifierTrainingParams = {
   /**
    * Averaging strategy for evaluation metrics (micro or macro)
    */
-  averaging?: ClassifierAveraging;
+  averaging: ClassifierAveraging;
 };

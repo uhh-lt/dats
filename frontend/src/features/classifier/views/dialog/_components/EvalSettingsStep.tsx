@@ -19,9 +19,9 @@ import { SubmitErrorHandler, useForm } from "react-hook-form";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions } from "../../../store/classifierSlice";
 
-interface EvaluationSettings {
-  averaging: ClassifierAveraging;
-}
+type EvaluationSettings = {
+  averaging: NonNullable<ClassifierEvaluationParams["averaging"]>;
+};
 
 const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 
@@ -59,8 +59,6 @@ export function EvalSettingsStep() {
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: EvaluationSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined) return;
-
-    dispatch(ClassifierActions.onClassifierDialogSetEvaluationSettings({ averaging: data.averaging }));
 
     const evalParams: ClassifierEvaluationParams = {
       task_type: task,

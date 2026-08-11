@@ -16,7 +16,7 @@ export function useDatasetStatistics() {
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
   const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
   const classifierId = useAppSelector((state) => state.classifier.classifierId);
-  const trainingBaseModelName = useAppSelector((state) => state.classifier.classifierTrainingSettings?.baseModelName);
+  const trainingBaseModelName = useAppSelector((state) => state.classifier.classifierTrainingSettings?.base_name);
 
   // in the EVALUATION flow we know the classifier, so we use its actual base model
   const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);

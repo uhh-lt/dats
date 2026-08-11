@@ -38,4 +38,8 @@ export type ClassifierDatasetStatistics = {
    * Documents with a low share of labeled units, sorted by severity
    */
   problematic_sdocs: Array<ProblematicSdoc>;
+  /**
+   * IDs of tag-selected documents without a matching selected class. Span and sentence datasets exclude them; document datasets retain them as O examples
+   */
+  unannotated_sdocs: Array<number>;
 };

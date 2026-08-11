@@ -35,26 +35,11 @@ export function TrainingDataSelectionStep() {
 
     const trainingParams: ClassifierTrainingParams = {
       task_type: task,
-      // required
-      classifier_name: trainingSettings.classifierName,
-      base_name: trainingSettings.baseModelName,
-      adapter_name: trainingSettings.adapterName === "No Adapter" ? null : trainingSettings.adapterName,
+      ...trainingSettings,
       class_ids: classIds,
-      // training data
       tag_ids: tagIds,
       user_ids: userIds,
       merge_children_into_parent: mergeChildren,
-      // training settings
-      batch_size: trainingSettings.batchSize,
-      epochs: trainingSettings.epochs,
-      early_stopping: trainingSettings.earlyStopping,
-      learning_rate: trainingSettings.learningRate,
-      weight_decay: trainingSettings.weightDecay,
-      dropout: trainingSettings.dropout,
-      chunk_size: trainingSettings.chunkSize,
-      precision: trainingSettings.precision,
-      // evaluation settings
-      averaging: trainingSettings.averaging,
     };
 
     startClassifierJobMutation(
