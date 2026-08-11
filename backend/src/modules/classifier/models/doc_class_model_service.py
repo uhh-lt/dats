@@ -146,6 +146,7 @@ class DocClassificationLightningModel(pl.LightningModule):
         learning_rate: float,
         weight_decay: float,
         class_weights: list[float],
+        freeze_base_model: bool,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
         averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
@@ -168,6 +169,10 @@ class DocClassificationLightningModel(pl.LightningModule):
             base_name,
             config=self.config,
         )
+        self.freeze_base_model = freeze_base_model
+        if freeze_base_model:
+            for parameter in self.model.base_model.parameters():
+                parameter.requires_grad = False
 
         # Add adapter
         # lora_config = LoraConfig(
@@ -230,6 +235,12 @@ class DocClassificationLightningModel(pl.LightningModule):
 
         self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.freeze_base_model:
+            self.model.base_model.eval()
+        return self
 
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
@@ -365,7 +376,7 @@ class DocClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(),
+            (parameter for parameter in self.parameters() if parameter.requires_grad),
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
             # fused kernels only exist for CUDA; fall back on CPU/MPS.
@@ -465,9 +476,9 @@ class DocClassificationModelService(TextClassificationModelService):
         First, fetch every source document carrying one of the data-selection
         ``tag_ids``. Then fetch, for each document, the tags that are among the
         selected classifier ``class_ids``. Every usable document produces exactly
-        one dataset row. Its first matching class tag becomes its label; a document
-        without any matching class tag receives the O label and remains in the
-        dataset.
+        one dataset row. If a document has multiple selected class tags, the tag
+        appearing earlier in ``class_ids`` becomes its label. A document without
+        any matching class tag receives the O label and remains in the dataset.
 
         For example, suppose the data-selection tag selects documents 1, 2, and 3.
         Document 1 has selected class tag A, document 2 has none of the selected
@@ -533,8 +544,10 @@ class DocClassificationModelService(TextClassificationModelService):
                 )
                 continue  # skip documents without data
 
-            # We only use the first annotation (if multiple exist)
             annotations = sdoc_id2annotation_ids[sdoc_id]
+            # The selected class order defines deterministic precedence when a
+            # document carries multiple class tags.
+            annotations.sort(key=tagid2labelid.__getitem__)
             annotation = annotations[0] if len(annotations) > 0 else O_LABEL_ID
             if not annotations:
                 unannotated_sdocs.append(sdoc_id)
@@ -731,6 +744,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
+                freeze_base_model=parameters.freeze_base_model,
                 id2label=labelid2name,
                 label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
@@ -857,9 +871,7 @@ class DocClassificationModelService(TextClassificationModelService):
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
         tagid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
-        tokenizer.model_max_length = classifier.train_params.get(
-            "chunk_size", tokenizer.model_max_length
-        )
+        tokenizer.model_max_length = classifier.train_params["chunk_size"]
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         # 2. Create dataset
@@ -882,7 +894,7 @@ class DocClassificationModelService(TextClassificationModelService):
             test_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # Dataset statistics (number of annotations per tag)
@@ -898,14 +910,11 @@ class DocClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = DocClassificationLightningModel.load_from_checkpoint(classifier.path)
-        # Resolve the averaging strategy: eval param overrides the model's stored
-        # training setting (default micro for older models).
+        # The evaluation setting overrides the stored training setting.
         model.averaging = (
             parameters.averaging.value
             if parameters.averaging is not None
-            else classifier.train_params.get(
-                "averaging", ClassifierAveraging.MICRO.value
-            )
+            else classifier.train_params["averaging"]
         )
         model.eval()
 
@@ -992,9 +1001,7 @@ class DocClassificationModelService(TextClassificationModelService):
         }
 
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
-        tokenizer.model_max_length = classifier.train_params.get(
-            "chunk_size", tokenizer.model_max_length
-        )
+        tokenizer.model_max_length = classifier.train_params["chunk_size"]
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         # Delete existing annotations (if requested by the user)
@@ -1023,7 +1030,7 @@ class DocClassificationModelService(TextClassificationModelService):
             tokenized_hf_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # 3. Load the model

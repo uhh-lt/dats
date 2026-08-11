@@ -24,6 +24,14 @@ class EmptyDatasetError(Exception):
         )
 
 
+class InvalidDatasetSplitError(Exception):
+    def __init__(self, reason: str) -> None:
+        super().__init__(
+            "A class-stratified training/validation split could not be created: "
+            f"{reason}"
+        )
+
+
 class NoCheckpointError(Exception):
     def __init__(self) -> None:
         super().__init__(

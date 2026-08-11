@@ -131,6 +131,7 @@ classifier:
   # Defaults used to initialize the classifier training dialog.
   training_params:
     adapter_name: ${oc.env:CLASSIFIER_TRAINING_PARAMS_ADAPTER_NAME, null}
+    freeze_base_model: ${oc.env:CLASSIFIER_TRAINING_PARAMS_FREEZE_BASE_MODEL, true}
     epochs: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EPOCHS, 10}
     batch_size: ${oc.env:CLASSIFIER_TRAINING_PARAMS_BATCH_SIZE, 4}
     early_stopping: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EARLY_STOPPING, true}

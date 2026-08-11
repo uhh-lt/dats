@@ -114,6 +114,7 @@ def _training_payload(
         classifier_name=name,
         base_name=base_name,
         adapter_name=None,
+        freeze_base_model=True,
         class_ids=class_ids,
         user_ids=user_ids,
         tag_ids=tag_ids,

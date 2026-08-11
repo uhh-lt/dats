@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Literal, NamedTuple, TypedDict, cast
 from uuid import uuid4
 
 import numpy as np
@@ -19,7 +19,6 @@ from sqlalchemy.orm import Session
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 from torch.utils.data import DataLoader
 from torchcrf import CRF
-from typing_extensions import NotRequired
 
 from config import conf
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
@@ -81,7 +80,7 @@ class DatasetRow(TypedDict):
     user_id: int
     labels: list[int]
     sdoc_id: int
-    sentences: NotRequired[torch.Tensor]
+    sentences: list[str]
 
 
 class AnnotationResult(TypedDict):
@@ -89,6 +88,11 @@ class AnnotationResult(TypedDict):
     end: int
     class_id: int
     sdoc_id: int
+
+
+class SentenceClassifierOutput(NamedTuple):
+    loss: torch.Tensor | None
+    predictions: list[list[int]] | None
 
 
 class SentClassificationLightningModel(pl.LightningModule):
@@ -101,9 +105,8 @@ class SentClassificationLightningModel(pl.LightningModule):
         class_weights: list[float],
         # special params
         embedding_model_name: str,
-        embedding_dim: int,
-        hidden_dim: int,
         use_lstm: bool,
+        freeze_base_model: bool,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
         averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
@@ -112,8 +115,20 @@ class SentClassificationLightningModel(pl.LightningModule):
         # Saves hyperparameters to the checkpoint
         self.save_hyperparameters()
 
-        # Init model architecure
-        self.embedding_dim = embedding_dim
+        # Load the sentence embedding model as part of the trainable pipeline.
+        self.embedding_model = SentenceTransformer(embedding_model_name)
+        resolved_embedding_dim = self.embedding_model.get_embedding_dimension()
+        if resolved_embedding_dim is None:
+            raise ValueError(
+                f"Could not determine embedding dimension of model '{embedding_model_name}'"
+            )
+        self.embedding_dim = resolved_embedding_dim
+        self.freeze_base_model = freeze_base_model
+        if freeze_base_model:
+            for parameter in self.embedding_model.parameters():
+                parameter.requires_grad = False
+
+        hidden_dim = int(self.embedding_dim / 2)
 
         if use_lstm:
             self.lstm = nn.LSTM(
@@ -123,7 +138,7 @@ class SentClassificationLightningModel(pl.LightningModule):
                 bidirectional=True,
                 dropout=dropout,
             )
-            linear_input_dim = 2 * hidden_dim  # Double the hidden_dim for bidirectional
+            linear_input_dim = 2 * hidden_dim
         else:
             linear_input_dim = self.embedding_dim
             self.lstm = None
@@ -138,7 +153,6 @@ class SentClassificationLightningModel(pl.LightningModule):
         self.weight_decay = weight_decay
         self.class_weights = class_weights
         self.embedding_model_name = embedding_model_name
-        self.embedding_dim = embedding_dim
         self.hidden_dim = hidden_dim
         self.use_lstm = use_lstm
         self.id2label = id2label
@@ -157,57 +171,101 @@ class SentClassificationLightningModel(pl.LightningModule):
 
     def forward(
         self,
-        sentences: torch.Tensor,
-        mask=None,
-        labels=None,
+        sentences: list[list[str]],
+        mask: torch.Tensor | None = None,
+        labels: torch.Tensor | None = None,
+        decode: bool = True,
         **kwargs,
-    ):
+    ) -> SentenceClassifierOutput:
         assert mask is not None, "Mask must be provided"
+        sentence_counts = [len(document_sentences) for document_sentences in sentences]
+        flat_sentences = [
+            sentence
+            for document_sentences in sentences
+            for sentence in document_sentences
+        ]
+        tokenized_sentences = {
+            name: tensor.to(self.device)
+            for name, tensor in self.embedding_model.tokenize(flat_sentences).items()
+        }
+        if self.freeze_base_model:
+            with torch.no_grad():
+                sentence_embeddings = self.embedding_model(tokenized_sentences)[
+                    "sentence_embedding"
+                ]
+        else:
+            sentence_embeddings = self.embedding_model(tokenized_sentences)[
+                "sentence_embedding"
+            ]
+        padded_embeddings = pad_sequence(
+            list(torch.split(sentence_embeddings, sentence_counts)),
+            batch_first=True,
+            padding_value=0,
+        )
 
         if self.lstm:
             lengths = mask.sum(dim=1).tolist()  # Calculate lengths of valid sequences
             packed_embeddings = pack_padded_sequence(
-                sentences, lengths, batch_first=True, enforce_sorted=False
+                padded_embeddings, lengths, batch_first=True, enforce_sorted=False
             )
             packed_output, _ = self.lstm(
                 packed_embeddings
             )  # Pass packed sequence to LSTM
-            sentences, _ = pad_packed_sequence(
+            padded_embeddings, _ = pad_packed_sequence(
                 packed_output, batch_first=True
             )  # Unpack the output
 
-        emissions = self.linear(sentences)
+        emissions = self.linear(padded_embeddings)
+        loss = (
+            -self.crf(
+                emissions,
+                labels,
+                mask=mask,
+                # Average over valid sentences, excluding padding.
+                reduction="token_mean",
+            )
+            if labels is not None
+            else None
+        )
+        # torchcrf accepts boolean masks, although its decode stub only declares
+        # ByteTensor.
+        predictions = (
+            self.crf.decode(
+                emissions,
+                mask=mask,  # pyright: ignore[reportArgumentType]
+            )
+            if decode
+            else None
+        )
+        return SentenceClassifierOutput(loss=loss, predictions=predictions)
 
-        # inference
-        if labels is None:
-            return self.crf.decode(emissions, mask=mask)
-        # training
-        else:
-            return -self.crf(
-                emissions, labels, mask=mask
-            )  # Negative log-likelihood loss
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.freeze_base_model:
+            self.embedding_model.eval()
+        return self
 
     def training_step(self, batch, batch_idx):
-        loss = self(**batch)
+        output = self.forward(**batch, decode=False)
+        assert output.loss is not None, "Training requires labels"
 
-        self.log("train_loss", loss, on_step=False, on_epoch=True)
-        return loss
+        self.log("train_loss", output.loss, on_step=False, on_epoch=True)
+        return output.loss
 
     def _val_test_step(self, prefix: str, batch, batch_idx: int) -> torch.Tensor:
-        loss = self(**batch)
+        output = self.forward(**batch)
+        assert output.loss is not None, "Evaluation requires labels"
+        assert output.predictions is not None, "Evaluation requires predictions"
 
-        # Get predictions and ground truth tags
-        sentences = batch["sentences"]
         mask = batch["mask"]
         labels = batch["labels"]
-        predictions = self(sentences=sentences, mask=mask)
         golds = []
         for i in range(len(labels)):  # Iterate over the batch
             golds.append(labels[i][mask[i] == 1].tolist())
 
         # Accumulate token-level predictions/labels so that metrics can be
         # computed once over the whole epoch.
-        flat_preds = [p for prediction in predictions for p in prediction]
+        flat_preds = [p for prediction in output.predictions for p in prediction]
         flat_labels = [g for gold in golds for g in gold]
         if prefix == "eval":
             self._val_preds.extend(flat_preds)
@@ -217,8 +275,8 @@ class SentClassificationLightningModel(pl.LightningModule):
             self._test_labels.extend(flat_labels)
 
         # Log loss
-        self.log(f"{prefix}_loss", loss, on_step=False, on_epoch=True)
-        return loss
+        self.log(f"{prefix}_loss", output.loss, on_step=False, on_epoch=True)
+        return output.loss
 
     def _compute_and_log_token_metrics(self, prefix: str) -> None:
         if prefix == "eval":
@@ -311,16 +369,17 @@ class SentClassificationLightningModel(pl.LightningModule):
     @torch.no_grad()
     def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
         # Get predictions and ground truth tags
-        predictions = self(sentences=batch["sentences"], mask=batch["mask"])
+        output = self.forward(sentences=batch["sentences"], mask=batch["mask"])
+        assert output.predictions is not None, "Prediction requires decoded output"
 
         return {
             "sdoc_ids": batch["sdoc_id"],
-            "predictions": predictions,
+            "predictions": output.predictions,
         }
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(),
+            (parameter for parameter in self.parameters() if parameter.requires_grad),
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
             # fused kernels only exist for CUDA; fall back on CPU/MPS.
@@ -346,14 +405,14 @@ class SentClassificationModelService(TextClassificationModelService):
             code_ids=class_ids,
         )
 
-        # Build the dataset exactly as in training, but skip the expensive embedding
-        _, dataset, unannotated_sdocs = self._retrieve_build_embedd_dataset(
+        # Build labeled sentence sequences and collect the selected documents
+        # that have no matching annotations.
+        _, dataset, unannotated_sdocs = self._retrieve_and_build_dataset(
             db=db,
             project_id=project_id,
             tag_ids=tag_ids,
             user_ids=user_ids,
             codeid2labelid=codeid2labelid,
-            embedding_model=None,
             merge_children_into_parent=merge_children_into_parent,
         )
 
@@ -428,14 +487,13 @@ class SentClassificationModelService(TextClassificationModelService):
             unannotated_sdocs=unannotated_sdocs,
         )
 
-    def _retrieve_build_embedd_dataset(
+    def _retrieve_and_build_dataset(
         self,
         db: Session,
         project_id: int,
         tag_ids: list[int],
         user_ids: list[int],
         codeid2labelid: dict[int, int],
-        embedding_model: SentenceTransformer | None,
         merge_children_into_parent: bool = False,
     ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset, list[int]]:
         """Build the sentence-classification dataset from tags and annotators.
@@ -445,7 +503,8 @@ class SentClassificationModelService(TextClassificationModelService):
         this classifier. One dataset row is created per matching
         annotator/document combination, so a document annotated by two selected
         annotators appears twice. Documents without a matching annotation are
-        excluded.
+        excluded. Documents whose source data is missing or contains no sentences
+        are excluded before annotations are retrieved.
 
         For example, suppose the provided tag selects documents 1, 2, and 3.
         Annotator A annotated documents 1 and 2, and annotator B annotated
@@ -455,10 +514,14 @@ class SentClassificationModelService(TextClassificationModelService):
         Finally, annotations for the selected codes are written into each row;
         all other sentences remain O. When ``merge_children_into_parent`` is
         true, descendant-code annotations are mapped to their selected parent.
+        If annotations with different selected classes overlap, the class that
+        appears earlier in the selected ``class_ids`` wins the conflicting
+        sentences.
 
-        Returns the grouped annotations, the embedded dataset, and the sorted IDs
-        of tag-selected documents excluded because they have no matching
-        annotation.
+        Returns the annotations grouped by annotator and document, a Hugging Face
+        dataset containing the sentence text and labels for every included row,
+        and the sorted IDs of tag-selected documents excluded because they have
+        no matching annotation.
         """
 
         # Expand which code ids to fetch:
@@ -482,6 +545,21 @@ class SentClassificationModelService(TextClassificationModelService):
                 tag_ids=tag_ids,
             )
         ]
+
+        # Sentence models require at least one sentence per row. Filter unusable
+        # documents before retrieving annotations so they cannot reach collation,
+        # sequence packing, or the CRF.
+        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+        sdocid2data = {
+            sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
+        }
+        excluded_sdoc_count = len(sdoc_ids) - len(sdocid2data)
+        if excluded_sdoc_count > 0:
+            logger.warning(
+                f"Excluding {excluded_sdoc_count} source documents with missing or "
+                "empty sentence data from the sentence-classification dataset."
+            )
+        sdoc_ids = [sdoc_id for sdoc_id in sdoc_ids if sdoc_id in sdocid2data]
 
         user_id2sdoc_id2annotations: dict[
             int, dict[int, list[SentenceAnnotationORM]]
@@ -521,10 +599,6 @@ class SentClassificationModelService(TextClassificationModelService):
         }
         unannotated_sdocs = sorted(set(sdoc_ids) - included_sdoc_ids)
 
-        # Get source document data
-        sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
-        sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
-
         # Overlay annotations onto all-O sentence labels.
         dataset: list[DatasetRow] = []
         for user_id, sdoc_id2annotations in user_id2sdoc_id2annotations.items():
@@ -532,7 +606,16 @@ class SentClassificationModelService(TextClassificationModelService):
                 sdoc_data = sdocid2data[sdoc_id]
                 sentences = sdoc_data.sentences
                 labels = [O_LABEL_ID for _ in sentences]
-                for annotation in annotations:
+                # Apply lower-priority classes first so the class appearing
+                # earlier in class_ids (lower label ID) deterministically wins
+                # overlapping sentences.
+                annotations.sort(
+                    key=lambda annotation: (
+                        codeid2labelid[annotation.code_id],
+                        annotation.id,
+                    )
+                )
+                for annotation in reversed(annotations):
                     # sentence_id_end is INCLUSIVE, so the slice end is +1.
                     labels[
                         annotation.sentence_id_start : annotation.sentence_id_end + 1
@@ -544,14 +627,11 @@ class SentClassificationModelService(TextClassificationModelService):
                     "sdoc_id": sdoc_data.id,
                     "user_id": user_id,
                     "labels": labels,
+                    "sentences": sentences,
                 }
-                if embedding_model is not None:
-                    row["sentences"] = embedding_model.encode(
-                        sentences, convert_to_tensor=True
-                    )
                 dataset.append(row)
 
-        # Construct an embedded huggingface dataset
+        # Construct the Hugging Face dataset from the collected rows.
         if len(dataset) == 0:
             logger.warning(
                 "The sentence classification dataset is empty (no matching documents or annotations)."
@@ -560,9 +640,8 @@ class SentClassificationModelService(TextClassificationModelService):
                 "sdoc_id": [],
                 "user_id": [],
                 "labels": [],
+                "sentences": [],
             }
-            if embedding_model is not None:
-                empty_columns["sentences"] = []
             return (
                 user_id2sdoc_id2annotations,
                 Dataset.from_dict(empty_columns),
@@ -574,7 +653,7 @@ class SentClassificationModelService(TextClassificationModelService):
         return user_id2sdoc_id2annotations, hf_dataset, unannotated_sdocs
 
     def _collate_fn(self, batch):
-        embeddings = [torch.tensor(b["sentences"]) for b in batch]
+        sentences = [b["sentences"] for b in batch]
         labels = [torch.tensor(b["labels"]) for b in batch]
         sdoc_ids = [b["sdoc_id"] for b in batch]
         user_ids = [b["user_id"] for b in batch]
@@ -587,11 +666,8 @@ class SentClassificationModelService(TextClassificationModelService):
         for i, label in enumerate(labels):
             mask[i, : len(label)] = 1
 
-        # Pad embeddings
-        padded_embeddings = pad_sequence(embeddings, batch_first=True, padding_value=0)  # type: ignore
-
         return {
-            "sentences": padded_embeddings,
+            "sentences": sentences,
             "labels": padded_labels,
             "mask": mask,
             "sdoc_id": torch.tensor(sdoc_ids),
@@ -634,32 +710,20 @@ class SentClassificationModelService(TextClassificationModelService):
             code_ids=parameters.class_ids,
         )
 
-        # Build dataset
-        embedding_model = SentenceTransformer(parameters.base_name)
-        embedding_dim = embedding_model.get_sentence_embedding_dimension()
-        if embedding_dim is None:
-            raise ValueError(
-                f"Could not determine embedding dimension of model '{parameters.base_name}'"
-            )
-        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_build_embedd_dataset(
+        # Build one labeled sentence sequence per annotator/document pair.
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             codeid2labelid=codeid2labelid,
-            embedding_model=embedding_model,
             merge_children_into_parent=parameters.merge_children_into_parent,
         )
-
-        # Free the embedding model memory
-        del embedding_model
-        torch.cuda.empty_cache()
 
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
-        # Train/test split, grouped by sdoc_id so the same document (annotated
-        # by several users) never appears in both train and eval.
+        # Choose the best class-balanced split grouped by source document.
         train_idx, test_idx = grouped_train_test_split(
             dataset,
             test_size=parameters.train_test_split,
@@ -764,10 +828,9 @@ class SentClassificationModelService(TextClassificationModelService):
             lightning_model = SentClassificationLightningModel(
                 # embedding model params
                 embedding_model_name=parameters.base_name,
-                embedding_dim=embedding_dim,
                 # sent classifier specific params
-                hidden_dim=int(embedding_dim / 2),
                 use_lstm=True,
+                freeze_base_model=parameters.freeze_base_model,
                 # training params
                 num_labels=len(labelid2name),
                 dropout=parameters.dropout,
@@ -793,7 +856,7 @@ class SentClassificationModelService(TextClassificationModelService):
         if not checkpoint_callback.best_model_path:
             raise NoCheckpointError()
         best_model = SentClassificationLightningModel.load_from_checkpoint(
-            checkpoint_callback.best_model_path
+            checkpoint_callback.best_model_path,
         )
         best_model.eval()
         eval_results = trainer.validate(best_model, dataloaders=val_dataloader)[0]
@@ -903,23 +966,17 @@ class SentClassificationModelService(TextClassificationModelService):
         # 2. Create dataset
         job.update(current_step=2)
 
-        # Build dataset.
-        embedding_model = SentenceTransformer(classifier.base_model)
-        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_build_embedd_dataset(
+        # Build one labeled sentence sequence per annotator/document pair.
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             codeid2labelid=codeid2labelid,
-            embedding_model=embedding_model,
-            merge_children_into_parent=classifier.train_params.get(
-                "merge_children_into_parent", False
-            ),
+            merge_children_into_parent=classifier.train_params[
+                "merge_children_into_parent"
+            ],
         )
-
-        # Free the embedding model memory
-        del embedding_model
-        torch.cuda.empty_cache()
 
         if len(dataset) == 0:
             raise EmptyDatasetError()
@@ -929,7 +986,7 @@ class SentClassificationModelService(TextClassificationModelService):
             dataset,  # type: ignore
             shuffle=False,
             collate_fn=self._collate_fn,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # Dataset statistics (number of annotations per code).
@@ -945,14 +1002,11 @@ class SentClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = SentClassificationLightningModel.load_from_checkpoint(classifier.path)
-        # Resolve the averaging strategy: eval param overrides the model's stored
-        # training setting (default micro for older models).
+        # The evaluation setting overrides the stored training setting.
         model.averaging = (
             parameters.averaging.value
             if parameters.averaging is not None
-            else classifier.train_params.get(
-                "averaging", ClassifierAveraging.MICRO.value
-            )
+            else classifier.train_params["averaging"]
         )
         model.eval()
 
@@ -1050,34 +1104,37 @@ class SentClassificationModelService(TextClassificationModelService):
         job.update(current_step=2)
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=parameters.sdoc_ids)
-
-        # Constructing dataset
-        embedding_model = SentenceTransformer(classifier.base_model)
-        inference_dataset: list[DatasetRow] = []
-        for sdoc_data in sdoc_datas:
-            sentences = embedding_model.encode(
-                sdoc_data.sentences, convert_to_tensor=True
+        usable_sdoc_datas = [
+            sdoc_data for sdoc_data in sdoc_datas if sdoc_data.sentences
+        ]
+        excluded_sdoc_count = len(parameters.sdoc_ids) - len(usable_sdoc_datas)
+        if excluded_sdoc_count > 0:
+            logger.warning(
+                f"Excluding {excluded_sdoc_count} source documents with missing or "
+                "empty sentence data from sentence-classifier inference."
             )
+
+        # Build one inference row per requested source document.
+        inference_dataset: list[DatasetRow] = []
+        for sdoc_data in usable_sdoc_datas:
             inference_dataset.append(
                 {
                     "sdoc_id": sdoc_data.id,
-                    "sentences": sentences,
+                    "sentences": sdoc_data.sentences,
                     "labels": [O_LABEL_ID] * len(sdoc_data.sentences),  # Dummy labels
                     "user_id": ASSISTANT_TRAINED_ID,  # Dummy user_id
                 }
             )
+        if not inference_dataset:
+            raise EmptyDatasetError()
         hf_dataset = Dataset.from_list(inference_dataset)  # type: ignore
-
-        # Free the embedding model memory
-        del embedding_model
-        torch.cuda.empty_cache()
 
         # Build dataloader
         inference_dataloader = DataLoader(
             hf_dataset,  # type: ignore
             shuffle=False,
             collate_fn=self._collate_fn,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # 3. Load the model
