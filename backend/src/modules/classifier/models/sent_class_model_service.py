@@ -146,6 +146,9 @@ class SentClassificationLightningModel(pl.LightningModule):
 
         self.linear = nn.Linear(linear_input_dim, num_labels)
         self.crf = CRF(num_labels, batch_first=True)
+        self.loss_fn = nn.CrossEntropyLoss(
+            weight=torch.tensor(class_weights, dtype=torch.float)
+        )
 
         # Store params
         self.num_labels = num_labels
@@ -217,19 +220,21 @@ class SentClassificationLightningModel(pl.LightningModule):
             )  # Unpack the output
 
         emissions = self.linear(padded_embeddings)
-        # TODO: Incorporate self.class_weights into the training objective.
-        # torchcrf does not support class-weighted likelihoods directly.
-        loss = (
-            -self.crf(
+        if labels is not None:
+            crf_loss = -self.crf(
                 emissions,
                 labels,
                 mask=mask,
                 # Average over valid sentences, excluding padding.
                 reduction="token_mean",
             )
-            if labels is not None
-            else None
-        )
+            # torchcrf has no class-weight argument. Add weighted token-level
+            # cross-entropy so rare classes influence the emission scores while
+            # the CRF loss continues to train sequence transitions.
+            class_loss = self.loss_fn(emissions[mask], labels[mask])
+            loss = crf_loss + class_loss
+        else:
+            loss = None
         # torchcrf accepts boolean masks, although its decode stub only declares
         # ByteTensor.
         predictions = (
@@ -764,8 +769,8 @@ class SentClassificationModelService(TextClassificationModelService):
             for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 eval_dataset_stats[annotation.code_id] += 1
 
-        # Compute and persist sentence-level weights even though the current CRF
-        # objective cannot consume them yet.
+        # Compute inverse-frequency weights over the sentence labels that
+        # contribute to the training objective.
         train_labels = cast(list[list[int]], train_dataset["labels"])
         class_weights = compute_balanced_class_weights(
             (label for labels in train_labels for label in labels),
