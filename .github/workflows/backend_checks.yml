@@ -86,6 +86,13 @@ jobs:
         run: |
           source .env
           uv run pytest
+      - name: Upload classifier metrics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: classifier-metrics
+          path: backend/test-results/classifier-metrics.jsonl
+          if-no-files-found: ignore
       - name: Database migrates without errors
         working-directory: backend
         env:
