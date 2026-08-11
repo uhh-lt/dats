@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 from datasets import Dataset
 from loguru import logger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
@@ -63,6 +64,7 @@ from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_tag_label_mappings,
     check_hf_model_exists,
+    compute_balanced_class_weights,
 )
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
@@ -205,8 +207,9 @@ class DocClassificationLightningModel(pl.LightningModule):
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
 
-        # Define custom loss function
-        # self.loss_fn = nn.CrossEntropyLoss(weight=class_weights)
+        self.loss_fn = nn.CrossEntropyLoss(
+            weight=torch.tensor(class_weights, dtype=torch.float)
+        )
 
     def forward(
         self,
@@ -216,22 +219,18 @@ class DocClassificationLightningModel(pl.LightningModule):
         **kwargs,
     ) -> Any:
         kwargs.pop("sdoc_id", None)
-        return self.model(
+        outputs = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
-            labels=labels,
             **kwargs,
         )
+        if labels is not None:
+            outputs.loss = self.loss_fn(outputs.logits, labels)
+        return outputs
 
     def training_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
-        outputs = self(**batch)
-        # the standard loss computed by HF model
+        outputs = self.forward(**batch)
         loss = outputs.loss
-
-        # our weighted Cross Entropy Loss
-        # logits = outputs.logits
-        # labels = batch["labels"]
-        # loss = self.loss_fn(logits.view(-1, self.num_labels), labels.view(-1))
 
         self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
@@ -245,7 +244,7 @@ class DocClassificationLightningModel(pl.LightningModule):
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
     ) -> torch.Tensor:
-        outputs = self(**batch)
+        outputs = self.forward(**batch)
         sdoc_ids = batch["sdoc_id"].tolist()
         logits = list(outputs.logits.detach().cpu())
         golds = batch["labels"].tolist()
@@ -258,9 +257,9 @@ class DocClassificationLightningModel(pl.LightningModule):
             self._test_logits.extend(logits)
             self._test_labels.extend(golds)
 
-        # Log loss
-        self.log(f"{prefix}_loss", outputs.loss, on_step=False, on_epoch=True)
-        return outputs.loss
+        loss = outputs.loss
+        self.log(f"{prefix}_loss", loss, on_step=False, on_epoch=True)
+        return loss
 
     def _compute_and_log_document_metrics(self, prefix: str) -> None:
         if prefix == "eval":
@@ -674,21 +673,13 @@ class DocClassificationModelService(TextClassificationModelService):
             for annotation in sdoc_id2annotation_ids[sdoc_id]:
                 eval_dataset_stats[annotation] += 1
 
-        # Calculate class weights
-        # Count the occurrences of each label in the training set
-        label_counts = defaultdict(int)
-        for label in split_dataset["train"]["labels"]:
-            label_counts[label] += 1
-
-        # Calculate the weight for each label: A simple inverse frequency weighting
-        total_tokens = sum(label_counts.values())
-        num_labels = len(tagid2labelid)
-        class_weights = [0.0] * num_labels
-        for label, count in label_counts.items():
-            if count > 0:
-                class_weights[label] = total_tokens / (num_labels * count)
-            else:
-                raise ValueError(f"Label '{label}' has zero count in training data!")
+        # Every tokenized chunk contributes one loss value, so class weights
+        # must reflect the chunk labels rather than the original documents.
+        train_chunk_labels = cast(list[int], train_dataset["labels"])
+        class_weights = compute_balanced_class_weights(
+            train_chunk_labels,
+            num_labels=len(tagid2labelid),
+        )
 
         # 2. Initialize PyTorch Lightning components
         job.update(current_step=2)
