@@ -334,6 +334,7 @@ class ClassifierTrainingParamsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     adapter_name: str | None
+    freeze_base_model: bool
     epochs: int = Field(gt=0)
     batch_size: int = Field(gt=0)
     early_stopping: bool

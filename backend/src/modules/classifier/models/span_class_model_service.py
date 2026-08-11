@@ -105,6 +105,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
         learning_rate: float,
         weight_decay: float,
         class_weights: list[float],
+        freeze_base_model: bool,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
         averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
@@ -126,6 +127,10 @@ class SpanClassificationLightningModel(pl.LightningModule):
             base_name,
             config=self.config,
         )
+        self.freeze_base_model = freeze_base_model
+        if freeze_base_model:
+            for parameter in self.model.base_model.parameters():
+                parameter.requires_grad = False
 
         # Add adapter
         # lora_config = LoraConfig(
@@ -180,6 +185,12 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
         self.log("train_loss", loss.detach(), on_step=False, on_epoch=True)
         return loss
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.freeze_base_model:
+            self.model.base_model.eval()
+        return self
 
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
@@ -324,7 +335,7 @@ class SpanClassificationLightningModel(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.AdamW(
-            self.parameters(),
+            (parameter for parameter in self.parameters() if parameter.requires_grad),
             lr=self.learning_rate,
             weight_decay=self.weight_decay,
             # fused kernels only exist for CUDA; fall back on CPU/MPS.
@@ -362,7 +373,10 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         Finally, annotations for the selected codes are written into each row;
         all other tokens remain O. When ``merge_children_into_parent`` is true,
-        descendant-code annotations are mapped to their selected parent code.
+        descendant-code annotations are mapped to their selected parent code. If
+        annotations with different selected classes overlap, the class that
+        appears earlier in the selected ``class_ids`` wins the conflicting
+        tokens.
 
         Returns the grouped annotations, the tokenized dataset, and the sorted
         IDs of tag-selected documents excluded because they have no matching
@@ -440,7 +454,16 @@ class SpanClassificationModelService(TextClassificationModelService):
                 sdoc_data = sdocid2data[sdoc_id]
                 words = sdoc_data.tokens
                 labels = [O_LABEL_ID for _ in words]
-                for annotation in annotations:
+                # Apply lower-priority classes first so the class appearing
+                # earlier in class_ids (lower label ID) deterministically wins
+                # overlapping tokens.
+                annotations.sort(
+                    key=lambda annotation: (
+                        codeid2labelid[annotation.code_id],
+                        annotation.id,
+                    )
+                )
+                for annotation in reversed(annotations):
                     labels[annotation.begin_token : annotation.end_token] = [
                         codeid2labelid[annotation.code_id]
                     ] * (annotation.end_token - annotation.begin_token)
@@ -698,8 +721,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
-        # 1.3 Train/test split, grouped by sdoc_id so the same document (annotated
-        # by several users) never appears in both train and eval.
+        # 1.3 Choose the best class-balanced split grouped by source document.
         train_idx, test_idx = grouped_train_test_split(
             dataset,
             test_size=parameters.train_test_split,
@@ -828,6 +850,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 learning_rate=parameters.learning_rate,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
+                freeze_base_model=parameters.freeze_base_model,
                 id2label=labelid2name,
                 label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
@@ -974,9 +997,9 @@ class SpanClassificationModelService(TextClassificationModelService):
             codeid2labelid=codeid2labelid,
             tokenizer=tokenizer,
             use_chunking=True,
-            merge_children_into_parent=classifier.train_params.get(
-                "merge_children_into_parent", False
-            ),
+            merge_children_into_parent=classifier.train_params[
+                "merge_children_into_parent"
+            ],
             chunk_stride=max(1, tokenizer.model_max_length // 4),
         )
         if len(dataset) == 0:
@@ -988,7 +1011,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # Dataset statistics (number of annotations per code).
@@ -1010,14 +1033,11 @@ class SpanClassificationModelService(TextClassificationModelService):
         # 3. Load the model
         job.update(current_step=3)
         model = SpanClassificationLightningModel.load_from_checkpoint(classifier.path)
-        # Resolve the averaging strategy: eval param overrides the model's stored
-        # training setting (default micro for older models).
+        # The evaluation setting overrides the stored training setting.
         model.averaging = (
             parameters.averaging.value
             if parameters.averaging is not None
-            else classifier.train_params.get(
-                "averaging", ClassifierAveraging.MICRO.value
-            )
+            else classifier.train_params["averaging"]
         )
         model.eval()
 
@@ -1179,7 +1199,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             tokenized_hf_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
-            batch_size=classifier.train_params.get("batch_size", 4),
+            batch_size=classifier.train_params["batch_size"],
         )
 
         # 3. Load the model

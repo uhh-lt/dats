@@ -37,6 +37,9 @@ class ClassifierTrainingDefaults(BaseModel):
     adapter_name: str | None = Field(
         description="Default adapter to use, or null to train without an adapter"
     )
+    freeze_base_model: bool = Field(
+        description="Whether the pretrained base model is frozen by default"
+    )
     epochs: int = Field(description="Default number of training epochs")
     batch_size: int = Field(description="Default training batch size")
     early_stopping: bool = Field(description="Whether early stopping is enabled")
@@ -281,6 +284,11 @@ class ClassifierTrainingParams(BaseModel):
     classifier_name: str = Field(description="Name of the model to train")
     base_name: str = Field(description="Name of the base model")
     adapter_name: str | None = Field(description="Name of the adapter to use (if any)")
+    freeze_base_model: bool = Field(
+        description=(
+            "Freeze the pretrained base model and train only the classifier layers"
+        )
+    )
     class_ids: list[int] = Field(
         description="List of class IDs to train on (tag or code)"
     )
@@ -319,6 +327,7 @@ class ClassifierTrainingParams(BaseModel):
         return {
             "epochs": self.epochs,
             "batch_size": self.batch_size,
+            "freeze_base_model": self.freeze_base_model,
             "early_stopping": self.early_stopping,
             "early_stopping_patience": self.early_stopping_patience,
             "train_test_split": self.train_test_split,
