@@ -24,7 +24,7 @@ export function useDatasetStatistics() {
   const baseModelName = trainingBaseModelName ?? classifier?.base_model ?? "";
 
   // global server state
-  const datasetStats = ClassifierHooks.useComputeDatasetStatistics2({
+  const datasetStats = ClassifierHooks.useComputeDatasetStatistics({
     projectId,
     model,
     classIds,
