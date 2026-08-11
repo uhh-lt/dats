@@ -345,12 +345,28 @@ class SpanClassificationModelService(TextClassificationModelService):
         use_chunking: bool,
         merge_children_into_parent: bool = False,
         chunk_stride: int = 0,
-    ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset]:
-        """Fetches span annotations and builds the tokenized dataset.
+    ) -> tuple[dict[int, dict[int, list[SpanAnnotationORM]]], Dataset, list[int]]:
+        """Build the span-classification dataset from tags and annotators.
 
-        Annotations are fetched for the codes in ``codeid2labelid``. If
-        ``merge_children_into_parent`` is True, annotations of all descendant
-        codes are fetched as well and remapped to their parent code.
+        First, fetch every source document carrying one of ``tag_ids``. Then fetch
+        annotations from the selected ``user_ids`` whose codes are selected for
+        this classifier. One dataset row is created per matching
+        annotator/document combination, so a document annotated by two selected
+        annotators appears twice. Documents without a matching annotation are
+        excluded.
+
+        For example, suppose the provided tag selects documents 1, 2, and 3.
+        Annotator A annotated documents 1 and 2, and annotator B annotated
+        document 2. The dataset contains rows A/1, A/2, and B/2. Document 2
+        occurs twice, while untouched document 3 is excluded.
+
+        Finally, annotations for the selected codes are written into each row;
+        all other tokens remain O. When ``merge_children_into_parent`` is true,
+        descendant-code annotations are mapped to their selected parent code.
+
+        Returns the grouped annotations, the tokenized dataset, and the sorted
+        IDs of tag-selected documents excluded because they have no matching
+        annotation.
         """
 
         # Expand which code ids to fetch:
@@ -375,8 +391,6 @@ class SpanClassificationModelService(TextClassificationModelService):
             )
         ]
 
-        # Get annotations by user and source document
-        # 1. construct result object, grouping annotations by user and source document
         user_id2sdoc_id2annotations: dict[int, dict[int, list[SpanAnnotationORM]]] = (
             defaultdict(lambda: defaultdict(list))
         )
@@ -385,7 +399,6 @@ class SpanClassificationModelService(TextClassificationModelService):
         for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
             batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
 
-            # 3. Build the SELECT statement
             stmt = (
                 select(
                     SpanAnnotationORM,
@@ -399,8 +412,6 @@ class SpanClassificationModelService(TextClassificationModelService):
                 )
             )
 
-            # 4. Execute the statement and fetch the results, remapping each
-            # annotation's code id to its parent (class) code.
             batch_result = db.execute(stmt).all()
             for row in batch_result:
                 annotation, adoc = row._tuple()
@@ -411,23 +422,27 @@ class SpanClassificationModelService(TextClassificationModelService):
                     adoc.source_document_id
                 ].append(annotation)
 
+        included_sdoc_ids = {
+            sdoc_id
+            for sdoc_id2annotations in user_id2sdoc_id2annotations.values()
+            for sdoc_id in sdoc_id2annotations
+        }
+        unannotated_sdocs = sorted(set(sdoc_ids) - included_sdoc_ids)
+
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
         sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
 
-        # Create a labeled dataset
-        # Every annotated source document is part of the training data
-        # If the same document was annotated by two different users it will be included twice
+        # Overlay annotations onto all-O token labels.
         dataset: list[DatasetRow] = []
         for user_id, sdoc_id2annotations in user_id2sdoc_id2annotations.items():
-            sdoc_id2annotations = user_id2sdoc_id2annotations[user_id]
             for sdoc_id, annotations in sdoc_id2annotations.items():
                 sdoc_data = sdocid2data[sdoc_id]
                 words = sdoc_data.tokens
-                labels = [O_LABEL_ID for word in words]
+                labels = [O_LABEL_ID for _ in words]
                 for annotation in annotations:
                     labels[annotation.begin_token : annotation.end_token] = [
-                        codeid2labelid.get(annotation.code_id, O_LABEL_ID)
+                        codeid2labelid[annotation.code_id]
                     ] * (annotation.end_token - annotation.begin_token)
                 dataset.append(
                     {
@@ -451,7 +466,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                     "labels": [],
                 }
             )
-            return user_id2sdoc_id2annotations, empty_hf_dataset
+            return user_id2sdoc_id2annotations, empty_hf_dataset, unannotated_sdocs
 
         def tokenize_and_align_labels(examples: dict):
             # When chunking, split long documents into overlapping windows via
@@ -510,7 +525,11 @@ class SpanClassificationModelService(TextClassificationModelService):
             remove_columns=hf_dataset.column_names,
         )
 
-        return user_id2sdoc_id2annotations, tokenized_hf_dataset
+        return (
+            user_id2sdoc_id2annotations,
+            tokenized_hf_dataset,
+            unannotated_sdocs,
+        )
 
     def compute_dataset_statistics(
         self,
@@ -532,7 +551,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         # statistics are computed over whole documents (one row per
         # user/document), and chunking would split and double-count them.
         tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-        _, dataset = self._retrieve_and_build_dataset(
+        _, dataset, unannotated_sdocs = self._retrieve_and_build_dataset(
             db=db,
             project_id=project_id,
             tag_ids=tag_ids,
@@ -614,6 +633,7 @@ class SpanClassificationModelService(TextClassificationModelService):
                 for code in codes
             ],
             problematic_sdocs=problematic_sdocs,
+            unannotated_sdocs=unannotated_sdocs,
         )
 
     def train(
@@ -664,7 +684,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         )
 
         # 1.2 Build dataset (already chunked, with overlap, by the builder)
-        user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
@@ -680,7 +700,10 @@ class SpanClassificationModelService(TextClassificationModelService):
 
         # 1.3 Train/test split, grouped by sdoc_id so the same document (annotated
         # by several users) never appears in both train and eval.
-        train_idx, test_idx = grouped_train_test_split(dataset)
+        train_idx, test_idx = grouped_train_test_split(
+            dataset,
+            test_size=parameters.train_test_split,
+        )
         train_dataset = dataset.select(train_idx).remove_columns(["sdoc_id", "user_id"])
         val_dataset = dataset.select(test_idx).remove_columns(["sdoc_id", "user_id"])
 
@@ -711,25 +734,23 @@ class SpanClassificationModelService(TextClassificationModelService):
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         seen_train_rows: set[tuple[int, int]] = set()
         for i in train_idx:
-            row_key = (dataset_user_ids[i], dataset_sdoc_ids[i])
+            user_id = dataset_user_ids[i]
+            row_key = (user_id, dataset_sdoc_ids[i])
             if row_key in seen_train_rows:
                 continue
             seen_train_rows.add(row_key)
-            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
-                dataset_sdoc_ids[i]
-            ]:
+            for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         seen_eval_rows: set[tuple[int, int]] = set()
         for i in test_idx:
-            row_key = (dataset_user_ids[i], dataset_sdoc_ids[i])
+            user_id = dataset_user_ids[i]
+            row_key = (user_id, dataset_sdoc_ids[i])
             if row_key in seen_eval_rows:
                 continue
             seen_eval_rows.add(row_key)
-            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
-                dataset_sdoc_ids[i]
-            ]:
+            for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 eval_dataset_stats[annotation.code_id] += 1
 
         # 1.6 Calculate class weights (inverse token frequency over the train set).
@@ -774,7 +795,7 @@ class SpanClassificationModelService(TextClassificationModelService):
             early_stopping_callback = EarlyStopping(
                 monitor="eval_f1",
                 mode="max",
-                patience=3,  # Wait for 3 epochs
+                patience=parameters.early_stopping_patience,
             )
             callbacks.append(early_stopping_callback)
 
@@ -945,7 +966,7 @@ class SpanClassificationModelService(TextClassificationModelService):
         job.update(current_step=2)
 
         # Build dataset, chunked exactly like training (no truncation).
-        user_id2sdoc_id2annotations, dataset = self._retrieve_and_build_dataset(
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,

@@ -122,6 +122,13 @@ class ClassifierDatasetStatistics(BaseModel):
     problematic_sdocs: list[ProblematicSdoc] = Field(
         description="Documents with a low share of labeled units, sorted by severity"
     )
+    unannotated_sdocs: list[int] = Field(
+        description=(
+            "IDs of tag-selected documents without a matching selected class. "
+            "Span and sentence datasets exclude them; document datasets retain "
+            "them as O examples"
+        )
+    )
 
 
 # ----- CRUD DTOS -----
@@ -213,6 +220,15 @@ class ClassifierTrainingParams(BaseModel):
     epochs: int = Field(description="Number of epochs to train for")
     batch_size: int = Field(description="Batch size to use for training")
     early_stopping: bool = Field(description="Whether to use early stopping")
+    early_stopping_patience: int = Field(
+        ge=0,
+        description="Number of validation epochs without improvement before stopping",
+    )
+    train_test_split: float = Field(
+        gt=0.0,
+        lt=1.0,
+        description="Fraction of selected training data reserved for validation",
+    )
     learning_rate: float = Field(description="Learning rate to use for training")
     weight_decay: float = Field(description="Weight decay to use for training")
     dropout: float = Field(description="Dropout rate to use in the model")
@@ -222,7 +238,6 @@ class ClassifierTrainingParams(BaseModel):
     )
     # evaluation settings
     averaging: ClassifierAveraging = Field(
-        default=ClassifierAveraging.MICRO,
         description="Averaging strategy for evaluation metrics (micro or macro)",
     )
 
@@ -231,6 +246,8 @@ class ClassifierTrainingParams(BaseModel):
             "epochs": self.epochs,
             "batch_size": self.batch_size,
             "early_stopping": self.early_stopping,
+            "early_stopping_patience": self.early_stopping_patience,
+            "train_test_split": self.train_test_split,
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
             "dropout": self.dropout,

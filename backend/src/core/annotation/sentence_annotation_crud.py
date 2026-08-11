@@ -63,14 +63,14 @@ class CRUDSentenceAnnotation(
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: dict[int, int] = {}
-        for sdoc_id in sdoc_ids:
-            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
-                db=db, user_id=user_id, sdoc_id=sdoc_id
-            ).id
+        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
+            db=db,
+            user_id=user_id,
+            sdoc_ids=list(sdoc_ids),
+        )
 
         # create the annotations
-        return self.create_multi(
+        annotations = self.create_multi(
             db=db,
             create_dtos=[
                 SentenceAnnotationCreateIntern(
@@ -79,11 +79,16 @@ class CRUDSentenceAnnotation(
                     sentence_id_end=create_dto.sentence_id_end,
                     sentence_id_start=create_dto.sentence_id_start,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_id_by_sdoc_id[create_dto.sdoc_id],
+                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
                 )
                 for create_dto in create_dtos
             ],
         )
+        crud_adoc.update_timestamps(
+            db=db,
+            ids=list({annotation.annotation_document_id for annotation in annotations}),
+        )
+        return annotations
 
     ### READ OPERATIONS ###
 

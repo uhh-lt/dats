@@ -91,10 +91,9 @@ class CRUDSpanAnnotation(
 
         # update all affected annotation documents' timestamp
         adoc_ids = list(
-            set([create_dto.annotation_document_id for create_dto in create_dtos])
+            {create_dto.annotation_document_id for create_dto in create_dtos}
         )
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id)
+        crud_adoc.update_timestamps(db=db, ids=adoc_ids)
 
         return db_objs
 
@@ -111,11 +110,11 @@ class CRUDSpanAnnotation(
             project_id_by_sdoc_id[sdoc.id] = sdoc.project_id
 
         # find or create annotation documents for each sdoc_id
-        adoc_id_by_sdoc_id: dict[int, int] = {}
-        for sdoc_id in sdoc_ids:
-            adoc_id_by_sdoc_id[sdoc_id] = crud_adoc.exists_or_create(
-                db=db, user_id=user_id, sdoc_id=sdoc_id
-            ).id
+        adoc_by_sdoc_id = crud_adoc.exists_or_create_multi(
+            db=db,
+            user_id=user_id,
+            sdoc_ids=list(sdoc_ids),
+        )
 
         # create the annotations
         return self.create_multi(
@@ -130,7 +129,7 @@ class CRUDSpanAnnotation(
                     begin_token=create_dto.begin_token,
                     end_token=create_dto.end_token,
                     code_id=create_dto.code_id,
-                    annotation_document_id=adoc_id_by_sdoc_id[create_dto.sdoc_id],
+                    annotation_document_id=adoc_by_sdoc_id[create_dto.sdoc_id].id,
                 )
                 for create_dto in create_dtos
             ],
