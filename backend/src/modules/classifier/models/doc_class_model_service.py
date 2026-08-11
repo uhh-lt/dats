@@ -87,6 +87,56 @@ class AnnotationResult(TypedDict):
     sdoc_id: int
 
 
+def _tokenize_document_dataset(dataset: Dataset, tokenizer) -> Dataset:
+    """Tokenize documents into overlapping chunks while preserving row metadata."""
+    chunk_stride = max(1, tokenizer.model_max_length // 4)
+
+    def tokenize_and_chunk(examples: dict):
+        tokenized_inputs = tokenizer(
+            examples["text"],
+            truncation=True,
+            return_overflowing_tokens=True,
+            stride=chunk_stride,
+        )
+        overflow_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
+        tokenized_inputs["sdoc_id"] = [
+            examples["sdoc_id"][source_index] for source_index in overflow_mapping
+        ]
+        if "labels" in examples:
+            tokenized_inputs["labels"] = [
+                examples["labels"][source_index] for source_index in overflow_mapping
+            ]
+        return tokenized_inputs
+
+    return dataset.map(
+        tokenize_and_chunk,
+        batched=True,
+        remove_columns=dataset.column_names,
+    )
+
+
+def _aggregate_document_logits(
+    sdoc_ids: list[int], logits: list[torch.Tensor]
+) -> tuple[list[int], list[int]]:
+    """Average chunk logits and return one prediction per document."""
+    logit_sums: dict[int, torch.Tensor] = {}
+    chunk_counts: dict[int, int] = defaultdict(int)
+
+    for sdoc_id, chunk_logits in zip(sdoc_ids, logits, strict=True):
+        if sdoc_id not in logit_sums:
+            logit_sums[sdoc_id] = chunk_logits.clone()
+        else:
+            logit_sums[sdoc_id] += chunk_logits
+        chunk_counts[sdoc_id] += 1
+
+    document_ids = list(logit_sums)
+    predictions = [
+        int(torch.argmax(logit_sums[sdoc_id] / chunk_counts[sdoc_id]).item())
+        for sdoc_id in document_ids
+    ]
+    return document_ids, predictions
+
+
 class DocClassificationLightningModel(pl.LightningModule):
     def __init__(
         self,
@@ -139,12 +189,13 @@ class DocClassificationLightningModel(pl.LightningModule):
         self.weight_decay = weight_decay
         self.averaging: Literal["micro", "macro"] = averaging
 
-        # Buffers to accumulate predictions/labels across batches so that
-        # evaluation metrics are computed once over the whole epoch instead of
-        # being averaged from per-batch scores.
-        self._val_preds: list[int] = []
+        # Buffers to aggregate chunk logits into one prediction per document
+        # before computing epoch-level metrics.
+        self._val_sdoc_ids: list[int] = []
+        self._val_logits: list[torch.Tensor] = []
         self._val_labels: list[int] = []
-        self._test_preds: list[int] = []
+        self._test_sdoc_ids: list[int] = []
+        self._test_logits: list[torch.Tensor] = []
         self._test_labels: list[int] = []
         # Per-class metrics of the most recent test epoch (label id -> metrics).
         self._last_class_metrics: list[dict] = []
@@ -159,8 +210,12 @@ class DocClassificationLightningModel(pl.LightningModule):
         labels: torch.Tensor | None = None,
         **kwargs,
     ) -> Any:
+        kwargs.pop("sdoc_id", None)
         return self.model(
-            input_ids=input_ids, attention_mask=attention_mask, labels=labels
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            **kwargs,
         )
 
     def training_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
@@ -179,32 +234,45 @@ class DocClassificationLightningModel(pl.LightningModule):
     def _val_test_step(
         self, prefix: str, batch: dict[str, Any], batch_idx: int
     ) -> torch.Tensor:
-        # Predict
         outputs = self(**batch)
-        predictions = torch.argmax(outputs.logits, dim=1).tolist()
-
-        # Accumulate predictions/labels so that metrics can be computed once
-        # over the whole epoch.
+        sdoc_ids = batch["sdoc_id"].tolist()
+        logits = list(outputs.logits.detach().cpu())
         golds = batch["labels"].tolist()
         if prefix == "eval":
-            self._val_preds.extend(predictions)
+            self._val_sdoc_ids.extend(sdoc_ids)
+            self._val_logits.extend(logits)
             self._val_labels.extend(golds)
         else:
-            self._test_preds.extend(predictions)
+            self._test_sdoc_ids.extend(sdoc_ids)
+            self._test_logits.extend(logits)
             self._test_labels.extend(golds)
 
         # Log loss
         self.log(f"{prefix}_loss", outputs.loss, on_step=False, on_epoch=True)
         return outputs.loss
 
-    def _compute_and_log_token_metrics(self, prefix: str) -> None:
+    def _compute_and_log_document_metrics(self, prefix: str) -> None:
         if prefix == "eval":
-            preds, labels = self._val_preds, self._val_labels
+            sdoc_ids = self._val_sdoc_ids
+            logits = self._val_logits
+            chunk_labels = self._val_labels
         else:
-            preds, labels = self._test_preds, self._test_labels
+            sdoc_ids = self._test_sdoc_ids
+            logits = self._test_logits
+            chunk_labels = self._test_labels
 
-        if len(labels) == 0:
+        if len(chunk_labels) == 0:
             return
+
+        document_ids, preds = _aggregate_document_logits(sdoc_ids, logits)
+        labels_by_document: dict[int, int] = {}
+        for sdoc_id, label in zip(sdoc_ids, chunk_labels, strict=True):
+            previous_label = labels_by_document.setdefault(sdoc_id, label)
+            if previous_label != label:
+                raise ValueError(
+                    f"Document {sdoc_id} has inconsistent labels across chunks."
+                )
+        labels = [labels_by_document[sdoc_id] for sdoc_id in document_ids]
 
         # Document-level metrics. A document counts as correct when its
         # predicted label matches the gold label. P/R/F1 use the configured
@@ -260,13 +328,15 @@ class DocClassificationLightningModel(pl.LightningModule):
             ]
 
     def on_validation_epoch_end(self) -> None:
-        self._compute_and_log_token_metrics("eval")
-        self._val_preds.clear()
+        self._compute_and_log_document_metrics("eval")
+        self._val_sdoc_ids.clear()
+        self._val_logits.clear()
         self._val_labels.clear()
 
     def on_test_epoch_end(self) -> None:
-        self._compute_and_log_token_metrics("test")
-        self._test_preds.clear()
+        self._compute_and_log_document_metrics("test")
+        self._test_sdoc_ids.clear()
+        self._test_logits.clear()
         self._test_labels.clear()
 
     @torch.no_grad()
@@ -287,15 +357,10 @@ class DocClassificationLightningModel(pl.LightningModule):
 
     @torch.no_grad()
     def predict_step(self, batch: dict[str, Any], batch_idx: int) -> Any:
-        outputs = self.model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-        )
-        predictions = torch.argmax(outputs.logits, dim=1).tolist()
-
+        outputs = self(**batch)
         return {
-            "sdoc_ids": batch["sdoc_id"],
-            "predictions": predictions,
+            "sdoc_ids": batch["sdoc_id"].detach().cpu(),
+            "logits": outputs.logits.detach().cpu(),
         }
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
@@ -324,14 +389,12 @@ class DocClassificationModelService(TextClassificationModelService):
         tags, tagid2labelid, _ = build_tag_label_mappings(db=db, class_ids=class_ids)
 
         # Build the dataset exactly as in training, but skip tokenization
-        _, dataset = self._retrieve_and_build_dataset(
+        _, dataset, unannotated_sdocs = self._retrieve_and_build_dataset(
             db=db,
             project_id=project_id,
             tag_ids=tag_ids,
             class_ids=class_ids,
             tagid2labelid=tagid2labelid,
-            tokenizer=None,
-            use_chunking=False,
         )
 
         # Compute statistics from the document-level labels (before splitting)
@@ -386,6 +449,7 @@ class DocClassificationModelService(TextClassificationModelService):
                 for tag in tags
             ],
             problematic_sdocs=problematic_sdocs,
+            unannotated_sdocs=unannotated_sdocs,
         )
 
     def _retrieve_and_build_dataset(
@@ -395,9 +459,27 @@ class DocClassificationModelService(TextClassificationModelService):
         tag_ids: list[int],
         class_ids: list[int],
         tagid2labelid: dict[int, int],
-        tokenizer,
-        use_chunking: bool,
-    ) -> tuple[dict[int, list[int]], Dataset]:
+    ) -> tuple[dict[int, list[int]], Dataset, list[int]]:
+        """Build the document-classification dataset from data and class tags.
+
+        First, fetch every source document carrying one of the data-selection
+        ``tag_ids``. Then fetch, for each document, the tags that are among the
+        selected classifier ``class_ids``. Every usable document produces exactly
+        one dataset row. Its first matching class tag becomes its label; a document
+        without any matching class tag receives the O label and remains in the
+        dataset.
+
+        For example, suppose the data-selection tag selects documents 1, 2, and 3.
+        Document 1 has selected class tag A, document 2 has none of the selected
+        class tags, and document 3 has selected class tag B. The resulting dataset
+        contains A/1, O/2, and B/3. Document 2 is reported as unannotated but is not
+        excluded from training.
+
+        Documents whose source data cannot be loaded are skipped. Returns the
+        selected class tags grouped by document, the un-tokenized dataset, and the
+        sorted IDs of retained documents labeled O because they have none of the
+        selected class tags.
+        """
         # Find documents
         sdoc_ids = [
             sdoc.id
@@ -442,6 +524,7 @@ class DocClassificationModelService(TextClassificationModelService):
         # Create a labeled dataset
         # Every source document is part of the training data
         dataset: list[DatasetRow] = []
+        unannotated_sdocs: list[int] = []
         for sdoc_id in sdoc_ids:
             sdoc_data = sdocid2data[sdoc_id]
             if sdoc_data is None:
@@ -453,6 +536,8 @@ class DocClassificationModelService(TextClassificationModelService):
             # We only use the first annotation (if multiple exist)
             annotations = sdoc_id2annotation_ids[sdoc_id]
             annotation = annotations[0] if len(annotations) > 0 else O_LABEL_ID
+            if not annotations:
+                unannotated_sdocs.append(sdoc_id)
             dataset.append(
                 {
                     "sdoc_id": sdoc_data.id,
@@ -476,26 +561,13 @@ class DocClassificationModelService(TextClassificationModelService):
                     "labels": [],
                 }
             )
-            return sdoc_id2annotation_ids, empty_hf_dataset
+            return sdoc_id2annotation_ids, empty_hf_dataset, []
 
-        hf_dataset = Dataset.from_list(dataset)  # type: ignore
-        if tokenizer is None:
-            # No tokenization requested (e.g. for dataset statistics)
-            return sdoc_id2annotation_ids, hf_dataset
-
-        def tokenize_text(examples):
-            tokenized_inputs = tokenizer(
-                examples["text"],
-                truncation=not use_chunking,
-                is_split_into_words=False,
-                add_special_tokens=not use_chunking,
-            )
-            return tokenized_inputs
-
-        tokenized_hf_dataset = hf_dataset.map(tokenize_text, batched=True)
-        tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["text"])
-
-        return sdoc_id2annotation_ids, tokenized_hf_dataset
+        return (
+            sdoc_id2annotation_ids,
+            Dataset.from_list(dataset),  # type: ignore
+            sorted(unannotated_sdocs),
+        )
 
     def train(
         self, db: Session, job: Job, payload: ClassifierJobInput
@@ -546,59 +618,24 @@ class DocClassificationModelService(TextClassificationModelService):
         )
 
         # Build dataset
-        sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
+        sdoc_id2annotation_ids, dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=parameters.class_ids,
             tagid2labelid=tagid2labelid,
-            tokenizer=tokenizer,
-            use_chunking=True,
         )
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
         # Train test split
-        split_dataset = dataset.train_test_split(test_size=0.2, seed=42)
-
-        def split_in_chunks(examples: dict):
-            chunk_len = tokenizer.model_max_length - 2
-            for key, values in examples.items():
-                if "labels" == key:
-                    continue
-                elif "attention_mask" == key:
-                    pre = [1]
-                    post = [1]
-                elif "input_ids" == key:
-                    pre = [tokenizer.added_tokens_encoder["[CLS]"]]
-                    post = [tokenizer.added_tokens_encoder["[SEP]"]]
-                else:
-                    raise ValueError(f"Unsupported {key} in batch examples dict")
-
-                result = []
-                original_labels = examples["labels"]
-                labels = []
-                for val, lab in zip(values, original_labels):
-                    chunks = [
-                        pre + val[i : i + chunk_len] + post
-                        for i in range(0, len(val), chunk_len)
-                    ]
-                    result.extend(chunks)
-                    labels.extend([lab] * len(chunks))
-                examples[key] = result
-                examples["labels"] = labels
-            return examples
-
-        train_dataset = (
-            split_dataset["train"]
-            .remove_columns(["sdoc_id"])
-            .map(split_in_chunks, batched=True)
+        split_dataset = dataset.train_test_split(
+            test_size=parameters.train_test_split,
+            seed=42,
         )
-        val_dataset = (
-            split_dataset["test"]
-            .remove_columns(["sdoc_id"])
-            .map(split_in_chunks, batched=True)
-        )
+
+        train_dataset = _tokenize_document_dataset(split_dataset["train"], tokenizer)
+        val_dataset = _tokenize_document_dataset(split_dataset["test"], tokenizer)
 
         train_dataloader = DataLoader(
             train_dataset,  # type: ignore
@@ -667,7 +704,7 @@ class DocClassificationModelService(TextClassificationModelService):
             early_stopping_callback = EarlyStopping(
                 monitor="eval_f1",
                 mode="max",
-                patience=3,  # Wait for 3 epochs
+                patience=parameters.early_stopping_patience,
             )
             callbacks.append(early_stopping_callback)
 
@@ -820,27 +857,29 @@ class DocClassificationModelService(TextClassificationModelService):
         classifier = crud_classifier.read(db=db, id=parameters.classifier_id)
         tagid2labelid = {v: int(k) for k, v in classifier.labelid2classid.items()}
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
+        tokenizer.model_max_length = classifier.train_params.get(
+            "chunk_size", tokenizer.model_max_length
+        )
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         # 2. Create dataset
         job.update(current_step=2)
 
         # Build dataset
-        sdoc_id2annotation_ids, dataset = self._retrieve_and_build_dataset(
+        sdoc_id2annotation_ids, document_dataset, _ = self._retrieve_and_build_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
             class_ids=classifier.class_ids,
             tagid2labelid=tagid2labelid,
-            tokenizer=tokenizer,
-            use_chunking=False,
         )
-        if len(dataset) == 0:
+        if len(document_dataset) == 0:
             raise EmptyDatasetError()
+        test_dataset = _tokenize_document_dataset(document_dataset, tokenizer)
 
         # Build dataloader
         test_dataloader = DataLoader(
-            dataset,  # type: ignore
+            test_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
             batch_size=classifier.train_params.get("batch_size", 4),
@@ -852,7 +891,7 @@ class DocClassificationModelService(TextClassificationModelService):
             for tag_id, label_id in tagid2labelid.items()
             if label_id != O_LABEL_ID
         }
-        for sdoc_id in dataset["sdoc_id"]:
+        for sdoc_id in document_dataset["sdoc_id"]:
             for annotation in sdoc_id2annotation_ids[sdoc_id]:
                 eval_dataset_stats[annotation] += 1
 
@@ -953,6 +992,9 @@ class DocClassificationModelService(TextClassificationModelService):
         }
 
         tokenizer = AutoTokenizer.from_pretrained(classifier.base_model)
+        tokenizer.model_max_length = classifier.train_params.get(
+            "chunk_size", tokenizer.model_max_length
+        )
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         # Delete existing annotations (if requested by the user)
@@ -973,13 +1015,8 @@ class DocClassificationModelService(TextClassificationModelService):
             for sdoc_data in sdoc_datas
         ]
 
-        # Construct a tokenized dataset
-        def tokenize_text(examples):
-            return tokenizer(examples["text"], truncation=True)
-
         hf_dataset = Dataset.from_list(inference_dataset)  # type: ignore
-        tokenized_hf_dataset = hf_dataset.map(tokenize_text, batched=True)
-        tokenized_hf_dataset = tokenized_hf_dataset.remove_columns(["text"])
+        tokenized_hf_dataset = _tokenize_document_dataset(hf_dataset, tokenizer)
 
         # Build dataloader
         inference_dataloader = DataLoader(
@@ -1010,15 +1047,19 @@ class DocClassificationModelService(TextClassificationModelService):
         # 5. Post-process the predictions to extract annotations
         job.update(current_step=5)
         # Flatten outputs
-        flat_predictions: list[int] = []
         flat_sdoc_ids: list[int] = []
+        flat_logits: list[torch.Tensor] = []
         for pred in predictions:
             flat_sdoc_ids.extend([x.item() for x in pred["sdoc_ids"]])  # type: ignore
-            flat_predictions.extend(pred["predictions"])  # type: ignore
+            flat_logits.extend(list(pred["logits"]))  # type: ignore
+
+        document_ids, document_predictions = _aggregate_document_logits(
+            flat_sdoc_ids, flat_logits
+        )
 
         # Map predictions
         results: list[AnnotationResult] = []
-        for sdoc_id, label in zip(flat_sdoc_ids, flat_predictions):
+        for sdoc_id, label in zip(document_ids, document_predictions, strict=True):
             if (
                 label != O_LABEL_ID
             ):  # O_LABEL_ID is the "O" label, i.e. no classification

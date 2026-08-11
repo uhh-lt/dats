@@ -251,6 +251,9 @@ def app(db_session: Session, test_user: UserORM) -> FastAPI:
         db=db_session, email=test_user.email
     )
 
+    # Import jobs first because they register generated routes on endpoint routers.
+    import_by_suffix("_job.py")
+
     # import & register all endpoints dynamically
     modules = import_by_suffix("_endpoint.py")
     modules.sort(key=lambda m: m.__name__)

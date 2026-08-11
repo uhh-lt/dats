@@ -6,7 +6,7 @@ class JobProgressCallback(pl.Callback):
         super().__init__()
         self.job = job
 
-    def on_validation_end(self, trainer):
+    def on_validation_end(self, trainer, pl_module):
         metrics = trainer.callback_metrics
         precision = metrics.get("eval_precision", None)
         recall = metrics.get("eval_recall", None)

@@ -1,7 +1,9 @@
 import datetime
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.annotation_document_dto import (
     AnnotationDocumentCreate,
     AnnotationDocumentUpdate,
@@ -48,6 +50,18 @@ class CRUDAnnotationDocument(
             update_dto=AnnotationDocumentUpdate(updated=datetime.datetime.now()),
         )
 
+    def update_timestamps(self, db: Session, *, ids: list[int]) -> None:
+        """Update annotation-document timestamps using batched SQL statements."""
+        updated = datetime.datetime.now()
+        for i in range(0, len(ids), conf.postgres.batch_size):
+            batch_ids = ids[i : i + conf.postgres.batch_size]
+            db.execute(
+                update(self.model)
+                .where(self.model.id.in_(batch_ids))
+                .values(updated=updated)
+            )
+        db.flush()
+
     ### DELETE OPERATIONS ###
 
     def delete_by_sdoc(self, db: Session, *, sdoc_id: int) -> list[int]:
@@ -86,6 +100,53 @@ class CRUDAnnotationDocument(
                 ),
             )
         return db_obj
+
+    def exists_or_create_multi(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        sdoc_ids: list[int],
+    ) -> dict[int, AnnotationDocumentORM]:
+        """Return annotation documents for a user, creating missing rows in bulk."""
+        unique_sdoc_ids = list(dict.fromkeys(sdoc_ids))
+        annotation_documents: list[AnnotationDocumentORM] = []
+        for i in range(0, len(unique_sdoc_ids), conf.postgres.batch_size):
+            batch_ids = unique_sdoc_ids[i : i + conf.postgres.batch_size]
+            annotation_documents.extend(
+                db.query(self.model)
+                .filter(
+                    self.model.user_id == user_id,
+                    self.model.source_document_id.in_(batch_ids),
+                )
+                .all()
+            )
+
+        existing_sdoc_ids = {
+            annotation_document.source_document_id
+            for annotation_document in annotation_documents
+        }
+        missing_sdoc_ids = [
+            sdoc_id for sdoc_id in unique_sdoc_ids if sdoc_id not in existing_sdoc_ids
+        ]
+        if missing_sdoc_ids:
+            annotation_documents.extend(
+                self.create_multi(
+                    db=db,
+                    create_dtos=[
+                        AnnotationDocumentCreate(
+                            user_id=user_id,
+                            source_document_id=sdoc_id,
+                        )
+                        for sdoc_id in missing_sdoc_ids
+                    ],
+                )
+            )
+
+        return {
+            annotation_document.source_document_id: annotation_document
+            for annotation_document in annotation_documents
+        }
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)

@@ -347,7 +347,7 @@ class SentClassificationModelService(TextClassificationModelService):
         )
 
         # Build the dataset exactly as in training, but skip the expensive embedding
-        _, dataset = self._retrieve_build_embedd_dataset(
+        _, dataset, unannotated_sdocs = self._retrieve_build_embedd_dataset(
             db=db,
             project_id=project_id,
             tag_ids=tag_ids,
@@ -425,6 +425,7 @@ class SentClassificationModelService(TextClassificationModelService):
                 for code in codes
             ],
             problematic_sdocs=problematic_sdocs,
+            unannotated_sdocs=unannotated_sdocs,
         )
 
     def _retrieve_build_embedd_dataset(
@@ -436,12 +437,28 @@ class SentClassificationModelService(TextClassificationModelService):
         codeid2labelid: dict[int, int],
         embedding_model: SentenceTransformer | None,
         merge_children_into_parent: bool = False,
-    ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset]:
-        """Fetches sentence annotations and builds the embedded dataset.
+    ) -> tuple[dict[int, dict[int, list[SentenceAnnotationORM]]], Dataset, list[int]]:
+        """Build the sentence-classification dataset from tags and annotators.
 
-        Annotations are fetched for the codes in ``codeid2labelid``. If
-        ``merge_children_into_parent`` is True, annotations of all descendant
-        codes are fetched as well and remapped to their parent code.
+        First, fetch every source document carrying one of ``tag_ids``. Then fetch
+        annotations from the selected ``user_ids`` whose codes are selected for
+        this classifier. One dataset row is created per matching
+        annotator/document combination, so a document annotated by two selected
+        annotators appears twice. Documents without a matching annotation are
+        excluded.
+
+        For example, suppose the provided tag selects documents 1, 2, and 3.
+        Annotator A annotated documents 1 and 2, and annotator B annotated
+        document 2. The dataset contains rows A/1, A/2, and B/2. Document 2
+        occurs twice, while untouched document 3 is excluded.
+
+        Finally, annotations for the selected codes are written into each row;
+        all other sentences remain O. When ``merge_children_into_parent`` is
+        true, descendant-code annotations are mapped to their selected parent.
+
+        Returns the grouped annotations, the embedded dataset, and the sorted IDs
+        of tag-selected documents excluded because they have no matching
+        annotation.
         """
 
         # Expand which code ids to fetch:
@@ -466,18 +483,14 @@ class SentClassificationModelService(TextClassificationModelService):
             )
         ]
 
-        # Get annotations by user and source document
-        # 1. construct result object, grouping annotations by user and source document
         user_id2sdoc_id2annotations: dict[
             int, dict[int, list[SentenceAnnotationORM]]
         ] = defaultdict(lambda: defaultdict(list))
 
         # 2. retrieve annotations from the database, in batches
-        fetch_code_ids = list(codeid2parentid.keys())
         for i in range(0, len(sdoc_ids), SQL_BATCH_SIZE):
             batch_sdoc_ids = sdoc_ids[i : i + SQL_BATCH_SIZE]
 
-            # 3. Build the SELECT statement
             stmt = (
                 select(
                     SentenceAnnotationORM,
@@ -487,12 +500,10 @@ class SentClassificationModelService(TextClassificationModelService):
                 .where(
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     AnnotationDocumentORM.source_document_id.in_(batch_sdoc_ids),
-                    SentenceAnnotationORM.code_id.in_(fetch_code_ids),
+                    SentenceAnnotationORM.code_id.in_(list(codeid2parentid.keys())),
                 )
             )
 
-            # 4. Execute the statement and fetch the results, remapping each
-            # annotation's code id to its parent (class) code.
             batch_result = db.execute(stmt).all()
             for result_row in batch_result:
                 annotation, adoc = result_row._tuple()
@@ -503,25 +514,29 @@ class SentClassificationModelService(TextClassificationModelService):
                     adoc.source_document_id
                 ].append(annotation)
 
+        included_sdoc_ids = {
+            sdoc_id
+            for sdoc_id2annotations in user_id2sdoc_id2annotations.values()
+            for sdoc_id in sdoc_id2annotations
+        }
+        unannotated_sdocs = sorted(set(sdoc_ids) - included_sdoc_ids)
+
         # Get source document data
         sdoc_datas = crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
         sdocid2data = {sdoc_data.id: sdoc_data for sdoc_data in sdoc_datas}
 
-        # Create a labeled, embedded dataset
-        # Every annotated source document is part of the training data
-        # If the same document was annotated by two different users it will be included twice
+        # Overlay annotations onto all-O sentence labels.
         dataset: list[DatasetRow] = []
         for user_id, sdoc_id2annotations in user_id2sdoc_id2annotations.items():
-            sdoc_id2annotations = user_id2sdoc_id2annotations[user_id]
             for sdoc_id, annotations in sdoc_id2annotations.items():
                 sdoc_data = sdocid2data[sdoc_id]
                 sentences = sdoc_data.sentences
-                labels = [O_LABEL_ID for sentence in sentences]
+                labels = [O_LABEL_ID for _ in sentences]
                 for annotation in annotations:
                     # sentence_id_end is INCLUSIVE, so the slice end is +1.
                     labels[
                         annotation.sentence_id_start : annotation.sentence_id_end + 1
-                    ] = [codeid2labelid.get(annotation.code_id, O_LABEL_ID)] * (
+                    ] = [codeid2labelid[annotation.code_id]] * (
                         annotation.sentence_id_end - annotation.sentence_id_start + 1
                     )
 
@@ -548,11 +563,15 @@ class SentClassificationModelService(TextClassificationModelService):
             }
             if embedding_model is not None:
                 empty_columns["sentences"] = []
-            return user_id2sdoc_id2annotations, Dataset.from_dict(empty_columns)
+            return (
+                user_id2sdoc_id2annotations,
+                Dataset.from_dict(empty_columns),
+                unannotated_sdocs,
+            )
 
         hf_dataset = Dataset.from_list(dataset)  # type: ignore
 
-        return user_id2sdoc_id2annotations, hf_dataset
+        return user_id2sdoc_id2annotations, hf_dataset, unannotated_sdocs
 
     def _collate_fn(self, batch):
         embeddings = [torch.tensor(b["sentences"]) for b in batch]
@@ -622,7 +641,7 @@ class SentClassificationModelService(TextClassificationModelService):
             raise ValueError(
                 f"Could not determine embedding dimension of model '{parameters.base_name}'"
             )
-        user_id2sdoc_id2annotations, dataset = self._retrieve_build_embedd_dataset(
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_build_embedd_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,
@@ -641,7 +660,10 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Train/test split, grouped by sdoc_id so the same document (annotated
         # by several users) never appears in both train and eval.
-        train_idx, test_idx = grouped_train_test_split(dataset)
+        train_idx, test_idx = grouped_train_test_split(
+            dataset,
+            test_size=parameters.train_test_split,
+        )
         train_dataset = dataset.select(train_idx)
         val_dataset = dataset.select(test_idx)
 
@@ -665,16 +687,14 @@ class SentClassificationModelService(TextClassificationModelService):
 
         train_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in train_idx:
-            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
-                dataset_sdoc_ids[i]
-            ]:
+            user_id = dataset_user_ids[i]
+            for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 train_dataset_stats[annotation.code_id] += 1
 
         eval_dataset_stats: dict[int, int] = {code.id: 0 for code in codes}
         for i in test_idx:
-            for annotation in user_id2sdoc_id2annotations[dataset_user_ids[i]][
-                dataset_sdoc_ids[i]
-            ]:
+            user_id = dataset_user_ids[i]
+            for annotation in user_id2sdoc_id2annotations[user_id][dataset_sdoc_ids[i]]:
                 eval_dataset_stats[annotation.code_id] += 1
 
         # Calculate class weights
@@ -721,7 +741,7 @@ class SentClassificationModelService(TextClassificationModelService):
             early_stopping_callback = EarlyStopping(
                 monitor="eval_f1",
                 mode="max",
-                patience=3,  # Wait for 3 epochs
+                patience=parameters.early_stopping_patience,
             )
             callbacks.append(early_stopping_callback)
 
@@ -885,7 +905,7 @@ class SentClassificationModelService(TextClassificationModelService):
 
         # Build dataset.
         embedding_model = SentenceTransformer(classifier.base_model)
-        user_id2sdoc_id2annotations, dataset = self._retrieve_build_embedd_dataset(
+        user_id2sdoc_id2annotations, dataset, _ = self._retrieve_build_embedd_dataset(
             db=db,
             project_id=payload.project_id,
             tag_ids=parameters.tag_ids,

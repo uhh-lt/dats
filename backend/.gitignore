@@ -4,4 +4,6 @@ __pycache__/
 .ruff_cache/
 .venv/
 
+test-results/
+
 .env
