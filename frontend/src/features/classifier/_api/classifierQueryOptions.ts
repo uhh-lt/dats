@@ -2,6 +2,7 @@ import { QueryKey } from "@api/hooks/QueryKey";
 import { queryClient } from "@api/queryClient";
 import { ClassifierService } from "@api/services/ClassifierService";
 import { ClassifierInfo } from "@models/ClassifierInfo";
+import { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import { ClassifierInferenceParams } from "@models/ClassifierInferenceParams";
 import { ClassifierJobRead } from "@models/ClassifierJobRead";
 import { ClassifierModel } from "@models/ClassifierModel";
@@ -155,7 +156,7 @@ interface DatasetStatisticsParams {
   baseModelName: string;
 }
 
-const useComputeDatasetStatistics2 = ({
+const useComputeDatasetStatistics = ({
   projectId,
   model,
   classIds,
@@ -180,16 +181,18 @@ const useComputeDatasetStatistics2 = ({
         throw new Error("Cannot compute dataset statistics without a classifier model.");
       }
 
-      return ClassifierService.computeDatasetStatistics2({
-        projId: projectId,
+      const request: ClassifierDatasetStatisticsRequest = {
         model,
-        baseModelName,
-        mergeChildrenIntoParent: mergeChildren,
-        requestBody: {
-          tag_ids: tagIds,
-          user_ids: userIds,
-          class_ids: classIds,
-        },
+        base_model_name: baseModelName,
+        tag_ids: tagIds,
+        user_ids: userIds,
+        class_ids: classIds,
+        merge_children_into_parent: mergeChildren,
+      };
+
+      return ClassifierService.computeDatasetStatistics({
+        projId: projectId,
+        requestBody: request,
       });
     },
     enabled:
@@ -207,6 +210,6 @@ export const ClassifierHooks = {
   useGetAllClassifiers,
   useUpdateClassifier,
   useDeleteClassifier,
-  useComputeDatasetStatistics2,
+  useComputeDatasetStatistics,
   useGetClassifierInfo,
 };

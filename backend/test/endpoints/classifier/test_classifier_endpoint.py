@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from config import conf
 from modules.classifier.classifier_dto import (
     ClassifierAveraging,
+    ClassifierDatasetStatisticsRequest,
     ClassifierJobInput,
     ClassifierModel,
     ClassifierRead,
@@ -155,28 +156,32 @@ def test_start_job_nonexistent_project(client: TestClient):
 
 
 def _request_dataset_statistics(
-    client: TestClient, project_id, model, class_ids, base_model_name, **kw
+    client: TestClient,
+    project_id: int,
+    model: ClassifierModel,
+    class_ids: list[int],
+    base_model_name: str,
+    *,
+    tag_ids: list[int] | None = None,
+    user_ids: list[int] | None = None,
+    merge_children_into_parent: bool = False,
 ):
-    """POST to the datasetstatistics2 endpoint and return the parsed statistics.
+    """Request statistics for one typed classifier dataset configuration.
 
-    Asserts the request succeeds; `tag_ids` / `user_ids` filters can be passed
-    as keyword arguments.
+    Asserts the request succeeds; tag, annotator, and merge-children selections
+    can be supplied as keyword arguments.
     """
-    # the id lists are body fields; the scalars are query params
-    params = {
-        "model": model,
-        "base_model_name": base_model_name,
-        "merge_children_into_parent": False,
-    }
-    body = {
-        "tag_ids": kw.get("tag_ids", []),
-        "user_ids": kw.get("user_ids", []),
-        "class_ids": class_ids,
-    }
+    request = ClassifierDatasetStatisticsRequest(
+        model=model,
+        base_model_name=base_model_name,
+        tag_ids=tag_ids or [],
+        user_ids=user_ids or [],
+        class_ids=class_ids,
+        merge_children_into_parent=merge_children_into_parent,
+    )
     response = client.post(
-        f"/classifier/project/{project_id}/datasetstatistics2",
-        params=params,
-        json=body,
+        f"/classifier/project/{project_id}/dataset-statistics",
+        json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
     return response.json()
@@ -235,7 +240,7 @@ def test_dataset_statistics_span(
     data = _request_dataset_statistics(
         client,
         span_statistics_dataset["project"].id,
-        "span",
+        ClassifierModel.SPAN,
         [c.id for c in codes.values()],
         base_model,
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],
@@ -265,7 +270,7 @@ def test_dataset_statistics_span_reports_excluded_documents(
     data = _request_dataset_statistics(
         client,
         span_statistics_dataset["project"].id,
-        "span",
+        ClassifierModel.SPAN,
         [codes["PER"].id],
         base_model,
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],
@@ -285,7 +290,7 @@ def test_dataset_statistics_document(client: TestClient, document_statistics_dat
     data = _request_dataset_statistics(
         client,
         document_statistics_dataset["project"].id,
-        "document",
+        ClassifierModel.DOCUMENT,
         [t.id for t in tags.values()],
         base_model,
         tag_ids=[
@@ -314,7 +319,7 @@ def test_dataset_statistics_document_reports_documents_without_selected_class_ta
     data = _request_dataset_statistics(
         client,
         document_statistics_dataset["project"].id,
-        "document",
+        ClassifierModel.DOCUMENT,
         [selected_tag.id],
         base_model,
         tag_ids=[
@@ -343,7 +348,7 @@ def test_dataset_statistics_sentence(
     data = _request_dataset_statistics(
         client,
         sentence_statistics_dataset["project"].id,
-        "sentence",
+        ClassifierModel.SENTENCE,
         [c.id for c in codes.values()],
         base_model,
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],
@@ -368,7 +373,7 @@ def test_dataset_statistics_sentence_reports_excluded_documents(
     data = _request_dataset_statistics(
         client,
         sentence_statistics_dataset["project"].id,
-        "sentence",
+        ClassifierModel.SENTENCE,
         [codes["background"].id],
         base_model,
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],

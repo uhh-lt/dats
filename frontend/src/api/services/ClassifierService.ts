@@ -2,12 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_classifier_compute_dataset_statistics2 } from "@models/Body_classifier_compute_dataset_statistics2";
 import type { ClassifierDatasetStatistics } from "@models/ClassifierDatasetStatistics";
+import type { ClassifierDatasetStatisticsRequest } from "@models/ClassifierDatasetStatisticsRequest";
 import type { ClassifierInfo } from "@models/ClassifierInfo";
 import type { ClassifierJobInput } from "@models/ClassifierJobInput";
 import type { ClassifierJobRead } from "@models/ClassifierJobRead";
-import type { ClassifierModel } from "@models/ClassifierModel";
 import type { ClassifierRead } from "@models/ClassifierRead";
 import type { ClassifierUpdate } from "@models/ClassifierUpdate";
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -89,29 +88,18 @@ export class ClassifierService {
    * @returns ClassifierDatasetStatistics Successful Response
    * @throws ApiError
    */
-  public static computeDatasetStatistics2({
+  public static computeDatasetStatistics({
     projId,
-    model,
-    baseModelName,
     requestBody,
-    mergeChildrenIntoParent = false,
   }: {
     projId: number;
-    model: ClassifierModel;
-    baseModelName: string;
-    requestBody: Body_classifier_compute_dataset_statistics2;
-    mergeChildrenIntoParent?: boolean;
+    requestBody: ClassifierDatasetStatisticsRequest;
   }): CancelablePromise<ClassifierDatasetStatistics> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/classifier/project/{proj_id}/datasetstatistics2",
+      url: "/classifier/project/{proj_id}/dataset-statistics",
       path: {
         proj_id: projId,
-      },
-      query: {
-        model: model,
-        base_model_name: baseModelName,
-        merge_children_into_parent: mergeChildrenIntoParent,
       },
       body: requestBody,
       mediaType: "application/json",

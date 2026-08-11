@@ -713,39 +713,19 @@
         }
       }
     },
-    "/classifier/project/{proj_id}/datasetstatistics2": {
+    "/classifier/project/{proj_id}/dataset-statistics": {
       "post": {
         "tags": ["classifier"],
         "summary": "Returns statistics of the dataset that would be created with these parameters",
-        "operationId": "compute_dataset_statistics2",
+        "operationId": "compute_dataset_statistics",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
-          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
-          {
-            "name": "model",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/ClassifierModel" }
-          },
-          {
-            "name": "base_model_name",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string", "title": "Base Model Name" }
-          },
-          {
-            "name": "merge_children_into_parent",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "boolean", "default": false, "title": "Merge Children Into Parent" }
-          }
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Body_classifier-compute_dataset_statistics2" }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/ClassifierDatasetStatisticsRequest" } }
           }
         },
         "responses": {
@@ -7099,16 +7079,6 @@
         "required": ["username", "password"],
         "title": "Body_authentication-login"
       },
-      "Body_classifier-compute_dataset_statistics2": {
-        "properties": {
-          "tag_ids": { "items": { "type": "integer" }, "type": "array", "title": "Tag Ids" },
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
-          "class_ids": { "items": { "type": "integer" }, "type": "array", "title": "Class Ids" }
-        },
-        "type": "object",
-        "required": ["tag_ids", "user_ids", "class_ids"],
-        "title": "Body_classifier-compute_dataset_statistics2"
-      },
       "Body_docprocessing-recompute_processing_step": {
         "properties": {
           "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" },
@@ -7875,6 +7845,47 @@
           "unannotated_sdocs"
         ],
         "title": "ClassifierDatasetStatistics"
+      },
+      "ClassifierDatasetStatisticsRequest": {
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/ClassifierModel",
+            "description": "Classifier type whose dataset construction should be inspected. Document classifiers use tags as classes, while sentence and span classifiers use codes and selected annotators."
+          },
+          "base_model_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Base Model Name",
+            "description": "Hugging Face base model selected for training. Span statistics use its tokenizer to align word annotations with model tokens; document and sentence statistics currently do not depend on it."
+          },
+          "tag_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tag Ids",
+            "description": "IDs of document tags that select the dataset's source documents"
+          },
+          "user_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "User Ids",
+            "description": "IDs of annotators whose annotations should be used for sentence and span classification; ignored for document classification"
+          },
+          "class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "Selected tag IDs for document classification or code IDs for sentence and span classification"
+          },
+          "merge_children_into_parent": {
+            "type": "boolean",
+            "title": "Merge Children Into Parent",
+            "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["model", "base_model_name", "tag_ids", "user_ids", "class_ids"],
+        "title": "ClassifierDatasetStatisticsRequest"
       },
       "ClassifierEvaluationOutput": {
         "properties": {

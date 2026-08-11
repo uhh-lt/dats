@@ -10,8 +10,8 @@ from modules.classifier.classifier_crud import crud_classifier
 from modules.classifier.classifier_dto import (
     ClassifierBaseModelOption,
     ClassifierDatasetStatistics,
+    ClassifierDatasetStatisticsRequest,
     ClassifierInfo,
-    ClassifierModel,
     ClassifierRead,
     ClassifierTrainingDefaults,
     ClassifierUpdate,
@@ -103,31 +103,26 @@ def delete_by_id(
 
 
 @router.post(
-    "/project/{proj_id}/datasetstatistics2",
+    "/project/{proj_id}/dataset-statistics",
     response_model=ClassifierDatasetStatistics,
     summary="Returns statistics of the dataset that would be created with these parameters",
 )
-def compute_dataset_statistics2(
+def compute_dataset_statistics(
     *,
     proj_id: int,
-    tag_ids: list[int],
-    user_ids: list[int],
-    class_ids: list[int],
-    model: ClassifierModel,
-    base_model_name: str,
+    request: ClassifierDatasetStatisticsRequest,
     db: Session = Depends(get_db_session),
     authz_user: AuthzUser = Depends(),
-    merge_children_into_parent: bool = False,
 ) -> ClassifierDatasetStatistics:
     authz_user.assert_in_project(proj_id)
 
-    tcs = ClassifierService().get_model_service(model)
+    tcs = ClassifierService().get_model_service(request.model)
     return tcs.compute_dataset_statistics(
         db=db,
         project_id=proj_id,
-        tag_ids=tag_ids,
-        user_ids=user_ids,
-        class_ids=class_ids,
-        merge_children_into_parent=merge_children_into_parent,
-        base_model_name=base_model_name,
+        tag_ids=request.tag_ids,
+        user_ids=request.user_ids,
+        class_ids=request.class_ids,
+        merge_children_into_parent=request.merge_children_into_parent,
+        base_model_name=request.base_model_name,
     )

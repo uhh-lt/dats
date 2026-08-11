@@ -107,6 +107,46 @@ class ClassifierSignalStrength(str, Enum):
     STRONG = "strong"
 
 
+class ClassifierDatasetStatisticsRequest(BaseModel):
+    model: ClassifierModel = Field(
+        description=(
+            "Classifier type whose dataset construction should be inspected. "
+            "Document classifiers use tags as classes, while sentence and span "
+            "classifiers use codes and selected annotators."
+        )
+    )
+    base_model_name: str = Field(
+        min_length=1,
+        description=(
+            "Hugging Face base model selected for training. Span statistics use "
+            "its tokenizer to align word annotations with model tokens; document "
+            "and sentence statistics currently do not depend on it."
+        ),
+    )
+    tag_ids: list[int] = Field(
+        description="IDs of document tags that select the dataset's source documents"
+    )
+    user_ids: list[int] = Field(
+        description=(
+            "IDs of annotators whose annotations should be used for sentence and "
+            "span classification; ignored for document classification"
+        )
+    )
+    class_ids: list[int] = Field(
+        description=(
+            "Selected tag IDs for document classification or code IDs for sentence "
+            "and span classification"
+        )
+    )
+    merge_children_into_parent: bool = Field(
+        default=False,
+        description=(
+            "Whether annotations of descendant codes should count toward their "
+            "selected parent code; only applies to sentence and span classification"
+        ),
+    )
+
+
 class ClassifierClassStatistics(BaseModel):
     class_id: int = Field(description="ID of the class (tag or code)")
     num_examples: int = Field(
