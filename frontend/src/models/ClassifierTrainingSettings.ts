@@ -45,9 +45,17 @@ export type ClassifierTrainingSettings = {
    */
   train_test_split: number;
   /**
-   * Learning rate
+   * Peak learning rate for the pretrained base model
    */
-  learning_rate: number;
+  base_learning_rate: number;
+  /**
+   * Peak learning rate for the classifier head and, when enabled, LoRA adapter parameters
+   */
+  head_learning_rate: number;
+  /**
+   * Fraction of optimizer steps used to increase each learning rate linearly from zero to its peak before linear decay
+   */
+  warmup_fraction: number;
   /**
    * Weight decay
    */

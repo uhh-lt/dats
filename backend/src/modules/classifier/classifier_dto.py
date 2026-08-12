@@ -60,7 +60,25 @@ class ClassifierTrainingSettings(BaseModel):
         lt=1.0,
         description="Fraction of selected training data reserved for validation",
     )
-    learning_rate: float = Field(gt=0.0, description="Learning rate")
+    base_learning_rate: float = Field(
+        gt=0.0,
+        description="Peak learning rate for the pretrained base model",
+    )
+    head_learning_rate: float = Field(
+        gt=0.0,
+        description=(
+            "Peak learning rate for the classifier head and, when enabled, "
+            "LoRA adapter parameters"
+        ),
+    )
+    warmup_fraction: float = Field(
+        ge=0.0,
+        lt=1.0,
+        description=(
+            "Fraction of optimizer steps used to increase each learning rate "
+            "linearly from zero to its peak before linear decay"
+        ),
+    )
     weight_decay: float = Field(ge=0.0, le=1.0, description="Weight decay")
     dropout: float = Field(ge=0.0, le=1.0, description="Model dropout rate")
     chunk_size: int = Field(gt=0, description="Token chunk size")

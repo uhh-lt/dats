@@ -343,7 +343,9 @@ class ClassifierTrainingParamsConfig(BaseModel):
     early_stopping: bool
     early_stopping_patience: int = Field(ge=0)
     train_test_split: float = Field(gt=0.0, lt=1.0)
-    learning_rate: float = Field(gt=0.0)
+    base_learning_rate: float = Field(gt=0.0)
+    head_learning_rate: float = Field(gt=0.0)
+    warmup_fraction: float = Field(ge=0.0, lt=1.0)
     weight_decay: float = Field(ge=0.0, le=1.0)
     dropout: float = Field(ge=0.0, le=1.0)
     chunk_size: int = Field(gt=0)

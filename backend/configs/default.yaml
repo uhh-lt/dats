@@ -140,7 +140,9 @@ classifier:
     early_stopping: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EARLY_STOPPING, true}
     early_stopping_patience: ${oc.env:CLASSIFIER_TRAINING_PARAMS_EARLY_STOPPING_PATIENCE, 3}
     train_test_split: ${oc.env:CLASSIFIER_TRAINING_PARAMS_TRAIN_TEST_SPLIT, 0.2}
-    learning_rate: ${oc.env:CLASSIFIER_TRAINING_PARAMS_LEARNING_RATE, 0.00001}
+    base_learning_rate: ${oc.env:CLASSIFIER_TRAINING_PARAMS_BASE_LEARNING_RATE, 0.00001}
+    head_learning_rate: ${oc.env:CLASSIFIER_TRAINING_PARAMS_HEAD_LEARNING_RATE, 0.0001}
+    warmup_fraction: ${oc.env:CLASSIFIER_TRAINING_PARAMS_WARMUP_FRACTION, 0.1}
     weight_decay: ${oc.env:CLASSIFIER_TRAINING_PARAMS_WEIGHT_DECAY, 0.01}
     dropout: ${oc.env:CLASSIFIER_TRAINING_PARAMS_DROPOUT, 0.1}
     chunk_size: ${oc.env:CLASSIFIER_TRAINING_PARAMS_CHUNK_SIZE, 1024}

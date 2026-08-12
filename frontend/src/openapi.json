@@ -8344,11 +8344,24 @@
             "title": "Train Test Split",
             "description": "Fraction of selected training data reserved for validation"
           },
-          "learning_rate": {
+          "base_learning_rate": {
             "type": "number",
             "exclusiveMinimum": 0,
-            "title": "Learning Rate",
-            "description": "Learning rate"
+            "title": "Base Learning Rate",
+            "description": "Peak learning rate for the pretrained base model"
+          },
+          "head_learning_rate": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Head Learning Rate",
+            "description": "Peak learning rate for the classifier head and, when enabled, LoRA adapter parameters"
+          },
+          "warmup_fraction": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "minimum": 0,
+            "title": "Warmup Fraction",
+            "description": "Fraction of optimizer steps used to increase each learning rate linearly from zero to its peak before linear decay"
           },
           "weight_decay": {
             "type": "number",
@@ -8425,7 +8438,9 @@
           "early_stopping",
           "early_stopping_patience",
           "train_test_split",
-          "learning_rate",
+          "base_learning_rate",
+          "head_learning_rate",
+          "warmup_fraction",
           "weight_decay",
           "dropout",
           "chunk_size",
@@ -8499,11 +8514,24 @@
             "title": "Train Test Split",
             "description": "Fraction of selected training data reserved for validation"
           },
-          "learning_rate": {
+          "base_learning_rate": {
             "type": "number",
             "exclusiveMinimum": 0,
-            "title": "Learning Rate",
-            "description": "Learning rate"
+            "title": "Base Learning Rate",
+            "description": "Peak learning rate for the pretrained base model"
+          },
+          "head_learning_rate": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Head Learning Rate",
+            "description": "Peak learning rate for the classifier head and, when enabled, LoRA adapter parameters"
+          },
+          "warmup_fraction": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "minimum": 0,
+            "title": "Warmup Fraction",
+            "description": "Fraction of optimizer steps used to increase each learning rate linearly from zero to its peak before linear decay"
           },
           "weight_decay": {
             "type": "number",
@@ -8564,7 +8592,9 @@
           "early_stopping",
           "early_stopping_patience",
           "train_test_split",
-          "learning_rate",
+          "base_learning_rate",
+          "head_learning_rate",
+          "warmup_fraction",
           "weight_decay",
           "dropout",
           "chunk_size",
