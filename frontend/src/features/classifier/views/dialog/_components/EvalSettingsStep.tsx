@@ -28,13 +28,14 @@ const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 
 export function EvalSettingsStep() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const classifierId = useAppSelector((state) => state.classifier.classifierId);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const task = useAppSelector((state) => state.classifier.context.task);
+  const classifierId = useAppSelector((state) => state.classifier.context.classifierId);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const userIds = useAppSelector((state) => state.classifier.dataset.userIds);
+  const tagIds = useAppSelector((state) => state.classifier.dataset.tagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.dataset.mergeChildren);
+  const savedAveraging = useAppSelector((state) => state.classifier.drafts.evaluationAveraging);
   const dispatch = useAppDispatch();
 
   // read the classifier to pre-fill the averaging strategy from its training settings
@@ -42,27 +43,31 @@ export function EvalSettingsStep() {
   const classifierInfo = ClassifierHooks.useGetClassifierInfo();
   const classifier = classifiers.data?.find((c) => c.id === classifierId);
   const configuredAveraging = classifier?.train_params["averaging"];
-  const storedAveraging =
-    configuredAveraging === ClassifierAveraging.MICRO || configuredAveraging === ClassifierAveraging.MACRO
+  const defaultAveraging =
+    savedAveraging ??
+    (configuredAveraging === ClassifierAveraging.MICRO || configuredAveraging === ClassifierAveraging.MACRO
       ? configuredAveraging
-      : classifierInfo.data?.training_params.averaging;
+      : classifierInfo.data?.training_params.averaging);
 
   // form state
   const {
     control,
+    getValues,
     handleSubmit,
     formState: { errors },
   } = useForm<EvaluationSettings>({
-    values: storedAveraging === undefined ? undefined : { averaging: storedAveraging },
+    values: defaultAveraging === undefined ? undefined : { averaging: defaultAveraging },
   });
 
   // dialog actions
   const handlePrev = () => {
+    dispatch(ClassifierActions.setEvaluationAveraging(getValues("averaging")));
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const { mutate: startClassifierJobMutation, isPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: EvaluationSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined) return;
+    dispatch(ClassifierActions.setEvaluationAveraging(data.averaging));
 
     const evalParams: ClassifierEvaluationParams = {
       task_type: task,
@@ -84,7 +89,8 @@ export function EvalSettingsStep() {
       },
       {
         onSuccess: (jobData) => {
-          dispatch(ClassifierActions.onClassifierDialogStartJob(jobData.job_id));
+          dispatch(ClassifierActions.setClassifierJobId(jobData.job_id));
+          dispatch(ClassifierActions.nextClassifierDialogStep());
         },
       },
     );

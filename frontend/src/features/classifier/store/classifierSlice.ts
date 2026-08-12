@@ -1,3 +1,4 @@
+import { ClassifierAveraging } from "@models/ClassifierAveraging";
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
@@ -7,127 +8,125 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 export type ClassifierTrainingSettings = ClassifierTrainingSettingsDto &
   Pick<ClassifierTrainingParams, "classifier_name" | "base_name">;
 
-interface ClassifierState {
-  isClassifierDialogOpen: boolean;
-  classifierProjectId: number;
-  classifierModel?: ClassifierModel;
-  classifierTask?: ClassifierTask;
+interface ClassifierDialogContext {
+  projectId: number;
+  model?: ClassifierModel;
+  task?: ClassifierTask;
   classifierId?: number;
-  classifierStep: number;
-  classifierClassIds: number[];
-  classifierSdocIds: number[];
-  classifierUserIds: number[];
-  classifierTagIds: number[];
-  classifierMergeChildren: boolean;
-  classifierTrainingSettings?: ClassifierTrainingSettings;
-  classifierJobId?: string;
 }
 
-const initialState: ClassifierState = {
-  isClassifierDialogOpen: false,
-  classifierProjectId: -1,
-  classifierModel: undefined,
-  classifierTask: undefined,
-  classifierId: undefined,
-  classifierStep: 0,
-  classifierClassIds: [],
-  classifierSdocIds: [],
-  classifierUserIds: [],
-  classifierTagIds: [],
-  classifierMergeChildren: false,
-  classifierTrainingSettings: undefined,
-  classifierJobId: undefined,
-};
+interface ClassifierDatasetSelection {
+  classIds: number[];
+  sourceDocumentIds: number[];
+  userIds: number[];
+  tagIds: number[];
+  mergeChildren: boolean;
+}
+
+interface ClassifierDialogDrafts {
+  trainingSettings?: ClassifierTrainingSettings;
+  evaluationAveraging?: ClassifierAveraging;
+  inferenceKeepExisting: boolean;
+}
+
+interface ClassifierState {
+  isOpen: boolean;
+  step: number;
+  context: ClassifierDialogContext;
+  dataset: ClassifierDatasetSelection;
+  drafts: ClassifierDialogDrafts;
+  jobId?: string;
+}
+
+interface OpenClassifierDialogPayload {
+  projectId: number;
+  model: ClassifierModel;
+  task: ClassifierTask;
+  classifierId?: number;
+  initialStep?: number;
+  initialClassIds?: number[];
+  initialSourceDocumentIds?: number[];
+  mergeChildren?: boolean;
+}
+
+const createInitialState = (): ClassifierState => ({
+  isOpen: false,
+  step: 0,
+  context: {
+    projectId: -1,
+  },
+  dataset: {
+    classIds: [],
+    sourceDocumentIds: [],
+    userIds: [],
+    tagIds: [],
+    mergeChildren: false,
+  },
+  drafts: {
+    inferenceKeepExisting: true,
+  },
+  jobId: undefined,
+});
 
 const classifierSlice = createSlice({
   name: "classifier",
-  initialState,
+  initialState: createInitialState(),
   reducers: {
-    openClassifierDialog: (
-      state,
-      action: PayloadAction<{
-        projectId: number;
-        classifierModel?: ClassifierModel;
-        classifierTask?: ClassifierTask;
-        classifierId?: number;
-        classifierStep?: number;
-        classifierClassIds?: number[];
-        classifierSdocIds?: number[];
-        classifierMergeChildren?: boolean;
-      }>,
-    ) => {
-      state.isClassifierDialogOpen = true;
-      state.classifierProjectId = action.payload.projectId;
-      state.classifierModel = action.payload.classifierModel;
-      state.classifierTask = action.payload.classifierTask;
-      state.classifierId = action.payload.classifierId;
-      state.classifierStep = action.payload.classifierStep || 0;
-      state.classifierClassIds = action.payload.classifierClassIds || [];
-      state.classifierSdocIds = action.payload.classifierSdocIds || [];
-      state.classifierMergeChildren = action.payload.classifierMergeChildren ?? false;
+    openClassifierDialog: (_state, action: PayloadAction<OpenClassifierDialogPayload>) => {
+      const state = createInitialState();
+      state.isOpen = true;
+      state.step = action.payload.initialStep ?? 0;
+      state.context = {
+        projectId: action.payload.projectId,
+        model: action.payload.model,
+        task: action.payload.task,
+        classifierId: action.payload.classifierId,
+      };
+      state.dataset.classIds = action.payload.initialClassIds ?? [];
+      state.dataset.sourceDocumentIds = action.payload.initialSourceDocumentIds ?? [];
+      state.dataset.mergeChildren = action.payload.mergeChildren ?? false;
+      return state;
     },
-    onClassifierDialogSelectClasses: (
+    closeClassifierDialog: () => createInitialState(),
+    nextClassifierDialogStep: (state) => {
+      state.step += 1;
+    },
+    previousClassifierDialogStep: (state) => {
+      state.step = Math.max(0, state.step - 1);
+    },
+    setClassSelection: (
       state,
       action: PayloadAction<{
         classIds: number[];
         mergeChildren: boolean;
       }>,
     ) => {
-      state.classifierClassIds = action.payload.classIds;
-      state.classifierMergeChildren = action.payload.mergeChildren;
-      state.classifierStep += 1;
+      state.dataset.classIds = action.payload.classIds;
+      state.dataset.mergeChildren = action.payload.mergeChildren;
     },
-    onClassifierDialogSetMergeChildren: (state, action: PayloadAction<boolean>) => {
-      state.classifierMergeChildren = action.payload;
+    setSourceDocumentIds: (state, action: PayloadAction<number[]>) => {
+      state.dataset.sourceDocumentIds = action.payload;
     },
-    onClassifierDialogSelectSdocs: (state, action: PayloadAction<number[]>) => {
-      state.classifierSdocIds = action.payload;
-      state.classifierStep += 1;
+    setUserIds: (state, action: PayloadAction<number[]>) => {
+      state.dataset.userIds = action.payload;
     },
-    onClassifierDialogSelectAnnotators: (state, action: PayloadAction<number[]>) => {
-      state.classifierUserIds = action.payload;
+    setTagIds: (state, action: PayloadAction<number[]>) => {
+      state.dataset.tagIds = action.payload;
     },
-    onClassifierDialogSelectTags: (state, action: PayloadAction<number[]>) => {
-      state.classifierTagIds = action.payload;
+    setMergeChildren: (state, action: PayloadAction<boolean>) => {
+      state.dataset.mergeChildren = action.payload;
     },
-    onClassifierDialogSetTrainingSettings: (state, action: PayloadAction<ClassifierTrainingSettings>) => {
-      state.classifierTrainingSettings = action.payload;
-      state.classifierStep += 1;
+    setTrainingSettings: (state, action: PayloadAction<ClassifierTrainingSettings>) => {
+      state.drafts.trainingSettings = action.payload;
     },
-    onClassifierDialogStartJob: (state, action: PayloadAction<string>) => {
-      state.classifierJobId = action.payload;
-      state.classifierStep += 1;
+    setEvaluationAveraging: (state, action: PayloadAction<ClassifierAveraging>) => {
+      state.drafts.evaluationAveraging = action.payload;
     },
-    nextClassifierDialogStep: (state) => {
-      state.classifierStep += 1;
+    setInferenceKeepExisting: (state, action: PayloadAction<boolean>) => {
+      state.drafts.inferenceKeepExisting = action.payload;
     },
-    previousClassifierDialogStep: (state) => {
-      state.classifierStep -= 1;
-      if (state.classifierStep < 0) {
-        state.classifierStep = 0;
-      }
-      if (state.classifierStep === 0) {
-        state.classifierClassIds = initialState.classifierClassIds;
-        state.classifierMergeChildren = initialState.classifierMergeChildren;
-        state.classifierSdocIds = initialState.classifierSdocIds;
-        state.classifierUserIds = initialState.classifierUserIds;
-        state.classifierTagIds = initialState.classifierTagIds;
-      }
-    },
-    closeClassifierDialog: (state) => {
-      state.isClassifierDialogOpen = initialState.isClassifierDialogOpen;
-      state.classifierProjectId = initialState.classifierProjectId;
-      state.classifierModel = initialState.classifierModel;
-      state.classifierTask = initialState.classifierTask;
-      state.classifierId = initialState.classifierId;
-      state.classifierStep = initialState.classifierStep;
-      state.classifierUserIds = initialState.classifierUserIds;
-      state.classifierSdocIds = initialState.classifierSdocIds;
-      state.classifierTagIds = initialState.classifierTagIds;
-      state.classifierClassIds = initialState.classifierClassIds;
-      state.classifierMergeChildren = initialState.classifierMergeChildren;
-      state.classifierTrainingSettings = initialState.classifierTrainingSettings;
-      state.classifierJobId = initialState.classifierJobId;
+    setClassifierJobId: (state, action: PayloadAction<string>) => {
+      state.jobId = action.payload;
     },
   },
 });

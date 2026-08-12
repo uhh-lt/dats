@@ -64,13 +64,13 @@ const content: Record<ClassifierTask, React.ReactNode[]> = {
 
 export const ClassifierDialog = memo(() => {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const step = useAppSelector((state) => state.classifier.classifierStep);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const task = useAppSelector((state) => state.classifier.context.task);
+  const step = useAppSelector((state) => state.classifier.step);
 
   // open/close dialog
   const dispatch = useAppDispatch();
-  const open = useAppSelector((state) => state.classifier.isClassifierDialogOpen);
+  const open = useAppSelector((state) => state.classifier.isOpen);
   const handleClose = useCallback(() => {
     dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);

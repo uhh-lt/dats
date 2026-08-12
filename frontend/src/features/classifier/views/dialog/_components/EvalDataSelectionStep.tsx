@@ -9,11 +9,11 @@ import { DataSelection } from "./DataSelection";
 
 export function EvalDataSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const classIds = useAppSelector((state) => state.classifier.dataset.classIds);
+  const userIds = useAppSelector((state) => state.classifier.dataset.userIds);
+  const tagIds = useAppSelector((state) => state.classifier.dataset.tagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.dataset.mergeChildren);
   const dispatch = useAppDispatch();
 
   // dialog actions
@@ -28,7 +28,7 @@ export function EvalDataSelectionStep() {
     dispatch(ClassifierActions.nextClassifierDialogStep());
   };
   const handleMergeChildrenChange = (event: ChangeEvent<HTMLInputElement>) => {
-    dispatch(ClassifierActions.onClassifierDialogSetMergeChildren(event.target.checked));
+    dispatch(ClassifierActions.setMergeChildren(event.target.checked));
   };
 
   const isNextDisabled =

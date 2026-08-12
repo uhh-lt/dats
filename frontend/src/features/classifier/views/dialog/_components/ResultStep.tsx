@@ -11,7 +11,7 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ResultStep() {
   // global client state
-  const classifierJobId = useAppSelector((state) => state.classifier.classifierJobId);
+  const classifierJobId = useAppSelector((state) => state.classifier.jobId);
   const dispatch = useAppDispatch();
 
   // get the job

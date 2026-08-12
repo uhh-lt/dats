@@ -10,8 +10,8 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function InferDataSelectionStep() {
   // dialog state
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const sdocIds = useAppSelector((state) => state.classifier.classifierSdocIds);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const sdocIds = useAppSelector((state) => state.classifier.dataset.sourceDocumentIds);
   const dispatch = useAppDispatch();
 
   // global server state
@@ -39,7 +39,8 @@ export function InferDataSelectionStep() {
     dispatch(ClassifierActions.closeClassifierDialog());
   }, [dispatch]);
   const handleNext = useCallback(() => {
-    dispatch(ClassifierActions.onClassifierDialogSelectSdocs(selectedSdocIds));
+    dispatch(ClassifierActions.setSourceDocumentIds(selectedSdocIds));
+    dispatch(ClassifierActions.nextClassifierDialogStep());
   }, [dispatch, selectedSdocIds]);
 
   return (

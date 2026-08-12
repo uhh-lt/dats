@@ -20,19 +20,26 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export function ClassSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const classIds = useAppSelector((state) => state.classifier.dataset.classIds);
+  const storedMergeChildren = useAppSelector((state) => state.classifier.dataset.mergeChildren);
 
   // selection state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-  const selectedClassIds = Object.keys(rowSelectionModel).map((key) => parseInt(key));
-  const [mergeChildren, setMergeChildren] = useState<boolean>(false);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
+    Object.fromEntries(classIds.map((classId) => [classId, true])),
+  );
+  const selectedClassIds = Object.entries(rowSelectionModel)
+    .filter(([, selected]) => selected)
+    .map(([key]) => parseInt(key));
+  const [mergeChildren, setMergeChildren] = useState(storedMergeChildren);
 
   // actions
   const dispatch = useAppDispatch();
   const handleNext = useCallback(() => {
     if (selectedClassIds.length === 0) return;
-    dispatch(ClassifierActions.onClassifierDialogSelectClasses({ classIds: selectedClassIds, mergeChildren }));
+    dispatch(ClassifierActions.setClassSelection({ classIds: selectedClassIds, mergeChildren }));
+    dispatch(ClassifierActions.nextClassifierDialogStep());
   }, [dispatch, selectedClassIds, mergeChildren]);
 
   const handleClose = useCallback(() => {
@@ -73,7 +80,7 @@ export function ClassSelectionStep() {
               />
               <FormControlLabel
                 sx={{ margin: 1 }}
-                control={<Switch onChange={(_, checked) => setMergeChildren(checked)} />}
+                control={<Switch checked={mergeChildren} onChange={(_, checked) => setMergeChildren(checked)} />}
                 label="Merge child codes into parent?"
               />
             </>

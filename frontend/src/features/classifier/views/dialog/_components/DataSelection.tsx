@@ -18,16 +18,16 @@ interface DataSelectionProps {
 
 export function DataSelection({ model, datasetStats }: DataSelectionProps) {
   // dialog state
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
+  const userIds = useAppSelector((state) => state.classifier.dataset.userIds);
+  const tagIds = useAppSelector((state) => state.classifier.dataset.tagIds);
 
   // selection actions
   const dispatch = useAppDispatch();
   const handleUserSelection = (userIds: number[]) => {
-    dispatch(ClassifierActions.onClassifierDialogSelectAnnotators(userIds));
+    dispatch(ClassifierActions.setUserIds(userIds));
   };
   const handleTagSelection = (tagIds: number[]) => {
-    dispatch(ClassifierActions.onClassifierDialogSelectTags(tagIds));
+    dispatch(ClassifierActions.setTagIds(tagIds));
   };
 
   return (
