@@ -34,6 +34,7 @@ export function EvalSettingsStep() {
   const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
   const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
   const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
   const dispatch = useAppDispatch();
 
   // read the classifier to pre-fill the averaging strategy from its training settings
@@ -68,6 +69,7 @@ export function EvalSettingsStep() {
       classifier_id: classifierId,
       tag_ids: tagIds,
       user_ids: userIds,
+      merge_children_into_parent: mergeChildren,
       averaging: data.averaging,
     };
 
