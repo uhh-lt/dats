@@ -1,5 +1,6 @@
 from collections import Counter
 from collections.abc import Iterable
+from os import environ
 
 import numpy as np
 from datasets import Dataset
@@ -23,6 +24,11 @@ O_LABEL_NAME = "O"
 # tokens, non-first subwords). PyTorch's default ignore_index.
 IGNORE_LABEL_ID = -100
 GROUPED_SPLIT_CANDIDATES = 100
+
+
+def classifier_progress_bar_enabled() -> bool:
+    """Show Lightning progress bars outside non-interactive CI runs."""
+    return environ.get("CI", "").strip().lower() not in {"1", "true", "yes"}
 
 
 def compute_balanced_class_weights(

@@ -69,6 +69,7 @@ from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_code_label_mappings,
     check_hf_model_exists,
+    classifier_progress_bar_enabled,
     compute_balanced_class_weights,
     grouped_train_test_split,
 )
@@ -850,7 +851,7 @@ class SentClassificationModelService(TextClassificationModelService):
             logger=csv_logger,
             max_epochs=parameters.epochs,
             callbacks=callbacks,
-            enable_progress_bar=True,
+            enable_progress_bar=classifier_progress_bar_enabled(),
             precision=parameters.precision,
             devices=[torch.cuda.current_device()],
             # Special params
@@ -1051,6 +1052,7 @@ class SentClassificationModelService(TextClassificationModelService):
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
+            enable_progress_bar=classifier_progress_bar_enabled(),
             devices=[torch.cuda.current_device()],
         )
         eval_results = trainer.test(model, dataloaders=test_dataloader)[0]
@@ -1185,6 +1187,7 @@ class SentClassificationModelService(TextClassificationModelService):
         csv_logger = CSVLogger(log_dir, name=classifier.name)
         trainer = pl.Trainer(
             logger=csv_logger,
+            enable_progress_bar=classifier_progress_bar_enabled(),
             devices=[torch.cuda.current_device()],
         )
         predictions = trainer.predict(model, dataloaders=inference_dataloader)
