@@ -15,6 +15,7 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
 from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import batch_to_device
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -210,10 +211,10 @@ class SentClassificationLightningModel(pl.LightningModule):
             for document_sentences in sentences
             for sentence in document_sentences
         ]
-        tokenized_sentences = {
-            name: tensor.to(self.device)
-            for name, tensor in self.embedding_model.tokenize(flat_sentences).items()
-        }
+        tokenized_sentences = batch_to_device(
+            self.embedding_model.preprocess(flat_sentences),
+            self.device,
+        )
         if self.freeze_base_model and not self.lora_enabled:
             with torch.no_grad():
                 sentence_embeddings = self.embedding_model(tokenized_sentences)[
