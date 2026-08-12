@@ -279,9 +279,10 @@ METRICS_ARTIFACTS = {
 
 
 class MetricArtifactRow(ClassifierTrainingParams):
-    """One classifier run's training configuration and latest available metrics."""
+    """One classifier run's training configuration and evaluation metrics."""
 
     task_type: Literal[ClassifierTask.TRAINING] = Field(exclude=True)
+    training_precision: str | int | None
     recorded_at: datetime
     evaluation_dataset: Literal["training-validation", "held-out-evaluation"]
     accuracy: float
@@ -300,7 +301,8 @@ class MetricArtifactRow(ClassifierTrainingParams):
     ) -> Self:
         """Combine one typed training request and its latest evaluation."""
         return cls(
-            **training_params.model_dump(),
+            **training_params.model_dump(exclude={"precision"}),
+            training_precision=training_params.precision,
             recorded_at=datetime.now(UTC),
             evaluation_dataset=evaluation_dataset,
             accuracy=evaluation.accuracy,
