@@ -1,15 +1,19 @@
+import csv
 import json
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal, Self, TypedDict
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import Field
 
 from config import conf
 from modules.classifier.classifier_dto import (
     ClassifierAveraging,
     ClassifierEvaluationParams,
+    ClassifierEvaluationRead,
     ClassifierInferenceParams,
     ClassifierJobInput,
     ClassifierModel,
@@ -21,27 +25,6 @@ from systems.job_system.job_dto import JobStatus
 # Smallest configured base models keep training fast on the GPU runner.
 TRANSFORMER_BASE = conf.classifier.transformer_models[0].value
 EMBEDDING_BASE = conf.classifier.embedding_models[0].value
-METRICS_ARTIFACT = (
-    Path(__file__).parents[3] / "test-results" / "classifier-metrics.jsonl"
-)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def initialize_metrics_artifact():
-    """Create an empty JSONL metrics artifact once for the E2E test session."""
-    METRICS_ARTIFACT.parent.mkdir(parents=True, exist_ok=True)
-    METRICS_ARTIFACT.write_text("", encoding="utf-8")
-
-
-def _write_metrics_artifact(report_type: str, data: dict):
-    """Append one timestamped report record to the classifier JSONL artifact."""
-    record = {
-        "recorded_at": datetime.now(UTC).isoformat(),
-        "report_type": report_type,
-        "data": data,
-    }
-    with METRICS_ARTIFACT.open("a", encoding="utf-8") as artifact:
-        artifact.write(json.dumps(record) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -95,8 +78,31 @@ def _start_job(client: TestClient, payload: ClassifierJobInput) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# HELPERS
+# REQUEST PAYLOADS
 # ---------------------------------------------------------------------------
+
+
+class ClassifierTrainingTestPayload(TypedDict):
+    freeze_base_model: bool
+    classifier_name_suffix: str
+
+
+classifier_training_params = [
+    pytest.param(
+        {
+            "freeze_base_model": True,
+            "classifier_name_suffix": "frozen-base",
+        },
+        id="train-head-only",
+    ),
+    pytest.param(
+        {
+            "freeze_base_model": False,
+            "classifier_name_suffix": "full-model",
+        },
+        id="train-full-model",
+    ),
+]
 
 
 def _training_payload(
@@ -107,14 +113,15 @@ def _training_payload(
     class_ids: list[int],
     user_ids: list[int],
     tag_ids: list[int],
+    freeze_base_model: bool,
 ) -> ClassifierJobInput:
-    """Build the typed, shared two-epoch training request used by all model E2Es."""
+    """Build a typed two-epoch training request for either training mode."""
     training_params = ClassifierTrainingParams(
         task_type=ClassifierTask.TRAINING,
         classifier_name=name,
         base_name=base_name,
         adapter_name=None,
-        freeze_base_model=True,
+        freeze_base_model=freeze_base_model,
         class_ids=class_ids,
         user_ids=user_ids,
         tag_ids=tag_ids,
@@ -183,6 +190,11 @@ def _inference_payload(
     )
 
 
+# ---------------------------------------------------------------------------
+# METRIC ASSERTIONS
+# ---------------------------------------------------------------------------
+
+
 def _assert_metrics_in_range(evaluation: dict):
     """Assert that every persisted overall metric is a valid normalized score."""
     for key in ("f1", "precision", "recall", "accuracy"):
@@ -227,6 +239,105 @@ def _assert_metrics_expected(
 
 
 # ---------------------------------------------------------------------------
+# METRIC ARTIFACTS
+# ---------------------------------------------------------------------------
+
+METRICS_ARTIFACT_DIR = Path(__file__).parents[3] / "test-results"
+METRICS_ARTIFACTS = {
+    ClassifierModel.SPAN: METRICS_ARTIFACT_DIR / "span-classification.csv",
+    ClassifierModel.DOCUMENT: METRICS_ARTIFACT_DIR / "doc-classification.csv",
+    ClassifierModel.SENTENCE: METRICS_ARTIFACT_DIR / "sent-classification.csv",
+}
+
+
+class MetricArtifactRow(ClassifierTrainingParams):
+    """One classifier run's training configuration and held-out metrics."""
+
+    task_type: Literal[ClassifierTask.TRAINING] = Field(exclude=True)
+    recorded_at: datetime
+    accuracy: float
+    precision: float
+    recall: float
+    f1: float
+    class_f1_scores: dict[str, float] = Field(exclude=True)
+
+    @classmethod
+    def from_run(
+        cls,
+        training_params: ClassifierTrainingParams,
+        evaluation: ClassifierEvaluationRead,
+        id2name: dict[int, str],
+    ) -> Self:
+        """Combine one typed training request and its held-out evaluation."""
+        return cls(
+            **training_params.model_dump(),
+            recorded_at=datetime.now(UTC),
+            accuracy=evaluation.accuracy,
+            precision=evaluation.precision,
+            recall=evaluation.recall,
+            f1=evaluation.f1,
+            class_f1_scores={
+                id2name[metric.class_id]: metric.f1
+                for metric in evaluation.class_metrics
+            },
+        )
+
+    def to_csv_row(self) -> dict[str, str | int | float | bool]:
+        """Flatten class F1 scores and serialize this run as one CSV row."""
+        serialized_row = self.model_dump(mode="json")
+        serialized_row.update(
+            {
+                f"{class_name}_f1": f1
+                for class_name, f1 in sorted(self.class_f1_scores.items())
+            }
+        )
+
+        csv_row: dict[str, str | int | float | bool] = {}
+        for column, value in serialized_row.items():
+            if isinstance(value, (dict, list)):
+                csv_row[column] = json.dumps(value, sort_keys=True)
+            elif value is None:
+                csv_row[column] = ""
+            else:
+                csv_row[column] = value
+        return csv_row
+
+
+@pytest.fixture(scope="session", autouse=True)
+def initialize_metrics_artifact():
+    """Create one empty classifier metrics CSV per E2E dataset."""
+    METRICS_ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    for artifact in METRICS_ARTIFACTS.values():
+        artifact.write_text("", encoding="utf-8")
+
+
+def _write_metrics_artifact(
+    model_type: ClassifierModel,
+    row: MetricArtifactRow,
+) -> None:
+    """Append one run, with dataset-specific class F1 columns, to its CSV."""
+    artifact = METRICS_ARTIFACTS[model_type]
+    csv_row = row.to_csv_row()
+    fieldnames = list(csv_row)
+
+    write_header = artifact.stat().st_size == 0
+    if not write_header:
+        with artifact.open(encoding="utf-8", newline="") as file:
+            existing_fieldnames = next(csv.reader(file))
+        if existing_fieldnames != fieldnames:
+            raise ValueError(
+                f"Metrics columns changed between {model_type.value} runs: "
+                f"{existing_fieldnames} != {fieldnames}"
+            )
+
+    with artifact.open("a", encoding="utf-8", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        if write_header:
+            writer.writeheader()
+        writer.writerow(csv_row)
+
+
+# ---------------------------------------------------------------------------
 # REPORTING HELPERS (ASCII tables mirroring the frontend plots)
 # ---------------------------------------------------------------------------
 
@@ -259,29 +370,12 @@ def _report_training(
     id2name: dict[int, str],
     dataset_tag_name: str,
 ):
-    """Report persisted training data, losses, and internal validation results.
+    """Report persisted training data and epoch losses.
 
-    Write the complete training record to the JSONL artifact, print tables to
-    captured output, and report each evaluation stored with the classifier.
-    Table headings reflect the configured train/validation split and selection
-    tag.
+    Table headings reflect the configured training split and selection tag.
     """
     validation_percentage = classifier["train_params"]["train_test_split"] * 100
     training_percentage = 100 - validation_percentage
-    _write_metrics_artifact(
-        "training",
-        {
-            "classifier_id": classifier["id"],
-            "classifier_name": classifier["name"],
-            "model_type": classifier["type"],
-            "train_data_stats": classifier["train_data_stats"],
-            "train_loss": classifier["train_loss"],
-            "train_params": classifier["train_params"],
-            "evaluations": classifier["evaluations"],
-            "class_names": id2name,
-            "dataset_tag": dataset_tag_name,
-        },
-    )
     print(
         f"\n{'=' * 72}\nTRAIN  {classifier['name']}  (id={classifier['id']})\n{'=' * 72}"
     )
@@ -305,17 +399,6 @@ def _report_training(
     ]
     _print_table("Training loss (per epoch)", ["epoch", "loss"], loss_rows)
 
-    for evaluation in classifier["evaluations"]:
-        _report_evaluation(
-            evaluation,
-            id2name,
-            title="Training validation",
-            dataset_scope=(
-                f"{validation_percentage:g}% split of documents tagged "
-                f'"{dataset_tag_name}"'
-            ),
-        )
-
 
 def _report_evaluation(
     evaluation: dict,
@@ -325,18 +408,10 @@ def _report_evaluation(
 ):
     """Report evaluation data counts and overall/per-class metrics.
 
-    Append the report to the JSONL artifact before printing its available data,
-    overall scores, and per-class scores to captured test output.
+    Print the available data, overall scores, and per-class scores to captured
+    test output.
     """
     scoped_title = f"{title} ({dataset_scope})"
-    _write_metrics_artifact(
-        "evaluation",
-        {
-            "title": scoped_title,
-            "evaluation": evaluation,
-            "class_names": id2name,
-        },
-    )
     stats_rows = [
         [id2name.get(s["class_id"], str(s["class_id"])), str(s["num_examples"])]
         for s in evaluation.get("eval_data_stats", [])
@@ -381,15 +456,7 @@ def _report_inference(
     id2name: dict[int, str],
     dataset_tag_name: str,
 ):
-    """Report inference prediction counts and append them to the JSONL artifact."""
-    _write_metrics_artifact(
-        "inference",
-        {
-            "output": output,
-            "class_names": id2name,
-            "dataset_tag": dataset_tag_name,
-        },
-    )
+    """Report inference prediction counts to captured test output."""
     rows = [
         [id2name.get(s["class_id"], str(s["class_id"])), str(s["num_examples"])]
         for s in output["result_statistics"]
@@ -409,14 +476,20 @@ def _report_inference(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("payload", classifier_training_params)
 def test_span_classifier_train_eval_infer(
-    client: TestClient, db_session, conll_span_dataset, test_user
+    client: TestClient,
+    db_session,
+    conll_span_dataset,
+    test_user,
+    payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for span classification on CoNLL-2003.
 
-    Use disjoint tag-selected document subsets for training, held-out
-    evaluation, and inference; verify persisted metrics against conservative
-    quality floors and retain reports even when an assertion later fails.
+    Run once with a frozen base model and once with the complete model trainable.
+    Train on the training split, validate on its remaining split, evaluate on a
+    separate held-out subset, and infer on the test subset. Apply conservative
+    quality floors to both evaluations.
     """
     project = conll_span_dataset["project"]
     codes = conll_span_dataset["codes"]
@@ -424,36 +497,48 @@ def test_span_classifier_train_eval_infer(
     class_ids = [c.id for c in codes.values()]
     id2name = {c.id: name for name, c in codes.items()}
 
-    # TRAIN on the training-data subset
-    job = _start_job(
-        client,
-        _training_payload(
-            project.id,
-            ClassifierModel.SPAN,
-            "span-clf",
-            TRANSFORMER_BASE,
-            class_ids,
-            [test_user.id],
-            [tags["train"].id],
-        ),
+    # TRAIN on the training split of the training-data subset
+    training_request = _training_payload(
+        project.id,
+        ClassifierModel.SPAN,
+        f"span-clf-{payload['classifier_name_suffix']}",
+        TRANSFORMER_BASE,
+        class_ids,
+        [test_user.id],
+        [tags["train"].id],
+        payload["freeze_base_model"],
     )
-    finished = _wait_for_job(client, job["job_id"])
-    output = finished["output"]["task_output"]
-    classifier = output["classifier"]
+    training_params = training_request.task_parameters
+    assert isinstance(training_params, ClassifierTrainingParams)
+    train_job = _start_job(client, training_request)
+    train_finished = _wait_for_job(client, train_job["job_id"])
+    train_output = train_finished["output"]["task_output"]
+    classifier = train_output["classifier"]
     _report_training(classifier, id2name, tags["train"].name)
     assert classifier["type"] == "span"
     assert len(classifier["evaluations"]) == 1
-    _assert_metrics_in_range(classifier["evaluations"][0])
-    # Floors leave headroom below the observed two-epoch CoNLL metrics while
-    # still detecting a materially degraded training run.
+    classifier_id = classifier["id"]
+
+    # VALIDATE on the validation split of the training-data subset
+    training_validation = classifier["evaluations"][0]
+    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    _report_evaluation(
+        training_validation,
+        id2name,
+        title="Training validation",
+        dataset_scope=(
+            f"{validation_percentage:g}% split of documents tagged "
+            f'"{tags["train"].name}"'
+        ),
+    )
+    _assert_metrics_in_range(training_validation)
     _assert_metrics_expected(
-        classifier["evaluations"][0],
+        training_validation,
         min_f1=0.65,
         min_precision=0.58,
         min_recall=0.70,
         min_accuracy=0.85,
     )
-    classifier_id = classifier["id"]
 
     # EVALUATE on the held-out evaluation-data subset
     eval_job = _start_job(
@@ -474,6 +559,11 @@ def test_span_classifier_train_eval_infer(
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{tags["eval"].name}"',
     )
+    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    _write_metrics_artifact(
+        ClassifierModel.SPAN,
+        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+    )
     _assert_metrics_in_range(eval_output["evaluation"])
     _assert_metrics_expected(
         eval_output["evaluation"],
@@ -482,6 +572,7 @@ def test_span_classifier_train_eval_infer(
         min_recall=0.70,
         min_accuracy=0.85,
     )
+
     # INFER on the held-out test-data subset
     infer_job = _start_job(
         client,
@@ -503,14 +594,19 @@ def test_span_classifier_train_eval_infer(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("payload", classifier_training_params)
 def test_document_classifier_train_eval_infer(
-    client: TestClient, db_session, news20_doc_dataset
+    client: TestClient,
+    db_session,
+    news20_doc_dataset,
+    payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for document classification on 20NG.
 
-    Use disjoint tag-selected document subsets, validate document-level overall
-    metrics, and require all but one low-support class to meet the per-class F1
-    floor. Reports are persisted before quality assertions run.
+    Run once with a frozen base model and once with the complete model trainable.
+    Train on the training split, validate on its remaining split, evaluate on a
+    separate held-out subset, and infer on the test subset. Require all but one
+    low-support class to meet the per-class F1 floor in both evaluations.
     """
     project = news20_doc_dataset["project"]
     tags = news20_doc_dataset["tags"]
@@ -518,31 +614,43 @@ def test_document_classifier_train_eval_infer(
     class_ids = [t.id for t in tags.values()]
     id2name = {t.id: name for name, t in tags.items()}
 
-    # TRAIN on the training-data subset
-    job = _start_job(
-        client,
-        _training_payload(
-            project.id,
-            ClassifierModel.DOCUMENT,
-            "doc-clf",
-            TRANSFORMER_BASE,
-            class_ids,
-            [],
-            [subset_tags["train"].id],
-        ),
+    # TRAIN on the training split of the training-data subset
+    training_request = _training_payload(
+        project.id,
+        ClassifierModel.DOCUMENT,
+        f"doc-clf-{payload['classifier_name_suffix']}",
+        TRANSFORMER_BASE,
+        class_ids,
+        [],
+        [subset_tags["train"].id],
+        payload["freeze_base_model"],
     )
-    finished = _wait_for_job(client, job["job_id"])
-    output = finished["output"]["task_output"]
-    classifier = output["classifier"]
+    training_params = training_request.task_parameters
+    assert isinstance(training_params, ClassifierTrainingParams)
+    train_job = _start_job(client, training_request)
+    train_finished = _wait_for_job(client, train_job["job_id"])
+    train_output = train_finished["output"]["task_output"]
+    classifier = train_output["classifier"]
     _report_training(classifier, id2name, subset_tags["train"].name)
     assert classifier["type"] == "document"
     assert len(classifier["evaluations"]) == 1
-    _assert_metrics_in_range(classifier["evaluations"][0])
-    # Correct document-level runs reach roughly 0.62-0.68 micro-F1. Keep a
-    # conservative overall floor and tolerate the single small, difficult
-    # talk.religion.misc class falling below the per-class floor.
+    classifier_id = classifier["id"]
+
+    # VALIDATE on the validation split of the training-data subset
+    training_validation = classifier["evaluations"][0]
+    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    _report_evaluation(
+        training_validation,
+        id2name,
+        title="Training validation",
+        dataset_scope=(
+            f"{validation_percentage:g}% split of documents tagged "
+            f'"{subset_tags["train"].name}"'
+        ),
+    )
+    _assert_metrics_in_range(training_validation)
     _assert_metrics_expected(
-        classifier["evaluations"][0],
+        training_validation,
         min_f1=0.58,
         min_precision=0.58,
         min_recall=0.58,
@@ -550,7 +658,6 @@ def test_document_classifier_train_eval_infer(
         min_class_f1=0.35,
         max_classes_below_f1_floor=1,
     )
-    classifier_id = classifier["id"]
 
     # EVALUATE on the held-out evaluation-data subset
     eval_job = _start_job(
@@ -571,6 +678,11 @@ def test_document_classifier_train_eval_infer(
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{subset_tags["eval"].name}"',
     )
+    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    _write_metrics_artifact(
+        ClassifierModel.DOCUMENT,
+        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+    )
     _assert_metrics_in_range(eval_output["evaluation"])
     _assert_metrics_expected(
         eval_output["evaluation"],
@@ -581,6 +693,7 @@ def test_document_classifier_train_eval_infer(
         min_class_f1=0.35,
         max_classes_below_f1_floor=1,
     )
+
     # INFER on the held-out test-data subset
     infer_job = _start_job(
         client,
@@ -602,14 +715,20 @@ def test_document_classifier_train_eval_infer(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("payload", classifier_training_params)
 def test_sentence_classifier_train_eval_infer(
-    client: TestClient, db_session, csabstruct_sent_dataset, test_user
+    client: TestClient,
+    db_session,
+    csabstruct_sent_dataset,
+    test_user,
+    payload: ClassifierTrainingTestPayload,
 ):
     """Train, evaluate, and run inference for sentence classification on CSAbstruct.
 
-    Use disjoint tag-selected document subsets and the selected annotator,
-    assert conservative overall and per-class metric floors, and persist each
-    report before evaluating its quality.
+    Run once with a frozen base model and once with the complete model trainable.
+    Train on the training split, validate on its remaining split, evaluate on a
+    separate held-out subset, and infer on the test subset using the selected
+    annotator. Apply conservative quality floors to both evaluations.
     """
     project = csabstruct_sent_dataset["project"]
     codes = csabstruct_sent_dataset["codes"]
@@ -617,35 +736,48 @@ def test_sentence_classifier_train_eval_infer(
     class_ids = [c.id for c in codes.values()]
     id2name = {c.id: name for name, c in codes.items()}
 
-    # TRAIN on the training-data subset
-    job = _start_job(
-        client,
-        _training_payload(
-            project.id,
-            ClassifierModel.SENTENCE,
-            "sent-clf",
-            EMBEDDING_BASE,
-            class_ids,
-            [test_user.id],
-            [tags["train"].id],
-        ),
+    # TRAIN on the training split of the training-data subset
+    training_request = _training_payload(
+        project.id,
+        ClassifierModel.SENTENCE,
+        f"sent-clf-{payload['classifier_name_suffix']}",
+        EMBEDDING_BASE,
+        class_ids,
+        [test_user.id],
+        [tags["train"].id],
+        payload["freeze_base_model"],
     )
-    finished = _wait_for_job(client, job["job_id"])
-    output = finished["output"]["task_output"]
-    classifier = output["classifier"]
+    training_params = training_request.task_parameters
+    assert isinstance(training_params, ClassifierTrainingParams)
+    train_job = _start_job(client, training_request)
+    train_finished = _wait_for_job(client, train_job["job_id"])
+    train_output = train_finished["output"]["task_output"]
+    classifier = train_output["classifier"]
     _report_training(classifier, id2name, tags["train"].name)
     assert classifier["type"] == "sentence"
     assert len(classifier["evaluations"]) == 1
-    _assert_metrics_in_range(classifier["evaluations"][0])
-    # CSAbstruct with gte-modernbert-base reaches ~0.65 micro-f1; 0.45 is a safe floor.
+    classifier_id = classifier["id"]
+
+    # VALIDATE on the validation split of the training-data subset
+    training_validation = classifier["evaluations"][0]
+    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    _report_evaluation(
+        training_validation,
+        id2name,
+        title="Training validation",
+        dataset_scope=(
+            f"{validation_percentage:g}% split of documents tagged "
+            f'"{tags["train"].name}"'
+        ),
+    )
+    _assert_metrics_in_range(training_validation)
     _assert_metrics_expected(
-        classifier["evaluations"][0],
+        training_validation,
         min_f1=0.45,
         min_precision=0.45,
         min_recall=0.45,
         min_accuracy=0.45,
     )
-    classifier_id = classifier["id"]
 
     # EVALUATE on the held-out evaluation-data subset
     eval_job = _start_job(
@@ -666,6 +798,11 @@ def test_sentence_classifier_train_eval_infer(
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{tags["eval"].name}"',
     )
+    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    _write_metrics_artifact(
+        ClassifierModel.SENTENCE,
+        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+    )
     _assert_metrics_in_range(eval_output["evaluation"])
     _assert_metrics_expected(
         eval_output["evaluation"],
@@ -674,6 +811,7 @@ def test_sentence_classifier_train_eval_infer(
         min_recall=0.45,
         min_accuracy=0.45,
     )
+
     # INFER on the held-out test-data subset
     infer_job = _start_job(
         client,
@@ -705,6 +843,7 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
         [],
         [],
         [],
+        True,
     )
     job = _start_job(client, payload)
     # The job should fail; _wait_for_job fails the test with the status message.
