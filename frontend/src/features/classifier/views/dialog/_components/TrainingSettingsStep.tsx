@@ -22,8 +22,6 @@ import { SubmitErrorHandler, useForm, useWatch } from "react-hook-form";
 import { ClassifierHooks } from "../../../_api/classifierQueryOptions";
 import { ClassifierActions, ClassifierTrainingSettings } from "../../../store/classifierSlice";
 
-const adapterOptions = ["No Adapter", "LoRA", "LoHa", "AdaLoRA", "RandLora"];
-
 const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"];
 
 const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
@@ -62,13 +60,18 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<ClassifierTrainingSettings>({
     defaultValues: {
       classifier_name: "",
       // default base model depends on the classifier model type
       base_name: baseModelOptions?.[0]?.value ?? "",
-      adapter_name: trainingDefaults.adapter_name ?? "No Adapter",
+      lora_enabled: trainingDefaults.lora_enabled,
+      lora_rank: trainingDefaults.lora_rank,
+      lora_alpha: trainingDefaults.lora_alpha,
+      lora_dropout: trainingDefaults.lora_dropout,
+      freeze_base_model: trainingDefaults.lora_enabled ? true : trainingDefaults.freeze_base_model,
       epochs: trainingDefaults.epochs,
       batch_size: trainingDefaults.batch_size,
       early_stopping: trainingDefaults.early_stopping,
@@ -88,15 +91,23 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const onSubmit = (data: ClassifierTrainingSettings) => {
-    dispatch(
-      ClassifierActions.onClassifierDialogSetTrainingSettings({
-        ...data,
-        adapter_name: data.adapter_name === "No Adapter" ? null : data.adapter_name,
-      }),
-    );
+    dispatch(ClassifierActions.onClassifierDialogSetTrainingSettings(data));
   };
   const onError: SubmitErrorHandler<ClassifierTrainingSettings> = (data) => console.error(data);
   const earlyStoppingEnabled = useWatch({ control, name: "early_stopping" });
+  const loraEnabled = useWatch({ control, name: "lora_enabled" });
+
+  const handleLoraEnabledChange = (enabled: boolean) => {
+    if (enabled) {
+      setValue("freeze_base_model", true, { shouldDirty: true, shouldValidate: true });
+    }
+  };
+
+  const handleFreezeBaseModelChange = (frozen: boolean) => {
+    if (!frozen) {
+      setValue("lora_enabled", false, { shouldDirty: true, shouldValidate: true });
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onError)} className="myFlexContainer myFlexFillAllContainer">
@@ -147,26 +158,104 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
                 }}
               />
             </FormItem>
-            <FormItem title="Adapter Name" subtitle="Choose a PEFT method to optimize number of trainable parameters.">
-              <FormMenu
-                name="adapter_name"
+            <FormItem
+              title="Freeze Base Model"
+              subtitle={
+                loraEnabled
+                  ? "LoRA requires a frozen base model. Turning this off also disables LoRA."
+                  : "Train only the classifier head instead of updating the pretrained base model."
+              }
+            >
+              <FormSwitch
+                name="freeze_base_model"
                 control={control}
-                textFieldProps={{
-                  label: "Adapter",
-                  error: Boolean(errors.adapter_name),
-                  helperText: <ErrorMessage errors={errors} name="adapter_name" />,
-                  variant: "filled",
-                  fullWidth: true,
-                  disabled: true,
-                }}
-              >
-                {adapterOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </FormMenu>
+                switchProps={{ size: "medium", color: "primary" }}
+                boxProps={{ sx: { ml: 2 } }}
+                onValueChange={handleFreezeBaseModelChange}
+              />
             </FormItem>
+            <FormItem
+              title="LoRA"
+              subtitle="Train low-rank adapters. Enabling LoRA automatically freezes the pretrained base model."
+            >
+              <FormSwitch
+                name="lora_enabled"
+                control={control}
+                switchProps={{ size: "medium", color: "primary" }}
+                boxProps={{ sx: { ml: 2 } }}
+                onValueChange={handleLoraEnabledChange}
+              />
+            </FormItem>
+            <Box
+              sx={{
+                borderLeft: 3,
+                borderColor: loraEnabled ? "primary.main" : "divider",
+                pl: 1,
+                opacity: loraEnabled ? 1 : 0.6,
+                transition: (theme) =>
+                  theme.transitions.create(["border-color", "opacity"], {
+                    duration: theme.transitions.duration.short,
+                  }),
+              }}
+            >
+              <Stack spacing={2}>
+                <FormItem title="LoRA Rank" subtitle="Set the capacity of the low-rank update matrices.">
+                  <FormNumber
+                    name="lora_rank"
+                    control={control}
+                    rules={{ required: "Required", min: { value: 1, message: "Must be at least 1" } }}
+                    textFieldProps={{
+                      label: "Rank",
+                      variant: "filled",
+                      inputProps: { min: 1, step: 1 },
+                      size: "small",
+                      fullWidth: true,
+                      disabled: !loraEnabled,
+                      error: Boolean(errors.lora_rank),
+                      helperText: <ErrorMessage errors={errors} name="lora_rank" />,
+                    }}
+                  />
+                </FormItem>
+                <FormItem title="LoRA Alpha" subtitle="Set the scaling factor applied to LoRA updates.">
+                  <FormNumber
+                    name="lora_alpha"
+                    control={control}
+                    rules={{ required: "Required", min: { value: 1, message: "Must be at least 1" } }}
+                    textFieldProps={{
+                      label: "Alpha",
+                      variant: "filled",
+                      inputProps: { min: 1, step: 1 },
+                      size: "small",
+                      fullWidth: true,
+                      disabled: !loraEnabled,
+                      error: Boolean(errors.lora_alpha),
+                      helperText: <ErrorMessage errors={errors} name="lora_alpha" />,
+                    }}
+                  />
+                </FormItem>
+                <FormItem title="LoRA Dropout" subtitle="Set the dropout probability inside LoRA layers.">
+                  <FormNumber
+                    name="lora_dropout"
+                    control={control}
+                    rules={{
+                      required: "Required",
+                      min: { value: 0, message: "Must be at least 0" },
+                      max: { value: 0.99, message: "Must be below 1" },
+                    }}
+                    textFieldProps={{
+                      label: "LoRA Dropout",
+                      variant: "filled",
+                      inputProps: { min: 0, max: 0.99, step: 0.01 },
+                      size: "small",
+                      fullWidth: true,
+                      disabled: !loraEnabled,
+                      error: Boolean(errors.lora_dropout),
+                      helperText: <ErrorMessage errors={errors} name="lora_dropout" />,
+                    }}
+                  />
+                </FormItem>
+              </Stack>
+            </Box>
           </FormBox>
 
           <FormBox title="Expert configuration">

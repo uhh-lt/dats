@@ -3,19 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ClassifierAveraging } from "./ClassifierAveraging";
-export type ClassifierTrainingParams = {
-  /**
-   * IDs of document tags that select the dataset's source documents
-   */
-  tag_ids: Array<number>;
-  /**
-   * IDs of annotators whose annotations should be used for sentence and span classification; ignored for document classification
-   */
-  user_ids: Array<number>;
-  /**
-   * Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification
-   */
-  merge_children_into_parent: boolean;
+export type ClassifierTrainingSettings = {
   /**
    * Whether to train with a LoRA adapter
    */
@@ -96,17 +84,4 @@ export type ClassifierTrainingParams = {
    * Evaluation metric averaging strategy
    */
   averaging: ClassifierAveraging;
-  task_type: string;
-  /**
-   * Name of the model to train
-   */
-  classifier_name: string;
-  /**
-   * Name of the base model
-   */
-  base_name: string;
-  /**
-   * List of class IDs to train on (tag or code)
-   */
-  class_ids: Array<number>;
 };

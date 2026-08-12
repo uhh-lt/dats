@@ -7848,16 +7848,6 @@
       },
       "ClassifierDatasetStatisticsRequest": {
         "properties": {
-          "model": {
-            "$ref": "#/components/schemas/ClassifierModel",
-            "description": "Classifier type whose dataset construction should be inspected. Document classifiers use tags as classes, while sentence and span classifiers use codes and selected annotators."
-          },
-          "base_model_name": {
-            "type": "string",
-            "minLength": 1,
-            "title": "Base Model Name",
-            "description": "Hugging Face base model selected for training. Span statistics use its tokenizer to align word annotations with model tokens; document and sentence statistics currently do not depend on it."
-          },
           "tag_ids": {
             "items": { "type": "integer" },
             "type": "array",
@@ -7870,21 +7860,30 @@
             "title": "User Ids",
             "description": "IDs of annotators whose annotations should be used for sentence and span classification; ignored for document classification"
           },
+          "merge_children_into_parent": {
+            "type": "boolean",
+            "title": "Merge Children Into Parent",
+            "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ClassifierModel",
+            "description": "Classifier type whose dataset construction should be inspected. Document classifiers use tags as classes, while sentence and span classifiers use codes and selected annotators."
+          },
+          "base_model_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Base Model Name",
+            "description": "Hugging Face base model selected for training. Span statistics use its tokenizer to align word annotations with model tokens; document and sentence statistics currently do not depend on it."
+          },
           "class_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "Class Ids",
             "description": "Selected tag IDs for document classification or code IDs for sentence and span classification"
-          },
-          "merge_children_into_parent": {
-            "type": "boolean",
-            "title": "Merge Children Into Parent",
-            "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification",
-            "default": false
           }
         },
         "type": "object",
-        "required": ["model", "base_model_name", "tag_ids", "user_ids", "class_ids"],
+        "required": ["tag_ids", "user_ids", "merge_children_into_parent", "model", "base_model_name", "class_ids"],
         "title": "ClassifierDatasetStatisticsRequest"
       },
       "ClassifierEvaluationOutput": {
@@ -7901,23 +7900,28 @@
       },
       "ClassifierEvaluationParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
-          "classifier_id": {
-            "type": "integer",
-            "title": "Classifier Id",
-            "description": "ID of the model to evaluate"
-          },
           "tag_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "Tag Ids",
-            "description": "List of Tag IDs to evaluate on"
+            "description": "IDs of document tags that select the dataset's source documents"
           },
           "user_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "User Ids",
-            "description": "User IDs whose annotations serve as gold labels"
+            "description": "IDs of annotators whose annotations should be used for sentence and span classification; ignored for document classification"
+          },
+          "merge_children_into_parent": {
+            "type": "boolean",
+            "title": "Merge Children Into Parent",
+            "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification"
+          },
+          "task_type": { "type": "string", "const": "evaluation", "title": "Task Type" },
+          "classifier_id": {
+            "type": "integer",
+            "title": "Classifier Id",
+            "description": "ID of the model to evaluate"
           },
           "averaging": {
             "anyOf": [{ "$ref": "#/components/schemas/ClassifierAveraging" }, { "type": "null" }],
@@ -7925,7 +7929,7 @@
           }
         },
         "type": "object",
-        "required": ["task_type", "classifier_id", "tag_ids", "user_ids"],
+        "required": ["tag_ids", "user_ids", "merge_children_into_parent", "task_type", "classifier_id"],
         "title": "ClassifierEvaluationParams"
       },
       "ClassifierEvaluationRead": {
@@ -8027,7 +8031,7 @@
             "description": "Selectable embedding base models (sentence classification)"
           },
           "training_params": {
-            "$ref": "#/components/schemas/ClassifierTrainingDefaults",
+            "$ref": "#/components/schemas/ClassifierTrainingSettings",
             "description": "Backend-configured defaults for classifier training"
           }
         },
@@ -8253,78 +8257,6 @@
         "enum": ["training", "evaluation", "inference"],
         "title": "ClassifierTask"
       },
-      "ClassifierTrainingDefaults": {
-        "properties": {
-          "adapter_name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Adapter Name",
-            "description": "Default adapter to use, or null to train without an adapter"
-          },
-          "epochs": { "type": "integer", "title": "Epochs", "description": "Default number of training epochs" },
-          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Default training batch size" },
-          "early_stopping": {
-            "type": "boolean",
-            "title": "Early Stopping",
-            "description": "Whether early stopping is enabled"
-          },
-          "early_stopping_patience": {
-            "type": "integer",
-            "title": "Early Stopping Patience",
-            "description": "Default validation patience for early stopping"
-          },
-          "train_test_split": {
-            "type": "number",
-            "title": "Train Test Split",
-            "description": "Default fraction of training data reserved for validation"
-          },
-          "learning_rate": { "type": "number", "title": "Learning Rate", "description": "Default learning rate" },
-          "weight_decay": { "type": "number", "title": "Weight Decay", "description": "Default weight decay" },
-          "dropout": { "type": "number", "title": "Dropout", "description": "Default dropout rate" },
-          "chunk_size": { "type": "integer", "title": "Chunk Size", "description": "Default token chunk size" },
-          "precision": {
-            "anyOf": [
-              { "type": "integer", "enum": [64, 32, 16] },
-              {
-                "type": "string",
-                "enum": [
-                  "transformer-engine",
-                  "transformer-engine-float16",
-                  "16-true",
-                  "16-mixed",
-                  "bf16-true",
-                  "bf16-mixed",
-                  "32-true",
-                  "64-true"
-                ]
-              },
-              { "type": "string", "enum": ["64", "32", "16", "bf16"] },
-              { "type": "null" }
-            ],
-            "title": "Precision",
-            "description": "Default Lightning training precision"
-          },
-          "averaging": {
-            "$ref": "#/components/schemas/ClassifierAveraging",
-            "description": "Default evaluation metric averaging strategy"
-          }
-        },
-        "type": "object",
-        "required": [
-          "adapter_name",
-          "epochs",
-          "batch_size",
-          "early_stopping",
-          "early_stopping_patience",
-          "train_test_split",
-          "learning_rate",
-          "weight_decay",
-          "dropout",
-          "chunk_size",
-          "precision",
-          "averaging"
-        ],
-        "title": "ClassifierTrainingDefaults"
-      },
       "ClassifierTrainingOutput": {
         "properties": {
           "task_type": { "type": "string", "const": "training", "title": "Task Type" },
@@ -8336,43 +8268,64 @@
       },
       "ClassifierTrainingParams": {
         "properties": {
-          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
-          "classifier_name": {
-            "type": "string",
-            "title": "Classifier Name",
-            "description": "Name of the model to train"
-          },
-          "base_name": { "type": "string", "title": "Base Name", "description": "Name of the base model" },
-          "adapter_name": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Adapter Name",
-            "description": "Name of the adapter to use (if any)"
-          },
-          "class_ids": {
+          "tag_ids": {
             "items": { "type": "integer" },
             "type": "array",
-            "title": "Class Ids",
-            "description": "List of class IDs to train on (tag or code)"
+            "title": "Tag Ids",
+            "description": "IDs of document tags that select the dataset's source documents"
           },
           "user_ids": {
             "items": { "type": "integer" },
             "type": "array",
             "title": "User Ids",
-            "description": "List of user IDs to train on"
-          },
-          "tag_ids": {
-            "items": { "type": "integer" },
-            "type": "array",
-            "title": "Tag Ids",
-            "description": "List of Tag IDs to train on"
+            "description": "IDs of annotators whose annotations should be used for sentence and span classification; ignored for document classification"
           },
           "merge_children_into_parent": {
             "type": "boolean",
             "title": "Merge Children Into Parent",
-            "description": "Merge child codes in parent code?"
+            "description": "Whether annotations of descendant codes should count toward their selected parent code; only applies to sentence and span classification"
           },
-          "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs to train for" },
-          "batch_size": { "type": "integer", "title": "Batch Size", "description": "Batch size to use for training" },
+          "lora_enabled": {
+            "type": "boolean",
+            "title": "Lora Enabled",
+            "description": "Whether to train with a LoRA adapter"
+          },
+          "lora_rank": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Lora Rank",
+            "description": "Rank of the LoRA update matrices"
+          },
+          "lora_alpha": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Lora Alpha",
+            "description": "Scaling factor applied to LoRA updates"
+          },
+          "lora_dropout": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "minimum": 0,
+            "title": "Lora Dropout",
+            "description": "Dropout probability applied inside LoRA layers"
+          },
+          "freeze_base_model": {
+            "type": "boolean",
+            "title": "Freeze Base Model",
+            "description": "Freeze pretrained base-model weights. Without LoRA, only classifier layers are trained; LoRA requires this setting"
+          },
+          "epochs": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Epochs",
+            "description": "Number of training epochs"
+          },
+          "batch_size": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Batch Size",
+            "description": "Training batch size"
+          },
           "early_stopping": {
             "type": "boolean",
             "title": "Early Stopping",
@@ -8393,19 +8346,29 @@
           },
           "learning_rate": {
             "type": "number",
+            "exclusiveMinimum": 0,
             "title": "Learning Rate",
-            "description": "Learning rate to use for training"
+            "description": "Learning rate"
           },
           "weight_decay": {
             "type": "number",
+            "maximum": 1,
+            "minimum": 0,
             "title": "Weight Decay",
-            "description": "Weight decay to use for training"
+            "description": "Weight decay"
           },
-          "dropout": { "type": "number", "title": "Dropout", "description": "Dropout rate to use in the model" },
+          "dropout": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Dropout",
+            "description": "Model dropout rate"
+          },
           "chunk_size": {
             "type": "integer",
+            "exclusiveMinimum": 0,
             "title": "Chunk Size",
-            "description": "Slice long documents into chunks of size x"
+            "description": "Token chunk size"
           },
           "precision": {
             "anyOf": [
@@ -8427,23 +8390,175 @@
               { "type": "null" }
             ],
             "title": "Precision",
-            "description": "Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
+            "description": "Lightning training precision"
           },
           "averaging": {
             "$ref": "#/components/schemas/ClassifierAveraging",
-            "description": "Averaging strategy for evaluation metrics (micro or macro)"
+            "description": "Evaluation metric averaging strategy"
+          },
+          "task_type": { "type": "string", "const": "training", "title": "Task Type" },
+          "classifier_name": {
+            "type": "string",
+            "title": "Classifier Name",
+            "description": "Name of the model to train"
+          },
+          "base_name": { "type": "string", "title": "Base Name", "description": "Name of the base model" },
+          "class_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "List of class IDs to train on (tag or code)"
           }
         },
         "type": "object",
         "required": [
+          "tag_ids",
+          "user_ids",
+          "merge_children_into_parent",
+          "lora_enabled",
+          "lora_rank",
+          "lora_alpha",
+          "lora_dropout",
+          "freeze_base_model",
+          "epochs",
+          "batch_size",
+          "early_stopping",
+          "early_stopping_patience",
+          "train_test_split",
+          "learning_rate",
+          "weight_decay",
+          "dropout",
+          "chunk_size",
+          "precision",
+          "averaging",
           "task_type",
           "classifier_name",
           "base_name",
-          "adapter_name",
-          "class_ids",
-          "user_ids",
-          "tag_ids",
-          "merge_children_into_parent",
+          "class_ids"
+        ],
+        "title": "ClassifierTrainingParams"
+      },
+      "ClassifierTrainingSettings": {
+        "properties": {
+          "lora_enabled": {
+            "type": "boolean",
+            "title": "Lora Enabled",
+            "description": "Whether to train with a LoRA adapter"
+          },
+          "lora_rank": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Lora Rank",
+            "description": "Rank of the LoRA update matrices"
+          },
+          "lora_alpha": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Lora Alpha",
+            "description": "Scaling factor applied to LoRA updates"
+          },
+          "lora_dropout": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "minimum": 0,
+            "title": "Lora Dropout",
+            "description": "Dropout probability applied inside LoRA layers"
+          },
+          "freeze_base_model": {
+            "type": "boolean",
+            "title": "Freeze Base Model",
+            "description": "Freeze pretrained base-model weights. Without LoRA, only classifier layers are trained; LoRA requires this setting"
+          },
+          "epochs": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Epochs",
+            "description": "Number of training epochs"
+          },
+          "batch_size": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Batch Size",
+            "description": "Training batch size"
+          },
+          "early_stopping": {
+            "type": "boolean",
+            "title": "Early Stopping",
+            "description": "Whether to use early stopping"
+          },
+          "early_stopping_patience": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Early Stopping Patience",
+            "description": "Number of validation epochs without improvement before stopping"
+          },
+          "train_test_split": {
+            "type": "number",
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Train Test Split",
+            "description": "Fraction of selected training data reserved for validation"
+          },
+          "learning_rate": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Learning Rate",
+            "description": "Learning rate"
+          },
+          "weight_decay": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Weight Decay",
+            "description": "Weight decay"
+          },
+          "dropout": {
+            "type": "number",
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Dropout",
+            "description": "Model dropout rate"
+          },
+          "chunk_size": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "title": "Chunk Size",
+            "description": "Token chunk size"
+          },
+          "precision": {
+            "anyOf": [
+              { "type": "integer", "enum": [64, 32, 16] },
+              {
+                "type": "string",
+                "enum": [
+                  "transformer-engine",
+                  "transformer-engine-float16",
+                  "16-true",
+                  "16-mixed",
+                  "bf16-true",
+                  "bf16-mixed",
+                  "32-true",
+                  "64-true"
+                ]
+              },
+              { "type": "string", "enum": ["64", "32", "16", "bf16"] },
+              { "type": "null" }
+            ],
+            "title": "Precision",
+            "description": "Lightning training precision"
+          },
+          "averaging": {
+            "$ref": "#/components/schemas/ClassifierAveraging",
+            "description": "Evaluation metric averaging strategy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lora_enabled",
+          "lora_rank",
+          "lora_alpha",
+          "lora_dropout",
+          "freeze_base_model",
           "epochs",
           "batch_size",
           "early_stopping",
@@ -8456,7 +8571,7 @@
           "precision",
           "averaging"
         ],
-        "title": "ClassifierTrainingParams"
+        "title": "ClassifierTrainingSettings"
       },
       "ClassifierUpdate": {
         "properties": {

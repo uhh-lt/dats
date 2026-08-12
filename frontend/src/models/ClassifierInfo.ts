@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ClassifierBaseModelOption } from "./ClassifierBaseModelOption";
-import type { ClassifierTrainingDefaults } from "./ClassifierTrainingDefaults";
+import type { ClassifierTrainingSettings } from "./ClassifierTrainingSettings";
 export type ClassifierInfo = {
   /**
    * Signal percentage below which training signal is weak
@@ -24,5 +24,5 @@ export type ClassifierInfo = {
   /**
    * Backend-configured defaults for classifier training
    */
-  training_params: ClassifierTrainingDefaults;
+  training_params: ClassifierTrainingSettings;
 };

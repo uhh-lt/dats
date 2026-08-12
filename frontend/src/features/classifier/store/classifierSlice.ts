@@ -1,12 +1,11 @@
 import { ClassifierModel } from "@models/ClassifierModel";
 import { ClassifierTask } from "@models/ClassifierTask";
 import { ClassifierTrainingParams } from "@models/ClassifierTrainingParams";
+import { ClassifierTrainingSettings as ClassifierTrainingSettingsDto } from "@models/ClassifierTrainingSettings";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 
-export type ClassifierTrainingSettings = Omit<
-  ClassifierTrainingParams,
-  "task_type" | "class_ids" | "user_ids" | "tag_ids" | "merge_children_into_parent"
->;
+export type ClassifierTrainingSettings = ClassifierTrainingSettingsDto &
+  Pick<ClassifierTrainingParams, "classifier_name" | "base_name">;
 
 interface ClassifierState {
   isClassifierDialogOpen: boolean;
@@ -54,6 +53,7 @@ const classifierSlice = createSlice({
         classifierStep?: number;
         classifierClassIds?: number[];
         classifierSdocIds?: number[];
+        classifierMergeChildren?: boolean;
       }>,
     ) => {
       state.isClassifierDialogOpen = true;
@@ -64,6 +64,7 @@ const classifierSlice = createSlice({
       state.classifierStep = action.payload.classifierStep || 0;
       state.classifierClassIds = action.payload.classifierClassIds || [];
       state.classifierSdocIds = action.payload.classifierSdocIds || [];
+      state.classifierMergeChildren = action.payload.classifierMergeChildren ?? false;
     },
     onClassifierDialogSelectClasses: (
       state,
@@ -75,6 +76,9 @@ const classifierSlice = createSlice({
       state.classifierClassIds = action.payload.classIds;
       state.classifierMergeChildren = action.payload.mergeChildren;
       state.classifierStep += 1;
+    },
+    onClassifierDialogSetMergeChildren: (state, action: PayloadAction<boolean>) => {
+      state.classifierMergeChildren = action.payload;
     },
     onClassifierDialogSelectSdocs: (state, action: PayloadAction<number[]>) => {
       state.classifierSdocIds = action.payload;
@@ -121,6 +125,7 @@ const classifierSlice = createSlice({
       state.classifierSdocIds = initialState.classifierSdocIds;
       state.classifierTagIds = initialState.classifierTagIds;
       state.classifierClassIds = initialState.classifierClassIds;
+      state.classifierMergeChildren = initialState.classifierMergeChildren;
       state.classifierTrainingSettings = initialState.classifierTrainingSettings;
       state.classifierJobId = initialState.classifierJobId;
     },
