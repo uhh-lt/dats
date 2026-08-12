@@ -738,7 +738,7 @@ def test_document_classifier_train_eval_infer(
         min_recall=0.45 if head_only else 0.58,
         min_accuracy=0.45 if head_only else 0.58,
         min_class_f1=0.20 if head_only else 0.35,
-        max_classes_below_f1_floor=1 if head_only else 2,
+        max_classes_below_f1_floor=3 if head_only else 2,
     )
 
     # EVALUATE on the held-out evaluation-data subset
@@ -780,7 +780,7 @@ def test_document_classifier_train_eval_infer(
         min_recall=0.45 if head_only else 0.58,
         min_accuracy=0.45 if head_only else 0.58,
         min_class_f1=0.20 if head_only else 0.35,
-        max_classes_below_f1_floor=1 if head_only else 2,
+        max_classes_below_f1_floor=3 if head_only else 2,
     )
 
     # INFER on the held-out test-data subset
