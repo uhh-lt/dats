@@ -80,7 +80,9 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
       early_stopping: trainingDefaults.early_stopping,
       early_stopping_patience: trainingDefaults.early_stopping_patience,
       train_test_split: trainingDefaults.train_test_split,
-      learning_rate: trainingDefaults.learning_rate,
+      base_learning_rate: trainingDefaults.base_learning_rate,
+      head_learning_rate: trainingDefaults.head_learning_rate,
+      warmup_fraction: trainingDefaults.warmup_fraction,
       weight_decay: trainingDefaults.weight_decay,
       dropout: trainingDefaults.dropout,
       chunk_size: trainingDefaults.chunk_size,
@@ -101,6 +103,7 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
   const onError: SubmitErrorHandler<ClassifierTrainingSettings> = (data) => console.error(data);
   const earlyStoppingEnabled = useWatch({ control, name: "early_stopping" });
   const loraEnabled = useWatch({ control, name: "lora_enabled" });
+  const baseModelFrozen = useWatch({ control, name: "freeze_base_model" });
 
   const handleLoraEnabledChange = (enabled: boolean) => {
     if (enabled) {
@@ -354,21 +357,89 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
                 }}
               />
             </FormItem>
-            <FormItem title="Learning Rate" subtitle="Choose the learning rate for training.">
+            <FormItem
+              title="Base Model Learning Rate"
+              subtitle={
+                baseModelFrozen
+                  ? "Not used while the pretrained base model is frozen."
+                  : "Set the peak learning rate for fine-tuning the pretrained base model."
+              }
+            >
               <FormNumber
-                name="learning_rate"
+                name="base_learning_rate"
                 control={control}
                 rules={{
                   required: "Required",
-                  min: { value: 1e-7, message: "Must be at least 1e-5" },
+                  min: { value: 1e-7, message: "Must be at least 0.0000001" },
                   max: { value: 1, message: "Must be at most 1" },
                 }}
                 textFieldProps={{
-                  label: "Learning Rate",
+                  label: "Base Learning Rate",
                   variant: "filled",
-                  inputProps: { min: 1e-5, max: 1, step: 1e-5 },
+                  inputProps: {
+                    min: 0,
+                    max: 1,
+                    step: 1e-6,
+                  },
                   size: "small",
                   fullWidth: true,
+                  disabled: baseModelFrozen,
+                  error: Boolean(errors.base_learning_rate),
+                  helperText: <ErrorMessage errors={errors} name="base_learning_rate" />,
+                }}
+              />
+            </FormItem>
+            <FormItem
+              title={loraEnabled ? "Head and LoRA Learning Rate" : "Classifier Head Learning Rate"}
+              subtitle={
+                loraEnabled
+                  ? "Set the peak learning rate shared by the classifier head and LoRA adapter parameters."
+                  : "Set the peak learning rate for the classifier-specific layers."
+              }
+            >
+              <FormNumber
+                name="head_learning_rate"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 1e-7, message: "Must be at least 0.0000001" },
+                  max: { value: 1, message: "Must be at most 1" },
+                }}
+                textFieldProps={{
+                  label: loraEnabled ? "Head and LoRA Learning Rate" : "Head Learning Rate",
+                  variant: "filled",
+                  inputProps: {
+                    min: 0,
+                    max: 1,
+                    step: 1e-5,
+                  },
+                  size: "small",
+                  fullWidth: true,
+                  error: Boolean(errors.head_learning_rate),
+                  helperText: <ErrorMessage errors={errors} name="head_learning_rate" />,
+                }}
+              />
+            </FormItem>
+            <FormItem
+              title="Warmup Fraction"
+              subtitle="Choose the fraction of optimizer steps used to increase both learning rates from zero to their peaks. The rates then decay linearly to zero."
+            >
+              <FormNumber
+                name="warmup_fraction"
+                control={control}
+                rules={{
+                  required: "Required",
+                  min: { value: 0, message: "Must be at least 0" },
+                  max: { value: 0.99, message: "Must be below 1" },
+                }}
+                textFieldProps={{
+                  label: "Warmup Fraction",
+                  variant: "filled",
+                  inputProps: { min: 0, max: 0.99, step: 0.05 },
+                  size: "small",
+                  fullWidth: true,
+                  error: Boolean(errors.warmup_fraction),
+                  helperText: <ErrorMessage errors={errors} name="warmup_fraction" />,
                 }}
               />
             </FormItem>

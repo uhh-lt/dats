@@ -13,6 +13,7 @@ from loguru import logger
 from peft import TaskType, get_peft_model
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -68,6 +69,7 @@ from modules.classifier.models.model_utils import (
     check_hf_model_exists,
     compute_balanced_class_weights,
 )
+from modules.classifier.models.optimizer_utils import configure_classifier_optimizer
 from modules.classifier.models.text_class_model_service import (
     TextClassificationModelService,
 )
@@ -147,7 +149,9 @@ class DocClassificationLightningModel(pl.LightningModule):
         base_name: str,
         num_labels: int,
         dropout: float,
-        learning_rate: float,
+        base_learning_rate: float,
+        head_learning_rate: float,
+        warmup_fraction: float,
         weight_decay: float,
         class_weights: list[float],
         freeze_base_model: bool,
@@ -195,7 +199,9 @@ class DocClassificationLightningModel(pl.LightningModule):
 
         # Store params
         self.num_labels = num_labels
-        self.learning_rate = learning_rate
+        self.base_learning_rate = base_learning_rate
+        self.head_learning_rate = head_learning_rate
+        self.warmup_fraction = warmup_fraction
         self.weight_decay = weight_decay
         self.averaging: Literal["micro", "macro"] = averaging
 
@@ -376,15 +382,17 @@ class DocClassificationLightningModel(pl.LightningModule):
             "logits": outputs.logits.detach().cpu(),
         }
 
-    def configure_optimizers(self) -> torch.optim.Optimizer:
-        optimizer = torch.optim.AdamW(
-            (parameter for parameter in self.parameters() if parameter.requires_grad),
-            lr=self.learning_rate,
+    def configure_optimizers(self) -> OptimizerLRSchedulerConfig:
+        return configure_classifier_optimizer(
+            model=self,
+            base_model=self.model.base_model,
+            freeze_base_model=self.freeze_base_model,
+            base_learning_rate=self.base_learning_rate,
+            head_learning_rate=self.head_learning_rate,
             weight_decay=self.weight_decay,
-            # fused kernels only exist for CUDA; fall back on CPU/MPS.
-            fused=torch.cuda.is_available(),
+            warmup_fraction=self.warmup_fraction,
+            total_steps=int(self.trainer.estimated_stepping_batches),
         )
-        return optimizer
 
 
 class DocClassificationModelService(TextClassificationModelService):
@@ -735,7 +743,9 @@ class DocClassificationModelService(TextClassificationModelService):
                 base_name=parameters.base_name,
                 num_labels=len(tagid2labelid),
                 dropout=parameters.dropout,
-                learning_rate=parameters.learning_rate,
+                base_learning_rate=parameters.base_learning_rate,
+                head_learning_rate=parameters.head_learning_rate,
+                warmup_fraction=parameters.warmup_fraction,
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
                 freeze_base_model=parameters.freeze_base_model,
