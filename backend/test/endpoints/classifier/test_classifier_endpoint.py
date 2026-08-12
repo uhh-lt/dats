@@ -1,18 +1,23 @@
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from config import conf
 from modules.classifier.classifier_dto import (
     ClassifierAveraging,
+    ClassifierDatasetStatistics,
     ClassifierDatasetStatisticsRequest,
+    ClassifierInfo,
     ClassifierJobInput,
     ClassifierModel,
     ClassifierRead,
+    ClassifierSignalStrength,
     ClassifierTask,
     ClassifierTrainingParams,
     ClassifierUpdate,
 )
+
+CLASSIFIER_LIST_ADAPTER = TypeAdapter(list[ClassifierRead])
 
 # ---------------------------------------------------------------------------
 # CLASSIFIER INFO
@@ -23,15 +28,15 @@ def test_get_classifier_info(client: TestClient):
     """Classifier info exposes every frontend setting from server configuration."""
     response = client.get("/classifier/info")
     assert response.status_code == 200, response.text
-    data = response.json()
+    info = ClassifierInfo.model_validate(response.json())
     expected_transformer = [m.value for m in conf.classifier.transformer_models]
     expected_embedding = [m.value for m in conf.classifier.embedding_models]
-    assert [m["value"] for m in data["transformer_models"]] == expected_transformer
-    assert [m["value"] for m in data["embedding_models"]] == expected_embedding
-    assert data["weak_signal_threshold"] == conf.classifier.weak_signal_threshold
-    assert data["strong_signal_threshold"] == conf.classifier.strong_signal_threshold
-    assert data["training_params"] == conf.classifier.training_params.model_dump(
-        mode="json"
+    assert [model.value for model in info.transformer_models] == expected_transformer
+    assert [model.value for model in info.embedding_models] == expected_embedding
+    assert info.weak_signal_threshold == conf.classifier.weak_signal_threshold
+    assert info.strong_signal_threshold == conf.classifier.strong_signal_threshold
+    assert info.training_params.model_dump(mode="json") == (
+        conf.classifier.training_params.model_dump(mode="json")
     )
 
 
@@ -44,14 +49,15 @@ def test_list_classifiers_empty(client: TestClient, test_project):
     """Listing classifiers of a fresh project returns an empty list."""
     response = client.get(f"/classifier/project/{test_project.id}")
     assert response.status_code == 200, response.text
-    assert response.json() == []
+    classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
+    assert classifiers == []
 
 
 def test_list_classifiers(client: TestClient, test_project, persisted_classifier):
     """Listing classifiers returns the persisted classifier with matching id and name."""
     response = client.get(f"/classifier/project/{test_project.id}")
     assert response.status_code == 200, response.text
-    classifiers = [ClassifierRead.model_validate(c) for c in response.json()]
+    classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
     assert len(classifiers) == 1
     assert classifiers[0].id == persisted_classifier["classifier_id"]
     assert classifiers[0].name == "Test Classifier"
@@ -66,7 +72,8 @@ def test_rename_classifier(client: TestClient, persisted_classifier):
         json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
-    assert response.json()["name"] == "Renamed"
+    classifier = ClassifierRead.model_validate(response.json())
+    assert classifier.name == "Renamed"
 
 
 def test_delete_classifier_removes_dir_and_db_row(
@@ -80,11 +87,14 @@ def test_delete_classifier_removes_dir_and_db_row(
 
     response = client.delete(f"/classifier/{clf_id}")
     assert response.status_code == 200, response.text
+    deleted_classifier = ClassifierRead.model_validate(response.json())
+    assert deleted_classifier.id == clf_id
     assert not model_dir.exists()
 
     response = client.get(f"/classifier/project/{test_project.id}")
     assert response.status_code == 200, response.text
-    assert response.json() == []
+    classifiers = CLASSIFIER_LIST_ADAPTER.validate_python(response.json())
+    assert classifiers == []
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +218,7 @@ def _request_dataset_statistics(
     tag_ids: list[int] | None = None,
     user_ids: list[int] | None = None,
     merge_children_into_parent: bool = False,
-):
+) -> ClassifierDatasetStatistics:
     """Request statistics for one typed classifier dataset configuration.
 
     Asserts the request succeeds; tag, annotator, and merge-children selections
@@ -227,49 +237,51 @@ def _request_dataset_statistics(
         json=request.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    return ClassifierDatasetStatistics.model_validate(response.json())
 
 
-def _assert_signal_statistics(data: dict):
-    signal_percentage = data["signal_percentage"]
+def _assert_signal_statistics(data: ClassifierDatasetStatistics) -> None:
+    signal_percentage = data.signal_percentage
     if signal_percentage < conf.classifier.weak_signal_threshold:
-        expected_signal_strength = "weak"
+        expected_signal_strength = ClassifierSignalStrength.WEAK
     elif signal_percentage <= conf.classifier.strong_signal_threshold:
-        expected_signal_strength = "ok"
+        expected_signal_strength = ClassifierSignalStrength.OK
     else:
-        expected_signal_strength = "strong"
+        expected_signal_strength = ClassifierSignalStrength.STRONG
 
-    assert data["signal_strength"] == expected_signal_strength
-    assert data["weak_signal_threshold"] == conf.classifier.weak_signal_threshold
-    assert data["strong_signal_threshold"] == conf.classifier.strong_signal_threshold
+    assert data.signal_strength == expected_signal_strength
+    assert data.weak_signal_threshold == conf.classifier.weak_signal_threshold
+    assert data.strong_signal_threshold == conf.classifier.strong_signal_threshold
 
 
 def _assert_dataset_statistics(
-    data: dict,
+    data: ClassifierDatasetStatistics,
     *,
     total_units: int,
     labeled_units: int,
     signal_percentage: float,
     expected_classes: dict[int, tuple[int, int, float]],
-):
-    assert data["total_units"] == total_units
-    assert data["labeled_units"] == labeled_units
-    assert data["signal_percentage"] == signal_percentage
+) -> None:
+    assert data.total_units == total_units
+    assert data.labeled_units == labeled_units
+    assert data.signal_percentage == signal_percentage
     _assert_signal_statistics(data)
-    assert data["problematic_sdocs"] == []
-    assert data["unannotated_sdocs"] == []
+    assert data.problematic_sdocs == []
+    assert data.unannotated_sdocs == []
 
-    assert len(data["classes"]) == len(expected_classes)
-    classes = {cls["class_id"]: cls for cls in data["classes"]}
+    assert len(data.classes) == len(expected_classes)
+    classes = {
+        class_statistics.class_id: class_statistics for class_statistics in data.classes
+    }
     assert set(classes) == set(expected_classes)
     for class_id, (
         num_examples,
         num_units,
         unit_percentage,
     ) in expected_classes.items():
-        assert classes[class_id]["num_examples"] == num_examples
-        assert classes[class_id]["num_units"] == num_units
-        assert classes[class_id]["unit_percentage"] == unit_percentage
+        assert classes[class_id].num_examples == num_examples
+        assert classes[class_id].num_units == num_units
+        assert classes[class_id].unit_percentage == unit_percentage
 
 
 def test_dataset_statistics_span(
@@ -319,9 +331,9 @@ def test_dataset_statistics_span_reports_excluded_documents(
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],
         user_ids=[test_user.id],
     )
-    assert data["total_units"] == 10
-    assert data["labeled_units"] == 1
-    assert len(data["unannotated_sdocs"]) == 3
+    assert data.total_units == 10
+    assert data.labeled_units == 1
+    assert len(data.unannotated_sdocs) == 3
 
 
 def test_dataset_statistics_document(client: TestClient, document_statistics_dataset):
@@ -371,13 +383,13 @@ def test_dataset_statistics_document_reports_documents_without_selected_class_ta
             subset_tags["test"].id,
         ],
     )
-    assert data["total_units"] == len(tags)
-    assert data["labeled_units"] == 1
-    assert len(data["unannotated_sdocs"]) == len(tags) - 1
+    assert data.total_units == len(tags)
+    assert data.labeled_units == 1
+    assert len(data.unannotated_sdocs) == len(tags) - 1
     selected_sdoc_id = document_statistics_dataset["category2sdoc_ids"][
         selected_category
     ][0]
-    assert selected_sdoc_id not in data["unannotated_sdocs"]
+    assert selected_sdoc_id not in data.unannotated_sdocs
 
 
 def test_dataset_statistics_sentence(
@@ -422,6 +434,6 @@ def test_dataset_statistics_sentence_reports_excluded_documents(
         tag_ids=[tags["train"].id, tags["eval"].id, tags["test"].id],
         user_ids=[test_user.id],
     )
-    assert data["total_units"] == 2
-    assert data["labeled_units"] == 2
-    assert len(data["unannotated_sdocs"]) == len(codes) - 1
+    assert data.total_units == 2
+    assert data.labeled_units == 2
+    assert len(data.unannotated_sdocs) == len(codes) - 1
