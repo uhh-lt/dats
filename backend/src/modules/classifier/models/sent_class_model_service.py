@@ -202,7 +202,6 @@ class SentClassificationLightningModel(pl.LightningModule):
         mask: torch.Tensor | None = None,
         labels: torch.Tensor | None = None,
         decode: bool = True,
-        **kwargs,
     ) -> SentenceClassifierOutput:
         assert mask is not None, "Mask must be provided"
         sentence_counts = [len(document_sentences) for document_sentences in sentences]
@@ -276,15 +275,26 @@ class SentClassificationLightningModel(pl.LightningModule):
             self.embedding_model.eval()
         return self
 
-    def training_step(self, batch, batch_idx):
-        output = self.forward(**batch, decode=False)
+    def training_step(self, batch: dict[str, Any], batch_idx: int) -> torch.Tensor:
+        output = self.forward(
+            sentences=batch["sentences"],
+            mask=batch["mask"],
+            labels=batch["labels"],
+            decode=False,
+        )
         assert output.loss is not None, "Training requires labels"
 
         self.log("train_loss", output.loss, on_step=False, on_epoch=True)
         return output.loss
 
-    def _val_test_step(self, prefix: str, batch, batch_idx: int) -> torch.Tensor:
-        output = self.forward(**batch)
+    def _val_test_step(
+        self, prefix: str, batch: dict[str, Any], batch_idx: int
+    ) -> torch.Tensor:
+        output = self.forward(
+            sentences=batch["sentences"],
+            mask=batch["mask"],
+            labels=batch["labels"],
+        )
         assert output.loss is not None, "Evaluation requires labels"
         assert output.predictions is not None, "Evaluation requires predictions"
 
