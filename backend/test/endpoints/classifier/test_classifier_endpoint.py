@@ -1,4 +1,6 @@
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from config import conf
 from modules.classifier.classifier_dto import (
@@ -120,7 +122,10 @@ def test_start_job_nonexistent_project(client: TestClient):
         task_type=ClassifierTask.TRAINING,
         classifier_name="x",
         base_name="x",
-        adapter_name=None,
+        lora_enabled=False,
+        lora_rank=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
         freeze_base_model=True,
         class_ids=[1],
         user_ids=[1],
@@ -149,6 +154,39 @@ def test_start_job_nonexistent_project(client: TestClient):
         json=request.model_dump(mode="json"),
     )
     assert response.status_code in (403, 404), response.text
+
+
+def test_training_params_reject_lora_without_frozen_base_model():
+    """LoRA training cannot be configured with a trainable base model."""
+    with pytest.raises(
+        ValidationError,
+        match="LoRA requires freeze_base_model to be enabled",
+    ):
+        ClassifierTrainingParams(
+            task_type=ClassifierTask.TRAINING,
+            classifier_name="invalid-lora",
+            base_name="base-model",
+            lora_enabled=True,
+            lora_rank=16,
+            lora_alpha=32,
+            lora_dropout=0.05,
+            freeze_base_model=False,
+            class_ids=[1],
+            user_ids=[1],
+            tag_ids=[1],
+            merge_children_into_parent=False,
+            epochs=2,
+            batch_size=4,
+            early_stopping=False,
+            early_stopping_patience=3,
+            train_test_split=0.2,
+            learning_rate=0.00001,
+            weight_decay=0.01,
+            dropout=0.1,
+            chunk_size=1024,
+            precision="bf16-mixed",
+            averaging=ClassifierAveraging.MICRO,
+        )
 
 
 # ---------------------------------------------------------------------------

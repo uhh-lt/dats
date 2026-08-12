@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from lightning_fabric.plugins.precision.precision import _PRECISION_INPUT
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from repos.db.dto_base import UpdateDTOBase
 from systems.job_system.job_dto import JobInputBase, JobOutputBase
@@ -33,32 +33,56 @@ class ClassifierBaseModelOption(BaseModel):
     label: str = Field(description="Display label for the model")
 
 
-class ClassifierTrainingDefaults(BaseModel):
-    adapter_name: str | None = Field(
-        description="Default adapter to use, or null to train without an adapter"
+class ClassifierTrainingSettings(BaseModel):
+    lora_enabled: bool = Field(description="Whether to train with a LoRA adapter")
+    lora_rank: int = Field(gt=0, description="Rank of the LoRA update matrices")
+    lora_alpha: int = Field(gt=0, description="Scaling factor applied to LoRA updates")
+    lora_dropout: float = Field(
+        ge=0.0,
+        lt=1.0,
+        description="Dropout probability applied inside LoRA layers",
     )
     freeze_base_model: bool = Field(
-        description="Whether the pretrained base model is frozen by default"
+        description=(
+            "Freeze pretrained base-model weights. Without LoRA, only classifier "
+            "layers are trained; LoRA requires this setting"
+        )
     )
-    epochs: int = Field(description="Default number of training epochs")
-    batch_size: int = Field(description="Default training batch size")
-    early_stopping: bool = Field(description="Whether early stopping is enabled")
+    epochs: int = Field(gt=0, description="Number of training epochs")
+    batch_size: int = Field(gt=0, description="Training batch size")
+    early_stopping: bool = Field(description="Whether to use early stopping")
     early_stopping_patience: int = Field(
-        description="Default validation patience for early stopping"
+        ge=0,
+        description="Number of validation epochs without improvement before stopping",
     )
     train_test_split: float = Field(
-        description="Default fraction of training data reserved for validation"
+        gt=0.0,
+        lt=1.0,
+        description="Fraction of selected training data reserved for validation",
     )
-    learning_rate: float = Field(description="Default learning rate")
-    weight_decay: float = Field(description="Default weight decay")
-    dropout: float = Field(description="Default dropout rate")
-    chunk_size: int = Field(description="Default token chunk size")
+    learning_rate: float = Field(gt=0.0, description="Learning rate")
+    weight_decay: float = Field(ge=0.0, le=1.0, description="Weight decay")
+    dropout: float = Field(ge=0.0, le=1.0, description="Model dropout rate")
+    chunk_size: int = Field(gt=0, description="Token chunk size")
     precision: _PRECISION_INPUT | None = Field(
-        description="Default Lightning training precision"
+        description="Lightning training precision"
     )
     averaging: ClassifierAveraging = Field(
-        description="Default evaluation metric averaging strategy"
+        description="Evaluation metric averaging strategy"
     )
+
+    @model_validator(mode="after")
+    def validate_lora_freezes_base_model(self) -> Self:
+        if self.lora_enabled and not self.freeze_base_model:
+            raise ValueError("LoRA requires freeze_base_model to be enabled")
+        return self
+
+    def get_training_settings(self) -> dict[str, Any]:
+        """Serialize the fields defined by this training settings DTO."""
+        return self.model_dump(
+            mode="json",
+            include=set(ClassifierTrainingSettings.model_fields),
+        )
 
 
 class ClassifierInfo(BaseModel):
@@ -74,7 +98,7 @@ class ClassifierInfo(BaseModel):
     embedding_models: list[ClassifierBaseModelOption] = Field(
         description="Selectable embedding base models (sentence classification)"
     )
-    training_params: ClassifierTrainingDefaults = Field(
+    training_params: ClassifierTrainingSettings = Field(
         description="Backend-configured defaults for classifier training"
     )
 
@@ -110,7 +134,25 @@ class ClassifierSignalStrength(str, Enum):
     STRONG = "strong"
 
 
-class ClassifierDatasetStatisticsRequest(BaseModel):
+class ClassifierDatasetSelectionParams(BaseModel):
+    tag_ids: list[int] = Field(
+        description="IDs of document tags that select the dataset's source documents"
+    )
+    user_ids: list[int] = Field(
+        description=(
+            "IDs of annotators whose annotations should be used for sentence and "
+            "span classification; ignored for document classification"
+        )
+    )
+    merge_children_into_parent: bool = Field(
+        description=(
+            "Whether annotations of descendant codes should count toward their "
+            "selected parent code; only applies to sentence and span classification"
+        )
+    )
+
+
+class ClassifierDatasetStatisticsRequest(ClassifierDatasetSelectionParams):
     model: ClassifierModel = Field(
         description=(
             "Classifier type whose dataset construction should be inspected. "
@@ -126,27 +168,11 @@ class ClassifierDatasetStatisticsRequest(BaseModel):
             "and sentence statistics currently do not depend on it."
         ),
     )
-    tag_ids: list[int] = Field(
-        description="IDs of document tags that select the dataset's source documents"
-    )
-    user_ids: list[int] = Field(
-        description=(
-            "IDs of annotators whose annotations should be used for sentence and "
-            "span classification; ignored for document classification"
-        )
-    )
     class_ids: list[int] = Field(
         description=(
             "Selected tag IDs for document classification or code IDs for sentence "
             "and span classification"
         )
-    )
-    merge_children_into_parent: bool = Field(
-        default=False,
-        description=(
-            "Whether annotations of descendant codes should count toward their "
-            "selected parent code; only applies to sentence and span classification"
-        ),
     )
 
 
@@ -278,77 +304,22 @@ class ClassifierRead(ClassifierCreate):
 # ----- JOB DTOS -----
 
 
-class ClassifierTrainingParams(BaseModel):
+class ClassifierTrainingParams(
+    ClassifierTrainingSettings,
+    ClassifierDatasetSelectionParams,
+):
     task_type: Literal[ClassifierTask.TRAINING]
     # required
     classifier_name: str = Field(description="Name of the model to train")
     base_name: str = Field(description="Name of the base model")
-    adapter_name: str | None = Field(description="Name of the adapter to use (if any)")
-    freeze_base_model: bool = Field(
-        description=(
-            "Freeze the pretrained base model and train only the classifier layers"
-        )
-    )
     class_ids: list[int] = Field(
         description="List of class IDs to train on (tag or code)"
     )
-    # training data
-    user_ids: list[int] = Field(description="List of user IDs to train on")
-    tag_ids: list[int] = Field(description="List of Tag IDs to train on")
-    merge_children_into_parent: bool = Field(
-        description="Merge child codes in parent code?"
-    )
-    # training settings
-    epochs: int = Field(description="Number of epochs to train for")
-    batch_size: int = Field(description="Batch size to use for training")
-    early_stopping: bool = Field(description="Whether to use early stopping")
-    early_stopping_patience: int = Field(
-        ge=0,
-        description="Number of validation epochs without improvement before stopping",
-    )
-    train_test_split: float = Field(
-        gt=0.0,
-        lt=1.0,
-        description="Fraction of selected training data reserved for validation",
-    )
-    learning_rate: float = Field(description="Learning rate to use for training")
-    weight_decay: float = Field(description="Weight decay to use for training")
-    dropout: float = Field(description="Dropout rate to use in the model")
-    chunk_size: int = Field(description="Slice long documents into chunks of size x")
-    precision: _PRECISION_INPUT | None = Field(
-        description="Precision, e.g. 32-true, 16-mixed, 16-true, bf16-true, bf16-mixed"
-    )
-    # evaluation settings
-    averaging: ClassifierAveraging = Field(
-        description="Averaging strategy for evaluation metrics (micro or macro)",
-    )
-
-    def get_train_params(self):
-        return {
-            "epochs": self.epochs,
-            "batch_size": self.batch_size,
-            "freeze_base_model": self.freeze_base_model,
-            "early_stopping": self.early_stopping,
-            "early_stopping_patience": self.early_stopping_patience,
-            "train_test_split": self.train_test_split,
-            "learning_rate": self.learning_rate,
-            "weight_decay": self.weight_decay,
-            "dropout": self.dropout,
-            "averaging": self.averaging.value,
-            # Persisted so that eval/inference can rebuild the exact same
-            # tokenization window that was used during training.
-            "chunk_size": self.chunk_size,
-            "merge_children_into_parent": self.merge_children_into_parent,
-        }
 
 
-class ClassifierEvaluationParams(BaseModel):
+class ClassifierEvaluationParams(ClassifierDatasetSelectionParams):
     task_type: Literal[ClassifierTask.EVALUATION]
     classifier_id: int = Field(description="ID of the model to evaluate")
-    tag_ids: list[int] = Field(description="List of Tag IDs to evaluate on")
-    user_ids: list[int] = Field(
-        description="User IDs whose annotations serve as gold labels"
-    )
     averaging: ClassifierAveraging | None = Field(
         default=None,
         description="Averaging strategy for evaluation metrics. If None, the model's stored training setting is used.",

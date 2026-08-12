@@ -13,7 +13,7 @@ from modules.classifier.classifier_dto import (
     ClassifierDatasetStatisticsRequest,
     ClassifierInfo,
     ClassifierRead,
-    ClassifierTrainingDefaults,
+    ClassifierTrainingSettings,
     ClassifierUpdate,
 )
 from modules.classifier.classifier_service import ClassifierService
@@ -42,7 +42,7 @@ def get_classifier_info(
             ClassifierBaseModelOption(value=m.value, label=m.label)
             for m in conf.classifier.embedding_models
         ],
-        training_params=ClassifierTrainingDefaults.model_validate(
+        training_params=ClassifierTrainingSettings.model_validate(
             conf.classifier.training_params.model_dump()
         ),
     )

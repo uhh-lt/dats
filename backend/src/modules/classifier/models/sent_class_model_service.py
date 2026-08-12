@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 from datasets import Dataset
 from loguru import logger
+from peft import TaskType
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sentence_transformers import SentenceTransformer
@@ -61,6 +62,7 @@ from modules.classifier.classifier_exceptions import (
     NoCheckpointError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
+from modules.classifier.models.lora_utils import build_lora_config
 from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_code_label_mappings,
@@ -108,6 +110,10 @@ class SentClassificationLightningModel(pl.LightningModule):
         embedding_model_name: str,
         use_lstm: bool,
         freeze_base_model: bool,
+        lora_enabled: bool,
+        lora_rank: int,
+        lora_alpha: int,
+        lora_dropout: float,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
         averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
@@ -125,7 +131,17 @@ class SentClassificationLightningModel(pl.LightningModule):
             )
         self.embedding_dim = resolved_embedding_dim
         self.freeze_base_model = freeze_base_model
-        if freeze_base_model:
+        self.lora_enabled = lora_enabled
+        if lora_enabled:
+            self.embedding_model.add_adapter(
+                build_lora_config(
+                    rank=lora_rank,
+                    alpha=lora_alpha,
+                    dropout=lora_dropout,
+                    task_type=TaskType.FEATURE_EXTRACTION,
+                )
+            )
+        elif freeze_base_model:
             for parameter in self.embedding_model.parameters():
                 parameter.requires_grad = False
 
@@ -192,7 +208,7 @@ class SentClassificationLightningModel(pl.LightningModule):
             name: tensor.to(self.device)
             for name, tensor in self.embedding_model.tokenize(flat_sentences).items()
         }
-        if self.freeze_base_model:
+        if self.freeze_base_model and not self.lora_enabled:
             with torch.no_grad():
                 sentence_embeddings = self.embedding_model(tokenized_sentences)[
                     "sentence_embedding"
@@ -249,7 +265,7 @@ class SentClassificationLightningModel(pl.LightningModule):
 
     def train(self, mode: bool = True):
         super().train(mode)
-        if self.freeze_base_model:
+        if self.freeze_base_model and not self.lora_enabled:
             self.embedding_model.eval()
         return self
 
@@ -825,12 +841,13 @@ class SentClassificationModelService(TextClassificationModelService):
         with trainer.init_module():
             # Initialize the Lightning Model
             lightning_model = SentClassificationLightningModel(
-                # embedding model params
                 embedding_model_name=parameters.base_name,
-                # sent classifier specific params
                 use_lstm=True,
                 freeze_base_model=parameters.freeze_base_model,
-                # training params
+                lora_enabled=parameters.lora_enabled,
+                lora_rank=parameters.lora_rank,
+                lora_alpha=parameters.lora_alpha,
+                lora_dropout=parameters.lora_dropout,
                 num_labels=len(labelid2name),
                 dropout=parameters.dropout,
                 learning_rate=parameters.learning_rate,
@@ -894,7 +911,7 @@ class SentClassificationModelService(TextClassificationModelService):
                     ClassifierLoss(step=x["epoch"], value=x["train_loss"])
                     for x in train_loss_list
                 ],
-                train_params=parameters.get_train_params(),
+                train_params=parameters.get_training_settings(),
             ),
             codes=codes,
             tags=[],
@@ -972,9 +989,7 @@ class SentClassificationModelService(TextClassificationModelService):
             tag_ids=parameters.tag_ids,
             user_ids=parameters.user_ids,
             codeid2labelid=codeid2labelid,
-            merge_children_into_parent=classifier.train_params[
-                "merge_children_into_parent"
-            ],
+            merge_children_into_parent=parameters.merge_children_into_parent,
         )
 
         if len(dataset) == 0:
