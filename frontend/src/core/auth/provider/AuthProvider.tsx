@@ -6,8 +6,10 @@ import { AuthenticationService } from "@api/services/AuthenticationService";
 import { UserService } from "@api/services/UserService";
 import { UserAuthorizationHeaderData } from "@models/UserAuthorizationHeaderData";
 import { UserRead } from "@models/UserRead";
+import { useAppDispatch } from "@store/storeHooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { AuthActions } from "../authActions";
 import { AuthContext } from "../types/AuthContext";
 
 // init once
@@ -57,6 +59,8 @@ interface AuthContextProps {
  * - Therefore, consumers inside the provider tree only see stable auth state.
  */
 export const AuthProvider = ({ children }: AuthContextProps) => {
+  const dispatch = useAppDispatch();
+
   // --- credential state ---
   const [accessToken, setAccessToken] = useState<string | undefined>(
     localStorage.getItem(ACCESS_TOKEN_KEY) || undefined,
@@ -100,6 +104,15 @@ export const AuthProvider = ({ children }: AuthContextProps) => {
     retry: false,
     enabled: accessToken !== undefined && !isAccessTokenExpired(accessTokenExpires),
   });
+
+  useLayoutEffect(() => {
+    if (user.data === undefined) {
+      return;
+    }
+
+    dispatch(AuthActions.userChanged(user.data.id));
+  }, [dispatch, user.data]);
+
   // Session validation error handling.
   useEffect(() => {
     if (user.isError) {
