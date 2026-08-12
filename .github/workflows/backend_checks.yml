@@ -39,6 +39,8 @@ jobs:
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
       - name: Prepare environment
+        env:
+          HF_HUB_TOKEN: ${{ secrets.HF_HUB_TOKEN }}
         run: |
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
@@ -54,6 +56,10 @@ jobs:
           sed -i 's/^RAY_PORT=.*/RAY_PORT=10130/' backend/.env docker/.env
           sed -i 's/^DOCLING_HOST=.*/DOCLING_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
           sed -i 's/^DOCLING_PORT=.*/DOCLING_PORT=10139/' backend/.env docker/.env
+
+          # Configure secrets
+          sed -i "s|^HF_HUB_TOKEN=.*|HF_HUB_TOKEN=${HF_HUB_TOKEN}|" docker/.env
+          sed -i "s|^API_HF_HUB_TOKEN=.*|API_HF_HUB_TOKEN=${HF_HUB_TOKEN}|" backend/.env
 
           # Handle the case where RAY has changed
           if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
