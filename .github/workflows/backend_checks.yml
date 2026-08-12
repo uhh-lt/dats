@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: classifier-metrics
-          path: backend/test-results/classifier-metrics.jsonl
+          path: backend/test-results/*-classification.csv
           if-no-files-found: ignore
       - name: Database migrates without errors
         working-directory: backend
