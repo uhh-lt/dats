@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 from datasets import Dataset
 from loguru import logger
+from peft import TaskType, get_peft_model
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import CSVLogger
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
@@ -60,6 +61,7 @@ from modules.classifier.classifier_exceptions import (
     NoCheckpointError,
 )
 from modules.classifier.models.job_progress_callback import JobProgressCallback
+from modules.classifier.models.lora_utils import build_lora_config
 from modules.classifier.models.model_utils import (
     O_LABEL_ID,
     build_tag_label_mappings,
@@ -149,6 +151,10 @@ class DocClassificationLightningModel(pl.LightningModule):
         weight_decay: float,
         class_weights: list[float],
         freeze_base_model: bool,
+        lora_enabled: bool,
+        lora_rank: int,
+        lora_alpha: int,
+        lora_dropout: float,
         id2label: dict[int, str] | None = None,
         label2id: dict[str, int] | None = None,
         averaging: Literal["micro", "macro"] = ClassifierAveraging.MICRO.value,
@@ -172,23 +178,20 @@ class DocClassificationLightningModel(pl.LightningModule):
             config=self.config,
         )
         self.freeze_base_model = freeze_base_model
-        if freeze_base_model:
+        self.lora_enabled = lora_enabled
+        if lora_enabled:
+            self.model = get_peft_model(
+                self.model,
+                build_lora_config(
+                    rank=lora_rank,
+                    alpha=lora_alpha,
+                    dropout=lora_dropout,
+                    task_type=TaskType.SEQ_CLS,
+                ),
+            )
+        elif freeze_base_model:
             for parameter in self.model.base_model.parameters():
                 parameter.requires_grad = False
-
-        # Add adapter
-        # lora_config = LoraConfig(
-        #     r=16,
-        #     lora_alpha=32,
-        #     lora_dropout=0.05,
-        #     bias="none",
-        #     task_type=TaskType.TOKEN_CLS,
-        #     target_modules=[
-        #         "query",
-        #         "value",
-        #     ],  # this is model specific, we need to test every single model :/
-        # )
-        # self.model = get_peft_model(model, lora_config)
 
         # Store params
         self.num_labels = num_labels
@@ -237,7 +240,7 @@ class DocClassificationLightningModel(pl.LightningModule):
 
     def train(self, mode: bool = True):
         super().train(mode)
-        if self.freeze_base_model:
+        if self.freeze_base_model and not self.lora_enabled:
             self.model.base_model.eval()
         return self
 
@@ -736,6 +739,10 @@ class DocClassificationModelService(TextClassificationModelService):
                 weight_decay=parameters.weight_decay,
                 class_weights=class_weights,
                 freeze_base_model=parameters.freeze_base_model,
+                lora_enabled=parameters.lora_enabled,
+                lora_rank=parameters.lora_rank,
+                lora_alpha=parameters.lora_alpha,
+                lora_dropout=parameters.lora_dropout,
                 id2label=labelid2name,
                 label2id={v: k for k, v in labelid2name.items()},
                 averaging=parameters.averaging.value,
@@ -794,7 +801,7 @@ class DocClassificationModelService(TextClassificationModelService):
                     ClassifierLoss(step=x["epoch"], value=x["train_loss"])
                     for x in train_loss_list
                 ],
-                train_params=parameters.get_train_params(),
+                train_params=parameters.get_training_settings(),
             ),
             codes=[],
             tags=tags,

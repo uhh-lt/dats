@@ -84,6 +84,7 @@ def _start_job(client: TestClient, payload: ClassifierJobInput) -> dict:
 
 class ClassifierTrainingTestPayload(TypedDict):
     freeze_base_model: bool
+    lora_enabled: bool
     classifier_name_suffix: str
 
 
@@ -91,6 +92,7 @@ classifier_training_params = [
     pytest.param(
         {
             "freeze_base_model": True,
+            "lora_enabled": False,
             "classifier_name_suffix": "frozen-base",
         },
         id="train-head-only",
@@ -98,9 +100,18 @@ classifier_training_params = [
     pytest.param(
         {
             "freeze_base_model": False,
+            "lora_enabled": False,
             "classifier_name_suffix": "full-model",
         },
         id="train-full-model",
+    ),
+    pytest.param(
+        {
+            "freeze_base_model": True,
+            "lora_enabled": True,
+            "classifier_name_suffix": "lora",
+        },
+        id="train-lora",
     ),
 ]
 
@@ -114,13 +125,17 @@ def _training_payload(
     user_ids: list[int],
     tag_ids: list[int],
     freeze_base_model: bool,
+    lora_enabled: bool,
 ) -> ClassifierJobInput:
-    """Build a typed two-epoch training request for either training mode."""
+    """Build a typed two-epoch request for full, head-only, or LoRA training."""
     training_params = ClassifierTrainingParams(
         task_type=ClassifierTask.TRAINING,
         classifier_name=name,
         base_name=base_name,
-        adapter_name=None,
+        lora_enabled=lora_enabled,
+        lora_rank=16,
+        lora_alpha=32,
+        lora_dropout=0.05,
         freeze_base_model=freeze_base_model,
         class_ids=class_ids,
         user_ids=user_ids,
@@ -152,13 +167,15 @@ def _evaluation_payload(
     classifier_id: int,
     tag_ids: list[int],
     user_ids: list[int],
+    merge_children_into_parent: bool = False,
 ) -> ClassifierJobInput:
-    """Build a typed evaluation request that reuses the classifier's averaging mode."""
+    """Build a typed evaluation request with explicit dataset semantics."""
     evaluation_params = ClassifierEvaluationParams(
         task_type=ClassifierTask.EVALUATION,
         classifier_id=classifier_id,
         tag_ids=tag_ids,
         user_ids=user_ids,
+        merge_children_into_parent=merge_children_into_parent,
         averaging=None,
     )
     return ClassifierJobInput(
@@ -486,7 +503,7 @@ def test_span_classifier_train_eval_infer(
 ):
     """Train, evaluate, and run inference for span classification on CoNLL-2003.
 
-    Run once with a frozen base model and once with the complete model trainable.
+    Run with head-only training, complete-model training, and LoRA training.
     Train on the training split, validate on its remaining split, evaluate on a
     separate held-out subset, and infer on the test subset. Apply conservative
     quality floors to both evaluations.
@@ -507,6 +524,7 @@ def test_span_classifier_train_eval_infer(
         [test_user.id],
         [tags["train"].id],
         payload["freeze_base_model"],
+        payload["lora_enabled"],
     )
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
@@ -603,7 +621,7 @@ def test_document_classifier_train_eval_infer(
 ):
     """Train, evaluate, and run inference for document classification on 20NG.
 
-    Run once with a frozen base model and once with the complete model trainable.
+    Run with head-only training, complete-model training, and LoRA training.
     Train on the training split, validate on its remaining split, evaluate on a
     separate held-out subset, and infer on the test subset. Require all but one
     low-support class to meet the per-class F1 floor in both evaluations.
@@ -624,6 +642,7 @@ def test_document_classifier_train_eval_infer(
         [],
         [subset_tags["train"].id],
         payload["freeze_base_model"],
+        payload["lora_enabled"],
     )
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
@@ -725,7 +744,7 @@ def test_sentence_classifier_train_eval_infer(
 ):
     """Train, evaluate, and run inference for sentence classification on CSAbstruct.
 
-    Run once with a frozen base model and once with the complete model trainable.
+    Run with head-only training, complete-model training, and LoRA training.
     Train on the training split, validate on its remaining split, evaluate on a
     separate held-out subset, and infer on the test subset using the selected
     annotator. Apply conservative quality floors to both evaluations.
@@ -746,6 +765,7 @@ def test_sentence_classifier_train_eval_infer(
         [test_user.id],
         [tags["train"].id],
         payload["freeze_base_model"],
+        payload["lora_enabled"],
     )
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
@@ -844,6 +864,7 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
         [],
         [],
         True,
+        False,
     )
     job = _start_job(client, payload)
     # The job should fail; _wait_for_job fails the test with the status message.

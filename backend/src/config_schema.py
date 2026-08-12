@@ -333,7 +333,10 @@ class BaseModelOption(BaseModel):
 class ClassifierTrainingParamsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    adapter_name: str | None
+    lora_enabled: bool
+    lora_rank: int = Field(gt=0)
+    lora_alpha: int = Field(gt=0)
+    lora_dropout: float = Field(ge=0.0, lt=1.0)
     freeze_base_model: bool
     epochs: int = Field(gt=0)
     batch_size: int = Field(gt=0)
@@ -346,6 +349,12 @@ class ClassifierTrainingParamsConfig(BaseModel):
     chunk_size: int = Field(gt=0)
     precision: Literal["32-true", "16-true", "16-mixed", "bf16-true", "bf16-mixed"]
     averaging: Literal["micro", "macro"]
+
+    @model_validator(mode="after")
+    def validate_lora_freezes_base_model(self) -> ClassifierTrainingParamsConfig:
+        if self.lora_enabled and not self.freeze_base_model:
+            raise ValueError("Enabled LoRA requires freeze_base_model")
+        return self
 
 
 class ClassifierConfig(BaseModel):
