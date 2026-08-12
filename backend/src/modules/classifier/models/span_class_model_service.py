@@ -1007,10 +1007,12 @@ class SpanClassificationModelService(TextClassificationModelService):
         if len(dataset) == 0:
             raise EmptyDatasetError()
 
-        # Build dataloader
+        # Keep document metadata in `dataset` for the statistics below, but do
+        # not collate it into model input batches.
+        model_dataset = dataset.remove_columns(["sdoc_id", "user_id"])
         data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
         test_dataloader = DataLoader(
-            dataset,  # type: ignore
+            model_dataset,  # type: ignore
             shuffle=False,
             collate_fn=data_collator,
             batch_size=classifier.train_params["batch_size"],
