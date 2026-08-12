@@ -10,8 +10,9 @@ def build_lora_config(
     """Build a LoRA configuration that adapts only the classifier base model.
 
     PEFT keeps token- and sequence-classification heads (named ``classifier`` or
-    ``score``) fully trainable through ``modules_to_save``. Excluding those heads
-    from ``all-linear`` prevents PEFT from first replacing them with LoRA layers.
+    ``score``) fully trainable through ``modules_to_save``. Declaring them before
+    adapter injection and excluding them from ``all-linear`` prevents PEFT from
+    first replacing them with LoRA layers.
     """
     classifier_head_modules = (
         ["classifier", "score"]
@@ -26,4 +27,9 @@ def build_lora_config(
         lora_dropout=dropout,
         target_modules="all-linear",
         exclude_modules=classifier_head_modules,
+        modules_to_save=(
+            classifier_head_modules.copy()
+            if classifier_head_modules is not None
+            else None
+        ),
     )
