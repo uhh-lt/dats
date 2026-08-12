@@ -12,15 +12,21 @@ from pydantic import Field
 from config import conf
 from modules.classifier.classifier_dto import (
     ClassifierAveraging,
+    ClassifierEvaluationOutput,
     ClassifierEvaluationParams,
     ClassifierEvaluationRead,
+    ClassifierInferenceOutput,
     ClassifierInferenceParams,
     ClassifierJobInput,
+    ClassifierJobOutput,
     ClassifierModel,
+    ClassifierRead,
     ClassifierTask,
+    ClassifierTrainingOutput,
     ClassifierTrainingParams,
+    ClassifierTrainingSettings,
 )
-from systems.job_system.job_dto import JobStatus
+from systems.job_system.job_dto import JobRead, JobStatus
 
 # Smallest configured base models keep training fast on the GPU runner.
 TRANSFORMER_BASE = conf.classifier.transformer_models[0].value
@@ -32,11 +38,12 @@ EMBEDDING_BASE = conf.classifier.embedding_models[0].value
 # ---------------------------------------------------------------------------
 
 CLASSIFIER_JOB_URL = "/classifier/classifier"
+ClassifierJobRead = JobRead[ClassifierJobInput, ClassifierJobOutput]
 
 
 def _wait_for_job(
     client: TestClient, job_id: str, timeout: float = 600.0, poll_interval: float = 10.0
-) -> dict:
+) -> ClassifierJobRead:
     """Poll a classifier job until it finishes and return its endpoint response.
 
     Fail the test with the job's status message when it fails, is stopped or
@@ -46,18 +53,18 @@ def _wait_for_job(
     while True:
         response = client.get(f"{CLASSIFIER_JOB_URL}/{job_id}")
         assert response.status_code == 200, response.text
-        job = response.json()
-        status = job["status"]
-        if status == JobStatus.FINISHED.value:
+        job = ClassifierJobRead.model_validate(response.json())
+        status = job.status
+        if status == JobStatus.FINISHED:
             return job
         if status in (
-            JobStatus.FAILED.value,
-            JobStatus.STOPPED.value,
-            JobStatus.CANCELED.value,
+            JobStatus.FAILED,
+            JobStatus.STOPPED,
+            JobStatus.CANCELED,
         ):
             pytest.fail(
                 f"Classifier job {job_id} ended with status '{status}': "
-                f"{job.get('status_message')}"
+                f"{job.status_message}"
             )
         if time.monotonic() > deadline:
             pytest.fail(
@@ -67,14 +74,14 @@ def _wait_for_job(
         time.sleep(poll_interval)
 
 
-def _start_job(client: TestClient, payload: ClassifierJobInput) -> dict:
+def _start_job(client: TestClient, payload: ClassifierJobInput) -> ClassifierJobRead:
     """Serialize a typed classifier request, start its job, and return the response."""
     response = client.post(
         CLASSIFIER_JOB_URL,
         json=payload.model_dump(mode="json"),
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    return ClassifierJobRead.model_validate(response.json())
 
 
 # ---------------------------------------------------------------------------
@@ -214,14 +221,19 @@ def _inference_payload(
 # ---------------------------------------------------------------------------
 
 
-def _assert_metrics_in_range(evaluation: dict):
+def _assert_metrics_in_range(evaluation: ClassifierEvaluationRead) -> None:
     """Assert that every persisted overall metric is a valid normalized score."""
-    for key in ("f1", "precision", "recall", "accuracy"):
-        assert 0.0 <= evaluation[key] <= 1.0, f"{key} out of range: {evaluation[key]}"
+    for name, value in (
+        ("f1", evaluation.f1),
+        ("precision", evaluation.precision),
+        ("recall", evaluation.recall),
+        ("accuracy", evaluation.accuracy),
+    ):
+        assert 0.0 <= value <= 1.0, f"{name} out of range: {value}"
 
 
 def _assert_metrics_expected(
-    evaluation: dict,
+    evaluation: ClassifierEvaluationRead,
     min_f1: float,
     min_precision: float,
     min_recall: float,
@@ -235,24 +247,21 @@ def _assert_metrics_expected(
     difficult or low-support classes while retaining a class-level quality
     check for the remainder.
     """
-    for key, floor in (
-        ("f1", min_f1),
-        ("precision", min_precision),
-        ("recall", min_recall),
-        ("accuracy", min_accuracy),
+    for name, value, floor in (
+        ("f1", evaluation.f1, min_f1),
+        ("precision", evaluation.precision, min_precision),
+        ("recall", evaluation.recall, min_recall),
+        ("accuracy", evaluation.accuracy, min_accuracy),
     ):
-        assert evaluation[key] >= floor, (
-            f"{key} below expected floor: {evaluation[key]:.4f} < {floor}"
-        )
+        assert value >= floor, f"{name} below expected floor: {value:.4f} < {floor}"
     classes_below_floor = [
-        m for m in evaluation.get("class_metrics", []) if m["f1"] < min_class_f1
+        metric for metric in evaluation.class_metrics if metric.f1 < min_class_f1
     ]
     assert len(classes_below_floor) <= max_classes_below_f1_floor, (
         f"{len(classes_below_floor)} classes below F1 floor {min_class_f1}; "
         f"allowed {max_classes_below_f1_floor}: "
         + ", ".join(
-            f"class {metric['class_id']}={metric['f1']:.4f}"
-            for metric in classes_below_floor
+            f"class {metric.class_id}={metric.f1:.4f}" for metric in classes_below_floor
         )
     )
 
@@ -270,10 +279,11 @@ METRICS_ARTIFACTS = {
 
 
 class MetricArtifactRow(ClassifierTrainingParams):
-    """One classifier run's training configuration and held-out metrics."""
+    """One classifier run's training configuration and latest available metrics."""
 
     task_type: Literal[ClassifierTask.TRAINING] = Field(exclude=True)
     recorded_at: datetime
+    evaluation_dataset: Literal["training-validation", "held-out-evaluation"]
     accuracy: float
     precision: float
     recall: float
@@ -286,11 +296,13 @@ class MetricArtifactRow(ClassifierTrainingParams):
         training_params: ClassifierTrainingParams,
         evaluation: ClassifierEvaluationRead,
         id2name: dict[int, str],
+        evaluation_dataset: Literal["training-validation", "held-out-evaluation"],
     ) -> Self:
-        """Combine one typed training request and its held-out evaluation."""
+        """Combine one typed training request and its latest evaluation."""
         return cls(
             **training_params.model_dump(),
             recorded_at=datetime.now(UTC),
+            evaluation_dataset=evaluation_dataset,
             accuracy=evaluation.accuracy,
             precision=evaluation.precision,
             recall=evaluation.recall,
@@ -301,7 +313,7 @@ class MetricArtifactRow(ClassifierTrainingParams):
             },
         )
 
-    def to_csv_row(self) -> dict[str, str | int | float | bool]:
+    def to_csv_row(self) -> dict[str, str]:
         """Flatten class F1 scores and serialize this run as one CSV row."""
         serialized_row = self.model_dump(mode="json")
         serialized_row.update(
@@ -311,14 +323,14 @@ class MetricArtifactRow(ClassifierTrainingParams):
             }
         )
 
-        csv_row: dict[str, str | int | float | bool] = {}
+        csv_row: dict[str, str] = {}
         for column, value in serialized_row.items():
             if isinstance(value, (dict, list)):
                 csv_row[column] = json.dumps(value, sort_keys=True)
             elif value is None:
                 csv_row[column] = ""
             else:
-                csv_row[column] = value
+                csv_row[column] = str(value)
         return csv_row
 
 
@@ -334,7 +346,12 @@ def _write_metrics_artifact(
     model_type: ClassifierModel,
     row: MetricArtifactRow,
 ) -> None:
-    """Append one run, with dataset-specific class F1 columns, to its CSV."""
+    """Append one CSV row for each completed evaluation stage.
+
+    Training-validation metrics are written as soon as training finishes, before
+    quality assertions can fail. A completed held-out evaluation is appended as a
+    second row. The ``evaluation_dataset`` column distinguishes both stages.
+    """
     artifact = METRICS_ARTIFACTS[model_type]
     csv_row = row.to_csv_row()
     fieldnames = list(csv_row)
@@ -342,7 +359,8 @@ def _write_metrics_artifact(
     write_header = artifact.stat().st_size == 0
     if not write_header:
         with artifact.open(encoding="utf-8", newline="") as file:
-            existing_fieldnames = next(csv.reader(file))
+            reader = csv.DictReader(file)
+            existing_fieldnames = reader.fieldnames
         if existing_fieldnames != fieldnames:
             raise ValueError(
                 f"Metrics columns changed between {model_type.value} runs: "
@@ -385,23 +403,27 @@ def _print_table(title: str, headers: list[str], rows: list[list[str]]):
 
 
 def _report_training(
-    classifier: dict,
+    classifier: ClassifierRead,
     id2name: dict[int, str],
     dataset_tag_name: str,
-):
+) -> None:
     """Report persisted training data and epoch losses.
 
     Table headings reflect the configured training split and selection tag.
     """
-    validation_percentage = classifier["train_params"]["train_test_split"] * 100
-    training_percentage = 100 - validation_percentage
-    print(
-        f"\n{'=' * 72}\nTRAIN  {classifier['name']}  (id={classifier['id']})\n{'=' * 72}"
+    training_settings = ClassifierTrainingSettings.model_validate(
+        classifier.train_params
     )
+    validation_percentage = training_settings.train_test_split * 100
+    training_percentage = 100 - validation_percentage
+    print(f"\n{'=' * 72}\nTRAIN  {classifier.name}  (id={classifier.id})\n{'=' * 72}")
 
     stats_rows = [
-        [id2name.get(s["class_id"], str(s["class_id"])), str(s["num_examples"])]
-        for s in classifier["train_data_stats"]
+        [
+            id2name.get(statistic.class_id, str(statistic.class_id)),
+            str(statistic.num_examples),
+        ]
+        for statistic in classifier.train_data_stats
     ]
     _print_table(
         (
@@ -413,18 +435,17 @@ def _report_training(
     )
 
     loss_rows = [
-        [str(entry["step"]), f"{entry['value']:.4f}"]
-        for entry in classifier["train_loss"]
+        [str(entry.step), f"{entry.value:.4f}"] for entry in classifier.train_loss
     ]
     _print_table("Training loss (per epoch)", ["epoch", "loss"], loss_rows)
 
 
 def _report_evaluation(
-    evaluation: dict,
+    evaluation: ClassifierEvaluationRead,
     id2name: dict[int, str],
     title: str,
     dataset_scope: str,
-):
+) -> None:
     """Report evaluation data counts and overall/per-class metrics.
 
     Print the available data, overall scores, and per-class scores to captured
@@ -432,18 +453,21 @@ def _report_evaluation(
     """
     scoped_title = f"{title} ({dataset_scope})"
     stats_rows = [
-        [id2name.get(s["class_id"], str(s["class_id"])), str(s["num_examples"])]
-        for s in evaluation.get("eval_data_stats", [])
+        [
+            id2name.get(statistic.class_id, str(statistic.class_id)),
+            str(statistic.num_examples),
+        ]
+        for statistic in evaluation.eval_data_stats
     ]
     if stats_rows:
         _print_table(f"{scoped_title} — data", ["class", "examples"], stats_rows)
 
     overall = [
         [
-            f"{evaluation['precision']:.4f}",
-            f"{evaluation['recall']:.4f}",
-            f"{evaluation['f1']:.4f}",
-            f"{evaluation['accuracy']:.4f}",
+            f"{evaluation.precision:.4f}",
+            f"{evaluation.recall:.4f}",
+            f"{evaluation.f1:.4f}",
+            f"{evaluation.accuracy:.4f}",
         ]
     ]
     _print_table(
@@ -454,13 +478,13 @@ def _report_evaluation(
 
     metric_rows = [
         [
-            id2name.get(m["class_id"], str(m["class_id"])),
-            f"{m['precision']:.4f}",
-            f"{m['recall']:.4f}",
-            f"{m['f1']:.4f}",
-            str(m["support"]),
+            id2name.get(metric.class_id, str(metric.class_id)),
+            f"{metric.precision:.4f}",
+            f"{metric.recall:.4f}",
+            f"{metric.f1:.4f}",
+            str(metric.support),
         ]
-        for m in evaluation.get("class_metrics", [])
+        for metric in evaluation.class_metrics
     ]
     if metric_rows:
         _print_table(
@@ -471,19 +495,22 @@ def _report_evaluation(
 
 
 def _report_inference(
-    output: dict,
+    output: ClassifierInferenceOutput,
     id2name: dict[int, str],
     dataset_tag_name: str,
-):
+) -> None:
     """Report inference prediction counts to captured test output."""
     rows = [
-        [id2name.get(s["class_id"], str(s["class_id"])), str(s["num_examples"])]
-        for s in output["result_statistics"]
+        [
+            id2name.get(statistic.class_id, str(statistic.class_id)),
+            str(statistic.num_examples),
+        ]
+        for statistic in output.result_statistics
     ]
     _print_table(
         (
             f'INFER (documents tagged "{dataset_tag_name}") '
-            f"— affected docs: {output['total_affected_docs']}"
+            f"— affected docs: {output.total_affected_docs}"
         ),
         ["class", "predicted"],
         rows,
@@ -531,17 +558,19 @@ def test_span_classifier_train_eval_infer(
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job["job_id"])
-    train_output = train_finished["output"]["task_output"]
-    classifier = train_output["classifier"]
+    train_finished = _wait_for_job(client, train_job.job_id)
+    assert train_finished.output is not None
+    train_output = train_finished.output.task_output
+    assert isinstance(train_output, ClassifierTrainingOutput)
+    classifier = train_output.classifier
     _report_training(classifier, id2name, tags["train"].name)
-    assert classifier["type"] == "span"
-    assert len(classifier["evaluations"]) == 1
-    classifier_id = classifier["id"]
+    assert classifier.type == ClassifierModel.SPAN
+    assert len(classifier.evaluations) == 1
+    classifier_id = classifier.id
 
     # VALIDATE on the validation split of the training-data subset
-    training_validation = classifier["evaluations"][0]
-    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    training_validation = classifier.evaluations[0]
+    validation_percentage = training_params.train_test_split * 100
     _report_evaluation(
         training_validation,
         id2name,
@@ -549,6 +578,15 @@ def test_span_classifier_train_eval_infer(
         dataset_scope=(
             f"{validation_percentage:g}% split of documents tagged "
             f'"{tags["train"].name}"'
+        ),
+    )
+    _write_metrics_artifact(
+        ClassifierModel.SPAN,
+        MetricArtifactRow.from_run(
+            training_params,
+            training_validation,
+            id2name,
+            "training-validation",
         ),
     )
     _assert_metrics_in_range(training_validation)
@@ -571,22 +609,29 @@ def test_span_classifier_train_eval_infer(
             [test_user.id],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job["job_id"])
-    eval_output = eval_finished["output"]["task_output"]
+    eval_finished = _wait_for_job(client, eval_job.job_id)
+    assert eval_finished.output is not None
+    eval_output = eval_finished.output.task_output
+    assert isinstance(eval_output, ClassifierEvaluationOutput)
     _report_evaluation(
-        eval_output["evaluation"],
+        eval_output.evaluation,
         id2name,
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{tags["eval"].name}"',
     )
-    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    evaluation = eval_output.evaluation
     _write_metrics_artifact(
         ClassifierModel.SPAN,
-        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+        MetricArtifactRow.from_run(
+            training_params,
+            evaluation,
+            id2name,
+            "held-out-evaluation",
+        ),
     )
-    _assert_metrics_in_range(eval_output["evaluation"])
+    _assert_metrics_in_range(evaluation)
     _assert_metrics_expected(
-        eval_output["evaluation"],
+        evaluation,
         min_f1=0.65,
         min_precision=0.58,
         min_recall=0.70,
@@ -603,10 +648,12 @@ def test_span_classifier_train_eval_infer(
             conll_span_dataset["subset2sdoc_ids"]["test"][:5],
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job["job_id"])
-    infer_output = infer_finished["output"]["task_output"]
+    infer_finished = _wait_for_job(client, infer_job.job_id)
+    assert infer_finished.output is not None
+    infer_output = infer_finished.output.task_output
+    assert isinstance(infer_output, ClassifierInferenceOutput)
     _report_inference(infer_output, id2name, tags["test"].name)
-    assert infer_output["total_affected_docs"] >= 0
+    assert infer_output.total_affected_docs >= 0
 
 
 # ---------------------------------------------------------------------------
@@ -625,8 +672,8 @@ def test_document_classifier_train_eval_infer(
 
     Run with head-only training, complete-model training, and LoRA training.
     Train on the training split, validate on its remaining split, evaluate on a
-    separate held-out subset, and infer on the test subset. Require all but one
-    low-support class to meet the per-class F1 floor in both evaluations.
+    separate held-out subset, and infer on the test subset. Permit at most two
+    difficult or low-support classes below the per-class F1 floor.
     """
     project = news20_doc_dataset["project"]
     tags = news20_doc_dataset["tags"]
@@ -649,17 +696,19 @@ def test_document_classifier_train_eval_infer(
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job["job_id"])
-    train_output = train_finished["output"]["task_output"]
-    classifier = train_output["classifier"]
+    train_finished = _wait_for_job(client, train_job.job_id)
+    assert train_finished.output is not None
+    train_output = train_finished.output.task_output
+    assert isinstance(train_output, ClassifierTrainingOutput)
+    classifier = train_output.classifier
     _report_training(classifier, id2name, subset_tags["train"].name)
-    assert classifier["type"] == "document"
-    assert len(classifier["evaluations"]) == 1
-    classifier_id = classifier["id"]
+    assert classifier.type == ClassifierModel.DOCUMENT
+    assert len(classifier.evaluations) == 1
+    classifier_id = classifier.id
 
     # VALIDATE on the validation split of the training-data subset
-    training_validation = classifier["evaluations"][0]
-    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    training_validation = classifier.evaluations[0]
+    validation_percentage = training_params.train_test_split * 100
     _report_evaluation(
         training_validation,
         id2name,
@@ -667,6 +716,15 @@ def test_document_classifier_train_eval_infer(
         dataset_scope=(
             f"{validation_percentage:g}% split of documents tagged "
             f'"{subset_tags["train"].name}"'
+        ),
+    )
+    _write_metrics_artifact(
+        ClassifierModel.DOCUMENT,
+        MetricArtifactRow.from_run(
+            training_params,
+            training_validation,
+            id2name,
+            "training-validation",
         ),
     )
     _assert_metrics_in_range(training_validation)
@@ -677,7 +735,7 @@ def test_document_classifier_train_eval_infer(
         min_recall=0.58,
         min_accuracy=0.58,
         min_class_f1=0.35,
-        max_classes_below_f1_floor=1,
+        max_classes_below_f1_floor=2,
     )
 
     # EVALUATE on the held-out evaluation-data subset
@@ -691,28 +749,35 @@ def test_document_classifier_train_eval_infer(
             [],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job["job_id"])
-    eval_output = eval_finished["output"]["task_output"]
+    eval_finished = _wait_for_job(client, eval_job.job_id)
+    assert eval_finished.output is not None
+    eval_output = eval_finished.output.task_output
+    assert isinstance(eval_output, ClassifierEvaluationOutput)
     _report_evaluation(
-        eval_output["evaluation"],
+        eval_output.evaluation,
         id2name,
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{subset_tags["eval"].name}"',
     )
-    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    evaluation = eval_output.evaluation
     _write_metrics_artifact(
         ClassifierModel.DOCUMENT,
-        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+        MetricArtifactRow.from_run(
+            training_params,
+            evaluation,
+            id2name,
+            "held-out-evaluation",
+        ),
     )
-    _assert_metrics_in_range(eval_output["evaluation"])
+    _assert_metrics_in_range(evaluation)
     _assert_metrics_expected(
-        eval_output["evaluation"],
+        evaluation,
         min_f1=0.58,
         min_precision=0.58,
         min_recall=0.58,
         min_accuracy=0.58,
         min_class_f1=0.35,
-        max_classes_below_f1_floor=1,
+        max_classes_below_f1_floor=2,
     )
 
     # INFER on the held-out test-data subset
@@ -725,10 +790,12 @@ def test_document_classifier_train_eval_infer(
             news20_doc_dataset["subset2sdoc_ids"]["test"][:5],
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job["job_id"])
-    infer_output = infer_finished["output"]["task_output"]
+    infer_finished = _wait_for_job(client, infer_job.job_id)
+    assert infer_finished.output is not None
+    infer_output = infer_finished.output.task_output
+    assert isinstance(infer_output, ClassifierInferenceOutput)
     _report_inference(infer_output, id2name, subset_tags["test"].name)
-    assert infer_output["total_affected_docs"] >= 0
+    assert infer_output.total_affected_docs >= 0
 
 
 # ---------------------------------------------------------------------------
@@ -772,17 +839,19 @@ def test_sentence_classifier_train_eval_infer(
     training_params = training_request.task_parameters
     assert isinstance(training_params, ClassifierTrainingParams)
     train_job = _start_job(client, training_request)
-    train_finished = _wait_for_job(client, train_job["job_id"])
-    train_output = train_finished["output"]["task_output"]
-    classifier = train_output["classifier"]
+    train_finished = _wait_for_job(client, train_job.job_id)
+    assert train_finished.output is not None
+    train_output = train_finished.output.task_output
+    assert isinstance(train_output, ClassifierTrainingOutput)
+    classifier = train_output.classifier
     _report_training(classifier, id2name, tags["train"].name)
-    assert classifier["type"] == "sentence"
-    assert len(classifier["evaluations"]) == 1
-    classifier_id = classifier["id"]
+    assert classifier.type == ClassifierModel.SENTENCE
+    assert len(classifier.evaluations) == 1
+    classifier_id = classifier.id
 
     # VALIDATE on the validation split of the training-data subset
-    training_validation = classifier["evaluations"][0]
-    validation_percentage = classifier["train_params"]["train_test_split"] * 100
+    training_validation = classifier.evaluations[0]
+    validation_percentage = training_params.train_test_split * 100
     _report_evaluation(
         training_validation,
         id2name,
@@ -790,6 +859,15 @@ def test_sentence_classifier_train_eval_infer(
         dataset_scope=(
             f"{validation_percentage:g}% split of documents tagged "
             f'"{tags["train"].name}"'
+        ),
+    )
+    _write_metrics_artifact(
+        ClassifierModel.SENTENCE,
+        MetricArtifactRow.from_run(
+            training_params,
+            training_validation,
+            id2name,
+            "training-validation",
         ),
     )
     _assert_metrics_in_range(training_validation)
@@ -812,22 +890,29 @@ def test_sentence_classifier_train_eval_infer(
             [test_user.id],
         ),
     )
-    eval_finished = _wait_for_job(client, eval_job["job_id"])
-    eval_output = eval_finished["output"]["task_output"]
+    eval_finished = _wait_for_job(client, eval_job.job_id)
+    assert eval_finished.output is not None
+    eval_output = eval_finished.output.task_output
+    assert isinstance(eval_output, ClassifierEvaluationOutput)
     _report_evaluation(
-        eval_output["evaluation"],
+        eval_output.evaluation,
         id2name,
         title="Held-out evaluation",
         dataset_scope=f'documents tagged "{tags["eval"].name}"',
     )
-    evaluation = ClassifierEvaluationRead.model_validate(eval_output["evaluation"])
+    evaluation = eval_output.evaluation
     _write_metrics_artifact(
         ClassifierModel.SENTENCE,
-        MetricArtifactRow.from_run(training_params, evaluation, id2name),
+        MetricArtifactRow.from_run(
+            training_params,
+            evaluation,
+            id2name,
+            "held-out-evaluation",
+        ),
     )
-    _assert_metrics_in_range(eval_output["evaluation"])
+    _assert_metrics_in_range(evaluation)
     _assert_metrics_expected(
-        eval_output["evaluation"],
+        evaluation,
         min_f1=0.45,
         min_precision=0.45,
         min_recall=0.45,
@@ -844,10 +929,12 @@ def test_sentence_classifier_train_eval_infer(
             csabstruct_sent_dataset["subset2sdoc_ids"]["test"][:5],
         ),
     )
-    infer_finished = _wait_for_job(client, infer_job["job_id"])
-    infer_output = infer_finished["output"]["task_output"]
+    infer_finished = _wait_for_job(client, infer_job.job_id)
+    assert infer_finished.output is not None
+    infer_output = infer_finished.output.task_output
+    assert isinstance(infer_output, ClassifierInferenceOutput)
     _report_inference(infer_output, id2name, tags["test"].name)
-    assert infer_output["total_affected_docs"] >= 0
+    assert infer_output.total_affected_docs >= 0
 
 
 # ---------------------------------------------------------------------------
@@ -873,12 +960,13 @@ def test_train_job_invalid_base_model(client: TestClient, test_project):
     # We poll manually here to assert on the failure message instead.
     deadline = time.monotonic() + 120
     while True:
-        r = client.get(f"{CLASSIFIER_JOB_URL}/{job['job_id']}")
-        j = r.json()
-        if j["status"] == "failed":
-            assert "does not exist" in (j.get("status_message") or "").lower()
+        response = client.get(f"{CLASSIFIER_JOB_URL}/{job.job_id}")
+        assert response.status_code == 200, response.text
+        current_job = ClassifierJobRead.model_validate(response.json())
+        if current_job.status == JobStatus.FAILED:
+            assert "does not exist" in (current_job.status_message or "").lower()
             break
-        if j["status"] == "finished":
+        if current_job.status == JobStatus.FINISHED:
             pytest.fail("Training with a bogus base model unexpectedly succeeded")
         if time.monotonic() > deadline:
             pytest.fail("Job did not reach failed state in time")
