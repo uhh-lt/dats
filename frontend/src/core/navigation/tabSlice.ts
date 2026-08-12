@@ -1,9 +1,15 @@
+import { AuthActions } from "@core/auth";
 import { Draft, PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@store/store";
+import { persistReducer } from "redux-persist";
+import createWebStorage from "redux-persist/es/storage/createWebStorage";
 import { ProjectTabState, TabData } from "./_types/TabData";
 import { normalizeTabRoute } from "./_utils/TabRouteTargetUtils";
 
+const storage = createWebStorage("local");
+
 export interface TabState {
+  userId?: number;
   tabsByProject: Record<number, ProjectTabState>;
 }
 
@@ -27,6 +33,7 @@ const moveItem = <T>(arr: T[], from: number, to: number): T[] => {
 };
 
 const initialState: TabState = {
+  userId: undefined,
   tabsByProject: {},
 };
 
@@ -105,6 +112,16 @@ const tabSlice = createSlice({
       projectState.tabOrder = projectState.tabOrder.slice(0, fromIndex + 1);
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(AuthActions.userChanged, (state, action) => {
+      if (state.userId === action.payload) {
+        return;
+      }
+
+      state.userId = action.payload;
+      state.tabsByProject = {};
+    });
+  },
 });
 
 export const selectProjectTabState =
@@ -119,4 +136,12 @@ export const selectProjectTabs = (projectId: number) =>
   });
 
 export const TabActions = tabSlice.actions;
-export const tabReducer = { [tabSlice.name]: tabSlice.reducer };
+export const tabReducer = {
+  [tabSlice.name]: persistReducer(
+    {
+      key: tabSlice.name,
+      storage,
+    },
+    tabSlice.reducer,
+  ),
+};
