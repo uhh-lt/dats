@@ -3,6 +3,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { ClassifierAveraging } from "@models/ClassifierAveraging";
 import { ClassifierInfo } from "@models/ClassifierInfo";
 import { ClassifierModel } from "@models/ClassifierModel";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   Alert,
   Box,
@@ -13,8 +14,10 @@ import {
   CircularProgress,
   DialogActions,
   Divider,
+  IconButton,
   MenuItem,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
@@ -61,6 +64,7 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
   // form state
   const {
     control,
+    clearErrors,
     getValues,
     handleSubmit,
     setValue,
@@ -117,6 +121,49 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
     }
   };
 
+  const handleResetRequiredConfiguration = () => {
+    setValue("classifier_name", "", { shouldDirty: true });
+    setValue("base_name", baseModelOptions?.[0]?.value ?? "", { shouldDirty: true });
+    setValue("lora_enabled", trainingDefaults.lora_enabled, { shouldDirty: true });
+    setValue("lora_rank", trainingDefaults.lora_rank, { shouldDirty: true });
+    setValue("lora_alpha", trainingDefaults.lora_alpha, { shouldDirty: true });
+    setValue("lora_dropout", trainingDefaults.lora_dropout, { shouldDirty: true });
+    setValue("freeze_base_model", trainingDefaults.lora_enabled ? true : trainingDefaults.freeze_base_model, {
+      shouldDirty: true,
+    });
+    clearErrors(["classifier_name", "base_name", "lora_rank", "lora_alpha", "lora_dropout"]);
+  };
+
+  const handleResetExpertConfiguration = () => {
+    setValue("epochs", trainingDefaults.epochs, { shouldDirty: true });
+    setValue("batch_size", trainingDefaults.batch_size, { shouldDirty: true });
+    setValue("early_stopping", trainingDefaults.early_stopping, { shouldDirty: true });
+    setValue("early_stopping_patience", trainingDefaults.early_stopping_patience, { shouldDirty: true });
+    setValue("train_test_split", trainingDefaults.train_test_split, { shouldDirty: true });
+    setValue("base_learning_rate", trainingDefaults.base_learning_rate, { shouldDirty: true });
+    setValue("head_learning_rate", trainingDefaults.head_learning_rate, { shouldDirty: true });
+    setValue("warmup_fraction", trainingDefaults.warmup_fraction, { shouldDirty: true });
+    setValue("weight_decay", trainingDefaults.weight_decay, { shouldDirty: true });
+    setValue("dropout", trainingDefaults.dropout, { shouldDirty: true });
+    setValue("chunk_size", trainingDefaults.chunk_size, { shouldDirty: true });
+    setValue("precision", trainingDefaults.precision, { shouldDirty: true });
+    setValue("averaging", trainingDefaults.averaging, { shouldDirty: true });
+    clearErrors([
+      "epochs",
+      "batch_size",
+      "early_stopping_patience",
+      "train_test_split",
+      "base_learning_rate",
+      "head_learning_rate",
+      "warmup_fraction",
+      "weight_decay",
+      "dropout",
+      "chunk_size",
+      "precision",
+      "averaging",
+    ]);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit, onError)} className="myFlexContainer myFlexFillAllContainer">
       <Stack spacing={2} p={2} className="myFlexFillAllContainer" sx={{ backgroundColor: "grey.100" }}>
@@ -125,7 +172,11 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
           the training parameters as needed.
         </Alert>
         <Stack spacing={2}>
-          <FormBox title="Required configuration">
+          <FormBox
+            title="Required configuration"
+            resetTooltip="Reset required configuration"
+            onReset={handleResetRequiredConfiguration}
+          >
             <FormItem title="Classifier Name" subtitle="Specify the name of your new classifier.">
               <FormText
                 name="classifier_name"
@@ -266,7 +317,11 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
             </Box>
           </FormBox>
 
-          <FormBox title="Expert configuration">
+          <FormBox
+            title="Expert configuration"
+            resetTooltip="Reset expert configuration"
+            onReset={handleResetExpertConfiguration}
+          >
             <FormItem title="Epochs" subtitle="Choose the number of training epochs.">
               <FormNumber
                 name="epochs"
@@ -550,11 +605,25 @@ function TrainingSettingsForm({ classifierInfo, model, savedSettings }: Training
   );
 }
 
-function FormBox({ title, children }: { title: string; children: React.ReactNode }) {
+interface FormBoxProps {
+  title: string;
+  resetTooltip: string;
+  onReset: () => void;
+  children: React.ReactNode;
+}
+
+function FormBox({ title, resetTooltip, onReset, children }: FormBoxProps) {
   return (
     <Card variant="outlined">
       <CardHeader
         title={title}
+        action={
+          <Tooltip title={resetTooltip}>
+            <IconButton type="button" onClick={onReset}>
+              <RestartAltIcon />
+            </IconButton>
+          </Tooltip>
+        }
         slotProps={{
           title: {
             variant: "h6",
