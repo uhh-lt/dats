@@ -764,7 +764,11 @@ def csabstruct_sent_dataset(db_session, test_project, test_user) -> SentDataset:
     Sdocs are split into train/eval/test thirds tagged training-data /
     evaluation-data / test-data; `subset2sdoc_ids` maps subset name -> sdoc ids.
     """
-    ds = load_dataset("allenai/csabstruct", split="train")
+    ds = load_dataset(
+        "allenai/csabstruct",
+        split="train",
+        revision="28a642ef5d64426faf75f3b7504eb652a4850fec",
+    )
 
     # Fail loudly if the dataset's labels drift from our constants
     # (labels are ClassLabel ints; the string names live in the feature metadata)
