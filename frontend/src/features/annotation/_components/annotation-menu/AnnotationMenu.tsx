@@ -67,6 +67,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
   const [editingAnnotation, setEditingAnnotation] = useState<Annotation | undefined>(undefined);
   const [duplicatingAnnotation, setDuplicatingAnnotation] = useState<Annotation | undefined>(undefined);
   const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilterWithLevel | null>(null);
+  const [autoCompleteInputValue, setAutoCompleteInputValue] = useState("");
 
   // computed
   const codes = useComputeCodesForSelection();
@@ -114,6 +115,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
     setIsPopoverOpen(false);
     setIsAutoCompleteOpen(false);
     setAutoCompleteValue(null);
+    setAutoCompleteInputValue("");
     onClose(reason);
   };
 
@@ -209,7 +211,8 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
       event.ctrlKey ||
       event.metaKey ||
       event.altKey ||
-      event.shiftKey
+      event.shiftKey ||
+      autoCompleteInputValue !== ""
     ) {
       return;
     }
@@ -305,9 +308,9 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
             onChange={handleChange}
             filterOptions={(options, params) => {
               const shortcutOptions = options.filter((option) => option.shortcutKey !== undefined);
-              const filtered = filter(
-                options.filter((option) => option.shortcutKey === undefined),
-                params,
+              const regularOptions = options.filter((option) => option.shortcutKey === undefined);
+              const filtered = filter(params.inputValue === "" ? regularOptions : options, params).map((option) =>
+                option.shortcutKey === undefined ? option : { ...option, shortcutKey: undefined },
               );
 
               const { inputValue } = params;
@@ -331,7 +334,7 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
                 });
               }
 
-              return [...shortcutOptions, ...filtered];
+              return params.inputValue === "" ? [...shortcutOptions, ...filtered] : filtered;
             }}
             options={codeOptions}
             getOptionLabel={(option) => {
@@ -371,6 +374,8 @@ export const AnnotationMenu = ({ ref, onClose, onAdd, onEdit, onDelete, onDuplic
             }}
             sx={{ width: 300 }}
             renderInput={(params) => <TextField autoFocus {...params} />}
+            inputValue={autoCompleteInputValue}
+            onInputChange={(_event, newInputValue) => setAutoCompleteInputValue(newInputValue)}
             autoHighlight
             selectOnFocus
             clearOnBlur
