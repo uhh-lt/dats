@@ -8,7 +8,7 @@ import { ClassifierActions } from "../../../store/classifierSlice";
 
 export const StatusStep = memo(() => {
   // global state
-  const classifierJobId = useAppSelector((state) => state.classifier.classifierJobId);
+  const classifierJobId = useAppSelector((state) => state.classifier.jobId);
   const dispatch = useAppDispatch();
 
   // poll the job

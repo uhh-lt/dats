@@ -27,7 +27,8 @@ const precisionOptions = ["32-true", "16-true", "16-mixed", "bf16-true", "bf16-m
 const averagingOptions = [ClassifierAveraging.MICRO, ClassifierAveraging.MACRO];
 
 export function TrainingSettingsStep() {
-  const model = useAppSelector((state) => state.classifier.classifierModel);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const savedSettings = useAppSelector((state) => state.classifier.drafts.trainingSettings);
   const classifierInfo = ClassifierHooks.useGetClassifierInfo();
 
   if (classifierInfo.isError) {
@@ -42,15 +43,16 @@ export function TrainingSettingsStep() {
     );
   }
 
-  return <TrainingSettingsForm classifierInfo={classifierInfo.data} model={model} />;
+  return <TrainingSettingsForm classifierInfo={classifierInfo.data} model={model} savedSettings={savedSettings} />;
 }
 
 interface TrainingSettingsFormProps {
   classifierInfo: ClassifierInfo;
   model?: ClassifierModel;
+  savedSettings?: ClassifierTrainingSettings;
 }
 
-function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormProps) {
+function TrainingSettingsForm({ classifierInfo, model, savedSettings }: TrainingSettingsFormProps) {
   const dispatch = useAppDispatch();
   const baseModelOptions =
     model === ClassifierModel.SENTENCE ? classifierInfo.embedding_models : classifierInfo.transformer_models;
@@ -59,11 +61,12 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
   // form state
   const {
     control,
+    getValues,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useForm<ClassifierTrainingSettings>({
-    defaultValues: {
+    defaultValues: savedSettings ?? {
       classifier_name: "",
       // default base model depends on the classifier model type
       base_name: baseModelOptions?.[0]?.value ?? "",
@@ -88,10 +91,12 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
 
   // dialog actions
   const handlePrev = () => {
+    dispatch(ClassifierActions.setTrainingSettings(getValues()));
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const onSubmit = (data: ClassifierTrainingSettings) => {
-    dispatch(ClassifierActions.onClassifierDialogSetTrainingSettings(data));
+    dispatch(ClassifierActions.setTrainingSettings(data));
+    dispatch(ClassifierActions.nextClassifierDialogStep());
   };
   const onError: SubmitErrorHandler<ClassifierTrainingSettings> = (data) => console.error(data);
   const earlyStoppingEnabled = useWatch({ control, name: "early_stopping" });
@@ -309,22 +314,25 @@ function TrainingSettingsForm({ classifierInfo, model }: TrainingSettingsFormPro
             </FormItem>
             <FormItem
               title="Train/Validation Split"
-              subtitle="Choose the fraction of selected data reserved for validation (0.2 means 20%)."
+              subtitle="Choose between 10% and 50% of the selected data for validation."
             >
               <FormNumber
                 name="train_test_split"
                 control={control}
                 rules={{
                   required: "Required",
-                  min: { value: 0.01, message: "Must be at least 0.01" },
-                  max: { value: 0.99, message: "Must be at most 0.99" },
+                  min: { value: 0.1, message: "Must be at least 0.1" },
+                  max: { value: 0.5, message: "Must be at most 0.5" },
+                  validate: (value) => Number.isInteger(Number(value) * 10) || "Must use increments of 0.1",
                 }}
                 textFieldProps={{
                   label: "Validation Fraction",
                   variant: "filled",
-                  inputProps: { min: 0.01, max: 0.99, step: 0.05 },
+                  inputProps: { min: 0.1, max: 0.5, step: 0.1 },
                   size: "small",
                   fullWidth: true,
+                  error: Boolean(errors.train_test_split),
+                  helperText: <ErrorMessage errors={errors} name="train_test_split" />,
                 }}
               />
             </FormItem>

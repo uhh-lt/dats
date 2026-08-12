@@ -63,12 +63,12 @@ export const ClassifierInferenceButton = memo(({ sdocIds, projectId }: { sdocIds
       dispatch(
         ClassifierActions.openClassifierDialog({
           projectId: projectId,
+          model: classifier.type,
+          task: ClassifierTask.INFERENCE,
           classifierId: classifier.id,
-          classifierTask: ClassifierTask.INFERENCE,
-          classifierClassIds: classifier.class_ids,
-          classifierModel: classifier.type,
-          classifierStep: 1,
-          classifierSdocIds: sdocIds,
+          initialClassIds: classifier.class_ids,
+          initialStep: 1,
+          initialSourceDocumentIds: sdocIds,
         }),
       );
       handleClose();

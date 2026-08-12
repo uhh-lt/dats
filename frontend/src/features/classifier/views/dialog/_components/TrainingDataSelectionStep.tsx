@@ -10,14 +10,14 @@ import { DataSelection } from "./DataSelection";
 
 export function TrainingDataSelectionStep() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
-  const trainingSettings = useAppSelector((state) => state.classifier.classifierTrainingSettings);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const task = useAppSelector((state) => state.classifier.context.task);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const classIds = useAppSelector((state) => state.classifier.dataset.classIds);
+  const userIds = useAppSelector((state) => state.classifier.dataset.userIds);
+  const tagIds = useAppSelector((state) => state.classifier.dataset.tagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.dataset.mergeChildren);
+  const trainingSettings = useAppSelector((state) => state.classifier.drafts.trainingSettings);
   const dispatch = useAppDispatch();
 
   // dialog actions
@@ -53,7 +53,8 @@ export function TrainingDataSelectionStep() {
       },
       {
         onSuccess: (data) => {
-          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
+          dispatch(ClassifierActions.setClassifierJobId(data.job_id));
+          dispatch(ClassifierActions.nextClassifierDialogStep());
         },
       },
     );

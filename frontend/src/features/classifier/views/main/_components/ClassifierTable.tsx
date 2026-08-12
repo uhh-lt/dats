@@ -123,9 +123,8 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
     dispatch(
       ClassifierActions.openClassifierDialog({
         projectId: projectId,
-        classifierModel: modelType,
-        classifierTask: ClassifierTask.TRAINING,
-        classifierStep: 0,
+        model: modelType,
+        task: ClassifierTask.TRAINING,
       }),
     );
   };
@@ -134,11 +133,10 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
     dispatch(
       ClassifierActions.openClassifierDialog({
         projectId: projectId,
-        classifierModel: modelType,
-        classifierId: classifierId,
-        classifierTask: ClassifierTask.EVALUATION,
-        classifierClassIds: classIds,
-        classifierStep: 0,
+        model: modelType,
+        task: ClassifierTask.EVALUATION,
+        classifierId,
+        initialClassIds: classIds,
       }),
     );
   };
@@ -147,11 +145,10 @@ export function ClassifierTable({ projectId, classifiers, isFetching, isError, o
     dispatch(
       ClassifierActions.openClassifierDialog({
         projectId: projectId,
-        classifierModel: modelType,
-        classifierId: classifierId,
-        classifierTask: ClassifierTask.INFERENCE,
-        classifierClassIds: classIds,
-        classifierStep: 0,
+        model: modelType,
+        task: ClassifierTask.INFERENCE,
+        classifierId,
+        initialClassIds: classIds,
       }),
     );
   };

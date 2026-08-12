@@ -9,14 +9,14 @@ import { ClassifierHooks } from "./classifierQueryOptions";
  */
 export function useDatasetStatistics() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
-  const userIds = useAppSelector((state) => state.classifier.classifierUserIds);
-  const tagIds = useAppSelector((state) => state.classifier.classifierTagIds);
-  const mergeChildren = useAppSelector((state) => state.classifier.classifierMergeChildren);
-  const classifierId = useAppSelector((state) => state.classifier.classifierId);
-  const trainingBaseModelName = useAppSelector((state) => state.classifier.classifierTrainingSettings?.base_name);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const classIds = useAppSelector((state) => state.classifier.dataset.classIds);
+  const userIds = useAppSelector((state) => state.classifier.dataset.userIds);
+  const tagIds = useAppSelector((state) => state.classifier.dataset.tagIds);
+  const mergeChildren = useAppSelector((state) => state.classifier.dataset.mergeChildren);
+  const classifierId = useAppSelector((state) => state.classifier.context.classifierId);
+  const trainingBaseModelName = useAppSelector((state) => state.classifier.drafts.trainingSettings?.base_name);
 
   // in the EVALUATION flow we know the classifier, so we use its actual base model
   const classifiers = ClassifierHooks.useGetAllClassifiers(projectId);

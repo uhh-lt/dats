@@ -43,12 +43,13 @@ const useCountBySdocsAndUser = (model: ClassifierModel) => {
 
 export function InferenceSettingsStep() {
   // dialog state
-  const model = useAppSelector((state) => state.classifier.classifierModel);
-  const classifierId = useAppSelector((state) => state.classifier.classifierId);
-  const task = useAppSelector((state) => state.classifier.classifierTask);
-  const projectId = useAppSelector((state) => state.classifier.classifierProjectId);
-  const sdocIds = useAppSelector((state) => state.classifier.classifierSdocIds);
-  const classIds = useAppSelector((state) => state.classifier.classifierClassIds);
+  const model = useAppSelector((state) => state.classifier.context.model);
+  const classifierId = useAppSelector((state) => state.classifier.context.classifierId);
+  const task = useAppSelector((state) => state.classifier.context.task);
+  const projectId = useAppSelector((state) => state.classifier.context.projectId);
+  const sdocIds = useAppSelector((state) => state.classifier.dataset.sourceDocumentIds);
+  const classIds = useAppSelector((state) => state.classifier.dataset.classIds);
+  const keepExisting = useAppSelector((state) => state.classifier.drafts.inferenceKeepExisting);
   const dispatch = useAppDispatch();
 
   // count existing classes by that user
@@ -63,22 +64,22 @@ export function InferenceSettingsStep() {
     });
   }, [countMutation, sdocIds, classIds]);
 
-  console.log("Count data:", countData);
-
   // form state
-  const { control, handleSubmit } = useForm<InferenceSettings>({
+  const { control, getValues, handleSubmit } = useForm<InferenceSettings>({
     defaultValues: {
-      keepExisting: true,
+      keepExisting,
     },
   });
 
   // dialog actions
   const handlePrev = () => {
+    dispatch(ClassifierActions.setInferenceKeepExisting(getValues("keepExisting")));
     dispatch(ClassifierActions.previousClassifierDialogStep());
   };
   const { mutate: startClassifierJobMutation, isPending: isStartJobPending } = ClassifierHooks.useStartClassifierJob();
   const onSubmit = (data: InferenceSettings) => {
     if (model === undefined || task === undefined || classifierId === undefined || sdocIds.length === 0) return;
+    dispatch(ClassifierActions.setInferenceKeepExisting(data.keepExisting));
 
     const inferenceParams: ClassifierInferenceParams = {
       // required
@@ -100,7 +101,8 @@ export function InferenceSettingsStep() {
       },
       {
         onSuccess: (data) => {
-          dispatch(ClassifierActions.onClassifierDialogStartJob(data.job_id));
+          dispatch(ClassifierActions.setClassifierJobId(data.job_id));
+          dispatch(ClassifierActions.nextClassifierDialogStep());
         },
       },
     );
