@@ -17,6 +17,14 @@
 # Any failure? Stop—no tag, images, or release
 #     ↓
 # Build images and create GitHub Release (.github/workflows/release.yml)
+#
+# Tag Restrictions:
+# The active "Validated Release Tags" GitHub ruleset protects tags matching v*:
+# - A release tag may only be created when backend-checks, frontend-checks,
+#   precommit-checks, and ray-checks succeeded for the tagged commit.
+# - Tag updates and deletions are restricted so published releases remain immutable.
+# - Do not create release tags manually; .github/workflows/release_gate.yml creates
+#   the tag automatically after verifying the corresponding main-branch workflows.
 
 set -euo pipefail
 
