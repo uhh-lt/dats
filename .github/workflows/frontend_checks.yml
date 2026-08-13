@@ -58,6 +58,8 @@ jobs:
             echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
           fi
       - name: Prepare environment
+        env:
+          HF_HUB_TOKEN: ${{ secrets.HF_HUB_TOKEN }}
         run: |
           ./bin/setup-folders.sh
           ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
