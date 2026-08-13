@@ -1,3 +1,5 @@
+# Builds the application stack and verifies that the generated frontend API client is current.
+# It runs for every push to main and for pull requests that can affect the frontend.
 name: frontend checks
 on:
   push:

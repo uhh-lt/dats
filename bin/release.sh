@@ -1,9 +1,37 @@
 #!/bin/bash
 
+# Creates and pushes a version-bump commit. GitHub Actions performs every remaining
+# release step automatically; this script does not create or push the release tag.
+#
+# Release workflow:
+#
+# release.sh
+#     ↓
+# Push release commit to main
+#     ↓
+# Existing four checks run once (.github/workflows/backend_checks.yml, .github/workflows/frontend_checks.yml, .github/workflows/precommit_checks.yml, .github/workflows/ray_checks.yml)
+#     ↓
+# Automatic gate observes their results (.github/workflows/release_gate.yml)
+#     ↓
+# All green? Create tag automatically
+# Any failure? Stop—no tag, images, or release
+#     ↓
+# Build images and create GitHub Release (.github/workflows/release.yml)
+
 set -euo pipefail
 
 if [ "${1:-}" = "" ]; then
 	echo "Please provide a version parameter, e.g. release.sh 0.0.3"
+	exit 1
+fi
+
+if [[ ! "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	echo "Invalid version '$1'. Please use semantic version format, e.g. 1.2.3."
+	exit 1
+fi
+
+if [ "$(git branch --show-current)" != "main" ]; then
+	echo "Please run this script from the main branch."
 	exit 1
 fi
 
@@ -30,6 +58,6 @@ npm run update-api && npm run generate-api && npm run update-version
 cd ..
 git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/core/OpenAPI.ts
 git commit -m "Release v$1"
-git tag v"$1"
 git push
-git push --tags
+
+echo "Release commit pushed. The v$1 tag will be created automatically after all required checks succeed."

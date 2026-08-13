@@ -1,3 +1,5 @@
+# Runs the backend integration test suite and database migration checks.
+# It runs for every push to main and for pull requests that can affect the backend.
 name: backend checks
 on:
   push:

@@ -1,0 +1,120 @@
+# Observes completed main-branch checks and automatically releases valid release commits.
+# A release proceeds only when backend, frontend, precommit, and Ray checks all succeeded.
+name: Release gate
+
+on:
+  workflow_run:
+    workflows:
+      - backend checks
+      - frontend checks
+      - precommit checks
+      - ray checks
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: release-gate-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Verify release checks
+    runs-on: ubuntu-latest
+    outputs:
+      release_ref: ${{ steps.create_tag.outputs.release_ref }}
+      release_sha: ${{ steps.release.outputs.release_sha }}
+      should_release: ${{ steps.create_tag.outputs.should_release }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Identify release commit
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          commit_message=$(gh api "/repos/${{ github.repository }}/commits/$RELEASE_SHA" --jq '.commit.message')
+          release_title=$(printf '%s\n' "$commit_message" | head -n 1)
+
+          if [[ ! "$release_title" =~ ^Release\ v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "Commit is not a release commit; nothing to publish."
+            exit 0
+          fi
+
+          echo "release_sha=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
+          echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify all required workflows succeeded
+        id: checks
+        if: steps.release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        run: |
+          workflow_runs=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=$RELEASE_SHA&event=push&per_page=100")
+          required_workflows=(
+            "backend checks"
+            "frontend checks"
+            "precommit checks"
+            "ray checks"
+          )
+
+          for workflow in "${required_workflows[@]}"; do
+            conclusion=$(jq -r --arg workflow "$workflow" '
+              [.workflow_runs[] | select(.name == $workflow)]
+              | sort_by(.id)
+              | last
+              | .conclusion // ""
+            ' <<< "$workflow_runs")
+
+            if [ "$conclusion" != "success" ]; then
+              echo "$workflow has not succeeded (conclusion: ${conclusion:-pending})."
+              exit 0
+            fi
+          done
+
+          echo "all_succeeded=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create release tag
+        id: create_tag
+        if: steps.checks.outputs.all_succeeded == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          existing_sha=$(gh api "/repos/${{ github.repository }}/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null || true)
+
+          if [ -n "$existing_sha" ]; then
+            if [ "$existing_sha" != "$RELEASE_SHA" ]; then
+              echo "Tag $tag already points to a different commit."
+              exit 1
+            fi
+
+            echo "Tag $tag already exists; nothing to publish."
+            exit 0
+          fi
+
+          gh api --method POST "/repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/tags/$tag" \
+            -f sha="$RELEASE_SHA"
+
+          echo "release_ref=refs/tags/$tag" >> "$GITHUB_OUTPUT"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Publish release
+    needs: gate
+    if: needs.gate.outputs.should_release == 'true'
+    uses: ./.github/workflows/release.yml
+    with:
+      release_ref: ${{ needs.gate.outputs.release_ref }}
+      release_sha: ${{ needs.gate.outputs.release_sha }}
+      version: ${{ needs.gate.outputs.version }}
+    secrets: inherit

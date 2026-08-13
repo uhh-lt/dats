@@ -1,13 +1,63 @@
+# Builds and pushes the backend, frontend, and Ray images, then creates the GitHub Release.
+# This reusable workflow can only be called by release_gate.yml after all checks succeed.
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_call:
+    inputs:
+      release_ref:
+        description: "Git reference to build and release"
+        required: true
+        type: string
+      release_sha:
+        description: "Commit SHA to build and release"
+        required: true
+        type: string
+      version:
+        description: "Semantic version without the v prefix"
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
+  prepare_release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      release_ref: ${{ steps.release.outputs.release_ref }}
+      release_sha: ${{ steps.release.outputs.release_sha }}
+      short_sha: ${{ steps.release.outputs.short_sha }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Resolve release details
+        id: release
+        env:
+          INPUT_RELEASE_REF: ${{ inputs.release_ref }}
+          INPUT_RELEASE_SHA: ${{ inputs.release_sha }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          release_ref="$INPUT_RELEASE_REF"
+          release_sha="$INPUT_RELEASE_SHA"
+          version="$INPUT_VERSION"
+          version="${version#v}"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release version: $version"
+            exit 1
+          fi
+
+          echo "release_ref=$release_ref" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${release_sha:0:7}" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
   build_images:
     name: Build ${{ matrix.component }}
+    needs: prepare_release
     runs-on: self-hosted
     strategy:
       matrix:
@@ -18,6 +68,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare_release.outputs.release_ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.1.0
@@ -34,10 +86,10 @@ jobs:
         with:
           images: uhhlt/dats_${{ matrix.component }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
+            type=semver,pattern={{version}},value=${{ needs.prepare_release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.prepare_release.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.prepare_release.outputs.version }}
+            type=raw,value=sha-${{ needs.prepare_release.outputs.short_sha }}
 
       - name: Build and push
         uses: docker/build-push-action@v7.3.0
@@ -49,10 +101,12 @@ jobs:
 
   create_release:
     name: Create GitHub Release
-    needs: build_images
+    needs: [prepare_release, build_images]
     runs-on: ubuntu-latest
     steps:
       - name: Create Release
         uses: ncipollo/release-action@v1.21.0
         with:
+          commit: ${{ needs.prepare_release.outputs.release_sha }}
           generateReleaseNotes: true
+          tag: ${{ needs.prepare_release.outputs.tag }}

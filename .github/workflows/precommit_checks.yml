@@ -1,3 +1,5 @@
+# Runs all repository-wide pre-commit formatting, linting, and static-analysis checks.
+# It runs for every pull request and every push to main.
 name: precommit checks
 on:
   push:
