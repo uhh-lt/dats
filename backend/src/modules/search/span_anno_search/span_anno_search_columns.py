@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import cast
+from sqlalchemy.types import String
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.span_annotation_orm import SpanAnnotationORM
@@ -9,6 +11,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.memo_dto import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_crud import crud_tag
@@ -18,6 +21,7 @@ from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
+from systems.search_system.grouping import GroupExpressions
 from systems.search_system.search_builder import SearchBuilder
 
 
@@ -81,7 +85,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.USER_ID:
                 return FilterValueType.USER_ID
 
-    def get_sort_column(self):
+    def get_sort_column(self, subquery_dict=None):
         match self:
             case SpanColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
@@ -187,7 +191,43 @@ class SpanColumns(str, AbstractColumns):
                     AnnotationDocumentORM,
                     AnnotationDocumentORM.id
                     == SpanAnnotationORM.annotation_document_id,
+                )._join_query(
+                    UserORM,
+                    UserORM.id == AnnotationDocumentORM.user_id,
                 )
+
+    def is_groupable(self) -> bool:
+        return self in {
+            SpanColumns.CODE_ID,
+            SpanColumns.USER_ID,
+            SpanColumns.SOURCE_DOCUMENT_NAME,
+        }
+
+    def get_group_expressions(self, subquery_dict, date_granularity):
+        # Grouping runs against the outer query, which already joins CodeORM,
+        # SourceDocumentORM, AnnotationDocumentORM (and UserORM for USER_ID).
+        match self:
+            case SpanColumns.CODE_ID:
+                return GroupExpressions(
+                    key=cast(SpanAnnotationORM.code_id, String),
+                    label=CodeORM.name,
+                    target_id=SpanAnnotationORM.code_id,
+                    target_type=AttachedObjectType.code.value,
+                )
+            case SpanColumns.USER_ID:
+                return GroupExpressions(
+                    key=cast(AnnotationDocumentORM.user_id, String),
+                    label=UserORM.email,
+                )
+            case SpanColumns.SOURCE_DOCUMENT_NAME:
+                return GroupExpressions(
+                    key=SourceDocumentORM.name,
+                    label=SourceDocumentORM.name,
+                    target_id=SourceDocumentORM.id,
+                    target_type=AttachedObjectType.source_document.value,
+                )
+            case _:
+                return None
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:

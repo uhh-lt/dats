@@ -3,6 +3,12 @@ from enum import Enum
 from sqlalchemy import not_
 from sqlalchemy.orm import QueryableAttribute
 
+from core.memo.memo_dto import AttachedObjectType
+from systems.search_system.search_system_exceptions import (
+    InvalidFilterValueError,
+    InvalidFilterValueFormatError,
+)
+
 FilterValue = bool | str | int | list[str] | list[list[str]]
 
 
@@ -27,15 +33,19 @@ class FilterOperator(Enum):
     ID_LIST_RECURSIVE = "ID_LIST_RECURSIVE"
     LIST = "LIST"
     DATE = "DATE"
+    ATTACHED_TO = "ATTACHED_TO"
 
 
 class BooleanOperator(Enum):
     EQUALS = "BOOLEAN_EQUALS"
     NOT_EQUALS = "BOOLEAN_NOT_EQUALS"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.BOOLEAN
+
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, bool):
-            raise ValueError("Invalid value type for BooleanOperator (requires bool)!")
+            raise InvalidFilterValueError("BooleanOperator", "bool", value)
 
         match self:
             case BooleanOperator.EQUALS:
@@ -51,9 +61,12 @@ class StringOperator(Enum):
     STARTS_WITH = "STRING_STARTS_WITH"
     ENDS_WITH = "STRING_ENDS_WITH"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.STRING
+
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, str):
-            raise ValueError("Invalid value type for StringOperator (requires str)!")
+            raise InvalidFilterValueError("StringOperator", "str", value)
 
         match self:
             case StringOperator.EQUALS:
@@ -72,18 +85,47 @@ class IDOperator(Enum):
     EQUALS = "ID_EQUALS"
     NOT_EQUALS = "ID_NOT_EQUALS"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.ID
+
     def apply(
         self,
         column: QueryableAttribute,
         value: FilterValue,
     ):
         if not isinstance(value, (int, str)):
-            raise ValueError("Invalid value type for IDOperator (requires int or str)!")
+            raise InvalidFilterValueError("IDOperator", "int or str", value)
 
         match self:
             case IDOperator.EQUALS:
                 return column == value
             case IDOperator.NOT_EQUALS:
+                return column != value
+
+
+class AttachedToOperator(Enum):
+    EQUALS = "ATTACHED_TO_EQUALS"
+    NOT_EQUALS = "ATTACHED_TO_NOT_EQUALS"
+
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.ATTACHED_TO
+
+    def apply(
+        self,
+        column: QueryableAttribute,
+        value: FilterValue,
+    ):
+        if not isinstance(value, str):
+            raise InvalidFilterValueError("AttachedToOperator", "str", value)
+        if value not in AttachedObjectType._value2member_map_:
+            raise InvalidFilterValueFormatError(
+                f"Invalid value for AttachedToOperator: '{value}' is not a valid AttachedObjectType!"
+            )
+
+        match self:
+            case AttachedToOperator.EQUALS:
+                return column == value
+            case AttachedToOperator.NOT_EQUALS:
                 return column != value
 
 
@@ -95,9 +137,12 @@ class NumberOperator(Enum):
     GTE = "NUMBER_GTE"
     LTE = "NUMBER_LTE"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.NUMBER
+
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, int):
-            raise ValueError("Invalid value type for NumberOperator (requires int)!")
+            raise InvalidFilterValueError("NumberOperator", "int", value)
 
         match self:
             case NumberOperator.EQUALS:
@@ -118,15 +163,16 @@ class IDListOperator(Enum):
     CONTAINS = "ID_LIST_CONTAINS"
     NOT_CONTAINS = "ID_LIST_NOT_CONTAINS"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.ID_LIST
+
     def apply(self, column, value: FilterValue):
         if not isinstance(value, (str, list, int)):
-            raise ValueError(  # pyright: ignore[reportUnreachable]
-                "Invalid value type for IDListOperator (requires str, list[str], or int)!"
+            raise InvalidFilterValueError(  # pyright: ignore[reportUnreachable]
+                "IDListOperator", "str, list[str], or int", value
             )
         if isinstance(value, list) and len(value) > 0 and not isinstance(value[0], str):
-            raise ValueError(
-                "Invalid value type for IDListOperator (requires list[str])!"
-            )
+            raise InvalidFilterValueError("IDListOperator", "list[str]", value)
 
         # value should be str | list[str]
         if isinstance(column, tuple):
@@ -166,6 +212,9 @@ class IDListRecursiveOperator(Enum):
     NOT_CONTAINS = "IDLR_NOT_CONTAINS"
     CONTAINS_RECURSIVE = "IDLR_CONTAINS_RECURSIVE"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.ID_LIST_RECURSIVE
+
     def apply(self, column, value: FilterValue):
         if self == IDListRecursiveOperator.CONTAINS_RECURSIVE:
             if not isinstance(value, list):
@@ -176,13 +225,15 @@ class IDListRecursiveOperator(Enum):
             resolved_ints: list[int] = []
             for v in value_list:
                 if isinstance(v, list):
-                    raise ValueError(
-                        "Nested lists are not supported for IDListRecursiveOperator!"
+                    raise InvalidFilterValueError(
+                        "IDListRecursiveOperator", "flat list[str] or list[int]", value
                     )
                 if isinstance(v, (str, int)):
                     resolved_ints.append(int(v))
                 else:
-                    raise ValueError(f"Invalid value type: {type(v)}")
+                    raise InvalidFilterValueError(
+                        "IDListRecursiveOperator", "str or int", v
+                    )
 
             if isinstance(column, tuple):
                 if len(column) == 2:
@@ -209,15 +260,14 @@ class ListOperator(Enum):
     CONTAINS = "LIST_CONTAINS"
     NOT_CONTAINS = "LIST_NOT_CONTAINS"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.LIST
+
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, list):
-            raise ValueError(
-                "Invalid value type for ListOperator (requires list[str])!"
-            )
+            raise InvalidFilterValueError("ListOperator", "list[str]", value)
         if len(value) > 0 and not isinstance(value[0], str):
-            raise ValueError(
-                "Invalid value type for ListOperator (requires list[str])!"
-            )
+            raise InvalidFilterValueError("ListOperator", "list[str]", value)
 
         match self:
             case ListOperator.CONTAINS:
@@ -233,9 +283,12 @@ class DateOperator(Enum):
     GTE = "DATE_GTE"
     LTE = "DATE_LTE"
 
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.DATE
+
     def apply(self, column: QueryableAttribute, value: FilterValue):
         if not isinstance(value, str):
-            raise ValueError("Invalid value type for DateOperator (requires str)!")
+            raise InvalidFilterValueError("DateOperator", "str", value)
 
         from dateutil.parser import parse
         from sqlalchemy import Date, cast
@@ -243,7 +296,7 @@ class DateOperator(Enum):
         try:
             parsed_date = parse(value).date()
         except Exception as e:
-            raise ValueError(f"Invalid date format: {value}") from e
+            raise InvalidFilterValueFormatError(f"Invalid date format: {value}") from e
 
         match self:
             case DateOperator.EQUALS:

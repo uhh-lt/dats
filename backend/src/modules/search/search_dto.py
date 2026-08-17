@@ -1,9 +1,86 @@
+from datetime import datetime
+from typing import Generic, TypeVar
+
 from pydantic import BaseModel, Field
 
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
+from core.memo.memo_dto import AttachedObjectType
 from repos.elastic.elastic_dto_base import ElasticSearchHit
+from systems.search_system.abstract_column import AbstractColumns
+from systems.search_system.filtering import Filter
+from systems.search_system.grouping import GroupConfig
+from systems.search_system.sorting import Sort
+
+T = TypeVar("T", bound=AbstractColumns)
+ItemT = TypeVar("ItemT", bound=BaseModel)
+
+
+class Page(BaseModel, Generic[ItemT]):
+    """A paginated list of row results.
+
+    Unified row-query response for every searchable entity. `items` holds the
+    entity-specific row DTO (e.g. MemoRow, SpanAnnotationRow); `total_results`
+    is the unpaginated match count used to drive pagination.
+    """
+
+    items: list[ItemT] = Field(description="The rows on the requested page")
+    total_results: int = Field(
+        description="Total number of matching rows (unpaginated), used for pagination"
+    )
+
+
+class QueryRequest(BaseModel, Generic[T]):
+    """Unified row-query request for every searchable entity.
+
+    - `filter`: the column filter tree applied to the entity's subquery.
+    - `sorts`: ordered sort expressions; empty means the entity's default sort.
+    - `group_by` + `group_key`: optional drill-down. When both are set, results are
+      restricted to the single group identified by `group_key` (the group is defined
+      by `group_by`). `group_by` without `group_key` has no effect on a row query.
+    """
+
+    project_id: int = Field(description="Project the search runs in")
+    search_query: str = Field(default="", description="Full-text query")
+    filter: Filter[T] = Field(description="Column filter tree")
+    sorts: list[Sort[T]] = Field(
+        default=[],
+        description="Ordered sort expressions; empty means the entity's default sort",
+    )
+    group_by: GroupConfig[T] | None = Field(
+        default=None,
+        description="Grouping definition; together with `group_key`, restricts "
+        "results to one group (drill-down).",
+    )
+    group_key: str | None = Field(
+        default=None,
+        description="Key of the single group to drill into (requires `group_by`).",
+    )
+    page_number: int = Field(default=0, ge=0, description="Zero-based page index")
+    page_size: int = Field(
+        default=20, ge=1, le=200, description="Number of rows per page"
+    )
+
+
+class MemoRow(BaseModel):
+    """Row item DTO for memo search results (the `items` of a Page[MemoRow])."""
+
+    id: int = Field(description="ID of the Memo")
+    title: str = Field(description="Title of the Memo")
+    icon: str | None = Field(description="Icon of the Memo")
+    content_excerpt: str = Field(description="Short excerpt of the Memo's content")
+    user_id: int = Field(description="User who authored the Memo")
+    project_id: int = Field(description="Project the Memo belongs to")
+    created: datetime = Field(description="Created timestamp of the Memo")
+    updated: datetime = Field(description="Updated timestamp of the Memo")
+    is_favorite: bool = Field(description="Whether the Memo is marked as favorite")
+    attached_object_id: int = Field(
+        description="ID of the object the Memo is attached to"
+    )
+    attached_object_type: AttachedObjectType = Field(
+        description="Type of the object the Memo is attached to"
+    )
 
 
 class SpanAnnotationRow(BaseModel):
@@ -20,13 +97,6 @@ class SpanAnnotationRow(BaseModel):
     )
 
 
-class SpanAnnotationSearchResult(BaseModel):
-    total_results: int = Field(
-        description="The total number of span_annotation_ids. Used for pagination."
-    )
-    data: list[SpanAnnotationRow] = Field(description="The Annotations.")
-
-
 class SentenceAnnotationRow(BaseModel):
     id: int = Field(description="ID of the SentenceAnnotation")
     text: str = Field(description="The Text the SentenceAnnotation spans.")
@@ -39,13 +109,6 @@ class SentenceAnnotationRow(BaseModel):
     memo_ids: list[int] = Field(
         description="The IDs of the Memos attached to the Annotation."
     )
-
-
-class SentenceAnnotationSearchResult(BaseModel):
-    total_results: int = Field(
-        description="The total number of sentence_annotation_ids. Used for pagination."
-    )
-    data: list[SentenceAnnotationRow] = Field(description="The Annotations.")
 
 
 class BBoxAnnotationRow(BaseModel):
@@ -64,13 +127,6 @@ class BBoxAnnotationRow(BaseModel):
     memo_ids: list[int] = Field(
         description="The IDs of the Memos attached to the Annotation."
     )
-
-
-class BBoxAnnotationSearchResult(BaseModel):
-    total_results: int = Field(
-        description="The total number of bbox_annotation_ids. Used for pagination."
-    )
-    data: list[BBoxAnnotationRow] = Field(description="The Annotations.")
 
 
 class HierarchicalElasticSearchHit(ElasticSearchHit):

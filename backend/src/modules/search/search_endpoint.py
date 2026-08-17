@@ -4,11 +4,16 @@ from sqlalchemy.orm import Session
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from modules.search.bbox_anno_search.bbox_anno_search import (
+    find_bbox_annotation_groups,
     find_bbox_annotations,
     find_bbox_annotations_info,
 )
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.memo_search.memo_search import find_memo_info
+from modules.search.memo_search.memo_search import (
+    find_memo_groups,
+    find_memo_info,
+    find_memos,
+)
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
@@ -16,23 +21,29 @@ from modules.search.sdoc_search.sdoc_search import (
 )
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
-    BBoxAnnotationSearchResult,
+    BBoxAnnotationRow,
+    MemoRow,
+    Page,
     PaginatedSDocHits,
-    SentenceAnnotationSearchResult,
-    SpanAnnotationSearchResult,
+    QueryRequest,
+    SentenceAnnotationRow,
+    SpanAnnotationRow,
 )
 from modules.search.sent_anno_search.sent_anno_search import (
+    find_sentence_annotation_groups,
     find_sentence_annotations,
     find_sentence_annotations_info,
 )
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from modules.search.span_anno_search.span_anno_search import (
+    find_span_annotation_groups,
     find_span_annotations,
     find_span_annotations_info,
 )
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
+from systems.search_system.grouping import GroupPage, GroupQueryRequest
 from systems.search_system.sorting import Sort
 
 router = APIRouter(
@@ -108,6 +119,36 @@ def search_memo_info(
 
 
 @router.post(
+    "/memo",
+    response_model=Page[MemoRow],
+    summary="Queries Memo summaries for a workspace view",
+)
+def search_memos(
+    *,
+    db: Session = Depends(get_db_session),
+    request: QueryRequest[MemoColumns],
+    authz_user: AuthzUser = Depends(),
+) -> Page[MemoRow]:
+    authz_user.assert_in_project(request.project_id)
+    return find_memos(db=db, request=request, user_id=authz_user.user.id)
+
+
+@router.post(
+    "/memo/groups",
+    response_model=GroupPage,
+    summary="Queries paginated Memo groups for a workspace view",
+)
+def search_memo_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    request: GroupQueryRequest[MemoColumns],
+    authz_user: AuthzUser = Depends(),
+) -> GroupPage:
+    authz_user.assert_in_project(request.project_id)
+    return find_memo_groups(db=db, request=request, user_id=authz_user.user.id)
+
+
+@router.post(
     "/span_annotation_info",
     response_model=list[ColumnInfo[SpanColumns]],
     summary="Returns SpanAnnotationSearch Info.",
@@ -127,28 +168,35 @@ def search_span_annotation_info(
 
 @router.post(
     "/span_annotation",
-    response_model=SpanAnnotationSearchResult,
+    response_model=Page[SpanAnnotationRow],
     summary="Returns SpanAnnotationSearch.",
 )
 def search_span_annotations(
     *,
     db: Session = Depends(get_db_session),
-    project_id: int,
-    filter: Filter[SpanColumns],
-    page: int | None = None,
-    page_size: int | None = None,
-    sorts: list[Sort[SpanColumns]],
+    request: QueryRequest[SpanColumns],
     authz_user: AuthzUser = Depends(),
-) -> SpanAnnotationSearchResult:
-    authz_user.assert_in_project(project_id)
+) -> Page[SpanAnnotationRow]:
+    authz_user.assert_in_project(request.project_id)
 
-    return find_span_annotations(
-        db=db,
-        project_id=project_id,
-        filter=filter,
-        page=page,
-        page_size=page_size,
-        sorts=sorts,
+    return find_span_annotations(db=db, request=request, user_id=authz_user.user.id)
+
+
+@router.post(
+    "/span_annotation/groups",
+    response_model=GroupPage,
+    summary="Returns paginated SpanAnnotation groups.",
+)
+def search_span_annotation_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    request: GroupQueryRequest[SpanColumns],
+    authz_user: AuthzUser = Depends(),
+) -> GroupPage:
+    authz_user.assert_in_project(request.project_id)
+
+    return find_span_annotation_groups(
+        db=db, request=request, user_id=authz_user.user.id
     )
 
 
@@ -172,28 +220,35 @@ def search_sentence_annotation_info(
 
 @router.post(
     "/sentence_annotation",
-    response_model=SentenceAnnotationSearchResult,
+    response_model=Page[SentenceAnnotationRow],
     summary="Returns Sentence Annotations.",
 )
 def search_sentence_annotations(
     *,
     db: Session = Depends(get_db_session),
-    project_id: int,
-    filter: Filter[SentAnnoColumns],
-    page: int | None = None,
-    page_size: int | None = None,
-    sorts: list[Sort[SentAnnoColumns]],
+    request: QueryRequest[SentAnnoColumns],
     authz_user: AuthzUser = Depends(),
-) -> SentenceAnnotationSearchResult:
-    authz_user.assert_in_project(project_id)
+) -> Page[SentenceAnnotationRow]:
+    authz_user.assert_in_project(request.project_id)
 
-    return find_sentence_annotations(
-        db=db,
-        project_id=project_id,
-        filter=filter,
-        page=page,
-        page_size=page_size,
-        sorts=sorts,
+    return find_sentence_annotations(db=db, request=request, user_id=authz_user.user.id)
+
+
+@router.post(
+    "/sentence_annotation/groups",
+    response_model=GroupPage,
+    summary="Returns paginated Sentence Annotation groups.",
+)
+def search_sentence_annotation_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    request: GroupQueryRequest[SentAnnoColumns],
+    authz_user: AuthzUser = Depends(),
+) -> GroupPage:
+    authz_user.assert_in_project(request.project_id)
+
+    return find_sentence_annotation_groups(
+        db=db, request=request, user_id=authz_user.user.id
     )
 
 
@@ -217,26 +272,33 @@ def search_bbox_annotation_info(
 
 @router.post(
     "/bbox_annotation",
-    response_model=BBoxAnnotationSearchResult,
-    summary="Returns BBoxAnnotationSearchResult.",
+    response_model=Page[BBoxAnnotationRow],
+    summary="Returns BBox Annotations.",
 )
 def search_bbox_annotations(
     *,
     db: Session = Depends(get_db_session),
-    project_id: int,
-    filter: Filter[BBoxColumns],
-    page: int | None = None,
-    page_size: int | None = None,
-    sorts: list[Sort[BBoxColumns]],
+    request: QueryRequest[BBoxColumns],
     authz_user: AuthzUser = Depends(),
-) -> BBoxAnnotationSearchResult:
-    authz_user.assert_in_project(project_id)
+) -> Page[BBoxAnnotationRow]:
+    authz_user.assert_in_project(request.project_id)
 
-    return find_bbox_annotations(
-        db=db,
-        project_id=project_id,
-        filter=filter,
-        page=page,
-        page_size=page_size,
-        sorts=sorts,
+    return find_bbox_annotations(db=db, request=request, user_id=authz_user.user.id)
+
+
+@router.post(
+    "/bbox_annotation/groups",
+    response_model=GroupPage,
+    summary="Returns paginated BBox Annotation groups.",
+)
+def search_bbox_annotation_groups(
+    *,
+    db: Session = Depends(get_db_session),
+    request: GroupQueryRequest[BBoxColumns],
+    authz_user: AuthzUser = Depends(),
+) -> GroupPage:
+    authz_user.assert_in_project(request.project_id)
+
+    return find_bbox_annotation_groups(
+        db=db, request=request, user_id=authz_user.user.id
     )

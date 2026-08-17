@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import cast
+from sqlalchemy.types import String
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.sentence_annotation_orm import SentenceAnnotationORM
@@ -8,6 +10,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.memo_dto import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_crud import crud_tag
@@ -17,6 +20,7 @@ from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
+from systems.search_system.grouping import GroupExpressions
 from systems.search_system.search_builder import SearchBuilder
 
 
@@ -80,7 +84,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.USER_ID:
                 return FilterValueType.USER_ID
 
-    def get_sort_column(self):
+    def get_sort_column(self, subquery_dict=None):
         match self:
             case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
@@ -181,7 +185,43 @@ class SentAnnoColumns(str, AbstractColumns):
                     AnnotationDocumentORM,
                     AnnotationDocumentORM.id
                     == SentenceAnnotationORM.annotation_document_id,
+                )._join_query(
+                    UserORM,
+                    UserORM.id == AnnotationDocumentORM.user_id,
                 )
+
+    def is_groupable(self) -> bool:
+        return self in {
+            SentAnnoColumns.CODE_ID,
+            SentAnnoColumns.USER_ID,
+            SentAnnoColumns.SOURCE_DOCUMENT_NAME,
+        }
+
+    def get_group_expressions(self, subquery_dict, date_granularity):
+        # Grouping runs against the outer query, which already joins CodeORM,
+        # SourceDocumentORM, AnnotationDocumentORM (and UserORM for USER_ID).
+        match self:
+            case SentAnnoColumns.CODE_ID:
+                return GroupExpressions(
+                    key=cast(SentenceAnnotationORM.code_id, String),
+                    label=CodeORM.name,
+                    target_id=SentenceAnnotationORM.code_id,
+                    target_type=AttachedObjectType.code.value,
+                )
+            case SentAnnoColumns.USER_ID:
+                return GroupExpressions(
+                    key=cast(AnnotationDocumentORM.user_id, String),
+                    label=UserORM.email,
+                )
+            case SentAnnoColumns.SOURCE_DOCUMENT_NAME:
+                return GroupExpressions(
+                    key=SourceDocumentORM.name,
+                    label=SourceDocumentORM.name,
+                    target_id=SourceDocumentORM.id,
+                    target_type=AttachedObjectType.source_document.value,
+                )
+            case _:
+                return None
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:

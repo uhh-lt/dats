@@ -1,12 +1,13 @@
 from enum import Enum
 from typing import Generic, TypeVar, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering_operators import (
+    AttachedToOperator,
     BooleanOperator,
     DateOperator,
     FilterValue,
@@ -16,6 +17,11 @@ from systems.search_system.filtering_operators import (
     ListOperator,
     NumberOperator,
     StringOperator,
+)
+from systems.search_system.search_system_exceptions import (
+    FilterValueNotFoundError,
+    InvalidFilterValueError,
+    OperatorNotCompatibleWithColumnError,
 )
 
 
@@ -67,8 +73,11 @@ class LogicalOperator(str, Enum):
 
 
 class FilterExpression(BaseModel, Generic[T]):
-    id: str
-    column: T | int
+    id: str = Field(description="Unique id of this expression within the filter tree")
+    column: T | int = Field(
+        description="The column to filter on: an enum member, or an int id "
+        "referring to a project-metadata column"
+    )
     operator: (
         IDOperator
         | NumberOperator
@@ -78,8 +87,39 @@ class FilterExpression(BaseModel, Generic[T]):
         | ListOperator
         | DateOperator
         | BooleanOperator
-    )
-    value: FilterValue
+        | AttachedToOperator
+    ) = Field(description="The comparison operator applied to the column")
+    value: FilterValue = Field(description="The value the column is compared against")
+
+    @model_validator(mode="after")
+    def check_operator_matches_column(self) -> "FilterExpression[T]":
+        """Validate that the operator's family matches the column's declared family.
+
+        For enum columns this compares ``self.operator.get_filter_operator()`` against
+        ``self.column.get_filter_operator()`` and raises
+        ``OperatorNotCompatibleWithColumnError`` (HTTP 400) on mismatch.
+
+        IMPORTANT: metadata columns (``column: int``) are NOT validated here. Their
+        operator family is stored on the ``ProjectMetadata`` database row
+        (``metatype``) and resolving it requires a DB session, which is not available
+        at request-validation time. As a result, a mismatched operator on a metadata
+        column is currently NOT caught by this validator and will only fail (or
+        silently misbehave) at query-execution time.
+        """
+        # Metadata columns (int) cannot be validated without a DB session; see docstring.
+        if isinstance(self.column, int):
+            return self
+
+        expected = self.column.get_filter_operator()
+        actual = self.operator.get_filter_operator()
+        if actual != expected:
+            raise OperatorNotCompatibleWithColumnError(
+                operator_value=self.operator.value,
+                operator_family=actual,
+                column=self.column,
+                column_family=expected,
+            )
+        return self
 
     def get_sqlalchemy_expression(self, subquery_dict):
         if isinstance(self.column, int):
@@ -102,9 +142,7 @@ class FilterExpression(BaseModel, Generic[T]):
             assert isinstance(self.value, int), f"Expected int, got {type(self.value)}"
             resolved_ids = self.column.resolve_ids(db=db, ids=[int(self.value)])
             if len(resolved_ids) == 0:
-                raise ValueError(
-                    f"ID '{self.value}' not found for column {self.column}"
-                )
+                raise FilterValueNotFoundError(self.value, self.column)
             self.value = resolved_ids[0]
             return self
 
@@ -130,7 +168,7 @@ class FilterExpression(BaseModel, Generic[T]):
 
             resolved_ids = self.column.resolve_ids(db=db, ids=ids)
             if len(ids) > 1 and len(resolved_ids) == 0:
-                raise ValueError(f"IDs '{ids}' not found for column {self.column}")
+                raise FilterValueNotFoundError(ids, self.column)
             self.value = resolved_ids
             return self
 
@@ -148,7 +186,7 @@ class FilterExpression(BaseModel, Generic[T]):
                 db=db, project_id=project_id, names=[self.value]
             )
             if len(resolved_names) == 0:
-                raise ValueError(f"'{self.value}' not found for column {self.column}")
+                raise FilterValueNotFoundError(self.value, self.column)
             self.value = resolved_names[0]
             return self
 
@@ -176,9 +214,7 @@ class FilterExpression(BaseModel, Generic[T]):
 
             resolved_names = [str(id) for id in resolved_names_ids]
             if len(names) > 0 and len(resolved_names) == 0:
-                raise ValueError(
-                    f"Names '{self.value}' not found for column {self.column}"
-                )
+                raise FilterValueNotFoundError(self.value, self.column)
             self.value = resolved_names
             return self
 
@@ -189,9 +225,13 @@ class Filter(BaseModel, Generic[T]):
     """A tree of column expressions for filtering on many database columns using various
     comparisons."""
 
-    id: str
-    items: list[Union[FilterExpression[T], "Filter[T]"]]
-    logic_operator: LogicalOperator
+    id: str = Field(description="Unique id of this node within the filter tree")
+    items: list[Union[FilterExpression[T], "Filter[T]"]] = Field(
+        description="Child expressions and/or nested filter nodes"
+    )
+    logic_operator: LogicalOperator = Field(
+        description="How the child items are combined (and/or)"
+    )
 
     def get_sqlalchemy_expression(self, subquery_dict):
         op = self.logic_operator.get_sqlalchemy_operator()
@@ -260,8 +300,10 @@ def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
             if item.operator == IDListRecursiveOperator.CONTAINS_RECURSIVE:
                 expr = item.model_copy(deep=True)
                 if isinstance(expr.column, int):
-                    raise ValueError(
-                        "Metadata columns are not supported for recursive filtering!"
+                    raise InvalidFilterValueError(
+                        "IDListRecursiveOperator",
+                        "a non-metadata column (recursive filtering)",
+                        expr.column,
                     )
 
                 if isinstance(expr.value, str):
@@ -272,8 +314,10 @@ def resolve_recursive_filter(filter: Filter[T], db: Session) -> Filter[T]:
                     parent_ids = []
                     for v in expr.value:
                         if isinstance(v, list):
-                            raise ValueError(
-                                "Nested lists are not supported for IDListRecursiveOperator!"
+                            raise InvalidFilterValueError(
+                                "IDListRecursiveOperator",
+                                "flat list[str] or list[int]",
+                                expr.value,
                             )
                         parent_ids.append(int(v))
                 else:

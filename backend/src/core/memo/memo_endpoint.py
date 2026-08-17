@@ -17,17 +17,7 @@ from core.memo.memo_dto import (
     MemoUpdate,
 )
 from core.memo.memo_generation_service import generate_memo_llm
-from core.memo.memo_query_dto import (
-    MemoGroupPage,
-    MemoGroupQueryRequest,
-    MemoPage,
-    MemoQueryRequest,
-)
 from core.memo.memo_utils import get_object_memos
-from modules.search.memo_search.memo_query_service import (
-    query_memo_groups,
-    query_memos,
-)
 
 router = APIRouter(
     prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]
@@ -90,36 +80,6 @@ def add_memo(
         attached_object_id=attached_object_id,
         attached_object_type=attached_object_type,
     )
-
-
-@router.post(
-    "/query",
-    response_model=MemoPage,
-    summary="Queries Memo summaries for a workspace view",
-)
-def query(
-    *,
-    db: Session = Depends(get_db_session),
-    request: MemoQueryRequest,
-    authz_user: AuthzUser = Depends(),
-) -> MemoPage:
-    authz_user.assert_in_project(request.project_id)
-    return query_memos(db=db, request=request, user_id=authz_user.user.id)
-
-
-@router.post(
-    "/query/groups",
-    response_model=MemoGroupPage,
-    summary="Queries paginated Memo groups for a workspace view",
-)
-def query_groups(
-    *,
-    db: Session = Depends(get_db_session),
-    request: MemoGroupQueryRequest,
-    authz_user: AuthzUser = Depends(),
-) -> MemoGroupPage:
-    authz_user.assert_in_project(request.project_id)
-    return query_memo_groups(db=db, request=request, user_id=authz_user.user.id)
 
 
 @router.get(

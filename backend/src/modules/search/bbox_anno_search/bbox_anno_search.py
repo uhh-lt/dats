@@ -12,12 +12,11 @@ from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.search_dto import BBoxAnnotationRow, BBoxAnnotationSearchResult
+from modules.search.search_dto import BBoxAnnotationRow, Page, QueryRequest
 from repos.filesystem_repo import FilesystemRepo
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter
+from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder
-from systems.search_system.sorting import Sort
 
 repo_service = FilesystemRepo()
 
@@ -45,13 +44,18 @@ def find_bbox_annotations_info(
 
 def find_bbox_annotations(
     db: Session,
-    project_id: int,
-    filter: Filter[BBoxColumns],
-    sorts: list[Sort[BBoxColumns]],
-    page: int | None = None,
-    page_size: int | None = None,
-) -> BBoxAnnotationSearchResult:
-    builder = SearchBuilder(db, filter, sorts)
+    *,
+    request: QueryRequest[BBoxColumns],
+    user_id: int,
+) -> Page[BBoxAnnotationRow]:
+    builder = SearchBuilder(
+        db,
+        request.filter,
+        request.sorts,
+        group_by=request.group_by,
+        group_key=request.group_key,
+        user_id=user_id,
+    )
     subquery = builder.init_subquery(
         db.query(
             BBoxAnnotationORM.id,
@@ -68,7 +72,7 @@ def find_bbox_annotations(
         .add_entity(CodeORM)
         .add_entity(SourceDocumentORM)
         .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == project_id)
+        .filter(SourceDocumentORM.project_id == request.project_id)
     )._join_query(
         AnnotationDocumentORM,
         AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
@@ -78,10 +82,12 @@ def find_bbox_annotations(
     )._join_query(
         CodeORM,
         CodeORM.id == BBoxAnnotationORM.code_id,
-    ).build_query()
+    )
+    builder.build_query()
+
     result_rows, total_results = builder.execute_query(
-        page_number=page,
-        page_size=page_size,
+        page_number=request.page_number,
+        page_size=request.page_size,
     )
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
@@ -90,12 +96,12 @@ def find_bbox_annotations(
         object_ids=[row[0] for row in result_rows],
     )
 
-    data = []
+    items = []
     for row in result_rows:
         bbox_orm: BBoxAnnotationORM = row[2]
         code_orm: CodeORM = row[3]
         sdoc_orm: SourceDocumentORM = row[4]
-        data.append(
+        items.append(
             BBoxAnnotationRow(
                 id=row[0],
                 user_id=row[1],
@@ -115,4 +121,64 @@ def find_bbox_annotations(
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
             )
         )
-    return BBoxAnnotationSearchResult(total_results=total_results, data=data)
+    return Page[BBoxAnnotationRow](items=items, total_results=total_results)
+
+
+def find_bbox_annotation_groups(
+    db: Session,
+    *,
+    request: GroupQueryRequest[BBoxColumns],
+    user_id: int,
+) -> GroupPage:
+    """Group query: aggregate bbox annotations by a column -> GroupPage.
+
+    The SearchBuilder grouping branch returns aggregate rows
+    (group_key, group_label, total_results, target_id, target_type) directly.
+    """
+    builder = SearchBuilder(
+        db, request.filter, sorts=[], group_by=request.group_by, user_id=user_id
+    )
+    subquery = builder.init_subquery(
+        db.query(
+            BBoxAnnotationORM.id,
+        ).group_by(
+            BBoxAnnotationORM.id,
+        )
+    ).build_subquery()
+    builder.init_query(
+        db.query(
+            BBoxAnnotationORM.id,
+        )
+        .join(subquery, BBoxAnnotationORM.id == subquery.c.id)
+        .filter(SourceDocumentORM.project_id == request.project_id)
+    )._join_query(
+        AnnotationDocumentORM,
+        AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
+    )._join_query(
+        SourceDocumentORM,
+        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+    )._join_query(
+        CodeORM,
+        CodeORM.id == BBoxAnnotationORM.code_id,
+    )
+    builder.build_query()
+
+    rows, total_results = builder.execute_query(
+        page_number=request.page_number,
+        page_size=request.page_size,
+    )
+
+    groups = []
+    for row in rows:
+        data = row._mapping
+        groups.append(
+            GroupSummary(
+                key=data["group_key"],
+                label=data["group_label"],
+                total_results=data["total_results"],
+                target_id=data.get("target_id"),
+                target_type=data.get("target_type"),
+            )
+        )
+
+    return GroupPage(items=groups, total_results=total_results)

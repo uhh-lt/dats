@@ -111,7 +111,7 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
                 return FilterValueType.SPAN_ANNOTATION
 
-    def get_sort_column(self):
+    def get_sort_column(self, subquery_dict=None):
         match self:
             case WordFrequencyColumns.WORD:
                 return WordFrequencyORM.word

@@ -12,14 +12,14 @@ from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from modules.search.search_dto import (
+    Page,
+    QueryRequest,
     SentenceAnnotationRow,
-    SentenceAnnotationSearchResult,
 )
 from modules.search.sent_anno_search.sent_anno_search_columns import SentAnnoColumns
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter
+from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder
-from systems.search_system.sorting import Sort
 
 
 def find_sentence_annotations_info(
@@ -43,13 +43,18 @@ def find_sentence_annotations_info(
 
 def find_sentence_annotations(
     db: Session,
-    project_id: int,
-    filter: Filter[SentAnnoColumns],
-    sorts: list[Sort[SentAnnoColumns]],
-    page: int | None = None,
-    page_size: int | None = None,
-) -> SentenceAnnotationSearchResult:
-    builder = SearchBuilder(db, filter, sorts)
+    *,
+    request: QueryRequest[SentAnnoColumns],
+    user_id: int,
+) -> Page[SentenceAnnotationRow]:
+    builder = SearchBuilder(
+        db,
+        request.filter,
+        request.sorts,
+        group_by=request.group_by,
+        group_key=request.group_key,
+        user_id=user_id,
+    )
     # build the initial subquery that queries all necessary data for the desired output
     subquery = builder.init_subquery(
         db.query(
@@ -68,7 +73,7 @@ def find_sentence_annotations(
         .add_entity(CodeORM)
         .add_entity(SourceDocumentORM)
         .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
-        .filter(SourceDocumentORM.project_id == project_id)
+        .filter(SourceDocumentORM.project_id == request.project_id)
         .filter(CodeORM.enabled == True)  # noqa: E712
     )._join_query(
         AnnotationDocumentORM,
@@ -79,10 +84,12 @@ def find_sentence_annotations(
     )._join_query(
         CodeORM,
         CodeORM.id == SentenceAnnotationORM.code_id,
-    ).build_query()
+    )
+    builder.build_query()
+
     result_rows, total_results = builder.execute_query(
-        page_number=page,
-        page_size=page_size,
+        page_number=request.page_number,
+        page_size=request.page_size,
     )
 
     memo_ids_by_annotation = crud_object_handle.read_memo_ids_by_objects(
@@ -91,12 +98,12 @@ def find_sentence_annotations(
         object_ids=[row[0] for row in result_rows],
     )
 
-    data = []
+    items = []
     for row in result_rows:
         sent_start = row[1]
         sent_end = row[2]
         sdoc_orm: SourceDocumentORM = row[5]
-        data.append(
+        items.append(
             SentenceAnnotationRow(
                 id=row[0],
                 user_id=row[3],
@@ -107,4 +114,65 @@ def find_sentence_annotations(
                 memo_ids=memo_ids_by_annotation.get(row[0], []),
             )
         )
-    return SentenceAnnotationSearchResult(total_results=total_results, data=data)
+    return Page[SentenceAnnotationRow](items=items, total_results=total_results)
+
+
+def find_sentence_annotation_groups(
+    db: Session,
+    *,
+    request: GroupQueryRequest[SentAnnoColumns],
+    user_id: int,
+) -> GroupPage:
+    """Group query: aggregate sentence annotations by a column -> GroupPage.
+
+    The SearchBuilder grouping branch returns aggregate rows
+    (group_key, group_label, total_results, target_id, target_type) directly.
+    """
+    builder = SearchBuilder(
+        db, request.filter, sorts=[], group_by=request.group_by, user_id=user_id
+    )
+    subquery = builder.init_subquery(
+        db.query(
+            SentenceAnnotationORM.id,
+        ).group_by(
+            SentenceAnnotationORM.id,
+        )
+    ).build_subquery()
+    builder.init_query(
+        db.query(
+            SentenceAnnotationORM.id,
+        )
+        .join(subquery, SentenceAnnotationORM.id == subquery.c.id)
+        .filter(SourceDocumentORM.project_id == request.project_id)
+        .filter(CodeORM.enabled == True)  # noqa: E712
+    )._join_query(
+        AnnotationDocumentORM,
+        AnnotationDocumentORM.id == SentenceAnnotationORM.annotation_document_id,
+    )._join_query(
+        SourceDocumentORM,
+        SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+    )._join_query(
+        CodeORM,
+        CodeORM.id == SentenceAnnotationORM.code_id,
+    )
+    builder.build_query()
+
+    rows, total_results = builder.execute_query(
+        page_number=request.page_number,
+        page_size=request.page_size,
+    )
+
+    groups = []
+    for row in rows:
+        data = row._mapping
+        groups.append(
+            GroupSummary(
+                key=data["group_key"],
+                label=data["group_label"],
+                total_results=data["total_results"],
+                target_id=data.get("target_id"),
+                target_type=data.get("target_type"),
+            )
+        )
+
+    return GroupPage(items=groups, total_results=total_results)

@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import cast
+from sqlalchemy.types import String
 
 from core.annotation.annotation_document_orm import AnnotationDocumentORM
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -8,6 +10,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.folder_dto import FolderType
 from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
+from core.memo.memo_dto import AttachedObjectType
 from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_crud import crud_tag
@@ -15,6 +18,7 @@ from core.tag.tag_orm import TagORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
+from systems.search_system.grouping import GroupExpressions
 from systems.search_system.search_builder import SearchBuilder
 
 
@@ -64,7 +68,7 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
 
-    def get_sort_column(self):
+    def get_sort_column(self, subquery_dict=None):
         match self:
             case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return SourceDocumentORM.name
@@ -152,6 +156,33 @@ class BBoxColumns(str, AbstractColumns):
                     ),
                     isouter=True,
                 )
+
+    def is_groupable(self) -> bool:
+        return self in {
+            BBoxColumns.CODE_ID,
+            BBoxColumns.SOURCE_DOCUMENT_NAME,
+        }
+
+    def get_group_expressions(self, subquery_dict, date_granularity):
+        # Grouping runs against the outer query, which already joins CodeORM and
+        # SourceDocumentORM.
+        match self:
+            case BBoxColumns.CODE_ID:
+                return GroupExpressions(
+                    key=cast(BBoxAnnotationORM.code_id, String),
+                    label=CodeORM.name,
+                    target_id=BBoxAnnotationORM.code_id,
+                    target_type=AttachedObjectType.code.value,
+                )
+            case BBoxColumns.SOURCE_DOCUMENT_NAME:
+                return GroupExpressions(
+                    key=SourceDocumentORM.name,
+                    label=SourceDocumentORM.name,
+                    target_id=SourceDocumentORM.id,
+                    target_type=AttachedObjectType.source_document.value,
+                )
+            case _:
+                return None
 
     def resolve_ids(self, db: Session, ids: list[int]) -> list[str]:
         match self:

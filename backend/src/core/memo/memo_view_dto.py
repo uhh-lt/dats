@@ -5,7 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from systems.search_system.filtering import Filter
-from systems.search_system.sorting import SortDirection
+from systems.search_system.grouping import DateGranularity, GroupConfig
+from systems.search_system.sorting import Sort
 
 
 class MemoViewLayout(str, Enum):
@@ -16,50 +17,12 @@ class MemoViewLayout(str, Enum):
     FEED = "feed"
 
 
-class MemoGroupBy(str, Enum):
-    TITLE = "title"
-    AUTHOR = "author"
-    ATTACHED_OBJECT_TYPE = "attached_object_type"
-    ATTACHED_OBJECT = "attached_object"
-    SOURCE_DOCUMENT = "source_document"
-    CODE = "code"
-    CREATED = "created"
-    UPDATED = "updated"
-    FAVORITE = "favorite"
-
-
-class MemoDateGranularity(str, Enum):
-    DAY = "day"
-    WEEK = "week"
-    MONTH = "month"
-    YEAR = "year"
-
-
-class MemoGroupConfig(BaseModel):
-    field: MemoGroupBy
-    date_granularity: MemoDateGranularity | None = None
-
-    @model_validator(mode="after")
-    def validate_date_granularity(self) -> "MemoGroupConfig":
-        is_date_group = self.field in {MemoGroupBy.CREATED, MemoGroupBy.UPDATED}
-        if is_date_group and self.date_granularity is None:
-            self.date_granularity = MemoDateGranularity.MONTH
-        if not is_date_group:
-            self.date_granularity = None
-        return self
-
-
-class MemoSortConfig(BaseModel):
-    column: MemoColumns
-    direction: SortDirection
-
-
 class MemoViewBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     layout: MemoViewLayout
     filters: Filter[MemoColumns]
-    group_by: MemoGroupConfig | None = None
-    sort_by: MemoSortConfig | None = None
+    group_by: GroupConfig[MemoColumns] | None = None
+    sort_by: Sort[MemoColumns] | None = None
 
     @field_validator("name")
     @classmethod
@@ -68,6 +31,20 @@ class MemoViewBase(BaseModel):
         if name == "":
             raise ValueError("Memo view name cannot be blank")
         return name
+
+    @model_validator(mode="after")
+    def validate_group_by(self) -> "MemoViewBase":
+        if self.group_by is None:
+            return self
+        field = self.group_by.field
+        if not field.is_groupable():
+            raise ValueError(f"Column {field} does not support grouping")
+        is_date_group = field in {MemoColumns.CREATED, MemoColumns.UPDATED}
+        if is_date_group and self.group_by.date_granularity is None:
+            self.group_by.date_granularity = DateGranularity.MONTH
+        if not is_date_group:
+            self.group_by.date_granularity = None
+        return self
 
     @model_validator(mode="after")
     def validate_board_group(self) -> "MemoViewBase":
@@ -84,8 +61,8 @@ class MemoViewUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     layout: MemoViewLayout | None = None
     filters: Filter[MemoColumns] | None = None
-    group_by: MemoGroupConfig | None = None
-    sort_by: MemoSortConfig | None = None
+    group_by: GroupConfig[MemoColumns] | None = None
+    sort_by: Sort[MemoColumns] | None = None
     clear_group_by: bool = False
     clear_sort_by: bool = False
 
