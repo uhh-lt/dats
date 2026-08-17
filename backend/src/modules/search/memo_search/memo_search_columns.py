@@ -19,68 +19,6 @@ from systems.search_system.grouping import (
 )
 from systems.search_system.search_builder import SearchBuilder
 
-# Aliased tables shared by the memo subquery projection. Defined at module level so
-# that the subquery builder and the column hooks reference the same aliases.
-handle = aliased(ObjectHandleORM)
-span_group = aliased(SpanGroupORM)
-source_document = aliased(SourceDocumentORM)
-code = aliased(CodeORM)
-tag = aliased(TagORM)
-project = aliased(ProjectORM)
-author = aliased(UserORM)
-favorite = aliased(MemoFavoriteLinkTable)
-
-# Resolved expressions reused across columns.
-attached_object_id_expr = func.coalesce(
-    handle.source_document_id,
-    handle.code_id,
-    handle.tag_id,
-    handle.project_id,
-    handle.span_annotation_id,
-    handle.sentence_annotation_id,
-    handle.bbox_annotation_id,
-    handle.span_group_id,
-)
-attached_object_type_expr = case(
-    (handle.source_document_id.is_not(None), AttachedObjectType.source_document.value),
-    (handle.code_id.is_not(None), AttachedObjectType.code.value),
-    (handle.tag_id.is_not(None), AttachedObjectType.tag.value),
-    (handle.project_id.is_not(None), AttachedObjectType.project.value),
-    (
-        handle.span_annotation_id.is_not(None),
-        AttachedObjectType.span_annotation.value,
-    ),
-    (
-        handle.sentence_annotation_id.is_not(None),
-        AttachedObjectType.sentence_annotation.value,
-    ),
-    (
-        handle.bbox_annotation_id.is_not(None),
-        AttachedObjectType.bbox_annotation.value,
-    ),
-    (handle.span_group_id.is_not(None), AttachedObjectType.span_group.value),
-)
-attached_object_label_expr = case(
-    (handle.source_document_id.is_not(None), source_document.name),
-    (handle.code_id.is_not(None), code.name),
-    (handle.tag_id.is_not(None), tag.name),
-    (handle.project_id.is_not(None), project.title),
-    (
-        handle.span_annotation_id.is_not(None),
-        func.concat("Span annotation #", handle.span_annotation_id),
-    ),
-    (
-        handle.sentence_annotation_id.is_not(None),
-        func.concat("Sentence annotation #", handle.sentence_annotation_id),
-    ),
-    (
-        handle.bbox_annotation_id.is_not(None),
-        func.concat("Bounding box annotation #", handle.bbox_annotation_id),
-    ),
-    (handle.span_group_id.is_not(None), span_group.name),
-    else_="Memo attachment",
-)
-
 
 def build_memo_subquery(db, project_id: int, user_id: int):
     """Build the full memo projection as a SQLAlchemy query (pre-subquery).
@@ -88,6 +26,70 @@ def build_memo_subquery(db, project_id: int, user_id: int):
     Selects every column the memo search/group/sort engine needs, joined across
     all attached-object types, the author, and the per-user favorites link.
     """
+    # Aliased tables shared by the memo subquery projection.
+    handle = aliased(ObjectHandleORM)
+    span_group = aliased(SpanGroupORM)
+    source_document = aliased(SourceDocumentORM)
+    code = aliased(CodeORM)
+    tag = aliased(TagORM)
+    project = aliased(ProjectORM)
+    author = aliased(UserORM)
+    favorite = aliased(MemoFavoriteLinkTable)
+
+    # Resolved expressions reused across columns.
+    attached_object_id_expr = func.coalesce(
+        handle.source_document_id,
+        handle.code_id,
+        handle.tag_id,
+        handle.project_id,
+        handle.span_annotation_id,
+        handle.sentence_annotation_id,
+        handle.bbox_annotation_id,
+        handle.span_group_id,
+    )
+    attached_object_type_expr = case(
+        (
+            handle.source_document_id.is_not(None),
+            AttachedObjectType.source_document.value,
+        ),
+        (handle.code_id.is_not(None), AttachedObjectType.code.value),
+        (handle.tag_id.is_not(None), AttachedObjectType.tag.value),
+        (handle.project_id.is_not(None), AttachedObjectType.project.value),
+        (
+            handle.span_annotation_id.is_not(None),
+            AttachedObjectType.span_annotation.value,
+        ),
+        (
+            handle.sentence_annotation_id.is_not(None),
+            AttachedObjectType.sentence_annotation.value,
+        ),
+        (
+            handle.bbox_annotation_id.is_not(None),
+            AttachedObjectType.bbox_annotation.value,
+        ),
+        (handle.span_group_id.is_not(None), AttachedObjectType.span_group.value),
+    )
+    attached_object_label_expr = case(
+        (handle.source_document_id.is_not(None), source_document.name),
+        (handle.code_id.is_not(None), code.name),
+        (handle.tag_id.is_not(None), tag.name),
+        (handle.project_id.is_not(None), project.title),
+        (
+            handle.span_annotation_id.is_not(None),
+            func.concat("Span annotation #", handle.span_annotation_id),
+        ),
+        (
+            handle.sentence_annotation_id.is_not(None),
+            func.concat("Sentence annotation #", handle.sentence_annotation_id),
+        ),
+        (
+            handle.bbox_annotation_id.is_not(None),
+            func.concat("Bounding box annotation #", handle.bbox_annotation_id),
+        ),
+        (handle.span_group_id.is_not(None), span_group.name),
+        else_="Memo attachment",
+    )
+
     return (
         db.query(
             MemoORM.id.label("id"),
