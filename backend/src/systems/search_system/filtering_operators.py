@@ -7,6 +7,7 @@ FilterValue = bool | str | int | list[str] | list[list[str]]
 
 
 class FilterValueType(Enum):
+    ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE"
     SDOC_ID = "SDOC_ID"
     CODE_ID = "CODE_ID"
     USER_ID = "USER_ID"

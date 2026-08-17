@@ -7,63 +7,82 @@ from systems.search_system.search_builder import SearchBuilder
 class MemoColumns(str, AbstractColumns):
     TITLE = "M_TITLE"
     CONTENT = "M_CONTENT"
-    STARRED = "M_STARRED"
     USER_ID = "M_USER_ID"
+    ATTACHED_OBJECT_TYPE = "M_ATTACHED_OBJECT_TYPE"
+    ATTACHED_OBJECT_ID = "M_ATTACHED_OBJECT_ID"
+    SOURCE_DOCUMENT_ID = "M_SOURCE_DOCUMENT_ID"
+    CODE_ID = "M_CODE_ID"
+    CREATED = "M_CREATED"
+    UPDATED = "M_UPDATED"
+    FAVORITE = "M_FAVORITE"
 
     def get_filter_column(self, subquery_dict):
-        match self:
-            case MemoColumns.TITLE:
-                return MemoORM.title
-            case MemoColumns.CONTENT:
-                return MemoORM.content
-            case MemoColumns.STARRED:
-                return MemoORM.starred
-            case MemoColumns.USER_ID:
-                return MemoORM.user_id
+        if self == MemoColumns.TITLE:
+            return MemoORM.title
+        if self == MemoColumns.CONTENT:
+            return MemoORM.content
+        if self == MemoColumns.USER_ID:
+            return MemoORM.user_id
+        if self == MemoColumns.CREATED:
+            return MemoORM.created
+        if self == MemoColumns.UPDATED:
+            return MemoORM.updated
+        return subquery_dict[self.value]
 
     def get_filter_operator(self) -> FilterOperator:
-        match self:
-            case MemoColumns.TITLE:
-                return FilterOperator.STRING
-            case MemoColumns.CONTENT:
-                return FilterOperator.STRING
-            case MemoColumns.STARRED:
-                return FilterOperator.BOOLEAN
-            case MemoColumns.USER_ID:
-                return FilterOperator.ID
+        if self in {MemoColumns.TITLE, MemoColumns.CONTENT}:
+            return FilterOperator.STRING
+        if self in {
+            MemoColumns.USER_ID,
+            MemoColumns.ATTACHED_OBJECT_ID,
+            MemoColumns.SOURCE_DOCUMENT_ID,
+            MemoColumns.CODE_ID,
+        }:
+            return FilterOperator.ID
+        if self in {MemoColumns.CREATED, MemoColumns.UPDATED}:
+            return FilterOperator.DATE
+        if self == MemoColumns.FAVORITE:
+            return FilterOperator.BOOLEAN
+        return FilterOperator.STRING
 
     def get_filter_value_type(self) -> FilterValueType:
-        match self:
-            case MemoColumns.TITLE:
-                return FilterValueType.INFER_FROM_OPERATOR
-            case MemoColumns.CONTENT:
-                return FilterValueType.INFER_FROM_OPERATOR
-            case MemoColumns.STARRED:
-                return FilterValueType.INFER_FROM_OPERATOR
-            case MemoColumns.USER_ID:
-                return FilterValueType.USER_ID
+        if self == MemoColumns.ATTACHED_OBJECT_TYPE:
+            return FilterValueType.ATTACHED_OBJECT_TYPE
+        if self == MemoColumns.USER_ID:
+            return FilterValueType.USER_ID
+        if self == MemoColumns.SOURCE_DOCUMENT_ID:
+            return FilterValueType.SDOC_ID
+        if self == MemoColumns.CODE_ID:
+            return FilterValueType.CODE_ID
+        return FilterValueType.INFER_FROM_OPERATOR
 
     def get_sort_column(self):
-        match self:
-            case MemoColumns.TITLE:
-                return MemoORM.title
-            case MemoColumns.CONTENT:
-                return MemoORM.content
-            case MemoColumns.STARRED:
-                return MemoORM.starred
-            case MemoColumns.USER_ID:
-                return MemoORM.user_id
+        if self == MemoColumns.TITLE:
+            return MemoORM.title
+        if self == MemoColumns.CONTENT:
+            return MemoORM.content
+        if self == MemoColumns.USER_ID:
+            return MemoORM.user_id
+        if self == MemoColumns.CREATED:
+            return MemoORM.created
+        if self == MemoColumns.UPDATED:
+            return MemoORM.updated
+        return MemoORM.id
 
     def get_label(self) -> str:
-        match self:
-            case MemoColumns.TITLE:
-                return "Title"
-            case MemoColumns.CONTENT:
-                return "Content"
-            case MemoColumns.STARRED:
-                return "Starred"
-            case MemoColumns.USER_ID:
-                return "User"
+        labels = {
+            MemoColumns.TITLE: "Title",
+            MemoColumns.CONTENT: "Content",
+            MemoColumns.USER_ID: "Author",
+            MemoColumns.ATTACHED_OBJECT_TYPE: "Attached object type",
+            MemoColumns.ATTACHED_OBJECT_ID: "Attached object",
+            MemoColumns.SOURCE_DOCUMENT_ID: "Source document context",
+            MemoColumns.CODE_ID: "Code context",
+            MemoColumns.CREATED: "Created",
+            MemoColumns.UPDATED: "Updated",
+            MemoColumns.FAVORITE: "Favorite",
+        }
+        return labels[self]
 
     def add_query_filter_statements(self, query_builder: SearchBuilder):
         pass

@@ -8,7 +8,7 @@ from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotations_info,
 )
 from modules.search.bbox_anno_search.bbox_anno_search_columns import BBoxColumns
-from modules.search.memo_search.memo_search import find_memo_info, find_memos
+from modules.search.memo_search.memo_search import find_memo_info
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.sdoc_search.sdoc_search import (
     find_sdocs,
@@ -31,7 +31,6 @@ from modules.search.span_anno_search.span_anno_search import (
     find_span_annotations_info,
 )
 from modules.search.span_anno_search.span_anno_search_columns import SpanColumns
-from repos.elastic.elastic_dto_base import PaginatedElasticSearchHits
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
@@ -106,37 +105,6 @@ def search_memo_info(
     authz_user.assert_in_project(project_id)
 
     return find_memo_info(project_id=project_id)
-
-
-@router.post(
-    "/memo",
-    response_model=PaginatedElasticSearchHits,
-    summary="Returns all Memo Ids that match the query parameters.",
-)
-def search_memos(
-    *,
-    db: Session = Depends(get_db_session),
-    search_query: str,
-    project_id: int,
-    search_content: bool,
-    page_number: int,
-    page_size: int,
-    filter: Filter[MemoColumns],
-    sorts: list[Sort[MemoColumns]],
-    authz_user: AuthzUser = Depends(),
-) -> PaginatedElasticSearchHits:
-    authz_user.assert_in_project(project_id)
-
-    return find_memos(
-        db=db,
-        project_id=project_id,
-        search_query=search_query,
-        search_content=search_content,
-        filter=filter,
-        sorts=sorts,
-        page_number=page_number,
-        page_size=page_size,
-    )
 
 
 @router.post(
