@@ -6,7 +6,6 @@ from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
 from core.project.project_dto import ProjectCreate
@@ -75,7 +74,6 @@ class ProjectService(metaclass=SingletonMeta):
         # 7) create elasticsearch indices for this project
         client = self.es_repo.get_client()
         crud_elastic_sdoc.index.create_index(client=client, proj_id=project_id)
-        crud_elastic_memo.index.create_index(client=client, proj_id=project_id)
 
         # 8) create weaviate tenants for this project
         from core.doc.document_collection import DocumentCollection
@@ -107,7 +105,6 @@ class ProjectService(metaclass=SingletonMeta):
         # 3) delete elasticsearch indices for this project
         client = self.es_repo.get_client()
         crud_elastic_sdoc.index.delete_index(client=client, proj_id=proj_id)
-        crud_elastic_memo.index.delete_index(client=client, proj_id=proj_id)
 
         # 4) delete weaviate embeddings and related search indices for this project
         client = self.weaviate.get_client()

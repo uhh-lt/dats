@@ -1,5 +1,4 @@
 from fastapi.encoders import jsonable_encoder
-from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -15,15 +14,12 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
-from core.memo.memo_elastic_crud import crud_elastic_memo
-from core.memo.memo_elastic_dto import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
 from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
 from repos.db.crud_base import CRUDBase
-from repos.elastic.elastic_repo import ElasticSearchRepo
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
@@ -90,33 +86,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         # create an ObjectHandle for the attached object
         oh_db_obj = crud_object_handle.create(db=db, create_dto=oh_create_dto)
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
-        self.create_memo_elasticsearch(
-            memo_orm=db_obj,
-            attached_object_id=attached_object_id,
-            attached_object_type=attached_object_type,
-        )
         return db_obj
-
-    @staticmethod
-    def create_memo_elasticsearch(
-        memo_orm: MemoORM,
-        attached_object_id: int,
-        attached_object_type: AttachedObjectType,
-    ):
-        esmemo = ElasticSearchMemoCreate(
-            title=memo_orm.title,
-            content=memo_orm.content,
-            memo_id=memo_orm.id,
-            project_id=memo_orm.project_id,
-            user_id=memo_orm.user_id,
-            attached_object_id=attached_object_id,
-            attached_object_type=attached_object_type,
-        )
-        crud_elastic_memo.create(
-            client=ElasticSearchRepo().get_client(),
-            create_dto=esmemo,
-            proj_id=memo_orm.project_id,
-        )
 
     ### READ OPERATIONS ###
 
@@ -146,44 +116,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     ### UPDATE OPERATIONS ###
 
-    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
-        updated_memo = super().update(db, id=id, update_dto=update_dto)
-        self.update_memo_elasticsearch(updated_memo)
-        return updated_memo
-
-    @staticmethod
-    def update_memo_elasticsearch(
-        memo_orm: MemoORM,
-    ):
-        update_es_dto = ElasticSearchMemoUpdate(
-            title=memo_orm.title,
-            content=memo_orm.content,
-        )
-
-        crud_elastic_memo.update(
-            client=ElasticSearchRepo().get_client(),
-            id=memo_orm.id,
-            update_dto=update_es_dto,
-            proj_id=memo_orm.project_id,
-        )
-
     ### DELETE OPERATIONS ###
-
-    def delete(self, db: Session, *, id: int) -> MemoORM:
-        db_obj = self.read(db=db, id=id)
-        try:
-            crud_elastic_memo.delete(
-                client=ElasticSearchRepo().get_client(),
-                id=db_obj.id,
-                proj_id=db_obj.project_id,
-            )
-        except Exception:
-            logger.exception(
-                "Failed to remove Memo {} from Elasticsearch project {}",
-                db_obj.id,
-                db_obj.project_id,
-            )
-        return super().delete(db=db, id=id)
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
