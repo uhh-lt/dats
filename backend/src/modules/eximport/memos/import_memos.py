@@ -1,3 +1,4 @@
+import json
 from typing import TypedDict
 
 import pandas as pd
@@ -28,6 +29,7 @@ class MemoCreateData(TypedDict):
     create_dto: MemoCreateIntern
     attached_to: int
     attached_type: AttachedObjectType
+    favorited_by_emails: list[str]
 
 
 def import_memos_to_proj(
@@ -67,6 +69,7 @@ def import_memos_to_proj(
     user_emails: set[str] = set()
     for memo in memo_collection.memos:
         user_emails.add(memo.user_email)
+        user_emails.update(json.loads(memo.favorited_by))
     project_user_emails = {user.email: user for user in project.users}
     for user_email in user_emails:
         if user_email not in project_user_emails:
@@ -187,6 +190,7 @@ def import_memos_to_proj(
                     "create_dto": memo_create,
                     "attached_to": attached_to,
                     "attached_type": attached_type,
+                    "favorited_by_emails": json.loads(memo.favorited_by),
                 }
             )
 
@@ -208,6 +212,12 @@ def import_memos_to_proj(
             create_dto=memo["create_dto"],
         )
         imported_memo_ids.append(created_memo.id)
+
+        # Restore favorites
+        for email in memo["favorited_by_emails"]:
+            favorite_user = project_user_emails[email]
+            crud_memo.favorite(db=db, memo_id=created_memo.id, user_id=favorite_user.id)
+
         logger.info(f"Successfully imported memo: {created_memo.title}")
     logger.info(
         f"Successfully imported {len(imported_memo_ids)} memos into project {project_id}"

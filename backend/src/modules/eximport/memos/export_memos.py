@@ -1,7 +1,9 @@
+import json
 from pathlib import Path
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -10,10 +12,11 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
-from core.memo.memo_orm import MemoORM
+from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_crud import crud_object_handle
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
+from core.user.user_orm import UserORM
 from modules.eximport.export_exceptions import NoDataToExportError
 from modules.eximport.memos.memo_export_schema import (
     MemoExportCollection,
@@ -73,6 +76,16 @@ def __generate_export_df_for_memos(
 ) -> pd.DataFrame:
     logger.info(f"Exporting {len(memos)} Memos ...")
 
+    # Batch-load favorites for all memos: memo_id -> list of user emails
+    favorited_by_emails: dict[int, list[str]] = {}
+    rows = db.execute(
+        select(MemoFavoriteLinkTable.memo_id, UserORM.email)
+        .join(UserORM, UserORM.id == MemoFavoriteLinkTable.user_id)
+        .where(MemoFavoriteLinkTable.memo_id.in_([memo.id for memo in memos]))
+    ).all()
+    for memo_id, email in rows:
+        favorited_by_emails.setdefault(memo_id, []).append(email)
+
     memo_export_items = []
     for memo in memos:
         memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
@@ -85,11 +98,12 @@ def __generate_export_df_for_memos(
         # Common data for all memo types
         exported_memo = MemoExportSchema(
             uuid=memo.uuid,
-            starred=memo_dto.starred,
             title=memo_dto.title,
+            icon=memo_dto.icon,
             content=memo_dto.content,
             content_json=memo_dto.content_json,
             user_email=user.email,
+            favorited_by=json.dumps(favorited_by_emails.get(memo.id, [])),
             attached_type=memo_dto.attached_object_type,
             attached_to="-1",
         )

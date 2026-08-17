@@ -11,7 +11,10 @@ class MemoExportSchema(BaseModel):
 
     uuid: str = Field(description="UUID of the memo")
     user_email: str = Field(description="Email of the user who created the memo")
-    starred: bool = Field(description="Whether the memo is starred")
+    favorited_by: str = Field(
+        default="[]",
+        description="JSON-encoded list of emails of users who favorited the memo",
+    )
     title: str = Field(description="Title of the memo")
     icon: str | None = Field(
         default=None,
@@ -53,6 +56,25 @@ class MemoExportSchema(BaseModel):
             )
         except Exception as e:
             raise ValueError(f"Invalid attached_type format: {str(e)}")
+
+        return v
+
+    @field_validator("favorited_by")
+    @classmethod
+    def validate_favorited_by(cls, v):
+        """Validate that favorited_by is a JSON-encoded list of email strings."""
+        if not v or v.strip() == "":
+            return "[]"
+
+        try:
+            parsed = json.loads(v)
+        except Exception as e:
+            raise ValueError(f"Invalid JSON format: {str(e)}")
+
+        if not isinstance(parsed, list) or not all(
+            isinstance(email, str) for email in parsed
+        ):
+            raise ValueError("favorited_by must be a JSON-encoded list of strings")
 
         return v
 
