@@ -1,4 +1,5 @@
 from fastapi.encoders import jsonable_encoder
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -16,7 +17,7 @@ from core.memo.memo_dto import (
 )
 from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.memo.memo_elastic_dto import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
-from core.memo.memo_orm import MemoORM
+from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
@@ -143,30 +144,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         )
         return query.first()
 
-    def read_by_user_and_project(
-        self,
-        db: Session,
-        user_id: int,
-        proj_id: int,
-        only_starred: bool | None,
-    ) -> list[MemoORM]:
-        if only_starred:
-            return (
-                db.query(self.model)
-                .filter(
-                    self.model.user_id == user_id,
-                    self.model.project_id == proj_id,
-                    self.model.starred == only_starred,
-                )
-                .all()
-            )
-
-        return (
-            db.query(self.model)
-            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .all()
-        )
-
     ### UPDATE OPERATIONS ###
 
     def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
@@ -181,7 +158,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
         update_es_dto = ElasticSearchMemoUpdate(
             title=memo_orm.title,
             content=memo_orm.content,
-            starred=memo_orm.starred,
         )
 
         crud_elastic_memo.update(
@@ -193,92 +169,94 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
 
     ### DELETE OPERATIONS ###
 
-    def delete_by_user_and_project(
-        self, db: Session, user_id: int, proj_id: int
-    ) -> list[int]:
-        # find all memos to be removed
-        query = db.query(self.model).filter(
-            self.model.user_id == user_id, self.model.project_id == proj_id
-        )
-        removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
-
-        # delete the memos
-        query.delete()
-        db.flush()
-
-        return ids
-
-    ### OTHER OPERATIONS ###
-
-    def exists_for_user_and_object_handle(
-        self, db: Session, *, user_id: int, attached_to_id: int
-    ) -> bool:
-        return (
-            db.query(self.model.id)
-            .filter(
-                self.model.user_id == user_id,
-                self.model.attached_to_id == attached_to_id,
+    def delete(self, db: Session, *, id: int) -> MemoORM:
+        db_obj = self.read(db=db, id=id)
+        try:
+            crud_elastic_memo.delete(
+                client=ElasticSearchRepo().get_client(),
+                id=db_obj.id,
+                proj_id=db_obj.project_id,
             )
-            .first()
-            is not None
-        )
+        except Exception:
+            logger.exception(
+                "Failed to remove Memo {} from Elasticsearch project {}",
+                db_obj.id,
+                db_obj.project_id,
+            )
+        return super().delete(db=db, id=id)
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
-    def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> MemoRead:
+    def get_memo_read_dto_from_orm(
+        db: Session, db_obj: MemoORM, user_id: int | None = None
+    ) -> MemoRead:
         # Flo: this is necessary to avoid circular imports.
         from core.memo.object_handle_crud import crud_object_handle
 
         attached_to = crud_object_handle.resolve_handled_object(
             db=db, handle=db_obj.attached_to
         )
+
         memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
+        favorite = (
+            crud_memo.is_favorited(db, memo_id=db_obj.id, user_id=user_id)
+            if user_id is not None
+            else False
+        )
+        memo_data = memo_as_in_db_dto.model_dump(exclude={"attached_to", "is_favorite"})
         if isinstance(attached_to, CodeORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.code,
             )
         elif isinstance(attached_to, SpanAnnotationORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.span_annotation,
             )
         elif isinstance(attached_to, SpanGroupORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.span_group,
             )
         elif isinstance(attached_to, BBoxAnnotationORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
             )
         elif isinstance(attached_to, SentenceAnnotationORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.sentence_annotation,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.source_document,
             )
         elif isinstance(attached_to, ProjectORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.project,
             )
         elif isinstance(attached_to, TagORM):
             return MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+                **memo_data,
+                is_favorite=favorite,
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.tag,
             )
@@ -286,6 +264,38 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             raise NotImplementedError(
                 f"Unknown AttachedObjectType: {type(attached_to)}"
             )
+
+    ### FAVORITE OPERATIONS ###
+
+    def favorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
+        self.exists(db, id=memo_id, raise_error=True)
+
+        from sqlalchemy.dialects.postgresql import insert
+
+        insert_stmt = insert(MemoFavoriteLinkTable).on_conflict_do_nothing()
+        db.execute(insert_stmt, [{"memo_id": memo_id, "user_id": user_id}])
+        db.flush()
+
+    def unfavorite(self, db: Session, *, memo_id: int, user_id: int) -> None:
+        from sqlalchemy import delete
+
+        stmt = delete(MemoFavoriteLinkTable).where(
+            MemoFavoriteLinkTable.memo_id == memo_id,
+            MemoFavoriteLinkTable.user_id == user_id,
+        )
+        db.execute(stmt)
+        db.flush()
+
+    def is_favorited(self, db: Session, *, memo_id: int, user_id: int) -> bool:
+        return (
+            db.query(MemoFavoriteLinkTable.memo_id)
+            .filter(
+                MemoFavoriteLinkTable.memo_id == memo_id,
+                MemoFavoriteLinkTable.user_id == user_id,
+            )
+            .first()
+            is not None
+        )
 
 
 crud_memo = CRUDMemo(MemoORM)

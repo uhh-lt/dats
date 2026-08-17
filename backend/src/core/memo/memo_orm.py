@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     UniqueConstraint,
@@ -24,10 +24,10 @@ class MemoORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     uuid: Mapped[str] = mapped_column(String, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    icon: Mapped[str | None] = mapped_column(String(64), nullable=True)
     content: Mapped[str] = mapped_column(String, nullable=False, index=False)
     content_json: Mapped[str] = mapped_column(String, nullable=False, index=False)
-    starred: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
-    created: Mapped[int] = mapped_column(
+    created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
     updated: Mapped[datetime] = mapped_column(
@@ -75,7 +75,16 @@ class MemoORM(ORMBase):
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="memos")
 
+    # many to many
+    favorited_by_users: Mapped[list["UserORM"]] = relationship(
+        "UserORM",
+        secondary="MemoFavoriteLinkTable".lower(),
+        back_populates="favorite_memos",
+        passive_deletes=True,
+    )
+
     __table_args__ = (
+        Index("idx_memo_project_updated", "project_id", "updated"),
         UniqueConstraint(
             "project_id",
             "uuid",
@@ -85,3 +94,18 @@ class MemoORM(ORMBase):
 
     def get_project_id(self) -> int:
         return self.project_id
+
+
+class MemoFavoriteLinkTable(ORMBase):
+    memo_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("memo.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    __table_args__ = (Index("ix_memofavoritelinktable_memo_id", "memo_id"),)

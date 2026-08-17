@@ -1,9 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from repos.db.dto_base import UpdateDTOBase
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 """
  Flo:
@@ -29,23 +27,49 @@ class AttachedObjectType(str, Enum):
 # Properties shared across all DTOs
 class MemoBaseDTO(BaseModel):
     title: str = Field(description="Title of the Memo")
+    icon: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Optional Unicode emoji used as the Memo icon",
+    )
     content: str = Field(description="Textual content of the Memo")
     content_json: str = Field(description="JSON content of the Memo")
 
 
 # Properties to update
-class MemoUpdate(BaseModel, UpdateDTOBase):
+class MemoUpdate(BaseModel):
     title: str | None = Field(description="Title of the Memo", default=None)
+    icon: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Optional Unicode emoji used as the Memo icon",
+    )
     content: str | None = Field(description="Textual content of the Memo", default=None)
     content_json: str | None = Field(
         description="JSON content of the Memo", default=None
     )
-    starred: bool | None = Field(description="Starred flag of the Memo", default=None)
+
+    @model_validator(mode="after")
+    def check_at_least_one_field_is_set(self) -> "MemoUpdate":
+        if not self.model_fields_set:
+            raise ValueError("At least one field has to be provided for an update")
+
+        required_fields = {"title", "content", "content_json"}
+        invalid_fields = {
+            field
+            for field in required_fields.intersection(self.model_fields_set)
+            if getattr(self, field) is None
+        }
+        if invalid_fields:
+            raise ValueError(
+                f"Fields cannot be null: {', '.join(sorted(invalid_fields))}"
+            )
+        return self
 
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
-    starred: bool | None = Field(description="Starred flag of the Memo", default=False)
+    pass
 
 
 class MemoCreateIntern(MemoCreate):
@@ -57,7 +81,9 @@ class MemoCreateIntern(MemoCreate):
 # Properties to read
 class MemoReadBaseDTO(MemoBaseDTO):
     id: int = Field(description="ID of the Memo")
-    starred: bool = Field(description="Starred flag of the Memo")
+    is_favorite: bool = Field(
+        description="Whether the requesting user favorited the Memo", default=False
+    )
     user_id: int = Field(description="User the Memo belongs to")
     project_id: int = Field(description="Project the Memo belongs to")
     created: datetime = Field(description="Created timestamp of the Memo")
