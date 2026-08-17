@@ -13,6 +13,11 @@ class MemoExportSchema(BaseModel):
     user_email: str = Field(description="Email of the user who created the memo")
     starred: bool = Field(description="Whether the memo is starred")
     title: str = Field(description="Title of the memo")
+    icon: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Optional Unicode emoji used as the memo icon",
+    )
     content: str | None = Field(description="Content of the memo")
     content_json: str | None = Field(description="JSON Content of the memo")
     attached_type: str = Field(description="Type of object the memo is attached to")

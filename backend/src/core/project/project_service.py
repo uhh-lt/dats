@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from sqlalchemy.orm import Session
 
 from common.singleton_meta import SingletonMeta
@@ -8,11 +6,6 @@ from core.doc.document_embedding_crud import crud_document_embedding
 from core.doc.image_embedding_crud import crud_image_embedding
 from core.doc.sdoc_elastic_crud import crud_elastic_sdoc
 from core.doc.sentence_embedding_crud import crud_sentence_embedding
-from core.memo.memo_crud import crud_memo
-from core.memo.memo_dto import (
-    AttachedObjectType,
-    MemoCreateIntern,
-)
 from core.memo.memo_elastic_crud import crud_elastic_memo
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.project.project_crud import crud_project
@@ -45,25 +38,7 @@ class ProjectService(metaclass=SingletonMeta):
         return super(ProjectService, cls).__new__(cls)
 
     def associate_user(self, *, db: Session, proj_id: int, user_id: int) -> UserORM:
-        # 1) add user to project
         crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
-
-        # 2) create memo for this user–project association
-        crud_memo.create_for_attached_object(
-            db=db,
-            attached_object_id=proj_id,
-            attached_object_type=AttachedObjectType.project,
-            create_dto=MemoCreateIntern(
-                uuid=str(uuid4()),
-                title="Project Memo",
-                content="",
-                content_json="",
-                starred=False,
-                user_id=user_id,
-                project_id=proj_id,
-            ),
-        )
-
         return crud_user.read(db=db, id=user_id)
 
     def create_project(

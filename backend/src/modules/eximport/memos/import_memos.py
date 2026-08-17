@@ -11,7 +11,6 @@ from core.code.code_crud import crud_code
 from core.doc.source_document_crud import crud_sdoc
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
-from core.memo.memo_utils import get_object_memo_for_user
 from core.project.project_crud import crud_project
 from core.tag.tag_crud import crud_tag
 from modules.eximport.memos.memo_export_schema import MemoExportCollection
@@ -97,9 +96,9 @@ def import_memos_to_proj(
             project_id=project_id,
             user_id=user.id,
             title=memo.title,
+            icon=memo.icon,
             content=memo.content if memo.content else "",
             content_json=memo.content_json if memo.content_json else "",
-            starred=memo.starred,
         )
         attached_type = AttachedObjectType(memo.attached_type)
         attached_to: int | None = None
@@ -120,17 +119,7 @@ def import_memos_to_proj(
                         f"Source document '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that source document already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=sdoc,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"Source document '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = sdoc.id
+                    attached_to = sdoc.id
 
             case AttachedObjectType.tag:
                 tag = crud_tag.read_by_name_and_project(
@@ -141,17 +130,7 @@ def import_memos_to_proj(
                         f"Document tag '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that document tag already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=tag,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"Document tag '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = tag.id
+                    attached_to = tag.id
 
             case AttachedObjectType.code:
                 code = crud_code.read_by_name_and_project(
@@ -162,17 +141,7 @@ def import_memos_to_proj(
                         f"Code '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that code already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=code,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"Code '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = code.id
+                    attached_to = code.id
 
             case AttachedObjectType.bbox_annotation:
                 bbox_anno = crud_bbox_anno.read_by_project_and_uuid(
@@ -183,17 +152,7 @@ def import_memos_to_proj(
                         f"Bounding box annotation '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that bounding box annotation already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=bbox_anno,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"BBox annotation '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = bbox_anno.id
+                    attached_to = bbox_anno.id
 
             case AttachedObjectType.sentence_annotation:
                 sentence_anno = crud_sentence_anno.read_by_project_and_uuid(
@@ -204,17 +163,7 @@ def import_memos_to_proj(
                         f"Sentence annotation '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that sentence annotation already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=sentence_anno,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"Sentence annotation '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = sentence_anno.id
+                    attached_to = sentence_anno.id
 
             case AttachedObjectType.span_annotation:
                 span_anno = crud_span_anno.read_by_project_and_uuid(
@@ -225,17 +174,7 @@ def import_memos_to_proj(
                         f"Span annotation '{memo.attached_to}' not found in project {project_id}"
                     )
                 else:
-                    # Check if that span annotation already has a memo
-                    try:
-                        existing_memo = get_object_memo_for_user(
-                            db_obj=span_anno,
-                            user_id=user.id,
-                        )
-                        error_messages.append(
-                            f"Span annotation '{memo.attached_to}' already has a memo attached to it"
-                        )
-                    except Exception:
-                        attached_to = span_anno.id
+                    attached_to = span_anno.id
 
             case _:
                 error_messages.append(
