@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from core.doc.folder_orm import FolderORM
     from core.doc.source_document_orm import SourceDocumentORM
     from core.memo.memo_orm import MemoORM
+    from core.memo.memo_view_orm import MemoViewORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.metadata.project_metadata_orm import ProjectMetadataORM
     from core.tag.tag_orm import TagORM
@@ -66,6 +67,13 @@ class ProjectORM(ORMBase):
 
     memos: Mapped[list["MemoORM"]] = relationship(
         "MemoORM",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    memo_views: Mapped[list["MemoViewORM"]] = relationship(
+        "MemoViewORM",
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

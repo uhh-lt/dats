@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
     from core.auth.refresh_token_orm import RefreshTokenORM
     from core.memo.memo_orm import MemoORM
+    from core.memo.memo_view_orm import MemoViewORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
 
@@ -51,6 +52,13 @@ class UserORM(ORMBase):
         passive_deletes=True,
     )
 
+    memo_views: Mapped[list["MemoViewORM"]] = relationship(
+        "MemoViewORM",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     refresh_tokens: Mapped[list["RefreshTokenORM"]] = relationship(
         "RefreshTokenORM",
         back_populates="user",
@@ -61,6 +69,13 @@ class UserORM(ORMBase):
     # many to many
     projects: Mapped[list["ProjectORM"]] = relationship(
         "ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users"
+    )
+
+    favorite_memos: Mapped[list["MemoORM"]] = relationship(
+        "MemoORM",
+        secondary="MemoFavoriteLinkTable".lower(),
+        back_populates="favorited_by_users",
+        passive_deletes=True,
     )
 
     def get_project_id(self) -> None:
