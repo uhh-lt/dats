@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
-import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { contrastiveColors } from "@utils/colors/colors";
 
 interface MarkProps {
@@ -12,8 +12,8 @@ interface MarkProps {
   groups?: number[];
 }
 
-export function Mark({ codeId, isStart, isEnd, height, top, groups }: MarkProps) {
-  const code = CodeHooks.useGetCode(codeId);
+export function Mark({ annotation, isStart, isEnd, height, top, groups }: MarkProps) {
+  const code = CodeHooks.useGetCode(annotation.code_id);
 
   if (code.data) {
     let color: string;
@@ -33,9 +33,7 @@ export function Mark({ codeId, isStart, isEnd, height, top, groups }: MarkProps)
           outline: annotation.requires_review ? "2px dashed #ed6c02" : undefined,
         }}
         title={annotation.requires_review ? "This annotation needs review" : undefined}
-      >
-        {resizeHandles}
-      </span>
+      />
     );
   }
   return (

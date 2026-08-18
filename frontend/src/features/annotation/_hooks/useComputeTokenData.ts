@@ -1,7 +1,7 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
+import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { SourceDocumentDataRead } from "@models/SourceDocumentDataRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
 import { useMemo } from "react";
 import { IToken } from "../_types/IToken";
 
@@ -42,11 +42,7 @@ export function useComputeTokenData({
     const annotationMap = new Map<number, ContextualAnnotation<SpanAnnotationRead>>();
     const annotationsPerToken = new Map<number, number[]>();
     annotations.data.forEach((storedAnnotation) => {
-      const selectedAnnotation =
-        storedAnnotation.id === annotationOverride?.id
-          ? { ...annotationOverride, requires_review: storedAnnotation.requires_review }
-          : storedAnnotation;
-      const groupIds = selectedAnnotation.group_ids.map((id) => {
+      const groupIds = storedAnnotation.group_ids.map((id: number) => {
         let mapped = spanGroupIdMapping.get(id);
         if (mapped === undefined) {
           mapped = spanGroupIdMapping.size + 1;
@@ -55,7 +51,7 @@ export function useComputeTokenData({
         return mapped;
       });
       const annotation: ContextualAnnotation<SpanAnnotationRead> = {
-        ...selectedAnnotation,
+        ...storedAnnotation,
         group_ids: groupIds,
       };
 

@@ -1,5 +1,5 @@
-import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { ContextualAnnotation } from "@api/hooks/useAnnotationBranchVisibility";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
@@ -35,7 +35,7 @@ export function Token({ token, spanAnnotations }: TokenProps) {
     return spans.map((spanAnnotation, index) => (
       <Mark
         key={spanAnnotation.id}
-        codeId={spanAnnotation.code_id}
+        annotation={spanAnnotation}
         isStart={isStart}
         isEnd={isEnd}
         height={h}
