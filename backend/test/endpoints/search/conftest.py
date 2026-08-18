@@ -44,9 +44,16 @@ class SearchProjectState(TypedDict):
     - Users: `user` = the global test_user (Test User, testuser@dats.org),
       `other_user` (Other Author, otherauthor@dats.org).
     - Codes: `code_alpha` "Alpha" (#ff0000), `code_beta` "Beta" (#00ff00).
-    - Tags: `tag` "Important" (#0000ff) — linked to `sdoc_one` only.
-    - Folders: `folder` "Research" (NORMAL) — contains `sdoc_two` (its
-      auto-created SDOC_FOLDER has parent_id = folder.id). `sdoc_one` sits in
+      `code_beta` is a CHILD of `code_alpha` (parent_id = code_alpha.id), so
+      CODE CONTAINS_RECURSIVE on Alpha matches both Alpha- and Beta-coded
+      annotations, while plain CONTAINS on Alpha matches only Alpha-coded ones.
+    - Tags (a hierarchy): `tag` "Important" (#0000ff, parent_id=None) — linked
+      to `sdoc_one`; `subtag` "Urgent" (#ff00ff, parent_id = tag.id, a CHILD of
+      "Important") — linked to `sdoc_two`.
+    - Folders (a hierarchy): `folder` "Research" (NORMAL, parent_id=None) and
+      `subfolder` "Archive" (NORMAL, parent_id = folder.id, a CHILD of
+      "Research"). `sdoc_two`'s auto-created SDOC_FOLDER is re-parented under
+      "Archive", so its NORMAL parent folder is "Archive". `sdoc_one` sits in
       its own auto-created SDOC_FOLDER with parent_id=None (no NORMAL folder).
     - Documents:
       - `sdoc_one` "Test Document" (test_document.txt, text, file on disk):
@@ -80,10 +87,16 @@ class SearchProjectState(TypedDict):
       operator — not even negative ones like NOT_CONTAINS.
     - TAG_ID_LIST_RECURSIVE aggregates the tags of the annotation's sdoc:
       annotations on sdoc_one (span[0], span[1], sent[0], bbox[0]) contain
-      tag "Important"; annotations on sdoc_two (sent[1], bbox[1]) contain none.
+      tag "Important"; annotations on sdoc_two (sent[1], bbox[1]) contain
+      subtag "Urgent". Because "Urgent" is a child of "Important",
+      CONTAINS_RECURSIVE on "Important" matches annotations on BOTH sdocs,
+      while plain CONTAINS on "Important" matches only sdoc_one's.
     - FOLDER_ID_LIST_RECURSIVE aggregates the NORMAL parent folder of the
       annotation's sdoc: only annotations on sdoc_two (sent[1], bbox[1])
-      contain folder "Research"; sdoc_one's annotations contain none.
+      contain a folder, and that folder is "Archive" (the child), NOT
+      "Research". So plain CONTAINS on "Research" matches nothing, while
+      CONTAINS_RECURSIVE on "Research" (expanding to {Research, Archive})
+      matches sdoc_two's annotations. sdoc_one's annotations contain none.
     - sdoc_two has no file on disk (only sdoc_one's file is written). Endpoints
       that build file URLs for sdoc_two rows may fail; avoid depending on them.
     - Span texts are "This" and "is" — "is" CONTAINS/ENDS_WITH matches both
@@ -101,18 +114,26 @@ class SearchProjectState(TypedDict):
     sentence_annotations: list[SentenceAnnotationORM]
     bbox_annotations: list[BBoxAnnotationORM]
     tag: TagORM
+    subtag: TagORM
     folder: FolderORM
+    subfolder: FolderORM
     memos: list[MemoORM]
 
 
-def _make_code(db_session, project: ProjectORM, name: str, color: str) -> CodeORM:
+def _make_code(
+    db_session,
+    project: ProjectORM,
+    name: str,
+    color: str,
+    parent_id: int | None = None,
+) -> CodeORM:
     return crud_code.create(
         db=db_session,
         create_dto=CodeCreate(
             name=name,
             color=color,
             description=f"{name} code",
-            parent_id=None,
+            parent_id=parent_id,
             enabled=True,
             project_id=project.id,
             is_system=False,
@@ -293,12 +314,17 @@ def search_project(
         ),
     )
 
-    # --- codes ---
+    # --- codes (Beta is a CHILD of Alpha, so CONTAINS_RECURSIVE on Alpha also
+    # matches Beta-coded annotations) ---
     code_alpha = _make_code(db_session, project, "Alpha", "#ff0000")
-    code_beta = _make_code(db_session, project, "Beta", "#00ff00")
+    code_beta = _make_code(
+        db_session, project, "Beta", "#00ff00", parent_id=code_alpha.id
+    )
 
-    # --- tag (linked to sdoc_one only, so TAG filters have a positive and a
-    # negative case) ---
+    # --- tags (a hierarchy: "Urgent" is a CHILD of "Important"). "Important" is
+    # linked to sdoc_one, "Urgent" to sdoc_two, so TAG CONTAINS_RECURSIVE on
+    # "Important" expands to {Important, Urgent} and matches annotations on BOTH
+    # sdocs, while plain CONTAINS on "Important" matches only sdoc_one. ---
     tag = crud_tag.create(
         db=db_session,
         create_dto=TagCreate(
@@ -309,11 +335,26 @@ def search_project(
             project_id=project.id,
         ),
     )
+    subtag = crud_tag.create(
+        db=db_session,
+        create_dto=TagCreate(
+            name="Urgent",
+            color="#ff00ff",
+            description="Urgent tag",
+            parent_id=tag.id,
+            project_id=project.id,
+        ),
+    )
     crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc_one.id], tag_ids=[tag.id])
+    crud_tag.link_multiple_tags(
+        db=db_session, sdoc_ids=[sdoc_two.id], tag_ids=[subtag.id]
+    )
 
-    # --- folder (a NORMAL folder containing sdoc_two, so FOLDER filters have a
-    # positive and a negative case). sdoc_two's auto-created SDOC_FOLDER is
-    # re-parented under it; the FOLDER aggregate exposes that NORMAL parent. ---
+    # --- folders (a hierarchy: "Archive" is a CHILD of "Research"). sdoc_two's
+    # auto-created SDOC_FOLDER is re-parented under "Archive", so its NORMAL
+    # parent folder is "Archive" (not "Research" directly). Thus FOLDER CONTAINS
+    # on "Research" matches nothing, while CONTAINS_RECURSIVE on "Research"
+    # expands to {Research, Archive} and matches sdoc_two's annotations. ---
     folder = crud_folder.create(
         db=db_session,
         create_dto=FolderCreate(
@@ -323,9 +364,18 @@ def search_project(
             project_id=project.id,
         ),
     )
+    subfolder = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Archive",
+            folder_type=FolderType.NORMAL,
+            parent_id=folder.id,
+            project_id=project.id,
+        ),
+    )
     db_session.refresh(sdoc_two)
     sdoc_two_folder = sdoc_two.folder
-    sdoc_two_folder.parent_id = folder.id
+    sdoc_two_folder.parent_id = subfolder.id
     db_session.add(sdoc_two_folder)
     db_session.flush()
 
@@ -503,7 +553,9 @@ def search_project(
         code_alpha,
         code_beta,
         tag,
+        subtag,
         folder,
+        subfolder,
         *span_annotations,
         *sentence_annotations,
         *bbox_annotations,
@@ -523,6 +575,8 @@ def search_project(
         "sentence_annotations": sentence_annotations,
         "bbox_annotations": bbox_annotations,
         "tag": tag,
+        "subtag": subtag,
         "folder": folder,
+        "subfolder": subfolder,
         "memos": memos,
     }
