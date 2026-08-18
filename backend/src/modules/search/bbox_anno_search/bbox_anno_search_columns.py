@@ -23,7 +23,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 
 class BBoxColumns(str, AbstractColumns):
-    CODE_ID = "BB_CODE_ID"
+    CODE_ID_LIST_RECURSIVE = "BB_CODE_ID_LIST_RECURSIVE"
     MEMO_CONTENT = "BB_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "BB_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "BB_TAG_ID_LIST_RECURSIVE"
@@ -37,8 +37,8 @@ class BBoxColumns(str, AbstractColumns):
                 return subquery_dict[BBoxColumns.TAG_ID_LIST_RECURSIVE.value]
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[BBoxColumns.FOLDER_ID_LIST_RECURSIVE.value]
-            case BBoxColumns.CODE_ID:
-                return BBoxAnnotationORM.code_id
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
+                return subquery_dict[BBoxColumns.CODE_ID_LIST_RECURSIVE.value]
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
 
@@ -50,8 +50,8 @@ class BBoxColumns(str, AbstractColumns):
                 return FilterOperator.ID_LIST_RECURSIVE
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
-            case BBoxColumns.CODE_ID:
-                return FilterOperator.ID
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             case BBoxColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
 
@@ -63,7 +63,7 @@ class BBoxColumns(str, AbstractColumns):
                 return FilterValueType.TAG_ID
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterValueType.FOLDER_ID
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
             case BBoxColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
@@ -76,7 +76,7 @@ class BBoxColumns(str, AbstractColumns):
                 return None
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 return CodeORM.name
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
@@ -89,13 +89,20 @@ class BBoxColumns(str, AbstractColumns):
                 return "Tags"
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 return "Folder"
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 return "Code"
             case BBoxColumns.MEMO_CONTENT:
                 return "Memo content"
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        BBoxAnnotationORM.code_id,
+                        label=BBoxColumns.CODE_ID_LIST_RECURSIVE.value,
+                    )
+                )
             case BBoxColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
@@ -150,16 +157,11 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.MEMO_CONTENT:
                 query_builder._join_query(
                     BBoxAnnotationORM.object_handle, isouter=True
-                )._join_query(
-                    ObjectHandleORM.attached_memos.and_(
-                        MemoORM.user_id == AnnotationDocumentORM.user_id
-                    ),
-                    isouter=True,
-                )
+                )._join_query(ObjectHandleORM.attached_memos, isouter=True)
 
     def is_groupable(self) -> bool:
         return self in {
-            BBoxColumns.CODE_ID,
+            BBoxColumns.CODE_ID_LIST_RECURSIVE,
             BBoxColumns.SOURCE_DOCUMENT_NAME,
         }
 
@@ -167,7 +169,7 @@ class BBoxColumns(str, AbstractColumns):
         # Grouping runs against the outer query, which already joins CodeORM and
         # SourceDocumentORM.
         match self:
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 return GroupExpressions(
                     key=cast(BBoxAnnotationORM.code_id, String),
                     label=CodeORM.name,
@@ -192,7 +194,7 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
             case _:
@@ -213,7 +215,7 @@ class BBoxColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case BBoxColumns.CODE_ID:
+            case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case _:

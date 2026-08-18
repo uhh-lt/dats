@@ -27,7 +27,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 class SpanColumns(str, AbstractColumns):
     SPAN_TEXT = "SP_SPAN_TEXT"
-    CODE_ID = "SP_CODE_ID"
+    CODE_ID_LIST_RECURSIVE = "SP_CODE_ID_LIST_RECURSIVE"
     USER_ID = "SP_USER_ID"
     MEMO_CONTENT = "SP_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SP_SOURCE_SOURCE_DOCUMENT_NAME"
@@ -42,8 +42,8 @@ class SpanColumns(str, AbstractColumns):
                 return subquery_dict[SpanColumns.TAG_ID_LIST_RECURSIVE.value]
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[SpanColumns.FOLDER_ID_LIST_RECURSIVE.value]
-            case SpanColumns.CODE_ID:
-                return SpanAnnotationORM.code_id
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
+                return subquery_dict[SpanColumns.CODE_ID_LIST_RECURSIVE.value]
             case SpanColumns.SPAN_TEXT:
                 return SpanTextORM.text
             case SpanColumns.MEMO_CONTENT:
@@ -59,8 +59,8 @@ class SpanColumns(str, AbstractColumns):
                 return FilterOperator.ID_LIST_RECURSIVE
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
-            case SpanColumns.CODE_ID:
-                return FilterOperator.ID
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             case SpanColumns.SPAN_TEXT:
                 return FilterOperator.STRING
             case SpanColumns.MEMO_CONTENT:
@@ -76,7 +76,7 @@ class SpanColumns(str, AbstractColumns):
                 return FilterValueType.TAG_ID
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterValueType.FOLDER_ID
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
             case SpanColumns.SPAN_TEXT:
                 return FilterValueType.INFER_FROM_OPERATOR
@@ -93,7 +93,7 @@ class SpanColumns(str, AbstractColumns):
                 return None
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 return CodeORM.name
             case SpanColumns.SPAN_TEXT:
                 return SpanTextORM.text
@@ -110,7 +110,7 @@ class SpanColumns(str, AbstractColumns):
                 return "Tags"
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 return "Folder"
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 return "Code"
             case SpanColumns.SPAN_TEXT:
                 return "Annotated text"
@@ -121,6 +121,13 @@ class SpanColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        SpanAnnotationORM.code_id,
+                        label=SpanColumns.CODE_ID_LIST_RECURSIVE.value,
+                    )
+                )
             case SpanColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
@@ -180,12 +187,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.MEMO_CONTENT:
                 query_builder._join_query(
                     SpanAnnotationORM.object_handle, isouter=True
-                )._join_query(
-                    ObjectHandleORM.attached_memos.and_(
-                        MemoORM.user_id == AnnotationDocumentORM.user_id
-                    ),
-                    isouter=True,
-                )
+                )._join_query(ObjectHandleORM.attached_memos, isouter=True)
             case SpanColumns.USER_ID:
                 query_builder._join_query(
                     AnnotationDocumentORM,
@@ -198,7 +200,7 @@ class SpanColumns(str, AbstractColumns):
 
     def is_groupable(self) -> bool:
         return self in {
-            SpanColumns.CODE_ID,
+            SpanColumns.CODE_ID_LIST_RECURSIVE,
             SpanColumns.USER_ID,
             SpanColumns.SOURCE_DOCUMENT_NAME,
         }
@@ -207,7 +209,7 @@ class SpanColumns(str, AbstractColumns):
         # Grouping runs against the outer query, which already joins CodeORM,
         # SourceDocumentORM, AnnotationDocumentORM (and UserORM for USER_ID).
         match self:
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 return GroupExpressions(
                     key=cast(SpanAnnotationORM.code_id, String),
                     label=CodeORM.name,
@@ -237,7 +239,7 @@ class SpanColumns(str, AbstractColumns):
             case SpanColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
             case SpanColumns.USER_ID:
@@ -261,7 +263,7 @@ class SpanColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case SpanColumns.CODE_ID:
+            case SpanColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case SpanColumns.USER_ID:

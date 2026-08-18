@@ -26,7 +26,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 class SentAnnoColumns(str, AbstractColumns):
     # TEXT = "SentAnno_SPAN_TEXT"
-    CODE_ID = "SentAnno_CODE_ID"
+    CODE_ID_LIST_RECURSIVE = "SentAnno_CODE_ID_LIST_RECURSIVE"
     USER_ID = "SentAnno_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME"
@@ -41,8 +41,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return subquery_dict[SentAnnoColumns.TAG_ID_LIST_RECURSIVE.value]
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return subquery_dict[SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE.value]
-            case SentAnnoColumns.CODE_ID:
-                return SentenceAnnotationORM.code_id
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
+                return subquery_dict[SentAnnoColumns.CODE_ID_LIST_RECURSIVE.value]
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:
@@ -58,8 +58,8 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterOperator.ID_LIST_RECURSIVE
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
-            case SentAnnoColumns.CODE_ID:
-                return FilterOperator.ID
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
+                return FilterOperator.ID_LIST_RECURSIVE
             # case SentAnnoColumns.TEXT:
             #     return FilterOperator.STRING
             case SentAnnoColumns.MEMO_CONTENT:
@@ -75,7 +75,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterValueType.TAG_ID
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return FilterValueType.FOLDER_ID
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
             # case SentAnnoColumns.TEXT:
             #     return FilterValueType.INFER_FROM_OPERATOR
@@ -92,7 +92,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 return None
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return None
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return CodeORM.name
             # case SentAnnoColumns.TEXT:
             #     return SpanTextORM.text
@@ -109,7 +109,7 @@ class SentAnnoColumns(str, AbstractColumns):
                 return "Tags"
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 return "Folder"
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return "Code"
             # case SentAnnoColumns.TEXT:
             #     return "Annotated text"
@@ -120,6 +120,15 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
+                # The subquery is grouped per annotation, so this aggregates to
+                # [code_id] per row; recursion expands the filter value instead.
+                query_builder._add_subquery_column(
+                    aggregate_ids(
+                        SentenceAnnotationORM.code_id,
+                        label=SentAnnoColumns.CODE_ID_LIST_RECURSIVE.value,
+                    )
+                )
             case SentAnnoColumns.TAG_ID_LIST_RECURSIVE:
                 query_builder._add_subquery_column(
                     aggregate_ids(
@@ -172,14 +181,11 @@ class SentAnnoColumns(str, AbstractColumns):
                     SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
                 )
             case SentAnnoColumns.MEMO_CONTENT:
+                # Memos are collaborative: match memo content regardless of who
+                # authored the memo or the annotation.
                 query_builder._join_query(
                     SentenceAnnotationORM.object_handle, isouter=True
-                )._join_query(
-                    ObjectHandleORM.attached_memos.and_(
-                        MemoORM.user_id == AnnotationDocumentORM.user_id
-                    ),
-                    isouter=True,
-                )
+                )._join_query(ObjectHandleORM.attached_memos, isouter=True)
             case SentAnnoColumns.USER_ID:
                 query_builder._join_query(
                     AnnotationDocumentORM,
@@ -192,7 +198,7 @@ class SentAnnoColumns(str, AbstractColumns):
 
     def is_groupable(self) -> bool:
         return self in {
-            SentAnnoColumns.CODE_ID,
+            SentAnnoColumns.CODE_ID_LIST_RECURSIVE,
             SentAnnoColumns.USER_ID,
             SentAnnoColumns.SOURCE_DOCUMENT_NAME,
         }
@@ -201,7 +207,7 @@ class SentAnnoColumns(str, AbstractColumns):
         # Grouping runs against the outer query, which already joins CodeORM,
         # SourceDocumentORM, AnnotationDocumentORM (and UserORM for USER_ID).
         match self:
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return GroupExpressions(
                     key=cast(SentenceAnnotationORM.code_id, String),
                     label=CodeORM.name,
@@ -231,7 +237,7 @@ class SentAnnoColumns(str, AbstractColumns):
             case SentAnnoColumns.FOLDER_ID_LIST_RECURSIVE:
                 folders = crud_folder.read_by_ids(db, ids=ids)
                 return [folder.name for folder in folders]
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
             case SentAnnoColumns.USER_ID:
@@ -255,7 +261,7 @@ class SentAnnoColumns(str, AbstractColumns):
                     folder_type=FolderType.NORMAL,
                 )
                 return [folder.id for folder in result]
-            case SentAnnoColumns.CODE_ID:
+            case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
             case SentAnnoColumns.USER_ID:
