@@ -3,12 +3,14 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
+from core.memo.memo_dto import AttachedObjectType
 from modules.search.memo_search.memo_search_columns import MemoColumns
 from modules.search.search_dto import MemoRow, Page, QueryRequest
 from systems.search_system.column_info import ColumnInfo
-from systems.search_system.filtering import Filter, LogicalOperator
+from systems.search_system.filtering import Filter, FilterExpression, LogicalOperator
 from systems.search_system.filtering_operators import (
-    AttachedToOperator,
+    AttachedObjectOperator,
+    AttachedObjectTypeOperator,
     BooleanOperator,
     DateOperator,
     IDOperator,
@@ -265,7 +267,7 @@ def test_memo_search_content_column_supports_string_filter_operators(
                     make_filter_expr(
                         "e1",
                         MemoColumns.ATTACHED_OBJECT_TYPE,
-                        AttachedToOperator.EQUALS,
+                        AttachedObjectTypeOperator.EQUALS,
                         "code",
                     )
                 ]
@@ -280,7 +282,7 @@ def test_memo_search_content_column_supports_string_filter_operators(
                     make_filter_expr(
                         "e1",
                         MemoColumns.ATTACHED_OBJECT_TYPE,
-                        AttachedToOperator.EQUALS,
+                        AttachedObjectTypeOperator.EQUALS,
                         "source_document",
                     )
                 ]
@@ -295,7 +297,7 @@ def test_memo_search_content_column_supports_string_filter_operators(
                     make_filter_expr(
                         "e1",
                         MemoColumns.ATTACHED_OBJECT_TYPE,
-                        AttachedToOperator.NOT_EQUALS,
+                        AttachedObjectTypeOperator.NOT_EQUALS,
                         "code",
                     )
                 ]
@@ -308,7 +310,7 @@ def test_memo_search_content_column_supports_string_filter_operators(
 def test_memo_search_attached_object_type_column_supports_attached_to_operators(
     client: TestClient, search_project, filter_tree, expected_titles
 ):
-    """ATTACHED_OBJECT_TYPE supports the ATTACHED_TO equals/not-equals operators."""
+    """ATTACHED_OBJECT_TYPE supports the ATTACHED_OBJECT_TYPE equals/not-equals operators."""
     assert (
         _post_memo_query(client, search_project["project"].id, filter_tree)
         == expected_titles
@@ -328,7 +330,7 @@ def test_memo_search_attached_object_type_column_supports_attached_to_operators(
                     make_filter_expr(
                         "e2",
                         MemoColumns.ATTACHED_OBJECT_TYPE,
-                        AttachedToOperator.EQUALS,
+                        AttachedObjectTypeOperator.EQUALS,
                         "code",
                     ),
                 ]
@@ -383,7 +385,7 @@ def test_memo_search_attached_object_type_filter_matches_each_type(
                 make_filter_expr(
                     "e1",
                     MemoColumns.ATTACHED_OBJECT_TYPE,
-                    AttachedToOperator.EQUALS,
+                    AttachedObjectTypeOperator.EQUALS,
                     attached_type,
                 )
             ]
@@ -435,23 +437,61 @@ def test_memo_search_user_id_column_supports_id_filter_operators(
 
 
 @pytest.mark.parametrize(
-    "operator,object_key,expected_titles",
+    "operator,object_type,object_key,expected_titles",
     [
-        # EQUALS the code's id -> only the memo on that code.
-        pytest.param(IDOperator.EQUALS, "code_alpha", {"Code Memo"}, id="code-equals"),
-        # NOT_EQUALS the code's id -> all but the code memo.
+        # EQUALS (code, code_alpha.id) -> only the memo on that code.
         pytest.param(
-            IDOperator.NOT_EQUALS,
+            AttachedObjectOperator.EQUALS,
+            "code",
+            "code_alpha",
+            {"Code Memo"},
+            id="code-equals",
+        ),
+        # NOT_EQUALS (code, code_alpha.id) -> all but the code memo.
+        pytest.param(
+            AttachedObjectOperator.NOT_EQUALS,
+            "code",
             "code_alpha",
             ALL_MEMOS - {"Code Memo"},
             id="code-not-equals",
         ),
+        # EQUALS (source_document, sdoc_one.id) -> only the document memo.
+        pytest.param(
+            AttachedObjectOperator.EQUALS,
+            "source_document",
+            "sdoc_one",
+            {"Document Memo"},
+            id="sdoc-equals",
+        ),
+        # EQUALS (tag, tag.id) -> only the tag memo.
+        pytest.param(
+            AttachedObjectOperator.EQUALS,
+            "tag",
+            "tag",
+            {"Tag Memo"},
+            id="tag-equals",
+        ),
+        # The same numeric id under a DIFFERENT type matches nothing: the pair
+        # (source_document, code_alpha.id) does not exist, proving the type is
+        # part of the comparison (a raw-id filter would have matched Code Memo).
+        pytest.param(
+            AttachedObjectOperator.EQUALS,
+            "source_document",
+            "code_alpha",
+            set(),
+            id="type-disambiguates-id",
+        ),
     ],
 )
-def test_memo_search_attached_object_id_column_supports_id_filter_operators(
-    client: TestClient, search_project, operator, object_key, expected_titles
+def test_memo_search_attached_object_column_supports_attached_object_operators(
+    client: TestClient,
+    search_project,
+    operator,
+    object_type,
+    object_key,
+    expected_titles,
 ):
-    """Memo ATTACHED_OBJECT_ID filter matches by the attached object's id."""
+    """Memo ATTACHED_OBJECT filter matches by the (type, id) pair, not the raw id."""
     object_id = search_project[object_key].id
     assert (
         _post_memo_query(
@@ -460,13 +500,129 @@ def test_memo_search_attached_object_id_column_supports_id_filter_operators(
             make_filter_tree(
                 [
                     make_filter_expr(
-                        "e1", MemoColumns.ATTACHED_OBJECT_ID, operator, object_id
+                        "e1",
+                        MemoColumns.ATTACHED_OBJECT_ID,
+                        operator,
+                        [object_type, str(object_id)],
                     )
                 ]
             ),
         )
         == expected_titles
     )
+
+
+# ===========================================================================
+# ATTACHED_OBJECT ID/NAME RESOLUTION (export/import round-trip) TESTS
+# ===========================================================================
+#
+# The ATTACHED_OBJECT column is polymorphic: its value is a [type, id] pair, so the
+# generic resolve_ids/resolve_names hooks cannot know which table the id lives in.
+# filtering.py therefore converts the AttachedObjectType token into a `Crud` member
+# and passes it down as `types`, letting the memo column resolve the exact row.
+# These tests pin that contract: a [type, id] filter must survive a full
+# resolve_ids -> resolve_names round-trip unchanged, for every attachable type.
+
+
+@pytest.mark.parametrize(
+    "object_type,object_key",
+    [
+        # Each attachable type round-trips through its own display-name attribute.
+        pytest.param(AttachedObjectType.code, "code_alpha", id="code"),
+        pytest.param(AttachedObjectType.source_document, "sdoc_one", id="sdoc"),
+        pytest.param(AttachedObjectType.tag, "tag", id="tag"),
+        pytest.param(AttachedObjectType.project, "project", id="project"),
+        # Annotations have no name; they round-trip by their stringified id.
+        pytest.param(
+            AttachedObjectType.span_annotation, "span_annotations", id="span-anno"
+        ),
+        pytest.param(
+            AttachedObjectType.sentence_annotation,
+            "sentence_annotations",
+            id="sentence-anno",
+        ),
+        pytest.param(
+            AttachedObjectType.bbox_annotation, "bbox_annotations", id="bbox-anno"
+        ),
+    ],
+)
+def test_memo_attached_object_resolve_round_trip_returns_original_pair(
+    db_session, search_project, object_type, object_key
+):
+    """A [type, id] ATTACHED_OBJECT filter survives resolve_ids -> resolve_names."""
+    target = search_project[object_key]
+    # Annotation fixture values are lists; the named objects are single ORM rows.
+    object_id = target[0].id if isinstance(target, list) else target.id
+
+    original = make_filter_tree(
+        [
+            make_filter_expr(
+                "e1",
+                MemoColumns.ATTACHED_OBJECT_ID,
+                AttachedObjectOperator.EQUALS,
+                [object_type.value, str(object_id)],
+            )
+        ]
+    )
+
+    # Export direction: ids -> names (portable across projects).
+    named = Filter.resolve_ids(original, db=db_session)
+    # Import direction: names -> ids (in the target project).
+    round_tripped = Filter.resolve_names(
+        named, db=db_session, project_id=search_project["project"].id
+    )
+
+    expr = round_tripped.items[0]
+    assert isinstance(expr, FilterExpression)
+    assert expr.value == [object_type.value, str(object_id)]
+
+
+def test_memo_attached_object_resolve_disambiguates_shared_id_across_types(
+    db_session, search_project
+):
+    """A code and a tag sharing one id resolve to different names (type-aware)."""
+    code = search_project["code_alpha"]
+    tag = search_project["tag"]
+
+    # Force the collision: point both filters at the same numeric id, differing only
+    # in the type token. The type part must steer each to its own table/name.
+    shared_id = code.id
+    code_filter = make_filter_tree(
+        [
+            make_filter_expr(
+                "e1",
+                MemoColumns.ATTACHED_OBJECT_ID,
+                AttachedObjectOperator.EQUALS,
+                [AttachedObjectType.code.value, str(shared_id)],
+            )
+        ]
+    )
+    tag_filter = make_filter_tree(
+        [
+            make_filter_expr(
+                "e1",
+                MemoColumns.ATTACHED_OBJECT_ID,
+                AttachedObjectOperator.EQUALS,
+                [AttachedObjectType.tag.value, str(shared_id)],
+            )
+        ]
+    )
+
+    code_expr = Filter.resolve_ids(code_filter, db=db_session).items[0]
+    tag_expr = Filter.resolve_ids(tag_filter, db=db_session).items[0]
+    assert isinstance(code_expr, FilterExpression)
+    assert isinstance(tag_expr, FilterExpression)
+    code_named = code_expr.value
+    tag_named = tag_expr.value
+    assert isinstance(code_named, list) and isinstance(tag_named, list)
+
+    # Same id, different type -> the resolved names must differ (code name vs tag
+    # name), proving the resolution is type-aware rather than a probe-all-tables
+    # first-match.
+    assert code_named[0] == AttachedObjectType.code.value
+    assert tag_named[0] == AttachedObjectType.tag.value
+    assert code_named[1] == code.name
+    assert tag_named[1] == tag.name
 
 
 @pytest.mark.parametrize(
@@ -608,26 +764,42 @@ def test_memo_search_created_updated_columns_support_date_filter_operators(
             r"Invalid value type for IDOperator \(requires int or str\)",
             id="user-id-non-int-str",
         ),
-        # IDOperator rejects a list value.
+        # AttachedObjectOperator rejects a non-pair value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_ID,
-            IDOperator.EQUALS,
-            ["invalid"],
-            r"Invalid value type for IDOperator \(requires int or str\)",
-            id="attached-object-id-non-int-str",
+            AttachedObjectOperator.EQUALS,
+            "invalid",
+            r"Invalid value type for AttachedObjectOperator \(requires list\[str\] of \[type, id\]\)",
+            id="attached-object-non-pair",
         ),
-        # AttachedToOperator rejects a non-str value.
+        # AttachedObjectOperator rejects an unknown AttachedObjectType in the pair.
+        pytest.param(
+            MemoColumns.ATTACHED_OBJECT_ID,
+            AttachedObjectOperator.EQUALS,
+            ["bogus", "1"],
+            r"is not a valid AttachedObjectType",
+            id="attached-object-invalid-type",
+        ),
+        # AttachedObjectOperator rejects a non-integer id in the pair.
+        pytest.param(
+            MemoColumns.ATTACHED_OBJECT_ID,
+            AttachedObjectOperator.EQUALS,
+            ["code", "not-an-int"],
+            r"is not an integer id",
+            id="attached-object-non-int-id",
+        ),
+        # AttachedObjectTypeOperator rejects a non-str value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
-            AttachedToOperator.EQUALS,
+            AttachedObjectTypeOperator.EQUALS,
             123,
-            r"Invalid value type for AttachedToOperator \(requires str\)",
+            r"Invalid value type for AttachedObjectTypeOperator \(requires str\)",
             id="attached-to-non-str",
         ),
-        # AttachedToOperator rejects an unknown AttachedObjectType value.
+        # AttachedObjectTypeOperator rejects an unknown AttachedObjectType value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
-            AttachedToOperator.EQUALS,
+            AttachedObjectTypeOperator.EQUALS,
             "bogus",
             r"is not a valid AttachedObjectType",
             id="attached-to-invalid-enum-value",
@@ -715,12 +887,19 @@ def test_memo_search_rejects_wrong_typed_filter_values_with_400(
             "1",
             id="user-id-with-string-op",
         ),
-        # ATTACHED_OBJECT_TYPE is an ATTACHED_TO column; an ID operator mismatches.
+        # ATTACHED_OBJECT_TYPE is an ATTACHED_OBJECT_TYPE column; an ID operator mismatches.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
             IDOperator.EQUALS,
             1,
             id="attached-type-with-id-op",
+        ),
+        # ATTACHED_OBJECT is an ATTACHED_OBJECT column; an ID operator mismatches.
+        pytest.param(
+            MemoColumns.ATTACHED_OBJECT_ID,
+            IDOperator.EQUALS,
+            1,
+            id="attached-object-with-id-op",
         ),
         # CREATED is a DATE column; a STRING operator mismatches.
         pytest.param(
@@ -866,6 +1045,22 @@ def test_memo_drill_down_into_attached_object_type_group_returns_only_that_group
     )
     assert page.total_results == len(expected_titles)
     assert {m.title for m in page.items} == expected_titles
+
+
+def test_memo_drill_down_into_attached_object_group_returns_only_that_object(
+    client: TestClient, search_project
+):
+    """Drilling into a specific attached-object group (composite "type:id" key)
+    returns only the memo attached to that exact object."""
+    code = search_project["code_alpha"]
+    page = _post_memo_drill_down_query(
+        client,
+        search_project["project"].id,
+        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_ID),
+        f"code:{code.id}",
+    )
+    assert page.total_results == 1
+    assert {m.title for m in page.items} == {"Code Memo"}
 
 
 def test_memo_drill_down_into_user_group_returns_only_that_authors_memos(
@@ -1079,10 +1274,10 @@ def test_memo_group_by_title_buckets_by_first_letter(
     assert page.total_results == 6
 
 
-def test_memo_group_by_attached_object_id_sets_drill_down_target(
+def test_memo_group_by_attached_object_sets_drill_down_target(
     client: TestClient, search_project
 ):
-    """Grouping by attached_object_id yields one bucket per object with a target."""
+    """Grouping by attached_object yields one bucket per object with a target."""
     page = _post_memo_group_query(
         client,
         search_project["project"].id,
