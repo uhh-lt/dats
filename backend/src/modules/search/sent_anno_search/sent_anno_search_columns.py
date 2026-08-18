@@ -25,7 +25,6 @@ from systems.search_system.search_builder import SearchBuilder
 
 
 class SentAnnoColumns(str, AbstractColumns):
-    # TEXT = "SentAnno_SPAN_TEXT"
     CODE_ID_LIST_RECURSIVE = "SentAnno_CODE_ID_LIST_RECURSIVE"
     USER_ID = "SentAnno_USER_ID"
     MEMO_CONTENT = "SentAnno_MEMO_CONTENT"
@@ -60,8 +59,6 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterOperator.ID_LIST_RECURSIVE
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterOperator.ID_LIST_RECURSIVE
-            # case SentAnnoColumns.TEXT:
-            #     return FilterOperator.STRING
             case SentAnnoColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
             case SentAnnoColumns.USER_ID:
@@ -77,8 +74,6 @@ class SentAnnoColumns(str, AbstractColumns):
                 return FilterValueType.FOLDER_ID
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return FilterValueType.CODE_ID
-            # case SentAnnoColumns.TEXT:
-            #     return FilterValueType.INFER_FROM_OPERATOR
             case SentAnnoColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
             case SentAnnoColumns.USER_ID:
@@ -94,8 +89,6 @@ class SentAnnoColumns(str, AbstractColumns):
                 return None
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return CodeORM.name
-            # case SentAnnoColumns.TEXT:
-            #     return SpanTextORM.text
             case SentAnnoColumns.MEMO_CONTENT:
                 return MemoORM.content
             case SentAnnoColumns.USER_ID:
@@ -111,8 +104,6 @@ class SentAnnoColumns(str, AbstractColumns):
                 return "Folder"
             case SentAnnoColumns.CODE_ID_LIST_RECURSIVE:
                 return "Code"
-            # case SentAnnoColumns.TEXT:
-            #     return "Annotated text"
             case SentAnnoColumns.MEMO_CONTENT:
                 return "Memo content"
             case SentAnnoColumns.USER_ID:

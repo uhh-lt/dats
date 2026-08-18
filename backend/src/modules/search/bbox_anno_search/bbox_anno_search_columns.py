@@ -15,6 +15,8 @@ from core.memo.memo_orm import MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
+from core.user.user_orm import UserORM
 from repos.db.sql_utils import aggregate_ids
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
@@ -24,6 +26,7 @@ from systems.search_system.search_builder import SearchBuilder
 
 class BBoxColumns(str, AbstractColumns):
     CODE_ID_LIST_RECURSIVE = "BB_CODE_ID_LIST_RECURSIVE"
+    USER_ID = "BB_USER_ID"
     MEMO_CONTENT = "BB_MEMO_CONTENT"
     SOURCE_DOCUMENT_NAME = "BB_SOURCE_SOURCE_DOCUMENT_NAME"
     TAG_ID_LIST_RECURSIVE = "BB_TAG_ID_LIST_RECURSIVE"
@@ -41,6 +44,8 @@ class BBoxColumns(str, AbstractColumns):
                 return subquery_dict[BBoxColumns.CODE_ID_LIST_RECURSIVE.value]
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
+            case BBoxColumns.USER_ID:
+                return AnnotationDocumentORM.user_id
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
@@ -54,6 +59,8 @@ class BBoxColumns(str, AbstractColumns):
                 return FilterOperator.ID_LIST_RECURSIVE
             case BBoxColumns.MEMO_CONTENT:
                 return FilterOperator.STRING
+            case BBoxColumns.USER_ID:
+                return FilterOperator.ID
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:
@@ -67,6 +74,8 @@ class BBoxColumns(str, AbstractColumns):
                 return FilterValueType.CODE_ID
             case BBoxColumns.MEMO_CONTENT:
                 return FilterValueType.INFER_FROM_OPERATOR
+            case BBoxColumns.USER_ID:
+                return FilterValueType.USER_ID
 
     def get_sort_column(self, subquery_dict=None):
         match self:
@@ -80,6 +89,8 @@ class BBoxColumns(str, AbstractColumns):
                 return CodeORM.name
             case BBoxColumns.MEMO_CONTENT:
                 return MemoORM.content
+            case BBoxColumns.USER_ID:
+                return UserORM.last_name
 
     def get_label(self) -> str:
         match self:
@@ -93,6 +104,8 @@ class BBoxColumns(str, AbstractColumns):
                 return "Code"
             case BBoxColumns.MEMO_CONTENT:
                 return "Memo content"
+            case BBoxColumns.USER_ID:
+                return "User"
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
         match self:
@@ -158,16 +171,24 @@ class BBoxColumns(str, AbstractColumns):
                 query_builder._join_query(
                     BBoxAnnotationORM.object_handle, isouter=True
                 )._join_query(ObjectHandleORM.attached_memos, isouter=True)
+            case BBoxColumns.USER_ID:
+                query_builder._join_query(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.id
+                    == BBoxAnnotationORM.annotation_document_id,
+                )._join_query(
+                    UserORM,
+                    UserORM.id == AnnotationDocumentORM.user_id,
+                )
 
     def is_groupable(self) -> bool:
         return self in {
             BBoxColumns.CODE_ID_LIST_RECURSIVE,
+            BBoxColumns.USER_ID,
             BBoxColumns.SOURCE_DOCUMENT_NAME,
         }
 
     def get_group_expressions(self, subquery_dict, date_granularity):
-        # Grouping runs against the outer query, which already joins CodeORM and
-        # SourceDocumentORM.
         match self:
             case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 return GroupExpressions(
@@ -175,6 +196,11 @@ class BBoxColumns(str, AbstractColumns):
                     label=CodeORM.name,
                     target_id=BBoxAnnotationORM.code_id,
                     target_type=AttachedObjectType.code.value,
+                )
+            case BBoxColumns.USER_ID:
+                return GroupExpressions(
+                    key=cast(AnnotationDocumentORM.user_id, String),
+                    label=UserORM.email,
                 )
             case BBoxColumns.SOURCE_DOCUMENT_NAME:
                 return GroupExpressions(
@@ -197,6 +223,9 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 codes = crud_code.read_by_ids(db, ids=ids)
                 return [code.name for code in codes]
+            case BBoxColumns.USER_ID:
+                users = crud_user.read_by_ids(db, ids=ids)
+                return [user.email for user in users]
             case _:
                 raise NotImplementedError(f"Cannot resolve ID for {self}!")
 
@@ -218,5 +247,8 @@ class BBoxColumns(str, AbstractColumns):
             case BBoxColumns.CODE_ID_LIST_RECURSIVE:
                 result = crud_code.read_by_names(db, project_id=project_id, names=names)
                 return [code.id for code in result]
+            case BBoxColumns.USER_ID:
+                result = crud_user.read_by_emails(db, emails=names)
+                return [user.id for user in result]
             case _:
                 raise NotImplementedError(f"Cannot resolve name for {self}!")
