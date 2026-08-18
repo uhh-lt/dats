@@ -19,6 +19,9 @@ from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.code.code_crud import crud_code
 from core.code.code_dto import CodeCreate
 from core.code.code_orm import CodeORM
+from core.doc.folder_crud import crud_folder
+from core.doc.folder_dto import FolderCreate, FolderType
+from core.doc.folder_orm import FolderORM
 from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
@@ -35,13 +38,56 @@ from core.user.user_orm import UserORM
 class SearchProjectState(TypedDict):
     """A deterministic project fixture for search tests.
 
-    Contents (all committed and refreshed):
-    - 2 users: the global `test_user` (author of half the data) and `other_user`.
-    - 2 codes: "Alpha" and "Beta".
-    - 2 text source documents (from the root `project_with_sdoc` fixture is NOT used;
-      we build our own so we control names/content deterministically).
-    - span/sentence/bbox annotations split across codes and users.
-    - memos attached to a code, a source document, and a span annotation.
+    This fixture sets up the following project:
+
+    - Project: "Simple Test Project" (from the root `test_project` fixture).
+    - Users: `user` = the global test_user (Test User, testuser@dats.org),
+      `other_user` (Other Author, otherauthor@dats.org).
+    - Codes: `code_alpha` "Alpha" (#ff0000), `code_beta` "Beta" (#00ff00).
+    - Tags: `tag` "Important" (#0000ff) — linked to `sdoc_one` only.
+    - Folders: `folder` "Research" (NORMAL) — contains `sdoc_two` (its
+      auto-created SDOC_FOLDER has parent_id = folder.id). `sdoc_one` sits in
+      its own auto-created SDOC_FOLDER with parent_id=None (no NORMAL folder).
+    - Documents:
+      - `sdoc_one` "Test Document" (test_document.txt, text, file on disk):
+        content "This is a test document. It has two sentences.", 2 sentences.
+        -> linked to tag "Important"; NOT in any NORMAL folder.
+      - `sdoc_two` "Second Document" (second_document.txt, text, NO file on
+        disk): content "Alpha beta gamma.", 1 sentence.
+        -> no tags; inside folder "Research".
+    - Span annotations (both on sdoc_one):
+      - [0] by `user`, code Alpha, text "This" (chars 0-4)
+      - [1] by `other_user`, code Beta, text "is" (chars 5-7)
+    - Sentence annotations (sentence 0 each):
+      - [0] by `user`, code Alpha, on sdoc_one ("This is a test document.")
+      - [1] by `other_user`, code Beta, on sdoc_two ("Alpha beta gamma.")
+    - Bbox annotations:
+      - [0] by `user`, code Alpha, on sdoc_one (x=0, y=0, w=10, h=10)
+      - [1] by `user`, code Beta, on sdoc_two (x=20, y=20, w=20, h=20)
+    - Memos (one per attached-object type; [0], [2], [4] back-dated to
+      yesterday, the rest today):
+      - [0] "Code Memo" by `user` on code_alpha
+      - [1] "Document Memo" by `other_user` on sdoc_one
+      - [2] "Span Memo" by `user` on span_annotations[0]
+      - [3] "Sentence Memo" by `other_user` on sentence_annotations[0]
+      - [4] "BBox Memo" by `user` on bbox_annotations[0]
+      - [5] "Project Memo" by `other_user` on project
+      - [6] "Tag Memo" by `user` on tag
+
+    Non-obvious derived behavior (documented so tests don't re-derive it):
+    - Only span[0], sent[0], bbox[0] have a memo attached. For all other
+      annotations the memo columns are NULL, and NULL rows match NO string
+      operator — not even negative ones like NOT_CONTAINS.
+    - TAG_ID_LIST_RECURSIVE aggregates the tags of the annotation's sdoc:
+      annotations on sdoc_one (span[0], span[1], sent[0], bbox[0]) contain
+      tag "Important"; annotations on sdoc_two (sent[1], bbox[1]) contain none.
+    - FOLDER_ID_LIST_RECURSIVE aggregates the NORMAL parent folder of the
+      annotation's sdoc: only annotations on sdoc_two (sent[1], bbox[1])
+      contain folder "Research"; sdoc_one's annotations contain none.
+    - sdoc_two has no file on disk (only sdoc_one's file is written). Endpoints
+      that build file URLs for sdoc_two rows may fail; avoid depending on them.
+    - Span texts are "This" and "is" — "is" CONTAINS/ENDS_WITH matches both
+      ("This" contains "is"). Use "Thi" for a single-match substring.
     """
 
     project: ProjectORM
@@ -55,6 +101,7 @@ class SearchProjectState(TypedDict):
     sentence_annotations: list[SentenceAnnotationORM]
     bbox_annotations: list[BBoxAnnotationORM]
     tag: TagORM
+    folder: FolderORM
     memos: list[MemoORM]
 
 
@@ -250,7 +297,8 @@ def search_project(
     code_alpha = _make_code(db_session, project, "Alpha", "#ff0000")
     code_beta = _make_code(db_session, project, "Beta", "#00ff00")
 
-    # --- tag ---
+    # --- tag (linked to sdoc_one only, so TAG filters have a positive and a
+    # negative case) ---
     tag = crud_tag.create(
         db=db_session,
         create_dto=TagCreate(
@@ -261,6 +309,25 @@ def search_project(
             project_id=project.id,
         ),
     )
+    crud_tag.link_multiple_tags(db=db_session, sdoc_ids=[sdoc_one.id], tag_ids=[tag.id])
+
+    # --- folder (a NORMAL folder containing sdoc_two, so FOLDER filters have a
+    # positive and a negative case). sdoc_two's auto-created SDOC_FOLDER is
+    # re-parented under it; the FOLDER aggregate exposes that NORMAL parent. ---
+    folder = crud_folder.create(
+        db=db_session,
+        create_dto=FolderCreate(
+            name="Research",
+            folder_type=FolderType.NORMAL,
+            parent_id=None,
+            project_id=project.id,
+        ),
+    )
+    db_session.refresh(sdoc_two)
+    sdoc_two_folder = sdoc_two.folder
+    sdoc_two_folder.parent_id = folder.id
+    db_session.add(sdoc_two_folder)
+    db_session.flush()
 
     # --- span annotations (2: one per code, both by test_user on sdoc_one) ---
     span_annotations = [
@@ -436,6 +503,7 @@ def search_project(
         code_alpha,
         code_beta,
         tag,
+        folder,
         *span_annotations,
         *sentence_annotations,
         *bbox_annotations,
@@ -455,5 +523,6 @@ def search_project(
         "sentence_annotations": sentence_annotations,
         "bbox_annotations": bbox_annotations,
         "tag": tag,
+        "folder": folder,
         "memos": memos,
     }
