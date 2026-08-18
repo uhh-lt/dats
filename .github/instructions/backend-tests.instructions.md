@@ -42,11 +42,18 @@ There are two levels of conftest:
 - Builds a **deterministic test project** (users, documents, codes, annotations, memos, ...) with fixed names and contents, so every test has a known expected result.
 - Returns the created objects (e.g. as a `TypedDict`) so tests can read ids and attributes.
 - A project fixture **may be shared** by many tests in the folder. If a test needs a special setup, define **another project fixture** in the same conftest — even one fixture per test is fine.
-- Document the fixture's contents (the project setup) in the docstring of the fixture (what objects, which user authored them, etc).
+- The `TypedDict` (or fixture) docstring must contain a **complete description of the project**: every object in it (project, users, codes, tags, folders, documents, annotations, memos, ...) with its fixed names/values, which user authored it, and how objects are linked (e.g. "Document A is linked to tag a", "Document B is in folder X"). Structure it as a readable inventory ("This fixture sets up the following project: ..."), followed by a short list of **non-obvious derived behavior** (things a test cannot see from the setup code alone, e.g. NULL columns that match no operator). A reader must be able to predict every expected test result from the docstring alone, without reading the fixture body.
 
 **Never do project setup inside a test function.** All data setup belongs in conftest fixtures.
 
 ## Writing a Test
+
+**Workflow — read fixtures, not internals:**
+
+1. Read the folder's `conftest.py` (and the root `backend/test/conftest.py`) to learn the fixture data. The fixture docstrings document the contents and any non-obvious derived behavior.
+2. Write tests asserting **from the fixture objects** (`search_project["code_alpha"].id`, `search_project["user"].email`, ...), not from values reverse-engineered out of service/ORM/CRUD code.
+3. For behavior that is not obvious from the fixture, state your best hypothesis in the assertion and **let the test run confirm or correct it**. Only read implementation code when a test actually fails in a surprising way — then investigate only what failed.
+4. When you discover a non-obvious derived behavior of the fixture (e.g. a join that nulls out a column), document it in the fixture's docstring in conftest so it is never re-derived.
 
 Each test function:
 
