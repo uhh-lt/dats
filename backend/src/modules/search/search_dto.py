@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
@@ -38,7 +38,7 @@ class QueryRequest(BaseModel, Generic[T]):
     - `sorts`: ordered sort expressions; empty means the entity's default sort.
     - `group_by` + `group_key`: optional drill-down. When both are set, results are
       restricted to the single group identified by `group_key` (the group is defined
-      by `group_by`). `group_by` without `group_key` has no effect on a row query.
+      by `group_by`). Both must be provided together, or both must be omitted.
     """
 
     project_id: int = Field(description="Project the search runs in")
@@ -51,16 +51,26 @@ class QueryRequest(BaseModel, Generic[T]):
     group_by: GroupConfig[T] | None = Field(
         default=None,
         description="Grouping definition; together with `group_key`, restricts "
-        "results to one group (drill-down).",
+        "results to one group (drill-down). Both must be set or both omitted.",
     )
     group_key: str | None = Field(
         default=None,
-        description="Key of the single group to drill into (requires `group_by`).",
+        description="Key of the single group to drill into (requires `group_by`). "
+        "Both must be set or both omitted.",
     )
     page_number: int = Field(default=0, ge=0, description="Zero-based page index")
     page_size: int = Field(
         default=20, ge=1, le=200, description="Number of rows per page"
     )
+
+    @model_validator(mode="after")
+    def validate_drill_down_fields(self) -> "QueryRequest[T]":
+        if (self.group_by is None) != (self.group_key is None):
+            raise ValueError(
+                "Both 'group_by' and 'group_key' must be provided together for drill-down, "
+                "or both must be omitted."
+            )
+        return self
 
 
 class MemoRow(BaseModel):

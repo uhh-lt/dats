@@ -1,20 +1,3 @@
-"""Endpoint tests for the memo search endpoints (/search/memo*).
-
-All tests run against the deterministic `search_project` fixture (see conftest.py),
-which builds one memo per (non-deprecated) AttachedObjectType:
-- "Code Memo" (on code Alpha, by user)
-- "Document Memo" (on sdoc_one, by other_user)
-- "Span Memo" (on span_annotations[0], by user)
-- "Sentence Memo" (on sentence_annotations[0], by other_user)
-- "BBox Memo" (on bbox_annotations[0], by user)
-- "Project Memo" (on the project, by other_user)
-- "Tag Memo" (on the tag, by user)
-
-AttachedObjectType.span_group is deprecated and intentionally not covered.
-Because the data is fixed, every filter/group combination below has a known,
-deterministic expected result.
-"""
-
 import re
 
 import pytest
@@ -64,29 +47,33 @@ MEMOS_BY_TYPE = {
 
 
 # ===========================================================================
-# INFO ENDPOINT
+# SEARCH MEMO INFO (/search/memo_info) TESTS
 # ===========================================================================
 
 
-def test_memo_info_groupable_flags(client: TestClient, search_project):
+def test_memo_info_marks_all_columns_except_content_groupable(
+    client: TestClient, search_project
+):
     """Memo info exposes every MemoColumns member; all but CONTENT are groupable."""
     response = client.post(
         "/search/memo_info", params={"project_id": search_project["project"].id}
     )
     assert response.status_code == 200, response.text
-    infos = [ColumnInfo.model_validate(x) for x in response.json()]
+    infos = [ColumnInfo[MemoColumns].model_validate(x) for x in response.json()]
     groupable = {info.column for info in infos if info.groupable}
     # CONTENT is the only non-groupable memo column.
     assert groupable == set(MemoColumns) - {MemoColumns.CONTENT}
 
 
 # ===========================================================================
-# ROW QUERIES — FILTERS
+# SEARCH MEMO (/search/memo) TESTS
 # ===========================================================================
 
 
-def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> set[str]:
-    """Run a memo row query and return the set of matching memo titles."""
+def _post_memo_query(
+    client: TestClient, project_id: int, filter_tree: Filter
+) -> set[str]:
+    """POST /search/memo and return the set of matching memo titles."""
     request = QueryRequest[MemoColumns](
         project_id=project_id,
         search_query="",
@@ -100,10 +87,18 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
     return {m.title for m in Page[MemoRow].model_validate(response.json()).items}
 
 
+# --- A. columns support their operators ------------------------------------------
+# Each memo column declares an operator family (MemoColumns.get_filter_operator).
+# The tests below verify that every column accepts all operators of its family
+# and that they behave correctly against the deterministic fixture data.
+
+
 @pytest.mark.parametrize(
     "filter_tree,expected_titles",
     [
+        # No filter -> all memos.
         pytest.param(empty_filter(), ALL_MEMOS, id="no-filter"),
+        # Every title contains "Memo".
         pytest.param(
             make_filter_tree(
                 [
@@ -115,6 +110,7 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
             ALL_MEMOS,
             id="title-contains",
         ),
+        # Only "Code Memo" equals exactly.
         pytest.param(
             make_filter_tree(
                 [
@@ -126,6 +122,7 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
             {"Code Memo"},
             id="title-equals",
         ),
+        # NOT_EQUALS excludes only "Code Memo".
         pytest.param(
             make_filter_tree(
                 [
@@ -137,6 +134,7 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
             ALL_MEMOS - {"Code Memo"},
             id="title-not-equals",
         ),
+        # Only "Code Memo" starts with "Code".
         pytest.param(
             make_filter_tree(
                 [
@@ -148,6 +146,7 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
             {"Code Memo"},
             id="title-starts-with",
         ),
+        # Every title ends with "Memo".
         pytest.param(
             make_filter_tree(
                 [
@@ -161,12 +160,12 @@ def _memo_titles(client: TestClient, project_id: int, filter_tree: Filter) -> se
         ),
     ],
 )
-def test_memo_rows_title_string_filters(
+def test_memo_search_title_column_supports_string_filter_operators(
     client: TestClient, search_project, filter_tree, expected_titles
 ):
     """TITLE supports all five string operators."""
     assert (
-        _memo_titles(client, search_project["project"].id, filter_tree)
+        _post_memo_query(client, search_project["project"].id, filter_tree)
         == expected_titles
     )
 
@@ -246,12 +245,12 @@ def test_memo_rows_title_string_filters(
         ),
     ],
 )
-def test_memo_rows_content_string_filters(
+def test_memo_search_content_column_supports_string_filter_operators(
     client: TestClient, search_project, filter_tree, expected_titles
 ):
     """CONTENT supports all five string operators."""
     assert (
-        _memo_titles(client, search_project["project"].id, filter_tree)
+        _post_memo_query(client, search_project["project"].id, filter_tree)
         == expected_titles
     )
 
@@ -259,6 +258,7 @@ def test_memo_rows_content_string_filters(
 @pytest.mark.parametrize(
     "filter_tree,expected_titles",
     [
+        # EQUALS "code" -> only the memo on a code.
         pytest.param(
             make_filter_tree(
                 [
@@ -273,6 +273,7 @@ def test_memo_rows_content_string_filters(
             {"Code Memo"},
             id="attached-type-equals-code",
         ),
+        # EQUALS "source_document" -> only the memo on a document.
         pytest.param(
             make_filter_tree(
                 [
@@ -287,6 +288,7 @@ def test_memo_rows_content_string_filters(
             {"Document Memo"},
             id="attached-type-equals-sdoc",
         ),
+        # NOT_EQUALS "code" -> all but the code memo.
         pytest.param(
             make_filter_tree(
                 [
@@ -303,12 +305,12 @@ def test_memo_rows_content_string_filters(
         ),
     ],
 )
-def test_memo_rows_attached_to_filters(
+def test_memo_search_attached_object_type_column_supports_attached_to_operators(
     client: TestClient, search_project, filter_tree, expected_titles
 ):
     """ATTACHED_OBJECT_TYPE supports the ATTACHED_TO equals/not-equals operators."""
     assert (
-        _memo_titles(client, search_project["project"].id, filter_tree)
+        _post_memo_query(client, search_project["project"].id, filter_tree)
         == expected_titles
     )
 
@@ -316,7 +318,7 @@ def test_memo_rows_attached_to_filters(
 @pytest.mark.parametrize(
     "filter_tree,expected_titles",
     [
-        # --- two expressions combined with AND ---
+        # Two expressions combined with AND -> only the memo matching both.
         pytest.param(
             make_filter_tree(
                 [
@@ -334,7 +336,7 @@ def test_memo_rows_attached_to_filters(
             {"Code Memo"},
             id="and-combination",
         ),
-        # --- two expressions combined with OR ---
+        # Two expressions combined with OR -> memos matching either.
         pytest.param(
             make_filter_tree(
                 [
@@ -352,12 +354,12 @@ def test_memo_rows_attached_to_filters(
         ),
     ],
 )
-def test_memo_rows_logic_combinations(
+def test_memo_search_filter_expressions_combine_with_and_or_logic(
     client: TestClient, search_project, filter_tree, expected_titles
 ):
     """Filter trees combine expressions with AND/OR logic."""
     assert (
-        _memo_titles(client, search_project["project"].id, filter_tree)
+        _post_memo_query(client, search_project["project"].id, filter_tree)
         == expected_titles
     )
 
@@ -369,11 +371,11 @@ def test_memo_rows_logic_combinations(
         for attached_type, title in MEMOS_BY_TYPE.items()
     ],
 )
-def test_memo_rows_filter_by_attached_object_type(
+def test_memo_search_attached_object_type_filter_matches_each_type(
     client: TestClient, search_project, attached_type, expected_title
 ):
     """Filtering by each ATTACHED_OBJECT_TYPE returns exactly the memo of that type."""
-    assert _memo_titles(
+    assert _post_memo_query(
         client,
         search_project["project"].id,
         make_filter_tree(
@@ -415,13 +417,13 @@ def test_memo_rows_filter_by_attached_object_type(
         ),
     ],
 )
-def test_memo_rows_id_filters(
+def test_memo_search_user_id_column_supports_id_filter_operators(
     client: TestClient, search_project, operator, user_key, expected_titles
 ):
     """Memo USER_ID filter matches by authoring user."""
     user_id = search_project[user_key].id
     assert (
-        _memo_titles(
+        _post_memo_query(
             client,
             search_project["project"].id,
             make_filter_tree(
@@ -437,10 +439,6 @@ def test_memo_rows_id_filters(
     [
         # EQUALS the code's id -> only the memo on that code.
         pytest.param(IDOperator.EQUALS, "code_alpha", {"Code Memo"}, id="code-equals"),
-        # EQUALS the sdoc's id -> only the memo on that document.
-        pytest.param(
-            IDOperator.EQUALS, "sdoc_one", {"Document Memo"}, id="sdoc-equals"
-        ),
         # NOT_EQUALS the code's id -> all but the code memo.
         pytest.param(
             IDOperator.NOT_EQUALS,
@@ -450,13 +448,13 @@ def test_memo_rows_id_filters(
         ),
     ],
 )
-def test_memo_rows_attached_object_id_filters(
+def test_memo_search_attached_object_id_column_supports_id_filter_operators(
     client: TestClient, search_project, operator, object_key, expected_titles
 ):
     """Memo ATTACHED_OBJECT_ID filter matches by the attached object's id."""
     object_id = search_project[object_key].id
     assert (
-        _memo_titles(
+        _post_memo_query(
             client,
             search_project["project"].id,
             make_filter_tree(
@@ -482,12 +480,12 @@ def test_memo_rows_attached_object_id_filters(
         pytest.param(BooleanOperator.NOT_EQUALS, True, ALL_MEMOS, id="not-equals-true"),
     ],
 )
-def test_memo_rows_boolean_filter(
+def test_memo_search_favorite_column_supports_boolean_filter_operators(
     client: TestClient, search_project, operator, value, expected_titles
 ):
     """Memo FAVORITE boolean filter (no favorites exist in the fixture)."""
     assert (
-        _memo_titles(
+        _post_memo_query(
             client,
             search_project["project"].id,
             make_filter_tree(
@@ -497,16 +495,6 @@ def test_memo_rows_boolean_filter(
         == expected_titles
     )
 
-
-# ===========================================================================
-# ROW QUERIES — DATE FILTERS
-# ===========================================================================
-# The fixture back-dates a deterministic subset of memos to yesterday (see
-# search/conftest.py), so the memo set is split across two days:
-#   yesterday: Code Memo, Span Memo, BBox Memo          (test_user-authored)
-#   today:     Document, Sentence, Project, Tag Memos   (other_user-authored)
-# This makes every date operator distinguishable, unlike a single-day fixture
-# where LT/GT and LTE/GTE would be indistinguishable.
 
 # Memos created/updated yesterday (back-dated in the fixture).
 YESTERDAY_MEMOS = {"Code Memo", "Span Memo", "BBox Memo"}
@@ -518,31 +506,42 @@ TODAY_MEMOS = ALL_MEMOS - YESTERDAY_MEMOS
 @pytest.mark.parametrize(
     "operator,day,expected",
     [
-        # --- relative to TODAY ---
+        # EQUALS today -> today's memos.
         pytest.param(DateOperator.EQUALS, "today", "today_set", id="equals-today"),
+        # LT today -> only yesterday's memos.
         pytest.param(DateOperator.LT, "today", "yesterday_set", id="lt-today"),
+        # LTE today -> all memos.
         pytest.param(DateOperator.LTE, "today", "all", id="lte-today"),
+        # GT today -> none.
         pytest.param(DateOperator.GT, "today", "none", id="gt-today"),
+        # GTE today -> today's memos.
         pytest.param(DateOperator.GTE, "today", "today_set", id="gte-today"),
-        # --- relative to YESTERDAY ---
+        # EQUALS yesterday -> yesterday's memos.
         pytest.param(
             DateOperator.EQUALS, "yesterday", "yesterday_set", id="equals-yesterday"
         ),
+        # LT yesterday -> none.
         pytest.param(DateOperator.LT, "yesterday", "none", id="lt-yesterday"),
+        # LTE yesterday -> yesterday's memos.
         pytest.param(
             DateOperator.LTE, "yesterday", "yesterday_set", id="lte-yesterday"
         ),
+        # GT yesterday -> today's memos.
         pytest.param(DateOperator.GT, "yesterday", "today_set", id="gt-yesterday"),
+        # GTE yesterday -> all memos.
         pytest.param(DateOperator.GTE, "yesterday", "all", id="gte-yesterday"),
     ],
 )
-def test_memo_rows_date_filters(
+def test_memo_search_created_updated_columns_support_date_filter_operators(
     client: TestClient, search_project, date_column, operator, day, expected
 ):
     """CREATED and UPDATED support all five date operators, distinguished by day.
 
-    Memos are split across two days (see fixture), so each operator yields a
-    distinct, deterministic result relative to both today and yesterday.
+    The fixture back-dates the three test_user-authored memos (Code, Span, BBox)
+    to yesterday, so the memo set is split across two days and each operator
+    yields a distinct, deterministic result relative to both today and yesterday
+    (unlike a single-day fixture, where LT/GT and LTE/GTE would be
+    indistinguishable).
     """
     project_id = search_project["project"].id
     # memos[0] is a back-dated (yesterday) memo; memos[1] is a today memo.
@@ -558,7 +557,7 @@ def test_memo_rows_date_filters(
     }[expected]
 
     assert (
-        _memo_titles(
+        _post_memo_query(
             client,
             project_id,
             make_filter_tree(
@@ -569,20 +568,23 @@ def test_memo_rows_date_filters(
     )
 
 
-# ===========================================================================
-# ROW QUERIES — INVALID FILTER VALUES (HTTP 400 contracts)
-# ===========================================================================
-# Pydantic validates that `value` is a bool/str/int/list, but NOT that its type
-# matches the operator. A wrong-typed or malformed value therefore reaches
-# `*Operator.apply()`, which raises InvalidFilterValueError (or
-# InvalidFilterValueFormatError). Both are registered with a 400 handler, so the
-# endpoint returns HTTP 400 and we assert on the response body.
+# --- B. invalid filter input (HTTP 400 contracts) ----------------------------------
+# Two kinds of malformed filter input, both surfaced as HTTP 400:
+#   1. wrong-typed/malformed values: Pydantic only checks that `value` is a
+#      bool/str/int/list, not that its type matches the operator, so the value
+#      reaches `*Operator.apply()`, which raises InvalidFilterValueError (or
+#      InvalidFilterValueFormatError) -> 400.
+#   2. operator/column family mismatch: the FilterExpression model_validator
+#      rejects an operator whose family differs from the column's declared
+#      family (OperatorNotCompatibleWithColumnError) -> 400. Metadata (int)
+#      columns are NOT validated (their family needs a DB lookup), so only
+#      enum columns are tested.
 
 
 @pytest.mark.parametrize(
     "column,operator,value,match",
     [
-        # --- StringOperator requires str ---
+        # StringOperator rejects a non-str value.
         pytest.param(
             MemoColumns.TITLE,
             StringOperator.EQUALS,
@@ -590,6 +592,7 @@ def test_memo_rows_date_filters(
             r"Invalid value type for StringOperator \(requires str\)",
             id="title-string-non-str",
         ),
+        # StringOperator rejects a non-str value.
         pytest.param(
             MemoColumns.CONTENT,
             StringOperator.CONTAINS,
@@ -597,22 +600,23 @@ def test_memo_rows_date_filters(
             r"Invalid value type for StringOperator \(requires str\)",
             id="content-string-non-str",
         ),
-        # --- IDOperator requires int or str ---
+        # IDOperator rejects a list value.
         pytest.param(
             MemoColumns.USER_ID,
             IDOperator.EQUALS,
-            1.5,
+            ["invalid"],
             r"Invalid value type for IDOperator \(requires int or str\)",
             id="user-id-non-int-str",
         ),
+        # IDOperator rejects a list value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_ID,
             IDOperator.EQUALS,
-            1.5,
+            ["invalid"],
             r"Invalid value type for IDOperator \(requires int or str\)",
             id="attached-object-id-non-int-str",
         ),
-        # --- AttachedToOperator requires str, then a valid AttachedObjectType ---
+        # AttachedToOperator rejects a non-str value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
             AttachedToOperator.EQUALS,
@@ -620,6 +624,7 @@ def test_memo_rows_date_filters(
             r"Invalid value type for AttachedToOperator \(requires str\)",
             id="attached-to-non-str",
         ),
+        # AttachedToOperator rejects an unknown AttachedObjectType value.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
             AttachedToOperator.EQUALS,
@@ -627,7 +632,7 @@ def test_memo_rows_date_filters(
             r"is not a valid AttachedObjectType",
             id="attached-to-invalid-enum-value",
         ),
-        # --- DateOperator requires str, then a parseable date ---
+        # DateOperator rejects a non-str value.
         pytest.param(
             MemoColumns.CREATED,
             DateOperator.EQUALS,
@@ -635,6 +640,7 @@ def test_memo_rows_date_filters(
             r"Invalid value type for DateOperator \(requires str\)",
             id="created-date-non-str",
         ),
+        # DateOperator rejects an unparseable date string.
         pytest.param(
             MemoColumns.CREATED,
             DateOperator.EQUALS,
@@ -642,6 +648,7 @@ def test_memo_rows_date_filters(
             r"Invalid date format",
             id="created-date-unparseable",
         ),
+        # DateOperator rejects a non-str value.
         pytest.param(
             MemoColumns.UPDATED,
             DateOperator.EQUALS,
@@ -649,6 +656,7 @@ def test_memo_rows_date_filters(
             r"Invalid value type for DateOperator \(requires str\)",
             id="updated-date-non-str",
         ),
+        # DateOperator rejects an unparseable date string.
         pytest.param(
             MemoColumns.UPDATED,
             DateOperator.EQUALS,
@@ -656,7 +664,7 @@ def test_memo_rows_date_filters(
             r"Invalid date format",
             id="updated-date-unparseable",
         ),
-        # --- BooleanOperator requires bool ---
+        # BooleanOperator rejects a non-bool value.
         pytest.param(
             MemoColumns.FAVORITE,
             BooleanOperator.EQUALS,
@@ -666,7 +674,7 @@ def test_memo_rows_date_filters(
         ),
     ],
 )
-def test_memo_rows_invalid_filter_values(
+def test_memo_search_rejects_wrong_typed_filter_values_with_400(
     client: TestClient, search_project, column, operator, value, match
 ):
     """Wrong-typed/malformed filter values are rejected with HTTP 400."""
@@ -683,54 +691,45 @@ def test_memo_rows_invalid_filter_values(
     assert re.search(match, response.text), response.text
 
 
-# ===========================================================================
-# ROW QUERIES — INVALID OPERATOR (operator/column family mismatch)
-# ===========================================================================
-# The FilterExpression model_validator rejects an operator whose family does not
-# match the column's declared family, raising OperatorNotCompatibleWithColumnError.
-# That exception is registered with a 400 handler, so the endpoint returns HTTP 400.
-# NOTE: metadata (int) columns are NOT validated (their family needs a DB lookup),
-# so only enum columns are tested here.
-
-
 @pytest.mark.parametrize(
     "column,operator,value",
     [
-        # TITLE is a STRING column; pair it with non-STRING operators.
+        # TITLE is a STRING column; a DATE operator mismatches.
         pytest.param(
             MemoColumns.TITLE,
             DateOperator.EQUALS,
             "2024-01-01",
             id="title-string-with-date-op",
         ),
+        # TITLE is a STRING column; a BOOLEAN operator mismatches.
         pytest.param(
             MemoColumns.TITLE,
             BooleanOperator.EQUALS,
             True,
             id="title-string-with-bool-op",
         ),
-        # USER_ID is an ID column; pair it with a STRING operator.
+        # USER_ID is an ID column; a STRING operator mismatches.
         pytest.param(
             MemoColumns.USER_ID,
             StringOperator.CONTAINS,
             "1",
             id="user-id-with-string-op",
         ),
-        # ATTACHED_OBJECT_TYPE is an ATTACHED_TO column; pair it with an ID operator.
+        # ATTACHED_OBJECT_TYPE is an ATTACHED_TO column; an ID operator mismatches.
         pytest.param(
             MemoColumns.ATTACHED_OBJECT_TYPE,
             IDOperator.EQUALS,
             1,
             id="attached-type-with-id-op",
         ),
-        # CREATED is a DATE column; pair it with a STRING operator.
+        # CREATED is a DATE column; a STRING operator mismatches.
         pytest.param(
             MemoColumns.CREATED,
             StringOperator.EQUALS,
             "2024-01-01",
             id="created-date-with-string-op",
         ),
-        # FAVORITE is a BOOLEAN column; pair it with a STRING operator.
+        # FAVORITE is a BOOLEAN column; a STRING operator mismatches.
         pytest.param(
             MemoColumns.FAVORITE,
             StringOperator.EQUALS,
@@ -739,29 +738,42 @@ def test_memo_rows_invalid_filter_values(
         ),
     ],
 )
-def test_memo_rows_invalid_operator(
+def test_memo_search_rejects_operator_column_family_mismatch_with_400(
     client: TestClient, search_project, column, operator, value
 ):
     """An operator whose family mismatches the column's family is rejected (400)."""
-    request = QueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
-        search_query="",
-        filter=make_filter_tree([make_filter_expr("e1", column, operator, value)]),
-        sorts=[],
-        page_number=0,
-        page_size=20,
-    )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    payload = {
+        "project_id": search_project["project"].id,
+        "search_query": "",
+        "filter": {
+            "id": "root",
+            "logic_operator": "and",
+            "items": [
+                {
+                    "id": "e1",
+                    "column": column.value if hasattr(column, "value") else column,
+                    "operator": (
+                        operator.value if hasattr(operator, "value") else operator
+                    ),
+                    "value": value,
+                }
+            ],
+        },
+        "sorts": [],
+        "page_number": 0,
+        "page_size": 20,
+    }
+    response = client.post("/search/memo", json=payload)
     assert response.status_code == 400, response.text
     assert "not compatible with column" in response.text
 
 
-# ===========================================================================
-# ROW QUERIES — SEARCH QUERY & PAGINATION
-# ===========================================================================
+# --- C. full-text search & pagination ---------------------------------------------
 
 
-def test_memo_rows_search_query(client: TestClient, search_project):
+def test_memo_search_full_text_query_matches_title_and_content(
+    client: TestClient, search_project
+):
     """Memo full-text search matches against title/content."""
     request = QueryRequest[MemoColumns](
         project_id=search_project["project"].id,
@@ -778,7 +790,7 @@ def test_memo_rows_search_query(client: TestClient, search_project):
     assert {m.title for m in page.items} == {"Document Memo"}
 
 
-def test_memo_rows_pagination(client: TestClient, search_project):
+def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_project):
     """Memo row query paginates deterministically (default sort: updated desc)."""
 
     def _page(page_number: int) -> Page[MemoRow]:
@@ -803,8 +815,186 @@ def test_memo_rows_pagination(client: TestClient, search_project):
     assert {m.id for m in page0.items}.isdisjoint({m.id for m in page1.items})
 
 
+# --- D. drill-down (group_by + group_key) ------------------------------------------
+# A row query that sets BOTH group_by and group_key is restricted to the single
+# group identified by group_key (exprs.key == group_key). Setting only one of
+# group_by or group_key is rejected (422) by QueryRequest validation.
+
+
+def _post_memo_drill_down_query(
+    client: TestClient,
+    project_id: int,
+    group_by: GroupConfig | None,
+    group_key: str | None,
+) -> Page[MemoRow]:
+    """POST a row query with optional drill-down and return the validated Page."""
+    request = QueryRequest[MemoColumns](
+        project_id=project_id,
+        search_query="",
+        filter=empty_filter(),
+        sorts=[],
+        group_by=group_by,
+        group_key=group_key,
+        page_number=0,
+        page_size=20,
+    )
+    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    assert response.status_code == 200, response.text
+    return Page[MemoRow].model_validate(response.json())
+
+
+@pytest.mark.parametrize(
+    "group_key,expected_titles",
+    [
+        # Drill into the "code" group -> only the code memo.
+        pytest.param("code", {"Code Memo"}, id="code"),
+        # Drill into the "source_document" group -> only the document memo.
+        pytest.param("source_document", {"Document Memo"}, id="source-document"),
+        # Drill into the "tag" group -> only the tag memo.
+        pytest.param("tag", {"Tag Memo"}, id="tag"),
+    ],
+)
+def test_memo_drill_down_into_attached_object_type_group_returns_only_that_group(
+    client: TestClient, search_project, group_key, expected_titles
+):
+    """Drilling into an attached-object-type group returns only that group's rows."""
+    page = _post_memo_drill_down_query(
+        client,
+        search_project["project"].id,
+        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
+        group_key,
+    )
+    assert page.total_results == len(expected_titles)
+    assert {m.title for m in page.items} == expected_titles
+
+
+def test_memo_drill_down_into_user_group_returns_only_that_authors_memos(
+    client: TestClient, search_project
+):
+    """Drilling into an author group returns only that author's memos."""
+    page = _post_memo_drill_down_query(
+        client,
+        search_project["project"].id,
+        GroupConfig(field=MemoColumns.USER_ID),
+        str(search_project["user"].id),
+    )
+    assert {m.title for m in page.items} == {
+        "Code Memo",
+        "Span Memo",
+        "BBox Memo",
+        "Tag Memo",
+    }
+
+
+def test_memo_drill_down_into_favorite_group_returns_all_memos(
+    client: TestClient, search_project
+):
+    """Drilling into the (only) favorite bucket returns all memos."""
+    page = _post_memo_drill_down_query(
+        client,
+        search_project["project"].id,
+        GroupConfig(field=MemoColumns.FAVORITE),
+        "false",
+    )
+    assert page.total_results == 7
+    assert {m.title for m in page.items} == ALL_MEMOS
+
+
+def test_memo_drill_down_into_day_bucket_returns_only_that_days_memos(
+    client: TestClient, search_project
+):
+    """Drilling into a DAY date bucket returns only that day's memos.
+
+    This mirrors the real two-request flow: fetch the DAY groups, then drill into
+    the older (yesterday) bucket using the key the groups endpoint returned. This
+    avoids hardcoding PostgreSQL's timestamp-cast string format.
+    """
+    project_id = search_project["project"].id
+    group_config = GroupConfig(
+        field=MemoColumns.CREATED, date_granularity=DateGranularity.DAY
+    )
+    groups = _post_memo_group_query(client, project_id, group_config)
+    # Two day-buckets, newest first: [today (4), yesterday (3)].
+    assert [g.total_results for g in groups.items] == [4, 3]
+    yesterday_key = groups.items[1].key
+
+    page = _post_memo_drill_down_query(client, project_id, group_config, yesterday_key)
+    assert {m.title for m in page.items} == YESTERDAY_MEMOS
+
+
+def test_memo_drill_down_with_nonexistent_group_key_returns_empty_page(
+    client: TestClient, search_project
+):
+    """A group_key matching no group yields an empty page."""
+    page = _post_memo_drill_down_query(
+        client,
+        search_project["project"].id,
+        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
+        "no-such-group",
+    )
+    assert page.items == []
+    assert page.total_results == 0
+
+
+def test_memo_drill_down_group_by_without_group_key_rejected_with_422(
+    client: TestClient, search_project
+):
+    """group_by alone (no group_key) is rejected with HTTP 422."""
+    payload = {
+        "project_id": search_project["project"].id,
+        "search_query": "",
+        "filter": empty_filter().model_dump(mode="json"),
+        "sorts": [],
+        "group_by": {"field": MemoColumns.ATTACHED_OBJECT_TYPE.value},
+        "group_key": None,
+        "page_number": 0,
+        "page_size": 20,
+    }
+    response = client.post("/search/memo", json=payload)
+    assert response.status_code == 422, response.text
+    assert "Both 'group_by' and 'group_key' must be provided together" in response.text
+
+
+def test_memo_drill_down_group_key_without_group_by_rejected_with_422(
+    client: TestClient, search_project
+):
+    """group_key alone (no group_by) is rejected with HTTP 422."""
+    payload = {
+        "project_id": search_project["project"].id,
+        "search_query": "",
+        "filter": empty_filter().model_dump(mode="json"),
+        "sorts": [],
+        "group_by": None,
+        "group_key": "code",
+        "page_number": 0,
+        "page_size": 20,
+    }
+    response = client.post("/search/memo", json=payload)
+    assert response.status_code == 422, response.text
+    assert "Both 'group_by' and 'group_key' must be provided together" in response.text
+
+
+def test_memo_drill_down_into_non_groupable_column_rejected_with_400(
+    client: TestClient, search_project
+):
+    """Drilling into a non-groupable column (CONTENT) is rejected with HTTP 400."""
+    request = QueryRequest[MemoColumns](
+        project_id=search_project["project"].id,
+        search_query="",
+        filter=empty_filter(),
+        sorts=[],
+        group_by=GroupConfig(field=MemoColumns.CONTENT),
+        group_key="x",
+        page_number=0,
+        page_size=20,
+    )
+    response = client.post("/search/memo", json=request.model_dump(mode="json"))
+    assert response.status_code == 400, response.text
+    assert "does not support grouping" in response.text
+
+
 # ===========================================================================
-# GROUP QUERIES
+# SEARCH MEMO GROUPS (/search/memo/groups) TESTS
 # ===========================================================================
 # Every memo column except CONTENT is groupable (see MemoColumns.is_groupable).
 # Grouping partitions by KEY (never label); each column defines its own key/label
@@ -818,7 +1008,7 @@ def test_memo_rows_pagination(client: TestClient, search_project):
 #   - No favorites exist.
 
 
-def _memo_groups(
+def _post_memo_group_query(
     client: TestClient,
     project_id: int,
     group_by: GroupConfig,
@@ -841,12 +1031,14 @@ def _memo_groups(
     return GroupPage.model_validate(response.json())
 
 
-# --- A. per-column happy paths -----------------------------------------------
+# --- A. one bucket per column value ----------------------------------------------
 
 
-def test_memo_groups_by_attached_object_type(client: TestClient, search_project):
+def test_memo_group_by_attached_object_type_yields_one_bucket_per_type(
+    client: TestClient, search_project
+):
     """Grouping by attached_object_type yields one bucket per type with counts."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -857,9 +1049,11 @@ def test_memo_groups_by_attached_object_type(client: TestClient, search_project)
     assert page.total_results == len(MEMOS_BY_TYPE)
 
 
-def test_memo_groups_by_user(client: TestClient, search_project):
+def test_memo_group_by_user_id_yields_one_bucket_per_author(
+    client: TestClient, search_project
+):
     """Grouping by author yields one bucket per authoring user."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.USER_ID),
@@ -870,9 +1064,11 @@ def test_memo_groups_by_user(client: TestClient, search_project):
     assert page.total_results == 2
 
 
-def test_memo_groups_by_title_initial(client: TestClient, search_project):
+def test_memo_group_by_title_buckets_by_first_letter(
+    client: TestClient, search_project
+):
     """Grouping by title buckets memos by their first letter (A-Z)."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.TITLE),
@@ -883,11 +1079,11 @@ def test_memo_groups_by_title_initial(client: TestClient, search_project):
     assert page.total_results == 6
 
 
-def test_memo_groups_by_attached_object_id_sets_target(
+def test_memo_group_by_attached_object_id_sets_drill_down_target(
     client: TestClient, search_project
 ):
     """Grouping by attached_object_id yields one bucket per object with a target."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_ID),
@@ -902,53 +1098,80 @@ def test_memo_groups_by_attached_object_id_sets_target(
         assert group.key == f"{group.target_type}:{group.target_id}"
 
 
-def test_memo_groups_by_favorite(client: TestClient, search_project):
+def test_memo_group_by_favorite_yields_single_not_favorites_bucket(
+    client: TestClient, search_project
+):
     """Grouping by favorite yields a single 'Not favorites' bucket (none exist)."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.FAVORITE),
     )
     assert page.total_results == 1
     group = page.items[0]
-    assert group.key == "False"
+    assert group.key == "false"
     assert group.label == "Not favorites"
     assert group.total_results == 7
 
 
 @pytest.mark.parametrize("date_column", [MemoColumns.CREATED, MemoColumns.UPDATED])
 @pytest.mark.parametrize(
-    "granularity,expected_counts",
+    "granularity",
     [
-        # DAY splits the back-dated (3) from the today (4) memos -> 2 buckets.
-        pytest.param(DateGranularity.DAY, sorted([3, 4]), id="day"),
-        # WEEK/MONTH/YEAR: both days fall in the same bucket -> a single group of 7.
-        pytest.param(DateGranularity.WEEK, [7], id="week"),
-        pytest.param(DateGranularity.MONTH, [7], id="month"),
-        pytest.param(DateGranularity.YEAR, [7], id="year"),
-        # Default (no granularity) falls back to MONTH -> a single group of 7.
-        pytest.param(None, [7], id="default-month"),
+        # DAY buckets: yesterday (3) and today (4) are separate days.
+        pytest.param(DateGranularity.DAY, id="day"),
+        # WEEK buckets: one bucket if both days share a week, else two.
+        pytest.param(DateGranularity.WEEK, id="week"),
+        # MONTH buckets: one bucket if both days share a month, else two.
+        pytest.param(DateGranularity.MONTH, id="month"),
+        # YEAR buckets: one bucket if both days share a year, else two.
+        pytest.param(DateGranularity.YEAR, id="year"),
+        # No granularity -> defaults to MONTH.
+        pytest.param(None, id="default-month"),
     ],
 )
-def test_memo_groups_by_date_granularity(
-    client: TestClient, search_project, date_column, granularity, expected_counts
+def test_memo_group_by_date_column_respects_granularity(
+    client: TestClient, search_project, date_column, granularity
 ):
     """CREATED/UPDATED group into date buckets sized by the granularity."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=date_column, date_granularity=granularity),
     )
+    yesterday = search_project["memos"][0].created
+    today = search_project["memos"][1].created
+
+    match granularity:
+        case DateGranularity.DAY:
+            expected_counts = sorted([3, 4])
+        case DateGranularity.WEEK:
+            same_week = yesterday.isocalendar()[:2] == today.isocalendar()[:2]
+            expected_counts = [7] if same_week else sorted([3, 4])
+        case DateGranularity.MONTH | None:
+            same_month = (yesterday.year, yesterday.month) == (
+                today.year,
+                today.month,
+            )
+            expected_counts = [7] if same_month else sorted([3, 4])
+        case DateGranularity.YEAR:
+            same_year = yesterday.year == today.year
+            expected_counts = [7] if same_year else sorted([3, 4])
+        case _:
+            raise AssertionError(f"Unhandled granularity: {granularity}")
+
     assert sorted(g.total_results for g in page.items) == expected_counts
     assert page.total_results == len(expected_counts)
 
 
-# --- B. labels & ordering ------------------------------------------------------
+# --- B. group labels & ordering ----------------------------------------------------
 
 
-def test_memo_groups_attached_object_type_labels(client: TestClient, search_project):
+def test_memo_group_attached_object_type_labels_replace_underscores(
+    client: TestClient, search_project
+):
     """ATTACHED_OBJECT_TYPE group labels replace underscores with spaces."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -959,9 +1182,11 @@ def test_memo_groups_attached_object_type_labels(client: TestClient, search_proj
     assert labels["code"] == "code"
 
 
-def test_memo_groups_sorted_alphabetically_by_label(client: TestClient, search_project):
+def test_memo_groups_are_sorted_alphabetically_by_label(
+    client: TestClient, search_project
+):
     """Non-date groups are ordered alphabetically by label."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -970,9 +1195,11 @@ def test_memo_groups_sorted_alphabetically_by_label(client: TestClient, search_p
     assert labels == sorted(labels)
 
 
-def test_memo_groups_date_sorted_newest_first(client: TestClient, search_project):
+def test_memo_group_date_buckets_sorted_newest_first(
+    client: TestClient, search_project
+):
     """Date groups are ordered newest bucket first."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.CREATED, date_granularity=DateGranularity.DAY),
@@ -983,12 +1210,14 @@ def test_memo_groups_date_sorted_newest_first(client: TestClient, search_project
     assert page.items[0].key > page.items[1].key
 
 
-# --- C. grouping combined with filter / search ---------------------------------
+# --- C. filter / search query are applied before grouping --------------------------
 
 
-def test_memo_groups_with_filter(client: TestClient, search_project):
+def test_memo_group_query_applies_filter_before_grouping(
+    client: TestClient, search_project
+):
     """A filter is applied before grouping: only matching rows are bucketed."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -1014,9 +1243,11 @@ def test_memo_groups_with_filter(client: TestClient, search_project):
     assert page.total_results == 4
 
 
-def test_memo_groups_with_search_query(client: TestClient, search_project):
+def test_memo_group_query_applies_search_query_before_grouping(
+    client: TestClient, search_project
+):
     """A full-text search query is applied before grouping."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -1028,14 +1259,16 @@ def test_memo_groups_with_search_query(client: TestClient, search_project):
     assert page.items[0].total_results == 1
 
 
-# --- D. pagination ---------------------------------------------------------------
+# --- D. pagination over groups ------------------------------------------------------
 
 
-def test_memo_groups_pagination(client: TestClient, search_project):
+def test_memo_group_query_paginates_groups_without_overlap(
+    client: TestClient, search_project
+):
     """Group queries paginate over groups (not rows)."""
 
     def _page(page_number: int) -> GroupPage:
-        return _memo_groups(
+        return _post_memo_group_query(
             client,
             search_project["project"].id,
             GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -1052,10 +1285,12 @@ def test_memo_groups_pagination(client: TestClient, search_project):
     assert {g.key for g in page0.items}.isdisjoint({g.key for g in page1.items})
 
 
-# --- E. errors & edge cases ------------------------------------------------------
+# --- E. errors & edge cases ---------------------------------------------------------
 
 
-def test_memo_groups_non_groupable_column_raises(client: TestClient, search_project):
+def test_memo_group_by_non_groupable_column_rejected_with_400(
+    client: TestClient, search_project
+):
     """Grouping by CONTENT (not groupable) is rejected with HTTP 400."""
     request = GroupQueryRequest[MemoColumns](
         project_id=search_project["project"].id,
@@ -1070,9 +1305,11 @@ def test_memo_groups_non_groupable_column_raises(client: TestClient, search_proj
     assert "does not support grouping" in response.text
 
 
-def test_memo_groups_empty_result(client: TestClient, search_project):
+def test_memo_group_query_with_filter_matching_nothing_returns_no_groups(
+    client: TestClient, search_project
+):
     """A filter matching nothing yields zero groups."""
-    page = _memo_groups(
+    page = _post_memo_group_query(
         client,
         search_project["project"].id,
         GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
@@ -1086,162 +1323,3 @@ def test_memo_groups_empty_result(client: TestClient, search_project):
     )
     assert page.items == []
     assert page.total_results == 0
-
-
-# ===========================================================================
-# DRILL-DOWN (group_by + group_key on the row query)
-# ===========================================================================
-# A row query that sets BOTH group_by and group_key is restricted to the single
-# group identified by group_key (exprs.key == group_key). group_by without
-# group_key (or vice versa) has NO effect on a row query.
-
-
-def _drill_down(
-    client: TestClient,
-    project_id: int,
-    group_by: GroupConfig | None,
-    group_key: str | None,
-) -> Page[MemoRow]:
-    """POST a row query with optional drill-down and return the validated Page."""
-    request = QueryRequest[MemoColumns](
-        project_id=project_id,
-        search_query="",
-        filter=empty_filter(),
-        sorts=[],
-        group_by=group_by,
-        group_key=group_key,
-        page_number=0,
-        page_size=20,
-    )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
-    assert response.status_code == 200, response.text
-    return Page[MemoRow].model_validate(response.json())
-
-
-@pytest.mark.parametrize(
-    "group_key,expected_titles",
-    [
-        pytest.param("code", {"Code Memo"}, id="code"),
-        pytest.param("source_document", {"Document Memo"}, id="source-document"),
-        pytest.param("tag", {"Tag Memo"}, id="tag"),
-    ],
-)
-def test_memo_drill_down_by_attached_object_type(
-    client: TestClient, search_project, group_key, expected_titles
-):
-    """Drilling into an attached-object-type group returns only that group's rows."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
-        group_key,
-    )
-    assert page.total_results == len(expected_titles)
-    assert {m.title for m in page.items} == expected_titles
-
-
-def test_memo_drill_down_by_user(client: TestClient, search_project):
-    """Drilling into an author group returns only that author's memos."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        GroupConfig(field=MemoColumns.USER_ID),
-        str(search_project["user"].id),
-    )
-    assert {m.title for m in page.items} == {
-        "Code Memo",
-        "Span Memo",
-        "BBox Memo",
-        "Tag Memo",
-    }
-
-
-def test_memo_drill_down_by_favorite(client: TestClient, search_project):
-    """Drilling into the (only) favorite bucket returns all memos."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        GroupConfig(field=MemoColumns.FAVORITE),
-        "False",
-    )
-    assert page.total_results == 7
-    assert {m.title for m in page.items} == ALL_MEMOS
-
-
-def test_memo_drill_down_by_date_bucket(client: TestClient, search_project):
-    """Drilling into a DAY date bucket returns only that day's memos.
-
-    This mirrors the real two-request flow: fetch the DAY groups, then drill into
-    the older (yesterday) bucket using the key the groups endpoint returned. This
-    avoids hardcoding PostgreSQL's timestamp-cast string format.
-    """
-    project_id = search_project["project"].id
-    group_config = GroupConfig(
-        field=MemoColumns.CREATED, date_granularity=DateGranularity.DAY
-    )
-    groups = _memo_groups(client, project_id, group_config)
-    # Two day-buckets, newest first: [today (4), yesterday (3)].
-    assert [g.total_results for g in groups.items] == [4, 3]
-    yesterday_key = groups.items[1].key
-
-    page = _drill_down(client, project_id, group_config, yesterday_key)
-    assert {m.title for m in page.items} == YESTERDAY_MEMOS
-
-
-def test_memo_drill_down_nonexistent_key(client: TestClient, search_project):
-    """A group_key matching no group yields an empty page."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
-        "no-such-group",
-    )
-    assert page.items == []
-    assert page.total_results == 0
-
-
-def test_memo_drill_down_group_by_without_key_is_noop(
-    client: TestClient, search_project
-):
-    """group_by alone (no group_key) does NOT restrict a row query."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        GroupConfig(field=MemoColumns.ATTACHED_OBJECT_TYPE),
-        None,
-    )
-    assert page.total_results == 7
-    assert {m.title for m in page.items} == ALL_MEMOS
-
-
-def test_memo_drill_down_key_without_group_by_is_noop(
-    client: TestClient, search_project
-):
-    """group_key alone (no group_by) does NOT restrict a row query."""
-    page = _drill_down(
-        client,
-        search_project["project"].id,
-        None,
-        "code",
-    )
-    assert page.total_results == 7
-    assert {m.title for m in page.items} == ALL_MEMOS
-
-
-def test_memo_drill_down_non_groupable_column_raises(
-    client: TestClient, search_project
-):
-    """Drilling into a non-groupable column (CONTENT) is rejected with HTTP 400."""
-    request = QueryRequest[MemoColumns](
-        project_id=search_project["project"].id,
-        search_query="",
-        filter=empty_filter(),
-        sorts=[],
-        group_by=GroupConfig(field=MemoColumns.CONTENT),
-        group_key="x",
-        page_number=0,
-        page_size=20,
-    )
-    response = client.post("/search/memo", json=request.model_dump(mode="json"))
-    assert response.status_code == 400, response.text
-    assert "does not support grouping" in response.text

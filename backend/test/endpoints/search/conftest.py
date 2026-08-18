@@ -2,11 +2,11 @@ from datetime import timedelta
 from typing import Any, Generator, TypedDict
 from uuid import uuid4
 
-import dats_setup_utils
 import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
+import dats_setup_utils
 from core.annotation.bbox_annotation_crud import crud_bbox_anno
 from core.annotation.bbox_annotation_dto import BBoxAnnotationCreate
 from core.annotation.bbox_annotation_orm import BBoxAnnotationORM
@@ -417,8 +417,9 @@ def search_project(
     # --- split memo dates across two days so date operators are distinguishable ---
     # created/updated use a DB-side server_default (func.now()), so all memos would
     # otherwise share one day and LT/GT/LTE/GTE could not be told apart. Back-date a
-    # deterministic subset (the three test_user-authored memos) to yesterday via a
-    # direct UPDATE, leaving the other four (other_user-authored) on today.
+    # deterministic subset (the three test_user-authored memos: Code, Span, BBox) to
+    # yesterday via a direct UPDATE, leaving the other four (other_user-authored:
+    # Document, Sentence, Project, Tag) on today.
     backdated_memo_ids = [memos[0].id, memos[2].id, memos[4].id]  # Code, Span, BBox
     yesterday = memos[0].created - timedelta(days=1)
     db_session.execute(

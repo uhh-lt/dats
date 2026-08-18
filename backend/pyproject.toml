@@ -93,6 +93,7 @@ known-first-party = [
     "core",
     "config",
     "config_schema",
+    "dats_setup_utils",
     "main",
     "migrations",
     "modules",
