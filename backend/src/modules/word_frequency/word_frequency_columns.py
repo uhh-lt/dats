@@ -84,7 +84,7 @@ class WordFrequencyColumns(str, AbstractColumns):
             case WordFrequencyColumns.USER_ID_LIST:
                 return FilterOperator.ID_LIST
             case WordFrequencyColumns.SPAN_ANNOTATIONS:
-                return FilterOperator.ID_LIST
+                return FilterOperator.SPAN_ANNOTATION
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:

@@ -61,7 +61,7 @@ class SdocColumns(str, AbstractColumns):
             case SdocColumns.USER_ID_LIST:
                 return FilterOperator.ID_LIST
             case SdocColumns.SPAN_ANNOTATIONS:
-                return FilterOperator.ID_LIST
+                return FilterOperator.SPAN_ANNOTATION
 
     def get_filter_value_type(self) -> FilterValueType:
         match self:

@@ -37,6 +37,7 @@ class FilterOperator(Enum):
     DATE = "DATE"
     ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE"
     ATTACHED_OBJECT = "ATTACHED_OBJECT"
+    SPAN_ANNOTATION = "SPAN_ANNOTATION"
 
 
 class BooleanOperator(Enum):
@@ -245,16 +246,7 @@ class IDListOperator(Enum):
 
         else:
             if isinstance(value, list):
-                if len(value) == 2:
-                    # This is a special case only for span annotations! (this is bad...)
-                    # Column is aggregated list of ["CODE_ID", "SPAN_TEXT"], e.g. subquery_dict.SPAN_ANNOTATIONS
-                    match self:
-                        case IDListOperator.CONTAINS:
-                            return column.contains([value])
-                        case IDListOperator.NOT_CONTAINS:
-                            return not_(column.contains([value]))
-                else:
-                    raise ValueError("Invalid value for IDListOperator!")
+                raise ValueError("Invalid value for IDListOperator!")
             else:
                 # Column is aggregated list of IDs, e.g. subquery_dict.CODE_ID_LIST_RECURSIVE
                 match self:
@@ -311,6 +303,39 @@ class IDListRecursiveOperator(Enum):
             standard_value = self.value.replace("IDLR_", "ID_LIST_")
             mapped_operator = IDListOperator(standard_value)
             return mapped_operator.apply(column, value)
+
+
+class SpanAnnotationOperator(Enum):
+    """Filters by a single span annotation, given as a [code_id, span_text] pair.
+
+    The column is an aggregated 2-D array of ``[code_id, span_text]`` string pairs
+    (e.g. ``subquery_dict.SPAN_ANNOTATIONS``), so membership is tested by checking
+    whether the pair is an element of that array.
+    """
+
+    CONTAINS = "SPAN_ANNOTATION_CONTAINS"
+    NOT_CONTAINS = "SPAN_ANNOTATION_NOT_CONTAINS"
+
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.SPAN_ANNOTATION
+
+    def apply(self, column: QueryableAttribute, value: FilterValue):
+        if (
+            not isinstance(value, list)
+            or len(value) != 2
+            or not all(isinstance(v, str) for v in value)
+        ):
+            raise InvalidFilterValueError(
+                "SpanAnnotationOperator", "list[str] of [code_id, span_text]", value
+            )
+
+        # The guard above proves value is a two-element list[str].
+        pair = cast(list[str], value)
+        match self:
+            case SpanAnnotationOperator.CONTAINS:
+                return column.contains([pair])
+            case SpanAnnotationOperator.NOT_CONTAINS:
+                return not_(column.contains([pair]))
 
 
 class ListOperator(Enum):

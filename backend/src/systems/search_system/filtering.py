@@ -17,6 +17,7 @@ from systems.search_system.filtering_operators import (
     IDOperator,
     ListOperator,
     NumberOperator,
+    SpanAnnotationOperator,
     StringOperator,
 )
 from systems.search_system.search_system_exceptions import (
@@ -90,6 +91,7 @@ class FilterExpression(BaseModel, Generic[T]):
         | BooleanOperator
         | AttachedObjectTypeOperator
         | AttachedObjectOperator
+        | SpanAnnotationOperator
     ) = Field(description="The comparison operator applied to the column")
     value: FilterValue = Field(description="The value the column is compared against")
 
