@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import cast
 
-from sqlalchemy import not_
+from sqlalchemy import and_, not_
 from sqlalchemy.orm import QueryableAttribute
 
 from core.memo.memo_dto import AttachedObjectType
@@ -14,6 +15,7 @@ FilterValue = bool | str | int | list[str] | list[list[str]]
 
 class FilterValueType(Enum):
     ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE"
+    ATTACHED_OBJECT = "ATTACHED_OBJECT"
     SDOC_ID = "SDOC_ID"
     CODE_ID = "CODE_ID"
     USER_ID = "USER_ID"
@@ -33,7 +35,8 @@ class FilterOperator(Enum):
     ID_LIST_RECURSIVE = "ID_LIST_RECURSIVE"
     LIST = "LIST"
     DATE = "DATE"
-    ATTACHED_TO = "ATTACHED_TO"
+    ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE"
+    ATTACHED_OBJECT = "ATTACHED_OBJECT"
 
 
 class BooleanOperator(Enum):
@@ -103,12 +106,14 @@ class IDOperator(Enum):
                 return column != value
 
 
-class AttachedToOperator(Enum):
-    EQUALS = "ATTACHED_TO_EQUALS"
-    NOT_EQUALS = "ATTACHED_TO_NOT_EQUALS"
+class AttachedObjectTypeOperator(Enum):
+    """Filters on the attached object's type (a single AttachedObjectType value)."""
+
+    EQUALS = "ATTACHED_OBJECT_TYPE_EQUALS"
+    NOT_EQUALS = "ATTACHED_OBJECT_TYPE_NOT_EQUALS"
 
     def get_filter_operator(self) -> FilterOperator:
-        return FilterOperator.ATTACHED_TO
+        return FilterOperator.ATTACHED_OBJECT_TYPE
 
     def apply(
         self,
@@ -116,17 +121,69 @@ class AttachedToOperator(Enum):
         value: FilterValue,
     ):
         if not isinstance(value, str):
-            raise InvalidFilterValueError("AttachedToOperator", "str", value)
+            raise InvalidFilterValueError("AttachedObjectTypeOperator", "str", value)
         if value not in AttachedObjectType._value2member_map_:
             raise InvalidFilterValueFormatError(
-                f"Invalid value for AttachedToOperator: '{value}' is not a valid AttachedObjectType!"
+                f"Invalid value for AttachedObjectTypeOperator: '{value}' is not a valid AttachedObjectType!"
             )
 
         match self:
-            case AttachedToOperator.EQUALS:
+            case AttachedObjectTypeOperator.EQUALS:
                 return column == value
-            case AttachedToOperator.NOT_EQUALS:
+            case AttachedObjectTypeOperator.NOT_EQUALS:
                 return column != value
+
+
+class AttachedObjectOperator(Enum):
+    """Compares an attached object as a (type, id) pair.
+
+    The column is a tuple ``(type_expr, id_expr)`` and the value is a two-element
+    list ``[type, id]`` (e.g. ``["tag", "5"]``). Filtering by the raw id alone is
+    meaningless because ids collide across entity types (tag 5, code 5, sdoc 5 are
+    different objects), so the type is always part of the comparison.
+    """
+
+    EQUALS = "ATTACHED_OBJECT_EQUALS"
+    NOT_EQUALS = "ATTACHED_OBJECT_NOT_EQUALS"
+
+    def get_filter_operator(self) -> FilterOperator:
+        return FilterOperator.ATTACHED_OBJECT
+
+    def apply(self, column, value: FilterValue):
+        if not isinstance(column, tuple) or len(column) != 2:
+            raise ValueError(
+                "AttachedObjectOperator requires a (type, id) tuple column!"
+            )
+        if (
+            not isinstance(value, list)
+            or len(value) != 2
+            or not all(isinstance(v, str) for v in value)
+        ):
+            raise InvalidFilterValueError(
+                "AttachedObjectOperator", "list[str] of [type, id]", value
+            )
+
+        # The guard above proves value is a two-element list[str].
+        type_value, id_value = cast(list[str], value)
+        if type_value not in AttachedObjectType._value2member_map_:
+            raise InvalidFilterValueFormatError(
+                f"Invalid value for AttachedObjectOperator: '{type_value}' is not a "
+                "valid AttachedObjectType!"
+            )
+        try:
+            object_id = int(id_value)
+        except ValueError as e:
+            raise InvalidFilterValueFormatError(
+                f"Invalid value for AttachedObjectOperator: '{id_value}' is not an "
+                "integer id!"
+            ) from e
+
+        type_expr, id_expr = column
+        match self:
+            case AttachedObjectOperator.EQUALS:
+                return and_(type_expr == type_value, id_expr == object_id)
+            case AttachedObjectOperator.NOT_EQUALS:
+                return not_(and_(type_expr == type_value, id_expr == object_id))
 
 
 class NumberOperator(Enum):

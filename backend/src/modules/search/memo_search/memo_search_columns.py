@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, and_, case, cast, func
 from sqlalchemy.orm import aliased
 
@@ -9,6 +11,7 @@ from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
 from core.tag.tag_orm import TagORM
+from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from systems.search_system.column_info import AbstractColumns
 from systems.search_system.filtering_operators import FilterOperator, FilterValueType
@@ -18,6 +21,9 @@ from systems.search_system.grouping import (
     GroupExpressions,
 )
 from systems.search_system.search_builder import SearchBuilder
+
+if TYPE_CHECKING:
+    from common.crud_enum import Crud
 
 
 def build_memo_subquery(db, project_id: int, user_id: int):
@@ -134,7 +140,24 @@ class MemoColumns(str, AbstractColumns):
     FAVORITE = "M_FAVORITE"
 
     def get_filter_column(self, subquery_dict):
-        return subquery_dict[self.value]
+        match self:
+            # ATTACHED_OBJECT filters on the (type, id) pair: the raw id alone is
+            # meaningless because ids collide across entity types.
+            case MemoColumns.ATTACHED_OBJECT_ID:
+                return (
+                    subquery_dict[MemoColumns.ATTACHED_OBJECT_TYPE.value],
+                    subquery_dict[self.value],
+                )
+            case (
+                MemoColumns.TITLE
+                | MemoColumns.CONTENT
+                | MemoColumns.USER_ID
+                | MemoColumns.ATTACHED_OBJECT_TYPE
+                | MemoColumns.CREATED
+                | MemoColumns.UPDATED
+                | MemoColumns.FAVORITE
+            ):
+                return subquery_dict[self.value]
 
     def get_filter_operator(self) -> FilterOperator:
         match self:
@@ -145,9 +168,9 @@ class MemoColumns(str, AbstractColumns):
             case MemoColumns.USER_ID:
                 return FilterOperator.ID
             case MemoColumns.ATTACHED_OBJECT_TYPE:
-                return FilterOperator.ATTACHED_TO
+                return FilterOperator.ATTACHED_OBJECT_TYPE
             case MemoColumns.ATTACHED_OBJECT_ID:
-                return FilterOperator.ID
+                return FilterOperator.ATTACHED_OBJECT
             case MemoColumns.CREATED:
                 return FilterOperator.DATE
             case MemoColumns.UPDATED:
@@ -159,9 +182,17 @@ class MemoColumns(str, AbstractColumns):
         match self:
             case MemoColumns.ATTACHED_OBJECT_TYPE:
                 return FilterValueType.ATTACHED_OBJECT_TYPE
+            case MemoColumns.ATTACHED_OBJECT_ID:
+                return FilterValueType.ATTACHED_OBJECT
             case MemoColumns.USER_ID:
                 return FilterValueType.USER_ID
-            case _:
+            case (
+                MemoColumns.TITLE
+                | MemoColumns.CONTENT
+                | MemoColumns.CREATED
+                | MemoColumns.UPDATED
+                | MemoColumns.FAVORITE
+            ):
                 return FilterValueType.INFER_FROM_OPERATOR
 
     def get_sort_column(self, subquery_dict=None):
@@ -175,7 +206,14 @@ class MemoColumns(str, AbstractColumns):
                 return subquery_dict["author_label"]
             case MemoColumns.ATTACHED_OBJECT_ID:
                 return subquery_dict["attached_object_label"]
-            case _:
+            case (
+                MemoColumns.TITLE
+                | MemoColumns.CONTENT
+                | MemoColumns.ATTACHED_OBJECT_TYPE
+                | MemoColumns.CREATED
+                | MemoColumns.UPDATED
+                | MemoColumns.FAVORITE
+            ):
                 return subquery_dict[self.value]
 
     def get_label(self) -> str:
@@ -201,8 +239,6 @@ class MemoColumns(str, AbstractColumns):
         pass
 
     def add_subquery_filter_statements(self, query_builder: SearchBuilder):
-        # The memo projection is built wholesale by build_memo_subquery; no
-        # per-column subquery augmentation is needed.
         pass
 
     def get_group_expressions(
@@ -249,7 +285,8 @@ class MemoColumns(str, AbstractColumns):
                     (columns[self.value].is_(True), "Favorites"),
                     else_="Not favorites",
                 )
-            case _:
+            case MemoColumns.CONTENT:
+                # CONTENT is free text and not a useful partition key.
                 return None
 
         missing_labels = {
@@ -263,6 +300,92 @@ class MemoColumns(str, AbstractColumns):
         )
 
     def is_groupable(self) -> bool:
-        # Every memo column is groupable except CONTENT (free text, not a useful
-        # partition key). This mirrors the columns handled in get_group_expressions.
-        return self is not MemoColumns.CONTENT
+        match self:
+            case MemoColumns.CONTENT:
+                return False
+            case (
+                MemoColumns.TITLE
+                | MemoColumns.USER_ID
+                | MemoColumns.ATTACHED_OBJECT_TYPE
+                | MemoColumns.ATTACHED_OBJECT_ID
+                | MemoColumns.CREATED
+                | MemoColumns.UPDATED
+                | MemoColumns.FAVORITE
+            ):
+                return True
+            case _:
+                raise NotImplementedError(f"Cannot determine groupability for {self}!")  # type: ignore
+
+    def resolve_ids(
+        self, db, ids: list[int], types: list[Crud] | None = None
+    ) -> list[str]:
+        match self:
+            case MemoColumns.ATTACHED_OBJECT_ID:
+                assert types is not None and len(types) == len(ids), (
+                    "ATTACHED_OBJECT resolution requires the entity type per id"
+                )
+                return [
+                    self._resolve_attached_object_name(db, crud, i)
+                    for crud, i in zip(types, ids)
+                ]
+            case MemoColumns.USER_ID:
+                users = crud_user.read_by_ids(db, ids=ids)
+                return [user.email for user in users]
+            case _:
+                raise NotImplementedError(f"Cannot resolve ID for {self}!")
+
+    @staticmethod
+    def _resolve_attached_object_name(db, crud: Crud, object_id: int) -> str:
+        match crud:
+            case Crud.SOURCE_DOCUMENT | Crud.CODE | Crud.TAG | Crud.SPAN_GROUP:
+                return crud.value.read(db, object_id).name
+            case Crud.PROJECT:
+                return crud.value.read(db, object_id).title
+            case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
+                return str(object_id)
+            case _:
+                raise NotImplementedError(f"Cannot resolve name for {crud}!")
+
+    def resolve_names(
+        self, db, project_id: int, names: list[str], types: list[Crud] | None = None
+    ) -> list[int]:
+        match self:
+            case MemoColumns.ATTACHED_OBJECT_ID:
+                assert types is not None and len(types) == len(names), (
+                    "ATTACHED_OBJECT resolution requires the entity type per name"
+                )
+                return [
+                    self._resolve_attached_object_id(db, project_id, crud, name)
+                    for crud, name in zip(types, names)
+                ]
+            case MemoColumns.USER_ID:
+                users = crud_user.read_by_emails(db, emails=names)
+                return [user.id for user in users]
+            case _:
+                raise NotImplementedError(f"Cannot resolve name for {self}!")
+
+    @staticmethod
+    def _resolve_attached_object_id(db, project_id: int, crud: Crud, name: str) -> int:
+        match crud:
+            case Crud.SPAN_ANNOTATION | Crud.SENTENCE_ANNOTATION | Crud.BBOX_ANNOTATION:
+                # Annotations have no name; they round-trip by their stringified id.
+                return int(name)
+            case Crud.SOURCE_DOCUMENT:
+                found = crud.value.read_by_name(db, name=name, proj_id=project_id)  # type: ignore
+            case Crud.CODE:
+                found = crud.value.read_by_name_and_project(
+                    db, code_name=name, proj_id=project_id
+                )  # type: ignore
+            case Crud.TAG:
+                found = crud.value.read_by_name_and_project(
+                    db, name=name, project_id=project_id
+                )  # type: ignore
+            case Crud.PROJECT:
+                found = crud.value.read_by_title(db, title=name)  # type: ignore
+            case Crud.SPAN_GROUP:
+                found = crud.value.read_by_name(db, name=name)  # type: ignore
+            case _:
+                raise NotImplementedError(f"Cannot resolve id for {crud}!")
+        if found is None:
+            raise ValueError(f"No {crud.name} named '{name}' in project {project_id}!")
+        return found.id

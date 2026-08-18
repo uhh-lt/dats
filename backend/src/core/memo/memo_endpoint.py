@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud, MemoCrud
+from common.crud_enum import Crud, attached_object_type_to_crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
@@ -24,18 +24,6 @@ router = APIRouter(
 )
 
 
-attachedObject2Crud: dict[AttachedObjectType, MemoCrud] = {
-    AttachedObjectType.tag: MemoCrud.TAG,
-    AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
-    AttachedObjectType.code: MemoCrud.CODE,
-    AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,
-    AttachedObjectType.span_annotation: MemoCrud.SPAN_ANNOTATION,
-    AttachedObjectType.sentence_annotation: MemoCrud.SENTENCE_ANNOTATION,
-    AttachedObjectType.span_group: MemoCrud.SPAN_GROUP,
-    AttachedObjectType.project: MemoCrud.PROJECT,
-}
-
-
 @router.put(
     "",
     response_model=MemoRead,
@@ -50,7 +38,7 @@ def add_memo(
     authz_user: AuthzUser = Depends(),
     validate: Validate = Depends(),
 ) -> MemoRead:
-    crud = attachedObject2Crud.get(attached_object_type)
+    crud = attached_object_type_to_crud.get(attached_object_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
@@ -113,7 +101,7 @@ def get_memos_by_attached_object_id(
     attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
-    crud = attachedObject2Crud.get(attached_obj_type)
+    crud = attached_object_type_to_crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
@@ -223,7 +211,7 @@ def generate_memo_suggestion(
     model: str,
     authz_user: AuthzUser = Depends(),
 ) -> str:
-    crud = attachedObject2Crud.get(attached_obj_type)
+    crud = attached_object_type_to_crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 

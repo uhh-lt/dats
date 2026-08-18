@@ -140,6 +140,15 @@ class CRUDSourceDocument(
 
         return query.all()
 
+    def read_by_name(
+        self, db: Session, *, name: str, proj_id: int
+    ) -> SourceDocumentORM | None:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == name, self.model.project_id == proj_id)
+            .first()
+        )
+
     def read_by_filename(
         self, db: Session, *, proj_id: int, only_finished: bool = True, filename: str
     ) -> SourceDocumentORM | None:

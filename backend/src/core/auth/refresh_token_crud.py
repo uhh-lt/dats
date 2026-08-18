@@ -25,7 +25,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
 
     ### READ OPERATIONS ###
 
-    def read(self, _db: Session, _id: int) -> RefreshTokenORM:
+    def read(self, db: Session, id: int) -> RefreshTokenORM:
         raise Exception("Use read_and_verify instead")
 
     def read_and_verify(self, db: Session, token_str: str) -> RefreshTokenORM:

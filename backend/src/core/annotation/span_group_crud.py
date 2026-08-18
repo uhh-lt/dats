@@ -53,6 +53,9 @@ class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreateIntern, SpanGroupUpdat
 
         return query.all()
 
+    def read_by_name(self, db: Session, *, name: str) -> SpanGroupORM | None:
+        return db.query(self.model).filter(self.model.name == name).first()
+
     def link_groups_spans_batch(
         self, db: Session, *, links: dict[int, list[int]]
     ) -> int:

@@ -12,6 +12,7 @@ from core.doc.folder_crud import crud_folder
 from core.doc.source_document_crud import crud_sdoc
 from core.doc.source_document_data_crud import crud_sdoc_data
 from core.memo.memo_crud import crud_memo
+from core.memo.memo_dto import AttachedObjectType
 from core.memo.object_handle_crud import crud_object_handle
 from core.metadata.project_metadata_crud import crud_project_meta
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
@@ -76,3 +77,15 @@ class MemoCrud(Enum):
     BBOX_ANNOTATION = crud_bbox_anno
     SENTENCE_ANNOTATION = crud_sentence_anno
     SPAN_GROUP = crud_span_group
+
+
+attached_object_type_to_crud: dict[AttachedObjectType, MemoCrud] = {
+    AttachedObjectType.project: MemoCrud.PROJECT,
+    AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
+    AttachedObjectType.tag: MemoCrud.TAG,
+    AttachedObjectType.code: MemoCrud.CODE,
+    AttachedObjectType.span_annotation: MemoCrud.SPAN_ANNOTATION,
+    AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,
+    AttachedObjectType.sentence_annotation: MemoCrud.SENTENCE_ANNOTATION,
+    AttachedObjectType.span_group: MemoCrud.SPAN_GROUP,
+}

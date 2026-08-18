@@ -41,5 +41,8 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
             db.query(self.model).filter(self.model.title == title).first() is not None
         )
 
+    def read_by_title(self, db: Session, *, title: str) -> ProjectORM | None:
+        return db.query(self.model).filter(self.model.title == title).first()
+
 
 crud_project = CRUDProject(ProjectORM)

@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering_operators import (
-    AttachedToOperator,
+    AttachedObjectOperator,
+    AttachedObjectTypeOperator,
     BooleanOperator,
     DateOperator,
     FilterValue,
@@ -87,7 +88,8 @@ class FilterExpression(BaseModel, Generic[T]):
         | ListOperator
         | DateOperator
         | BooleanOperator
-        | AttachedToOperator
+        | AttachedObjectTypeOperator
+        | AttachedObjectOperator
     ) = Field(description="The comparison operator applied to the column")
     value: FilterValue = Field(description="The value the column is compared against")
 
@@ -137,6 +139,26 @@ class FilterExpression(BaseModel, Generic[T]):
         if isinstance(self.column, int):
             return self
 
+        # Resolve IDs for AtachedObjectOperator [type, id] pairs back to a name
+        if (
+            self.operator == AttachedObjectOperator.EQUALS
+            or self.operator == AttachedObjectOperator.NOT_EQUALS
+        ):
+            from common.crud_enum import attached_object_type_to_crud
+            from core.memo.memo_dto import AttachedObjectType
+
+            assert isinstance(self.value, list) and len(self.value) == 2, (
+                f"Expected [type, id], got {self.value}"
+            )
+            type_value, id_value = self.value
+            assert isinstance(type_value, str) and isinstance(id_value, str)
+            crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
+            resolved = self.column.resolve_ids(db=db, ids=[int(id_value)], types=[crud])  # type: ignore
+            if len(resolved) == 0:
+                raise FilterValueNotFoundError(self.value, self.column)
+            self.value = [type_value, resolved[0]]
+            return self
+
         # Resolve IDs for IDOperator
         if self.operator == IDOperator.EQUALS or self.operator == IDOperator.NOT_EQUALS:
             assert isinstance(self.value, int), f"Expected int, got {type(self.value)}"
@@ -177,6 +199,32 @@ class FilterExpression(BaseModel, Generic[T]):
     def resolve_names(self, db: Session, project_id: int) -> "FilterExpression[T]":
         # We don't need to resolve names for metadata columns
         if isinstance(self.column, int):
+            return self
+
+        # Resolve names for AtachedObjectOperator [type, name]
+        if (
+            self.operator == AttachedObjectOperator.EQUALS
+            or self.operator == AttachedObjectOperator.NOT_EQUALS
+        ):
+            # Local imports: see resolve_ids above (circular import guard).
+            from common.crud_enum import attached_object_type_to_crud
+            from core.memo.memo_dto import AttachedObjectType
+
+            assert isinstance(self.value, list) and len(self.value) == 2, (
+                f"Expected [type, name], got {self.value}"
+            )
+            type_value, name_value = self.value
+            assert isinstance(type_value, str) and isinstance(name_value, str)
+            crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
+            resolved = self.column.resolve_names(
+                db=db,
+                project_id=project_id,
+                names=[name_value],
+                types=[crud],  # type: ignore
+            )
+            if len(resolved) == 0:
+                raise FilterValueNotFoundError(self.value, self.column)
+            self.value = [type_value, str(resolved[0])]
             return self
 
         # Resolve names for IDOperator
