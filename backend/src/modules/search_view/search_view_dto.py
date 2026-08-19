@@ -139,7 +139,7 @@ class BBoxSearchViewCreate(BBoxSearchViewBase):
     pass
 
 
-SearchViewCreate = Union[
+SearchViewCreateUnion = Union[
     MemoSearchViewCreate,
     SpanSearchViewCreate,
     SentenceSearchViewCreate,
@@ -186,7 +186,7 @@ class BBoxSearchViewRead(BBoxSearchViewBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-SearchViewRead = Union[
+SearchViewReadUnion = Union[
     MemoSearchViewRead,
     SpanSearchViewRead,
     SentenceSearchViewRead,
@@ -213,7 +213,7 @@ _ENTITY_TYPE_TO_READ: dict[
 }
 
 
-def search_view_read_from_orm(view: "SearchViewORM") -> SearchViewRead:
+def search_view_read_from_orm(view: "SearchViewORM") -> SearchViewReadUnion:
     """Validate a SearchViewORM into its entity-specific Read DTO.
 
     Dispatches on the stored `entity_type` so the returned model's
@@ -252,27 +252,6 @@ class SearchViewUpdate(BaseModel, Generic[T]):
             raise ValueError("Search view name cannot be blank")
         return name
 
-    def merged_with(self, current: SearchViewBase[T]) -> "SearchViewBase[T]":
-        """Merge this patch onto the current (fully-typed) view state.
-
-        For every update field: omitted -> keep `current`; explicitly provided ->
-        use the provided value (so `group_by=null` clears grouping, `sorts=[]`
-        clears sorting). Field names come from the model itself, so renaming a
-        field here automatically renames the merge behavior (no string literals).
-        """
-        base_cls = type(current)
-        provided = self.model_fields_set
-
-        # Start from the current state, then overlay every explicitly-provided field.
-        merged = current.model_dump()
-        for field_name in type(self).model_fields:
-            if field_name in provided:
-                merged[field_name] = getattr(self, field_name)
-
-        # Re-validate through the entity-specific base. This re-runs the group/board
-        # validators and normalizes an explicit `sorts=null` to the field default ([]).
-        return base_cls.model_validate(merged)
-
 
 class MemoSearchViewUpdate(SearchViewUpdate[MemoColumns]):
     pass
@@ -288,6 +267,14 @@ class SentenceSearchViewUpdate(SearchViewUpdate[SentAnnoColumns]):
 
 class BBoxSearchViewUpdate(SearchViewUpdate[BBoxColumns]):
     pass
+
+
+SearchViewUpdateUnion = Union[
+    MemoSearchViewUpdate,
+    SpanSearchViewUpdate,
+    SentenceSearchViewUpdate,
+    BBoxSearchViewUpdate,
+]
 
 
 # --- Reorder ---

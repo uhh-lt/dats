@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from common.exception_handler import exception_handler
 from modules.search_view.search_view_dto import (
     SearchEntityType,
-    SearchViewCreate,
-    SearchViewUpdate,
+    SearchViewCreateUnion,
+    SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
 from modules.search_view.search_view_orm import SearchViewORM
@@ -18,14 +18,16 @@ class InvalidSearchViewOrderError(Exception):
     pass
 
 
-class CRUDSearchView(CRUDBase[SearchViewORM, SearchViewCreate, SearchViewUpdate]):
+class CRUDSearchView(
+    CRUDBase[SearchViewORM, SearchViewCreateUnion, SearchViewUpdateUnion]
+):
     ### CREATE OPERATIONS ###
 
     def create(
         self,
         db: Session,
         *,
-        create_dto: SearchViewCreate,
+        create_dto: SearchViewCreateUnion,
         user_id: int,
     ) -> SearchViewORM:
         last_position = (
@@ -81,14 +83,25 @@ class CRUDSearchView(CRUDBase[SearchViewORM, SearchViewCreate, SearchViewUpdate]
     ### UPDATE OPERATIONS ###
 
     def update(
-        self, db: Session, *, id: int, update_dto: SearchViewUpdate
+        self, db: Session, *, id: int, update_dto: SearchViewUpdateUnion
     ) -> SearchViewORM:
         view = self.read(db=db, id=id)
 
-        # Validate the stored ORM row into its fully-typed (entity-specific) state,
-        # then apply the patch (omitted fields keep current, explicit null clears).
+        # Validate the stored ORM row into its fully-typed (entity-specific) state.
         current = search_view_read_from_orm(view)
-        merged = update_dto.merged_with(current)
+
+        # Merge the patch onto the current state. For every update field: omitted ->
+        # keep `current`; explicitly provided -> use the provided value (so
+        # `group_by=null` clears grouping, `sorts=[]` clears sorting). Field names come
+        # from the update model itself, so renaming a field renames the merge behavior.
+        merged_data = current.model_dump()
+        for field_name in type(update_dto).model_fields:
+            if field_name in update_dto.model_fields_set:
+                merged_data[field_name] = getattr(update_dto, field_name)
+
+        # Re-validate through the stored view's entity-specific class. This re-runs the
+        # group/board validators and normalizes an explicit `sorts=null` to [].
+        merged = type(current).model_validate(merged_data)
 
         view.name = merged.name
         view.layout = merged.layout.value

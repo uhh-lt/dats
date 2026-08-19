@@ -6,10 +6,10 @@ from core.auth.authz_user import AuthzUser
 from modules.search_view.search_view_crud import crud_search_view
 from modules.search_view.search_view_dto import (
     SearchEntityType,
-    SearchViewCreate,
-    SearchViewRead,
+    SearchViewCreateUnion,
+    SearchViewReadUnion,
     SearchViewReorder,
-    SearchViewUpdate,
+    SearchViewUpdateUnion,
     search_view_read_from_orm,
 )
 
@@ -22,15 +22,15 @@ router = APIRouter(
 
 @router.post(
     "",
-    response_model=SearchViewRead,
+    response_model=SearchViewReadUnion,
     summary="Creates a personal search view",
 )
 def create(
     *,
     db: Session = Depends(get_db_session),
-    view: SearchViewCreate,
+    view: SearchViewCreateUnion,
     authz_user: AuthzUser = Depends(),
-) -> SearchViewRead:
+) -> SearchViewReadUnion:
     authz_user.assert_in_project(view.project_id)
     db_view = crud_search_view.create(
         db=db, create_dto=view, user_id=authz_user.user.id
@@ -40,7 +40,7 @@ def create(
 
 @router.get(
     "/project/{project_id}",
-    response_model=list[SearchViewRead],
+    response_model=list[SearchViewReadUnion],
     summary="Returns the current user's search views of an entity type in a project",
 )
 def get_by_project(
@@ -49,7 +49,7 @@ def get_by_project(
     project_id: int,
     entity_type: SearchEntityType,
     authz_user: AuthzUser = Depends(),
-) -> list[SearchViewRead]:
+) -> list[SearchViewReadUnion]:
     authz_user.assert_in_project(project_id)
     db_views = crud_search_view.read_by_user_project_and_entity(
         db=db,
@@ -62,7 +62,7 @@ def get_by_project(
 
 @router.put(
     "/project/{project_id}/order",
-    response_model=list[SearchViewRead],
+    response_model=list[SearchViewReadUnion],
     summary="Reorders the current user's search views of an entity type in a project",
 )
 def reorder(
@@ -72,7 +72,7 @@ def reorder(
     entity_type: SearchEntityType,
     view_order: SearchViewReorder,
     authz_user: AuthzUser = Depends(),
-) -> list[SearchViewRead]:
+) -> list[SearchViewReadUnion]:
     authz_user.assert_in_project(project_id)
     db_views = crud_search_view.reorder(
         db=db,
@@ -86,16 +86,16 @@ def reorder(
 
 @router.patch(
     "/{view_id}",
-    response_model=SearchViewRead,
+    response_model=SearchViewReadUnion,
     summary="Updates a personal search view",
 )
 def update(
     *,
     db: Session = Depends(get_db_session),
     view_id: int,
-    view_update: SearchViewUpdate,
+    view_update: SearchViewUpdateUnion,
     authz_user: AuthzUser = Depends(),
-) -> SearchViewRead:
+) -> SearchViewReadUnion:
     view = crud_search_view.read(db=db, id=view_id)
     authz_user.assert_in_project(view.project_id)
     authz_user.assert_is_same_user(view.user_id)
@@ -105,7 +105,7 @@ def update(
 
 @router.delete(
     "/{view_id}",
-    response_model=SearchViewRead,
+    response_model=SearchViewReadUnion,
     summary="Deletes a personal search view",
 )
 def delete(
@@ -113,7 +113,7 @@ def delete(
     db: Session = Depends(get_db_session),
     view_id: int,
     authz_user: AuthzUser = Depends(),
-) -> SearchViewRead:
+) -> SearchViewReadUnion:
     view = crud_search_view.read(db=db, id=view_id)
     authz_user.assert_in_project(view.project_id)
     authz_user.assert_is_same_user(view.user_id)
