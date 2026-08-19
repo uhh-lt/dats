@@ -100,6 +100,16 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
         """
         return False
 
+    def is_date_column(self) -> bool:
+        """Whether this column holds a date/datetime value.
+
+        Used to decide whether a `date_granularity` bucket (day/week/month/year)
+        applies when grouping by this column. Derived from the filter operator:
+        date columns use `FilterOperator.DATE`. Defaults to that derivation;
+        override only if a column is date-like but uses a different operator.
+        """
+        return self.get_filter_operator() == FilterOperator.DATE
+
     def resolve_ids(
         self, db: Session, ids: list[int], types: list["Crud"] | None = None
     ) -> list[str]:

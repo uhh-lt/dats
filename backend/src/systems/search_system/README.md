@@ -314,9 +314,9 @@ Both functions take the unified request DTOs (`QueryRequest[MemoColumns]` /
 `GroupQueryRequest[MemoColumns]`) defined in
 [`modules/search/search_dto.py`](../../modules/search/search_dto.py) and
 [`grouping.py`](grouping.py), so the API shape is identical to span/sentence/bbox
-search. Stored memo views ([`core/memo/memo_view_dto.py`](../../core/memo/memo_view_dto.py))
-reuse the same `GroupConfig[MemoColumns]` and `Sort[MemoColumns]` types and validate
-groupability via `MemoColumns.is_groupable()` — there is no separate view-specific
+search. Stored search views ([`modules/search_view/search_view_dto.py`](../../modules/search_view/search_view_dto.py))
+reuse the same `GroupConfig[T]` and `Sort[T]` types and validate
+groupability via `AbstractColumns.is_groupable()` — there is no separate view-specific
 grouping enum.
 
 This illustrates the house pattern: **SearchBuilder narrows to ids (or aggregates to

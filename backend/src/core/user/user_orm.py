@@ -10,9 +10,9 @@ if TYPE_CHECKING:
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
     from core.auth.refresh_token_orm import RefreshTokenORM
     from core.memo.memo_orm import MemoORM
-    from core.memo.memo_view_orm import MemoViewORM
     from core.memo.object_handle_orm import ObjectHandleORM
     from core.project.project_orm import ProjectORM
+    from modules.search_view.search_view_orm import SearchViewORM
 
 
 class UserORM(ORMBase):
@@ -52,8 +52,8 @@ class UserORM(ORMBase):
         passive_deletes=True,
     )
 
-    memo_views: Mapped[list["MemoViewORM"]] = relationship(
-        "MemoViewORM",
+    search_views: Mapped[list["SearchViewORM"]] = relationship(
+        "SearchViewORM",
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
