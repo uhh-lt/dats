@@ -155,7 +155,7 @@ class FilterExpression(BaseModel, Generic[T]):
             type_value, id_value = self.value
             assert isinstance(type_value, str) and isinstance(id_value, str)
             crud = attached_object_type_to_crud[AttachedObjectType(type_value)]
-            resolved = self.column.resolve_ids(db=db, ids=[int(id_value)], types=[crud])  # type: ignore
+            resolved = self.column.resolve_ids(db=db, ids=[int(id_value)], types=[crud])
             if len(resolved) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)
             self.value = [type_value, resolved[0]]
@@ -222,7 +222,7 @@ class FilterExpression(BaseModel, Generic[T]):
                 db=db,
                 project_id=project_id,
                 names=[name_value],
-                types=[crud],  # type: ignore
+                types=[crud],
             )
             if len(resolved) == 0:
                 raise FilterValueNotFoundError(self.value, self.column)

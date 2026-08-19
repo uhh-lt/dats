@@ -3,10 +3,9 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from common.crud_enum import Crud, attached_object_type_to_crud
+from common.crud_enum import Crud, attached_object_type_to_memo_crud
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
-from core.auth.validation import Validate
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import (
     AttachedObjectType,
@@ -36,9 +35,8 @@ def add_memo(
     attached_object_type: AttachedObjectType,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
 ) -> MemoRead:
-    crud = attached_object_type_to_crud.get(attached_object_type)
+    crud = attached_object_type_to_memo_crud.get(attached_object_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
@@ -101,7 +99,7 @@ def get_memos_by_attached_object_id(
     attached_obj_type: AttachedObjectType,
     authz_user: AuthzUser = Depends(),
 ) -> list[MemoRead]:
-    crud = attached_object_type_to_crud.get(attached_obj_type)
+    crud = attached_object_type_to_memo_crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 
@@ -211,7 +209,7 @@ def generate_memo_suggestion(
     model: str,
     authz_user: AuthzUser = Depends(),
 ) -> str:
-    crud = attached_object_type_to_crud.get(attached_obj_type)
+    crud = attached_object_type_to_memo_crud.get(attached_obj_type)
     if crud is None:
         raise ValueError("Invalid attached_object_type")
 

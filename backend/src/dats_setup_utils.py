@@ -8,7 +8,7 @@ in the *scope* of the fixtures that wrap these functions.
 """
 
 import os
-from typing import TypedDict
+from typing import Generator, TypedDict
 
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
@@ -241,7 +241,7 @@ def create_project_with_sdoc(db: Session, test_project: ProjectORM) -> ProjectWi
     }
 
 
-def build_app(db: Session, test_user: UserORM) -> FastAPI:
+def build_app(test_user: UserORM) -> FastAPI:
     """Build the FastAPI test application (replicates main.py)."""
     from psycopg2.errors import UniqueViolation
     from sqlalchemy.exc import IntegrityError
@@ -249,14 +249,21 @@ def build_app(db: Session, test_user: UserORM) -> FastAPI:
     from common.dependencies import get_current_user
     from common.exception_handler import exception_handler, exception_handlers
     from core.user.user_crud import crud_user
+    from repos.db.sql_repo import SQLRepo
     from utils.import_utils import import_by_suffix
 
     app = FastAPI()
 
-    # TODO: maybe do this differently
-    app.dependency_overrides[get_current_user] = lambda: crud_user.read_by_email(
-        db=db, email=test_user.email
-    )
+    # Override auth to skip JWT, but resolve the user through a FRESH transaction
+    # per request (exactly like the real `get_current_user` -> `get_db_session`),
+    # so the app never depends on a long-lived test session. This is a generator
+    # dependency: it holds the session open for the whole request (so lazy
+    # relationships like `user.projects` load) and commits/closes on teardown.
+    def _get_test_user() -> Generator[UserORM, None, None]:
+        with SQLRepo().transaction() as db:
+            yield crud_user.read_by_email(db=db, email=test_user.email)
+
+    app.dependency_overrides[get_current_user] = _get_test_user
 
     # Import jobs first because they register generated routes on endpoint routers.
     import_by_suffix("_job.py")

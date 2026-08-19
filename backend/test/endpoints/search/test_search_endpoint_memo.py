@@ -580,12 +580,16 @@ def test_memo_attached_object_resolve_round_trip_returns_original_pair(
 def test_memo_attached_object_resolve_disambiguates_shared_id_across_types(
     db_session, search_project
 ):
-    """A code and a tag sharing one id resolve to different names (type-aware)."""
-    code = search_project["code_alpha"]
-    tag = search_project["tag"]
+    """A code and a tag sharing one id resolve to different names (type-aware).
 
-    # Force the collision: point both filters at the same numeric id, differing only
-    # in the type token. The type part must steer each to its own table/name.
+    `colliding_tag` is a tag whose id equals `code_alpha.id` (see conftest). The
+    two filters below differ only in the type token, which must steer each to its
+    own table/name. This test only READS via Filter.resolve_ids.
+    """
+    code = search_project["code_alpha"]
+    tag = search_project["colliding_tag"]
+    assert tag.id == code.id  # the collision is a fixture precondition
+
     shared_id = code.id
     code_filter = make_filter_tree(
         [

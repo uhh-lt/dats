@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
-from sqlalchemy import case, func
+from sqlalchemy import case, func, literal
 
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering import Filter
@@ -160,8 +160,14 @@ def apply_grouping(query, group_by: GroupConfig, subquery_dict):
         selected.append(exprs.target_id.label("target_id"))
         grouped_columns.append(exprs.target_id)
     if exprs.target_type is not None:
-        selected.append(exprs.target_type.label("target_type"))
-        grouped_columns.append(exprs.target_type)
+        if isinstance(exprs.target_type, str):
+            # A constant target type: select it, but a constant must not appear
+            # in GROUP BY (Postgres would read a bare string literal there as a
+            # column ordinal).
+            selected.append(literal(exprs.target_type).label("target_type"))
+        else:
+            selected.append(exprs.target_type.label("target_type"))
+            grouped_columns.append(exprs.target_type)
 
     query = query.with_entities(*selected).group_by(*grouped_columns)
 

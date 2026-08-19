@@ -79,7 +79,7 @@ class MemoCrud(Enum):
     SPAN_GROUP = crud_span_group
 
 
-attached_object_type_to_crud: dict[AttachedObjectType, MemoCrud] = {
+attached_object_type_to_memo_crud: dict[AttachedObjectType, MemoCrud] = {
     AttachedObjectType.project: MemoCrud.PROJECT,
     AttachedObjectType.source_document: MemoCrud.SOURCE_DOCUMENT,
     AttachedObjectType.tag: MemoCrud.TAG,
@@ -88,4 +88,15 @@ attached_object_type_to_crud: dict[AttachedObjectType, MemoCrud] = {
     AttachedObjectType.bbox_annotation: MemoCrud.BBOX_ANNOTATION,
     AttachedObjectType.sentence_annotation: MemoCrud.SENTENCE_ANNOTATION,
     AttachedObjectType.span_group: MemoCrud.SPAN_GROUP,
+}
+
+attached_object_type_to_crud: dict[AttachedObjectType, Crud] = {
+    AttachedObjectType.project: Crud.PROJECT,
+    AttachedObjectType.source_document: Crud.SOURCE_DOCUMENT,
+    AttachedObjectType.tag: Crud.TAG,
+    AttachedObjectType.code: Crud.CODE,
+    AttachedObjectType.span_annotation: Crud.SPAN_ANNOTATION,
+    AttachedObjectType.bbox_annotation: Crud.BBOX_ANNOTATION,
+    AttachedObjectType.sentence_annotation: Crud.SENTENCE_ANNOTATION,
+    AttachedObjectType.span_group: Crud.SPAN_GROUP,
 }

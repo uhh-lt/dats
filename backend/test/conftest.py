@@ -18,12 +18,12 @@ os.environ["RQ_WORKERS_GPU"] = "1"
 
 from typing import Any, Generator
 
-import dats_setup_utils
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+import dats_setup_utils
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
 
@@ -126,9 +126,9 @@ def setup_users(db_session) -> None:
 # APP
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="function")
-def app(db_session: Session, test_user: UserORM) -> FastAPI:
+def app(test_user: UserORM) -> FastAPI:
     # See main.py! This function should replicate our main.py application entrypoint!
-    return dats_setup_utils.build_app(db_session, test_user)
+    return dats_setup_utils.build_app(test_user)
 
 
 # ---------------------------------------------------------------------------

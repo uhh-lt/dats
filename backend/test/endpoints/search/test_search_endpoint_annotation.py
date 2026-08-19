@@ -631,10 +631,12 @@ def test_annotation_rows_user_id_column_supports_id_operators(
             {0},
             id="equals-memo-content",
         ),
-        # NULL memo rows match NO string operator, not even NOT_EQUALS -> only index 0.
+        # NULL memo rows match NO string operator, not even NOT_EQUALS. The filter
+        # value must differ from index 0's memo content so index 0 (which HAS a
+        # memo) matches while the NULL index 1 does not -> {0}.
         pytest.param(
             StringOperator.NOT_EQUALS,
-            "memo_content",
+            "A memo on something else entirely",
             {0},
             id="not-equals-memo-content",
         ),
@@ -721,20 +723,25 @@ def test_span_rows_span_text_column_supports_string_operators(
     ],
 )
 @pytest.mark.parametrize(
-    "logic,expected_indices",
-    [
-        # AND: code Alpha AND on sdoc_two -> nothing (Alpha is on sdoc_one).
-        pytest.param(LogicalOperator.and_, set(), id="and"),
-        # OR: code Alpha OR on sdoc_two -> both annotations.
-        pytest.param(LogicalOperator.or_, {0, 1}, id="or"),
-    ],
+    "logic",
+    [LogicalOperator.and_, LogicalOperator.or_],
+    ids=["and", "or"],
 )
 def test_annotation_rows_filter_expressions_combine_with_and_or_logic(
-    client: TestClient, search_project, entity, url, logic, expected_indices
+    client: TestClient, search_project, entity, url, logic
 ):
     """Filter trees combine expressions with AND/OR logic."""
     row_model, columns_enum, key = ENTITY[entity]
     annotations = search_project[key]
+    # code Alpha sits on sdoc_one; the other expression matches sdoc_two.
+    code_alpha = {0}
+    on_sdoc_two = {0, 1} - _on_sdoc_one_indices(entity)
+    if logic == LogicalOperator.and_:
+        # code Alpha AND on sdoc_two -> nothing (Alpha is on sdoc_one).
+        expected_indices = code_alpha & on_sdoc_two
+    else:
+        # code Alpha OR on sdoc_two.
+        expected_indices = code_alpha | on_sdoc_two
     expected_ids = {annotations[i].id for i in expected_indices}
     filter_tree = make_filter_tree(
         [

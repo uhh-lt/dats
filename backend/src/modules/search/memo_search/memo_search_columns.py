@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING
-
 from sqlalchemy import String, and_, case, cast, func
 from sqlalchemy.orm import aliased
 
+from common.crud_enum import Crud
 from core.annotation.span_group_orm import SpanGroupORM
 from core.code.code_orm import CodeORM
 from core.doc.source_document_orm import SourceDocumentORM
@@ -21,9 +20,6 @@ from systems.search_system.grouping import (
     GroupExpressions,
 )
 from systems.search_system.search_builder import SearchBuilder
-
-if TYPE_CHECKING:
-    from common.crud_enum import Crud
 
 
 def build_memo_subquery(db, project_id: int, user_id: int):
