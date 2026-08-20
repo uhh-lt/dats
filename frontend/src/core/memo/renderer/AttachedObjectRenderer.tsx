@@ -1,3 +1,4 @@
+import { ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { BBoxAnnotationRenderer } from "@core/bbox-annotation";
 import { CodeRenderer } from "@core/code";
 import { ProjectRenderer } from "@core/project";
@@ -15,7 +16,7 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { memo } from "react";
 
-interface AttachedObjectRendererProps {
+interface AttachedObjectRendererProps extends ExpandableRendererProps {
   attachedObject:
     | TagRead
     | SourceDocumentRead
@@ -30,14 +31,16 @@ interface AttachedObjectRendererProps {
 }
 
 export const AttachedObjectRenderer = memo(
-  ({ attachedObject, attachedObjectType, link }: AttachedObjectRendererProps) => {
+  ({ attachedObject, attachedObjectType, link, ...expandProps }: AttachedObjectRendererProps) => {
     switch (attachedObjectType) {
       case AttachedObjectType.BBOX_ANNOTATION:
         return (
           <BBoxAnnotationRenderer
             bboxAnnotation={attachedObject as BBoxAnnotationRead | number}
+            link={link}
             showCode
-            showSpanText
+            showText
+            {...expandProps}
           />
         );
       case AttachedObjectType.SPAN_ANNOTATION:
@@ -46,7 +49,8 @@ export const AttachedObjectRenderer = memo(
             spanAnnotation={attachedObject as SpanAnnotationRead | number}
             link={link}
             showCode
-            showSpanText
+            showText
+            {...expandProps}
           />
         );
       case AttachedObjectType.SENTENCE_ANNOTATION:
@@ -55,19 +59,26 @@ export const AttachedObjectRenderer = memo(
             sentenceAnnotation={attachedObject as SentenceAnnotationRead | number}
             link={link}
             showCode
-            showSpanText
+            showText
+            {...expandProps}
           />
         );
       case AttachedObjectType.TAG:
-        return <TagRenderer tag={attachedObject as TagRead | number} />;
+        return <TagRenderer tag={attachedObject as TagRead | number} {...expandProps} />;
       case AttachedObjectType.CODE:
-        return <CodeRenderer code={attachedObject as CodeRead | number} />;
+        return <CodeRenderer code={attachedObject as CodeRead | number} {...expandProps} />;
       case AttachedObjectType.SOURCE_DOCUMENT:
         return (
-          <SdocRenderer sdoc={attachedObject as SourceDocumentRead | number} renderName renderDoctypeIcon link={link} />
+          <SdocRenderer
+            sdoc={attachedObject as SourceDocumentRead | number}
+            renderName
+            renderDoctypeIcon
+            link={link}
+            {...expandProps}
+          />
         );
       case AttachedObjectType.PROJECT:
-        return <ProjectRenderer project={attachedObject as ProjectRead | number} />;
+        return <ProjectRenderer project={attachedObject as ProjectRead | number} {...expandProps} />;
       default:
         return <>{attachedObjectType}</>;
     }
