@@ -22,7 +22,9 @@ function CustomTagsRenderer({ tags }: { tags: TagRead[] }) {
   return (
     <Stack>
       {tags.map((tag) => (
-        <TagRenderer key={tag.id} tag={tag} mr={0.5} sx={{ textWrap: "nowrap" }} />
+        <Box key={tag.id} component="span" mr={0.5} sx={{ textWrap: "nowrap" }}>
+          <TagRenderer tag={tag} />
+        </Box>
       ))}
     </Stack>
   );

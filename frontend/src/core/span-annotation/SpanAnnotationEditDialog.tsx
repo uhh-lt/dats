@@ -74,13 +74,13 @@ export const SpanAnnotationEditDialog = memo(({ projectId }: SpanAnnotationEditD
             <>
               <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
                 <Typography variant="h6">Preview</Typography>
-                <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showCode showSpanText />
+                <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showCode showText />
                 <ArrowRight />
                 {selectedCodeId ? (
                   <Stack direction="row" alignItems="center">
                     <CodeRenderer code={selectedCodeId} />
                     {": "}
-                    <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showSpanText />
+                    <SpanAnnotationRenderer spanAnnotation={dialogData.annotationIds[0]} showText />
                   </Stack>
                 ) : (
                   <span>Select a code to preview the change.</span>

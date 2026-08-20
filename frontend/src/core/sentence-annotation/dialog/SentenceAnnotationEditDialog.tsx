@@ -74,13 +74,13 @@ export function SentenceAnnotationEditDialog({ projectId }: SentenceAnnotationEd
             <>
               <Stack direction={"row"} spacing={1} alignItems="center" p={2}>
                 <Typography variant="h6">Preview</Typography>
-                <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showSpanText />
+                <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showCode showText />
                 <ArrowRight />
                 {selectedCodeId ? (
                   <Stack direction="row" alignItems="center">
                     <CodeRenderer code={selectedCodeId} />
                     {": "}
-                    <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showSpanText />
+                    <SentenceAnnotationRenderer sentenceAnnotation={dialogData.annotationIds[0]} showText />
                   </Stack>
                 ) : (
                   <span>Select a code to preview the change.</span>

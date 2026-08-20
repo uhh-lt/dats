@@ -74,13 +74,13 @@ export const BBoxAnnotationEditDialog = memo(({ projectId }: BBoxAnnotationEditD
               <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
               <Box px={3} mb={2}>
                 Before:
-                <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showCode showSpanText />
+                <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showCode showText />
                 After:
                 {selectedCodeId ? (
                   <Stack direction="row" alignItems="center">
                     <CodeRenderer code={selectedCodeId} />
                     {": "}
-                    <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showSpanText />
+                    <BBoxAnnotationRenderer bboxAnnotation={dialogData.annotationIds[0]} showText />
                   </Stack>
                 ) : (
                   <>
