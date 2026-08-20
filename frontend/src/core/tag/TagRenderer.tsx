@@ -1,37 +1,53 @@
 import { TagHooks } from "@api/hooks/TagHooks";
+import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { TagRead } from "@models/TagRead";
-import { Stack, StackProps, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
+import { memo } from "react";
 
-interface TagRendererProps {
+export type TagRendererSharedProps = ExpandableRendererProps;
+
+interface TagRendererProps extends TagRendererSharedProps {
   tag: number | TagRead;
 }
 
-export function TagRenderer({ tag, ...props }: TagRendererProps & Omit<StackProps, "direction" | "alignItems">) {
+export const TagRenderer = memo(({ tag, ...props }: TagRendererProps) => {
   if (typeof tag === "number") {
     return <TagRendererWithoutData tagId={tag} {...props} />;
   } else {
     return <TagRendererWithData tag={tag} {...props} />;
   }
-}
+});
 
-function TagRendererWithoutData({ tagId, ...props }: { tagId: number } & Omit<StackProps, "direction" | "alignItems">) {
+const TagRendererWithoutData = memo(({ tagId, ...props }: { tagId: number } & TagRendererSharedProps) => {
   const tag = TagHooks.useGetTag(tagId);
 
-  if (tag.data) {
+  if (tag.isSuccess) {
     return <TagRendererWithData tag={tag.data} {...props} />;
   } else if (tag.isError) {
     return <div>{tag.error.message}</div>;
   } else {
     return <div>Loading...</div>;
   }
-}
+});
 
-function TagRendererWithData({ tag, ...props }: { tag: TagRead } & Omit<StackProps, "direction" | "alignItems">) {
+const TagRendererWithData = memo(({ tag, ...expandProps }: { tag: TagRead } & TagRendererSharedProps) => {
   return (
-    <Stack spacing={0.5} direction="row" alignItems="center" {...props}>
-      {getIconComponent(Icon.TAG, { style: { color: tag.color } })}
-      <Typography>{tag.name}</Typography>
-    </Stack>
+    <ExpandableRenderer {...expandProps} expandedContent={<TagContext tag={tag} />}>
+      <Stack direction="row" alignItems="center" minWidth={0} maxWidth="100%" overflow="hidden">
+        {getIconComponent(Icon.TAG, { style: { color: tag.color, flexShrink: 0 } })}
+        <Typography component="span" noWrap minWidth={0}>
+          {tag.name}
+        </Typography>
+      </Stack>
+    </ExpandableRenderer>
+  );
+});
+
+function TagContext({ tag }: { tag: TagRead }) {
+  return (
+    <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+      {tag.description || "No description available."}
+    </Typography>
   );
 }

@@ -1,87 +1,74 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
-import { CodeRenderer } from "@core/code";
-import { LinkWrapper } from "@core/navigation";
-import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { ExpandableRenderer } from "@components/ExpandableRenderer";
+import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
-import { Stack } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { memo } from "react";
 
-interface SpanAnnotationRendererSharedProps {
-  showCode?: boolean;
-  showSpanText?: boolean;
-  showSdoc?: boolean;
-  showSdocTags?: boolean;
-  showSdocProjectMetadataId?: number;
-  sdocRendererProps?: SdocRendererSharedProps;
-  link?: boolean;
-}
+export type SpanAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
-interface SpanAnnotationRendererProps {
+interface SpanAnnotationRendererProps extends SpanAnnotationRendererSharedProps {
   spanAnnotation: number | SpanAnnotationRead;
 }
 
-export function SpanAnnotationRenderer({
-  spanAnnotation,
-  ...props
-}: SpanAnnotationRendererProps & SpanAnnotationRendererSharedProps) {
+export const SpanAnnotationRenderer = memo(({ spanAnnotation, ...props }: SpanAnnotationRendererProps) => {
   if (typeof spanAnnotation === "number") {
     return <SpanAnnotationRendererWithoutData spanAnnotationId={spanAnnotation} {...props} />;
   } else {
     return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation} {...props} />;
   }
-}
+});
 
-function SpanAnnotationRendererWithoutData({
-  spanAnnotationId,
-  ...props
-}: { spanAnnotationId: number } & SpanAnnotationRendererSharedProps) {
-  const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(spanAnnotationId);
+const SpanAnnotationRendererWithoutData = memo(
+  ({ spanAnnotationId, ...props }: { spanAnnotationId: number } & SpanAnnotationRendererSharedProps) => {
+    const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(spanAnnotationId);
 
-  if (spanAnnotation.isSuccess) {
-    return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation.data} {...props} />;
-  } else if (spanAnnotation.isError) {
-    return <div>{spanAnnotation.error.message}</div>;
-  } else {
-    return <div>Loading...</div>;
-  }
-}
+    if (spanAnnotation.isSuccess) {
+      return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation.data} {...props} />;
+    } else if (spanAnnotation.isError) {
+      return <div>{spanAnnotation.error.message}</div>;
+    } else {
+      return <div>Loading...</div>;
+    }
+  },
+);
 
-function SpanAnnotationRendererWithData({
-  spanAnnotation,
-  showCode,
-  showSpanText,
-  showSdoc,
-  showSdocTags,
-  showSdocProjectMetadataId,
-  sdocRendererProps,
-  link,
-}: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) {
-  const projectId = useAppSelector((state) => state.project.projectId);
+const SpanAnnotationRendererWithData = memo(
+  ({
+    spanAnnotation,
+    expandable,
+    expandMaxHeight,
+    expandButtonPosition,
+    ...summaryProps
+  }: { spanAnnotation: SpanAnnotationRead } & SpanAnnotationRendererSharedProps) => {
+    const projectId = useAppSelector((state) => state.project.projectId);
 
-  if (!projectId) {
-    return <div>Error: This component requires a project ID.</div>;
-  }
-  return (
-    <LinkWrapper
-      to="/project/$projectId/annotation/$sdocId"
-      params={{ projectId, sdocId: spanAnnotation.sdoc_id }}
-      search={{
-        visibleUserId: spanAnnotation.user_id,
-        selectedAnnotationId: spanAnnotation.id,
-      }}
-      link={!!link}
-    >
-      <Stack direction="row" alignItems="center">
-        {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
-        {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
-        {showSdocProjectMetadataId && (
-          <SdocMetadataRenderer sdocId={spanAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
-        )}
-        {showCode && <CodeRenderer code={spanAnnotation.code_id} />}
-        {showCode && showSpanText && ": "}
-        {showSpanText && spanAnnotation.text}
-      </Stack>
-    </LinkWrapper>
-  );
+    if (!projectId) {
+      return <div>Error: This component requires a project ID.</div>;
+    }
+
+    return (
+      <ExpandableRenderer
+        expandable={expandable}
+        expandMaxHeight={expandMaxHeight}
+        expandButtonPosition={expandButtonPosition}
+        expandedContent={<SpanAnnotationContext spanAnnotation={spanAnnotation} />}
+      >
+        <AnnotationSummaryRow
+          {...summaryProps}
+          sdocId={spanAnnotation.sdoc_id}
+          codeId={spanAnnotation.code_id}
+          text={spanAnnotation.text}
+          projectId={projectId}
+          userId={spanAnnotation.user_id}
+          annotationId={spanAnnotation.id}
+        />
+      </ExpandableRenderer>
+    );
+  },
+);
+
+function SpanAnnotationContext({ spanAnnotation }: { spanAnnotation: SpanAnnotationRead }) {
+  return <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{spanAnnotation.text}</Typography>;
 }

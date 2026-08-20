@@ -1,27 +1,29 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { CodeRead } from "@models/CodeRead";
-import { Stack } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { memo } from "react";
 
-interface CodeRendererProps {
+export type CodeRendererSharedProps = ExpandableRendererProps;
+
+interface CodeRendererProps extends CodeRendererSharedProps {
   code: number | CodeRead;
 }
 
-const CodeRendererWithData = memo(({ code }: { code: CodeRead }) => {
-  return (
-    <Stack direction="row" alignItems="center">
-      {getIconComponent(Icon.CODE, { style: { color: code.color } })}
-      {code.name}
-    </Stack>
-  );
+export const CodeRenderer = memo(({ code, ...props }: CodeRendererProps) => {
+  if (typeof code === "number") {
+    return <CodeRendererWithoutData codeId={code} {...props} />;
+  } else {
+    return <CodeRendererWithData code={code} {...props} />;
+  }
 });
 
-const CodeRendererWithoutData = memo(({ codeId }: { codeId: number }) => {
+const CodeRendererWithoutData = memo(({ codeId, ...props }: { codeId: number } & CodeRendererSharedProps) => {
   const code = CodeHooks.useGetCode(codeId);
 
-  if (code.data) {
-    return <CodeRendererWithData code={code.data} />;
+  if (code.isSuccess) {
+    return <CodeRendererWithData code={code.data} {...props} />;
   } else if (code.isError) {
     return <div>{code.error.message}</div>;
   } else {
@@ -29,10 +31,23 @@ const CodeRendererWithoutData = memo(({ codeId }: { codeId: number }) => {
   }
 });
 
-export const CodeRenderer = memo(({ code }: CodeRendererProps) => {
-  if (typeof code === "number") {
-    return <CodeRendererWithoutData codeId={code} />;
-  } else {
-    return <CodeRendererWithData code={code} />;
-  }
+const CodeRendererWithData = memo(({ code, ...expandProps }: { code: CodeRead } & CodeRendererSharedProps) => {
+  return (
+    <ExpandableRenderer {...expandProps} expandedContent={<CodeContext code={code} />}>
+      <Stack direction="row" alignItems="center" minWidth={0} maxWidth="100%" overflow="hidden">
+        {getIconComponent(Icon.CODE, { style: { color: code.color, flexShrink: 0 } })}
+        <Typography component="span" noWrap minWidth={0}>
+          {code.name}
+        </Typography>
+      </Stack>
+    </ExpandableRenderer>
+  );
 });
+
+function CodeContext({ code }: { code: CodeRead }) {
+  return (
+    <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+      {code.description || "No description available."}
+    </Typography>
+  );
+}

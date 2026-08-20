@@ -1,88 +1,109 @@
+import { SdocHooks } from "@api/hooks/SdocHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
-import { CodeRenderer } from "@core/code";
-import { LinkWrapper } from "@core/navigation";
-import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { ExpandableRenderer } from "@components/ExpandableRenderer";
+import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
-import { Stack } from "@mui/material";
+import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { memo } from "react";
 
-interface SentenceAnnotationRendererSharedProps {
-  showCode?: boolean;
-  showSpanText?: boolean;
-  showSdoc?: boolean;
-  showSdocTags?: boolean;
-  showSdocProjectMetadataId?: number;
-  sdocRendererProps?: SdocRendererSharedProps;
-  link?: boolean;
-}
+export type SentenceAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
-interface SentenceAnnotationRendererProps {
+interface SentenceAnnotationRendererProps extends SentenceAnnotationRendererSharedProps {
   sentenceAnnotation: number | SentenceAnnotationRead;
 }
 
-export function SentenceAnnotationRenderer({
-  sentenceAnnotation,
-  ...props
-}: SentenceAnnotationRendererProps & SentenceAnnotationRendererSharedProps) {
+export const SentenceAnnotationRenderer = memo(({ sentenceAnnotation, ...props }: SentenceAnnotationRendererProps) => {
   if (typeof sentenceAnnotation === "number") {
     return <SentenceAnnotationRendererWithoutData sentenceAnnotationId={sentenceAnnotation} {...props} />;
   } else {
     return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation} {...props} />;
   }
-}
+});
 
-function SentenceAnnotationRendererWithoutData({
-  sentenceAnnotationId,
-  ...props
-}: { sentenceAnnotationId: number } & SentenceAnnotationRendererSharedProps) {
-  const sentenceAnnotation = SentenceAnnotationHooks.useGetAnnotation(sentenceAnnotationId);
+const SentenceAnnotationRendererWithoutData = memo(
+  ({ sentenceAnnotationId, ...props }: { sentenceAnnotationId: number } & SentenceAnnotationRendererSharedProps) => {
+    const sentenceAnnotation = SentenceAnnotationHooks.useGetAnnotation(sentenceAnnotationId);
 
-  if (sentenceAnnotation.isSuccess) {
-    return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation.data} {...props} />;
-  } else if (sentenceAnnotation.isError) {
-    return <div>{sentenceAnnotation.error.message}</div>;
-  } else {
-    return <div>Loading...</div>;
+    if (sentenceAnnotation.isSuccess) {
+      return <SentenceAnnotationRendererWithData sentenceAnnotation={sentenceAnnotation.data} {...props} />;
+    } else if (sentenceAnnotation.isError) {
+      return <div>{sentenceAnnotation.error.message}</div>;
+    } else {
+      return <div>Loading...</div>;
+    }
+  },
+);
+
+const SentenceAnnotationRendererWithData = memo(
+  ({
+    sentenceAnnotation,
+    expandable,
+    expandMaxHeight,
+    expandButtonPosition,
+    ...summaryProps
+  }: { sentenceAnnotation: SentenceAnnotationRead } & SentenceAnnotationRendererSharedProps) => {
+    const projectId = useAppSelector((state) => state.project.projectId);
+
+    if (!projectId) {
+      return <div>Error: This component requires a project ID.</div>;
+    }
+
+    return (
+      <ExpandableRenderer
+        expandable={expandable}
+        expandMaxHeight={expandMaxHeight}
+        expandButtonPosition={expandButtonPosition}
+        expandedContent={<SentenceAnnotationContext sentenceAnnotation={sentenceAnnotation} />}
+      >
+        <AnnotationSummaryRow
+          {...summaryProps}
+          sdocId={sentenceAnnotation.sdoc_id}
+          codeId={sentenceAnnotation.code_id}
+          text={
+            <>
+              This annotation spans sentences {sentenceAnnotation.sentence_id_start + 1} to{" "}
+              {sentenceAnnotation.sentence_id_end + 1}.
+            </>
+          }
+          projectId={projectId}
+          userId={sentenceAnnotation.user_id}
+          annotationId={sentenceAnnotation.id}
+        />
+      </ExpandableRenderer>
+    );
+  },
+);
+
+function SentenceAnnotationContext({ sentenceAnnotation }: { sentenceAnnotation: SentenceAnnotationRead }) {
+  const sdocData = SdocHooks.useGetDocumentData(sentenceAnnotation.sdoc_id);
+
+  if (sdocData.isLoading) {
+    return <CircularProgress size={20} />;
   }
-}
-
-function SentenceAnnotationRendererWithData({
-  sentenceAnnotation,
-  showCode,
-  showSpanText,
-  showSdoc,
-  showSdocTags,
-  showSdocProjectMetadataId,
-  sdocRendererProps,
-  link,
-}: { sentenceAnnotation: SentenceAnnotationRead } & SentenceAnnotationRendererSharedProps) {
-  const projectId = useAppSelector((state) => state.project.projectId);
-
-  if (!projectId) {
-    return <div>Error: This component requires a project ID.</div>;
+  if (sdocData.isError) {
+    return <Typography color="error">{sdocData.error.message}</Typography>;
   }
+  if (!sdocData.data) {
+    return null;
+  }
+
+  const sentences = sdocData.data.sentences.slice(
+    sentenceAnnotation.sentence_id_start,
+    sentenceAnnotation.sentence_id_end + 1,
+  );
+
   return (
-    <LinkWrapper
-      to="/project/$projectId/annotation/$sdocId"
-      params={{ projectId, sdocId: sentenceAnnotation.sdoc_id }}
-      search={{
-        visibleUserId: sentenceAnnotation.user_id,
-        selectedAnnotationId: sentenceAnnotation.id,
-      }}
-      link={!!link}
-    >
-      <Stack direction="row" alignItems="center">
-        {showSdoc && <SdocRenderer sdoc={sentenceAnnotation.sdoc_id} {...sdocRendererProps} />}
-        {showSdocTags && <SdocTagsRenderer sdocId={sentenceAnnotation.sdoc_id} />}
-        {showSdocProjectMetadataId && (
-          <SdocMetadataRenderer sdocId={sentenceAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
-        )}
-        {showCode && <CodeRenderer code={sentenceAnnotation.code_id} />}
-        {showCode && showSpanText && ": "}
-        {showSpanText &&
-          `This annotation spans sentences ${sentenceAnnotation.sentence_id_start + 1} to ${sentenceAnnotation.sentence_id_end + 1}.`}
-      </Stack>
-    </LinkWrapper>
+    <Stack component="ol" spacing={1} sx={{ my: 0, pl: 3 }} start={sentenceAnnotation.sentence_id_start + 1}>
+      {sentences.map((sentence, index) => (
+        <Typography
+          component="li"
+          key={sentenceAnnotation.sentence_id_start + index}
+          sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+        >
+          {sentence}
+        </Typography>
+      ))}
+    </Stack>
   );
 }

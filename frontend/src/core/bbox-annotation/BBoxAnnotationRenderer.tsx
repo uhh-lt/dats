@@ -1,95 +1,113 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
-import { CodeRenderer } from "@core/code";
-import { SdocMetadataRenderer } from "@core/sdoc-metadata";
-import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { CodeHooks } from "@api/hooks/CodeHooks";
+import { SdocHooks } from "@api/hooks/SdocHooks";
+import { ExpandableRenderer } from "@components/ExpandableRenderer";
+import { ImageCropper } from "@components/ImageCropper";
+import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
-import { Stack } from "@mui/material";
-import { Link } from "@tanstack/react-router";
+import { CircularProgress, Typography } from "@mui/material";
+import { useAppSelector } from "@store/storeHooks";
+import { memo } from "react";
 
-interface BBoxAnnotationRendererSharedProps {
-  showCode?: boolean;
-  showSpanText?: boolean;
-  showSdoc?: boolean;
-  showSdocTags?: boolean;
-  showSdocProjectMetadataId?: number;
-  sdocRendererProps?: SdocRendererSharedProps;
-  link?: boolean;
-}
+export type BBoxAnnotationRendererSharedProps = AnnotationRendererSharedProps;
 
-interface BBoxAnnotationRendererProps {
+interface BBoxAnnotationRendererProps extends BBoxAnnotationRendererSharedProps {
   bboxAnnotation: number | BBoxAnnotationRead;
 }
 
-export function BBoxAnnotationRenderer({
-  bboxAnnotation,
-  ...props
-}: BBoxAnnotationRendererProps & BBoxAnnotationRendererSharedProps) {
+export const BBoxAnnotationRenderer = memo(({ bboxAnnotation, ...props }: BBoxAnnotationRendererProps) => {
   if (typeof bboxAnnotation === "number") {
     return <BBoxAnnotationRendererWithoutData bboxAnnotationId={bboxAnnotation} {...props} />;
   } else {
     return <BBoxAnnotationRendererWithData bboxAnnotation={bboxAnnotation} {...props} />;
   }
-}
+});
 
-function BBoxAnnotationRendererWithoutData({
-  bboxAnnotationId,
-  ...props
-}: { bboxAnnotationId: number } & BBoxAnnotationRendererSharedProps) {
-  const bboxAnnotation = BboxAnnotationHooks.useGetAnnotation(bboxAnnotationId);
+const BBoxAnnotationRendererWithoutData = memo(
+  ({ bboxAnnotationId, ...props }: { bboxAnnotationId: number } & BBoxAnnotationRendererSharedProps) => {
+    const bboxAnnotation = BboxAnnotationHooks.useGetAnnotation(bboxAnnotationId);
 
-  if (bboxAnnotation.isSuccess) {
-    return <BBoxAnnotationRendererWithData bboxAnnotation={bboxAnnotation.data} {...props} />;
-  } else if (bboxAnnotation.isError) {
-    return <div>{bboxAnnotation.error.message}</div>;
-  } else {
-    return <div>Loading...</div>;
-  }
-}
+    if (bboxAnnotation.isSuccess) {
+      return <BBoxAnnotationRendererWithData bboxAnnotation={bboxAnnotation.data} {...props} />;
+    } else if (bboxAnnotation.isError) {
+      return <div>{bboxAnnotation.error.message}</div>;
+    } else {
+      return <div>Loading...</div>;
+    }
+  },
+);
 
-function LinkWrapper({
-  children,
-  to,
-  link,
-  sdocId,
-}: {
-  children: React.ReactNode;
-  to: string;
-  sdocId: number;
-  link: boolean;
-}) {
-  if (link) {
+const BBoxAnnotationRendererWithData = memo(
+  ({
+    bboxAnnotation,
+    expandable,
+    expandMaxHeight,
+    expandButtonPosition,
+    ...summaryProps
+  }: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) => {
+    const projectId = useAppSelector((state) => state.project.projectId);
+
+    if (!projectId) {
+      return <div>Error: This component requires a project ID.</div>;
+    }
+
     return (
-      <Link to={to} params={{ sdocId }}>
-        {children}
-      </Link>
+      <ExpandableRenderer
+        expandable={expandable}
+        expandMaxHeight={expandMaxHeight}
+        expandButtonPosition={expandButtonPosition}
+        expandedContent={<BBoxAnnotationContext bboxAnnotation={bboxAnnotation} />}
+      >
+        <AnnotationSummaryRow
+          {...summaryProps}
+          sdocId={bboxAnnotation.sdoc_id}
+          codeId={bboxAnnotation.code_id}
+          text={
+            <>
+              {bboxAnnotation.x_min}, {bboxAnnotation.y_min}, {bboxAnnotation.x_max}, {bboxAnnotation.y_max}
+            </>
+          }
+          projectId={projectId}
+          userId={bboxAnnotation.user_id}
+          annotationId={bboxAnnotation.id}
+        />
+      </ExpandableRenderer>
     );
-  }
-  return children;
-}
+  },
+);
 
-function BBoxAnnotationRendererWithData({
-  bboxAnnotation,
-  showCode,
-  showSpanText,
-  showSdoc,
-  showSdocTags,
-  showSdocProjectMetadataId,
-  sdocRendererProps,
-  link,
-}: { bboxAnnotation: BBoxAnnotationRead } & BBoxAnnotationRendererSharedProps) {
+function BBoxAnnotationContext({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationRead }) {
+  const sdocData = SdocHooks.useGetDocumentData(bboxAnnotation.sdoc_id);
+  const code = CodeHooks.useGetCode(bboxAnnotation.code_id);
+
+  if (sdocData.isLoading || code.isLoading) {
+    return <CircularProgress size={20} />;
+  }
+  if (sdocData.isError) {
+    return <Typography color="error">{sdocData.error.message}</Typography>;
+  }
+  if (code.isError) {
+    return <Typography color="error">{code.error.message}</Typography>;
+  }
+  if (!sdocData.data || !code.data) {
+    return null;
+  }
+
+  const width = bboxAnnotation.x_max - bboxAnnotation.x_min;
+  const height = bboxAnnotation.y_max - bboxAnnotation.y_min;
+  const targetHeight = Math.min(height, 240);
+  const targetWidth = (width * targetHeight) / height;
+
   return (
-    <LinkWrapper to="/annotation/$sdocId" sdocId={bboxAnnotation.sdoc_id} link={!!link}>
-      <Stack direction="row" alignItems="center">
-        {showSdoc && <SdocRenderer sdoc={bboxAnnotation.sdoc_id} {...sdocRendererProps} />}
-        {showSdocTags && <SdocTagsRenderer sdocId={bboxAnnotation.sdoc_id} />}
-        {showSdocProjectMetadataId && (
-          <SdocMetadataRenderer sdocId={bboxAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
-        )}
-        {showCode && <CodeRenderer code={bboxAnnotation.code_id} />}
-        {showCode && showSpanText && ": "}
-        {showSpanText &&
-          `${bboxAnnotation.x_min}, ${bboxAnnotation.y_min}, ${bboxAnnotation.x_max}, ${bboxAnnotation.y_max}`}
-      </Stack>
-    </LinkWrapper>
+    <ImageCropper
+      imageUrl={encodeURI(`/content/${sdocData.data.repo_url}`)}
+      x={bboxAnnotation.x_min}
+      y={bboxAnnotation.y_min}
+      width={width}
+      height={height}
+      targetWidth={targetWidth}
+      targetHeight={targetHeight}
+      style={{ border: `4px solid ${code.data.color}`, maxWidth: "100%" }}
+    />
   );
 }
