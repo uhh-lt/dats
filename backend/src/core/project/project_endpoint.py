@@ -20,7 +20,7 @@ from repos.db.crud_base import NoSuchElementError
 router = APIRouter(
     prefix="/project",
     dependencies=[Depends(get_current_user)],
-    tags=["project"],
+    tags=["project", "mcp"],
 )
 
 
@@ -135,7 +135,7 @@ def get_user_projects(
 @router.get(
     "{project_id}/sdoc/status/{status}",
     response_model=int,
-    summary="Returns all Projects of the logged-in User",
+    summary="Returns count of SourceDocuments with the given status in the given project.",
 )
 def count_sdocs_with_status(
     *,

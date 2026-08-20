@@ -14,7 +14,9 @@ from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 
 router = APIRouter(
-    prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
+    prefix="/bbox",
+    dependencies=[Depends(get_current_user)],
+    tags=["bboxAnnotation", "mcp"],
 )
 
 

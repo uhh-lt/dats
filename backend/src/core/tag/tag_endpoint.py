@@ -17,7 +17,7 @@ from core.tag.tag_dto import (
 )
 
 router = APIRouter(
-    prefix="/tag", dependencies=[Depends(get_current_user)], tags=["tag"]
+    prefix="/tag", dependencies=[Depends(get_current_user)], tags=["tag", "mcp"]
 )
 
 

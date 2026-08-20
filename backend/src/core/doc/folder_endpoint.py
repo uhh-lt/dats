@@ -14,7 +14,7 @@ from core.doc.folder_dto import (
 )
 
 router = APIRouter(
-    prefix="/folder", dependencies=[Depends(get_current_user)], tags=["folder"]
+    prefix="/folder", dependencies=[Depends(get_current_user)], tags=["folder", "mcp"]
 )
 
 

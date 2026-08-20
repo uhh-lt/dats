@@ -15,7 +15,9 @@ from modules.whiteboard.whiteboard_dto import (
 )
 
 router = APIRouter(
-    prefix="/whiteboard", dependencies=[Depends(get_current_user)], tags=["whiteboard"]
+    prefix="/whiteboard",
+    dependencies=[Depends(get_current_user)],
+    tags=["whiteboard"],
 )
 
 

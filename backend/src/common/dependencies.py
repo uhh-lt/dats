@@ -1,6 +1,7 @@
+from datetime import UTC, datetime
 from typing import Generator
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from pydantic import ValidationError
@@ -8,8 +9,9 @@ from sqlalchemy.orm import Session
 from weaviate import WeaviateClient
 
 from config import conf
+from core.auth.api_key_crud import crud_api_key
 from core.auth.auth_exceptions import credentials_exception
-from core.auth.security import decode_jwt
+from core.auth.security import decode_jwt, hash_api_key
 from core.user.user_crud import crud_user
 from core.user.user_orm import UserORM
 from repos.db.sql_repo import SQLRepo
@@ -56,6 +58,17 @@ def get_weaviate_client() -> WeaviateClient:
 def get_current_user(
     db: Session = Depends(get_db_session), token: str = Depends(reusable_oauth2_scheme)
 ) -> UserORM:
+    if token.startswith("dats_"):
+        hashed_token = hash_api_key(token)
+        db_key = crud_api_key.get_by_hashed_key(db=db, hashed_key=hashed_token)
+
+        if not db_key:
+            raise credentials_exception
+
+        if db_key.expires_at and db_key.expires_at < datetime.now(UTC):
+            raise HTTPException(status_code=401, detail="API Key has expired")
+
+        return db_key.user
     try:
         payload = decode_jwt(token=token)
         email: str | None = payload.get("sub")

@@ -19,7 +19,7 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 router = APIRouter(
     prefix="/sentence",
     dependencies=[Depends(get_current_user)],
-    tags=["sentenceAnnotation"],
+    tags=["sentenceAnnotation", "mcp"],
 )
 
 
