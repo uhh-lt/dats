@@ -77,7 +77,7 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
             queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
             break;
           case ImportJobType.MEMOS:
-            queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMO] });
+            queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
@@ -92,7 +92,7 @@ const usePollImportJob = (importJobId: string | undefined, initialData: ImportJo
             queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_WHITEBOARDS, projectId] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_COTAS, projectId] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TABLE, projectId] });
-            queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMO] });
+            queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
             queryClient.invalidateQueries({ queryKey: [QueryKey.OBJECT_MEMOS] });
