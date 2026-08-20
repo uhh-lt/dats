@@ -1,5 +1,6 @@
 import { BboxAnnotationHooks } from "@api/hooks/BboxAnnotationHooks";
 import { CodeHooks } from "@api/hooks/CodeHooks";
+import { ProjectHooks } from "@api/hooks/ProjectHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
@@ -19,6 +20,7 @@ export const useGetMemosAttachedObject = (type: AttachedObjectType | undefined, 
   // Pass the id only when the type matches, otherwise pass undefined to disable the query
   const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
   const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
+  const projectQuery = ProjectHooks.useGetProject(type === AttachedObjectType.PROJECT ? id : undefined);
   const sdocQuery = SdocHooks.useGetDocument(type === AttachedObjectType.SOURCE_DOCUMENT ? id : undefined);
   const spanQuery = SpanAnnotationHooks.useGetAnnotation(type === AttachedObjectType.SPAN_ANNOTATION ? id : undefined);
   const bboxQuery = BboxAnnotationHooks.useGetAnnotation(type === AttachedObjectType.BBOX_ANNOTATION ? id : undefined);
@@ -31,6 +33,8 @@ export const useGetMemosAttachedObject = (type: AttachedObjectType | undefined, 
       return tagQuery;
     case AttachedObjectType.CODE:
       return codeQuery;
+    case AttachedObjectType.PROJECT:
+      return projectQuery;
     case AttachedObjectType.SOURCE_DOCUMENT:
       return sdocQuery;
     case AttachedObjectType.SPAN_ANNOTATION:
