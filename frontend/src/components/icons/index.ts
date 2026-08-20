@@ -1,3 +1,4 @@
+export * from "./AttachedObjectTypeIcons";
 export * from "./DATSIcons";
 export * from "./DocTypeIcons";
 export * from "./JobStatusIcons";

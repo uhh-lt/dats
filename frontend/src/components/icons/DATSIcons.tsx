@@ -59,6 +59,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import WorkspacesIcon from "@mui/icons-material/Workspaces";
 import { CircularProgress, SvgIconProps } from "@mui/material";
 import { ReactElement } from "react";
 
@@ -75,6 +76,7 @@ export enum Icon {
   SPAN_ANNOTATION = "span_annotation",
   SENTENCE_ANNOTATION = "sentence_annotation",
   BBOX_ANNOTATION = "bbox_annotation",
+  SPAN_GROUP = "span_group",
   FOLDER = "folder",
   ROOT_FOLDER = "root_folder",
   FOLDER_OFF = "folder_off",
@@ -202,6 +204,7 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SPAN_ANNOTATION]: (iconProps) => <ShortTextIcon {...iconProps} />,
   [Icon.SENTENCE_ANNOTATION]: (iconProps) => <SubjectIcon {...iconProps} />,
   [Icon.BBOX_ANNOTATION]: (iconProps) => <FilterIcon {...iconProps} />,
+  [Icon.SPAN_GROUP]: (iconProps) => <WorkspacesIcon {...iconProps} />,
   [Icon.FOLDER]: (iconProps) => <FolderIcon {...iconProps} />,
   [Icon.ROOT_FOLDER]: (iconProps) => <InboxIcon {...iconProps} />,
   [Icon.FOLDER_OFF]: (iconProps) => <FolderOffIcon {...iconProps} />,

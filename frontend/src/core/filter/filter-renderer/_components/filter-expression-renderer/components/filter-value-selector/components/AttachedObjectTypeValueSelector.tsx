@@ -1,5 +1,6 @@
+import { AttachedObjectTypeIcons, getIconComponent } from "@components/icons";
 import { AttachedObjectType } from "@models/AttachedObjectType";
-import { MenuItem, TextField } from "@mui/material";
+import { MenuItem, Stack, TextField } from "@mui/material";
 import { memo, useCallback } from "react";
 import { SharedFilterValueSelectorProps } from "../types/SharedFilterValueSelectorProps";
 
@@ -21,7 +22,10 @@ export const AttachedObjectTypeValueSelector = memo(
       >
         {Object.values(AttachedObjectType).map((type) => (
           <MenuItem key={type} value={type}>
-            {type.replaceAll("_", " ")}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {getIconComponent(AttachedObjectTypeIcons[type])}
+              <span>{type.replaceAll("_", " ")}</span>
+            </Stack>
           </MenuItem>
         ))}
       </TextField>
