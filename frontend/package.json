@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "update-api": "node bin/updateAPI.js",
+    "update-emojis": "node bin/updateEmojiData.js",
     "generate-api": "node bin/generateAPI.js",
     "update-version": "node bin/updateVersion.js"
   },
@@ -46,6 +47,7 @@
     "@xyflow/react": "^12.10.1",
     "d3": "^7.9.0",
     "dayjs": "^1.11.20",
+    "frimousse": "^0.3.0",
     "html-react-parser": "^5.2.17",
     "html-to-image": "^1.11.13",
     "lodash": "^4.17.23",
@@ -58,13 +60,13 @@
     "react-dropzone": "^15.0.0",
     "react-hook-form": "^7.71.2",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1",
     "react-player": "^3.4.0",
     "react-plotly.js": "^4.0.0",
     "react-redux": "^9.2.0",
     "react-resize-detector": "^12.3.0",
     "recharts": "^3.8.0",
     "redux-persist": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "ts-tree-structure": "^1.0.2"
   },
   "devDependencies": {
