@@ -6,15 +6,8 @@ import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
-import { AnnotationCardMemo } from "./AnnotationCardMemo";
 
-export function SpanAnnotationCard({
-  isSelected,
-  annotation,
-  code,
-  onClick,
-  cardProps,
-}: AnnotationCardProps<SpanAnnotationRead>) {
+export function SpanAnnotationCard({ annotation, code, onClick, cardProps }: AnnotationCardProps<SpanAnnotationRead>) {
   return (
     <Card {...cardProps}>
       <CardHeader
@@ -61,17 +54,6 @@ export function SpanAnnotationCard({
           </Stack>
         </CardContent>
       </CardActionArea>
-      {isSelected && (
-        <>
-          <Divider />
-          <AnnotationCardMemo
-            annotationId={annotation.id}
-            annotationType={AttachedObjectType.SPAN_ANNOTATION}
-            codeName={code.name}
-            annotationText={annotation.text}
-          />
-        </>
-      )}
     </Card>
   );
 }

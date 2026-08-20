@@ -18,10 +18,9 @@ import {
 import { memo } from "react";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
-import { AnnotationCardMemo } from "./AnnotationCardMemo";
 
 export const BBoxAnnotationCard = memo(
-  ({ isSelected, annotation, code, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationRead>) => {
+  ({ annotation, code, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationRead>) => {
     const sdocData = SdocHooks.useGetDocumentData(annotation.sdoc_id);
 
     return (
@@ -75,17 +74,6 @@ export const BBoxAnnotationCard = memo(
             </Stack>
           </CardContent>
         </CardActionArea>
-        {isSelected && (
-          <>
-            <Divider />
-            <AnnotationCardMemo
-              annotationId={annotation.id}
-              annotationType={AttachedObjectType.BBOX_ANNOTATION}
-              annotationText="Image"
-              codeName={code.name}
-            />
-          </>
-        )}
       </Card>
     );
   },

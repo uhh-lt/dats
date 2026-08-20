@@ -1,30 +1,11 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { Icon, getIconComponent } from "@components/icons";
-import { MemoDeleteMenuItem } from "@core/memo";
+import { MemoMenuItem } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { BBoxAnnotationDeleteMenuItem } from "./BBoxAnnotationDeleteMenuItem";
 import { SentenceAnnotationDeleteMenuItem } from "./SentenceAnnotationDeleteMenuItem";
 import { SpanAnnotationDeleteMenuItem } from "./SpanAnnotationDeleteMenuItem";
-
-interface MemoMenuItemsProps {
-  annotationId: number;
-  annotationType:
-    | AttachedObjectType.SPAN_ANNOTATION
-    | AttachedObjectType.BBOX_ANNOTATION
-    | AttachedObjectType.SENTENCE_ANNOTATION;
-  handleClose: () => void;
-}
-
-function MemoMenuItems({ annotationId, annotationType, handleClose }: MemoMenuItemsProps) {
-  const memo = MemoHooks.useGetUserMemo(annotationType, annotationId);
-
-  if (memo.isSuccess) {
-    return <MemoDeleteMenuItem memoId={memo.data.id} memoTitle={memo.data.title} onClick={handleClose} />;
-  }
-  return null;
-}
 
 interface AnnotationCardActionsMenuProps {
   annotationId: number;
@@ -43,9 +24,12 @@ export function AnnotationCardActionsMenu({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = () => {
+  const handleClose = (event?: { stopPropagation?: () => void; preventDefault?: () => void }) => {
+    event?.stopPropagation?.();
+    event?.preventDefault?.();
     setAnchorEl(null);
   };
 
@@ -55,7 +39,7 @@ export function AnnotationCardActionsMenu({
         {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MemoMenuItems annotationId={annotationId} annotationType={annotationType} handleClose={handleClose} />
+        <MemoMenuItem attachedObjectId={annotationId} attachedObjectType={annotationType} onClick={handleClose} />
         {annotationType === AttachedObjectType.SPAN_ANNOTATION ? (
           <SpanAnnotationDeleteMenuItem annotationId={annotationId} onClick={handleClose} />
         ) : annotationType === AttachedObjectType.SENTENCE_ANNOTATION ? (

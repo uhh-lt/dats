@@ -6,10 +6,8 @@ import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { Card, CardActionArea, CardContent, CardHeader, Divider, Stack, Typography } from "@mui/material";
 import { AnnotationCardProps } from "../_types/AnnotationCardProps";
 import { AnnotationCardActionsMenu } from "./AnnotationCardActionMenu";
-import { AnnotationCardMemo } from "./AnnotationCardMemo";
 
 export function SentenceAnnotationCard({
-  isSelected,
   annotation,
   code,
   onClick,
@@ -61,17 +59,6 @@ export function SentenceAnnotationCard({
           </Stack>
         </CardContent>
       </CardActionArea>
-      {isSelected && (
-        <>
-          <Divider />
-          <AnnotationCardMemo
-            annotationId={annotation.id}
-            annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
-            codeName={code.name}
-            annotationText={"Sentence"}
-          />
-        </>
-      )}
     </Card>
   );
 }
