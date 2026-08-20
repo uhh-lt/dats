@@ -27,7 +27,7 @@ const useGetObjectMemos = (attachedObjType: AttachedObjectType, attachedObjId: n
   useQuery<MemoRead[], Error>({
     queryKey: [QueryKey.OBJECT_MEMOS, attachedObjType, attachedObjId],
     queryFn: () => MemoService.getMemosByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
-    enabled: !!attachedObjId,
+    enabled: !!attachedObjId && (options?.enabled ?? true),
     retry: false,
   });
 

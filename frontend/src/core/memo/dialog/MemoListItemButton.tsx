@@ -1,8 +1,8 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { memo, useCallback } from "react";
+import { CircularProgress, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { memo } from "react";
+import { AttachedMemoMenu } from "./AttachedMemoMenu";
 import { MemoEvent } from "./types/MemoEvent";
-import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoMenuItemProps {
   onClick: (() => void) | undefined;
@@ -10,24 +10,26 @@ interface MemoMenuItemProps {
 }
 
 export const MemoListItemButton = memo(
-  ({ memoId, attachedObjectId, attachedObjectType, onClick, content }: MemoEvent & MemoMenuItemProps) => {
-    const openMemoDialog = useOpenMemoDialog();
-    const handleClick = useCallback(
-      (event: React.MouseEvent) => {
-        event.stopPropagation();
-        onClick?.();
-        openMemoDialog({ memoId, attachedObjectId, attachedObjectType });
-      },
-      [onClick, openMemoDialog, memoId, attachedObjectId, attachedObjectType],
-    );
+  ({ attachedObjectId, attachedObjectType, onClick, content }: MemoEvent & MemoMenuItemProps) => {
+    if (!attachedObjectId) return null;
 
     return (
-      <ListItem disablePadding>
-        <ListItemButton onClick={handleClick}>
-          <ListItemIcon>{getIconComponent(Icon.MEMO, { fontSize: "small" })}</ListItemIcon>
-          {content ? <>{content}</> : <ListItemText primary={"Memo"} />}
-        </ListItemButton>
-      </ListItem>
+      <AttachedMemoMenu
+        attachedObjectId={attachedObjectId}
+        attachedObjectType={attachedObjectType}
+        onAction={onClick}
+        menuPlacement="right"
+        renderTrigger={(handleClick, isFetching) => (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleClick} disabled={isFetching}>
+              <ListItemIcon>
+                {isFetching ? <CircularProgress size={20} /> : getIconComponent(Icon.MEMO, { fontSize: "small" })}
+              </ListItemIcon>
+              {content ? <>{content}</> : <ListItemText primary="Memos" />}
+            </ListItemButton>
+          </ListItem>
+        )}
+      />
     );
   },
 );

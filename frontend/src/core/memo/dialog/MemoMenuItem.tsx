@@ -1,30 +1,30 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { ListItemIcon, ListItemText, MenuItem } from "@mui/material";
-import { memo, useCallback } from "react";
+import { CircularProgress, ListItemIcon, ListItemText, MenuItem } from "@mui/material";
+import { memo } from "react";
+import { AttachedMemoMenu } from "./AttachedMemoMenu";
 import { MemoEvent } from "./types/MemoEvent";
-import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoMenuItemProps {
-  onClick: React.MouseEventHandler<HTMLLIElement>;
+  onClick: () => void;
 }
 
-export const MemoMenuItem = memo(
-  ({ memoId, attachedObjectId, attachedObjectType, onClick }: MemoEvent & MemoMenuItemProps) => {
-    const openMemoDialog = useOpenMemoDialog();
-    const handleClickOpen = useCallback(
-      (event: React.MouseEvent<HTMLLIElement>) => {
-        event.stopPropagation();
-        onClick(event);
-        openMemoDialog({ memoId, attachedObjectId, attachedObjectType });
-      },
-      [onClick, openMemoDialog, memoId, attachedObjectId, attachedObjectType],
-    );
+export const MemoMenuItem = memo(({ attachedObjectId, attachedObjectType, onClick }: MemoEvent & MemoMenuItemProps) => {
+  if (!attachedObjectId) return null;
 
-    return (
-      <MenuItem onClick={handleClickOpen}>
-        <ListItemIcon>{getIconComponent(Icon.MEMO, { fontSize: "small" })}</ListItemIcon>
-        <ListItemText>Memo</ListItemText>
-      </MenuItem>
-    );
-  },
-);
+  return (
+    <AttachedMemoMenu
+      attachedObjectId={attachedObjectId}
+      attachedObjectType={attachedObjectType}
+      onAction={onClick}
+      menuPlacement="right"
+      renderTrigger={(handleClick, isFetching) => (
+        <MenuItem onClick={handleClick} disabled={isFetching}>
+          <ListItemIcon>
+            {isFetching ? <CircularProgress size={20} /> : getIconComponent(Icon.MEMO, { fontSize: "small" })}
+          </ListItemIcon>
+          <ListItemText>Memos</ListItemText>
+        </MenuItem>
+      )}
+    />
+  );
+});

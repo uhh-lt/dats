@@ -1,7 +1,8 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { Icon, getIconComponent } from "@components/icons";
-import { useOpenMemoDialog } from "@core/memo";
+import { AttachedMemoMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
+import { CircularProgress } from "@mui/material";
 import { contrastiveColors } from "@utils/colors/colors";
 
 interface CodeIndicatorProps {
@@ -30,19 +31,10 @@ export function CodeIndicator({
   attachedObjectType = AttachedObjectType.SPAN_ANNOTATION,
 }: CodeIndicatorProps) {
   const code = CodeHooks.useGetCode(codeId);
-  const openMemoDialog = useOpenMemoDialog();
 
   // pending (not yet persisted) annotations have negative ids. They render their real code pill
   // (so the label never flickers), but are styled as pending and made non-interactive until saved.
   const isPending = annotationId < 0;
-
-  const handleMemoClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    openMemoDialog({
-      attachedObjectType,
-      attachedObjectId: annotationId,
-    });
-  };
 
   if (code.data) {
     let text: string;
@@ -69,10 +61,26 @@ export function CodeIndicator({
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
         {memoCount > 0 && !isPending && (
-          <span className="code-indicator__memo" onClick={handleMemoClick} title="Has memo — click to open">
-            {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
-            <span className="code-indicator__memo-count">{memoCount}</span>
-          </span>
+          <AttachedMemoMenu
+            attachedObjectType={attachedObjectType}
+            attachedObjectId={annotationId}
+            renderTrigger={(handleClick, isFetching) => (
+              <span
+                className="code-indicator__memo"
+                onClick={isFetching ? undefined : handleClick}
+                title="Show attached memos"
+              >
+                {isFetching ? (
+                  <CircularProgress size={12} />
+                ) : (
+                  <>
+                    {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
+                    <span className="code-indicator__memo-count">{memoCount}</span>
+                  </>
+                )}
+              </span>
+            )}
+          />
         )}
       </span>
     );

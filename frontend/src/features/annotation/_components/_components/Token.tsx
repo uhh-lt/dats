@@ -1,8 +1,9 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { Icon, getIconComponent } from "@components/icons";
-import { useOpenMemoDialog } from "@core/memo";
+import { AttachedMemoMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { CircularProgress } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
 import { range } from "lodash";
 import { useMemo } from "react";
@@ -100,31 +101,34 @@ interface MemoTokenBadgeProps {
  */
 function MemoTokenBadge({ annotation }: MemoTokenBadgeProps) {
   const code = CodeHooks.useGetCode(annotation.code_id);
-  const openMemoDialog = useOpenMemoDialog();
-
-  const handleClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    openMemoDialog({
-      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
-      attachedObjectId: annotation.id,
-    });
-  };
 
   if (!code.data) {
     return null;
   }
 
   return (
-    <span
-      className="code-indicator memo-badge"
-      style={{ "--indicator-color": code.data.color } as React.CSSProperties}
-      onClick={handleClick}
-      title="Has memo — click to open"
-    >
-      <span className="code-indicator__text memo-badge__content">
-        {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
-        <span className="memo-badge__count">{annotation.memo_ids.length}</span>
-      </span>
-    </span>
+    <AttachedMemoMenu
+      attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+      attachedObjectId={annotation.id}
+      renderTrigger={(handleClick, isFetching) => (
+        <span
+          className="code-indicator memo-badge"
+          style={{ "--indicator-color": code.data.color } as React.CSSProperties}
+          onClick={isFetching ? undefined : handleClick}
+          title="Show attached memos"
+        >
+          <span className="code-indicator__text memo-badge__content">
+            {isFetching ? (
+              <CircularProgress size={12} />
+            ) : (
+              <>
+                {getIconComponent(Icon.MEMO_ALT, { style: { fontSize: "inherit" } })}
+                <span className="memo-badge__count">{annotation.memo_ids.length}</span>
+              </>
+            )}
+          </span>
+        </span>
+      )}
+    />
   );
 }

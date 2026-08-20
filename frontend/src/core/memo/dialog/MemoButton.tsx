@@ -1,39 +1,38 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { memo, useCallback } from "react";
+import { CircularProgress, IconButton, IconButtonProps, Tooltip } from "@mui/material";
+import { memo } from "react";
+import { AttachedMemoMenu } from "./AttachedMemoMenu";
 import { MemoEvent } from "./types/MemoEvent";
-import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
 interface MemoButtonProps {
   onClick?: () => void;
 }
 
 export const MemoButton = memo(
-  ({
-    memoId,
-    attachedObjectType,
-    attachedObjectId,
-    onClick,
-    ...props
-  }: MemoButtonProps & MemoEvent & IconButtonProps) => {
-    const openMemoDialog = useOpenMemoDialog();
-    const handleClickOpen = useCallback(
-      (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        event.stopPropagation();
-        if (onClick) onClick();
-        openMemoDialog({ memoId, attachedObjectType, attachedObjectId });
-      },
-      [onClick, openMemoDialog, memoId, attachedObjectType, attachedObjectId],
-    );
+  ({ attachedObjectType, attachedObjectId, onClick, ...props }: MemoButtonProps & MemoEvent & IconButtonProps) => {
+    if (!attachedObjectId) return null;
 
     return (
-      <Tooltip title="Memo">
-        <span>
-          <IconButton onClick={handleClickOpen} {...(props as IconButtonProps)}>
-            {getIconComponent(Icon.MEMO)}
-          </IconButton>
-        </span>
-      </Tooltip>
+      <AttachedMemoMenu
+        attachedObjectType={attachedObjectType}
+        attachedObjectId={attachedObjectId}
+        renderTrigger={(handleClick, isFetching) => (
+          <Tooltip title="Memos">
+            <span>
+              <IconButton
+                onClick={(event) => {
+                  onClick?.();
+                  handleClick(event);
+                }}
+                disabled={isFetching}
+                {...props}
+              >
+                {isFetching ? <CircularProgress size={20} /> : getIconComponent(Icon.MEMO)}
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
+      />
     );
   },
 );
