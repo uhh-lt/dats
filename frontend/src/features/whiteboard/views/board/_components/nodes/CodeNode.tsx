@@ -47,7 +47,7 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
-  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.CODE, props.data.codeId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.CODE, props.data.codeId);
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes
@@ -118,15 +118,15 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   }, [reactFlowInstance, props.data.codeId, childCodes]);
 
   useEffect(() => {
-    if (!memo.data) return;
-    const memoId = memo.data.id;
+    if (!memos.data) return;
+    const memoIds = memos.data.map((memo) => memo.id);
 
     // checks which edges are already in the graph and removes edges to non-existing memos
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoCodeEdge)
       .filter((edge) => edge.target === `code-${props.data.codeId}`) // isEdgeForThisCode
-      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+      .filter((edge) => !memoIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForIncorrectMemo
     if (edgesToDelete.length > 0) {
       reactFlowInstance.deleteElements({ edges: edgesToDelete });
     }
@@ -136,14 +136,13 @@ export function CodeNode(props: NodeProps<CodeNode>) {
       .getNodes()
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
-    if (existingMemoNodeIds.includes(memoId)) {
-      const newEdge = createMemoCodeEdge({ memoId, codeId: props.data.codeId });
-      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
-      if (!edgeExists) {
-        reactFlowInstance.addEdges([newEdge]);
-      }
-    }
-  }, [props.data.codeId, reactFlowInstance, memo.data]);
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = existingMemoNodeIds
+      .filter((memoId) => memoIds.includes(memoId))
+      .map((memoId) => createMemoCodeEdge({ memoId, codeId: props.data.codeId }))
+      .filter((edge) => !currentEdges.some((current) => current.id === edge.id));
+    if (edgesToAdd.length) reactFlowInstance.addEdges(edgesToAdd);
+  }, [props.data.codeId, reactFlowInstance, memos.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && code.isSuccess) {
@@ -219,11 +218,11 @@ export function CodeNode(props: NodeProps<CodeNode>) {
   };
 
   const handleContextMenuExpandMemo = () => {
-    if (!memo.data) return;
+    if (!memos.data?.length) return;
 
     reactFlowService.addNodes(
       createMemoNodes({
-        memos: [memo.data],
+        memos: memos.data,
         position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
@@ -232,8 +231,6 @@ export function CodeNode(props: NodeProps<CodeNode>) {
 
   const openMemoDialog = useOpenMemoDialog();
   const handleContextMenuCreateMemo = () => {
-    if (memo.data) return;
-
     openMemoDialog({
       attachedObjectType: AttachedObjectType.CODE,
       attachedObjectId: props.data.codeId,
@@ -297,11 +294,10 @@ export function CodeNode(props: NodeProps<CodeNode>) {
           Create child code
         </MenuItem>
         <Divider />
-        {memo.data ? (
-          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
-        ) : (
-          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
-        )}
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memos.data?.length}>
+          Expand memos ({memos.data?.length ?? 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuCreateMemo}>Add memo</MenuItem>
       </GenericPositionMenu>
     </>
   );

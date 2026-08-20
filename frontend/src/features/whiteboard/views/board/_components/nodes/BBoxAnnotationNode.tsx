@@ -47,7 +47,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
   const sdocData = SdocHooks.useGetDocumentData(annotation.data?.sdoc_id);
-  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.BBOX_ANNOTATION, props.data.bboxAnnotationId);
 
   // effects
   useEffect(() => {
@@ -107,15 +107,15 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   }, [props.data.bboxAnnotationId, reactFlowInstance, annotation.data]);
 
   useEffect(() => {
-    if (!memo.data) return;
-    const memoId = memo.data.id;
+    if (!memos.data) return;
+    const memoIds = memos.data.map((memo) => memo.id);
 
     // check which edges are already in the graph and removes edges to non-existing memos
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoBBoxAnnotationEdge)
       .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
-      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+      .filter((edge) => !memoIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForIncorrectMemo
     if (edgesToDelete.length > 0) {
       reactFlowInstance.deleteElements({ edges: edgesToDelete });
     }
@@ -125,14 +125,13 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       .getNodes()
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
-    if (existingMemoNodeIds.includes(memoId)) {
-      const newEdge = createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: props.data.bboxAnnotationId });
-      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
-      if (!edgeExists) {
-        reactFlowInstance.addEdges([newEdge]);
-      }
-    }
-  }, [props.data.bboxAnnotationId, reactFlowInstance, memo.data]);
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = existingMemoNodeIds
+      .filter((memoId) => memoIds.includes(memoId))
+      .map((memoId) => createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: props.data.bboxAnnotationId }))
+      .filter((edge) => !currentEdges.some((current) => current.id === edge.id));
+    if (edgesToAdd.length) reactFlowInstance.addEdges(edgesToAdd);
+  }, [props.data.bboxAnnotationId, reactFlowInstance, memos.data]);
 
   // memoized event handlers
   const handleClick = useCallback(
@@ -171,21 +170,19 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
   }, [code.data, props.positionAbsoluteX, props.positionAbsoluteY, reactFlowService]);
 
   const handleContextMenuExpandMemo = useCallback(() => {
-    if (!memo.data) return;
+    if (!memos.data?.length) return;
 
     reactFlowService.addNodes(
       createMemoNodes({
-        memos: [memo.data],
+        memos: memos.data,
         position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
     contextMenuRef.current?.close();
-  }, [memo.data, props.positionAbsoluteX, props.positionAbsoluteY, reactFlowService]);
+  }, [memos.data, props.positionAbsoluteX, props.positionAbsoluteY, reactFlowService]);
 
   const openMemoDialog = useOpenMemoDialog();
   const handleContextMenuCreateMemo = useCallback(() => {
-    if (memo.data) return;
-
     openMemoDialog({
       attachedObjectType: AttachedObjectType.BBOX_ANNOTATION,
       attachedObjectId: props.data.bboxAnnotationId,
@@ -199,14 +196,7 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
       },
     });
     contextMenuRef.current?.close();
-  }, [
-    memo.data,
-    openMemoDialog,
-    props.data.bboxAnnotationId,
-    props.positionAbsoluteX,
-    props.positionAbsoluteY,
-    reactFlowService,
-  ]);
+  }, [openMemoDialog, props.data.bboxAnnotationId, props.positionAbsoluteX, props.positionAbsoluteY, reactFlowService]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -267,11 +257,10 @@ export const BBoxAnnotationNode = memo((props: NodeProps<BBoxAnnotationNode>) =>
         <Divider />
         <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
         <Divider />
-        {memo.data ? (
-          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
-        ) : (
-          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
-        )}
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memos.data?.length}>
+          Expand memos ({memos.data?.length ?? 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuCreateMemo}>Add memo</MenuItem>
       </GenericPositionMenu>
     </>
   );

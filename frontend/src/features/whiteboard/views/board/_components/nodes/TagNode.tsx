@@ -42,7 +42,7 @@ export function TagNode(props: NodeProps<TagNode>) {
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
   const sdocIds = SdocHooks.useGetSdocIdsByTagId(props.data.tagId);
-  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.TAG, props.data.tagId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.TAG, props.data.tagId);
 
   // effects
   useEffect(() => {
@@ -74,15 +74,15 @@ export function TagNode(props: NodeProps<TagNode>) {
   }, [props.data.tagId, reactFlowInstance, sdocIds.data]);
 
   useEffect(() => {
-    if (!memo.data) return;
-    const memoId = memo.data.id;
+    if (!memos.data) return;
+    const memoIds = memos.data.map((memo) => memo.id);
 
     // checks which edges are already in the graph and removes edges to non-existing memos
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoTagEdge)
       .filter((edge) => edge.target === `tag-${props.data.tagId}`) // isEdgeForThisTag
-      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+      .filter((edge) => !memoIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForIncorrectMemo
     if (edgesToDelete.length > 0) {
       reactFlowInstance.deleteElements({ edges: edgesToDelete });
     }
@@ -92,14 +92,13 @@ export function TagNode(props: NodeProps<TagNode>) {
       .getNodes()
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
-    if (existingMemoNodeIds.includes(memoId)) {
-      const newEdge = createMemoTagEdge({ memoId, tagId: props.data.tagId });
-      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
-      if (!edgeExists) {
-        reactFlowInstance.addEdges([newEdge]);
-      }
-    }
-  }, [props.data.tagId, reactFlowInstance, memo.data]);
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = existingMemoNodeIds
+      .filter((memoId) => memoIds.includes(memoId))
+      .map((memoId) => createMemoTagEdge({ memoId, tagId: props.data.tagId }))
+      .filter((edge) => !currentEdges.some((current) => current.id === edge.id));
+    if (edgesToAdd.length) reactFlowInstance.addEdges(edgesToAdd);
+  }, [props.data.tagId, reactFlowInstance, memos.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && tag.isSuccess) {
@@ -119,11 +118,11 @@ export function TagNode(props: NodeProps<TagNode>) {
   };
 
   const handleContextMenuExpandMemo = () => {
-    if (!memo.data) return;
+    if (!memos.data?.length) return;
 
     reactFlowService.addNodes(
       createMemoNodes({
-        memos: [memo.data],
+        memos: memos.data,
         position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
@@ -132,8 +131,6 @@ export function TagNode(props: NodeProps<TagNode>) {
 
   const openMemoDialog = useOpenMemoDialog();
   const handleContextMenuCreateMemo = () => {
-    if (memo.data) return;
-
     openMemoDialog({
       attachedObjectType: AttachedObjectType.TAG,
       attachedObjectId: props.data.tagId,
@@ -184,11 +181,10 @@ export function TagNode(props: NodeProps<TagNode>) {
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocuments}>Expand documents ({sdocIds.data?.length || 0})</MenuItem>
         <Divider />
-        {memo.data ? (
-          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
-        ) : (
-          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
-        )}
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memos.data?.length}>
+          Expand memos ({memos.data?.length ?? 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuCreateMemo}>Add memo</MenuItem>
       </GenericPositionMenu>
     </>
   );

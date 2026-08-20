@@ -45,7 +45,7 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   // global server state (react-query)
   const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code_id);
-  const memo = MemoHooks.useGetUserMemo(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
+  const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SPAN_ANNOTATION, props.data.spanAnnotationId);
 
   // effects
   useEffect(() => {
@@ -105,15 +105,15 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   }, [props.data.spanAnnotationId, reactFlowInstance, annotation.data]);
 
   useEffect(() => {
-    if (!memo.data) return;
-    const memoId = memo.data.id;
+    if (!memos.data) return;
+    const memoIds = memos.data.map((memo) => memo.id);
 
     // checks which edges are already in the graph and removes edges to non-existing memos
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoSpanAnnotationEdge)
       .filter((edge) => edge.target === `spanAnnotation-${props.data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
-      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+      .filter((edge) => !memoIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForIncorrectMemo
     if (edgesToDelete.length > 0) {
       reactFlowInstance.deleteElements({ edges: edgesToDelete });
     }
@@ -123,14 +123,13 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
       .getNodes()
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
-    if (existingMemoNodeIds.includes(memoId)) {
-      const newEdge = createMemoSpanAnnotationEdge({ memoId, spanAnnotationId: props.data.spanAnnotationId });
-      const edgeExists = reactFlowInstance.getEdges().some((edge) => edge.id === newEdge.id);
-      if (!edgeExists) {
-        reactFlowInstance.addEdges([newEdge]);
-      }
-    }
-  }, [props.data.spanAnnotationId, reactFlowInstance, memo.data]);
+    const currentEdges = reactFlowInstance.getEdges();
+    const edgesToAdd = existingMemoNodeIds
+      .filter((memoId) => memoIds.includes(memoId))
+      .map((memoId) => createMemoSpanAnnotationEdge({ memoId, spanAnnotationId: props.data.spanAnnotationId }))
+      .filter((edge) => !currentEdges.some((current) => current.id === edge.id));
+    if (edgesToAdd.length) reactFlowInstance.addEdges(edgesToAdd);
+  }, [props.data.spanAnnotationId, reactFlowInstance, memos.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (!annotation.data) return;
@@ -183,11 +182,11 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
   };
 
   const handleContextMenuExpandMemo = () => {
-    if (!memo.data) return;
+    if (!memos.data?.length) return;
 
     reactFlowService.addNodes(
       createMemoNodes({
-        memos: [memo.data],
+        memos: memos.data,
         position: { x: props.positionAbsoluteX, y: props.positionAbsoluteY - 200 },
       }),
     );
@@ -196,8 +195,6 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
 
   const openMemoDialog = useOpenMemoDialog();
   const handleContextMenuCreateMemo = () => {
-    if (memo.data) return;
-
     openMemoDialog({
       attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
       attachedObjectId: props.data.spanAnnotationId,
@@ -258,11 +255,10 @@ export function SpanAnnotationNode(props: NodeProps<SpanAnnotationNode>) {
         <Divider />
         <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
         <Divider />
-        {memo.data ? (
-          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
-        ) : (
-          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
-        )}
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memos.data?.length}>
+          Expand memos ({memos.data?.length ?? 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuCreateMemo}>Add memo</MenuItem>
       </GenericPositionMenu>
     </>
   );

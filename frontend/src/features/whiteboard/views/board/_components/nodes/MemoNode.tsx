@@ -5,6 +5,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
 import { MemoNodeData } from "@models/MemoNodeData";
+import { ProjectRead } from "@models/ProjectRead";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -159,7 +160,8 @@ const createAttachedObjectNodes = (
     | SpanAnnotationRead
     | BBoxAnnotationRead
     | SentenceAnnotationRead
-    | SourceDocumentRead,
+    | SourceDocumentRead
+    | ProjectRead,
   position: XYPosition,
 ): DATSNode[] => {
   switch (attachedObjectType) {
