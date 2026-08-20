@@ -7,6 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from repos.db.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from auth.api_key_orm import ApiKeyORM
+
     from core.annotation.annotation_document_orm import AnnotationDocumentORM
     from core.auth.refresh_token_orm import RefreshTokenORM
     from core.memo.memo_orm import MemoORM
@@ -76,6 +78,10 @@ class UserORM(ORMBase):
         secondary="MemoFavoriteLinkTable".lower(),
         back_populates="favorited_by_users",
         passive_deletes=True,
+    )
+
+    api_keys: Mapped[list["ApiKeyORM"]] = relationship(
+        "ApiKeyORM", back_populates="user"
     )
 
     def get_project_id(self) -> None:

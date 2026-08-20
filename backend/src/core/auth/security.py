@@ -103,3 +103,17 @@ def decode_jwt(token: str) -> dict:
 # Since request tokens are stored in the DB, we don't need to use JWT for them.
 def generate_refresh_token() -> str:
     return secrets.token_urlsafe()
+
+
+# =====================================================================
+# API Key
+# =====================================================================
+
+
+def generate_api_key() -> str:
+    raw_secret = secrets.token_hex(32)
+    return f"dats_{raw_secret}"
+
+
+def hash_api_key(api_key: str) -> str:
+    return hashlib.sha256(api_key.encode("utf-8")).hexdigest()

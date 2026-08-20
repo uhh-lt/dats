@@ -14,7 +14,9 @@ from core.annotation.span_group_dto import (
 from core.auth.authz_user import AuthzUser
 
 router = APIRouter(
-    prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]
+    prefix="/spangroup",
+    dependencies=[Depends(get_current_user)],
+    tags=["spanGroup"],
 )
 
 

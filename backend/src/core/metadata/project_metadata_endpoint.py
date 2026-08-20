@@ -14,7 +14,7 @@ from core.metadata.project_metadata_dto import (
 router = APIRouter(
     prefix="/projmeta",
     dependencies=[Depends(get_current_user)],
-    tags=["projectMetadata"],
+    tags=["projectMetadata", "mcp"],
 )
 
 

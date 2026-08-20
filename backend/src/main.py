@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.routing import APIRoute
 from loguru import logger
+from mcp_server import mcp_run
 from psycopg2.errors import UniqueViolation
 from rq.exceptions import NoSuchJobError
 from sqlalchemy.exc import IntegrityError
@@ -131,3 +132,5 @@ exception_handler(404)(NoSuchJobError)
 
 for ex_class, handler_func in exception_handlers:
     app.add_exception_handler(ex_class, handler_func)
+
+mcp_run(app=app, lifespan=lifespan)

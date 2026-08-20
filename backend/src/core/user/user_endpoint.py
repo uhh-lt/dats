@@ -10,7 +10,7 @@ from core.user.user_dto import ProjectAddUser, PublicUserRead, UserRead, UserUpd
 from core.user.user_orm import UserORM
 
 router = APIRouter(
-    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
+    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user", "mcp"]
 )
 
 
