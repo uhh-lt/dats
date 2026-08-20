@@ -3,8 +3,19 @@ import { LogicalOperator } from "@models/LogicalOperator";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Switch } from "@mui/material";
-import { ChangeEvent, memo, useCallback, useState } from "react";
+import {
+  Box,
+  Button,
+  ButtonProps,
+  FormControlLabel,
+  IconButton,
+  IconButtonProps,
+  Popover,
+  PopoverProps,
+  Switch,
+  Tooltip,
+} from "@mui/material";
+import { ChangeEvent, memo, MouseEvent, useCallback, useState } from "react";
 import { FilterRendererHandlers } from "../_types/FilterRendererProps";
 import { FilterRenderer, FilterRendererSimple } from "../filter-renderer";
 import { ColumnInfo, countFilterExpressions, FilterOperators, MyFilter, MyFilterExpression } from "../filterUtils";
@@ -27,6 +38,8 @@ export interface InternalFilterDialogProps {
   expertMode: boolean;
   onChangeExpertMode: (expertMode: boolean) => void;
   buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
+  iconButtonProps?: Omit<IconButtonProps, "onClick">;
+  iconOnly?: boolean;
   anchorOrigin?: PopoverProps["anchorOrigin"];
   transformOrigin?: PopoverProps["transformOrigin"];
   editableFilter: MyFilter;
@@ -44,6 +57,8 @@ const InternalFilterDialog = memo(
     onChangeExpertMode,
     onResetEditFilter,
     buttonProps,
+    iconButtonProps,
+    iconOnly = false,
     filterName = "root",
     anchorOrigin = {
       vertical: "top",
@@ -57,13 +72,18 @@ const InternalFilterDialog = memo(
   }: InternalFilterDialogProps & FilterRendererHandlers) => {
     // local client state
     const dialog = useDialog();
+    const [triggerAnchorEl, setTriggerAnchorEl] = useState<HTMLElement | null>(null);
     const numFilterExpressions = countFilterExpressions(filter);
 
     // actions
-    const handleOpenEditDialog = useCallback(() => {
-      dialog.open();
-      props.onStartFilterEdit(filterName);
-    }, [filterName, props, dialog]);
+    const handleOpenEditDialog = useCallback(
+      (event: MouseEvent<HTMLElement>) => {
+        setTriggerAnchorEl(event.currentTarget);
+        dialog.open();
+        props.onStartFilterEdit(filterName);
+      },
+      [filterName, props, dialog],
+    );
 
     const handleApplyChanges = useCallback(() => {
       dialog.close();
@@ -83,13 +103,21 @@ const InternalFilterDialog = memo(
 
     return (
       <>
-        <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
-          <b>Filter ({numFilterExpressions})</b>
-        </Button>
+        {iconOnly ? (
+          <Tooltip title={`Filter (${numFilterExpressions})`}>
+            <IconButton onClick={handleOpenEditDialog} {...iconButtonProps}>
+              <FilterListIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
+            <b>Filter ({numFilterExpressions})</b>
+          </Button>
+        )}
         <Popover
           open={dialog.isOpen}
           onClose={handlePopoverClose}
-          anchorEl={anchorEl}
+          anchorEl={anchorEl ?? triggerAnchorEl}
           anchorOrigin={anchorOrigin}
           transformOrigin={transformOrigin}
           slotProps={{
@@ -167,10 +195,15 @@ function FilterDialogInner<T extends string = string>({
   // ----
   anchorEl,
   buttonProps,
+  iconButtonProps,
+  iconOnly,
   anchorOrigin,
   transformOrigin,
 }: FilterDialogProps<T> &
-  Pick<InternalFilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) {
+  Pick<
+    InternalFilterDialogProps,
+    "anchorEl" | "buttonProps" | "iconButtonProps" | "iconOnly" | "transformOrigin" | "anchorOrigin"
+  >) {
   const [editableFilter, setEditableFilter] = useState(filter);
   const typedDefaultFilterExpression = defaultFilterExpression as MyFilterExpression<T>;
 
@@ -225,6 +258,8 @@ function FilterDialogInner<T extends string = string>({
     <InternalFilterDialog
       anchorEl={anchorEl}
       buttonProps={buttonProps}
+      iconButtonProps={iconButtonProps}
+      iconOnly={iconOnly}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}
       filter={filter}
