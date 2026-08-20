@@ -12,7 +12,9 @@ from modules.statistics.statistics_service import (
 )
 
 router = APIRouter(
-    prefix="/statistics", dependencies=[Depends(get_current_user)], tags=["statistics"]
+    prefix="/statistics",
+    dependencies=[Depends(get_current_user)],
+    tags=["statistics"],
 )
 
 

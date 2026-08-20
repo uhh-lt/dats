@@ -20,7 +20,7 @@ from core.memo.memo_generation_service import generate_memo_llm
 from core.memo.memo_utils import get_object_memo_for_user, get_object_memos
 
 router = APIRouter(
-    prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]
+    prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo", "mcp"]
 )
 
 

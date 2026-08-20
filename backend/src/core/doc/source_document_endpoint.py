@@ -11,7 +11,9 @@ from core.doc.source_document_dto import SourceDocumentRead, SourceDocumentUpdat
 from repos.filesystem_repo import FilesystemRepo
 
 router = APIRouter(
-    prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
+    prefix="/sdoc",
+    dependencies=[Depends(get_current_user)],
+    tags=["sourceDocument", "mcp"],
 )
 
 

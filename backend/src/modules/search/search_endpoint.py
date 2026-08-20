@@ -37,7 +37,7 @@ from systems.search_system.filtering import Filter
 from systems.search_system.sorting import Sort
 
 router = APIRouter(
-    prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
+    prefix="/search", dependencies=[Depends(get_current_user)], tags=["search", "mcp"]
 )
 
 

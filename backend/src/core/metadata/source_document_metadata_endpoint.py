@@ -13,7 +13,9 @@ from core.metadata.source_document_metadata_dto import (
 )
 
 router = APIRouter(
-    prefix="/sdocmeta", dependencies=[Depends(get_current_user)], tags=["sdocMetadata"]
+    prefix="/sdocmeta",
+    dependencies=[Depends(get_current_user)],
+    tags=["sdocMetadata", "mcp"],
 )
 
 

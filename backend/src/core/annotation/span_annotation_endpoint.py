@@ -16,7 +16,9 @@ from core.auth.authz_user import AuthzUser
 from core.auth.validation import Validate
 
 router = APIRouter(
-    prefix="/span", dependencies=[Depends(get_current_user)], tags=["spanAnnotation"]
+    prefix="/span",
+    dependencies=[Depends(get_current_user)],
+    tags=["spanAnnotation", "mcp"],
 )
 
 

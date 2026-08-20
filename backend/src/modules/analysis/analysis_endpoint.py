@@ -19,7 +19,9 @@ from modules.analysis.count_metadata import (
 from modules.analysis.document_sampler import document_sampler_by_tags
 
 router = APIRouter(
-    prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]
+    prefix="/analysis",
+    dependencies=[Depends(get_current_user)],
+    tags=["analysis"],
 )
 
 

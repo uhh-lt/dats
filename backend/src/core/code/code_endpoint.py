@@ -9,7 +9,7 @@ from core.code.code_dto import CodeCreate, CodeRead, CodeUpdate
 from core.project.project_crud import crud_project
 
 router = APIRouter(
-    prefix="/code", dependencies=[Depends(get_current_user)], tags=["code"]
+    prefix="/code", dependencies=[Depends(get_current_user)], tags=["code", "mcp"]
 )
 
 

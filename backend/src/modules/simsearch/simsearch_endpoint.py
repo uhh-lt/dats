@@ -9,7 +9,9 @@ from modules.simsearch.simsearch_service import SimSearchService
 from systems.search_system.filtering import Filter
 
 router = APIRouter(
-    prefix="/simsearch", dependencies=[Depends(get_current_user)], tags=["simsearch"]
+    prefix="/simsearch",
+    dependencies=[Depends(get_current_user)],
+    tags=["simsearch"],
 )
 
 

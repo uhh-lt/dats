@@ -15,7 +15,9 @@ from modules.classifier.classifier_dto import (
 from modules.classifier.classifier_service import ClassifierService
 
 router = APIRouter(
-    prefix="/classifier", dependencies=[Depends(get_current_user)], tags=["classifier"]
+    prefix="/classifier",
+    dependencies=[Depends(get_current_user)],
+    tags=["classifier"],
 )
 
 
