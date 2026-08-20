@@ -1,5 +1,5 @@
 import { URLFilterDialog, URLFilterTableToolbarProps } from "@core/filter";
-import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { MemoRow } from "@models/MemoRow";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
 import { MemoDeleteButton } from "../../MemoDeleteButton";
@@ -11,7 +11,7 @@ export function MemoURLToolbarLeft({
   routeApi,
   defaultFilterExpression,
   column2InfoSelector,
-}: URLFilterTableToolbarProps<ElasticSearchHit>) {
+}: URLFilterTableToolbarProps<MemoRow>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
   return (
