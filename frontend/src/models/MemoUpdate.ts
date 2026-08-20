@@ -8,6 +8,10 @@ export type MemoUpdate = {
    */
   title?: string | null;
   /**
+   * Optional Unicode emoji used as the Memo icon
+   */
+  icon?: string | null;
+  /**
    * Textual content of the Memo
    */
   content?: string | null;
@@ -15,8 +19,4 @@ export type MemoUpdate = {
    * JSON content of the Memo
    */
   content_json?: string | null;
-  /**
-   * Starred flag of the Memo
-   */
-  starred?: boolean | null;
 };

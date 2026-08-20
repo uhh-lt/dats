@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export enum SentAnnoColumns {
-  SENT_ANNO_CODE_ID = "SentAnno_CODE_ID",
+  SENT_ANNO_CODE_ID_LIST_RECURSIVE = "SentAnno_CODE_ID_LIST_RECURSIVE",
   SENT_ANNO_USER_ID = "SentAnno_USER_ID",
   SENT_ANNO_MEMO_CONTENT = "SentAnno_MEMO_CONTENT",
   SENT_ANNO_SOURCE_SOURCE_DOCUMENT_NAME = "SentAnno_SOURCE_SOURCE_DOCUMENT_NAME",

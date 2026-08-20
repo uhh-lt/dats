@@ -5,7 +5,16 @@
 import type { FilterExpression_SdocColumns_ } from "./FilterExpression_SdocColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
 export type Filter_SdocColumns__Output = {
+  /**
+   * Unique id of this node within the filter tree
+   */
   id: string;
+  /**
+   * Child expressions and/or nested filter nodes
+   */
   items: Array<FilterExpression_SdocColumns_ | Filter_SdocColumns__Output>;
+  /**
+   * How the child items are combined (and/or)
+   */
   logic_operator: LogicalOperator;
 };

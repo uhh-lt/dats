@@ -4,8 +4,17 @@
 /* eslint-disable */
 import type { FilterExpression_MemoColumns_ } from "./FilterExpression_MemoColumns_";
 import type { LogicalOperator } from "./LogicalOperator";
-export type Filter_MemoColumns_ = {
+export type Filter_MemoColumns__Input = {
+  /**
+   * Unique id of this node within the filter tree
+   */
   id: string;
-  items: Array<FilterExpression_MemoColumns_ | Filter_MemoColumns_>;
+  /**
+   * Child expressions and/or nested filter nodes
+   */
+  items: Array<FilterExpression_MemoColumns_ | Filter_MemoColumns__Input>;
+  /**
+   * How the child items are combined (and/or)
+   */
   logic_operator: LogicalOperator;
 };

@@ -122,23 +122,33 @@ export class MemoService {
     });
   }
   /**
-   * Returns the logged-in User's Memo attached to the object if it exists
+   * Favorites a Memo for the current user
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoByAttachedObjectId({
-    attachedObjId,
-    attachedObjType,
-  }: {
-    attachedObjId: number;
-    attachedObjType: AttachedObjectType;
-  }): CancelablePromise<MemoRead> {
+  public static favoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/memo/attached_obj/{attached_obj_type}/to/{attached_obj_id}/user",
+      method: "PUT",
+      url: "/memo/{memo_id}/favorite",
       path: {
-        attached_obj_id: attachedObjId,
-        attached_obj_type: attachedObjType,
+        memo_id: memoId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Removes the current user's Memo favorite
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static unfavoriteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/memo/{memo_id}/favorite",
+      path: {
+        memo_id: memoId,
       },
       errors: {
         422: `Validation Error`,

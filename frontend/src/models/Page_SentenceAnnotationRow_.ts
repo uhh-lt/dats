@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { SentenceAnnotationRow } from "./SentenceAnnotationRow";
-export type SentenceAnnotationSearchResult = {
+export type Page_SentenceAnnotationRow_ = {
   /**
-   * The total number of sentence_annotation_ids. Used for pagination.
+   * The rows on the requested page
+   */
+  items: Array<SentenceAnnotationRow>;
+  /**
+   * Total number of matching rows (unpaginated), used for pagination
    */
   total_results: number;
-  /**
-   * The Annotations.
-   */
-  data: Array<SentenceAnnotationRow>;
 };

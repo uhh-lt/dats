@@ -5,6 +5,12 @@
 import type { SortDirection } from "./SortDirection";
 import type { WordFrequencyColumns } from "./WordFrequencyColumns";
 export type Sort_WordFrequencyColumns_ = {
+  /**
+   * The column to sort by: an enum member, or an int id referring to a project-metadata column
+   */
   column: WordFrequencyColumns | number;
+  /**
+   * Sort direction (asc/desc)
+   */
   direction: SortDirection;
 };

@@ -5,6 +5,12 @@
 import type { SortDirection } from "./SortDirection";
 import type { SpanColumns } from "./SpanColumns";
 export type Sort_SpanColumns_ = {
+  /**
+   * The column to sort by: an enum member, or an int id referring to a project-metadata column
+   */
   column: SpanColumns | number;
+  /**
+   * Sort direction (asc/desc)
+   */
   direction: SortDirection;
 };

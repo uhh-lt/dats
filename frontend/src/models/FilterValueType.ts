@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export enum FilterValueType {
+  ATTACHED_OBJECT_TYPE = "ATTACHED_OBJECT_TYPE",
+  ATTACHED_OBJECT = "ATTACHED_OBJECT",
   SDOC_ID = "SDOC_ID",
   CODE_ID = "CODE_ID",
   USER_ID = "USER_ID",

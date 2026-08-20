@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { SpanAnnotationRow } from "./SpanAnnotationRow";
-export type SpanAnnotationSearchResult = {
+export type Page_SpanAnnotationRow_ = {
   /**
-   * The total number of span_annotation_ids. Used for pagination.
+   * The rows on the requested page
+   */
+  items: Array<SpanAnnotationRow>;
+  /**
+   * Total number of matching rows (unpaginated), used for pagination
    */
   total_results: number;
-  /**
-   * The Annotations.
-   */
-  data: Array<SpanAnnotationRow>;
 };

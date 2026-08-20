@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AttachedObjectOperator } from "./AttachedObjectOperator";
+import type { AttachedObjectTypeOperator } from "./AttachedObjectTypeOperator";
 import type { BBoxColumns } from "./BBoxColumns";
 import type { BooleanOperator } from "./BooleanOperator";
 import type { DateOperator } from "./DateOperator";
@@ -10,10 +12,20 @@ import type { IDListRecursiveOperator } from "./IDListRecursiveOperator";
 import type { IDOperator } from "./IDOperator";
 import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
+import type { SpanAnnotationOperator } from "./SpanAnnotationOperator";
 import type { StringOperator } from "./StringOperator";
 export type FilterExpression_BBoxColumns_ = {
+  /**
+   * Unique id of this expression within the filter tree
+   */
   id: string;
+  /**
+   * The column to filter on: an enum member, or an int id referring to a project-metadata column
+   */
   column: BBoxColumns | number;
+  /**
+   * The comparison operator applied to the column
+   */
   operator:
     | IDOperator
     | NumberOperator
@@ -22,6 +34,12 @@ export type FilterExpression_BBoxColumns_ = {
     | IDListRecursiveOperator
     | ListOperator
     | DateOperator
-    | BooleanOperator;
+    | BooleanOperator
+    | AttachedObjectTypeOperator
+    | AttachedObjectOperator
+    | SpanAnnotationOperator;
+  /**
+   * The value the column is compared against
+   */
   value: boolean | string | number | Array<string> | Array<Array<string>>;
 };

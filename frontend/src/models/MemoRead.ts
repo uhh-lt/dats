@@ -9,6 +9,10 @@ export type MemoRead = {
    */
   title: string;
   /**
+   * Optional Unicode emoji used as the Memo icon
+   */
+  icon?: string | null;
+  /**
    * Textual content of the Memo
    */
   content: string;
@@ -21,9 +25,9 @@ export type MemoRead = {
    */
   id: number;
   /**
-   * Starred flag of the Memo
+   * Whether the requesting user favorited the Memo
    */
-  starred: boolean;
+  is_favorite?: boolean;
   /**
    * User the Memo belongs to
    */

@@ -8,6 +8,10 @@ export type MemoCreate = {
    */
   title: string;
   /**
+   * Optional Unicode emoji used as the Memo icon
+   */
+  icon?: string | null;
+  /**
    * Textual content of the Memo
    */
   content: string;
@@ -15,8 +19,4 @@ export type MemoCreate = {
    * JSON content of the Memo
    */
   content_json: string;
-  /**
-   * Starred flag of the Memo
-   */
-  starred?: boolean | null;
 };

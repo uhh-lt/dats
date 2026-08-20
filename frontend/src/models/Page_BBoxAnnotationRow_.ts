@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BBoxAnnotationRow } from "./BBoxAnnotationRow";
-export type BBoxAnnotationSearchResult = {
+export type Page_BBoxAnnotationRow_ = {
   /**
-   * The total number of bbox_annotation_ids. Used for pagination.
+   * The rows on the requested page
+   */
+  items: Array<BBoxAnnotationRow>;
+  /**
+   * Total number of matching rows (unpaginated), used for pagination
    */
   total_results: number;
-  /**
-   * The Annotations.
-   */
-  data: Array<BBoxAnnotationRow>;
 };
