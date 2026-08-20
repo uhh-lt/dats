@@ -1,6 +1,3 @@
-import { useAuth } from "@core/auth";
-import { MemoRenderer2 } from "@core/memo";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -24,58 +21,43 @@ const renderToolbaInternalContent = ({ table }: { table: MRT_TableInstance<Sente
   </Stack>
 );
 
-export function SentenceAnnotationTableSimple({ sentAnnoIds }: { sentAnnoIds: number[] }) {
-  // global client state (react router)
-  const { user } = useAuth();
+const columns: MRT_ColumnDef<SentenceAnnotationTableRow>[] = [
+  {
+    id: "Text",
+    header: "Text",
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showText />,
+  },
+  {
+    id: "Code",
+    header: "Code",
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showCode />,
+  },
+  {
+    id: "Name",
+    header: "Document",
+    Cell: ({ row }) => (
+      <SentenceAnnotationRenderer
+        sentenceAnnotation={row.original.sentAnnoId}
+        showSdoc
+        sdocRendererProps={{ renderName: true, link: true }}
+      />
+    ),
+  },
+  {
+    id: "Tags",
+    header: "Tags",
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showSdocTags />,
+  },
+  {
+    id: "Memo",
+    header: "Memo",
+    Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} renderMemoIndicator />,
+  },
+];
 
+export function SentenceAnnotationTableSimple({ sentAnnoIds }: { sentAnnoIds: number[] }) {
   // computed
   const data = useMemo(() => sentAnnoIds.map((sentAnnoId) => ({ sentAnnoId })), [sentAnnoIds]);
-  const columns: MRT_ColumnDef<SentenceAnnotationTableRow>[] = useMemo(
-    () => [
-      {
-        id: "Text",
-        header: "Text",
-        Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showSpanText />,
-      },
-      {
-        id: "Code",
-        header: "Code",
-        Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showCode />,
-      },
-      {
-        id: "Name",
-        header: "Document",
-        Cell: ({ row }) => (
-          <SentenceAnnotationRenderer
-            sentenceAnnotation={row.original.sentAnnoId}
-            showSdoc
-            sdocRendererProps={{ renderName: true, link: true }}
-          />
-        ),
-      },
-      {
-        id: "Tags",
-        header: "Tags",
-        Cell: ({ row }) => <SentenceAnnotationRenderer sentenceAnnotation={row.original.sentAnnoId} showSdocTags />,
-      },
-      {
-        id: "Memo",
-        header: "Memo",
-        description: "Your comments on the document",
-        Cell: ({ row }) =>
-          user ? (
-            <MemoRenderer2
-              attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
-              attachedObjectId={row.original.sentAnnoId}
-              showTitle={false}
-              showContent
-              showIcon={false}
-            />
-          ) : null,
-      },
-    ],
-    [user],
-  );
 
   // table
   const table = useMaterialReactTable<SentenceAnnotationTableRow>({

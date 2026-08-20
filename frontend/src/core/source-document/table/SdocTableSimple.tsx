@@ -1,6 +1,3 @@
-import { useAuth } from "@core/auth";
-import { MemoRenderer2 } from "@core/memo";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -24,48 +21,32 @@ const renderToolbarActions = ({ table }: { table: MRT_TableInstance<SdocTableRow
   </Stack>
 );
 
-export const SdocTableSimple = memo(({ sdocIds }: { sdocIds: number[] }) => {
-  // global client state (react router)
-  const { user } = useAuth();
+const columns: MRT_ColumnDef<SdocTableRow>[] = [
+  {
+    header: "Type",
+    id: "Type",
+    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
+  },
+  {
+    id: "Name",
+    header: "Document",
+    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderName />,
+  },
+  {
+    id: "Tags",
+    header: "Tags",
+    Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdocId} />,
+  },
+  {
+    id: "Memo",
+    header: "Memo",
+    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderMemoIndicator />,
+  },
+];
 
+export const SdocTableSimple = memo(({ sdocIds }: { sdocIds: number[] }) => {
   // computed
   const data = useMemo(() => sdocIds.map((sdocId) => ({ sdocId })), [sdocIds]);
-
-  const columns: MRT_ColumnDef<SdocTableRow>[] = useMemo(
-    () => [
-      {
-        header: "Type",
-        id: "Type",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
-      },
-      {
-        id: "Name",
-        header: "Document",
-        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} link renderName />,
-      },
-      {
-        id: "Tags",
-        header: "Tags",
-        Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdocId} />,
-      },
-      {
-        id: "Memo",
-        header: "Memo",
-        description: "Your comments on the document",
-        Cell: ({ row }) =>
-          user ? (
-            <MemoRenderer2
-              attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
-              attachedObjectId={row.original.sdocId}
-              showTitle={false}
-              showContent
-              showIcon={false}
-            />
-          ) : null,
-      },
-    ],
-    [user],
-  );
 
   // table
   const table = useMaterialReactTable<SdocTableRow>({

@@ -1,6 +1,3 @@
-import { useAuth } from "@core/auth";
-import { MemoRenderer2 } from "@core/memo";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MaterialReactTable,
@@ -17,60 +14,43 @@ interface BBoxAnnotationTableRow {
   bboxAnnoId: number;
 }
 
-export const BBoxAnnotationTableSimple = memo(({ bboxAnnoIds }: { bboxAnnoIds: number[] }) => {
-  // global client state (react router)
-  const { user } = useAuth();
+const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = [
+  {
+    id: "Text",
+    header: "Text",
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showText />,
+  },
+  {
+    id: "Code",
+    header: "Code",
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showCode />,
+  },
+  {
+    id: "Name",
+    header: "Document",
+    Cell: ({ row }) => (
+      <BBoxAnnotationRenderer
+        bboxAnnotation={row.original.bboxAnnoId}
+        showSdoc
+        sdocRendererProps={{ renderName: true, link: true }}
+      />
+    ),
+  },
+  {
+    id: "Tags",
+    header: "Tags",
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSdocTags />,
+  },
+  {
+    id: "Memo",
+    header: "Memo",
+    Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} renderMemoIndicator />,
+  },
+];
 
+export const BBoxAnnotationTableSimple = memo(({ bboxAnnoIds }: { bboxAnnoIds: number[] }) => {
   // computed data
   const data = useMemo(() => bboxAnnoIds.map((bboxAnnoId) => ({ bboxAnnoId })), [bboxAnnoIds]);
-
-  // memoized columns definition
-  const columns: MRT_ColumnDef<BBoxAnnotationTableRow>[] = useMemo(
-    () => [
-      {
-        id: "Text",
-        header: "Text",
-        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSpanText />,
-      },
-      {
-        id: "Code",
-        header: "Code",
-        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showCode />,
-      },
-      {
-        id: "Name",
-        header: "Document",
-        Cell: ({ row }) => (
-          <BBoxAnnotationRenderer
-            bboxAnnotation={row.original.bboxAnnoId}
-            showSdoc
-            sdocRendererProps={{ renderName: true, link: true }}
-          />
-        ),
-      },
-      {
-        id: "Tags",
-        header: "Tags",
-        Cell: ({ row }) => <BBoxAnnotationRenderer bboxAnnotation={row.original.bboxAnnoId} showSdocTags />,
-      },
-      {
-        id: "Memo",
-        header: "Memo",
-        description: "Your comments on the document",
-        Cell: ({ row }) =>
-          user ? (
-            <MemoRenderer2
-              attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
-              attachedObjectId={row.original.bboxAnnoId}
-              showTitle={false}
-              showContent
-              showIcon={false}
-            />
-          ) : null,
-      },
-    ],
-    [user],
-  );
 
   // memoized toolbar renderer
   const renderToolbarActions = useCallback(

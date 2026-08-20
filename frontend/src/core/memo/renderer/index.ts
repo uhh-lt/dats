@@ -1,4 +1,3 @@
-export * from "./AttachedObjectMemoRenderer";
 export * from "./AttachedObjectRenderer";
 export * from "./attachedObjectTypeToText";
 export * from "./MemoCard";

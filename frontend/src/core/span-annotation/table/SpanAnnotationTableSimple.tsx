@@ -1,6 +1,3 @@
-import { useAuth } from "@core/auth";
-import { MemoRenderer2 } from "@core/memo";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack } from "@mui/material";
 import {
   MRT_ColumnDef,
@@ -24,58 +21,43 @@ const renderToolbaInternalContent = ({ table }: { table: MRT_TableInstance<SpanA
   </Stack>
 );
 
-export const SpanAnnotationTableSimple = memo(({ spanAnnoIds }: { spanAnnoIds: number[] }) => {
-  // global client state (react router)
-  const { user } = useAuth();
+const columns: MRT_ColumnDef<SpanAnnotationTableRow>[] = [
+  {
+    id: "Text",
+    header: "Text",
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showText />,
+  },
+  {
+    id: "Code",
+    header: "Code",
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showCode />,
+  },
+  {
+    id: "Name",
+    header: "Document",
+    Cell: ({ row }) => (
+      <SpanAnnotationRenderer
+        spanAnnotation={row.original.spanAnnoId}
+        showSdoc
+        sdocRendererProps={{ renderName: true, link: true }}
+      />
+    ),
+  },
+  {
+    id: "Tags",
+    header: "Tags",
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showSdocTags />,
+  },
+  {
+    id: "Memo",
+    header: "Memo",
+    Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} renderMemoIndicator />,
+  },
+];
 
+export const SpanAnnotationTableSimple = memo(({ spanAnnoIds }: { spanAnnoIds: number[] }) => {
   // computed
   const data = useMemo(() => spanAnnoIds.map((spanAnnoId) => ({ spanAnnoId })), [spanAnnoIds]);
-  const columns: MRT_ColumnDef<SpanAnnotationTableRow>[] = useMemo(
-    () => [
-      {
-        id: "Text",
-        header: "Text",
-        Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showSpanText />,
-      },
-      {
-        id: "Code",
-        header: "Code",
-        Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showCode />,
-      },
-      {
-        id: "Name",
-        header: "Document",
-        Cell: ({ row }) => (
-          <SpanAnnotationRenderer
-            spanAnnotation={row.original.spanAnnoId}
-            showSdoc
-            sdocRendererProps={{ renderName: true, link: true }}
-          />
-        ),
-      },
-      {
-        id: "Tags",
-        header: "Tags",
-        Cell: ({ row }) => <SpanAnnotationRenderer spanAnnotation={row.original.spanAnnoId} showSdocTags />,
-      },
-      {
-        id: "Memo",
-        header: "Memo",
-        description: "Your comments on the document",
-        Cell: ({ row }) =>
-          user ? (
-            <MemoRenderer2
-              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
-              attachedObjectId={row.original.spanAnnoId}
-              showTitle={false}
-              showContent
-              showIcon={false}
-            />
-          ) : null,
-      },
-    ],
-    [user],
-  );
 
   // table
   const table = useMaterialReactTable<SpanAnnotationTableRow>({
