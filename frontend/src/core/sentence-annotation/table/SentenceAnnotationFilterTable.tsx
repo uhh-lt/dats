@@ -19,16 +19,16 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
 } from "@core/filter";
-import { MemoIndicator, MemoRenderer2 } from "@core/memo";
+import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
+import { Page_SentenceAnnotationRow_ } from "@models/Page_SentenceAnnotationRow_";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
-import { SentenceAnnotationSearchResult } from "@models/SentenceAnnotationSearchResult";
 import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
@@ -40,7 +40,7 @@ import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSEATFilterSlice } from "./_hooks/useInitSEATFilterSlice";
 import { SEATFilterActions, defaultSEATFilterExpression } from "./seatFilterSlice";
 
-const flatMapData = (page: SentenceAnnotationSearchResult) => page.data;
+const flatMapData = (page: Page_SentenceAnnotationRow_) => page.items;
 
 /**
  * Component for rendering a filter table for sentence annotations.
@@ -97,7 +97,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
             accessorFn: (row) => row.tag_ids,
             Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
-        case SentAnnoColumns.SENT_ANNO_CODE_ID:
+        case SentAnnoColumns.SENT_ANNO_CODE_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             accessorFn: (row) => row.code,
@@ -121,16 +121,13 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
         case SentAnnoColumns.SENT_ANNO_MEMO_CONTENT:
           return {
             ...colDef,
-            Cell: ({ row }) =>
-              user ? (
-                <MemoRenderer2
-                  attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
-                  attachedObjectId={row.original.id}
-                  showTitle={false}
-                  showContent
-                  showIcon={false}
-                />
-              ) : null,
+            Cell: ({ row }) => (
+              <MemoIndicator
+                memoIds={row.original.memo_ids}
+                attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
+                attachedObjectId={row.original.id}
+              />
+            ),
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         case SentAnnoColumns.SENT_ANNO_FOLDER_ID_LIST_RECURSIVE:
           return {
@@ -167,20 +164,20 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SentenceAnnotationSearchResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_SentenceAnnotationRow_>({
     queryKey: [QueryKey.SENT_ANNO_TABLE, projectId, filter, sortingModel, fetchSize],
     queryFn: ({ pageParam }) =>
       SearchService.searchSentenceAnnotations({
-        projectId: projectId!,
         requestBody: {
+          project_id: projectId!,
           filter: filter as MyFilter<SentAnnoColumns>,
           sorts: sortingModel.map((sort) => ({
             column: sort.id as SentAnnoColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
+          page_number: pageParam as number,
+          page_size: fetchSize,
         },
-        page: pageParam as number,
-        pageSize: fetchSize,
       }),
     initialPageParam: 0,
     enabled: !!projectId && !!userId,

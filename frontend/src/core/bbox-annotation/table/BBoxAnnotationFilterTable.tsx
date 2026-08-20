@@ -19,15 +19,15 @@ import {
   URLFilterTableToolbarLeft,
   URLFilterTableToolbarProps,
 } from "@core/filter";
-import { MemoIndicator, MemoRenderer2 } from "@core/memo";
+import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRow } from "@models/BBoxAnnotationRow";
-import { BBoxAnnotationSearchResult } from "@models/BBoxAnnotationSearchResult";
 import { BBoxColumns } from "@models/BBoxColumns";
+import { Page_BBoxAnnotationRow_ } from "@models/Page_BBoxAnnotationRow_";
 import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
@@ -38,7 +38,7 @@ import { memo, useCallback, useMemo } from "react";
 import { useInitBBoxFilterSlice } from "./_hooks/useInitBBoxFilterSlice";
 import { BBoxFilterActions, defaultBBoxFilterExpression } from "./bboxFilterSlice";
 
-const flatMapData = (page: BBoxAnnotationSearchResult) => page.data;
+const flatMapData = (page: Page_BBoxAnnotationRow_) => page.items;
 
 /**
  * Component for rendering a filter table for BBox annotations.
@@ -90,7 +90,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             ...colDef,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<BBoxAnnotationRow>;
-        case BBoxColumns.BB_CODE_ID:
+        case BBoxColumns.BB_CODE_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             Cell: ({ row }) => (
@@ -108,12 +108,10 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             Cell: ({ row }) => (
-              <MemoRenderer2
+              <MemoIndicator
+                memoIds={row.original.memo_ids}
                 attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
                 attachedObjectId={row.original.id}
-                showTitle={false}
-                showContent
-                showIcon={false}
               />
             ),
           } as MRT_ColumnDef<BBoxAnnotationRow>;
@@ -165,7 +163,7 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   }, [tableInfo]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<BBoxAnnotationSearchResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_BBoxAnnotationRow_>({
     queryKey: [
       QueryKey.BBOX_TABLE,
       projectId,
@@ -175,16 +173,16 @@ const BBoxAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
     ],
     queryFn: ({ pageParam }) =>
       SearchService.searchBboxAnnotations({
-        projectId: projectId!,
         requestBody: {
+          project_id: projectId!,
           filter: filter as MyFilter<BBoxColumns>,
           sorts: sortingModel.map((sort) => ({
             column: sort.id as BBoxColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
+          page_number: pageParam as number,
+          page_size: fetchSize,
         },
-        page: pageParam as number,
-        pageSize: fetchSize,
       }),
     initialPageParam: 0,
     getNextPageParam: (_lastGroup, groups) => groups.length,

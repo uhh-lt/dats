@@ -19,16 +19,16 @@ import {
   URLFilterTableToolbarProps,
   createEmptyFilter,
 } from "@core/filter";
-import { MemoIndicator, MemoRenderer2 } from "@core/memo";
+import { MemoIndicator } from "@core/memo";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocFolderRenderer, SdocTagsRenderer } from "@core/source-document";
 import { UserRenderer } from "@core/user";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { AttachedObjectType } from "@models/AttachedObjectType";
+import { Page_SpanAnnotationRow_ } from "@models/Page_SpanAnnotationRow_";
 import { SortDirection } from "@models/SortDirection";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
-import { SpanAnnotationSearchResult } from "@models/SpanAnnotationSearchResult";
 import { SpanColumns } from "@models/SpanColumns";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
@@ -40,7 +40,7 @@ import { SdocAnnotationLink } from "./_components/SdocAnnotationLink";
 import { useInitSATFilterSlice } from "./_hooks/useInitSATFilterSlice";
 import { SATFilterActions, defaultSATFilterExpression } from "./satFilterSlice";
 
-const flatMapData = (page: SpanAnnotationSearchResult) => page.data;
+const flatMapData = (page: Page_SpanAnnotationRow_) => page.items;
 
 /**
  * Component for rendering a filter table for span annotations.
@@ -97,7 +97,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
             accessorFn: (row) => row.tag_ids,
             Cell: ({ row }) => <SdocTagsRenderer tagIds={row.original.tag_ids} />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
-        case SpanColumns.SP_CODE_ID:
+        case SpanColumns.SP_CODE_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             accessorFn: (row) => row.code,
@@ -121,16 +121,13 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
         case SpanColumns.SP_MEMO_CONTENT:
           return {
             ...colDef,
-            Cell: ({ row }) =>
-              user ? (
-                <MemoRenderer2
-                  attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
-                  attachedObjectId={row.original.id}
-                  showTitle={false}
-                  showContent
-                  showIcon={false}
-                />
-              ) : null,
+            Cell: ({ row }) => (
+              <MemoIndicator
+                memoIds={row.original.memo_ids}
+                attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+                attachedObjectId={row.original.id}
+              />
+            ),
           } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_SPAN_TEXT:
           return {
@@ -164,20 +161,20 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<SpanAnnotationSearchResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_SpanAnnotationRow_>({
     queryKey: [QueryKey.SPAN_ANNO_TABLE, projectId, filter, sortingModel, fetchSize],
     queryFn: ({ pageParam }) =>
       SearchService.searchSpanAnnotations({
-        projectId: projectId!,
         requestBody: {
+          project_id: projectId!,
           filter: filter as MyFilter<SpanColumns>,
           sorts: sortingModel.map((sort) => ({
             column: sort.id as SpanColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
+          page_number: pageParam as number,
+          page_size: fetchSize,
         },
-        page: pageParam as number,
-        pageSize: fetchSize,
       }),
     initialPageParam: 0,
     enabled: !!projectId && !!userId,
