@@ -1,7 +1,9 @@
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { DocTypeIcons, getIconComponent } from "@components/icons";
+import { MemoIndicator } from "@core/memo";
 import { LinkWrapper } from "@core/navigation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { memo } from "react";
@@ -10,6 +12,7 @@ export interface SdocRendererSharedProps extends ExpandableRendererProps {
   link?: boolean;
   renderName?: boolean;
   renderDoctypeIcon?: boolean;
+  renderMemoIndicator?: boolean;
 }
 
 interface SdocRendererProps extends SdocRendererSharedProps {
@@ -42,6 +45,7 @@ const SdocRendererWithData = memo(
     link,
     renderName,
     renderDoctypeIcon,
+    renderMemoIndicator,
     ...expandProps
   }: { sdoc: SourceDocumentRead } & SdocRendererSharedProps) => {
     return (
@@ -59,6 +63,13 @@ const SdocRendererWithData = memo(
                 {sdoc.name}
               </Typography>
             ) : null}
+            {renderMemoIndicator && sdoc.memo_ids && sdoc.memo_ids.length > 0 && (
+              <MemoIndicator
+                memoIds={sdoc.memo_ids}
+                attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
+                attachedObjectId={sdoc.id}
+              />
+            )}
           </Stack>
         </LinkWrapper>
       </ExpandableRenderer>

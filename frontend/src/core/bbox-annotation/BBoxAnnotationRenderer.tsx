@@ -4,6 +4,7 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { ImageCropper } from "@components/ImageCropper";
 import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CircularProgress, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -70,6 +71,8 @@ const BBoxAnnotationRendererWithData = memo(
           projectId={projectId}
           userId={bboxAnnotation.user_id}
           annotationId={bboxAnnotation.id}
+          annotationType={AttachedObjectType.BBOX_ANNOTATION}
+          memoIds={bboxAnnotation.memo_ids}
         />
       </ExpandableRenderer>
     );

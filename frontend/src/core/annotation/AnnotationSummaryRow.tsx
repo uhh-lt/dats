@@ -1,8 +1,10 @@
 import { ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { CodeRenderer } from "@core/code";
+import { MemoIndicator } from "@core/memo";
 import { LinkWrapper } from "@core/navigation";
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { SdocRenderer, SdocRendererSharedProps, SdocTagsRenderer } from "@core/source-document";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Stack, Typography } from "@mui/material";
 import { ReactNode } from "react";
 
@@ -14,6 +16,7 @@ export interface AnnotationRendererSharedProps extends ExpandableRendererProps {
   showSdocProjectMetadataId?: number;
   sdocRendererProps?: SdocRendererSharedProps;
   link?: boolean;
+  renderMemoIndicator?: boolean;
 }
 
 interface AnnotationSummaryRowProps extends AnnotationRendererSharedProps {
@@ -26,6 +29,8 @@ interface AnnotationSummaryRowProps extends AnnotationRendererSharedProps {
   projectId: number;
   userId: number;
   annotationId: number;
+  annotationType: AttachedObjectType;
+  memoIds?: number[];
 }
 
 export function AnnotationSummaryRow({
@@ -35,6 +40,8 @@ export function AnnotationSummaryRow({
   projectId,
   userId,
   annotationId,
+  annotationType,
+  memoIds,
   showCode,
   showText,
   showSdoc,
@@ -42,6 +49,7 @@ export function AnnotationSummaryRow({
   showSdocProjectMetadataId,
   sdocRendererProps,
   link,
+  renderMemoIndicator,
 }: AnnotationSummaryRowProps) {
   return (
     <LinkWrapper
@@ -71,6 +79,9 @@ export function AnnotationSummaryRow({
             {text}
           </Typography>
         ) : null}
+        {renderMemoIndicator && memoIds && memoIds.length > 0 && (
+          <MemoIndicator memoIds={memoIds} attachedObjectType={annotationType} attachedObjectId={annotationId} />
+        )}
       </Stack>
     </LinkWrapper>
   );

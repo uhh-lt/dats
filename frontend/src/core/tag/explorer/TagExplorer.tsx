@@ -1,29 +1,17 @@
 import { ITree, TreeExplorer } from "@components/tree-explorer";
-import { MemoIndicator } from "@core/memo";
-import { AttachedObjectType } from "@models/AttachedObjectType";
 import { TagRead } from "@models/TagRead";
 import LabelIcon from "@mui/icons-material/Label";
-import { Box, BoxProps, Typography } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 import { TagCreateListItemButton } from "../dialog";
 import { TagExportButton } from "../TagExportButton";
+import { TagRenderer } from "../TagRenderer";
 import { TagExplorerActionMenu } from "./_components/TagExplorerActionMenu";
 import { useComputeTagTree } from "./useComputeTagTree";
 
 const renderActions = (node: ITree<TagRead>) => <TagExplorerActionMenu node={node} />;
 
-const renderNode = (node: ITree<TagRead>) => (
-  <>
-    <Typography variant="body2" sx={{ fontWeight: "inherit", flexGrow: 1 }}>
-      {node.data.name}
-    </Typography>
-    <MemoIndicator
-      memoIds={node.data.memo_ids}
-      attachedObjectType={AttachedObjectType.TAG}
-      attachedObjectId={node.data.id}
-    />
-  </>
-);
+const renderNode = (node: ITree<TagRead>) => <TagRenderer tag={node.data} renderMemoIndicator />;
 
 interface TagExplorerProps {
   onTagClick?: (tagId: number) => void;

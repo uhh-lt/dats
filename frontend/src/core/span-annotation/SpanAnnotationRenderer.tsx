@@ -1,6 +1,7 @@
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -63,6 +64,8 @@ const SpanAnnotationRendererWithData = memo(
           projectId={projectId}
           userId={spanAnnotation.user_id}
           annotationId={spanAnnotation.id}
+          annotationType={AttachedObjectType.SPAN_ANNOTATION}
+          memoIds={spanAnnotation.memo_ids}
         />
       </ExpandableRenderer>
     );

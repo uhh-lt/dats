@@ -30,7 +30,6 @@ import { Page_SpanAnnotationRow_ } from "@models/Page_SpanAnnotationRow_";
 import { SortDirection } from "@models/SortDirection";
 import { SpanAnnotationRow } from "@models/SpanAnnotationRow";
 import { SpanColumns } from "@models/SpanColumns";
-import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -101,16 +100,7 @@ const SpanAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarProps
           return {
             ...colDef,
             accessorFn: (row) => row.code,
-            Cell: ({ row }) => (
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                <CodeRenderer code={row.original.code} />
-                <MemoIndicator
-                  memoIds={row.original.memo_ids}
-                  attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
-                  attachedObjectId={row.original.id}
-                />
-              </Stack>
-            ),
+            Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
           } as MRT_ColumnDef<SpanAnnotationRow>;
         case SpanColumns.SP_USER_ID:
           return {

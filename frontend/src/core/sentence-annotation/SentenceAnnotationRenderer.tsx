@@ -2,6 +2,7 @@ import { SdocHooks } from "@api/hooks/SdocHooks";
 import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { ExpandableRenderer } from "@components/ExpandableRenderer";
 import { AnnotationRendererSharedProps, AnnotationSummaryRow } from "@core/annotation";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
@@ -69,6 +70,8 @@ const SentenceAnnotationRendererWithData = memo(
           projectId={projectId}
           userId={sentenceAnnotation.user_id}
           annotationId={sentenceAnnotation.id}
+          annotationType={AttachedObjectType.SENTENCE_ANNOTATION}
+          memoIds={sentenceAnnotation.memo_ids}
         />
       </ExpandableRenderer>
     );

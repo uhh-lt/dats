@@ -30,7 +30,6 @@ import { Page_SentenceAnnotationRow_ } from "@models/Page_SentenceAnnotationRow_
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
 import { SentenceAnnotationRow } from "@models/SentenceAnnotationRow";
 import { SortDirection } from "@models/SortDirection";
-import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
 import { useAppSelector } from "@store/storeHooks";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -101,16 +100,7 @@ const SentenceAnnotationFilterTable = <TToolbarProps extends FilterTableToolbarP
           return {
             ...colDef,
             accessorFn: (row) => row.code,
-            Cell: ({ row }) => (
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                <CodeRenderer code={row.original.code} />
-                <MemoIndicator
-                  memoIds={row.original.memo_ids}
-                  attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
-                  attachedObjectId={row.original.id}
-                />
-              </Stack>
-            ),
+            Cell: ({ row }) => <CodeRenderer code={row.original.code} renderMemoIndicator />,
           } as MRT_ColumnDef<SentenceAnnotationRow>;
         case SentAnnoColumns.SENT_ANNO_USER_ID:
           return {
