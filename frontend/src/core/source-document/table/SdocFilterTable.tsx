@@ -18,8 +18,8 @@ import {
 import { SdocMetadataRenderer } from "@core/sdoc-metadata";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
-import { ElasticSearchHit } from "@models/ElasticSearchHit";
-import { PaginatedElasticSearchHits } from "@models/PaginatedElasticSearchHits";
+import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
+import { PaginatedSDocHits } from "@models/PaginatedSDocHits";
 import { SdocColumns } from "@models/SdocColumns";
 import { SortDirection } from "@models/SortDirection";
 import { Box, Typography } from "@mui/material";
@@ -33,7 +33,7 @@ import { SdocAnnotatorsRenderer, SdocFolderRenderer, SdocRenderer, SdocTagsRende
 import { useInitDocumentTableFilterSlice } from "./_hooks/useInitDocumentTableFilterSlice";
 import { SdocTableFilterActions, defaultSdocFilterExpression } from "./sdocTableFilterSlice";
 
-const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
+const flatMapData = (page: PaginatedSDocHits) => page.hits;
 
 /**
  * Component for rendering a filter table for source documents.
@@ -44,7 +44,7 @@ const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
  * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
  * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
  */
-const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSearchHit>>({
+const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<HierarchicalElasticSearchHit>>({
   projectId,
   filter,
   rowSelectionModel,
@@ -61,7 +61,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   renderTopLeftToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
-}: FilterTableContainerProps<ElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
+}: FilterTableContainerProps<HierarchicalElasticSearchHit, TToolbarProps, MyFilter<SdocColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
   const tableInfo = useInitDocumentTableFilterSlice({ projectId });
@@ -69,7 +69,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
+      const colDef: MRT_ColumnDef<HierarchicalElasticSearchHit> = {
         id: column.column,
         header: column.label,
         enableSorting: column.sortable,
@@ -79,25 +79,25 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
           return {
             ...colDef,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderDoctypeIcon />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_SOURCE_DOCUMENT_NAME:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.id} renderName />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_TAG_ID_LIST_RECURSIVE:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.id} />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         case SdocColumns.SD_CODE_ID_LIST_RECURSIVE:
           return null;
         case SdocColumns.SD_SPAN_ANNOTATIONS:
@@ -106,7 +106,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
           return {
             ...colDef,
             Cell: ({ row }) => <SdocFolderRenderer sdocId={row.original.id} renderName renderIcon />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
         default:
           if (!isNaN(parseInt(column.column))) {
             return {
@@ -115,19 +115,19 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.id} projectMetadataId={parseInt(column.column)} />
               ),
-            } as MRT_ColumnDef<ElasticSearchHit>;
+            } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
           }
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<HierarchicalElasticSearchHit>;
       }
     });
 
-    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchHit>[];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<HierarchicalElasticSearchHit>[];
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedSDocHits>({
     queryKey: [QueryKey.SDOC_TABLE, projectId, searchQuery, filter, sortingModel, fetchSize],
     queryFn: ({ pageParam }) =>
       SearchService.searchSdocs({
@@ -163,7 +163,7 @@ const SdocFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   const renderDetailPanel = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length === 0) return undefined;
 
-    return ({ row }: { row: { original: ElasticSearchHit } }) =>
+    return ({ row }: { row: { original: HierarchicalElasticSearchHit } }) =>
       row.original.highlights ? (
         <Box className="search-result-highlight">
           {row.original.highlights.map((highlight, index) => (
@@ -221,7 +221,11 @@ export const SdocReduxFilterTable = memo(
     filterName,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, ReduxFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
+    FilterTableContainerProps<
+      HierarchicalElasticSearchHit,
+      ReduxFilterTableToolbarProps<HierarchicalElasticSearchHit>,
+      MyFilter<SdocColumns>
+    >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
@@ -258,7 +262,11 @@ export const SdocURLFilterTable = memo(
     routeApi,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<SdocColumns>>,
+    FilterTableContainerProps<
+      HierarchicalElasticSearchHit,
+      URLFilterTableToolbarProps<HierarchicalElasticSearchHit>,
+      MyFilter<SdocColumns>
+    >,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {

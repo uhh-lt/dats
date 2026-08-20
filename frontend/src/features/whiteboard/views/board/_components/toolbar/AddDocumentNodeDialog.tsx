@@ -5,7 +5,7 @@ import { FilterTableToolbarProps } from "@core/filter";
 import { SdocReduxFilterTable } from "@core/source-document";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
-import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { HierarchicalElasticSearchHit } from "@models/HierarchicalElasticSearchHit";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
@@ -101,7 +101,7 @@ function AddDocumentNodeDialogContent({
 
   // rendering
   const renderBottomToolbar = useCallback(
-    (props: FilterTableToolbarProps<ElasticSearchHit>) => (
+    (props: FilterTableToolbarProps<HierarchicalElasticSearchHit>) => (
       <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
         Add {props.selectedData.length > 0 ? props.selectedData.length : null} Documents
       </Button>

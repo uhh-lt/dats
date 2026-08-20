@@ -3,6 +3,7 @@ import { SdocTagsRenderer } from "@core/source-document";
 import { DocType } from "@models/DocType";
 import { SimSearchImageHit } from "@models/SimSearchImageHit";
 import {
+  Box,
   Card,
   CardActionArea,
   CardContent,
@@ -104,7 +105,9 @@ export function ImageSimilaritySearchResultCard({
           </CardContent>
         </CardActionArea>
         <CardContent sx={{ py: 0 }}>
-          <SdocTagsRenderer sdocId={hit.sdoc_id} stackProps={{ sx: { overflowX: "auto" } }} />
+          <Box sx={{ overflowX: "auto" }}>
+            <SdocTagsRenderer sdocId={hit.sdoc_id} />
+          </Box>
         </CardContent>
       </Card>
     </>

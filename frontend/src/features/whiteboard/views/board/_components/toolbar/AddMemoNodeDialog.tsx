@@ -5,7 +5,7 @@ import { FilterTableToolbarProps } from "@core/filter";
 import { MemoReduxFilterTable } from "@core/memo";
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
-import { ElasticSearchHit } from "@models/ElasticSearchHit";
+import { MemoRow } from "@models/MemoRow";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { Button, ButtonProps, CircularProgress, Dialog, Tooltip } from "@mui/material";
 import { XYPosition } from "@xyflow/react";
@@ -102,7 +102,7 @@ function AddMemoNodeDialogContent({
 
   // rendering
   const renderBottomToolbar = useCallback(
-    (props: FilterTableToolbarProps<ElasticSearchHit>) => (
+    (props: FilterTableToolbarProps<MemoRow>) => (
       <Button onClick={handleConfirmSelection} disabled={props.selectedData.length === 0}>
         Add {props.selectedData.length > 0 ? props.selectedData.length : null} Memos
       </Button>

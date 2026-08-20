@@ -1,3 +1,5 @@
+import { AttachedObjectOperator } from "@models/AttachedObjectOperator";
+import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
 import { BooleanOperator } from "@models/BooleanOperator";
 import { DateOperator } from "@models/DateOperator";
 import { FilterOperator } from "@models/FilterOperator";
@@ -8,6 +10,7 @@ import { IDOperator } from "@models/IDOperator";
 import { ListOperator } from "@models/ListOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { NumberOperator } from "@models/NumberOperator";
+import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { StringOperator } from "@models/StringOperator";
 import { dateToLocaleYYYYMMDDString } from "@utils/DateUtils";
 
@@ -50,7 +53,10 @@ export type FilterOperatorType =
   | typeof IDListRecursiveOperator
   | typeof ListOperator
   | typeof DateOperator
-  | typeof BooleanOperator;
+  | typeof BooleanOperator
+  | typeof AttachedObjectTypeOperator
+  | typeof AttachedObjectOperator
+  | typeof SpanAnnotationOperator;
 
 export type FilterOperators =
   | IDOperator
@@ -60,7 +66,10 @@ export type FilterOperators =
   | IDListRecursiveOperator
   | ListOperator
   | DateOperator
-  | BooleanOperator;
+  | BooleanOperator
+  | AttachedObjectTypeOperator
+  | AttachedObjectOperator
+  | SpanAnnotationOperator;
 
 // TYPE GUARDS
 
@@ -83,6 +92,9 @@ export const filterOperator2defaultValue: Record<FilterOperator, boolean | strin
   [FilterOperator.ID_LIST_RECURSIVE]: [],
   [FilterOperator.LIST]: [],
   [FilterOperator.DATE]: dateToLocaleYYYYMMDDString(new Date()),
+  [FilterOperator.ATTACHED_OBJECT_TYPE]: "project",
+  [FilterOperator.ATTACHED_OBJECT]: ["code", "-1"],
+  [FilterOperator.SPAN_ANNOTATION]: ["-1", ""],
 };
 
 export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
@@ -94,10 +106,15 @@ export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOpe
   [FilterOperator.ID_LIST_RECURSIVE]: IDListRecursiveOperator,
   [FilterOperator.LIST]: ListOperator,
   [FilterOperator.DATE]: DateOperator,
+  [FilterOperator.ATTACHED_OBJECT_TYPE]: AttachedObjectTypeOperator,
+  [FilterOperator.ATTACHED_OBJECT]: AttachedObjectOperator,
+  [FilterOperator.SPAN_ANNOTATION]: SpanAnnotationOperator,
 };
 
 // this has to align with FilterValueSelector.tsx
 export const filterValueType2defaultValue: Record<FilterValueType, boolean | string | number | string[]> = {
+  [FilterValueType.ATTACHED_OBJECT_TYPE]: "project",
+  [FilterValueType.ATTACHED_OBJECT]: ["code", "-1"],
   [FilterValueType.CODE_ID]: -1,
   [FilterValueType.DOC_TYPE]: "none",
   [FilterValueType.FOLDER_ID]: -1,

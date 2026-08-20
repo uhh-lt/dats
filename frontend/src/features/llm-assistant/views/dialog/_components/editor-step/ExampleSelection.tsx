@@ -7,7 +7,7 @@ import { SATFilterActions, SpanAnnotationReduxFilterTable } from "@core/span-ann
 import { useDialog } from "@hooks/useDialog";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { CodeRead } from "@models/CodeRead";
-import { IDOperator } from "@models/IDOperator";
+import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SentAnnoColumns } from "@models/SentAnnoColumns";
@@ -65,8 +65,8 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
               items: [
                 {
                   id: crypto.randomUUID(),
-                  column: SentAnnoColumns.SENT_ANNO_CODE_ID,
-                  operator: IDOperator.ID_EQUALS,
+                  column: SentAnnoColumns.SENT_ANNO_CODE_ID_LIST_RECURSIVE,
+                  operator: IDListRecursiveOperator.IDLR_CONTAINS,
                   value: codeId,
                 },
               ],
@@ -83,8 +83,8 @@ export function ExampleSelection({ projectId, codes, onConfirmSelection, method 
               items: [
                 {
                   id: crypto.randomUUID(),
-                  column: SpanColumns.SP_CODE_ID,
-                  operator: IDOperator.ID_EQUALS,
+                  column: SpanColumns.SP_CODE_ID_LIST_RECURSIVE,
+                  operator: IDListRecursiveOperator.IDLR_CONTAINS,
                   value: codeId,
                 },
               ],

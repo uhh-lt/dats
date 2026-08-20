@@ -17,6 +17,7 @@ import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SdocColumns } from "@models/SdocColumns";
 import { SourceDocumentMetadataUpdate } from "@models/SourceDocumentMetadataUpdate";
+import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { StringOperator } from "@models/StringOperator";
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { ProjectActions } from "@store/global/projectSlice";
@@ -259,7 +260,7 @@ const perspectivesSlice = createSlice({
         {
           id: crypto.randomUUID(),
           column: SdocColumns.SD_SPAN_ANNOTATIONS,
-          operator: ListOperator.LIST_CONTAINS,
+          operator: SpanAnnotationOperator.SPAN_ANNOTATION_CONTAINS,
           value: [action.payload.codeId.toString(), action.payload.spanText],
         },
       ];

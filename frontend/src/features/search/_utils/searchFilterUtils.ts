@@ -8,6 +8,7 @@ import {
 import { getMetadataValue } from "@core/sdoc-metadata";
 import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { ListOperator } from "@models/ListOperator";
+import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
 import { SdocColumns } from "@models/SdocColumns";
@@ -77,7 +78,7 @@ export const addSpanAnnotationFilter = (
     {
       id: crypto.randomUUID(),
       column: SdocColumns.SD_SPAN_ANNOTATIONS,
-      operator: ListOperator.LIST_CONTAINS,
+      operator: SpanAnnotationOperator.SPAN_ANNOTATION_CONTAINS,
       value: [codeId.toString(), spanText],
     },
   ];

@@ -4,8 +4,8 @@ import { useAuth } from "@core/auth";
 import { MemoCard, MemoEditor } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import { Box, Button, CircularProgress, IconButton, Stack } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Button, CircularProgress, Stack } from "@mui/material";
 import { memo, useCallback, useState } from "react";
 
 interface DocumentMemosProps {
@@ -31,9 +31,9 @@ export const MemoPanel = memo(({ sdocId }: DocumentMemosProps) => {
         memoId={currentMemo}
         onDelete={handleReset}
         renderToolbar={() => (
-          <IconButton onClick={handleReset}>
-            <ArrowBackIosNewIcon />
-          </IconButton>
+          <Button startIcon={<ArrowBackIcon />} onClick={handleReset}>
+            Back to Document Memos
+          </Button>
         )}
       />
     );
@@ -56,16 +56,19 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
 
   const handleAddMemo = useCallback(() => {
     if (!user) return;
-    createMemoMutation({
-      attachedObjectId: sdocId,
-      attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
-      requestBody: {
-        content: "",
-        content_json: "",
-        title: `${user.first_name} ${user.last_name}'s Memo`,
+    createMemoMutation(
+      {
+        attachedObjectId: sdocId,
+        attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
+        requestBody: {
+          content: "",
+          content_json: "",
+          title: `${user.first_name} ${user.last_name}'s Memo`,
+        },
       },
-    });
-  }, [user, sdocId, createMemoMutation]);
+      { onSuccess: onClick },
+    );
+  }, [user, sdocId, createMemoMutation, onClick]);
 
   return (
     <Box p={1}>
@@ -77,18 +80,16 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
       {memos.isError && <span>{memos.error.message}</span>}
       {memos.isSuccess && (
         <>
-          {memos.data.filter((memo) => memo.user_id === user?.id).length === 0 && (
-            <Button
-              variant="text"
-              size="small"
-              startIcon={getIconComponent(Icon.ADD)}
-              sx={{ mb: 1 }}
-              onClick={handleAddMemo}
-              disabled={!user || isPending}
-            >
-              Add Document Memo
-            </Button>
-          )}
+          <Button
+            variant="text"
+            size="small"
+            startIcon={getIconComponent(Icon.ADD)}
+            sx={{ mb: 1 }}
+            onClick={handleAddMemo}
+            disabled={!user || isPending}
+          >
+            Add Document Memo
+          </Button>
           <Stack direction="column" spacing={2}>
             {memos.data
               .sort((a) => (a.user_id === user?.id ? -1 : 0)) // always show user's memos first
