@@ -1,16 +1,17 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
+import { ExpandableRenderer, ExpandableRendererProps } from "@components/ExpandableRenderer";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
-import { Box, Stack, StackProps } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { memo } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AttachedObjectRenderer } from "./AttachedObjectRenderer";
 
-export interface MemoRendererSharedProps {
+export interface MemoRendererSharedProps extends ExpandableRendererProps {
   showIcon?: boolean;
   showTitle?: boolean;
   showContent?: boolean;
@@ -20,55 +21,19 @@ export interface MemoRendererSharedProps {
   attachedObjectLink?: boolean;
 }
 
-interface MemoRendererProps {
+interface MemoRendererProps extends MemoRendererSharedProps {
   memo: number | MemoRead;
 }
 
-export const MemoRenderer = memo(
-  ({
-    memo,
-    showIcon = false,
-    showTitle = false,
-    showContent = false,
-    showUser = false,
-    showStar = false,
-    showAttachedObject = false,
-    attachedObjectLink = false,
-    ...props
-  }: MemoRendererProps & MemoRendererSharedProps & StackProps) => {
-    if (typeof memo === "number") {
-      return (
-        <MemoRendererWithoutData
-          memoId={memo}
-          showIcon={showIcon}
-          showTitle={showTitle}
-          showContent={showContent}
-          showUser={showUser}
-          showStar={showStar}
-          showAttachedObject={showAttachedObject}
-          attachedObjectLink={attachedObjectLink}
-          {...props}
-        />
-      );
-    } else {
-      return (
-        <MemoRendererWithData
-          memo={memo}
-          showIcon={showIcon}
-          showTitle={showTitle}
-          showContent={showContent}
-          showUser={showUser}
-          showStar={showStar}
-          showAttachedObject={showAttachedObject}
-          attachedObjectLink={attachedObjectLink}
-          {...props}
-        />
-      );
-    }
-  },
-);
+export const MemoRenderer = memo(({ memo, ...props }: MemoRendererProps) => {
+  if (typeof memo === "number") {
+    return <MemoRendererWithoutData memoId={memo} {...props} />;
+  } else {
+    return <MemoRendererWithData memo={memo} {...props} />;
+  }
+});
 
-function MemoRendererWithoutData({ memoId, ...props }: { memoId: number } & MemoRendererSharedProps & StackProps) {
+const MemoRendererWithoutData = memo(({ memoId, ...props }: { memoId: number } & MemoRendererSharedProps) => {
   const memo = MemoHooks.useGetMemo(memoId);
 
   if (memo.isSuccess) {
@@ -78,37 +43,59 @@ function MemoRendererWithoutData({ memoId, ...props }: { memoId: number } & Memo
   } else {
     return <div>Loading...</div>;
   }
-}
+});
 
-export function MemoRendererWithData({
-  memo,
-  showIcon,
-  showTitle,
-  showContent,
-  showUser,
-  showStar,
-  showAttachedObject,
-  attachedObjectLink,
-  ...props
-}: { memo: MemoRead } & MemoRendererSharedProps & StackProps) {
+export const MemoRendererWithData = memo(
+  ({
+    memo,
+    showIcon,
+    showTitle,
+    showContent,
+    showUser,
+    showStar,
+    showAttachedObject,
+    attachedObjectLink,
+    ...expandProps
+  }: { memo: MemoRead } & MemoRendererSharedProps) => {
+    return (
+      <ExpandableRenderer {...expandProps} expandedContent={<MemoContext memo={memo} />}>
+        <Stack direction="row" alignItems="center" spacing={1} minWidth={0} maxWidth="100%" overflow="hidden">
+          {showIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
+          {showTitle && (
+            <Typography component="span" noWrap minWidth={0}>
+              {memo.title}
+            </Typography>
+          )}
+          {showContent && (
+            <Box className="markdown-content" minWidth={0}>
+              <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
+            </Box>
+          )}
+          {showUser && <UserRenderer user={memo.user_id} />}
+          {showStar && (memo.is_favorite ? <StarIcon /> : <StarOutlineIcon />)}
+          {showAttachedObject && (
+            <AttachedObjectRenderer
+              attachedObject={memo.attached_object_id}
+              attachedObjectType={memo.attached_object_type}
+              link={attachedObjectLink}
+            />
+          )}
+        </Stack>
+      </ExpandableRenderer>
+    );
+  },
+);
+
+function MemoContext({ memo }: { memo: MemoRead }) {
   return (
-    <Stack direction="row" alignItems="center" {...props}>
-      {showIcon && getIconComponent(Icon.MEMO, { sx: { mr: 1 } })}
-      {showTitle && memo.title}
-      {showContent && (
-        <Box className="markdown-content">
-          <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
-        </Box>
-      )}
-      {showUser && <UserRenderer user={memo.user_id} />}
-      {showStar && (memo.starred ? <StarIcon /> : <StarOutlineIcon />)}
-      {showAttachedObject && (
-        <AttachedObjectRenderer
-          attachedObject={memo.attached_object_id}
-          attachedObjectType={memo.attached_object_type}
-          link={attachedObjectLink}
-        />
-      )}
+    <Stack spacing={1}>
+      <Typography variant="subtitle2">{memo.title}</Typography>
+      <Box className="markdown-content">
+        <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
+      </Box>
+      <Typography variant="caption" color="text.secondary">
+        Attached to: {memo.attached_object_type} #{memo.attached_object_id}
+      </Typography>
     </Stack>
   );
 }
