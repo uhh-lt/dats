@@ -1,4 +1,5 @@
 export * from "./MemoButton";
+export * from "./AttachedMemoMenu";
 export * from "./MemoDialog";
 export * from "./MemoEditButton";
 export * from "./MemoEditMenuItem";

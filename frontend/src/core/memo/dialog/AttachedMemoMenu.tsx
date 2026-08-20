@@ -4,7 +4,7 @@ import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
-import { memo, ReactNode, useCallback, useState } from "react";
+import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
 import { MemoCreateSuccessHandler } from "./types/MemoCreateSuccessHandler";
 import { useOpenMemoDialog } from "./useOpenMemoDialog";
 
@@ -142,7 +142,7 @@ const AttachedMemoMenuContent = memo(
           },
           list: {
             disablePadding: true,
-            onClick: (event) => event.stopPropagation(),
+            onClick: (event: MouseEvent<HTMLUListElement>) => event.stopPropagation(),
           },
         }}
       >
