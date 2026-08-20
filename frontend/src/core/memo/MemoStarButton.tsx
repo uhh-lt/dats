@@ -10,17 +10,17 @@ interface MemoStarButtonProps {
 }
 
 export const MemoStarButton = memo(({ memoIds, isStarred, ...props }: MemoStarButtonProps & IconButtonProps) => {
-  const { mutate: starMemos, isPending } = MemoHooks.useStarMemos();
+  const { mutate: favoriteMemos, isPending } = MemoHooks.useFavoriteMemos();
 
   const handleClick = useCallback(() => {
-    starMemos({
+    favoriteMemos({
       memoIds,
-      isStarred,
+      isFavorite: !isStarred,
     });
-  }, [memoIds, isStarred, starMemos]);
+  }, [memoIds, isStarred, favoriteMemos]);
 
   return (
-    <Tooltip title={isStarred ? "Mark as favorite" : "Mark as normal"}>
+    <Tooltip title={isStarred ? "Remove from favorites" : "Add to favorites"}>
       <span>
         <IconButton onClick={handleClick} disabled={isPending} {...props}>
           {isStarred ? <StarIcon /> : <StarOutlineIcon />}

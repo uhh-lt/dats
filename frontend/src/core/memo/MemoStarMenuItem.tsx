@@ -12,23 +12,18 @@ interface MemoStarButtonProps {
 
 export const MemoStarMenuItem = memo(
   ({ memoId, isStarred, onClick, ...props }: MemoStarButtonProps & MenuItemProps) => {
-    const { mutate: updateMemo, isPending } = MemoHooks.useUpdateMemo();
+    const { mutate: favoriteMemos, isPending } = MemoHooks.useFavoriteMemos();
 
     const handleClick = useCallback(
       (event: React.MouseEvent) => {
         if (memoId === undefined || isStarred === undefined) return;
         event.stopPropagation();
-        updateMemo({
-          memoId: memoId,
-          requestBody: {
-            starred: !isStarred,
-          },
-        });
+        favoriteMemos({ memoIds: [memoId], isFavorite: !isStarred });
         if (onClick) {
           onClick();
         }
       },
-      [memoId, isStarred, updateMemo, onClick],
+      [memoId, isStarred, favoriteMemos, onClick],
     );
 
     return (
@@ -38,7 +33,7 @@ export const MemoStarMenuItem = memo(
         {...props}
       >
         <ListItemIcon>{isStarred ? <StarIcon fontSize="small" /> : <StarOutlineIcon fontSize="small" />}</ListItemIcon>
-        <ListItemText>Mark/unmark memo</ListItemText>
+        <ListItemText>{isStarred ? "Remove from favorites" : "Add to favorites"}</ListItemText>
       </MenuItem>
     );
   },

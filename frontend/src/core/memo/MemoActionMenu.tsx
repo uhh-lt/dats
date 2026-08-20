@@ -45,7 +45,7 @@ export const MemoActionMenu = memo(({ memo, onStarredClick, onDeleteClick, iconB
       </IconButton>
       {memo && (
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.starred} />
+          <MemoStarMenuItem onClick={handleStarredClick} memoId={memo.id} isStarred={memo.is_favorite ?? false} />
           <MemoDeleteMenuItem memoId={memo.id} memoTitle={memo.title} onClick={handleDeleteClick} />
         </Menu>
       )}
