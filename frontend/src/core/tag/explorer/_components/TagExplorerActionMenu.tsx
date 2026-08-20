@@ -20,8 +20,9 @@ export function TagExplorerActionMenu({ node }: TagExplorerActionMenuProps) {
     setAnchorEl(event.currentTarget);
   }, []);
 
-  const handleClose = useCallback((event: React.MouseEvent<HTMLLIElement>) => {
-    event.stopPropagation();
+  const handleClose = useCallback((event?: { stopPropagation?: () => void; preventDefault?: () => void }) => {
+    event?.stopPropagation?.();
+    event?.preventDefault?.();
     setAnchorEl(null);
   }, []);
 

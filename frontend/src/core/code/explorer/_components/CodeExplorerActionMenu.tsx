@@ -23,7 +23,9 @@ export function CodeExplorerActionMenu({ node, isHidden, onToggleVisibility }: C
     setAnchorEl(event.currentTarget);
   }, []);
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback((event?: { stopPropagation?: () => void; preventDefault?: () => void }) => {
+    event?.stopPropagation?.();
+    event?.preventDefault?.();
     setAnchorEl(null);
   }, []);
 
