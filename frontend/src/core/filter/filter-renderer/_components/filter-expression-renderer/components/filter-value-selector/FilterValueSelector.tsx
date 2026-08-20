@@ -8,6 +8,8 @@ import { FolderIdValueSelector } from "./components/FolderIdValueSelector";
 import { SpanAnnotationValueSelector } from "./components/SpanAnnotationValueSelector";
 import { TagIdValueSelector } from "./components/TagIdValueSelector";
 import { UserIdValueSelector } from "./components/UserIdValueSelector";
+import { AttachedObjectTypeValueSelector } from "./components/AttachedObjectTypeValueSelector";
+import { AttachedObjectValueSelector } from "./components/AttachedObjectValueSelector";
 import { SharedFilterValueSelectorProps } from "./types/SharedFilterValueSelectorProps";
 
 interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
@@ -19,6 +21,10 @@ export const FilterValueSelector = memo(
     const filterInfo = useMemo(() => column2Info[filterExpression.column], [column2Info, filterExpression.column]);
 
     switch (filterInfo.value) {
+      case FilterValueType.ATTACHED_OBJECT_TYPE:
+        return <AttachedObjectTypeValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+      case FilterValueType.ATTACHED_OBJECT:
+        return <AttachedObjectValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
       case FilterValueType.TAG_ID:
         return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
       case FilterValueType.CODE_ID:

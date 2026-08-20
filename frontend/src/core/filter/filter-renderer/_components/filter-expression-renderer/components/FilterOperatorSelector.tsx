@@ -1,3 +1,5 @@
+import { AttachedObjectOperator } from "@models/AttachedObjectOperator";
+import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
 import { BooleanOperator } from "@models/BooleanOperator";
 import { DateOperator } from "@models/DateOperator";
 import { IDListOperator } from "@models/IDListOperator";
@@ -5,6 +7,7 @@ import { IDListRecursiveOperator } from "@models/IDListRecursiveOperator";
 import { IDOperator } from "@models/IDOperator";
 import { ListOperator } from "@models/ListOperator";
 import { NumberOperator } from "@models/NumberOperator";
+import { SpanAnnotationOperator } from "@models/SpanAnnotationOperator";
 import { StringOperator } from "@models/StringOperator";
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent, memo, useCallback, useMemo } from "react";
@@ -43,6 +46,12 @@ const operator2HumanReadable: Record<FilterOperators, string> = {
   [DateOperator.DATE_LTE]: "<=",
   [BooleanOperator.BOOLEAN_EQUALS]: "is",
   [BooleanOperator.BOOLEAN_NOT_EQUALS]: "is not",
+  [AttachedObjectTypeOperator.ATTACHED_OBJECT_TYPE_EQUALS]: "is",
+  [AttachedObjectTypeOperator.ATTACHED_OBJECT_TYPE_NOT_EQUALS]: "is not",
+  [AttachedObjectOperator.ATTACHED_OBJECT_EQUALS]: "is",
+  [AttachedObjectOperator.ATTACHED_OBJECT_NOT_EQUALS]: "is not",
+  [SpanAnnotationOperator.SPAN_ANNOTATION_CONTAINS]: "contains",
+  [SpanAnnotationOperator.SPAN_ANNOTATION_NOT_CONTAINS]: "contains not",
 };
 
 interface FilterOperatorSelectorProps {
