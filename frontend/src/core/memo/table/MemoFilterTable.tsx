@@ -14,9 +14,9 @@ import {
 } from "@core/filter";
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
-import { ElasticSearchHit } from "@models/ElasticSearchHit";
 import { MemoColumns } from "@models/MemoColumns";
-import { PaginatedElasticSearchHits } from "@models/PaginatedElasticSearchHits";
+import { MemoRow } from "@models/MemoRow";
+import { Page_MemoRow_ } from "@models/Page_MemoRow_";
 import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
@@ -32,7 +32,7 @@ import { MemoURLToolbarLeft } from "./_components/MemoURLToolbarLeft";
 import { useInitMemoFilterSlice } from "./_hooks/useInitMemoFilterSlice";
 import { MemoFilterActions, defaultMemoFilterExpression } from "./memoFilterSlice";
 
-const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
+const flatMapData = (page: Page_MemoRow_) => page.items;
 
 /**
  * Component for rendering a filter table for memos.
@@ -43,7 +43,7 @@ const flatMapData = (page: PaginatedElasticSearchHits) => page.hits;
  * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
  * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
  */
-const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSearchHit>>({
+const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>({
   projectId,
   filter,
   rowSelectionModel,
@@ -60,7 +60,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
   renderTopLeftToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
-}: FilterTableContainerProps<ElasticSearchHit, TToolbarProps, MyFilter<MemoColumns>>) => {
+}: FilterTableContainerProps<MemoRow, TToolbarProps, MyFilter<MemoColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
 
@@ -69,7 +69,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<ElasticSearchHit> = {
+      const colDef: MRT_ColumnDef<MemoRow> = {
         id: column.column,
         accessorFn: () => null,
         header: column.label,
@@ -82,28 +82,28 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
             ...colDef,
             size: 100,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<MemoRow>;
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
-        case MemoColumns.M_STARRED:
+          } as MRT_ColumnDef<MemoRow>;
+        case MemoColumns.M_FAVORITE:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<MemoRow>;
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<MemoRow>;
         default:
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<ElasticSearchHit>;
+          } as MRT_ColumnDef<MemoRow>;
       }
     });
 
@@ -113,27 +113,26 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<ElasticSe
       enableSorting: false,
       accessorFn: () => null,
       Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-    } as MRT_ColumnDef<ElasticSearchHit>;
+    } as MRT_ColumnDef<MemoRow>;
 
     return [...result, attachedToCell];
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchHits>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_MemoRow_>({
     queryKey: [QueryKey.MEMO_TABLE, projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize],
     queryFn: ({ pageParam }) =>
       SearchService.searchMemos({
-        searchQuery: searchQuery || "",
-        searchContent: isSearchContent,
-        projectId: projectId!,
         requestBody: {
-          filter: filter as MyFilter<MemoColumns>,
+          project_id: projectId!,
+          search_query: searchQuery || "",
+          filter: filter,
           sorts: sortingModel.map((sort) => ({
             column: sort.id as MemoColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
+          page_number: pageParam as number,
+          page_size: fetchSize,
         },
-        pageNumber: pageParam as number,
-        pageSize: fetchSize,
       }),
     initialPageParam: 0,
     getNextPageParam: (_lastGroup, groups) => groups.length,
@@ -209,7 +208,7 @@ export const MemoReduxFilterTable = memo(
     filterName,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, ReduxFilterTableToolbarProps<ElasticSearchHit>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<MemoRow, ReduxFilterTableToolbarProps<MemoRow>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
@@ -246,7 +245,7 @@ export const MemoURLFilterTable = memo(
     routeApi,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<ElasticSearchHit, URLFilterTableToolbarProps<ElasticSearchHit>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<MemoRow, URLFilterTableToolbarProps<MemoRow>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {
