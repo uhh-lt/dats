@@ -1,35 +1,32 @@
 import { TagHooks } from "@api/hooks/TagHooks";
-import { Stack, StackProps } from "@mui/material";
 import { TagRenderer } from "@core/tag";
+import { Stack } from "@mui/material";
 
-interface SharedProps {
-  stackProps?: Omit<StackProps, "direction" | "alignItems">;
-}
 interface SdocTagsRendererProps {
   sdocId?: number;
   tagIds?: number[];
 }
 
-export function SdocTagsRenderer({ sdocId, tagIds, ...props }: SdocTagsRendererProps & SharedProps) {
+export function SdocTagsRenderer({ sdocId, tagIds }: SdocTagsRendererProps) {
   if (sdocId === undefined && tagIds === undefined) {
     return <>Nothing to show :(</>;
   }
 
   if (tagIds) {
-    return <SdocTagsRendererWithData tagIds={tagIds} {...props} />;
+    return <SdocTagsRendererWithData tagIds={tagIds} />;
   }
 
   if (sdocId) {
-    return <SdocTagsRendererWithoutData sdocId={sdocId} {...props} />;
+    return <SdocTagsRendererWithoutData sdocId={sdocId} />;
   }
   return null;
 }
 
-function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SharedProps) {
+function SdocTagsRendererWithoutData({ sdocId }: { sdocId: number }) {
   const tags = TagHooks.useGetAllTagIdsBySdocId(sdocId);
 
   if (tags.isSuccess) {
-    return <SdocTagsRendererWithData tagIds={tags.data} {...props} />;
+    return <SdocTagsRendererWithData tagIds={tags.data} />;
   } else if (tags.isError) {
     return <div>{tags.error.message}</div>;
   } else {
@@ -37,11 +34,11 @@ function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number } & 
   }
 }
 
-function SdocTagsRendererWithData({ tagIds, stackProps }: { tagIds: number[] } & SharedProps) {
+function SdocTagsRendererWithData({ tagIds }: { tagIds: number[] }) {
   return (
-    <Stack direction="row" alignItems="center" {...stackProps}>
+    <Stack direction="row" alignItems="center" spacing={0.5}>
       {tagIds.map((tagId) => (
-        <TagRenderer key={tagId} tag={tagId} mr={0.5} sx={{ textWrap: "nowrap" }} />
+        <TagRenderer key={tagId} tag={tagId} />
       ))}
     </Stack>
   );

@@ -2,24 +2,22 @@ import { FolderHooks } from "@api/hooks/FolderHooks";
 import { SdocHooks } from "@api/hooks/SdocHooks";
 import { FolderRenderer, FolderRootRenderer } from "@core/folder";
 import { FolderType } from "@models/FolderType";
+import { memo } from "react";
 
-interface SharedProps {
+interface SdocFolderRendererProps {
+  sdocId?: number;
   renderName?: boolean;
   renderIcon?: boolean;
 }
 
-interface SdocFolderRendererProps {
-  sdocId?: number;
-}
-
-export function SdocFolderRenderer({ sdocId, ...props }: SdocFolderRendererProps & SharedProps) {
+export const SdocFolderRenderer = memo(({ sdocId, ...props }: SdocFolderRendererProps) => {
   const sdoc = SdocHooks.useGetDocument(sdocId);
   const sdocFolder = FolderHooks.useGetSdocFolder(sdoc.data?.folder_id);
 
-  if (sdoc.data && sdocFolder.data && sdocFolder.data.parent_id) {
+  if (sdoc.isSuccess && sdocFolder.isSuccess && sdocFolder.data.parent_id) {
     return <FolderRenderer folder={sdocFolder.data.parent_id} folderType={FolderType.NORMAL} {...props} />;
-  } else if (sdoc.data && sdocFolder.data) {
-    return <FolderRootRenderer projectId={sdoc.data?.project_id} {...props} />;
+  } else if (sdoc.isSuccess && sdocFolder.isSuccess) {
+    return <FolderRootRenderer projectId={sdoc.data.project_id} {...props} />;
   } else if (sdoc.isError) {
     return <div>{sdoc.error.message}</div>;
   } else if (sdocFolder.isError) {
@@ -27,4 +25,4 @@ export function SdocFolderRenderer({ sdocId, ...props }: SdocFolderRendererProps
   } else {
     return <div>Loading...</div>;
   }
-}
+});
