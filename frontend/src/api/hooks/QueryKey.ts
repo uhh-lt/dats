@@ -70,12 +70,18 @@ export const QueryKey = {
   // a single MemoRead (by memo id)
   // managed by frontend/src/api/hooks/MemoHooks.ts
   MEMO: "memo",
-  // a single MemoRead of the logged in user (by attachedObjectType, attachedObjectId)
-  // managed by frontend/src/api/hooks/MemoHooks.ts
-  USER_MEMO: "userMemo",
   // all MemoRead[] of the attached object (by attachedObjectType, attachedObjectId)
   // managed by frontend/src/api/hooks/MemoHooks.ts
   OBJECT_MEMOS: "objectMemos",
+  // memo workspace queries (search results)
+  // managed by frontend/src/api/hooks/MemoHooks.ts
+  MEMO_QUERY: "memoQuery",
+  // memo workspace group queries (grouped search results)
+  // managed by frontend/src/api/hooks/MemoHooks.ts
+  MEMO_GROUPS: "memoGroups",
+  // memo search views (by project id)
+  // managed by frontend/src/api/hooks/MemoViewHooks.ts
+  MEMO_VIEWS: "memoViews",
 
   // a single SpanAnnotationRead (by span annotation id)
   // managed by frontend/src/api/hooks/SpanAnnotationHooks.ts

@@ -1,8 +1,11 @@
-import { AttachedObjectType } from "@models/AttachedObjectType";
-import { MemoRead } from "@models/MemoRead";
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { SearchService } from "@api/services/SearchService";
+import { AttachedObjectType } from "@models/AttachedObjectType";
+import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
+import { MemoRead } from "@models/MemoRead";
+import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 
 // MEMO QUERIES
@@ -14,22 +17,42 @@ const useGetMemo = (memoId: number | null | undefined) =>
     staleTime: 1000 * 60 * 5,
   });
 
-const useGetUserMemo = (attachedObjType: AttachedObjectType, attachedObjId: number | null | undefined) =>
-  useQuery<MemoRead, Error>({
-    queryKey: [QueryKey.USER_MEMO, attachedObjType, attachedObjId],
-    queryFn: () => MemoService.getUserMemoByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
-    enabled: !!attachedObjId,
-    retry: false,
-    staleTime: 1000 * 60 * 5,
-  });
-
-const useGetObjectMemos = (attachedObjType: AttachedObjectType, attachedObjId: number | null | undefined) =>
+const useGetObjectMemos = (
+  attachedObjType: AttachedObjectType,
+  attachedObjId: number | null | undefined,
+  options?: { enabled?: boolean },
+) =>
   useQuery<MemoRead[], Error>({
     queryKey: [QueryKey.OBJECT_MEMOS, attachedObjType, attachedObjId],
     queryFn: () => MemoService.getMemosByAttachedObjectId({ attachedObjType, attachedObjId: attachedObjId! }),
     enabled: !!attachedObjId && (options?.enabled ?? true),
     retry: false,
   });
+
+const useQueryMemos = (request: QueryRequest_MemoColumns_, enabled = true) =>
+  useInfiniteQuery({
+    queryKey: [QueryKey.MEMO_QUERY, request],
+    queryFn: ({ pageParam }) => SearchService.searchMemos({ requestBody: { ...request, page_number: pageParam } }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) =>
+      pages.reduce((total, page) => total + page.items.length, 0) < lastPage.total_results ? pages.length : undefined,
+    enabled,
+  });
+
+const useQueryMemoGroups = (request: GroupQueryRequest_MemoColumns_, enabled = true) =>
+  useInfiniteQuery({
+    queryKey: [QueryKey.MEMO_GROUPS, request],
+    queryFn: ({ pageParam }) => SearchService.searchMemoGroups({ requestBody: { ...request, page_number: pageParam } }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) =>
+      pages.reduce((total, page) => total + page.items.length, 0) < lastPage.total_results ? pages.length : undefined,
+    enabled,
+  });
+
+const invalidateWorkspaceQueries = () => {
+  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_QUERY] });
+  queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_GROUPS] });
+};
 
 // Invalidate the caches that hold the memo_ids of the attached object,
 // so that memo indicators across the UI react to memo creation/deletion.
@@ -69,15 +92,12 @@ const useCreateMemo = () =>
     mutationFn: MemoService.addMemo,
     onSuccess: (data) => {
       queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
-      queryClient.setQueryData<MemoRead>(
-        [QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id],
-        data,
-      );
       queryClient.setQueryData<MemoRead[]>(
         [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
         (oldData) => (oldData ? [...oldData, data] : [data]),
       );
       invalidateAttachedObjectMemoIds(data.attached_object_type, data.attached_object_id);
+      invalidateWorkspaceQueries();
     },
     meta: {
       successMessage: (memo: MemoRead) => `Created memo "${memo.title}"`,
@@ -86,7 +106,6 @@ const useCreateMemo = () =>
 
 const updateInvalidation = (data: MemoRead) => {
   queryClient.setQueryData<MemoRead>([QueryKey.MEMO, data.id], data);
-  queryClient.setQueryData<MemoRead>([QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id], data);
   queryClient.setQueryData<MemoRead[]>(
     [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
     (oldData) => (oldData ? oldData.map((memo) => (memo.id === data.id ? data : memo)) : [data]),
@@ -98,34 +117,35 @@ const useUpdateMemo = () =>
     mutationFn: MemoService.updateById,
     onSuccess: (data) => {
       updateInvalidation(data);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      invalidateWorkspaceQueries();
     },
     meta: {
       successMessage: (memo: MemoRead) => `Updated memo "${memo.title}"`,
     },
   });
 
-const useStarMemos = () =>
+const useFavoriteMemos = () =>
   useMutation({
-    mutationFn: ({ memoIds, isStarred }: { memoIds: number[]; isStarred: boolean }) => {
-      const promises = memoIds.map((memoId) => MemoService.updateById({ memoId, requestBody: { starred: isStarred } }));
+    mutationFn: ({ memoIds, isFavorite }: { memoIds: number[]; isFavorite: boolean }) => {
+      const promises = memoIds.map((memoId) =>
+        isFavorite ? MemoService.favoriteById({ memoId }) : MemoService.unfavoriteById({ memoId }),
+      );
       return Promise.all(promises);
     },
     onSuccess: (memos) => {
       memos.forEach((memo) => {
         updateInvalidation(memo);
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      invalidateWorkspaceQueries();
     },
     meta: {
-      successMessage: (memos: MemoRead[], variables: { memoIds: number[]; isStarred: boolean }) =>
-        `${variables.isStarred ? "Starred" : "Unstarred"} ${memos.length} memo(s)`,
+      successMessage: (memos: MemoRead[], variables: { memoIds: number[]; isFavorite: boolean }) =>
+        `${variables.isFavorite ? "Favorited" : "Unfavorited"} ${memos.length} memo(s)`,
     },
   });
 
 const deleteInvalidation = (data: MemoRead) => {
   queryClient.removeQueries({ queryKey: [QueryKey.MEMO, data.id] });
-  queryClient.removeQueries({ queryKey: [QueryKey.USER_MEMO, data.attached_object_type, data.attached_object_id] });
   queryClient.setQueryData<MemoRead[]>(
     [QueryKey.OBJECT_MEMOS, data.attached_object_type, data.attached_object_id],
     (oldData) => (oldData ? oldData.filter((memo) => memo.id !== data.id) : oldData),
@@ -138,7 +158,7 @@ const useDeleteMemo = () =>
     mutationFn: MemoService.deleteById,
     onSuccess: (data) => {
       deleteInvalidation(data);
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      invalidateWorkspaceQueries();
     },
     meta: {
       successMessage: (memo: MemoRead) => `Deleted memo "${memo.title}"`,
@@ -155,7 +175,7 @@ const useDeleteMemos = () =>
       memos.forEach((data) => {
         deleteInvalidation(data);
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_TABLE] });
+      invalidateWorkspaceQueries();
     },
     meta: {
       successMessage: (memos: MemoRead[]) => `Deleted ${memos.length} memo(s)`,
@@ -165,10 +185,11 @@ const useDeleteMemos = () =>
 export const MemoHooks = {
   useGetMemo,
   useGetObjectMemos,
-  useGetUserMemo,
+  useQueryMemos,
+  useQueryMemoGroups,
   useCreateMemo,
   useUpdateMemo,
-  useStarMemos,
+  useFavoriteMemos,
   useDeleteMemo,
   useDeleteMemos,
 };
