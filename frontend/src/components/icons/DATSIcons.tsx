@@ -18,6 +18,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DescriptionIcon from "@mui/icons-material/Description";
+import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
 import EditIcon from "@mui/icons-material/Edit";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ExploreIcon from "@mui/icons-material/Explore";
@@ -27,6 +28,7 @@ import FolderIcon from "@mui/icons-material/Folder";
 import FolderOffIcon from "@mui/icons-material/FolderOff";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import FormatListBulletedOutlinedIcon from "@mui/icons-material/FormatListBulletedOutlined";
+import GridViewIcon from "@mui/icons-material/GridView";
 import HomeIcon from "@mui/icons-material/Home";
 import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
 import ImageIcon from "@mui/icons-material/Image";
@@ -52,11 +54,14 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SquareIcon from "@mui/icons-material/Square";
 import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
 import SubjectIcon from "@mui/icons-material/Subject";
+import TableRowsIcon from "@mui/icons-material/TableRows";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TextFormatIcon from "@mui/icons-material/TextFormat";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import TuneIcon from "@mui/icons-material/Tune";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
+import ViewListIcon from "@mui/icons-material/ViewList";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import WorkspacesIcon from "@mui/icons-material/Workspaces";
@@ -106,6 +111,13 @@ export enum Icon {
   DOCUMENT_SEARCH = "document_search",
   IMAGE_SEARCH = "image_search",
   SENTENCE_SEARCH = "sentence_search",
+
+  // Search view layouts
+  LAYOUT_TABLE = "layout_table",
+  LAYOUT_LIST = "layout_list",
+  LAYOUT_BOARD = "layout_board",
+  LAYOUT_GALLERY = "layout_gallery",
+  LAYOUT_FEED = "layout_feed",
 
   // Annotation
   ANNOTATION = "annotation",
@@ -234,6 +246,13 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.DOCUMENT_SEARCH]: (iconProps) => <DescriptionIcon {...iconProps} />,
   [Icon.IMAGE_SEARCH]: (iconProps) => <ImageSearchIcon {...iconProps} />,
   [Icon.SENTENCE_SEARCH]: (iconProps) => <ShortTextIcon {...iconProps} />,
+
+  // Search view layouts
+  [Icon.LAYOUT_TABLE]: (iconProps) => <TableRowsIcon {...iconProps} />,
+  [Icon.LAYOUT_LIST]: (iconProps) => <ViewListIcon {...iconProps} />,
+  [Icon.LAYOUT_BOARD]: (iconProps) => <ViewColumnIcon {...iconProps} />,
+  [Icon.LAYOUT_GALLERY]: (iconProps) => <GridViewIcon {...iconProps} />,
+  [Icon.LAYOUT_FEED]: (iconProps) => <DynamicFeedIcon {...iconProps} />,
 
   // Annotation
   [Icon.ANNOTATION]: (iconProps) => <FormatColorTextIcon {...iconProps} />,
