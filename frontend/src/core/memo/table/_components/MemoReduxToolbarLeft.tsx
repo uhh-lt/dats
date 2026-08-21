@@ -3,7 +3,7 @@ import { MemoRow } from "@models/MemoRow";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
 import { MemoDeleteButton } from "../../MemoDeleteButton";
-import { MemoStarButton } from "../../MemoStarButton";
+import { MemoFavoriteButton } from "../../MemoFavoriteButton";
 
 export function MemoReduxToolbarLeft({
   anchor,
@@ -26,8 +26,8 @@ export function MemoReduxToolbarLeft({
       {selectedMemoIds.length > 0 && (
         <>
           <MemoDeleteButton memoIds={selectedMemoIds} />
-          <MemoStarButton memoIds={selectedMemoIds} isStarred={true} />
-          <MemoStarButton memoIds={selectedMemoIds} isStarred={false} />
+          <MemoFavoriteButton memoIds={selectedMemoIds} isFavorite={true} />
+          <MemoFavoriteButton memoIds={selectedMemoIds} isFavorite={false} />
         </>
       )}
     </Stack>
