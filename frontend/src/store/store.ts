@@ -17,7 +17,7 @@ import { documentSamplerReducer } from "@features/document-sampler";
 import { duplicateFinderReducer } from "@features/duplicate-finder";
 import { healthReducer } from "@features/health";
 import { llmAssistantReducer } from "@features/llm-assistant";
-import { logbookReducer } from "@features/logbook";
+import { memoWorkspaceReducer } from "@features/memo-workspace";
 import { perspectivesReducer } from "@features/perspectives";
 import { imageSearchReducer, searchReducer, sentenceSearchReducer } from "@features/search";
 import { sentAnnotationAnalysisReducer } from "@features/sent-annotation-analysis";
@@ -47,7 +47,7 @@ export const store = configureStore({
     ...confirmationReducer,
     ...classifierReducer,
     ...llmAssistantReducer,
-    ...logbookReducer,
+    ...memoWorkspaceReducer,
     ...spanAnnotationAnalysisReducer,
     ...sentAnnotationAnalysisReducer,
     ...bboxAnnotationAnalysisReducer,

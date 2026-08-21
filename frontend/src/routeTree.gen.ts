@@ -31,6 +31,7 @@ import { Route as AuthProjectProjectIdToolsMlAutomationRouteImport } from './rou
 import { Route as AuthProjectProjectIdToolsHealthRouteImport } from './routes/_auth/project/$projectId/tools/health'
 import { Route as AuthProjectProjectIdToolsDuplicateFinderRouteImport } from './routes/_auth/project/$projectId/tools/duplicate-finder'
 import { Route as AuthProjectProjectIdToolsDocumentSamplerRouteImport } from './routes/_auth/project/$projectId/tools/document-sampler'
+import { Route as AuthProjectProjectIdMemoWorkspaceDetailRouteImport } from './routes/_auth/project/$projectId/memo-workspace/detail'
 import { Route as AuthProjectProjectIdAnnotationSdocIdRouteImport } from './routes/_auth/project/$projectId/annotation/$sdocId'
 import { Route as AuthProjectProjectIdAnalysisWordFrequencyRouteImport } from './routes/_auth/project/$projectId/analysis/word-frequency'
 import { Route as AuthProjectProjectIdAnalysisTagRecommendationsRouteImport } from './routes/_auth/project/$projectId/analysis/tag-recommendations'
@@ -170,6 +171,12 @@ const AuthProjectProjectIdToolsDocumentSamplerRoute =
     path: '/tools/document-sampler',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
+const AuthProjectProjectIdMemoWorkspaceDetailRoute =
+  AuthProjectProjectIdMemoWorkspaceDetailRouteImport.update({
+    id: '/detail',
+    path: '/detail',
+    getParentRoute: () => AuthProjectProjectIdMemoWorkspaceRoute,
+  } as any)
 const AuthProjectProjectIdAnnotationSdocIdRoute =
   AuthProjectProjectIdAnnotationSdocIdRouteImport.update({
     id: '/annotation/$sdocId',
@@ -270,7 +277,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRouteWithChildren
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/project/$projectId/memo-workspace/detail': typeof AuthProjectProjectIdMemoWorkspaceDetailRoute
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -307,7 +315,7 @@ export interface FileRoutesByTo {
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRouteWithChildren
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -318,6 +326,7 @@ export interface FileRoutesByTo {
   '/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/project/$projectId/memo-workspace/detail': typeof AuthProjectProjectIdMemoWorkspaceDetailRoute
   '/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -346,7 +355,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/_auth/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/_auth/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/_auth/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
+  '/_auth/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRouteWithChildren
   '/_auth/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/_auth/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/_auth/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -358,6 +367,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId/analysis/tag-recommendations': typeof AuthProjectProjectIdAnalysisTagRecommendationsRoute
   '/_auth/project/$projectId/analysis/word-frequency': typeof AuthProjectProjectIdAnalysisWordFrequencyRoute
   '/_auth/project/$projectId/annotation/$sdocId': typeof AuthProjectProjectIdAnnotationSdocIdRoute
+  '/_auth/project/$projectId/memo-workspace/detail': typeof AuthProjectProjectIdMemoWorkspaceDetailRoute
   '/_auth/project/$projectId/tools/document-sampler': typeof AuthProjectProjectIdToolsDocumentSamplerRoute
   '/_auth/project/$projectId/tools/duplicate-finder': typeof AuthProjectProjectIdToolsDuplicateFinderRoute
   '/_auth/project/$projectId/tools/health': typeof AuthProjectProjectIdToolsHealthRoute
@@ -397,6 +407,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/analysis/tag-recommendations'
     | '/project/$projectId/analysis/word-frequency'
     | '/project/$projectId/annotation/$sdocId'
+    | '/project/$projectId/memo-workspace/detail'
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
@@ -433,6 +444,7 @@ export interface FileRouteTypes {
     | '/project/$projectId/analysis/tag-recommendations'
     | '/project/$projectId/analysis/word-frequency'
     | '/project/$projectId/annotation/$sdocId'
+    | '/project/$projectId/memo-workspace/detail'
     | '/project/$projectId/tools/document-sampler'
     | '/project/$projectId/tools/duplicate-finder'
     | '/project/$projectId/tools/health'
@@ -472,6 +484,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId/analysis/tag-recommendations'
     | '/_auth/project/$projectId/analysis/word-frequency'
     | '/_auth/project/$projectId/annotation/$sdocId'
+    | '/_auth/project/$projectId/memo-workspace/detail'
     | '/_auth/project/$projectId/tools/document-sampler'
     | '/_auth/project/$projectId/tools/duplicate-finder'
     | '/_auth/project/$projectId/tools/health'
@@ -650,6 +663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdToolsDocumentSamplerRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
+    '/_auth/project/$projectId/memo-workspace/detail': {
+      id: '/_auth/project/$projectId/memo-workspace/detail'
+      path: '/detail'
+      fullPath: '/project/$projectId/memo-workspace/detail'
+      preLoaderRoute: typeof AuthProjectProjectIdMemoWorkspaceDetailRouteImport
+      parentRoute: typeof AuthProjectProjectIdMemoWorkspaceRoute
+    }
     '/_auth/project/$projectId/annotation/$sdocId': {
       id: '/_auth/project/$projectId/annotation/$sdocId'
       path: '/annotation/$sdocId'
@@ -758,6 +778,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthProjectProjectIdMemoWorkspaceRouteChildren {
+  AuthProjectProjectIdMemoWorkspaceDetailRoute: typeof AuthProjectProjectIdMemoWorkspaceDetailRoute
+}
+
+const AuthProjectProjectIdMemoWorkspaceRouteChildren: AuthProjectProjectIdMemoWorkspaceRouteChildren =
+  {
+    AuthProjectProjectIdMemoWorkspaceDetailRoute:
+      AuthProjectProjectIdMemoWorkspaceDetailRoute,
+  }
+
+const AuthProjectProjectIdMemoWorkspaceRouteWithChildren =
+  AuthProjectProjectIdMemoWorkspaceRoute._addFileChildren(
+    AuthProjectProjectIdMemoWorkspaceRouteChildren,
+  )
+
 interface AuthProjectProjectIdPerspectivesAspectIdRouteRouteChildren {
   AuthProjectProjectIdPerspectivesAspectIdMapRoute: typeof AuthProjectProjectIdPerspectivesAspectIdMapRoute
   AuthProjectProjectIdPerspectivesAspectIdIndexRoute: typeof AuthProjectProjectIdPerspectivesAspectIdIndexRoute
@@ -779,7 +814,7 @@ const AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren =
 interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdClassifierRoute: typeof AuthProjectProjectIdClassifierRoute
   AuthProjectProjectIdImagesearchRoute: typeof AuthProjectProjectIdImagesearchRoute
-  AuthProjectProjectIdMemoWorkspaceRoute: typeof AuthProjectProjectIdMemoWorkspaceRoute
+  AuthProjectProjectIdMemoWorkspaceRoute: typeof AuthProjectProjectIdMemoWorkspaceRouteWithChildren
   AuthProjectProjectIdSearchRoute: typeof AuthProjectProjectIdSearchRoute
   AuthProjectProjectIdSentencesearchRoute: typeof AuthProjectProjectIdSentencesearchRoute
   AuthProjectProjectIdPerspectivesAspectIdRouteRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -811,7 +846,7 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
     AuthProjectProjectIdClassifierRoute: AuthProjectProjectIdClassifierRoute,
     AuthProjectProjectIdImagesearchRoute: AuthProjectProjectIdImagesearchRoute,
     AuthProjectProjectIdMemoWorkspaceRoute:
-      AuthProjectProjectIdMemoWorkspaceRoute,
+      AuthProjectProjectIdMemoWorkspaceRouteWithChildren,
     AuthProjectProjectIdSearchRoute: AuthProjectProjectIdSearchRoute,
     AuthProjectProjectIdSentencesearchRoute:
       AuthProjectProjectIdSentencesearchRoute,
