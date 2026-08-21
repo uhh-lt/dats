@@ -1,40 +1,54 @@
-import { MemoFilterActions } from "@core/memo";
-import { createSlice } from "@reduxjs/toolkit";
-import { initialTableState, resetProjectTableState, tableReducer } from "@store/generic/tableSlice";
-import { ProjectActions } from "@store/global/projectSlice";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import createWebStorage from "redux-persist/es/storage/createWebStorage";
+
+const storage = createWebStorage("local");
+
+export interface RecentMemo {
+  id: number;
+  title: string;
+  icon?: string | null;
+  updated: string;
+}
+
+interface WorkspacePreference {
+  lastViewId?: number;
+  recents: RecentMemo[];
+}
+
+interface LogbookState {
+  workspaces: Record<string, WorkspacePreference>;
+}
+
+const initialState: LogbookState = { workspaces: {} };
+
+const getWorkspace = (state: LogbookState, scope: string) => {
+  state.workspaces[scope] ??= { recents: [] };
+  return state.workspaces[scope];
+};
 
 const logbookSlice = createSlice({
   name: "logbook",
-  initialState: {
-    ...initialTableState,
-  },
+  initialState,
   reducers: {
-    ...tableReducer,
-  },
-  extraReducers(builder) {
-    builder
-      .addCase(ProjectActions.changeProject, (state) => {
-        console.log("Project changed! Resetting 'logbook' state.");
-        resetProjectTableState(state);
-      })
-      .addCase(MemoFilterActions.init, (state, action) => {
-        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-          if (!column.column) return acc;
-          // this is a normal column
-          if (isNaN(parseInt(column.column))) {
-            return acc;
-            // this is a metadata column
-          } else {
-            return {
-              ...acc,
-              [column.column]: false,
-            };
-          }
-        }, {});
-      })
-      .addDefaultCase(() => {});
+    rememberView: (state, action: PayloadAction<{ scope: string; viewId?: number }>) => {
+      getWorkspace(state, action.payload.scope).lastViewId = action.payload.viewId;
+    },
+    rememberMemo: (state, action: PayloadAction<{ scope: string; memo: RecentMemo }>) => {
+      const workspace = getWorkspace(state, action.payload.scope);
+      workspace.recents = [
+        action.payload.memo,
+        ...workspace.recents.filter((memo) => memo.id !== action.payload.memo.id),
+      ].slice(0, 10);
+    },
+    removeMemo: (state, action: PayloadAction<{ scope: string; memoId: number }>) => {
+      const workspace = getWorkspace(state, action.payload.scope);
+      workspace.recents = workspace.recents.filter((memo) => memo.id !== action.payload.memoId);
+    },
   },
 });
 
 export const LogbookActions = logbookSlice.actions;
-export const logbookReducer = { [logbookSlice.name]: logbookSlice.reducer };
+export const logbookReducer = {
+  [logbookSlice.name]: persistReducer({ key: logbookSlice.name, storage }, logbookSlice.reducer),
+};

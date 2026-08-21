@@ -1,51 +1,29 @@
-import { ContentContentLayout } from "@components/content-layouts";
-import { MemoReduxFilterTable } from "@core/memo";
-import { useReduxConnector } from "@store/storeHooks";
+import { useAuth } from "@core/auth";
 import { getRouteApi } from "@tanstack/react-router";
-import { LogbookActions } from "../../store/logbookSlice";
-import { LogbookEditor } from "./_components/LogbookEditor";
+import { useCallback } from "react";
+import { MemoWorkspace } from "./_components/MemoWorkspace";
 
-const filterName = "logbook";
 const routeApi = getRouteApi("/_auth/project/$projectId/logbook");
 
 export function LogbookView() {
+  const { user } = useAuth();
   const projectId = routeApi.useParams({ select: (params) => params.projectId });
-
-  // global client state (redux) connected to table state
-  const [rowSelectionModel, setRowSelectionModel] = useReduxConnector(
-    (state) => state.logbook.rowSelectionModel,
-    LogbookActions.onRowSelectionChange,
-  );
-  const [sortingModel, setSortingModel] = useReduxConnector(
-    (state) => state.logbook.sortingModel,
-    LogbookActions.onSortChange,
-  );
-  const [columnVisibilityModel, setColumnVisibilityModel] = useReduxConnector(
-    (state) => state.logbook.columnVisibilityModel,
-    LogbookActions.onColumnVisibilityChange,
-  );
-  const [fetchSize, setFetchSize] = useReduxConnector(
-    (state) => state.logbook.fetchSize,
-    LogbookActions.onFetchSizeChange,
+  const selectedMemoId = routeApi.useSearch({ select: (search) => search.memoId });
+  const navigate = routeApi.useNavigate();
+  const handleSelectMemo = useCallback(
+    (memoId?: number) => {
+      navigate({ search: memoId ? { memoId } : {} });
+    },
+    [navigate],
   );
 
+  if (!user) return null;
   return (
-    <ContentContentLayout
-      leftContent={
-        <MemoReduxFilterTable
-          projectId={projectId}
-          filterName={filterName}
-          rowSelectionModel={rowSelectionModel}
-          onRowSelectionChange={setRowSelectionModel}
-          sortingModel={sortingModel}
-          onSortingChange={setSortingModel}
-          columnVisibilityModel={columnVisibilityModel}
-          onColumnVisibilityChange={setColumnVisibilityModel}
-          fetchSize={fetchSize}
-          onFetchSizeChange={setFetchSize}
-        />
-      }
-      rightContent={<LogbookEditor projectId={projectId} />}
+    <MemoWorkspace
+      projectId={projectId}
+      userId={user.id}
+      selectedMemoId={selectedMemoId}
+      onSelectMemo={handleSelectMemo}
     />
   );
 }
