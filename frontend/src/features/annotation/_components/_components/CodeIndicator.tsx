@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { Icon, getIconComponent } from "@components/icons";
-import { AttachedMemoMenu } from "@core/memo";
+import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CircularProgress } from "@mui/material";
 import { contrastiveColors } from "@utils/colors/colors";
@@ -61,7 +61,7 @@ export function CodeIndicator({
         <span className="code-indicator__color-dot" />
         <span className="code-indicator__text">{text}</span>
         {memoCount > 0 && !isPending && (
-          <AttachedMemoMenu
+          <MemoCreateOrSelectMenu
             attachedObjectType={attachedObjectType}
             attachedObjectId={annotationId}
             renderTrigger={(handleClick, isFetching) => (

@@ -1,5 +1,5 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { AttachedMemoMenu } from "@core/memo";
+import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
 import { CircularProgress } from "@mui/material";
@@ -10,7 +10,7 @@ import { CircularProgress } from "@mui/material";
  */
 export function SentenceMemoBadge({ annotation, color }: { annotation: SentenceAnnotationRead; color: string }) {
   return (
-    <AttachedMemoMenu
+    <MemoCreateOrSelectMenu
       attachedObjectType={AttachedObjectType.SENTENCE_ANNOTATION}
       attachedObjectId={annotation.id}
       renderTrigger={(handleClick, isFetching) => (

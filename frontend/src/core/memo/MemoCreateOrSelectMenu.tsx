@@ -5,10 +5,10 @@ import { MemoRead } from "@models/MemoRead";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
-import { MemoCreateSuccessHandler } from "./types/MemoCreateSuccessHandler";
-import { useOpenMemoDialog } from "./useOpenMemoDialog";
+import { useOpenMemoDialog } from "./dialog/hooks/useOpenMemoDialog";
+import { MemoCreateSuccessHandler } from "./dialog/types/MemoCreateSuccessHandler";
 
-interface AttachedMemoMenuProps {
+interface MemoCreateOrSelectMenuProps {
   attachedObjectType: AttachedObjectType;
   attachedObjectId: number;
   onCreateSuccess?: MemoCreateSuccessHandler;
@@ -18,13 +18,13 @@ interface AttachedMemoMenuProps {
 }
 
 /**
- * AttachedMemoMenu orchestrates the memo menu flow:
+ * MemoCreateOrSelectMenu orchestrates the memo menu flow:
  * 1. Renders a trigger via renderTrigger prop
  * 2. On click, fetches attached memos lazily
  * 3. If no memos exist, opens the memo editor directly
  * 4. If memos exist, opens a menu listing them
  */
-export const AttachedMemoMenu = memo(
+export const MemoCreateOrSelectMenu = memo(
   ({
     attachedObjectType,
     attachedObjectId,
@@ -32,7 +32,7 @@ export const AttachedMemoMenu = memo(
     onAction,
     menuPlacement = "bottom",
     renderTrigger,
-  }: AttachedMemoMenuProps) => {
+  }: MemoCreateOrSelectMenuProps) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const memos = MemoHooks.useGetObjectMemos(attachedObjectType, attachedObjectId, { enabled: false });
     const openMemoDialog = useOpenMemoDialog();
@@ -91,7 +91,7 @@ export const AttachedMemoMenu = memo(
     return (
       <>
         {renderTrigger(handleOpen, memos.isFetching)}
-        <AttachedMemoMenuContent
+        <MemoCreateOrSelectMenuContent
           anchorEl={anchorEl}
           onClose={handleClose}
           memos={memos.data ?? []}
@@ -104,7 +104,7 @@ export const AttachedMemoMenu = memo(
   },
 );
 
-interface AttachedMemoMenuContentProps {
+interface MemoCreateOrSelectMenuContentProps {
   anchorEl: HTMLElement | null;
   onClose: (event?: object) => void;
   memos: Array<MemoRead>;
@@ -114,11 +114,11 @@ interface AttachedMemoMenuContentProps {
 }
 
 /**
- * AttachedMemoMenuContent renders the actual menu with memo items.
+ * MemoCreateOrSelectMenuContent renders the actual menu with memo items.
  * Assumes memos are already loaded — no loading or error states.
  */
-const AttachedMemoMenuContent = memo(
-  ({ anchorEl, onClose, memos, onOpenMemo, onCreateMemo, menuPlacement }: AttachedMemoMenuContentProps) => {
+const MemoCreateOrSelectMenuContent = memo(
+  ({ anchorEl, onClose, memos, onOpenMemo, onCreateMemo, menuPlacement }: MemoCreateOrSelectMenuContentProps) => {
     return (
       <Menu
         anchorEl={anchorEl}

@@ -1,20 +1,20 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { CircularProgress, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { memo } from "react";
-import { AttachedMemoMenu } from "./AttachedMemoMenu";
-import { MemoEvent } from "./types/MemoEvent";
+import { MemoCreateOrSelectMenu } from "./MemoCreateOrSelectMenu";
+import { MemoEvent } from "./dialog/types/MemoEvent";
 
 interface MemoMenuItemProps {
   onClick: (() => void) | undefined;
   content?: React.ReactNode;
 }
 
-export const MemoListItemButton = memo(
+export const MemoCreateOrSelectListItemButton = memo(
   ({ attachedObjectId, attachedObjectType, onClick, content }: MemoEvent & MemoMenuItemProps) => {
     if (!attachedObjectId) return null;
 
     return (
-      <AttachedMemoMenu
+      <MemoCreateOrSelectMenu
         attachedObjectId={attachedObjectId}
         attachedObjectType={attachedObjectType}
         onAction={onClick}

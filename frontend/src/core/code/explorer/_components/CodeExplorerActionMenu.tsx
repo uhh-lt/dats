@@ -1,6 +1,6 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { ITree } from "@components/tree-explorer";
-import { MemoMenuItem } from "@core/memo";
+import { MemoCreateOrSelectMenuItem } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { CodeRead } from "@models/CodeRead";
 import { IconButton, Menu } from "@mui/material";
@@ -40,7 +40,7 @@ export function CodeExplorerActionMenu({ node, isHidden, onToggleVisibility }: C
           onClick={handleClose}
         />
         <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
-        <MemoMenuItem
+        <MemoCreateOrSelectMenuItem
           attachedObjectId={node.data.id}
           attachedObjectType={AttachedObjectType.CODE}
           onClick={handleClose}

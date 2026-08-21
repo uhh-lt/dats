@@ -1,5 +1,5 @@
 import { Icon, getIconComponent } from "@components/icons";
-import { MemoMenuItem } from "@core/memo";
+import { MemoCreateOrSelectMenuItem } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
@@ -39,7 +39,11 @@ export function AnnotationCardActionsMenu({
         {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MemoMenuItem attachedObjectId={annotationId} attachedObjectType={annotationType} onClick={handleClose} />
+        <MemoCreateOrSelectMenuItem
+          attachedObjectId={annotationId}
+          attachedObjectType={annotationType}
+          onClick={handleClose}
+        />
         {annotationType === AttachedObjectType.SPAN_ANNOTATION ? (
           <SpanAnnotationDeleteMenuItem annotationId={annotationId} onClick={handleClose} />
         ) : annotationType === AttachedObjectType.SENTENCE_ANNOTATION ? (

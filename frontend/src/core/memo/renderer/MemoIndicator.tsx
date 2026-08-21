@@ -1,7 +1,7 @@
 import { Icon, getIconComponent } from "@components/icons";
 import { Button, ButtonProps, CircularProgress } from "@mui/material";
 import { memo } from "react";
-import { AttachedMemoMenu, MemoEvent } from "../dialog";
+import { MemoCreateOrSelectMenu, MemoEvent } from "../dialog";
 
 interface MemoIndicatorProps {
   /**
@@ -35,7 +35,7 @@ export const MemoIndicator = memo(
     }
 
     return (
-      <AttachedMemoMenu
+      <MemoCreateOrSelectMenu
         attachedObjectType={attachedObjectType}
         attachedObjectId={attachedObjectId}
         onCreateSuccess={onCreateSuccess}

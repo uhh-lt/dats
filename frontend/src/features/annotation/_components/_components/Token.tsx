@@ -1,6 +1,6 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
 import { Icon, getIconComponent } from "@components/icons";
-import { AttachedMemoMenu } from "@core/memo";
+import { MemoCreateOrSelectMenu } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { CircularProgress } from "@mui/material";
@@ -107,7 +107,7 @@ function MemoTokenBadge({ annotation }: MemoTokenBadgeProps) {
   }
 
   return (
-    <AttachedMemoMenu
+    <MemoCreateOrSelectMenu
       attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
       attachedObjectId={annotation.id}
       renderTrigger={(handleClick, isFetching) => (
