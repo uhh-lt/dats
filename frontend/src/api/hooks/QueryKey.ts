@@ -82,6 +82,15 @@ export const QueryKey = {
   // memo search views (by project id)
   // managed by frontend/src/api/hooks/MemoViewHooks.ts
   MEMO_VIEWS: "memoViews",
+  // span annotation search views (by project id)
+  // managed by frontend/src/api/hooks/SpanAnnoViewHooks.ts
+  SPAN_ANNO_VIEWS: "spanAnnoViews",
+  // sentence annotation search views (by project id)
+  // managed by frontend/src/api/hooks/SentenceAnnoViewHooks.ts
+  SENTENCE_ANNO_VIEWS: "sentenceAnnoViews",
+  // bbox annotation search views (by project id)
+  // managed by frontend/src/api/hooks/BBoxAnnoViewHooks.ts
+  BBOX_ANNO_VIEWS: "bboxAnnoViews",
 
   // a single SpanAnnotationRead (by span annotation id)
   // managed by frontend/src/api/hooks/SpanAnnotationHooks.ts
