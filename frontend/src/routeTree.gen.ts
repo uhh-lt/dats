@@ -19,7 +19,7 @@ import { Route as AuthMeRouteImport } from './routes/_auth/me'
 import { Route as AuthProjectProjectIdRouteRouteImport } from './routes/_auth/project/$projectId/route'
 import { Route as AuthProjectProjectIdSentencesearchRouteImport } from './routes/_auth/project/$projectId/sentencesearch'
 import { Route as AuthProjectProjectIdSearchRouteImport } from './routes/_auth/project/$projectId/search'
-import { Route as AuthProjectProjectIdLogbookRouteImport } from './routes/_auth/project/$projectId/logbook'
+import { Route as AuthProjectProjectIdMemoWorkspaceRouteImport } from './routes/_auth/project/$projectId/memo-workspace'
 import { Route as AuthProjectProjectIdImagesearchRouteImport } from './routes/_auth/project/$projectId/imagesearch'
 import { Route as AuthProjectProjectIdClassifierRouteImport } from './routes/_auth/project/$projectId/classifier'
 import { Route as AuthProjectProjectIdWhiteboardIndexRouteImport } from './routes/_auth/project/$projectId/whiteboard/index'
@@ -98,10 +98,10 @@ const AuthProjectProjectIdSearchRoute =
     path: '/search',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
-const AuthProjectProjectIdLogbookRoute =
-  AuthProjectProjectIdLogbookRouteImport.update({
-    id: '/logbook',
-    path: '/logbook',
+const AuthProjectProjectIdMemoWorkspaceRoute =
+  AuthProjectProjectIdMemoWorkspaceRouteImport.update({
+    id: '/memo-workspace',
+    path: '/memo-workspace',
     getParentRoute: () => AuthProjectProjectIdRouteRoute,
   } as any)
 const AuthProjectProjectIdImagesearchRoute =
@@ -270,7 +270,7 @@ export interface FileRoutesByFullPath {
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/project/$projectId/logbook': typeof AuthProjectProjectIdLogbookRoute
+  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -307,7 +307,7 @@ export interface FileRoutesByTo {
   '/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/project/$projectId/logbook': typeof AuthProjectProjectIdLogbookRoute
+  '/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
   '/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/project/$projectId/analysis/annotation-scaling': typeof AuthProjectProjectIdAnalysisAnnotationScalingRoute
@@ -346,7 +346,7 @@ export interface FileRoutesById {
   '/_auth/project/$projectId': typeof AuthProjectProjectIdRouteRouteWithChildren
   '/_auth/project/$projectId/classifier': typeof AuthProjectProjectIdClassifierRoute
   '/_auth/project/$projectId/imagesearch': typeof AuthProjectProjectIdImagesearchRoute
-  '/_auth/project/$projectId/logbook': typeof AuthProjectProjectIdLogbookRoute
+  '/_auth/project/$projectId/memo-workspace': typeof AuthProjectProjectIdMemoWorkspaceRoute
   '/_auth/project/$projectId/search': typeof AuthProjectProjectIdSearchRoute
   '/_auth/project/$projectId/sentencesearch': typeof AuthProjectProjectIdSentencesearchRoute
   '/_auth/project/$projectId/perspectives/$aspectId': typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -385,7 +385,7 @@ export interface FileRouteTypes {
     | '/project/$projectId'
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
-    | '/project/$projectId/logbook'
+    | '/project/$projectId/memo-workspace'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
     | '/project/$projectId/perspectives/$aspectId'
@@ -422,7 +422,7 @@ export interface FileRouteTypes {
     | '/project/$projectId'
     | '/project/$projectId/classifier'
     | '/project/$projectId/imagesearch'
-    | '/project/$projectId/logbook'
+    | '/project/$projectId/memo-workspace'
     | '/project/$projectId/search'
     | '/project/$projectId/sentencesearch'
     | '/project/$projectId/analysis/annotation-scaling'
@@ -460,7 +460,7 @@ export interface FileRouteTypes {
     | '/_auth/project/$projectId'
     | '/_auth/project/$projectId/classifier'
     | '/_auth/project/$projectId/imagesearch'
-    | '/_auth/project/$projectId/logbook'
+    | '/_auth/project/$projectId/memo-workspace'
     | '/_auth/project/$projectId/search'
     | '/_auth/project/$projectId/sentencesearch'
     | '/_auth/project/$projectId/perspectives/$aspectId'
@@ -566,11 +566,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProjectProjectIdSearchRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
-    '/_auth/project/$projectId/logbook': {
-      id: '/_auth/project/$projectId/logbook'
-      path: '/logbook'
-      fullPath: '/project/$projectId/logbook'
-      preLoaderRoute: typeof AuthProjectProjectIdLogbookRouteImport
+    '/_auth/project/$projectId/memo-workspace': {
+      id: '/_auth/project/$projectId/memo-workspace'
+      path: '/memo-workspace'
+      fullPath: '/project/$projectId/memo-workspace'
+      preLoaderRoute: typeof AuthProjectProjectIdMemoWorkspaceRouteImport
       parentRoute: typeof AuthProjectProjectIdRouteRoute
     }
     '/_auth/project/$projectId/imagesearch': {
@@ -779,7 +779,7 @@ const AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren =
 interface AuthProjectProjectIdRouteRouteChildren {
   AuthProjectProjectIdClassifierRoute: typeof AuthProjectProjectIdClassifierRoute
   AuthProjectProjectIdImagesearchRoute: typeof AuthProjectProjectIdImagesearchRoute
-  AuthProjectProjectIdLogbookRoute: typeof AuthProjectProjectIdLogbookRoute
+  AuthProjectProjectIdMemoWorkspaceRoute: typeof AuthProjectProjectIdMemoWorkspaceRoute
   AuthProjectProjectIdSearchRoute: typeof AuthProjectProjectIdSearchRoute
   AuthProjectProjectIdSentencesearchRoute: typeof AuthProjectProjectIdSentencesearchRoute
   AuthProjectProjectIdPerspectivesAspectIdRouteRoute: typeof AuthProjectProjectIdPerspectivesAspectIdRouteRouteWithChildren
@@ -810,7 +810,8 @@ const AuthProjectProjectIdRouteRouteChildren: AuthProjectProjectIdRouteRouteChil
   {
     AuthProjectProjectIdClassifierRoute: AuthProjectProjectIdClassifierRoute,
     AuthProjectProjectIdImagesearchRoute: AuthProjectProjectIdImagesearchRoute,
-    AuthProjectProjectIdLogbookRoute: AuthProjectProjectIdLogbookRoute,
+    AuthProjectProjectIdMemoWorkspaceRoute:
+      AuthProjectProjectIdMemoWorkspaceRoute,
     AuthProjectProjectIdSearchRoute: AuthProjectProjectIdSearchRoute,
     AuthProjectProjectIdSentencesearchRoute:
       AuthProjectProjectIdSentencesearchRoute,
