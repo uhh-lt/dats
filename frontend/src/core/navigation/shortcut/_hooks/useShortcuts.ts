@@ -65,7 +65,7 @@ export function useShortcuts() {
       ),
       createShortcut(
         "goToPerspectives",
-        "m",
+        "e",
         "Go to Perspectives",
         () => tabNavigate({ to: "/project/$projectId/perspectives", params: { projectId } }),
         {
@@ -114,10 +114,10 @@ export function useShortcuts() {
         },
       ),
       createShortcut(
-        "goToLogbook",
-        "l",
-        "Go to Logbook",
-        () => tabNavigate({ to: "/project/$projectId/logbook", params: { projectId } }),
+        "goToMemoWorkspace",
+        "m",
+        "Go to Memo Workspace",
+        () => tabNavigate({ to: "/project/$projectId/memo-workspace", params: { projectId } }),
         {
           ctrlmeta: true,
           shift: true,

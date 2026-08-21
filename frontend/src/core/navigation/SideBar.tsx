@@ -212,7 +212,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Perspectives (⌘M)" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Perspectives (⌘⇧E)" placement="right" arrow disableHoverListener={isExpanded}>
                 <LinkListItemButton
                   to="/project/$projectId/perspectives"
                   params={{ projectId }}
@@ -233,7 +233,11 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                   >
                     {getIconComponent(Icon.PERSPECTIVES)}
                   </ListItemIcon>
-                  {isExpanded && <ListItemText>Perspectives</ListItemText>}
+                  {isExpanded && (
+                    <ListItemText>
+                      P<span style={{ textDecoration: "underline" }}>e</span>rspectives
+                    </ListItemText>
+                  )}
                 </LinkListItemButton>
               </Tooltip>
             </ListItem>
@@ -363,15 +367,15 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
             </ListItem>
 
             <ListItem disablePadding sx={{ display: "block" }}>
-              <Tooltip title="Logbook (⌘⇧L)" placement="right" arrow disableHoverListener={isExpanded}>
+              <Tooltip title="Memo Workspace (⌘⇧M)" placement="right" arrow disableHoverListener={isExpanded}>
                 <LinkListItemButton
-                  to="/project/$projectId/logbook"
+                  to="/project/$projectId/memo-workspace"
                   params={{ projectId }}
                   sx={{
                     minHeight: 48,
                     justifyContent: isExpanded ? "initial" : "center",
                     px: 2.5,
-                    bgcolor: isActive("/logbook") ? selectedColor : "transparent",
+                    bgcolor: isActive("/memo-workspace") ? selectedColor : "transparent",
                   }}
                 >
                   <ListItemIcon
@@ -386,7 +390,7 @@ export function SideBar({ projectId, isExpanded, onToggle }: SideBarProps) {
                   </ListItemIcon>
                   {isExpanded && (
                     <ListItemText>
-                      <span style={{ textDecoration: "underline" }}>L</span>ogbook
+                      <span style={{ textDecoration: "underline" }}>M</span>emo Workspace
                     </ListItemText>
                   )}
                 </LinkListItemButton>

@@ -117,15 +117,15 @@ export const useDefaultCommands = (projectId: number): CommandItem[] => {
         keywords: ["annotate", "annotation", "tag", "code"],
       },
       {
-        id: "logbook",
-        title: "Open Logbook",
-        description: "Go to project logbook",
+        id: "memo-workspace",
+        title: "Open Memo Workspace",
+        description: "Go to project memo workspace",
         category: "Navigation",
         icon: getIconComponent(Icon.LOGBOOK),
         action: () => {
-          tabNavigate({ to: "/project/$projectId/logbook", params: { projectId } });
+          tabNavigate({ to: "/project/$projectId/memo-workspace", params: { projectId } });
         },
-        keywords: ["log", "notes", "journal", "memo"],
+        keywords: ["log", "notes", "journal", "memo", "logbook"],
       },
       {
         id: "whiteboard",
