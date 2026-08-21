@@ -1,5 +1,5 @@
 import { CodeHooks } from "@api/hooks/CodeHooks";
-import { MemoListItemButton } from "@core/memo";
+import { MemoCreateOrSelectListItemButton } from "@core/memo";
 import { useTabNavigate } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
@@ -149,7 +149,7 @@ export const SentenceMenu = ({ ref, projectId }: SentenceMenuProps) => {
                     <ListItemText primary={`${code.name}: ${anno.text}`} />
                   </ListItemButton>
                 </ListItem>
-                <MemoListItemButton
+                <MemoCreateOrSelectListItemButton
                   onClick={() => closeMenu()}
                   attachedObjectId={anno.id}
                   attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}

@@ -1,15 +1,20 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
 import { DATSDialogHeader } from "@components/DATSDialogHeader";
 import { useDialogMaximize } from "@hooks/useDialogMaximize";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
-import { CircularProgress, Dialog } from "@mui/material";
+import { Box, CircularProgress, Dialog, DialogContent, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { useCallback } from "react";
-import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
-import { MemoDialogContent } from "./_components/MemoDialogContent";
-import { MemoDialogActions } from "./store/memoDialogSlice";
+import { MemoActionMenu } from "../MemoActionMenu";
+import { MemoAttachedObject, MemoEditor, useMemoEditorData, useMemoPersistence } from "../editor";
+import { MemoDialogEvent } from "./_types/MemoDialogEvent";
+import { MemoDialogActions } from "./memoDialogSlice";
 
+/**
+ * Global memo dialog container: redux-driven open state + dialog chrome
+ * (header, maximize, actions). The editing experience lives in MemoEditor,
+ * data in useMemoEditorData, persistence in useMemoPersistence.
+ */
 export function MemoDialog() {
   const isMemoDialogOpen = useAppSelector((state) => state.memoDialog.isMemoDialogOpen);
   const memoEventData = useAppSelector((state) => state.memoDialog.memoEventData);
@@ -22,105 +27,122 @@ export function MemoDialog() {
   // maximize
   const { isMaximized, toggleMaximize } = useDialogMaximize();
 
+  // data
+  const { memo, attachedObject, attachedObjectType, isLoading, error } = useMemoEditorData(memoEventData);
+  const isReady = !isLoading && !error && !!attachedObject && !!attachedObjectType;
+
   return (
-    <Dialog open={isMemoDialogOpen} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMaximized}>
-      <DATSDialogHeader
-        title="Memo"
-        onClose={handleClose}
-        isMaximized={isMaximized}
-        onToggleMaximize={toggleMaximize}
-      />
-      {memoEventData?.memoId ? (
-        <MemoDialogByID
-          memoId={memoEventData.memoId}
-          closeDialog={handleClose}
-          onMemoCreateSuccess={memoEventData?.onCreateSuccess}
+    <Dialog
+      open={isMemoDialogOpen && memoEventData !== undefined}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMaximized}
+      slotProps={{
+        paper: {
+          sx: {
+            height: isMaximized ? "100%" : "calc(100% - 64px)",
+          },
+        },
+      }}
+    >
+      {isReady && memoEventData ? (
+        <MemoDialogEditor
+          key={memo?.id ?? "new"}
+          memo={memo}
+          attachedObject={attachedObject}
+          attachedObjectType={attachedObjectType}
+          memoEventData={memoEventData}
+          onClose={handleClose}
+          isMaximized={isMaximized}
+          onToggleMaximize={toggleMaximize}
         />
-      ) : memoEventData?.attachedObjectId && memoEventData?.attachedObjectType ? (
-        <MemoDialogByAttachedObject
-          attachedObjectId={memoEventData.attachedObjectId}
-          attachedObjectType={memoEventData.attachedObjectType}
-          closeDialog={handleClose}
-          onMemoCreateSuccess={memoEventData?.onCreateSuccess}
-        />
-      ) : null}
+      ) : (
+        <>
+          <DATSDialogHeader
+            title="Memo Editor"
+            onClose={handleClose}
+            isMaximized={isMaximized}
+            onToggleMaximize={toggleMaximize}
+          />
+          {isLoading && (
+            <Box display="flex" justifyContent="center" p={4}>
+              <CircularProgress />
+            </Box>
+          )}
+          {error && (
+            <DialogContent>
+              <Typography color="error">Error: {error.message}</Typography>
+            </DialogContent>
+          )}
+        </>
+      )}
     </Dialog>
   );
 }
 
-interface SharedProps {
-  closeDialog: () => void;
-  onMemoCreateSuccess?: (memo: MemoRead) => void;
-}
-
-function MemoDialogByID({ memoId, ...props }: { memoId: number } & SharedProps) {
-  const memo = MemoHooks.useGetMemo(memoId);
-  if (memo.isSuccess) {
-    return (
-      <MemoDialog2
-        memo={memo.data}
-        attachedObjectId={memo.data.attached_object_id}
-        attachedObjectType={memo.data.attached_object_type}
-        {...props}
-      />
-    );
-  } else if (memo.isLoading) {
-    return <CircularProgress />;
-  } else if (memo.isError) {
-    return <div>Error: {memo.error.message}</div>;
-  } else {
-    return null;
-  }
-}
-
-function MemoDialogByAttachedObject(
-  props: { attachedObjectId: number; attachedObjectType: AttachedObjectType } & SharedProps,
-) {
-  const memo = MemoHooks.useGetUserMemo(props.attachedObjectType, props.attachedObjectId);
-  if (memo.isSuccess) {
-    return <MemoDialog2 memo={memo.data} {...props} />;
-  } else if (memo.isLoading) {
-    return <CircularProgress />;
-  } else if (memo.isError) {
-    return <MemoDialog2 memo={undefined} {...props} />;
-  } else {
-    return null;
-  }
-}
-
-function MemoDialog2({
-  memo,
-  attachedObjectId,
-  attachedObjectType,
-  closeDialog,
-  onMemoCreateSuccess,
-}: {
+interface MemoDialogEditorProps {
   memo: MemoRead | undefined;
-  attachedObjectId: number;
+  attachedObject: MemoAttachedObject;
   attachedObjectType: AttachedObjectType;
-} & SharedProps) {
-  // query
-  // there are three cases (attachedObjectType is always set!):
-  // 1. memoId is set, attachedObjectId is set
-  // 2. memoId is not set, attachedObjectId is set
-  // 3. memoId is set, attachedObjectId is not set
-  const attachedObject = useGetMemosAttachedObject(attachedObjectType, attachedObjectId);
+  memoEventData: MemoDialogEvent;
+  onClose: () => void;
+  isMaximized: boolean;
+  onToggleMaximize: () => void;
+}
+
+/**
+ * Owns the (single) persistence instance for the dialog and renders the
+ * header (with the action menu) plus the MemoEditor.
+ */
+function MemoDialogEditor({
+  memo,
+  attachedObject,
+  attachedObjectType,
+  memoEventData,
+  onClose,
+  isMaximized,
+  onToggleMaximize,
+}: MemoDialogEditorProps) {
+  const { formData, handleTitleChange, handleContentChange, handleIconChange, discardPendingChanges } =
+    useMemoPersistence({
+      memo,
+      attachedObject,
+      attachedObjectType,
+      onMemoCreateSuccess: memoEventData.onCreateSuccess,
+    });
+
+  const handleDelete = useCallback(() => {
+    discardPendingChanges();
+    onClose();
+  }, [discardPendingChanges, onClose]);
 
   return (
     <>
-      {attachedObject.data ? (
-        <MemoDialogContent
+      <DATSDialogHeader
+        title="Memo Editor"
+        onClose={onClose}
+        isMaximized={isMaximized}
+        onToggleMaximize={onToggleMaximize}
+        endActions={
+          <MemoActionMenu
+            memo={memo}
+            onDeleteClick={handleDelete}
+            iconButtonProps={{ color: "inherit", size: "small" }}
+          />
+        }
+      />
+      <DialogContent sx={{ p: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <MemoEditor
           memo={memo}
-          attachedObject={attachedObject.data}
+          attachedObject={attachedObject}
           attachedObjectType={attachedObjectType}
-          closeDialog={closeDialog}
-          onMemoCreateSuccess={onMemoCreateSuccess}
+          formData={formData}
+          onTitleChange={handleTitleChange}
+          onContentChange={handleContentChange}
+          onIconChange={handleIconChange}
         />
-      ) : attachedObject.isLoading && attachedObject.isFetching ? (
-        <>Loading!</>
-      ) : attachedObject.isError ? (
-        <div>Error: {attachedObject.error.message}</div>
-      ) : null}
+      </DialogContent>
     </>
   );
 }

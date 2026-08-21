@@ -1,7 +1,7 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { Icon, getIconComponent } from "@components/icons";
 import { useAuth } from "@core/auth";
-import { MemoCard, MemoEditor } from "@core/memo";
+import { MemoCard, MemoEditorPane } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -24,19 +24,17 @@ export const MemoPanel = memo(({ sdocId }: DocumentMemosProps) => {
     setCurrentMemo(undefined);
   }, []);
 
+  const renderToolbar = useCallback(() => {
+    return (
+      <Button startIcon={<ArrowBackIcon />} onClick={handleReset}>
+        Back to Document Memos
+      </Button>
+    );
+  }, [handleReset]);
+
   // rendering
   if (currentMemo !== undefined) {
-    return (
-      <MemoEditor
-        memoId={currentMemo}
-        onDelete={handleReset}
-        renderToolbar={() => (
-          <Button startIcon={<ArrowBackIcon />} onClick={handleReset}>
-            Back to Document Memos
-          </Button>
-        )}
-      />
-    );
+    return <MemoEditorPane memoId={currentMemo} onDelete={handleReset} renderToolbar={renderToolbar} />;
   } else {
     return <DocumentMemoList sdocId={sdocId} onClick={handleClickMemo} />;
   }

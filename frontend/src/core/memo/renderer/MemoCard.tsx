@@ -46,7 +46,7 @@ function MemoCardWithContent({
       <CardHeader
         title={
           <>
-            {attachedObject.isSuccess ? (
+            {attachedObject.data ? (
               <AttachedObjectRenderer
                 attachedObject={attachedObject.data}
                 attachedObjectType={memo.attached_object_type}

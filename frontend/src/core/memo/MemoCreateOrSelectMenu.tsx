@@ -5,13 +5,11 @@ import { MemoRead } from "@models/MemoRead";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { memo, MouseEvent, ReactNode, useCallback, useState } from "react";
-import { useOpenMemoDialog } from "./dialog/hooks/useOpenMemoDialog";
-import { MemoCreateSuccessHandler } from "./dialog/types/MemoCreateSuccessHandler";
+import { useOpenMemoDialog } from "./dialog/useOpenMemoDialog";
 
 interface MemoCreateOrSelectMenuProps {
   attachedObjectType: AttachedObjectType;
   attachedObjectId: number;
-  onCreateSuccess?: MemoCreateSuccessHandler;
   onAction?: () => void;
   menuPlacement?: "bottom" | "right";
   renderTrigger: (handleClick: (event: React.MouseEvent<HTMLElement>) => void, isFetching: boolean) => ReactNode;
@@ -28,7 +26,6 @@ export const MemoCreateOrSelectMenu = memo(
   ({
     attachedObjectType,
     attachedObjectId,
-    onCreateSuccess,
     onAction,
     menuPlacement = "bottom",
     renderTrigger,
@@ -45,13 +42,13 @@ export const MemoCreateOrSelectMenu = memo(
 
         if (attachedMemos?.length === 0) {
           onAction?.();
-          openMemoDialog({ attachedObjectType, attachedObjectId, onCreateSuccess });
+          openMemoDialog({ attachedObjectType, attachedObjectId });
           return;
         }
 
         setAnchorEl(trigger);
       },
-      [attachedObjectId, attachedObjectType, memos, onAction, onCreateSuccess, openMemoDialog],
+      [attachedObjectId, attachedObjectType, memos, onAction, openMemoDialog],
     );
 
     const handleClose = useCallback(
@@ -73,9 +70,9 @@ export const MemoCreateOrSelectMenu = memo(
         event.stopPropagation();
         setAnchorEl(null);
         onAction?.();
-        openMemoDialog({ memoId, attachedObjectType, attachedObjectId, onCreateSuccess });
+        openMemoDialog({ memoId, attachedObjectType, attachedObjectId });
       },
-      [attachedObjectId, attachedObjectType, onAction, onCreateSuccess, openMemoDialog],
+      [attachedObjectId, attachedObjectType, onAction, openMemoDialog],
     );
 
     const handleCreateMemo = useCallback(
@@ -83,9 +80,9 @@ export const MemoCreateOrSelectMenu = memo(
         event.stopPropagation();
         setAnchorEl(null);
         onAction?.();
-        openMemoDialog({ attachedObjectType, attachedObjectId, onCreateSuccess });
+        openMemoDialog({ attachedObjectType, attachedObjectId });
       },
-      [attachedObjectId, attachedObjectType, onAction, onCreateSuccess, openMemoDialog],
+      [attachedObjectId, attachedObjectType, onAction, openMemoDialog],
     );
 
     return (

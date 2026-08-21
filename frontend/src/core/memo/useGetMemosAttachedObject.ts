@@ -6,7 +6,31 @@ import { SentenceAnnotationHooks } from "@api/hooks/SentenceAnnotationHooks";
 import { SpanAnnotationHooks } from "@api/hooks/SpanAnnotationHooks";
 import { TagHooks } from "@api/hooks/TagHooks";
 import { AttachedObjectType } from "@models/AttachedObjectType";
+import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
+import { ProjectRead } from "@models/ProjectRead";
+import { SentenceAnnotationRead } from "@models/SentenceAnnotationRead";
+import { SourceDocumentRead } from "@models/SourceDocumentRead";
+import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
+import { TagRead } from "@models/TagRead";
+
+export type MemosAttachedObject =
+  | TagRead
+  | SourceDocumentRead
+  | CodeRead
+  | SpanAnnotationRead
+  | SentenceAnnotationRead
+  | BBoxAnnotationRead
+  | ProjectRead;
+
+export interface MemosAttachedObjectQuery {
+  data: MemosAttachedObject | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  error: Error | null;
+}
 
 /**
  * Hook to fetch the attached object of a memo based on its type.
@@ -16,7 +40,10 @@ import { CodeRead } from "@models/CodeRead";
  * @param id - The id of the attached object
  * @returns The query result for the attached object
  */
-export const useGetMemosAttachedObject = (type: AttachedObjectType | undefined, id: number | undefined) => {
+export const useGetMemosAttachedObject = (
+  type: AttachedObjectType | undefined,
+  id: number | undefined,
+): MemosAttachedObjectQuery => {
   // Pass the id only when the type matches, otherwise pass undefined to disable the query
   const tagQuery = TagHooks.useGetTag(type === AttachedObjectType.TAG ? id : undefined);
   const codeQuery = CodeHooks.useGetCode(type === AttachedObjectType.CODE ? id : undefined);
@@ -44,23 +71,13 @@ export const useGetMemosAttachedObject = (type: AttachedObjectType | undefined, 
     case AttachedObjectType.SENTENCE_ANNOTATION:
       return sentenceQuery;
     default: {
-      // Return a "disabled" query-like object when type is undefined
-      const placeholder: CodeRead = {
-        id: 0,
-        name: "",
-        color: "",
-        description: "",
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-        project_id: 0,
-        is_system: false,
-        memo_ids: [],
-      };
+      // Return a disabled-query shape when no type is given
       return {
-        data: placeholder,
+        data: undefined,
         isLoading: false,
+        isFetching: false,
         isError: false,
-        isSuccess: type === undefined,
+        isSuccess: false,
         error: null,
       };
     }

@@ -1,13 +1,13 @@
 import { useAppDispatch } from "@store/storeHooks";
 import { useCallback } from "react";
-import { MemoDialogActions } from "../store/memoDialogSlice";
-import { MemoEvent } from "../types/MemoEvent";
+import { MemoDialogEvent } from "./_types/MemoDialogEvent";
+import { MemoDialogActions } from "./memoDialogSlice";
 
 export const useOpenMemoDialog = () => {
   const dispatch = useAppDispatch();
 
   const openMemoDialog = useCallback(
-    (data: MemoEvent) => {
+    (data: MemoDialogEvent) => {
       dispatch(MemoDialogActions.openMemoDialog(data));
     },
     [dispatch],

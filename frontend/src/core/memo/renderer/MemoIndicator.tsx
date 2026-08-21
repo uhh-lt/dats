@@ -1,7 +1,8 @@
 import { Icon, getIconComponent } from "@components/icons";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { Button, ButtonProps, CircularProgress } from "@mui/material";
 import { memo } from "react";
-import { MemoCreateOrSelectMenu, MemoEvent } from "../dialog";
+import { MemoCreateOrSelectMenu } from "../MemoCreateOrSelectMenu";
 
 interface MemoIndicatorProps {
   /**
@@ -9,6 +10,8 @@ interface MemoIndicatorProps {
    * When empty, nothing is rendered.
    */
   memoIds: number[];
+  attachedObjectType: AttachedObjectType;
+  attachedObjectId: number;
   /**
    * Tooltip text. Defaults to "Has memo — click to open".
    */
@@ -23,14 +26,8 @@ interface MemoIndicatorProps {
  * (annotation cards, explorer trees, search tables, document viewers, ...).
  */
 export const MemoIndicator = memo(
-  ({
-    memoIds,
-    attachedObjectType,
-    attachedObjectId,
-    onCreateSuccess,
-    ...props
-  }: MemoIndicatorProps & MemoEvent & ButtonProps) => {
-    if (memoIds.length === 0 || !attachedObjectId) {
+  ({ memoIds, attachedObjectType, attachedObjectId, ...props }: MemoIndicatorProps & ButtonProps) => {
+    if (memoIds.length === 0) {
       return null;
     }
 
@@ -38,7 +35,6 @@ export const MemoIndicator = memo(
       <MemoCreateOrSelectMenu
         attachedObjectType={attachedObjectType}
         attachedObjectId={attachedObjectId}
-        onCreateSuccess={onCreateSuccess}
         renderTrigger={(handleClick, isFetching) => (
           <Button
             component="span"

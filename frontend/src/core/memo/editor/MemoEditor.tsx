@@ -1,112 +1,157 @@
-import { MemoHooks } from "@api/hooks/MemoHooks";
-import { EditableTypography } from "@components/EditableTypography";
+import { EmojiGlyph, EmojiPicker } from "@components/emoji";
 import { useAuth } from "@core/auth";
 import { UserRenderer } from "@core/user";
+import { AttachedObjectType } from "@models/AttachedObjectType";
 import { MemoRead } from "@models/MemoRead";
-import { Box, CircularProgress, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import { Box, Divider, InputBase, Stack, Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
-import { memo, useCallback, useMemo } from "react";
-import { MemoActionMenu } from "../MemoActionMenu";
+import { memo } from "react";
 import { AttachedObjectRenderer } from "../renderer";
-import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
-import { MemoEditorView } from "./MemoEditorView";
+import { MemoBlockNoteEditor } from "./_components/MemoBlockNoteEditor";
+import { MemoAttachedObject } from "./hooks/useMemoEditorData";
+import { MemoFormValues } from "./hooks/useMemoPersistence";
 
-interface MemoBlockEditorProps {
-  memoId: number;
-  renderToolbar?: (memo: MemoRead) => React.ReactNode;
-  onDelete?: () => void;
-  onStarred?: () => void;
+interface MemoEditorProps {
+  memo: MemoRead | undefined;
+  attachedObject: MemoAttachedObject;
+  attachedObjectType: AttachedObjectType;
+  /** The current draft, owned by useMemoPersistence. */
+  formData: MemoFormValues;
+  onTitleChange: (title: string) => void;
+  onContentChange: (content: string, contentJson: string) => void;
+  onIconChange: (icon: string | null) => void;
 }
 
-export const MemoEditor = memo(({ memoId, renderToolbar, onDelete, onStarred }: MemoBlockEditorProps) => {
-  // global client state
-  const { user } = useAuth();
-  const memo = MemoHooks.useGetMemo(memoId);
-  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type, memo.data?.attached_object_id);
+/**
+ * The memo editor: title, icon, metadata and the block-note content editor.
+ * Purely presentational — data fetching lives in useMemoEditorData,
+ * draft state and persistence live in useMemoPersistence,
+ * containers are MemoDialog / MemoEditorPane.
+ */
+export const MemoEditor = memo(
+  ({
+    memo,
+    attachedObject,
+    attachedObjectType,
+    formData,
+    onTitleChange,
+    onContentChange,
+    onIconChange,
+  }: MemoEditorProps) => {
+    const { user } = useAuth();
 
-  const isEditable = useMemo(() => user?.id === memo.data?.user_id, [user?.id, memo.data?.user_id]);
+    const isEditable = !memo || user?.id === memo.user_id;
+    const authorId = memo?.user_id ?? user?.id;
+    const lastModified = memo?.updated ? dateToLocaleString(memo.updated) : "Not saved yet";
 
-  const { mutate: updateMemo } = MemoHooks.useUpdateMemo();
+    if (!user || !authorId) {
+      return null;
+    }
 
-  const handleTitleChange = useCallback(
-    (title: string) => {
-      updateMemo({
-        memoId: memoId,
-        requestBody: {
-          title: title,
-        },
-      });
-    },
-    [memoId, updateMemo],
-  );
-
-  const handleMemoChange = useCallback(
-    (markdown: string, json: string) => {
-      updateMemo({
-        memoId: memoId,
-        requestBody: {
-          content: markdown,
-          content_json: json,
-        },
-      });
-    },
-    [memoId, updateMemo],
-  );
-
-  const lastModifiedDate = useMemo(() => {
-    if (!memo.data?.updated) return "";
-    const fullDate = dateToLocaleString(memo.data.updated);
-    return fullDate.substring(0, fullDate.indexOf(","));
-  }, [memo.data]);
-
-  return (
-    <Box className="h100 myFlexContainer">
-      {memo.isLoading || attachedObject.isLoading ? (
-        <CircularProgress />
-      ) : memo.isError ? (
-        <div>Error: {memo.error.message}</div>
-      ) : attachedObject.isError ? (
-        <div>Error: {attachedObject.error?.message}</div>
-      ) : memo.isSuccess && attachedObject.isSuccess && attachedObject.data ? (
-        <>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" p={0.5}>
-            <Typography>
-              <AttachedObjectRenderer
-                attachedObject={attachedObject.data}
-                attachedObjectType={memo.data.attached_object_type}
-                link
-              />
-            </Typography>
-            <Typography variant="subtitle2" color="textDisabled" fontSize={12} flexShrink={0}>
-              <UserRenderer user={memo.data.user_id} />
-            </Typography>
-          </Stack>
-          <Divider />
-          <Toolbar disableGutters variant="dense" sx={{ justifyContent: "space-between" }}>
-            {renderToolbar ? renderToolbar(memo.data) : null}
+    return (
+      <Box className="h100 myFlexContainer" sx={{ overflow: "hidden" }}>
+        <Box sx={{ width: "100%", px: 6, pt: 3, flexShrink: 0 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             {isEditable ? (
-              <EditableTypography
-                variant="h6"
-                value={memo.data.title}
-                onChange={handleTitleChange}
-                whiteColor={false}
-              />
+              <Box
+                component="h1"
+                sx={{
+                  m: 0,
+                  minWidth: 0,
+                  flex: 1,
+                  fontSize: "2.5rem",
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                }}
+              >
+                <InputBase
+                  fullWidth
+                  multiline
+                  value={formData.title}
+                  onChange={(event) => onTitleChange(event.target.value)}
+                  placeholder="New memo"
+                  sx={{
+                    font: "inherit",
+                    lineHeight: "inherit",
+                    "& .MuiInputBase-input": {
+                      p: 0,
+                      overflowWrap: "anywhere",
+                    },
+                  }}
+                />
+              </Box>
             ) : (
-              <Typography variant="h6">{memo.data.title}</Typography>
+              <Typography component="h1" variant="h3" fontWeight={700} sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                {formData.title || "New memo"}
+              </Typography>
             )}
-            <MemoActionMenu memo={memo.data} onDeleteClick={onDelete} onStarredClick={onStarred} />
-          </Toolbar>
-          <Divider />
-          <MemoEditorView
-            initialContentJson={memo.data.content_json}
-            onChange={handleMemoChange}
+            {isEditable ? (
+              <EmojiPicker value={formData.icon} onChange={onIconChange} />
+            ) : formData.icon ? (
+              <Typography
+                component="span"
+                sx={{ width: 48, lineHeight: "48px", fontSize: "2rem", textAlign: "center", flexShrink: 0 }}
+              >
+                <EmojiGlyph emoji={formData.icon} fontSize="2rem" />
+              </Typography>
+            ) : null}
+          </Stack>
+
+          <Stack spacing={1.25} mt={3}>
+            <MetadataRow label="Author">
+              <UserRenderer user={authorId} renderAvatar />
+            </MetadataRow>
+            <MetadataRow label="Last modified">{lastModified}</MetadataRow>
+            <MetadataRow label="Attached to">
+              <AttachedObjectRenderer
+                attachedObject={attachedObject}
+                attachedObjectType={attachedObjectType}
+                link
+                expandable
+                expandMaxHeight={280}
+              />
+            </MetadataRow>
+          </Stack>
+          <Divider sx={{ mt: 3 }} />
+        </Box>
+
+        <Box
+          sx={{
+            width: "100%",
+            px: 6,
+            pb: 3,
+            flex: "1 1 auto",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            "& .bn-editor": { px: 0 },
+          }}
+        >
+          <MemoBlockNoteEditor
+            initialContentJson={formData.content_json}
+            onChange={onContentChange}
             editable={isEditable}
           />
-          <Typography variant="subtitle2" color="textSecondary" fontSize={12} px={1}>
-            {"Last modified: " + lastModifiedDate}
-          </Typography>
-        </>
-      ) : null}
-    </Box>
+        </Box>
+      </Box>
+    );
+  },
+);
+
+interface MetadataRowProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function MetadataRow({ label, children }: MetadataRowProps) {
+  return (
+    <Stack direction="row" alignItems="flex-start" minHeight={28}>
+      <Typography color="text.secondary" width={140} flexShrink={0}>
+        {label}
+      </Typography>
+      <Box minWidth={0} maxWidth="100%" flex="1 1 auto">
+        {children}
+      </Box>
+    </Stack>
   );
-});
+}
