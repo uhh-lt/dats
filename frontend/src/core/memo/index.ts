@@ -1,6 +1,7 @@
 export * from "./dialog";
 export * from "./editor";
 export * from "./MemoActionMenu";
+export * from "./MemoCreateIconButton";
 export * from "./MemoCreateOrSelectListItemButton";
 export * from "./MemoCreateOrSelectMenu";
 export * from "./MemoCreateOrSelectMenuItem";
