@@ -53,6 +53,8 @@ import ShortTextIcon from "@mui/icons-material/ShortText";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SquareIcon from "@mui/icons-material/Square";
 import StackedBarChartIcon from "@mui/icons-material/StackedBarChart";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 import SubjectIcon from "@mui/icons-material/Subject";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
@@ -196,6 +198,8 @@ export enum Icon {
   SAVE = "save",
   CLOSE = "close",
   INFO = "info",
+  FAVORITE = "favorite",
+  FAVORITE_BORDER = "favorite_border",
 }
 
 // Define a type for icon component factory functions
@@ -331,6 +335,8 @@ const iconMap: Record<Icon, IconFactory> = {
   [Icon.SAVE]: (iconProps) => <SaveIcon {...iconProps} />,
   [Icon.CLOSE]: (iconProps) => <CloseIcon {...iconProps} />,
   [Icon.INFO]: (iconProps) => <InfoIcon {...iconProps} />,
+  [Icon.FAVORITE]: (iconProps) => <StarIcon {...iconProps} />,
+  [Icon.FAVORITE_BORDER]: (iconProps) => <StarBorderIcon {...iconProps} />,
 };
 
 /**
