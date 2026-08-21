@@ -14,4 +14,4 @@ export * from "./MemoFavoriteMenuItem";
 export * from "./renderer";
 export * from "./table";
 export * from "./useGetMemosAttachedObject";
-export * from "./workspace-renderers";
+export * from "./presentation";
