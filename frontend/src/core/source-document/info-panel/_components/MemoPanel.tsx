@@ -49,6 +49,14 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
   const { user } = useAuth();
   const memos = MemoHooks.useGetObjectMemos(AttachedObjectType.SOURCE_DOCUMENT, sdocId);
 
+  const handleSelectMemo = useCallback(
+    (memoId: number) => {
+      const memo = memos.data?.find((m) => m.id === memoId);
+      if (memo) onClick(memo);
+    },
+    [memos.data, onClick],
+  );
+
   // mutations
   const { mutate: createMemoMutation, isPending } = MemoHooks.useCreateMemo();
 
@@ -92,7 +100,17 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
             {memos.data
               .sort((a) => (a.user_id === user?.id ? -1 : 0)) // always show user's memos first
               .map((memo) => (
-                <MemoCard memo={memo} key={memo.id} onClick={onClick} />
+                <MemoCard
+                  memo={memo}
+                  key={memo.id}
+                  onSelect={handleSelectMemo}
+                  renderTitle
+                  renderAttachedObject
+                  attachedObjectLink
+                  renderActionMenu
+                  renderAuthor
+                  renderDate
+                />
               ))}
           </Stack>
         </>

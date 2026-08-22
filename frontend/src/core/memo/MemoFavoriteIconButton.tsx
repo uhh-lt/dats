@@ -1,11 +1,12 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { getIconComponent, Icon } from "@components/icons";
+import { MemoRead } from "@models/MemoRead";
 import { MemoRow } from "@models/MemoRow";
 import { IconButton } from "@mui/material";
 import { memo, useCallback } from "react";
 
 interface MemoFavoriteIconButtonProps {
-  memo: MemoRow;
+  memo: MemoRow | MemoRead;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { GenericPositionMenu, GenericPositionMenuHandle } from "@components/GenericPositionMenu";
-import { attachedObjectTypeToText, MemoRenderer, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
+import { attachedObjectTypeToText, MemoCard, useGetMemosAttachedObject, useOpenMemoDialog } from "@core/memo";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { BBoxAnnotationRead } from "@models/BBoxAnnotationRead";
 import { CodeRead } from "@models/CodeRead";
@@ -11,10 +11,9 @@ import { SourceDocumentRead } from "@models/SourceDocumentRead";
 import { SpanAnnotationRead } from "@models/SpanAnnotationRead";
 import { TagRead } from "@models/TagRead";
 import { WhiteboardNodeType } from "@models/WhiteboardNodeType";
-import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
+import { MenuItem, Typography } from "@mui/material";
 import { Node, NodeProps, useReactFlow, XYPosition } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import Markdown from "react-markdown";
 import { useReactFlowService } from "../../_hooks/ReactFlowService";
 import { DATSEdge } from "../../_types/DATSEdge";
 import { DATSNode } from "../../_types/DATSNode";
@@ -289,12 +288,7 @@ export function MemoNode(props: NodeProps<MemoNode>) {
         backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
         {memo.isSuccess ? (
-          <>
-            <CardHeader title={<MemoRenderer memo={memo.data} showIcon showTitle />} />
-            <CardContent>
-              <Markdown>{memo.data.content}</Markdown>
-            </CardContent>
-          </>
+          <MemoCard memo={memo.data} renderIcon renderTitle renderContent />
         ) : memo.isError ? (
           <Typography variant="body2">{memo.error.message}</Typography>
         ) : (

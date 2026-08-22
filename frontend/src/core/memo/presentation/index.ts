@@ -1,5 +1,6 @@
+export { MemoCard } from "./MemoCard";
 export { MemoFeedItem } from "./MemoFeedItem";
 export { MemoListItem } from "./MemoListItem";
+export type { MemoPresentationProps } from "./MemoPresentationProps";
 export { MemoTableHeader } from "./MemoTableHeader";
 export { MemoTableRow } from "./MemoTableRow";
-export { MemoWorkspaceCard } from "./MemoWorkspaceCard";

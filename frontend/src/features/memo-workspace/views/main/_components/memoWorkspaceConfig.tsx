@@ -1,12 +1,12 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { MemoViewHooks } from "@api/hooks/MemoViewHooks";
 import {
+  MemoCard,
   MemoCreateIconButton,
   MemoFeedItem,
   MemoListItem,
   MemoTableHeader,
   MemoTableRow,
-  MemoWorkspaceCard,
   useMemoSearchInfo,
 } from "@core/memo";
 import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
@@ -60,9 +60,33 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
 
   tableHeader: <MemoTableHeader />,
   renderTableRow: (row, onSelect) => <MemoTableRow key={row.id} memo={row} onSelect={onSelect} />,
-  renderListItem: (row, onSelect) => <MemoListItem key={row.id} memo={row} onSelect={onSelect} />,
-  renderCard: (row, onSelect) => <MemoWorkspaceCard key={row.id} memo={row} onSelect={onSelect} />,
-  renderFeedItem: (row, onSelect) => <MemoFeedItem key={row.id} memo={row} onSelect={onSelect} />,
+  renderListItem: (row, onSelect) => (
+    <MemoListItem key={row.id} memo={row} onSelect={onSelect} renderTitle renderContent renderFavoriteButton />
+  ),
+  renderCard: (row, onSelect) => (
+    <MemoCard
+      key={row.id}
+      memo={row}
+      onSelect={onSelect}
+      renderTitle
+      renderContent
+      renderFavoriteButton
+      renderAttachedObject
+    />
+  ),
+  renderFeedItem: (row, onSelect) => (
+    <MemoFeedItem
+      key={row.id}
+      memo={row}
+      onSelect={onSelect}
+      renderTitle
+      renderContent
+      renderAuthor
+      renderDate
+      renderFavoriteButton
+      renderAttachedObject
+    />
+  ),
 
   templates: createMemoTemplates(userId),
   renderGroupAction: (group, onSelect) =>
