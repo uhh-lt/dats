@@ -53,7 +53,7 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
 
   useSearchInfo: useMemoSearchInfo,
   useQueryRows: (request: WorkspaceQueryRequest<MemoColumns>, enabled?: boolean) =>
-    MemoHooks.useQueryMemos(request as QueryRequest_MemoColumns_, enabled),
+    MemoHooks.useQueryMemos(request as QueryRequest_MemoColumns_, { enabled }),
   useQueryGroups: (request: WorkspaceGroupQueryRequest<MemoColumns>, enabled?: boolean) =>
     MemoHooks.useQueryMemoGroups(request as GroupQueryRequest_MemoColumns_, enabled),
   useSearchViews: MemoViewHooks,

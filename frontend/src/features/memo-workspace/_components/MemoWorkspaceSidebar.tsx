@@ -5,14 +5,58 @@ import { MyFilter } from "@core/filter";
 import { LinkButton, LinkListItemButton } from "@core/navigation";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
+import { BooleanOperator } from "@models/BooleanOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { MemoColumns } from "@models/MemoColumns";
+import { MemoRow } from "@models/MemoRow";
+import { Page_MemoRow_ } from "@models/Page_MemoRow_";
 import { SortDirection } from "@models/SortDirection";
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Divider, IconButton, ListItemIcon, ListItemText, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useAppSelector } from "@store/storeHooks";
+import { InfiniteData, UseQueryResult } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
+
+const projectFilter: MyFilter<MemoColumns> = {
+  id: crypto.randomUUID(),
+  logic_operator: LogicalOperator.AND,
+  items: [
+    {
+      id: crypto.randomUUID(),
+      column: MemoColumns.M_ATTACHED_OBJECT_TYPE,
+      operator: AttachedObjectTypeOperator.ATTACHED_OBJECT_TYPE_EQUALS,
+      value: AttachedObjectType.PROJECT,
+    },
+  ],
+};
+
+const favoriteFilter: MyFilter<MemoColumns> = {
+  id: crypto.randomUUID(),
+  logic_operator: LogicalOperator.AND,
+  items: [
+    {
+      id: crypto.randomUUID(),
+      column: MemoColumns.M_FAVORITE,
+      operator: BooleanOperator.BOOLEAN_EQUALS,
+      value: true,
+    },
+  ],
+};
+
+const flattenMemoPagesToItems = (data: InfiniteData<Page_MemoRow_> | undefined): MemoRow[] => {
+  if (!data) return [];
+  return data.pages.flatMap((page) => page.items);
+};
 
 interface MemoWorkspaceSidebarProps {
   projectId: number;
@@ -41,28 +85,25 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
       },
     );
   }, [createMemo, navigate, projectId]);
-  const projectFilter = useMemo<MyFilter<MemoColumns>>(
-    () => ({
-      id: crypto.randomUUID(),
-      logic_operator: LogicalOperator.AND,
-      items: [
-        {
-          id: crypto.randomUUID(),
-          column: MemoColumns.M_ATTACHED_OBJECT_TYPE,
-          operator: AttachedObjectTypeOperator.ATTACHED_OBJECT_TYPE_EQUALS,
-          value: AttachedObjectType.PROJECT,
-        },
-      ],
-    }),
-    [],
+  const projectMemos = MemoHooks.useQueryMemos(
+    {
+      project_id: projectId,
+      filter: projectFilter,
+      sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
+      page_size: 200,
+    },
+    { select: flattenMemoPagesToItems },
   );
-  const projectMemos = MemoHooks.useQueryMemos({
-    project_id: projectId,
-    filter: projectFilter,
-    sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
-    page_size: 200,
-  });
-  const projects = projectMemos.data?.pages.flatMap((page) => page.items) ?? [];
+
+  const favoriteMemos = MemoHooks.useQueryMemos(
+    {
+      project_id: projectId,
+      filter: favoriteFilter,
+      sorts: [{ column: MemoColumns.M_TITLE, direction: SortDirection.ASC }],
+      page_size: 200,
+    },
+    { select: flattenMemoPagesToItems },
+  );
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -88,6 +129,11 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
             </Typography>
           )}
           <Divider />
+          <Typography variant="overline" color="text.secondary" noWrap>
+            Favorites
+          </Typography>
+          <SidebarMemoSection query={favoriteMemos} emptyText="No favorite memos" projectId={projectId} />
+          <Divider />
           <Stack direction="row" alignItems="center" justifyContent="space-between" minWidth={0}>
             <Typography variant="overline" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
               Project Memos
@@ -96,14 +142,31 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
               <AddIcon fontSize="small" />
             </IconButton>
           </Stack>
-          {projects.map((memo) => (
-            <SidebarMemoButton key={memo.id} memo={memo} projectId={projectId} />
-          ))}
+          <SidebarMemoSection query={projectMemos} emptyText="No project memos" projectId={projectId} />
         </Stack>
       </Box>
     </Box>
   );
 });
+
+interface SidebarMemoSectionProps {
+  query: UseQueryResult<MemoRow[], Error>;
+  emptyText: string;
+  projectId: number;
+}
+
+function SidebarMemoSection({ query, emptyText, projectId }: SidebarMemoSectionProps) {
+  if (query.isPending) return <CircularProgress size={20} sx={{ alignSelf: "center" }} />;
+  if (query.isError) return <Typography color="error">{query.error.message}</Typography>;
+  if (!query.data) {
+    return (
+      <Typography variant="caption" color="text.secondary" noWrap>
+        {emptyText}
+      </Typography>
+    );
+  }
+  return query.data.map((memo) => <SidebarMemoButton key={memo.id} memo={memo} projectId={projectId} />);
+}
 
 interface SidebarMemoButtonProps {
   memo: { id: number; title: string; icon?: string | null };
