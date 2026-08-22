@@ -1,6 +1,5 @@
 import { EntityWorkspace } from "@core/workspace";
 import { useAppDispatch, useAppSelector } from "@store/storeHooks";
-import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { MemoWorkspaceActions } from "../../../store/memoWorkspaceSlice";
 import { createMemoWorkspaceConfig } from "./memoWorkspaceConfig";
@@ -13,7 +12,6 @@ interface MemoWorkspaceProps {
 export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
   const scope = `${userId}:${projectId}`;
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const preferences = useAppSelector((state) => state.memoWorkspace.workspaces[scope]);
 
   const config = useMemo(() => createMemoWorkspaceConfig(userId), [userId]);
@@ -27,13 +25,9 @@ export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
 
   const handleSelectMemo = useCallback(
     (memoId: number) => {
-      navigate({
-        to: "/project/$projectId/memo-workspace/detail",
-        params: { projectId },
-        search: { memoId },
-      });
+      dispatch(MemoWorkspaceActions.openMemo({ scope, memoId }));
     },
-    [navigate, projectId],
+    [dispatch, scope],
   );
 
   return (

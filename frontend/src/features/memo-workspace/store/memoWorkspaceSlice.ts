@@ -5,18 +5,11 @@ import createWebStorage from "redux-persist/es/storage/createWebStorage";
 
 const storage = createWebStorage("local");
 
-/** A recently-opened memo shown in the workspace's "Recents" list. */
-export interface RecentMemo {
-  id: number;
-  title: string;
-  updated: string;
-  icon?: string | null;
-}
-
-/** Memo workspace preferences add a recents list to the generic workspace preference. */
+/** Memo workspace preferences add the currently-opened memo to the generic workspace preference. */
 export interface MemoWorkspacePreference {
   lastViewId?: number;
-  recents: RecentMemo[];
+  /** The memo currently opened in the workspace's detail editor (not routed). */
+  openMemoId?: number;
 }
 
 export interface MemoWorkspaceState extends WorkspaceState {
@@ -24,7 +17,7 @@ export interface MemoWorkspaceState extends WorkspaceState {
 }
 
 const getWorkspace = (state: MemoWorkspaceState, scope: string): MemoWorkspacePreference => {
-  state.workspaces[scope] ??= { recents: [] };
+  state.workspaces[scope] ??= {};
   return state.workspaces[scope];
 };
 
@@ -35,14 +28,11 @@ const memoWorkspaceSlice = createSlice({
   initialState,
   reducers: {
     ...workspaceReducer,
-    rememberRecent: (state, action: PayloadAction<{ scope: string; recent: RecentMemo }>) => {
-      const workspace = getWorkspace(state, action.payload.scope);
-      const kept = workspace.recents.filter((recent) => recent.id !== action.payload.recent.id);
-      workspace.recents = [action.payload.recent, ...kept].slice(0, 10);
+    openMemo: (state, action: PayloadAction<{ scope: string; memoId: number }>) => {
+      getWorkspace(state, action.payload.scope).openMemoId = action.payload.memoId;
     },
-    removeRecent: (state, action: PayloadAction<{ scope: string; recentId: number }>) => {
-      const workspace = getWorkspace(state, action.payload.scope);
-      workspace.recents = workspace.recents.filter((recent) => recent.id !== action.payload.recentId);
+    closeMemo: (state, action: PayloadAction<{ scope: string }>) => {
+      getWorkspace(state, action.payload.scope).openMemoId = undefined;
     },
   },
 });

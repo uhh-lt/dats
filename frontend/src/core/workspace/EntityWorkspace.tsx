@@ -1,5 +1,5 @@
 import { SearchViewLayout } from "@models/SearchViewLayout";
-import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 import { useCallback, useState } from "react";
 import { WorkspaceResults } from "./_components/results/WorkspaceResults";
 import { WorkspaceToolbar } from "./_components/toolbar/WorkspaceToolbar";
@@ -56,53 +56,51 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
   );
 
   return (
-    <Box sx={{ height: "100%", bgcolor: "background.paper" }}>
-      <Stack height="100%" minWidth={0}>
-        <WorkspaceToolbar
+    <Stack height="100%" minWidth={0}>
+      <WorkspaceToolbar
+        config={config}
+        views={views}
+        view={activeView}
+        activeViewId={activeViewId}
+        searchQuery={searchQuery}
+        expertMode={expertMode}
+        columnInfo={columnInfo}
+        isRenaming={updateView.isPending}
+        onSelectView={handleSelectViewAndResetSearch}
+        onReorderViews={handleReorderViews}
+        onCreateView={handleCreateView}
+        onRenameView={handleRenameView}
+        onDeleteView={handleDeleteView}
+        onSearchQueryChange={setSearchQuery}
+        onExpertModeChange={setExpertMode}
+        onUpdate={handleDebouncedUpdate}
+      />
+      {activeView ? (
+        <WorkspaceResults
           config={config}
-          views={views}
+          projectId={projectId}
           view={activeView}
-          activeViewId={activeViewId}
           searchQuery={searchQuery}
-          expertMode={expertMode}
-          columnInfo={columnInfo}
-          isRenaming={updateView.isPending}
-          onSelectView={handleSelectViewAndResetSearch}
-          onReorderViews={handleReorderViews}
-          onCreateView={handleCreateView}
-          onRenameView={handleRenameView}
-          onDeleteView={handleDeleteView}
-          onSearchQueryChange={setSearchQuery}
-          onExpertModeChange={setExpertMode}
-          onUpdate={handleDebouncedUpdate}
+          onSelect={onSelect}
         />
-        {activeView ? (
-          <WorkspaceResults
-            config={config}
-            projectId={projectId}
-            view={activeView}
-            searchQuery={searchQuery}
-            onSelect={onSelect}
-          />
-        ) : viewsQuery.isLoading ? (
-          <CircularProgress sx={{ m: "auto" }} />
-        ) : (
-          <Stack alignItems="center" justifyContent="center" spacing={2} flex={1}>
-            <Typography variant="h5">Build your {config.entityLabel} workspace</Typography>
-            <Typography color="text.secondary">
-              Create a view to organize every {config.entityLabel} in this project.
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() =>
-                handleCreateView(`All ${config.entityLabel}`, config.templates[0]?.layout ?? SearchViewLayout.TABLE)
-              }
-            >
-              Create All {config.entityLabel} view
-            </Button>
-          </Stack>
-        )}
-      </Stack>
-    </Box>
+      ) : viewsQuery.isLoading ? (
+        <CircularProgress sx={{ m: "auto" }} />
+      ) : (
+        <Stack alignItems="center" justifyContent="center" spacing={2} flex={1}>
+          <Typography variant="h5">Build your {config.entityLabel} workspace</Typography>
+          <Typography color="text.secondary">
+            Create a view to organize every {config.entityLabel} in this project.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() =>
+              handleCreateView(`All ${config.entityLabel}`, config.templates[0]?.layout ?? SearchViewLayout.TABLE)
+            }
+          >
+            Create All {config.entityLabel} view
+          </Button>
+        </Stack>
+      )}
+    </Stack>
   );
 }
