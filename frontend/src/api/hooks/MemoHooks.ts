@@ -54,6 +54,13 @@ const useQueryMemoGroups = (request: GroupQueryRequest_MemoColumns_, enabled = t
     enabled,
   });
 
+const useGetRecentMemos = (projectId: number | null | undefined) =>
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.MEMO_RECENT, projectId],
+    queryFn: () => MemoService.getRecentMemos({ projectId: projectId! }),
+    enabled: !!projectId,
+  });
+
 const invalidateWorkspaceQueries = () => {
   queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_QUERY] });
   queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_GROUPS] });
@@ -187,14 +194,24 @@ const useDeleteMemos = () =>
     },
   });
 
+const useRecordRecentMemo = () =>
+  useMutation({
+    mutationFn: ({ memoId }: { memoId: number; projectId: number }) => MemoService.recordRecentMemo({ memoId }),
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_RECENT, projectId] });
+    },
+  });
+
 export const MemoHooks = {
   useGetMemo,
   useGetObjectMemos,
   useQueryMemos,
   useQueryMemoGroups,
+  useGetRecentMemos,
   useCreateMemo,
   useUpdateMemo,
   useFavoriteMemos,
   useDeleteMemo,
   useDeleteMemos,
+  useRecordRecentMemo,
 };

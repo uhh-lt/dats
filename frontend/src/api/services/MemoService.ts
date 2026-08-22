@@ -39,6 +39,47 @@ export class MemoService {
     });
   }
   /**
+   * Returns the current user's most recently opened Memos in the project
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getRecentMemos({
+    projectId,
+    limit = 10,
+  }: {
+    projectId: number;
+    limit?: number;
+  }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/memo/recent",
+      query: {
+        project_id: projectId,
+        limit: limit,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Records that the current user opened the Memo with the given ID
+   * @returns void
+   * @throws ApiError
+   */
+  public static recordRecentMemo({ memoId }: { memoId: number }): CancelablePromise<void> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/memo/{memo_id}/recent",
+      path: {
+        memo_id: memoId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
    * Returns the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError

@@ -79,6 +79,9 @@ export const QueryKey = {
   // memo workspace group queries (grouped search results)
   // managed by frontend/src/api/hooks/MemoHooks.ts
   MEMO_GROUPS: "memoGroups",
+  // recently-opened memos of the current user (by project id)
+  // managed by frontend/src/api/hooks/MemoHooks.ts
+  MEMO_RECENT: "memoRecent",
   // memo search views (by project id)
   // managed by frontend/src/api/hooks/MemoViewHooks.ts
   MEMO_VIEWS: "memoViews",

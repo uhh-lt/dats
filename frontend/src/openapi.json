@@ -2395,6 +2395,64 @@
         }
       }
     },
+    "/memo/recent": {
+      "get": {
+        "tags": ["memo"],
+        "summary": "Returns the current user's most recently opened Memos in the project",
+        "operationId": "get_recent_memos",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10, "title": "Limit" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemoRead" },
+                  "title": "Response Memo-Get Recent Memos"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/memo/{memo_id}/recent": {
+      "post": {
+        "tags": ["memo"],
+        "summary": "Records that the current user opened the Memo with the given ID",
+        "operationId": "record_recent_memo",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "memo_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Memo Id" } }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/memo/{memo_id}": {
       "get": {
         "tags": ["memo"],
