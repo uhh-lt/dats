@@ -69,6 +69,47 @@ def add_memo(
 
 
 @router.get(
+    "/recent",
+    response_model=list[MemoRead],
+    summary="Returns the current user's most recently opened Memos in the project",
+)
+def get_recent_memos(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    limit: int = 10,
+    authz_user: AuthzUser = Depends(),
+) -> list[MemoRead]:
+    authz_user.assert_in_project(project_id=project_id)
+
+    db_objs = crud_memo.read_recents(
+        db=db, user_id=authz_user.user.id, project_id=project_id, limit=limit
+    )
+    return [
+        crud_memo.get_memo_read_dto_from_orm(
+            db=db, db_obj=db_obj, user_id=authz_user.user.id
+        )
+        for db_obj in db_objs
+    ]
+
+
+@router.post(
+    "/{memo_id}/recent",
+    status_code=204,
+    summary="Records that the current user opened the Memo with the given ID",
+)
+def record_recent_memo(
+    *,
+    db: Session = Depends(get_db_session),
+    memo_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> None:
+    authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
+
+    crud_memo.record_recent(db=db, memo_id=memo_id, user_id=authz_user.user.id)
+
+
+@router.get(
     "/{memo_id}",
     response_model=MemoRead,
     summary="Returns the Memo with the given ID if it exists",

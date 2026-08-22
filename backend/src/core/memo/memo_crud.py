@@ -14,7 +14,7 @@ from core.memo.memo_dto import (
     MemoRead,
     MemoUpdate,
 )
-from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM
+from core.memo.memo_orm import MemoFavoriteLinkTable, MemoORM, MemoRecentORM
 from core.memo.object_handle_dto import ObjectHandleCreate
 from core.memo.object_handle_orm import ObjectHandleORM
 from core.project.project_orm import ProjectORM
@@ -113,6 +113,22 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             self.model.uuid == uuid,
         )
         return query.first()
+
+    def read_recents(
+        self, db: Session, *, user_id: int, project_id: int, limit: int
+    ) -> list[MemoORM]:
+        """Return the user's most recently opened memos in a project, newest first."""
+        return (
+            db.query(MemoORM)
+            .join(MemoRecentORM, MemoRecentORM.memo_id == MemoORM.id)
+            .filter(
+                MemoRecentORM.user_id == user_id,
+                MemoORM.project_id == project_id,
+            )
+            .order_by(MemoRecentORM.last_opened.desc())
+            .limit(limit)
+            .all()
+        )
 
     ### UPDATE OPERATIONS ###
 
@@ -229,6 +245,20 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreateIntern, MemoUpdate]):
             .first()
             is not None
         )
+
+    ### RECENT OPERATIONS ###
+
+    def record_recent(self, db: Session, *, memo_id: int, user_id: int) -> None:
+        """Upsert a (user, memo) recents row, bumping last_opened to now."""
+        from sqlalchemy.dialects.postgresql import insert
+
+        insert_stmt = insert(MemoRecentORM).values(memo_id=memo_id, user_id=user_id)
+        upsert_stmt = insert_stmt.on_conflict_do_update(
+            index_elements=["user_id", "memo_id"],
+            set_={"last_opened": insert_stmt.excluded.last_opened},
+        )
+        db.execute(upsert_stmt)
+        db.commit()
 
 
 crud_memo = CRUDMemo(MemoORM)

@@ -109,3 +109,32 @@ class MemoFavoriteLinkTable(ORMBase):
     )
 
     __table_args__ = (Index("ix_memofavoritelinktable_memo_id", "memo_id"),)
+
+
+class MemoRecentORM(ORMBase):
+    """Tracks when a user last opened a memo (for "recently opened" lists).
+
+    One row per (user, memo). The memo FK cascades, so deleting a memo
+    automatically removes its recents entries.
+    """
+
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    memo_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("memo.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    last_opened: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    # many to one
+    memo: Mapped["MemoORM"] = relationship("MemoORM")
+
+    __table_args__ = (
+        Index("ix_memorecent_user_last_opened", "user_id", "last_opened"),
+    )
