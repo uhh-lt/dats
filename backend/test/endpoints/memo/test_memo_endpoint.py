@@ -424,3 +424,130 @@ def test_favorite_memo_not_existing(client: TestClient):
     """Authorization runs before the existence check, so an unknown id -> 403."""
     response = client.put("/memo/99999/favorite")
     assert response.status_code == 403, response.text
+
+
+# ===========================================================================
+# RECENT MEMOS (POST /memo/{memo_id}/recent, GET /memo/recent) TESTS
+# ===========================================================================
+#
+# Recents are per-user and per-project. The test client authenticates as `user`
+# (the fixture's `user`), so recording/reading recents always concerns `user`.
+# The fixture itself records NO recents, so each test starts from an empty list.
+
+
+def _record_recent(client: TestClient, memo_id: int) -> None:
+    """Record a memo-open for the requesting user and assert it succeeded."""
+    response = client.post(f"/memo/{memo_id}/recent")
+    assert response.status_code == 204, response.text
+
+
+def _get_recent_ids(client: TestClient, project_id: int, **params) -> list[int]:
+    """Read the requesting user's recent memos and return their ids in order."""
+    response = client.get("/memo/recent", params={"project_id": project_id, **params})
+    assert response.status_code == 200, response.text
+    return [MemoRead.model_validate(item).id for item in response.json()]
+
+
+def test_record_recent_memo_returns_no_content(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Recording a recent returns 204 No Content and an empty body."""
+    memo = memo_project["code_memo_a"]
+
+    response = client.post(f"/memo/{memo.id}/recent")
+
+    assert response.status_code == 204, response.text
+    assert response.content == b""
+
+
+def test_record_recent_memo_not_existing(client: TestClient):
+    """Authorization runs before the existence check, so an unknown id -> 403."""
+    response = client.post("/memo/99999/recent")
+    assert response.status_code == 403, response.text
+
+
+def test_get_recent_memos_empty_initially(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """With nothing recorded, the recents list is empty."""
+    project = memo_project["project"]
+
+    assert _get_recent_ids(client, project.id) == []
+
+
+def test_get_recent_memos_returns_recorded_memos(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """A recorded memo shows up in the recents list as a full MemoRead."""
+    project = memo_project["project"]
+    memo = memo_project["code_memo_a"]
+    _record_recent(client, memo.id)
+
+    response = client.get("/memo/recent", params={"project_id": project.id})
+
+    assert response.status_code == 200, response.text
+    recents = [MemoRead.model_validate(item) for item in response.json()]
+    assert [m.id for m in recents] == [memo.id]
+    assert recents[0].title == "Code Memo A"
+    # is_favorite is computed for the requesting user, who favorited code_memo_a.
+    assert recents[0].is_favorite is True
+
+
+def test_get_recent_memos_orders_by_last_opened_desc(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Recents are ordered most-recently-opened first."""
+    project = memo_project["project"]
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+    _record_recent(client, memo_a.id)
+    _record_recent(client, memo_b.id)
+
+    assert _get_recent_ids(client, project.id) == [memo_b.id, memo_a.id]
+
+
+def test_record_recent_memo_reopen_bumps_to_front(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Re-opening an already-recent memo moves it to the front (upsert, no duplicate)."""
+    project = memo_project["project"]
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+    _record_recent(client, memo_a.id)
+    _record_recent(client, memo_b.id)
+    # Re-open A: it must jump ahead of B without creating a second row.
+    _record_recent(client, memo_a.id)
+
+    assert _get_recent_ids(client, project.id) == [memo_a.id, memo_b.id]
+
+
+def test_get_recent_memos_respects_limit(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """The `limit` query param caps how many recents are returned."""
+    project = memo_project["project"]
+    memo_a = memo_project["code_memo_a"]
+    memo_b = memo_project["code_memo_b"]
+    tag_memo = memo_project["tag_memo"]
+    _record_recent(client, memo_a.id)
+    _record_recent(client, memo_b.id)
+    _record_recent(client, tag_memo.id)
+
+    assert _get_recent_ids(client, project.id, limit=2) == [tag_memo.id, memo_b.id]
+
+
+def test_get_recent_memos_only_returns_memos_from_given_project(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Recents are scoped to the requested project, not across projects."""
+    memo = memo_project["code_memo_a"]
+    _record_recent(client, memo.id)
+
+    # A different (nonexistent) project id has no recents for this user.
+    assert _get_recent_ids(client, project_id=99999) == []
+
+
+def test_get_recent_memos_requires_project_id(client: TestClient):
+    """Omitting the required `project_id` query param yields 422."""
+    response = client.get("/memo/recent")
+    assert response.status_code == 422, response.text
