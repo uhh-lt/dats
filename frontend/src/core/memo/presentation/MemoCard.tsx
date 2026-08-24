@@ -63,65 +63,74 @@ const MemoCardWithData = memo(
     const showContent = renderTitle || (renderContent && getMemoContent(memo).trim().length > 0);
     const content = getMemoContent(memo);
 
+    const actionMenu = (renderFavoriteStatus || renderActionMenu) && (
+      <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
+        {renderActionMenu && (
+          <MemoActionMenu
+            memo={memo as MemoRead}
+            onDeleteClick={onDeleteClick}
+            onStarredClick={onStarredClick}
+            iconButtonProps={{ size: "small" }}
+          />
+        )}
+      </Box>
+    );
+
     const body = (
-      <Box px={2} py={1.5} sx={{ "&::after": { content: '""', display: "table", clear: "both" } }}>
-        {(renderFavoriteStatus || renderActionMenu) && (
-          <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
-            {renderActionMenu && (
-              <MemoActionMenu
-                memo={memo as MemoRead}
-                onDeleteClick={onDeleteClick}
-                onStarredClick={onStarredClick}
-                iconButtonProps={{ size: "small" }}
-              />
-            )}
-          </Box>
-        )}
-        {showHeader && (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            {renderAttachedObject && attachedObject.data && (
-              <AttachedObjectRenderer
-                attachedObject={attachedObject.data}
-                attachedObjectType={memo.attached_object_type}
-                link={attachedObjectLink}
-              />
-            )}
-          </Stack>
-        )}
-        {showContent && (
-          <Stack sx={{ mt: showHeader ? 1 : 0 }}>
-            {renderTitle && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                {renderIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
-                <Typography variant="h6" fontWeight={600} minWidth={0} noWrap>
-                  {memo.title}
-                </Typography>
-              </Stack>
-            )}
-            {renderContent && (
-              <>
-                {isMemoRow(memo) ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{
-                      display: "-webkit-box",
-                      WebkitBoxOrient: "vertical",
-                      WebkitLineClamp: 3,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {content}
+      <Box px={2} py={1.5} display="flex" flexDirection="column" height="100%">
+        {/*
+          Block wrapper (not flex) so the floated action menu stays at the top and the
+          header/title wrap around it, exactly like the original layout. It grows
+          (flex: 1) to fill the card height, pushing the footer to the bottom.
+        */}
+        <Box flex={1} sx={{ "&::after": { content: '""', display: "table", clear: "both" } }}>
+          {actionMenu}
+          {showHeader && (
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              {renderAttachedObject && attachedObject.data && (
+                <AttachedObjectRenderer
+                  attachedObject={attachedObject.data}
+                  attachedObjectType={memo.attached_object_type}
+                  link={attachedObjectLink}
+                />
+              )}
+            </Stack>
+          )}
+          {showContent && (
+            <Stack sx={{ mt: showHeader ? 1 : 0 }}>
+              {renderTitle && (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  {renderIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
+                  <Typography variant="h6" fontWeight={600} minWidth={0} noWrap>
+                    {memo.title}
                   </Typography>
-                ) : (
-                  <Box className="markdown-content">
-                    <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
-                  </Box>
-                )}
-              </>
-            )}
-          </Stack>
-        )}
+                </Stack>
+              )}
+              {renderContent && (
+                <>
+                  {isMemoRow(memo) ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 3,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {content}
+                    </Typography>
+                  ) : (
+                    <Box className="markdown-content">
+                      <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Stack>
+          )}
+        </Box>
         {showFooter && (
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: showContent ? 2 : showHeader ? 1 : 0 }}>
             {renderAuthor ? (
@@ -154,11 +163,19 @@ const MemoCardWithData = memo(
     return (
       <Card
         variant="outlined"
-        sx={
-          renderFavoriteStatus && memo.is_favorite ? { borderLeftWidth: 3, borderLeftColor: "warning.main" } : undefined
-        }
+        sx={{
+          // Fill the grid cell so all cards in a gallery row share the row height.
+          height: "100%",
+          ...(renderFavoriteStatus && memo.is_favorite ? { borderLeftWidth: 3, borderLeftColor: "warning.main" } : {}),
+        }}
       >
-        {onSelect ? <CardActionArea onClick={handleClick}>{body}</CardActionArea> : body}
+        {onSelect ? (
+          <CardActionArea onClick={handleClick} sx={{ height: "100%" }}>
+            {body}
+          </CardActionArea>
+        ) : (
+          body
+        )}
       </Card>
     );
   },
