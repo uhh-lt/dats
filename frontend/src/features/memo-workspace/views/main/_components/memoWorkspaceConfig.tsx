@@ -61,6 +61,7 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
   defaultSelectedProperties,
   defaultFilterExpression: memoDefaultFilterExpression,
   dateColumns: [MemoColumns.M_CREATED, MemoColumns.M_UPDATED],
+  defaultGroupBy: { field: MemoColumns.M_ATTACHED_OBJECT_TYPE },
   emptyFilter: emptyMemoFilter,
 
   useSearchInfo: useMemoSearchInfo,

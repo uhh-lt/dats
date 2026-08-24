@@ -46,8 +46,8 @@ export function EntityGroup<TColumns extends string, TRow extends { id: number }
         variant="outlined"
         sx={{ minWidth: 320, maxWidth: 380, display: "flex", flexDirection: "column", maxHeight: "100%" }}
       >
-        <Stack direction="row" p={1} alignItems="center">
-          <Typography fontWeight={600} flex={1}>
+        <Stack direction="row" p={1} alignItems="center" spacing={1}>
+          <Typography fontWeight={600}>
             {group.label} ({group.total_results})
           </Typography>
           {config.renderGroupAction?.(group, onSelect)}
@@ -68,13 +68,16 @@ export function EntityGroup<TColumns extends string, TRow extends { id: number }
 
   return (
     <Box width="100%">
-      <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack direction="row" alignItems="center">
         <IconButton size="small" onClick={() => onToggle(!expanded)} aria-label="toggle group">
           {expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
         </IconButton>
-        <Typography fontWeight={600}>{group.label}</Typography>
-        <Typography color="text.secondary">{group.total_results}</Typography>
-        <Box flex={1} />
+        <Typography fontWeight={600} sx={{ ml: 0 }}>
+          {group.label}
+        </Typography>
+        <Typography color="text.secondary" sx={{ ml: 2, mr: 1 }}>
+          {group.total_results}
+        </Typography>
         {config.renderGroupAction?.(group, onSelect)}
       </Stack>
       <Collapse in={expanded}>

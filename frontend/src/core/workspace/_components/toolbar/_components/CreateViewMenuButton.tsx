@@ -29,7 +29,10 @@ export function CreateViewMenuButton<TColumns extends string, TRow extends { id:
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleCreate = (...args: Parameters<typeof onCreate>) => {
-    onCreate(...args);
+    const [name, layout, filters, groupBy, sorts] = args;
+    // BOARD views require a grouping; default to the config's defaultGroupBy when none is given.
+    const resolvedGroupBy = layout === SearchViewLayout.BOARD ? (groupBy ?? config.defaultGroupBy) : groupBy;
+    onCreate(name, layout, filters, resolvedGroupBy, sorts);
     setAnchorEl(null);
   };
   const handleTemplate = (template: WorkspaceTemplate<TColumns>) => {

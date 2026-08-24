@@ -44,6 +44,8 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   defaultFilterExpression: MyFilterExpression<TColumns>;
   /** Columns that get a date-granularity selector when used for grouping. */
   dateColumns: TColumns[];
+  /** Default grouping applied when creating a BOARD view without an explicit groupBy. */
+  defaultGroupBy?: WorkspaceGroupConfig<TColumns>;
   /** Default filter factory for a brand-new view. */
   emptyFilter: () => MyFilter<TColumns>;
 

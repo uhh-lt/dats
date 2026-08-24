@@ -39,7 +39,7 @@ export const MemoCreateIconButton = memo(
       <Tooltip title={title}>
         <span>
           <IconButton size="small" onClick={handleCreate} disabled={createMemo.isPending} {...props}>
-            {getIconComponent(Icon.ADD)}
+            {getIconComponent(Icon.CREATE)}
           </IconButton>
         </span>
       </Tooltip>
