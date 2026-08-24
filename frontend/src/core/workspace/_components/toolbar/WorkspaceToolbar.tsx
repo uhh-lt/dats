@@ -63,6 +63,11 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
   const columnValues = Object.values(config.columns) as TColumns[];
 
   const handleLayoutChange = (layout: SearchViewLayout) => {
+    // BOARD views require a grouping; default to the config's defaultGroupBy when none is set.
+    if (layout === SearchViewLayout.BOARD && !view?.group_by && config.defaultGroupBy) {
+      onUpdate({ layout, group_by: config.defaultGroupBy });
+      return;
+    }
     onUpdate({ layout });
   };
   const handleGroupChange = (group?: TColumns) => {
