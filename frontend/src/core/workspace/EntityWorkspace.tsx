@@ -50,7 +50,7 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
     handleSelectView,
     handleReorderViews,
     handleCreateView,
-    handleDebouncedUpdate,
+    handleUpdateView,
     handleDeleteView,
     handleRenameView,
   } = useWorkspaceViews({ projectId, config, lastViewId, onRememberView });
@@ -83,7 +83,7 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
         onDeleteView={handleDeleteView}
         onSearchQueryChange={setSearchQuery}
         onExpertModeChange={setExpertMode}
-        onUpdate={handleDebouncedUpdate}
+        onUpdate={handleUpdateView}
       />
       {activeView ? (
         <WorkspaceResults

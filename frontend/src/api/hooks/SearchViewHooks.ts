@@ -46,6 +46,29 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
   const useUpdateView = () =>
     useMutation({
       mutationFn: SearchViewService.update,
+      // Serialize updates per entity: rapid successive patches (e.g. toggling properties)
+      // must reach the server in click order, since each patch is merged onto server state.
+      scope: { id: `${queryKey}-update-${entityType}` },
+      onMutate: async ({ viewId, requestBody }) => {
+        // Optimistically merge the patch into every cached view list containing this view
+        // (the update DTO carries no project_id, so match by view id). This makes the UI
+        // react instantly and ensures the next click reads fresh state.
+        const key = [queryKey, entityType];
+        await queryClient.cancelQueries({ queryKey: key });
+        const previousEntries = queryClient.getQueriesData<TView[]>({ queryKey: key });
+        queryClient.setQueriesData<TView[]>({ queryKey: key }, (views) =>
+          (views ?? []).map((candidate) =>
+            candidate.id === viewId ? ({ ...candidate, ...requestBody } as TView) : candidate,
+          ),
+        );
+        return { previousEntries };
+      },
+      onError: (error, _variables, context) => {
+        for (const [key, views] of context?.previousEntries ?? []) {
+          queryClient.setQueryData(key, views);
+        }
+        console.error("Failed to update search view:", error);
+      },
       onSuccess: (view) => {
         const typedView = view as unknown as TView;
         queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) =>

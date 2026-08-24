@@ -13,7 +13,7 @@ single entity-specific **config**. The workspace itself contains no entity logic
 - **Saved views** — each user can save multiple named views per entity. Views are
   shown as draggable chips and persisted on the server (per project + entity).
 - **Toolbar** — layout switcher, filter dialog, sort menu, group menu, and a
-  search toggle. All controls operate on the active view and auto-save (debounced).
+  search toggle. All controls operate on the active view and auto-save (optimistic updates).
 - **Results** — rows are fetched with infinite pagination and rendered in the
   active layout. When a view is grouped, results render as a column of groups (or
   a row of columns for the BOARD layout).
@@ -124,7 +124,7 @@ core/workspace/
     EntityWorkspaceConfig.ts   # the config contract
     WorkspaceGeneratedTypes.ts # generic mirrors of the generated OpenAPI types
   _hooks/
-    useWorkspaceViews.ts       # view CRUD, selection, reorder, debounced updates
+    useWorkspaceViews.ts       # view CRUD, selection, reorder, optimistic updates
   _components/
     toolbar/
       WorkspaceToolbar.tsx     # public toolbar

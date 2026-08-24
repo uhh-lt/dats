@@ -1,6 +1,6 @@
 import { useOpenConfirmationDialog } from "@core/notification";
 import { SearchViewLayout } from "@models/SearchViewLayout";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { EntityWorkspaceConfig } from "../types/EntityWorkspaceConfig";
 import {
   WorkspaceGroupConfig,
@@ -21,7 +21,7 @@ interface UseWorkspaceViewsParams<TColumns extends string, TRow extends { id: nu
 /**
  * Owns all view-management state and behavior for an `EntityWorkspace`:
  * fetching/sorting views, the active-view selection (reconciled during render),
- * create/rename/delete, reorder, and the debounced + serialized update queue.
+ * create/rename/delete, reorder, and optimistic view updates.
  */
 export function useWorkspaceViews<TColumns extends string, TRow extends { id: number }>({
   projectId,
@@ -38,9 +38,6 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
   const deleteView = viewHooks.useDeleteView();
 
   const [activeViewId, setActiveViewId] = useState<number>();
-  const updateTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const pendingUpdate = useRef<WorkspaceViewUpdate<TColumns>>({});
-  const updateQueue = useRef(Promise.resolve());
 
   const views = useMemo(
     () =>
@@ -97,26 +94,15 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
     [createView, config, handleSelectView, projectId, views],
   );
 
-  const handleDebouncedUpdate = useCallback(
+  // Optimistic update: the mutation patches the cache in onMutate (instant UI), rolls back
+  // on error, and serializes per entity via its mutation scope, so rapid clicks are safe.
+  const handleUpdateView = useCallback(
     (requestBody: WorkspaceViewUpdate<TColumns>) => {
       if (!activeView) return;
-      pendingUpdate.current = { ...pendingUpdate.current, ...requestBody };
-      clearTimeout(updateTimer.current);
-      updateTimer.current = setTimeout(() => {
-        const update = pendingUpdate.current;
-        pendingUpdate.current = {};
-        updateQueue.current = updateQueue.current
-          .then(() =>
-            updateView.mutateAsync({
-              viewId: activeView.id,
-              requestBody: update,
-            } as Parameters<typeof updateView.mutateAsync>[0]),
-          )
-          .then(
-            () => undefined,
-            () => undefined,
-          );
-      }, 400);
+      updateView.mutate({
+        viewId: activeView.id,
+        requestBody,
+      } as Parameters<typeof updateView.mutate>[0]);
     },
     [activeView, updateView],
   );
@@ -152,7 +138,7 @@ export function useWorkspaceViews<TColumns extends string, TRow extends { id: nu
     handleSelectView,
     handleReorderViews,
     handleCreateView,
-    handleDebouncedUpdate,
+    handleUpdateView,
     handleDeleteView,
     handleRenameView,
   };
