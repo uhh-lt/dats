@@ -17,6 +17,7 @@ export const MemoActionMenu = memo(({ memo, onStarredClick, onDeleteClick, iconB
   const open = Boolean(anchorEl);
 
   const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   }, []);
 
@@ -44,7 +45,7 @@ export const MemoActionMenu = memo(({ memo, onStarredClick, onDeleteClick, iconB
         {getIconComponent(Icon.CONTEXT_MENU)}
       </IconButton>
       {memo && (
-        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose} onClick={(event) => event.stopPropagation()}>
           <MemoFavoriteMenuItem onClick={handleStarredClick} memoId={memo.id} isFavorite={memo.is_favorite ?? false} />
           <MemoDeleteMenuItem memoId={memo.id} memoTitle={memo.title} onClick={handleDeleteClick} />
         </Menu>

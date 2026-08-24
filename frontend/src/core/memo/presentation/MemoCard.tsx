@@ -3,23 +3,12 @@ import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { MemoRow } from "@models/MemoRow";
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardHeader,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
+import { Box, Card, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
+import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { MemoActionMenu } from "../MemoActionMenu";
-import { MemoFavoriteIconButton } from "../MemoFavoriteIconButton";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
@@ -58,7 +47,7 @@ const MemoCardWithData = memo(
     renderAuthor,
     renderCreatedDate,
     renderUpdatedDate,
-    renderFavoriteButton,
+    renderFavoriteStatus,
     renderAttachedObject,
     attachedObjectLink,
     renderActionMenu,
@@ -69,82 +58,104 @@ const MemoCardWithData = memo(
       onSelect?.(memo.id);
     }, [onSelect, memo.id]);
 
-    const showHeader = renderAttachedObject || renderActionMenu;
+    const showHeader = renderAttachedObject || renderFavoriteStatus || renderActionMenu;
+    const showFooter = renderAuthor || renderCreatedDate || renderUpdatedDate;
+    const showContent = renderTitle || (renderContent && getMemoContent(memo).trim().length > 0);
     const content = getMemoContent(memo);
 
     const body = (
-      <CardContent sx={onSelect ? { p: 1, pb: "0px !important" } : undefined}>
-        {renderTitle && (
-          <Stack direction="row" alignItems="center" spacing={1}>
-            {renderIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
-            <Typography variant="h6" flex={1} minWidth={0} noWrap>
-              {memo.title}
-            </Typography>
-            {renderFavoriteButton && <MemoFavoriteIconButton memo={memo} />}
+      <Stack px={2} py={1.5}>
+        {showHeader && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            {renderAttachedObject && attachedObject.data && (
+              <AttachedObjectRenderer
+                attachedObject={attachedObject.data}
+                attachedObjectType={memo.attached_object_type}
+                link={attachedObjectLink}
+              />
+            )}
+            <Box flex={1} minWidth={8} />
+
+            {renderActionMenu && (
+              <MemoActionMenu
+                memo={memo as MemoRead}
+                onDeleteClick={onDeleteClick}
+                onStarredClick={onStarredClick}
+                iconButtonProps={{ size: "small" }}
+              />
+            )}
           </Stack>
         )}
-        {renderContent &&
-          (isMemoRow(memo) ? (
-            <Typography mt={1}>{content}</Typography>
-          ) : (
-            <Box mt={1} className="markdown-content">
-              <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
-            </Box>
-          ))}
-        {(renderAuthor || renderCreatedDate || renderUpdatedDate) && (
-          <Stack direction="row" alignItems="center" mt={1} justifyContent="space-between">
-            <Stack direction="row" spacing={1}>
-              {renderCreatedDate && (
-                <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
-                  Created: {dateToLocaleString(memo.created)}
+        {showContent && (
+          <Stack sx={{ mt: showHeader ? 1 : 0 }}>
+            {renderTitle && (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                {renderIcon && getIconComponent(Icon.MEMO, { style: { flexShrink: 0 } })}
+                <Typography variant="h6" fontWeight={600} minWidth={0} noWrap>
+                  {memo.title}
                 </Typography>
-              )}
-              {renderUpdatedDate && (
-                <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
-                  Last modified: {dateToLocaleString(memo.updated)}
-                </Typography>
-              )}
-            </Stack>
-            {renderAuthor && (
-              <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
-                <UserRenderer user={memo.user_id} />
+              </Stack>
+            )}
+            {renderContent && (
+              <>
+                {isMemoRow(memo) ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitBoxOrient: "vertical",
+                      WebkitLineClamp: 3,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {content}
+                  </Typography>
+                ) : (
+                  <Box className="markdown-content">
+                    <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                  </Box>
+                )}
+              </>
+            )}
+          </Stack>
+        )}
+        {showFooter && (
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: showContent ? 2 : showHeader ? 1 : 0 }}>
+            {renderAuthor ? (
+              <Box
+                flex={1}
+                minWidth={0}
+                color="text.secondary"
+                sx={{ "& .MuiTypography-root": { fontSize: "0.75rem" } }}
+              >
+                <UserRenderer user={memo.user_id} renderAvatar />
+              </Box>
+            ) : (
+              <Box flex={1} />
+            )}
+            {renderUpdatedDate && (
+              <Typography variant="caption" color="text.secondary" noWrap>
+                Edited {dateToRelativeString(memo.updated)}
+              </Typography>
+            )}
+            {renderCreatedDate && (
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {dateToLocaleDateString(memo.created)}
               </Typography>
             )}
           </Stack>
         )}
-      </CardContent>
+      </Stack>
     );
 
     return (
-      <Card variant="outlined">
-        {showHeader && (
-          <>
-            <CardHeader
-              title={
-                renderAttachedObject && attachedObject.data ? (
-                  <AttachedObjectRenderer
-                    attachedObject={attachedObject.data}
-                    attachedObjectType={memo.attached_object_type}
-                    link={attachedObjectLink}
-                  />
-                ) : undefined
-              }
-              action={
-                renderActionMenu ? (
-                  <MemoActionMenu
-                    memo={memo as MemoRead}
-                    onDeleteClick={onDeleteClick}
-                    onStarredClick={onStarredClick}
-                    iconButtonProps={{ size: "small" }}
-                  />
-                ) : undefined
-              }
-              slotProps={{ title: { variant: "body1", display: "flex", alignItems: "center" } }}
-              sx={{ px: 1, py: 0.5 }}
-            />
-            <Divider />
-          </>
-        )}
+      <Card
+        variant="outlined"
+        sx={
+          renderFavoriteStatus && memo.is_favorite ? { borderLeftWidth: 3, borderLeftColor: "warning.main" } : undefined
+        }
+      >
         {onSelect ? <CardActionArea onClick={handleClick}>{body}</CardActionArea> : body}
       </Card>
     );

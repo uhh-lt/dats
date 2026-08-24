@@ -21,7 +21,7 @@ export interface MemoPresentationFlags {
   renderAuthor?: boolean;
   renderCreatedDate?: boolean;
   renderUpdatedDate?: boolean;
-  renderFavoriteButton?: boolean;
+  renderFavoriteStatus?: boolean;
   renderAttachedObject?: boolean;
   attachedObjectLink?: boolean;
   /** Context action menu (favorite / delete). */

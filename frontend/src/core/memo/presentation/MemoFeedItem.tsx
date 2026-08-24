@@ -41,7 +41,7 @@ const MemoFeedItemWithData = memo(
     renderAuthor,
     renderCreatedDate,
     renderUpdatedDate,
-    renderFavoriteButton,
+    renderFavoriteStatus,
     renderAttachedObject,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
     const handleClick = useCallback(() => {
@@ -56,7 +56,7 @@ const MemoFeedItemWithData = memo(
               {memo.title}
             </Typography>
           )}
-          {renderFavoriteButton && <MemoFavoriteIconButton memo={memo} />}
+          {renderFavoriteStatus && <MemoFavoriteIconButton memo={memo} />}
         </Stack>
         {(renderAuthor || renderCreatedDate || renderUpdatedDate || renderAttachedObject) && (
           <Typography variant="body2" color="text.secondary" component="div">

@@ -41,7 +41,7 @@ const MemoListItemWithData = memo(
     renderAuthor,
     renderCreatedDate,
     renderUpdatedDate,
-    renderFavoriteButton,
+    renderFavoriteStatus,
     renderAttachedObject,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
     const handleClick = useCallback(() => {
@@ -69,7 +69,7 @@ const MemoListItemWithData = memo(
               </Typography>
             )}
           </Box>
-          {renderFavoriteButton && <MemoFavoriteIconButton memo={memo} />}
+          {renderFavoriteStatus && <MemoFavoriteIconButton memo={memo} />}
         </Stack>
       </CardActionArea>
     );

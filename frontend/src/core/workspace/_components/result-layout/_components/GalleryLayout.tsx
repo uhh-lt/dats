@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ReactNode, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { LayoutProps } from "./LayoutProps";
 
-const MIN_CARD_WIDTH = 240;
+const MIN_CARD_WIDTH = 320;
 const GAP = 16;
 const PADDING = 16;
 
@@ -30,7 +30,7 @@ export function GalleryLayout<TColumns extends string, TRow extends { id: number
   }, []);
 
   // Track the container width to derive the number of grid lanes (matches the old
-  // `repeat(auto-fill, minmax(240px, 1fr))` behavior).
+  // `repeat(auto-fill, minmax(320px, 1fr))` behavior).
   useLayoutEffect(() => {
     const el = parentRef.current;
     if (!el) return;
@@ -63,7 +63,7 @@ export function GalleryLayout<TColumns extends string, TRow extends { id: number
 
   if (!virtualize)
     return (
-      <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(240px, 1fr))" gap={2} p={2}>
+      <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(320px, 1fr))" gap={2} p={2}>
         {rows.map(renderCard)}
       </Box>
     );

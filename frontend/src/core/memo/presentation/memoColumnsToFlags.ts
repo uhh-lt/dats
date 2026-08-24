@@ -17,7 +17,7 @@ const MEMO_COLUMN_TO_FLAG: Partial<Record<MemoColumns, keyof MemoPresentationFla
   [MemoColumns.M_USER_ID]: "renderAuthor",
   [MemoColumns.M_CREATED]: "renderCreatedDate",
   [MemoColumns.M_UPDATED]: "renderUpdatedDate",
-  [MemoColumns.M_FAVORITE]: "renderFavoriteButton",
+  [MemoColumns.M_FAVORITE]: "renderFavoriteStatus",
   [MemoColumns.M_ATTACHED_OBJECT_ID]: "renderAttachedObject",
 };
 
