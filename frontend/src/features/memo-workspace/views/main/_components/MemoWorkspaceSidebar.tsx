@@ -14,16 +14,18 @@ import { SortDirection } from "@models/SortDirection";
 import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
-  Button,
   CircularProgress,
   Divider,
   IconButton,
+  List,
+  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
-import { useAppDispatch } from "@store/storeHooks";
+import { useAppDispatch, useAppSelector } from "@store/storeHooks";
 import { InfiniteData } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import { MemoWorkspaceActions } from "../../../store/memoWorkspaceSlice";
@@ -68,6 +70,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
   const dispatch = useAppDispatch();
   const createMemo = MemoHooks.useCreateMemo();
   const recentMemos = MemoHooks.useGetRecentMemos(projectId);
+  const openMemoId = useAppSelector((state) => state.memoWorkspace.workspaces[scope]?.openMemoId);
 
   const handleCreateProjectMemo = useCallback(() => {
     createMemo.mutate(
@@ -107,24 +110,34 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
         to="/project/$projectId/memo-workspace"
         params={{ projectId }}
         search={{}}
-        sx={{ flex: "0 0 48px", minWidth: 0, overflow: "hidden", borderBottom: 1, borderColor: "divider" }}
+        sx={{ flex: "0 0 49px", minWidth: 0, overflow: "hidden", borderBottom: 1, borderColor: "divider" }}
       >
         <ListItemIcon sx={{ flexShrink: 0 }}>{getIconComponent(Icon.HOME)}</ListItemIcon>
         <ListItemText sx={{ minWidth: 0 }} primary={<Typography noWrap>Memo Workspace</Typography>} />
       </LinkListItemButton>
       <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-        <Stack p={1} spacing={1} alignItems="stretch">
-          <Typography variant="overline" color="text.secondary" noWrap>
+        <Stack>
+          <Typography variant="overline" color="text.secondary" noWrap sx={{ px: 2, mt: 1 }}>
             Recents
           </Typography>
-          <SidebarMemoSection query={recentMemos} emptyText="No recently opened memos" scope={scope} />
-          <Divider />
-          <Typography variant="overline" color="text.secondary" noWrap>
+          <SidebarMemoSection
+            query={recentMemos}
+            emptyText="No recently opened memos"
+            scope={scope}
+            openMemoId={openMemoId}
+          />
+          <Divider sx={{ mx: 1 }} />
+          <Typography variant="overline" color="text.secondary" noWrap sx={{ px: 2, mt: 1 }}>
             Favorites
           </Typography>
-          <SidebarMemoSection query={favoriteMemos} emptyText="No favorite memos" scope={scope} />
-          <Divider />
-          <Stack direction="row" alignItems="center" justifyContent="space-between" minWidth={0}>
+          <SidebarMemoSection
+            query={favoriteMemos}
+            emptyText="No favorite memos"
+            scope={scope}
+            openMemoId={openMemoId}
+          />
+          <Divider sx={{ mx: 1 }} />
+          <Stack direction="row" alignItems="center" justifyContent="space-between" minWidth={0} sx={{ px: 2, mt: 1 }}>
             <Typography variant="overline" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
               Project Memos
             </Typography>
@@ -132,7 +145,7 @@ export const MemoWorkspaceSidebar = memo(({ projectId, scope }: MemoWorkspaceSid
               <AddIcon fontSize="small" />
             </IconButton>
           </Stack>
-          <SidebarMemoSection query={projectMemos} emptyText="No project memos" scope={scope} />
+          <SidebarMemoSection query={projectMemos} emptyText="No project memos" scope={scope} openMemoId={openMemoId} />
         </Stack>
       </Box>
     </Box>
@@ -158,32 +171,50 @@ interface SidebarMemoSectionProps {
   query: SidebarMemoQuery;
   emptyText: string;
   scope: string;
+  openMemoId: number | undefined;
 }
 
-function SidebarMemoSection({ query, emptyText, scope }: SidebarMemoSectionProps) {
+function SidebarMemoSection({ query, emptyText, scope, openMemoId }: SidebarMemoSectionProps) {
   if (query.isPending) return <CircularProgress size={20} sx={{ alignSelf: "center" }} />;
-  if (query.isError) return <Typography color="error">{query.error?.message}</Typography>;
+  if (query.isError)
+    return (
+      <Typography color="error" sx={{ px: 2 }}>
+        {query.error?.message}
+      </Typography>
+    );
   const data = query.data ?? [];
   if (!data.length) {
     return (
-      <Typography variant="caption" color="text.secondary" noWrap>
+      <Typography variant="caption" color="text.secondary" noWrap sx={{ px: 2 }}>
         {emptyText}
       </Typography>
     );
   }
-  return data.map((memo) => (
-    <SidebarMemoButton key={memo.id} memoId={memo.id} title={memo.title} icon={memo.icon} scope={scope} />
-  ));
+  return (
+    <List dense disablePadding>
+      {data.map((memo) => (
+        <SidebarMemoListItem
+          key={memo.id}
+          memoId={memo.id}
+          title={memo.title}
+          icon={memo.icon}
+          scope={scope}
+          selected={memo.id === openMemoId}
+        />
+      ))}
+    </List>
+  );
 }
 
-interface SidebarMemoButtonProps {
+interface SidebarMemoListItemProps {
   memoId: number;
   title: string;
   icon?: string | null;
   scope: string;
+  selected: boolean;
 }
 
-function SidebarMemoButton({ memoId, title, icon, scope }: SidebarMemoButtonProps) {
+function SidebarMemoListItem({ memoId, title, icon, scope, selected }: SidebarMemoListItemProps) {
   const dispatch = useAppDispatch();
 
   const handleClick = useCallback(() => {
@@ -191,18 +222,15 @@ function SidebarMemoButton({ memoId, title, icon, scope }: SidebarMemoButtonProp
   }, [dispatch, scope, memoId]);
 
   return (
-    <Button
-      fullWidth
-      size="small"
-      onClick={handleClick}
-      sx={{ minWidth: 0, justifyContent: "flex-start", textTransform: "none", overflow: "hidden" }}
-    >
-      <Stack direction="row" spacing={1} alignItems="center" minWidth={0} width="100%">
-        {icon && <EmojiGlyph emoji={icon} />}
-        <Typography component="span" variant="body2" noWrap sx={{ minWidth: 0, textAlign: "left" }}>
-          {title || "Untitled"}
-        </Typography>
-      </Stack>
-    </Button>
+    <ListItem disablePadding>
+      <ListItemButton dense selected={selected} onClick={handleClick}>
+        {icon && (
+          <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
+            <EmojiGlyph emoji={icon} />
+          </ListItemIcon>
+        )}
+        <ListItemText primary={title || "Untitled"} primaryTypographyProps={{ variant: "body2", noWrap: true }} />
+      </ListItemButton>
+    </ListItem>
   );
 }
