@@ -25,8 +25,6 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
   entityType: SearchEntityType,
   queryKey: (typeof QueryKey)[keyof typeof QueryKey],
 ) => {
-  const viewsKey = (projectId: number) => [queryKey, entityType, projectId];
-
   const useGetViews = (projectId: number) =>
     useQuery<TView[], Error>({
       queryKey: [queryKey, entityType, projectId],
@@ -38,7 +36,10 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
       mutationFn: SearchViewService.create,
       onSuccess: (view) => {
         const typedView = view as unknown as TView;
-        queryClient.setQueryData<TView[]>(viewsKey(view.project_id), (views) => [...(views ?? []), typedView]);
+        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) => [
+          ...(views ?? []),
+          typedView,
+        ]);
       },
     });
 
@@ -47,7 +48,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
       mutationFn: SearchViewService.update,
       onSuccess: (view) => {
         const typedView = view as unknown as TView;
-        queryClient.setQueryData<TView[]>(viewsKey(view.project_id), (views) =>
+        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) =>
           (views ?? []).map((candidate) => (candidate.id === view.id ? typedView : candidate)),
         );
       },
@@ -57,9 +58,9 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
     useMutation({
       mutationFn: SearchViewService.reorder,
       scope: { id: `${queryKey}-order-${projectId}` },
-      onMutate: async ({ requestBody }) => {
-        const key = viewsKey(projectId);
-        await queryClient.cancelQueries({ queryKey: key });
+      onMutate: ({ requestBody }) => {
+        const key = [queryKey, entityType, projectId];
+        queryClient.cancelQueries({ queryKey: key });
         const previousViews = queryClient.getQueryData<TView[]>(key);
 
         queryClient.setQueryData<TView[]>(key, (views) => {
@@ -76,10 +77,13 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
         return { previousViews };
       },
       onError: (_error, _variables, context) => {
-        queryClient.setQueryData(viewsKey(projectId), (context as { previousViews?: TView[] })?.previousViews);
+        queryClient.setQueryData(
+          [queryKey, entityType, projectId],
+          (context as { previousViews?: TView[] })?.previousViews,
+        );
       },
       onSuccess: (views) => {
-        queryClient.setQueryData<TView[]>(viewsKey(projectId), views as unknown as TView[]);
+        queryClient.setQueryData<TView[]>([queryKey, entityType, projectId], views as unknown as TView[]);
       },
     });
 
@@ -87,7 +91,7 @@ export const createSearchViewHooks = <TView extends SearchViewBase>(
     useMutation({
       mutationFn: SearchViewService.delete,
       onSuccess: (view) => {
-        queryClient.setQueryData<TView[]>(viewsKey(view.project_id), (views) =>
+        queryClient.setQueryData<TView[]>([queryKey, entityType, view.project_id], (views) =>
           (views ?? []).filter((candidate) => candidate.id !== view.id),
         );
       },

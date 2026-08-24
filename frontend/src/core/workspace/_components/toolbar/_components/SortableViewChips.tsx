@@ -93,9 +93,14 @@ function SortableViewChip({
         style={{
           transform: CSS.Transform.toString(transform),
           transition,
-          opacity: isDragging ? 0.25 : 1,
         }}
-        sx={{ flexShrink: 0, cursor: isDragging ? "grabbing" : "grab", touchAction: "none" }}
+        sx={{
+          flexShrink: 0,
+          cursor: isDragging ? "grabbing" : "grab",
+          touchAction: "none",
+          // Keep the dragged chip in the layout but invisible; the DragOverlay is the visual.
+          opacity: isDragging ? 0 : 1,
+        }}
       />
       {isActive ? (
         <>
@@ -173,7 +178,27 @@ export function SortableViewChips({
 }: SortableViewChipsProps) {
   const [activeDragViewId, setActiveDragViewId] = useState<number>();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-  const activeDragView = views.find((currentView) => currentView.id === activeDragViewId);
+
+  // Transient id-order override, set synchronously on drop (same render batch as
+  // clearing the drag id) so the list is correct the moment the chip becomes visible.
+  // The Query cache notifies one render later, so without this the chip would flash
+  // at its old position. View data always comes from the `views` prop (single source
+  // of truth); the override is cleared once the server order catches up.
+  const [orderOverride, setOrderOverride] = useState<number[]>();
+  const serverOrder = views.map((view) => view.id);
+  if (orderOverride && orderOverride.every((id, index) => serverOrder[index] === id)) {
+    setOrderOverride(undefined); // server order caught up, drop the override
+  }
+
+  const viewById = new Map(views.map((view) => [view.id, view]));
+  const orderedViews = orderOverride
+    ? orderOverride.flatMap((id) => {
+        const view = viewById.get(id);
+        return view ? [view] : [];
+      })
+    : views;
+
+  const activeDragView = orderedViews.find((currentView) => currentView.id === activeDragViewId);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     if (typeof event.active.id === "number") {
@@ -183,13 +208,17 @@ export function SortableViewChips({
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveDragViewId(undefined);
-      if (!event.over || typeof event.active.id !== "number" || typeof event.over.id !== "number") return;
-      const sourceIndex = views.findIndex((currentView) => currentView.id === event.active.id);
-      const destinationIndex = views.findIndex((currentView) => currentView.id === event.over?.id);
+      const activeId = event.active.id;
+      const overId = event.over?.id;
+      if (typeof activeId !== "number" || typeof overId !== "number") return;
+      const sourceIndex = orderedViews.findIndex((currentView) => currentView.id === activeId);
+      const destinationIndex = orderedViews.findIndex((currentView) => currentView.id === overId);
       if (sourceIndex < 0 || destinationIndex < 0 || sourceIndex === destinationIndex) return;
-      onReorder(arrayMove(views, sourceIndex, destinationIndex).map((currentView) => currentView.id));
+      const reorderedIds = arrayMove(orderedViews, sourceIndex, destinationIndex).map((currentView) => currentView.id);
+      setOrderOverride(reorderedIds); // synchronous, same batch as clearing the drag id
+      onReorder(reorderedIds);
     },
-    [onReorder, views],
+    [onReorder, orderedViews],
   );
   const handleDragCancel = useCallback(() => {
     setActiveDragViewId(undefined);
@@ -204,13 +233,16 @@ export function SortableViewChips({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <SortableContext items={views.map((currentView) => currentView.id)} strategy={horizontalListSortingStrategy}>
-        {views.map((currentView) => (
+      <SortableContext
+        items={orderedViews.map((currentView) => currentView.id)}
+        strategy={horizontalListSortingStrategy}
+      >
+        {orderedViews.map((currentView) => (
           <SortableViewChip
             key={currentView.id}
             view={currentView}
             isActive={currentView.id === activeViewId}
-            existingNames={views
+            existingNames={orderedViews
               .filter((otherView) => otherView.id !== currentView.id)
               .map((otherView) => otherView.name)}
             isRenaming={isRenaming}
