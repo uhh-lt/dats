@@ -9,6 +9,7 @@ import { WorkspaceView, WorkspaceViewUpdate } from "../../types/WorkspaceGenerat
 import { CreateViewMenuButton } from "./_components/CreateViewMenuButton";
 import { GroupMenuButton } from "./_components/GroupMenuButton";
 import { LayoutMenuButton } from "./_components/LayoutMenuButton";
+import { PropertiesMenuButton } from "./_components/PropertiesMenuButton";
 import { SearchToggle } from "./_components/SearchToggle";
 import { SortableViewChips } from "./_components/SortableViewChips";
 import { SortMenuButton } from "./_components/SortMenuButton";
@@ -83,6 +84,9 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
   const handleSortChange = (column?: TColumns) => {
     onUpdate(column ? { sorts: [{ column, direction: activeSort?.direction ?? SortDirection.ASC }] } : { sorts: null });
   };
+  const handlePropertiesChange = (selected: TColumns[]) => {
+    onUpdate({ selected_properties: selected });
+  };
   const handleToggleSort = () => {
     if (!activeSort) return;
     onUpdate({
@@ -149,6 +153,14 @@ export function WorkspaceToolbar<TColumns extends string, TRow extends { id: num
             isDateGroup={isDateGroup}
             onChange={handleGroupChange}
             onGranularityChange={handleGranularityChange}
+          />
+          <PropertiesMenuButton
+            columns={columnValues}
+            renderableColumns={config.renderableColumns}
+            columnIcons={config.columnIcons}
+            columnInfo={columnInfo}
+            selectedProperties={view.selected_properties ?? config.defaultSelectedProperties}
+            onChange={handlePropertiesChange}
           />
           <SearchToggle
             searchQuery={searchQuery}

@@ -7,6 +7,7 @@ export function ListLayout<TColumns extends string, TRow extends { id: number }>
   config,
   rows,
   onSelect,
+  selectedProperties,
 }: LayoutProps<TColumns, TRow>): ReactNode {
-  return <Stack>{rows.map((row) => config.renderListItem(row, onSelect))}</Stack>;
+  return <Stack>{rows.map((row) => config.renderListItem(row, onSelect, selectedProperties))}</Stack>;
 }

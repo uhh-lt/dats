@@ -108,6 +108,7 @@ export interface WorkspaceView<TColumns extends string> extends SearchViewBase {
   filters: MyFilter<TColumns>;
   group_by?: WorkspaceGroupConfig<TColumns> | null;
   sorts?: WorkspaceSort<TColumns>[];
+  selected_properties?: TColumns[] | null;
   user_id: number;
   created: string;
   updated: string;
@@ -120,6 +121,7 @@ export interface WorkspaceViewUpdate<TColumns extends string> {
   filters?: MyFilter<TColumns> | null;
   group_by?: WorkspaceGroupConfig<TColumns> | null;
   sorts?: WorkspaceSort<TColumns>[] | null;
+  selected_properties?: TColumns[] | null;
 }
 
 /**

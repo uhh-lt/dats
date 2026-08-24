@@ -35,6 +35,7 @@ export function EntityResultList<TColumns extends string, TRow extends { id: num
     page_size: PAGE_SIZE,
   });
   const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const selectedProperties = view.selected_properties ?? config.defaultSelectedProperties;
   if (query.isLoading) return <CircularProgress sx={{ m: 2 }} />;
   if (query.isError)
     return (
@@ -44,7 +45,13 @@ export function EntityResultList<TColumns extends string, TRow extends { id: num
     );
   return (
     <Stack minHeight={0} overflow="auto">
-      <WorkspaceResultLayout config={config} layout={view.layout} rows={rows} onSelect={onSelect} />
+      <WorkspaceResultLayout
+        config={config}
+        layout={view.layout}
+        rows={rows}
+        onSelect={onSelect}
+        selectedProperties={selectedProperties}
+      />
       {query.hasNextPage && <Button onClick={() => query.fetchNextPage()}>Load more</Button>}
     </Stack>
   );

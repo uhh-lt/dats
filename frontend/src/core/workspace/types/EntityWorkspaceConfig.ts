@@ -35,6 +35,10 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   /** The column enum (values), used to enumerate sortable/groupable columns. */
   columns: Record<TColumns, TColumns>;
   columnIcons: Record<TColumns, ReactNode>;
+  /** Which columns the user may select for rendering (the "properties" selector). */
+  renderableColumns: Record<TColumns, boolean>;
+  /** Properties rendered when a view has no explicit `selected_properties`. */
+  defaultSelectedProperties: TColumns[];
   defaultFilterExpression: MyFilterExpression<TColumns>;
   /** Columns that get a date-granularity selector when used for grouping. */
   dateColumns: TColumns[];
@@ -57,9 +61,9 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   /** Header cells for the TABLE layout. */
   tableHeader: ReactNode;
   renderTableRow: (row: TRow, onSelect: (id: number) => void) => ReactNode;
-  renderListItem: (row: TRow, onSelect: (id: number) => void) => ReactNode;
-  renderCard: (row: TRow, onSelect: (id: number) => void) => ReactNode;
-  renderFeedItem: (row: TRow, onSelect: (id: number) => void) => ReactNode;
+  renderListItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
+  renderCard: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
+  renderFeedItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
 
   // ---- create-view templates ----
   templates: WorkspaceTemplate<TColumns>[];

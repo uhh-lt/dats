@@ -5,4 +5,6 @@ export interface LayoutProps<TColumns extends string, TRow extends { id: number 
   config: EntityWorkspaceConfig<TColumns, TRow>;
   rows: TRow[];
   onSelect: (id: number) => void;
+  /** The properties the user selected to render (drives card/list/feed flags). */
+  selectedProperties: TColumns[];
 }

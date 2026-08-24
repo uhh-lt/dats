@@ -12,6 +12,7 @@ interface WorkspaceLayoutProps<TColumns extends string, TRow extends { id: numbe
   layout: SearchViewLayout;
   rows: TRow[];
   onSelect: (id: number) => void;
+  selectedProperties: TColumns[];
 }
 
 /** Renders rows in the active layout by delegating to the config's per-layout renderers. */
@@ -20,16 +21,27 @@ export function WorkspaceResultLayout<TColumns extends string, TRow extends { id
   layout,
   rows,
   onSelect,
+  selectedProperties,
 }: WorkspaceLayoutProps<TColumns, TRow>): ReactNode {
   const layoutComponents = useMemo<Record<SearchViewLayout, ReactNode>>(
     () => ({
-      [SearchViewLayout.TABLE]: <TableLayout config={config} rows={rows} onSelect={onSelect} />,
-      [SearchViewLayout.LIST]: <ListLayout config={config} rows={rows} onSelect={onSelect} />,
-      [SearchViewLayout.GALLERY]: <GalleryLayout config={config} rows={rows} onSelect={onSelect} />,
-      [SearchViewLayout.FEED]: <FeedLayout config={config} rows={rows} onSelect={onSelect} />,
-      [SearchViewLayout.BOARD]: <ListLayout config={config} rows={rows} onSelect={onSelect} />,
+      [SearchViewLayout.TABLE]: (
+        <TableLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+      ),
+      [SearchViewLayout.LIST]: (
+        <ListLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+      ),
+      [SearchViewLayout.GALLERY]: (
+        <GalleryLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+      ),
+      [SearchViewLayout.FEED]: (
+        <FeedLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+      ),
+      [SearchViewLayout.BOARD]: (
+        <ListLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+      ),
     }),
-    [config, rows, onSelect],
+    [config, rows, onSelect, selectedProperties],
   );
 
   if (!rows.length)

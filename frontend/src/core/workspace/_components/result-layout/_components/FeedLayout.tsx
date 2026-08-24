@@ -7,10 +7,11 @@ export function FeedLayout<TColumns extends string, TRow extends { id: number }>
   config,
   rows,
   onSelect,
+  selectedProperties,
 }: LayoutProps<TColumns, TRow>): ReactNode {
   return (
     <Stack spacing={2} p={2}>
-      {rows.map((row) => config.renderFeedItem(row, onSelect))}
+      {rows.map((row) => config.renderFeedItem(row, onSelect, selectedProperties))}
     </Stack>
   );
 }
