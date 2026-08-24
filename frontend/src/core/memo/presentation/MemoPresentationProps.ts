@@ -13,7 +13,7 @@ type MemoPresentationData = MemoRead | MemoRow | number;
  * item, ...). Each container renders the subset of blocks its flags enable, so a
  * single component can be customized for every surface in the application.
  */
-interface MemoPresentationFlags {
+export interface MemoPresentationFlags {
   renderIcon?: boolean;
   renderTitle?: boolean;
   /** Excerpt for a `MemoRow`, full markdown content for a `MemoRead`. */
