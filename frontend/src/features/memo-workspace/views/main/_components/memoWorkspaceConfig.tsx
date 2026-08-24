@@ -76,7 +76,13 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
     <MemoTableSelectionActions selectedIds={selectedIds} clearSelection={clearSelection} />
   ),
   renderListItem: (row, onSelect, selectedProperties) => (
-    <MemoListItem key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
+    <MemoListItem
+      key={row.id}
+      memo={row}
+      onSelect={onSelect}
+      renderActionMenu
+      {...memoColumnsToFlags(selectedProperties)}
+    />
   ),
   renderCard: (row, onSelect, selectedProperties) => (
     <MemoCard
@@ -88,7 +94,13 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
     />
   ),
   renderFeedItem: (row, onSelect, selectedProperties) => (
-    <MemoFeedItem key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
+    <MemoFeedItem
+      key={row.id}
+      memo={row}
+      onSelect={onSelect}
+      renderActionMenu
+      {...memoColumnsToFlags(selectedProperties)}
+    />
   ),
 
   templates: createMemoTemplates(userId),
