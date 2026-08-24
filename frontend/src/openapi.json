@@ -7335,7 +7335,11 @@
             "description": "The filter of the Concept"
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" }
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters"],
@@ -7358,6 +7362,10 @@
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_BBoxColumns_" }, { "type": "null" }] },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_BBoxColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          },
           "id": { "type": "integer", "title": "Id" },
           "user_id": { "type": "integer", "title": "User Id" },
           "position": { "type": "integer", "title": "Position" },
@@ -7388,6 +7396,10 @@
               { "type": "null" }
             ],
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/BBoxColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
           }
         },
         "type": "object",
@@ -11325,7 +11337,11 @@
             "description": "Column filter tree applied before grouping"
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" }
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters"],
@@ -11343,6 +11359,10 @@
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_MemoColumns_" }, { "type": "null" }] },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_MemoColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          },
           "id": { "type": "integer", "title": "Id" },
           "user_id": { "type": "integer", "title": "User Id" },
           "position": { "type": "integer", "title": "Position" },
@@ -11376,6 +11396,10 @@
               { "type": "null" }
             ],
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/MemoColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
           }
         },
         "type": "object",
@@ -12948,6 +12972,13 @@
             "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
             "type": "array",
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Selected Properties"
           }
         },
         "type": "object",
@@ -12976,6 +13007,13 @@
             "items": { "$ref": "#/components/schemas/Sort_SentAnnoColumns_" },
             "type": "array",
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Selected Properties"
           },
           "id": { "type": "integer", "title": "Id" },
           "user_id": { "type": "integer", "title": "User Id" },
@@ -13012,6 +13050,13 @@
               { "type": "null" }
             ],
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/SentAnnoColumns" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Selected Properties"
           }
         },
         "type": "object",
@@ -14000,7 +14045,11 @@
             "description": "The filter of the Concept"
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }] },
-          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" }
+          "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          }
         },
         "type": "object",
         "required": ["project_id", "name", "layout", "filters"],
@@ -14023,6 +14072,10 @@
           },
           "group_by": { "anyOf": [{ "$ref": "#/components/schemas/GroupConfig_SpanColumns_" }, { "type": "null" }] },
           "sorts": { "items": { "$ref": "#/components/schemas/Sort_SpanColumns_" }, "type": "array", "title": "Sorts" },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
+          },
           "id": { "type": "integer", "title": "Id" },
           "user_id": { "type": "integer", "title": "User Id" },
           "position": { "type": "integer", "title": "Position" },
@@ -14053,6 +14106,10 @@
               { "type": "null" }
             ],
             "title": "Sorts"
+          },
+          "selected_properties": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/SpanColumns" }, "type": "array" }, { "type": "null" }],
+            "title": "Selected Properties"
           }
         },
         "type": "object",

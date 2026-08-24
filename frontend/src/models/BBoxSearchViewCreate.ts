@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BBoxColumns } from "./BBoxColumns";
 import type { Filter_BBoxColumns__Input } from "./Filter_BBoxColumns__Input";
 import type { GroupConfig_BBoxColumns_ } from "./GroupConfig_BBoxColumns_";
 import type { SearchViewLayout } from "./SearchViewLayout";
@@ -17,4 +18,5 @@ export type BBoxSearchViewCreate = {
   filters: Filter_BBoxColumns__Input;
   group_by?: GroupConfig_BBoxColumns_ | null;
   sorts?: Array<Sort_BBoxColumns_>;
+  selected_properties?: Array<BBoxColumns> | null;
 };
