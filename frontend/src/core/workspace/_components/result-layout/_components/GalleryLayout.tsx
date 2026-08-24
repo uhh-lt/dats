@@ -30,10 +30,13 @@ export function GalleryLayout<TColumns extends string, TRow extends { id: number
   }, []);
 
   // Track the container width to derive the number of grid lanes (matches the old
-  // `repeat(auto-fill, minmax(320px, 1fr))` behavior).
+  // `repeat(auto-fill, minmax(320px, 1fr))` behavior). Measure synchronously before paint
+  // so the first render already has the real lane count; the ResizeObserver only handles
+  // later resizes (its callback fires in a later frame, which would flash a 1-lane grid).
   useLayoutEffect(() => {
     const el = parentRef.current;
     if (!el) return;
+    setContainerWidth(el.getBoundingClientRect().width);
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width;
       if (width !== undefined) setContainerWidth(width);
