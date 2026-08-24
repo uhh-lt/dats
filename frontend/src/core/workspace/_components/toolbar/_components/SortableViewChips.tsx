@@ -98,6 +98,7 @@ function SortableViewChip({
           flexShrink: 0,
           cursor: isDragging ? "grabbing" : "grab",
           touchAction: "none",
+          userSelect: "none",
           // Keep the dragged chip in the layout but invisible; the DragOverlay is the visual.
           opacity: isDragging ? 0 : 1,
         }}
@@ -266,6 +267,7 @@ function DragOverlayContent({ view, isActive }: { view?: WorkspaceView<string>; 
           label={view.name}
           color={isActive ? "primary" : "default"}
           variant={isActive ? "filled" : "outlined"}
+          sx={{ cursor: "grabbing", userSelect: "none" }}
         />
       ) : null}
     </DragOverlay>
