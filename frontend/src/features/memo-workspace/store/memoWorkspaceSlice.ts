@@ -8,6 +8,8 @@ const storage = createWebStorage("local");
 /** Memo workspace preferences add the currently-opened memo to the generic workspace preference. */
 export interface MemoWorkspacePreference {
   lastViewId?: number;
+  /** Expanded group keys per view id. Missing entry = never touched (defaults apply). */
+  expandedGroups?: Record<number, string[]>;
   /** The memo currently opened in the workspace's detail editor (not routed). */
   openMemoId?: number;
 }

@@ -30,6 +30,13 @@ export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
     [dispatch, scope],
   );
 
+  const handleToggleGroup = useCallback(
+    (viewId: number, groupKey: string, expanded: boolean, allGroupKeys: string[]) => {
+      dispatch(MemoWorkspaceActions.toggleGroup({ scope, viewId, groupKey, expanded, allGroupKeys }));
+    },
+    [dispatch, scope],
+  );
+
   return (
     <EntityWorkspace
       projectId={projectId}
@@ -37,6 +44,8 @@ export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
       onSelect={handleSelectMemo}
       lastViewId={preferences?.lastViewId}
       onRememberView={handleRememberView}
+      expandedGroups={preferences?.expandedGroups}
+      onToggleGroup={handleToggleGroup}
     />
   );
 }

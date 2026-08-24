@@ -14,6 +14,8 @@ interface EntityResultListProps<TColumns extends string, TRow extends { id: numb
   searchQuery: string;
   onSelect: (id: number) => void;
   groupKey?: string;
+  /** Whether the rows query should execute. Defaults to true. */
+  enabled?: boolean;
 }
 
 /** Fetches the rows of a view (optionally within a group) and renders them in the view's layout. */
@@ -24,16 +26,20 @@ export function EntityResultList<TColumns extends string, TRow extends { id: num
   searchQuery,
   onSelect,
   groupKey,
+  enabled,
 }: EntityResultListProps<TColumns, TRow>): ReactNode {
-  const query = config.useQueryRows({
-    project_id: projectId,
-    search_query: searchQuery,
-    filter: view.filters,
-    sorts: view.sorts,
-    group_by: view.group_by,
-    group_key: groupKey,
-    page_size: PAGE_SIZE,
-  });
+  const query = config.useQueryRows(
+    {
+      project_id: projectId,
+      search_query: searchQuery,
+      filter: view.filters,
+      sorts: view.sorts,
+      group_by: view.group_by,
+      group_key: groupKey,
+      page_size: PAGE_SIZE,
+    },
+    enabled,
+  );
   const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
   const selectedProperties = view.selected_properties ?? config.defaultSelectedProperties;
   if (query.isLoading) return <CircularProgress sx={{ m: 2 }} />;

@@ -12,6 +12,8 @@ interface WorkspaceResultsProps<TColumns extends string, TRow extends { id: numb
   view: WorkspaceView<TColumns>;
   searchQuery: string;
   onSelect: (id: number) => void;
+  expandedGroups?: Record<number, string[]>;
+  onToggleGroup: (viewId: number, groupKey: string, expanded: boolean, allGroupKeys: string[]) => void;
 }
 
 /** Routes between flat results and grouped results based on the view's grouping. */
@@ -21,6 +23,8 @@ export function WorkspaceResults<TColumns extends string, TRow extends { id: num
   view,
   searchQuery,
   onSelect,
+  expandedGroups,
+  onToggleGroup,
 }: WorkspaceResultsProps<TColumns, TRow>): ReactNode {
   if (view.layout === SearchViewLayout.BOARD && !view.group_by)
     return (
@@ -30,7 +34,15 @@ export function WorkspaceResults<TColumns extends string, TRow extends { id: num
     );
   if (view.group_by)
     return (
-      <GroupedResults config={config} projectId={projectId} view={view} searchQuery={searchQuery} onSelect={onSelect} />
+      <GroupedResults
+        config={config}
+        projectId={projectId}
+        view={view}
+        searchQuery={searchQuery}
+        onSelect={onSelect}
+        expandedGroups={expandedGroups}
+        onToggleGroup={onToggleGroup}
+      />
     );
   return (
     <EntityResultList config={config} projectId={projectId} view={view} searchQuery={searchQuery} onSelect={onSelect} />

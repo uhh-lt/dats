@@ -11,6 +11,8 @@ interface GroupedResultsProps<TColumns extends string, TRow extends { id: number
   view: WorkspaceView<TColumns>;
   searchQuery: string;
   onSelect: (id: number) => void;
+  expandedGroups?: Record<number, string[]>;
+  onToggleGroup: (viewId: number, groupKey: string, expanded: boolean, allGroupKeys: string[]) => void;
 }
 
 /** Renders the groups of a grouped view: a column of groups, or a row of columns for BOARD. */
@@ -20,6 +22,8 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
   view,
   searchQuery,
   onSelect,
+  expandedGroups,
+  onToggleGroup,
 }: GroupedResultsProps<TColumns, TRow>): ReactNode {
   const groupBy = view.group_by;
   const query = config.useQueryGroups(
@@ -42,7 +46,7 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
       overflow="auto"
       alignItems="flex-start"
     >
-      {groups.map((group) => (
+      {groups.map((group, index) => (
         <EntityGroup
           key={group.key}
           group={group}
@@ -51,6 +55,15 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
           view={view}
           searchQuery={searchQuery}
           onSelect={onSelect}
+          expanded={expandedGroups?.[view.id]?.includes(group.key) ?? index === 0}
+          onToggle={(expanded) =>
+            onToggleGroup(
+              view.id,
+              group.key,
+              expanded,
+              groups.map((g) => g.key),
+            )
+          }
         />
       ))}
     </Stack>
