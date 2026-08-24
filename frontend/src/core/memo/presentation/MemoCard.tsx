@@ -58,13 +58,25 @@ const MemoCardWithData = memo(
       onSelect?.(memo.id);
     }, [onSelect, memo.id]);
 
-    const showHeader = renderAttachedObject || renderFavoriteStatus || renderActionMenu;
+    const showHeader = renderAttachedObject;
     const showFooter = renderAuthor || renderCreatedDate || renderUpdatedDate;
     const showContent = renderTitle || (renderContent && getMemoContent(memo).trim().length > 0);
     const content = getMemoContent(memo);
 
     const body = (
-      <Stack px={2} py={1.5}>
+      <Box px={2} py={1.5} sx={{ "&::after": { content: '""', display: "table", clear: "both" } }}>
+        {(renderFavoriteStatus || renderActionMenu) && (
+          <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
+            {renderActionMenu && (
+              <MemoActionMenu
+                memo={memo as MemoRead}
+                onDeleteClick={onDeleteClick}
+                onStarredClick={onStarredClick}
+                iconButtonProps={{ size: "small" }}
+              />
+            )}
+          </Box>
+        )}
         {showHeader && (
           <Stack direction="row" alignItems="center" spacing={0.5}>
             {renderAttachedObject && attachedObject.data && (
@@ -72,16 +84,6 @@ const MemoCardWithData = memo(
                 attachedObject={attachedObject.data}
                 attachedObjectType={memo.attached_object_type}
                 link={attachedObjectLink}
-              />
-            )}
-            <Box flex={1} minWidth={8} />
-
-            {renderActionMenu && (
-              <MemoActionMenu
-                memo={memo as MemoRead}
-                onDeleteClick={onDeleteClick}
-                onStarredClick={onStarredClick}
-                iconButtonProps={{ size: "small" }}
               />
             )}
           </Stack>
@@ -146,7 +148,7 @@ const MemoCardWithData = memo(
             )}
           </Stack>
         )}
-      </Stack>
+      </Box>
     );
 
     return (

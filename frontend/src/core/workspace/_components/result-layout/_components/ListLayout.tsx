@@ -16,5 +16,5 @@ export function ListLayout<TColumns extends string, TRow extends { id: number }>
     [config, onSelect, selectedProperties],
   );
   if (!virtualize) return <Stack>{rows.map(renderRow)}</Stack>;
-  return <VirtualizedRows rows={rows} renderRow={renderRow} estimateSize={72} />;
+  return <VirtualizedRows rows={rows} renderRow={renderRow} estimateSize={72} xPadding={2} />;
 }

@@ -9,8 +9,10 @@ interface VirtualizedRowsProps<TRow extends { id: number }> {
   estimateSize: number;
   /** Vertical gap between rows in px (matches the layout's spacing). Defaults to 0. */
   gap?: number;
-  /** Padding around the whole list in px (matches the layout's padding). Defaults to 0. */
-  padding?: number;
+  /** Vertical padding around the whole list in px (matches the layout's padding). Defaults to 0. */
+  yPadding?: number;
+  /** Horizontal padding around the rows in px. Defaults to 0. */
+  xPadding?: number;
 }
 
 /**
@@ -24,7 +26,8 @@ export function VirtualizedRows<TRow extends { id: number }>({
   renderRow,
   estimateSize,
   gap = 0,
-  padding = 0,
+  yPadding = 0,
+  xPadding = 0,
 }: VirtualizedRowsProps<TRow>): ReactNode {
   const parentRef = useRef<HTMLDivElement | null>(null);
 
@@ -47,31 +50,33 @@ export function VirtualizedRows<TRow extends { id: number }>({
     estimateSize: useCallback(() => estimateSize, [estimateSize]),
     overscan: 4,
     gap,
-    paddingStart: padding,
-    paddingEnd: padding,
+    paddingStart: yPadding,
+    paddingEnd: yPadding,
   });
 
   return (
-    <div ref={parentRef} style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
-      {virtualizer.getVirtualItems().map((virtualItem) => {
-        const row = rows[virtualItem.index];
-        return (
-          <div
-            key={virtualItem.key}
-            ref={virtualizer.measureElement}
-            data-index={virtualItem.index}
-            style={{
-              width: "100%",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            {renderRow(row)}
-          </div>
-        );
-      })}
+    <div style={{ padding: `0 ${xPadding}px` }}>
+      <div ref={parentRef} style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const row = rows[virtualItem.index];
+          return (
+            <div
+              key={virtualItem.key}
+              ref={virtualizer.measureElement}
+              data-index={virtualItem.index}
+              style={{
+                width: "100%",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              {renderRow(row)}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

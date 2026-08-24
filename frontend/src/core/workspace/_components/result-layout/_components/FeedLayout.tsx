@@ -22,5 +22,5 @@ export function FeedLayout<TColumns extends string, TRow extends { id: number }>
       </Stack>
     );
   // spacing={2} p={2} on the plain Stack -> 16px gap and padding; feed items are tall & variable.
-  return <VirtualizedRows rows={rows} renderRow={renderRow} estimateSize={200} gap={16} padding={16} />;
+  return <VirtualizedRows rows={rows} renderRow={renderRow} estimateSize={200} gap={16} yPadding={16} xPadding={16} />;
 }

@@ -3,17 +3,20 @@ import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
 import { MemoRow } from "@models/MemoRow";
 import { Box, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
-import { dateToLocaleString } from "@utils/DateUtils";
-import { formatOptionLabel } from "@utils/StringUtils";
+import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
-import { MemoFavoriteIconButton } from "../MemoFavoriteIconButton";
+import { MemoActionMenu } from "../MemoActionMenu";
+import { AttachedObjectRenderer } from "../renderer";
+import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
 import { getMemoContent } from "./memoPresentationUtils";
 
 /**
- * A memo rendered as a compact list row. Shares the `MemoPresentationProps`
- * flags with the other presentation containers. Accepts a `MemoRead`, a
- * `MemoRow`, or an id.
+ * A memo rendered as a compact list row: title and content first, then a
+ * metadata footer (author, dates, attached object). Favorite status is shown
+ * via an amber left border; the favorite toggle and action menu sit at the top
+ * right. Shares the `MemoPresentationProps` flags with the other presentation
+ * containers. Accepts a `MemoRead`, a `MemoRow`, or an id.
  */
 export const MemoListItem = memo(({ memo, ...props }: MemoPresentationProps) => {
   if (typeof memo === "number") {
@@ -36,6 +39,8 @@ const MemoListItemWithData = memo(
   ({
     memo,
     onSelect,
+    onDeleteClick,
+    onStarredClick,
     renderTitle,
     renderContent,
     renderAuthor,
@@ -43,34 +48,87 @@ const MemoListItemWithData = memo(
     renderUpdatedDate,
     renderFavoriteStatus,
     renderAttachedObject,
+    attachedObjectLink,
+    renderActionMenu,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
+    const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
+
     const handleClick = useCallback(() => {
       onSelect?.(memo.id);
     }, [onSelect, memo.id]);
 
-    const subtitle = getMemoContent(memo) || formatOptionLabel(memo.attached_object_type);
+    const showFooter = renderAuthor || renderCreatedDate || renderUpdatedDate || renderAttachedObject;
 
     return (
       <CardActionArea onClick={handleClick}>
-        <Stack direction="row" p={1.5} alignItems="center">
-          <Box flex={1} minWidth={0}>
-            {renderTitle && <Typography fontWeight={600}>{memo.title}</Typography>}
+        <Box
+          p={1.5}
+          sx={
+            renderFavoriteStatus && memo.is_favorite
+              ? { borderLeftWidth: 3, borderLeftStyle: "solid", borderLeftColor: "warning.main" }
+              : undefined
+          }
+        >
+          <Box minWidth={0}>
+            {(renderFavoriteStatus || renderActionMenu) && (
+              <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
+                {renderActionMenu && (
+                  <MemoActionMenu
+                    memo={memo as MemoRead}
+                    onDeleteClick={onDeleteClick}
+                    onStarredClick={onStarredClick}
+                    iconButtonProps={{ size: "small" }}
+                  />
+                )}
+              </Box>
+            )}
+            {renderTitle && (
+              <Typography fontWeight={600} noWrap>
+                {memo.title}
+              </Typography>
+            )}
             {renderContent && (
               <Typography variant="body2" color="text.secondary" noWrap>
-                {subtitle}
+                {getMemoContent(memo)}
               </Typography>
             )}
-            {(renderAuthor || renderCreatedDate || renderUpdatedDate || renderAttachedObject) && (
-              <Typography variant="caption" color="text.secondary" noWrap component="span">
-                {renderAuthor && <UserRenderer user={memo.user_id} />}
-                {renderCreatedDate && ` · created ${dateToLocaleString(memo.created)}`}
-                {renderUpdatedDate && ` · updated ${dateToLocaleString(memo.updated)}`}
-                {renderAttachedObject && ` · ${formatOptionLabel(memo.attached_object_type)}`}
-              </Typography>
+            {showFooter && (
+              <Stack mt={0.5} spacing={0.25}>
+                {renderAuthor && (
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      Author:
+                    </Typography>
+                    <Box color="text.secondary" sx={{ "& .MuiTypography-root": { fontSize: "0.75rem" } }}>
+                      <UserRenderer user={memo.user_id} />
+                    </Box>
+                  </Stack>
+                )}
+                {(renderUpdatedDate || renderCreatedDate) && (
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {renderUpdatedDate && `Updated: ${dateToRelativeString(memo.updated)}`}
+                    {renderUpdatedDate && renderCreatedDate && " | "}
+                    {renderCreatedDate && `Created: ${dateToLocaleDateString(memo.created)}`}
+                  </Typography>
+                )}
+                {renderAttachedObject && attachedObject.data && (
+                  <Stack direction="row" alignItems="center" spacing={0.5} minWidth={0}>
+                    <Typography variant="caption" color="text.secondary" noWrap flexShrink={0}>
+                      Attached to:
+                    </Typography>
+                    <Box minWidth={0} color="text.secondary" sx={{ "& .MuiTypography-root": { fontSize: "0.75rem" } }}>
+                      <AttachedObjectRenderer
+                        attachedObject={attachedObject.data}
+                        attachedObjectType={memo.attached_object_type}
+                        link={attachedObjectLink}
+                      />
+                    </Box>
+                  </Stack>
+                )}
+              </Stack>
             )}
           </Box>
-          {renderFavoriteStatus && <MemoFavoriteIconButton memo={memo} />}
-        </Stack>
+        </Box>
       </CardActionArea>
     );
   },
