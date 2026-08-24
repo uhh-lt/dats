@@ -99,6 +99,12 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
           } as MRT_ColumnDef<MemoRow>;
+        case MemoColumns.M_ATTACHED_OBJECT_ID:
+          return {
+            ...colDef,
+            enableSorting: false,
+            Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
+          } as MRT_ColumnDef<MemoRow>;
         default:
           return {
             ...colDef,
@@ -107,15 +113,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>
       }
     });
 
-    const attachedToCell = {
-      id: "attached_to",
-      header: "Attached To",
-      enableSorting: false,
-      accessorFn: () => null,
-      Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-    } as MRT_ColumnDef<MemoRow>;
-
-    return [...result, attachedToCell];
+    return result;
   }, [tableInfo]);
 
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_MemoRow_>({
