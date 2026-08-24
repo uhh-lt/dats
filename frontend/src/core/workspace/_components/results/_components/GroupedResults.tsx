@@ -38,13 +38,15 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
   );
   const groups = query.data?.pages.flatMap((page) => page.items) ?? [];
   if (query.isLoading) return <CircularProgress sx={{ m: 2 }} />;
+  const isBoard = view.layout === SearchViewLayout.BOARD;
   return (
     <Stack
-      direction={view.layout === SearchViewLayout.BOARD ? "row" : "column"}
+      direction={isBoard ? "row" : "column"}
       spacing={2}
       p={2}
       overflow="auto"
-      alignItems="flex-start"
+      alignItems={isBoard ? "stretch" : "flex-start"}
+      sx={isBoard ? { flex: 1, minHeight: 0 } : undefined}
     >
       {groups.map((group, index) => (
         <EntityGroup

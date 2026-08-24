@@ -1,3 +1,4 @@
+import { useVisibleOnce } from "@hooks/useVisibleOnce";
 import { GroupSummary } from "@models/GroupSummary";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -36,10 +37,15 @@ export function EntityGroup<TColumns extends string, TRow extends { id: number }
   onToggle,
 }: EntityGroupProps<TColumns, TRow>): ReactNode {
   const nestedView = { ...view, layout: view.layout === SearchViewLayout.BOARD ? SearchViewLayout.LIST : view.layout };
+  const { ref: laneRef, hasBeenVisible: laneVisible } = useVisibleOnce<HTMLDivElement>();
 
   if (view.layout === SearchViewLayout.BOARD) {
     return (
-      <Paper variant="outlined" sx={{ minWidth: 320, maxWidth: 380 }}>
+      <Paper
+        ref={laneRef}
+        variant="outlined"
+        sx={{ minWidth: 320, maxWidth: 380, display: "flex", flexDirection: "column", maxHeight: "100%" }}
+      >
         <Stack direction="row" p={1} alignItems="center">
           <Typography fontWeight={600} flex={1}>
             {group.label} ({group.total_results})
@@ -54,6 +60,7 @@ export function EntityGroup<TColumns extends string, TRow extends { id: number }
           searchQuery={searchQuery}
           groupKey={group.key}
           onSelect={onSelect}
+          enabled={laneVisible}
         />
       </Paper>
     );
@@ -79,6 +86,7 @@ export function EntityGroup<TColumns extends string, TRow extends { id: number }
           groupKey={group.key}
           onSelect={onSelect}
           enabled={expanded}
+          scrollable={false}
         />
       </Collapse>
     </Box>
