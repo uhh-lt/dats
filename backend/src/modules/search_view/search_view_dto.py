@@ -59,6 +59,9 @@ class SearchViewBase(BaseModel, Generic[T]):
     filters: Filter[T]
     group_by: GroupConfig[T] | None = None
     sorts: list[Sort[T]] = Field(default_factory=list)
+    # The entity properties the user chose to render. `None` = the frontend's
+    # default selection. Only meaningful for renderable columns; validated per entity.
+    selected_properties: list[T] | None = None
 
     @field_validator("name")
     @classmethod
@@ -241,6 +244,7 @@ class SearchViewUpdate(BaseModel, Generic[T]):
     filters: Filter[T] | None = None
     group_by: GroupConfig[T] | None = None
     sorts: list[Sort[T]] | None = None
+    selected_properties: list[T] | None = None
 
     @field_validator("name")
     @classmethod

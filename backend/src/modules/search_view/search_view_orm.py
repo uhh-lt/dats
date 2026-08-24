@@ -28,6 +28,9 @@ class SearchViewORM(ORMBase):
     filters: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     group_by: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
     sorts: Mapped[list[object] | None] = mapped_column(JSON, nullable=True)
+    selected_properties: Mapped[list[object] | None] = mapped_column(
+        JSON, nullable=True
+    )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     created: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False

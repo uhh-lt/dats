@@ -50,6 +50,11 @@ class CRUDSearchView(
                 else None
             ),
             sorts=[s.model_dump(mode="json") for s in create_dto.sorts],
+            selected_properties=(
+                [p.value for p in create_dto.selected_properties]
+                if create_dto.selected_properties is not None
+                else None
+            ),
             project_id=create_dto.project_id,
             user_id=user_id,
             position=(last_position + 1 if last_position is not None else 0),
@@ -112,6 +117,11 @@ class CRUDSearchView(
             else None
         )
         view.sorts = [s.model_dump(mode="json") for s in merged.sorts]
+        view.selected_properties = (
+            [p.value for p in merged.selected_properties]
+            if merged.selected_properties is not None
+            else None
+        )
         db.add(view)
         db.flush()
         db.refresh(view)
