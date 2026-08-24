@@ -39,6 +39,8 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
   const groups = query.data?.pages.flatMap((page) => page.items) ?? [];
   if (query.isLoading) return <CircularProgress sx={{ m: 2 }} />;
   const isBoard = view.layout === SearchViewLayout.BOARD;
+  // Card-style layouts (BOARD, FEED, GALLERY) sit on the app's grey background.
+  const greyBackground = isBoard || view.layout === SearchViewLayout.FEED || view.layout === SearchViewLayout.GALLERY;
   return (
     <Stack
       direction={isBoard ? "row" : "column"}
@@ -46,7 +48,10 @@ export function GroupedResults<TColumns extends string, TRow extends { id: numbe
       p={2}
       overflow="auto"
       alignItems={isBoard ? "stretch" : "flex-start"}
-      sx={isBoard ? { flex: 1, minHeight: 0 } : undefined}
+      sx={{
+        ...(isBoard ? { flex: 1, minHeight: 0 } : { flex: 1 }),
+        ...(greyBackground ? { backgroundColor: "grey.100" } : {}),
+      }}
     >
       {groups.map((group, index) => (
         <EntityGroup

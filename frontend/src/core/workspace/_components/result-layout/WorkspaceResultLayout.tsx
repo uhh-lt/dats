@@ -1,10 +1,13 @@
 import { SearchViewLayout } from "@models/SearchViewLayout";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { ReactNode, useMemo } from "react";
 import { EntityWorkspaceConfig } from "../../types/EntityWorkspaceConfig";
 import { FeedLayout } from "./_components/FeedLayout";
 import { GalleryLayout } from "./_components/GalleryLayout";
 import { ListLayout } from "./_components/ListLayout";
+
+/** Card-style layouts sit on the app's grey background; TABLE and LIST fill the view themselves. */
+const GREY_LAYOUTS = new Set<SearchViewLayout>([SearchViewLayout.FEED, SearchViewLayout.GALLERY]);
 
 interface WorkspaceLayoutProps<TColumns extends string, TRow extends { id: number }> {
   config: EntityWorkspaceConfig<TColumns, TRow>;
@@ -76,5 +79,7 @@ export function WorkspaceResultLayout<TColumns extends string, TRow extends { id
         No {config.entityLabel} match this view.
       </Typography>
     );
+  if (GREY_LAYOUTS.has(layout))
+    return <Box sx={{ backgroundColor: "grey.100", minHeight: "100%" }}>{layoutComponents[layout]}</Box>;
   return layoutComponents[layout];
 }
