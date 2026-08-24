@@ -5,11 +5,10 @@ import {
   MemoCreateIconButton,
   MemoFeedItem,
   MemoListItem,
-  MemoTableHeader,
-  MemoTableRow,
   memoColumnsToFlags,
   memoRenderableColumns,
   useMemoSearchInfo,
+  useMemoTableColumns,
 } from "@core/memo";
 import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -27,6 +26,7 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import TitleIcon from "@mui/icons-material/Title";
 import UpdateIcon from "@mui/icons-material/Update";
 import { ReactNode } from "react";
+import { MemoTableSelectionActions } from "./MemoTableSelectionActions";
 import { createMemoTemplates, emptyMemoFilter, memoDefaultFilterExpression } from "./memoTemplates";
 
 const columnIcons: Record<MemoColumns, ReactNode> = {
@@ -70,8 +70,10 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
     MemoHooks.useQueryMemoGroups(request as GroupQueryRequest_MemoColumns_, enabled),
   useSearchViews: MemoViewHooks,
 
-  tableHeader: <MemoTableHeader />,
-  renderTableRow: (row, onSelect) => <MemoTableRow key={row.id} memo={row} onSelect={onSelect} />,
+  useTableColumns: useMemoTableColumns,
+  renderTableSelectionActions: (selectedIds, clearSelection) => (
+    <MemoTableSelectionActions selectedIds={selectedIds} clearSelection={clearSelection} />
+  ),
   renderListItem: (row, onSelect, selectedProperties) => (
     <MemoListItem key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
   ),

@@ -10,3 +10,5 @@ export type {
   WorkspaceView,
   WorkspaceViewUpdate,
 } from "./types/WorkspaceGeneratedTypes";
+export { leafColumn } from "./types/WorkspaceTableRow";
+export type { WorkspaceTableRow } from "./types/WorkspaceTableRow";

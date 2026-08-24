@@ -37,6 +37,13 @@ export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
     [dispatch, scope],
   );
 
+  const handleColumnSizingChange = useCallback(
+    (viewId: number, columnSizing: Record<string, number>) => {
+      dispatch(MemoWorkspaceActions.setColumnSizing({ scope, viewId, columnSizing }));
+    },
+    [dispatch, scope],
+  );
+
   return (
     <EntityWorkspace
       projectId={projectId}
@@ -46,6 +53,8 @@ export function MemoWorkspace({ projectId, userId }: MemoWorkspaceProps) {
       onRememberView={handleRememberView}
       expandedGroups={preferences?.expandedGroups}
       onToggleGroup={handleToggleGroup}
+      columnSizing={preferences?.columnSizing}
+      onColumnSizingChange={handleColumnSizingChange}
     />
   );
 }

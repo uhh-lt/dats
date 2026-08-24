@@ -5,6 +5,7 @@ import { GroupSummary } from "@models/GroupSummary";
 import { SearchEntityType } from "@models/SearchEntityType";
 import { SearchViewLayout } from "@models/SearchViewLayout";
 import { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
+import { MRT_ColumnDef } from "material-react-table";
 import { ReactNode } from "react";
 import {
   WorkspaceGroupConfig,
@@ -13,6 +14,7 @@ import {
   WorkspaceQueryRequest,
   WorkspaceSort,
 } from "./WorkspaceGeneratedTypes";
+import { WorkspaceTableRow } from "./WorkspaceTableRow";
 
 /** A create-view template shown in the "new view" menu. */
 export interface WorkspaceTemplate<TColumns extends string> {
@@ -58,9 +60,16 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
   useSearchViews: ReturnType<typeof createSearchViewHooks>;
 
   // ---- renderers (per layout) ----
-  /** Header cells for the TABLE layout. */
-  tableHeader: ReactNode;
-  renderTableRow: (row: TRow, onSelect: (id: number) => void) => ReactNode;
+  /**
+   * Column definitions for the flat Material React Table TABLE layout, typed on the union
+   * `WorkspaceTableRow<TRow>`. Build leaf cells with the `leafColumn` helper so group-header
+   * discrimination is handled for you; the table renders group headers via the first column.
+   * Receives the view's selected properties so the columns adapt to the "properties" selector.
+   */
+  useTableColumns: (
+    onSelect: (id: number) => void,
+    selectedProperties: TColumns[],
+  ) => MRT_ColumnDef<WorkspaceTableRow<TRow>>[];
   renderListItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
   renderCard: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
   renderFeedItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
@@ -70,4 +79,9 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
 
   /** Optional per-group action (e.g. memos can create a memo attached to the group's target). */
   renderGroupAction?: (group: GroupSummary, onSelect: (id: number) => void) => ReactNode;
+  /**
+   * Optional bulk actions shown in the TABLE layout's selection toolbar when rows are selected.
+   * Receives the selected entity ids and a callback to clear the selection.
+   */
+  renderTableSelectionActions?: (selectedIds: number[], clearSelection: () => void) => ReactNode;
 }

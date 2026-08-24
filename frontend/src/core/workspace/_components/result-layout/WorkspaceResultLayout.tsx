@@ -5,7 +5,6 @@ import { EntityWorkspaceConfig } from "../../types/EntityWorkspaceConfig";
 import { FeedLayout } from "./_components/FeedLayout";
 import { GalleryLayout } from "./_components/GalleryLayout";
 import { ListLayout } from "./_components/ListLayout";
-import { TableLayout } from "./_components/TableLayout";
 
 interface WorkspaceLayoutProps<TColumns extends string, TRow extends { id: number }> {
   config: EntityWorkspaceConfig<TColumns, TRow>;
@@ -26,7 +25,7 @@ export function WorkspaceResultLayout<TColumns extends string, TRow extends { id
   const layoutComponents = useMemo<Record<SearchViewLayout, ReactNode>>(
     () => ({
       [SearchViewLayout.TABLE]: (
-        <TableLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />
+        <Typography>The table layout should be accessed through the TableLayout component.</Typography>
       ),
       [SearchViewLayout.LIST]: (
         <ListLayout config={config} rows={rows} onSelect={onSelect} selectedProperties={selectedProperties} />

@@ -10,6 +10,8 @@ export interface MemoWorkspacePreference {
   lastViewId?: number;
   /** Expanded group keys per view id. Missing entry = never touched (defaults apply). */
   expandedGroups?: Record<number, string[]>;
+  /** Column widths (column id -> px) per view id. Missing entry = never resized (defaults apply). */
+  columnSizing?: Record<number, Record<string, number>>;
   /** The memo currently opened in the workspace's detail editor (not routed). */
   openMemoId?: number;
 }
@@ -35,6 +37,14 @@ const memoWorkspaceSlice = createSlice({
     },
     closeMemo: (state, action: PayloadAction<{ scope: string }>) => {
       getWorkspace(state, action.payload.scope).openMemoId = undefined;
+    },
+    setColumnSizing: (
+      state,
+      action: PayloadAction<{ scope: string; viewId: number; columnSizing: Record<string, number> }>,
+    ) => {
+      const workspace = getWorkspace(state, action.payload.scope);
+      const { viewId, columnSizing } = action.payload;
+      workspace.columnSizing = { ...workspace.columnSizing, [viewId]: columnSizing };
     },
   },
 });

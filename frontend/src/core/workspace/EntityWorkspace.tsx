@@ -17,6 +17,9 @@ export interface EntityWorkspaceProps<TColumns extends string, TRow extends { id
   /** Persisted expanded group keys per view id (from the feature's preference slice). */
   expandedGroups?: Record<number, string[]>;
   onToggleGroup: (viewId: number, groupKey: string, expanded: boolean, allGroupKeys: string[]) => void;
+  /** Persisted column widths per view id (from the feature's preference slice). */
+  columnSizing?: Record<number, Record<string, number>>;
+  onColumnSizingChange: (viewId: number, columnSizing: Record<string, number>) => void;
 }
 
 /**
@@ -32,6 +35,8 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
   onRememberView,
   expandedGroups,
   onToggleGroup,
+  columnSizing,
+  onColumnSizingChange,
 }: EntityWorkspaceProps<TColumns, TRow>) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expertMode, setExpertMode] = useState(false);
@@ -89,6 +94,8 @@ export function EntityWorkspace<TColumns extends string, TRow extends { id: numb
           onSelect={onSelect}
           expandedGroups={expandedGroups}
           onToggleGroup={onToggleGroup}
+          columnSizing={columnSizing}
+          onColumnSizingChange={onColumnSizingChange}
         />
       ) : viewsQuery.isLoading ? (
         <CircularProgress sx={{ m: "auto" }} />
