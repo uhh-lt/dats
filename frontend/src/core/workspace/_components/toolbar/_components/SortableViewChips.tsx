@@ -99,6 +99,8 @@ function SortableViewChip({
           cursor: isDragging ? "grabbing" : "grab",
           touchAction: "none",
           userSelect: "none",
+          // Outlined chips are transparent; give them the paper background.
+          ...(isActive ? {} : { backgroundColor: "background.paper" }),
           // Keep the dragged chip in the layout but invisible; the DragOverlay is the visual.
           opacity: isDragging ? 0 : 1,
         }}
@@ -267,7 +269,12 @@ function DragOverlayContent({ view, isActive }: { view?: WorkspaceView<string>; 
           label={view.name}
           color={isActive ? "primary" : "default"}
           variant={isActive ? "filled" : "outlined"}
-          sx={{ cursor: "grabbing", userSelect: "none" }}
+          sx={{
+            cursor: "grabbing",
+            userSelect: "none",
+            // Outlined chips are transparent; give them the paper background.
+            ...(isActive ? {} : { backgroundColor: "background.paper" }),
+          }}
         />
       ) : null}
     </DragOverlay>
