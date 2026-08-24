@@ -7,6 +7,8 @@ import {
   MemoListItem,
   MemoTableHeader,
   MemoTableRow,
+  memoColumnsToFlags,
+  memoRenderableColumns,
   useMemoSearchInfo,
 } from "@core/memo";
 import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
@@ -38,6 +40,14 @@ const columnIcons: Record<MemoColumns, ReactNode> = {
   [MemoColumns.M_FAVORITE]: <StarBorderIcon fontSize="small" />,
 };
 
+/** Properties rendered when a view has no explicit selection. */
+const defaultSelectedProperties: MemoColumns[] = [
+  MemoColumns.M_TITLE,
+  MemoColumns.M_CONTENT,
+  MemoColumns.M_FAVORITE,
+  MemoColumns.M_ATTACHED_OBJECT_ID,
+];
+
 /**
  * Builds the memo workspace config. `userId` is needed for the "My Memos"
  * create-view template.
@@ -47,6 +57,8 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
   entityLabel: "memo",
   columns: MemoColumns,
   columnIcons,
+  renderableColumns: memoRenderableColumns,
+  defaultSelectedProperties,
   defaultFilterExpression: memoDefaultFilterExpression,
   dateColumns: [MemoColumns.M_CREATED, MemoColumns.M_UPDATED],
   emptyFilter: emptyMemoFilter,
@@ -60,32 +72,14 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
 
   tableHeader: <MemoTableHeader />,
   renderTableRow: (row, onSelect) => <MemoTableRow key={row.id} memo={row} onSelect={onSelect} />,
-  renderListItem: (row, onSelect) => (
-    <MemoListItem key={row.id} memo={row} onSelect={onSelect} renderTitle renderContent renderFavoriteButton />
+  renderListItem: (row, onSelect, selectedProperties) => (
+    <MemoListItem key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
   ),
-  renderCard: (row, onSelect) => (
-    <MemoCard
-      key={row.id}
-      memo={row}
-      onSelect={onSelect}
-      renderTitle
-      renderContent
-      renderFavoriteButton
-      renderAttachedObject
-    />
+  renderCard: (row, onSelect, selectedProperties) => (
+    <MemoCard key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
   ),
-  renderFeedItem: (row, onSelect) => (
-    <MemoFeedItem
-      key={row.id}
-      memo={row}
-      onSelect={onSelect}
-      renderTitle
-      renderContent
-      renderAuthor
-      renderDate
-      renderFavoriteButton
-      renderAttachedObject
-    />
+  renderFeedItem: (row, onSelect, selectedProperties) => (
+    <MemoFeedItem key={row.id} memo={row} onSelect={onSelect} {...memoColumnsToFlags(selectedProperties)} />
   ),
 
   templates: createMemoTemplates(userId),
