@@ -109,7 +109,7 @@ function DocumentMemoList({ sdocId, onClick }: DocumentMemoListProps) {
                   attachedObjectLink
                   renderActionMenu
                   renderAuthor
-                  renderDate
+                  renderUpdatedDate
                 />
               ))}
           </Stack>

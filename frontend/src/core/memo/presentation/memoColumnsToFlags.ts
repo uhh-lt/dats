@@ -4,8 +4,7 @@ import { MemoPresentationFlags } from "./MemoPresentationProps";
 /**
  * Single source of truth linking memo columns to presentation. Each key is one
  * user-selectable property (a column in the workspace "properties" selector) and
- * the value is the render flag it switches on. Several columns may share a flag
- * (both date columns enable `renderDate`).
+ * the value is the render flag it switches on.
  *
  * Columns absent from this map (e.g. `M_ATTACHED_OBJECT_TYPE`) have no
  * presentation equivalent: they are not selectable and map to no flag. Flags that
@@ -16,8 +15,8 @@ const MEMO_COLUMN_TO_FLAG: Partial<Record<MemoColumns, keyof MemoPresentationFla
   [MemoColumns.M_TITLE]: "renderTitle",
   [MemoColumns.M_CONTENT]: "renderContent",
   [MemoColumns.M_USER_ID]: "renderAuthor",
-  [MemoColumns.M_CREATED]: "renderDate",
-  [MemoColumns.M_UPDATED]: "renderDate",
+  [MemoColumns.M_CREATED]: "renderCreatedDate",
+  [MemoColumns.M_UPDATED]: "renderUpdatedDate",
   [MemoColumns.M_FAVORITE]: "renderFavoriteButton",
   [MemoColumns.M_ATTACHED_OBJECT_ID]: "renderAttachedObject",
 };

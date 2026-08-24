@@ -39,7 +39,8 @@ const MemoListItemWithData = memo(
     renderTitle,
     renderContent,
     renderAuthor,
-    renderDate,
+    renderCreatedDate,
+    renderUpdatedDate,
     renderFavoriteButton,
     renderAttachedObject,
   }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
@@ -59,10 +60,11 @@ const MemoListItemWithData = memo(
                 {subtitle}
               </Typography>
             )}
-            {(renderAuthor || renderDate || renderAttachedObject) && (
+            {(renderAuthor || renderCreatedDate || renderUpdatedDate || renderAttachedObject) && (
               <Typography variant="caption" color="text.secondary" noWrap component="span">
                 {renderAuthor && <UserRenderer user={memo.user_id} />}
-                {renderDate && ` · ${dateToLocaleString(memo.updated)}`}
+                {renderCreatedDate && ` · created ${dateToLocaleString(memo.created)}`}
+                {renderUpdatedDate && ` · updated ${dateToLocaleString(memo.updated)}`}
                 {renderAttachedObject && ` · ${formatOptionLabel(memo.attached_object_type)}`}
               </Typography>
             )}

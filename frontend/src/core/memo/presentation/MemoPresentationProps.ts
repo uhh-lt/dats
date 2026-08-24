@@ -19,7 +19,8 @@ export interface MemoPresentationFlags {
   /** Excerpt for a `MemoRow`, full markdown content for a `MemoRead`. */
   renderContent?: boolean;
   renderAuthor?: boolean;
-  renderDate?: boolean;
+  renderCreatedDate?: boolean;
+  renderUpdatedDate?: boolean;
   renderFavoriteButton?: boolean;
   renderAttachedObject?: boolean;
   attachedObjectLink?: boolean;

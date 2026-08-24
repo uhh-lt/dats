@@ -56,7 +56,8 @@ const MemoCardWithData = memo(
     renderTitle,
     renderContent,
     renderAuthor,
-    renderDate,
+    renderCreatedDate,
+    renderUpdatedDate,
     renderFavoriteButton,
     renderAttachedObject,
     attachedObjectLink,
@@ -90,13 +91,20 @@ const MemoCardWithData = memo(
               <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
             </Box>
           ))}
-        {(renderAuthor || renderDate) && (
+        {(renderAuthor || renderCreatedDate || renderUpdatedDate) && (
           <Stack direction="row" alignItems="center" mt={1} justifyContent="space-between">
-            {renderDate && (
-              <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
-                Last modified: {dateToLocaleString(memo.updated)}
-              </Typography>
-            )}
+            <Stack direction="row" spacing={1}>
+              {renderCreatedDate && (
+                <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
+                  Created: {dateToLocaleString(memo.created)}
+                </Typography>
+              )}
+              {renderUpdatedDate && (
+                <Typography variant="subtitle2" color="textSecondary" fontSize={12}>
+                  Last modified: {dateToLocaleString(memo.updated)}
+                </Typography>
+              )}
+            </Stack>
             {renderAuthor && (
               <Typography variant="subtitle2" color="textDisabled" fontSize={12}>
                 <UserRenderer user={memo.user_id} />
