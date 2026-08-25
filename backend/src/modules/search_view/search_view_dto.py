@@ -60,7 +60,8 @@ class SearchViewBase(BaseModel, Generic[T]):
     group_by: GroupConfig[T] | None = None
     sorts: list[Sort[T]] = Field(default_factory=list)
     # The entity properties the user chose to render. `None` = the frontend's
-    # default selection. Only meaningful for renderable columns; validated per entity.
+    # default selection. Any valid column of the entity is accepted; which columns
+    # are actually renderable is a frontend concern and not validated here.
     selected_properties: list[T] | None = None
 
     @field_validator("name")
@@ -233,8 +234,10 @@ class SearchViewUpdate(BaseModel, Generic[T]):
     """Patch payload. Omitted fields are left unchanged; providing a field replaces it.
 
     "Omitted" vs "explicitly null" is distinguished via `model_fields_set`:
-      - `group_by`: omit to keep, send `null` to clear, send an object to replace.
-      - `sorts`:    omit to keep, send `[]` to clear, send a list to replace.
+      - `group_by`:            omit to keep, send `null` to clear, send an object to replace.
+      - `sorts`:               omit to keep, send `[]` to clear, send a list to replace.
+      - `selected_properties`: omit to keep, send `null` to clear (back to the
+                               frontend's default selection), send a list to replace.
 
     `entity_type` is intentionally absent: a view's entity is fixed at creation.
     """

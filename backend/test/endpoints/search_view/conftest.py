@@ -1,6 +1,7 @@
-from typing import TypedDict
+from typing import Any, Generator, TypedDict
 
 import pytest
+from fastapi.testclient import TestClient
 
 from core.project.project_orm import ProjectORM
 from core.user.user_orm import UserORM
@@ -44,9 +45,12 @@ class SearchViewProjectState(TypedDict):
       owner of every view.
     - Search views (all TABLE layout, no grouping, no sorts; each has a single
       STRING_CONTAINS filter on a string column of its entity):
-      - `memo_view_a` "Memo View A" (memo, position 0), filter: M_TITLE contains "a"
-      - `memo_view_b` "Memo View B" (memo, position 1), filter: M_TITLE contains "b"
-      - `memo_view_c` "Memo View C" (memo, position 2), filter: M_TITLE contains "c"
+      - `memo_view_a` "Memo View A" (memo, position 0), filter: M_TITLE contains "a",
+        selected_properties [M_TITLE, M_CREATED]
+      - `memo_view_b` "Memo View B" (memo, position 1), filter: M_TITLE contains "b",
+        selected_properties None (frontend default)
+      - `memo_view_c` "Memo View C" (memo, position 2), filter: M_TITLE contains "c",
+        selected_properties None (frontend default)
       - `span_view` "Span View" (span_annotation, position 0), filter:
         SP_SPAN_TEXT contains "span"
       - `sentence_view` "Sentence View" (sentence_annotation, position 0), filter:
@@ -93,6 +97,7 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
             layout=SearchViewLayout.TABLE,
             filters=string_filter_tree(MemoColumns.TITLE, "a"),
             sorts=[],
+            selected_properties=[MemoColumns.TITLE, MemoColumns.CREATED],
         )
     )
     memo_view_b = create_view(
@@ -164,3 +169,71 @@ def search_view_project(db_session, test_project, test_user) -> SearchViewProjec
         "sentence_view": sentence_view,
         "bbox_view": bbox_view,
     }
+
+
+# ---------------------------------------------------------------------------
+# SECOND USERS (for authorization tests)
+# ---------------------------------------------------------------------------
+# Search views are personal: only the owner may update/delete them, and only
+# project members may create/list/reorder them. These fixtures build a second
+# project member and a non-member, each with their own app/client (auth is
+# overridden per-app via build_app, so a second user needs a second client).
+
+
+@pytest.fixture(scope="function")
+def other_member(db_session, test_project) -> UserORM:
+    """A second user who IS a member of the test project (but owns no views)."""
+    from core.user.user_crud import crud_user
+    from core.user.user_dto import UserCreate
+
+    user = crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            first_name="Other",
+            last_name="Member",
+            email="othermember@dats.org",
+            password="OtherPassword123",
+        ),
+    )
+    test_project.users.append(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture(scope="function")
+def other_member_client(other_member) -> Generator[TestClient, Any, None]:
+    """A client authenticated as `other_member`."""
+    import dats_setup_utils
+
+    with TestClient(dats_setup_utils.build_app(other_member)) as c:
+        yield c
+
+
+@pytest.fixture(scope="function")
+def non_member(db_session) -> UserORM:
+    """A second user who is NOT a member of the test project."""
+    from core.user.user_crud import crud_user
+    from core.user.user_dto import UserCreate
+
+    user = crud_user.create(
+        db=db_session,
+        create_dto=UserCreate(
+            first_name="Non",
+            last_name="Member",
+            email="nonmember@dats.org",
+            password="NonPassword123",
+        ),
+    )
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture(scope="function")
+def non_member_client(non_member) -> Generator[TestClient, Any, None]:
+    """A client authenticated as `non_member`."""
+    import dats_setup_utils
+
+    with TestClient(dats_setup_utils.build_app(non_member)) as c:
+        yield c
