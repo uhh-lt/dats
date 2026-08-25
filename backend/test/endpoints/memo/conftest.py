@@ -19,13 +19,28 @@ from core.doc.source_document_orm import SourceDocumentORM
 from core.memo.memo_crud import crud_memo
 from core.memo.memo_dto import AttachedObjectType, MemoCreateIntern
 from core.memo.memo_orm import MemoORM
+from core.project.project_dto import ProjectCreate
 from core.project.project_orm import ProjectORM
+from core.project.project_service import ProjectService
 from core.tag.tag_crud import crud_tag
 from core.tag.tag_dto import TagCreate
 from core.tag.tag_orm import TagORM
 from core.user.user_crud import crud_user
 from core.user.user_dto import UserCreate
 from core.user.user_orm import UserORM
+
+
+def _create_project(db_session, user: UserORM, title: str) -> ProjectORM:
+    """Create a project owned by `user` with a unique title.
+
+    (create_test_project hardcodes the title, which collides with the fixture's
+    project via the ix_project_title unique constraint.)
+    """
+    return ProjectService().create_project(
+        db=db_session,
+        create_dto=ProjectCreate(title=title, description="Project for memo tests"),
+        creating_user_id=user.id,
+    )
 
 
 def _create_memo(
@@ -89,6 +104,11 @@ class MemoProjectState(TypedDict):
       memo):
       - `user` favorited `code_memo_a`.
       - `other_user` favorited `code_memo_a` AND `code_memo_b`.
+    - Two extra projects used to exercise project scoping and authorization of
+      the recents endpoint. Both are empty (no memos, no recents):
+      - `other_project` "Other Test Project": `user` IS a member.
+      - `foreign_project` "Foreign Project": `user` is NOT a member (owned by
+        `other_user`).
 
     Non-obvious derived behavior (documented so tests don't re-derive it):
     - `is_favorite` on a MemoRead is computed for the REQUESTING user. Because
@@ -107,6 +127,8 @@ class MemoProjectState(TypedDict):
     project: ProjectORM
     user: UserORM
     other_user: UserORM
+    other_project: ProjectORM
+    foreign_project: ProjectORM
     code: CodeORM
     tag: TagORM
     sdoc: SourceDocumentORM
@@ -263,9 +285,16 @@ def memo_project(
     crud_memo.favorite(db=db_session, memo_id=code_memo_a.id, user_id=other_user.id)
     crud_memo.favorite(db=db_session, memo_id=code_memo_b.id, user_id=other_user.id)
 
+    # Two extra projects for recents scoping/authorization tests. Both are empty.
+    # `other_project` has `user` as a member; `foreign_project` does not.
+    other_project = _create_project(db_session, test_user, "Other Test Project")
+    foreign_project = _create_project(db_session, other_user, "Foreign Project")
+
     db_session.commit()
     for obj in (
         project,
+        other_project,
+        foreign_project,
         code,
         tag,
         sdoc,
@@ -288,6 +317,8 @@ def memo_project(
         "project": project,
         "user": test_user,
         "other_user": other_user,
+        "other_project": other_project,
+        "foreign_project": foreign_project,
         "code": code,
         "tag": tag,
         "sdoc": sdoc,

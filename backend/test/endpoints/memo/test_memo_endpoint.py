@@ -541,10 +541,25 @@ def test_get_recent_memos_only_returns_memos_from_given_project(
 ):
     """Recents are scoped to the requested project, not across projects."""
     memo = memo_project["code_memo_a"]
+    other_project = memo_project["other_project"]
     _record_recent(client, memo.id)
 
-    # A different (nonexistent) project id has no recents for this user.
-    assert _get_recent_ids(client, project_id=99999) == []
+    # `other_project` is a real project `user` belongs to, but has no recents.
+    assert _get_recent_ids(client, project_id=other_project.id) == []
+
+
+def test_get_recent_memos_non_member_project_returns_403(
+    client: TestClient, memo_project: MemoProjectState
+):
+    """Authorization runs before reading recents, so a project the requesting
+    user is not a member of (including a nonexistent one) yields 403."""
+    foreign_project = memo_project["foreign_project"]
+
+    response = client.get("/memo/recent", params={"project_id": foreign_project.id})
+    assert response.status_code == 403, response.text
+
+    response = client.get("/memo/recent", params={"project_id": 99999})
+    assert response.status_code == 403, response.text
 
 
 def test_get_recent_memos_requires_project_id(client: TestClient):
