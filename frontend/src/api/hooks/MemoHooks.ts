@@ -1,6 +1,8 @@
 import { queryClient } from "@api/queryClient";
 import { MemoService } from "@api/services/MemoService";
 import { SearchService } from "@api/services/SearchService";
+// eslint-disable-next-line boundaries/element-types
+import { ColumnInfo, tableInfoQueryKey } from "@core/filter";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoRead } from "@models/MemoRead";
@@ -59,6 +61,28 @@ const useGetRecentMemos = (projectId: number | null | undefined) =>
     queryKey: [QueryKey.MEMO_RECENT, projectId],
     queryFn: () => MemoService.getRecentMemos({ projectId: projectId! }),
     enabled: !!projectId,
+  });
+
+/**
+ * Fetches the memo column info (label, sortable, filter operator, filter value type)
+ * from the backend memo search info endpoint.
+ *
+ * Returns a map from column id to ColumnInfo. This is the single source of truth
+ * for which filters/operators are available on memo columns - do not hardcode
+ * column info in views.
+ */
+const useMemoSearchInfo = (projectId: number) =>
+  useQuery<Record<string, ColumnInfo>>({
+    queryKey: tableInfoQueryKey("memoFilter", projectId),
+    queryFn: async () => {
+      const result = await SearchService.searchMemoInfo({ projectId });
+      return result.reduce<Record<string, ColumnInfo>>((acc, info) => {
+        const column = info.column.toString();
+        acc[column] = { ...info, column };
+        return acc;
+      }, {});
+    },
+    staleTime: Infinity,
   });
 
 const invalidateWorkspaceQueries = () => {
@@ -208,6 +232,7 @@ export const MemoHooks = {
   useQueryMemos,
   useQueryMemoGroups,
   useGetRecentMemos,
+  useMemoSearchInfo,
   useCreateMemo,
   useUpdateMemo,
   useFavoriteMemos,
