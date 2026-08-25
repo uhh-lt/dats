@@ -67,14 +67,12 @@ export interface EntityWorkspaceConfig<TColumns extends string, TRow extends { i
    * `WorkspaceTableRow<TRow>`. Build leaf cells with the `leafColumn` helper so group-header
    * discrimination is handled for you; the table renders group headers via the first column.
    *
-   * Return one def per renderable column (see `renderableColumns`), in a stable order. The table
+   * Provide one def per renderable column (see `renderableColumns`), in a stable order. The table
    * derives MRT's `columnVisibility` from the view's selected properties, so this list must NOT
    * be filtered by the selection — it stays stable as the user toggles properties.
    *
-   * The defs are memoized on `onSelect`, so `onSelect` MUST be referentially stable (wrap it in
-   * `useCallback` at the source). An unstable `onSelect` rebuilds every column def each render.
    */
-  useTableColumns: (onSelect: (id: number) => void) => MRT_ColumnDef<WorkspaceTableRow<TRow>>[];
+  tableColumns: MRT_ColumnDef<WorkspaceTableRow<TRow>>[];
   renderListItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
   renderCard: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;
   renderFeedItem: (row: TRow, onSelect: (id: number) => void, selectedProperties: TColumns[]) => ReactNode;

@@ -7,8 +7,8 @@ import {
   MemoListItem,
   memoColumnsToFlags,
   memoRenderableColumns,
+  memoTableColumns,
   useMemoSearchInfo,
-  useMemoTableColumns,
 } from "@core/memo";
 import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryRequest } from "@core/workspace";
 import { AttachedObjectType } from "@models/AttachedObjectType";
@@ -71,7 +71,7 @@ export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig
     MemoHooks.useQueryMemoGroups(request as GroupQueryRequest_MemoColumns_, enabled),
   useSearchViews: MemoViewHooks,
 
-  useTableColumns: useMemoTableColumns,
+  tableColumns: memoTableColumns,
   renderTableSelectionActions: (selectedIds, clearSelection) => (
     <MemoTableSelectionActions selectedIds={selectedIds} clearSelection={clearSelection} />
   ),

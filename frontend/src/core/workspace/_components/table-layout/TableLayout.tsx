@@ -69,7 +69,7 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
   totalResults,
 }: TableLayoutProps<TColumns, TRow>): ReactNode {
   const isGrouped = Boolean(view.group_by) && groups !== undefined;
-  const entityColumns = config.useTableColumns(onSelect);
+  const entityColumns = config.tableColumns;
 
   // Column visibility is driven by the view's selected properties (the "properties" selector),
   // the defs are stable, and we derive MRT's columnVisibility
@@ -234,6 +234,12 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
     state: { expanded, rowSelection, columnSizing: columnSizingState, columnVisibility },
     onExpandedChange: handleExpandedChange,
     onColumnSizingChange: handleColumnSizingChange,
+    // Clicking a leaf row opens the entity. Interactive cell content (favorite toggle, links,
+    // expand buttons) stops propagation, so it does not also trigger selection.
+    muiTableBodyRowProps: ({ row }) => ({
+      onClick: isGroupHeaderRow(row.original) ? undefined : () => onSelect(row.original.row!.id),
+      sx: isGroupHeaderRow(row.original) ? undefined : { cursor: "pointer" },
+    }),
     muiTableContainerProps: { sx: { flex: 1, minHeight: 0 }, onScroll: handleScroll },
     muiTablePaperProps: { sx: { display: "flex", flexDirection: "column", height: "100%", minHeight: 0 } },
   });

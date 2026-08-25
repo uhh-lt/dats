@@ -13,10 +13,18 @@ import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
 
 /**
+ * Maximum rendered height (px) of a card's markdown content. Taller content is
+ * clipped, so a card never grows beyond roughly header + CONTENT_MAX_HEIGHT +
+ * footer, no matter how long the memo is.
+ */
+const CONTENT_MAX_HEIGHT = 80;
+
+/**
  * The single memo card for the whole application. Renders a memo as a card and
  * is fully customizable through the shared `MemoPresentationProps` flags, so it
  * can serve every surface (workspace gallery, document info panel, whiteboard
- * node, ...). Accepts a `MemoRead` or an id.
+ * node, ...). Accepts a `MemoRead` or an id. Content is clamped to
+ * `CONTENT_MAX_HEIGHT`.
  */
 export const MemoCard = memo(({ memo, ...props }: MemoPresentationProps) => {
   if (typeof memo === "number") {
@@ -61,14 +69,14 @@ const MemoCardWithData = memo(
     const showContent = renderTitle || (renderContent && memo.content.trim().length > 0);
     const content = memo.content;
 
-    const actionMenu = (renderFavoriteStatus || renderActionMenu) && (
-      <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
+    const actionMenu = renderActionMenu && (
+      <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center" }}>
         {renderActionMenu && (
           <MemoActionMenu
             memo={memo as MemoRead}
             onDeleteClick={onDeleteClick}
             onStarredClick={onStarredClick}
-            iconButtonProps={{ size: "small" }}
+            iconButtonProps={{ size: "small", sx: { p: 0 } }}
           />
         )}
       </Box>
@@ -78,7 +86,7 @@ const MemoCardWithData = memo(
       <Box px={2} py={1.5} display="flex" flexDirection="column" height="100%">
         {/*
           Block wrapper (not flex) so the floated action menu stays at the top and the
-          header/title wrap around it, exactly like the original layout. It grows
+          header/title wrap around it. It grows
           (flex: 1) to fill the card height, pushing the footer to the bottom.
         */}
         <Box flex={1} sx={{ "&::after": { content: '""', display: "table", clear: "both" } }}>
@@ -105,7 +113,7 @@ const MemoCardWithData = memo(
                 </Stack>
               )}
               {renderContent && (
-                <Box className="markdown-content">
+                <Box className="markdown-content" sx={{ maxHeight: CONTENT_MAX_HEIGHT, overflow: "hidden" }}>
                   <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
                 </Box>
               )}

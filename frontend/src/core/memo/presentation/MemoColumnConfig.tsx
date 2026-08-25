@@ -2,10 +2,10 @@ import { UserRenderer } from "@core/user";
 import { leafColumn, WorkspaceTableRow } from "@core/workspace";
 import { MemoColumns } from "@models/MemoColumns";
 import { MemoRead } from "@models/MemoRead";
+import { Typography } from "@mui/material";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { formatOptionLabel } from "@utils/StringUtils";
 import { MRT_ColumnDef } from "material-react-table";
-import { useMemo } from "react";
 import { MemoFavoriteIconButton } from "../MemoFavoriteIconButton";
 import { MemoPresentationFlags } from "./MemoPresentationProps";
 
@@ -75,64 +75,57 @@ export function memoColumnsToFlags(selectedProperties: MemoColumns[]): MemoPrese
  * `M_ATTACHED_OBJECT_TYPE` has no def: it is not a renderable property (it backs grouping, not a
  * table column). The single "Attached to" column is keyed by `M_ATTACHED_OBJECT_ID` and renders
  * the attached object's type label.
- *
- * Memoized on `onSelect`, which therefore must be referentially stable (`useCallback` at the
- * source) — see the `useTableColumns` contract in `EntityWorkspaceConfig`.
  */
-export const useMemoTableColumns = (onSelect: (id: number) => void): MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[] =>
-  useMemo<MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[]>(() => {
-    // Keyed by RenderableMemoColumn so the compiler forces exactly one def per renderable column:
-    // a missing or extra key is a type error, keeping the defs in sync with memoRenderableColumns.
-    const defs: Record<RenderableMemoColumn, MRT_ColumnDef<WorkspaceTableRow<MemoRead>>> = {
-      [MemoColumns.M_TITLE]: leafColumn<MemoRead>({
-        id: MemoColumns.M_TITLE,
-        header: "Title",
-        size: 320,
-        cell: (memo) => (
-          <span onClick={() => onSelect(memo.id)} style={{ cursor: "pointer" }}>
-            {memo.title}
-          </span>
-        ),
-      }),
-      [MemoColumns.M_CONTENT]: leafColumn<MemoRead>({
-        id: MemoColumns.M_CONTENT,
-        header: "Content",
-        size: 320,
-        cell: (memo) => memo.content,
-      }),
-      [MemoColumns.M_USER_ID]: leafColumn<MemoRead>({
-        id: MemoColumns.M_USER_ID,
-        header: "Author",
-        size: 160,
-        cell: (memo) => <UserRenderer user={memo.user_id} />,
-      }),
-      [MemoColumns.M_ATTACHED_OBJECT_ID]: leafColumn<MemoRead>({
-        id: MemoColumns.M_ATTACHED_OBJECT_ID,
-        header: "Attached to",
-        size: 160,
-        cell: (memo) => formatOptionLabel(memo.attached_object_type),
-      }),
-      [MemoColumns.M_CREATED]: leafColumn<MemoRead>({
-        id: MemoColumns.M_CREATED,
-        header: "Created",
-        size: 180,
-        cell: (memo) => dateToLocaleString(memo.created),
-      }),
-      [MemoColumns.M_UPDATED]: leafColumn<MemoRead>({
-        id: MemoColumns.M_UPDATED,
-        header: "Updated",
-        size: 180,
-        cell: (memo) => dateToLocaleString(memo.updated),
-      }),
-      [MemoColumns.M_FAVORITE]: leafColumn<MemoRead>({
-        id: MemoColumns.M_FAVORITE,
-        header: "Favorite",
-        size: 80,
-        cell: (memo) => <MemoFavoriteIconButton memo={memo} />,
-      }),
-    };
-    // Canonical enum order, restricted to the renderable columns.
-    return Object.values(MemoColumns)
-      .filter((column): column is RenderableMemoColumn => column in defs)
-      .map((column) => defs[column]);
-  }, [onSelect]);
+export const memoTableColumns: MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[] = (() => {
+  // Keyed by RenderableMemoColumn so the compiler forces exactly one def per renderable column:
+  // a missing or extra key is a type error, keeping the defs in sync with memoRenderableColumns.
+  const defs: Record<RenderableMemoColumn, MRT_ColumnDef<WorkspaceTableRow<MemoRead>>> = {
+    [MemoColumns.M_TITLE]: leafColumn<MemoRead>({
+      id: MemoColumns.M_TITLE,
+      header: "Title",
+      size: 320,
+      cell: (memo) => memo.title,
+    }),
+    [MemoColumns.M_CONTENT]: leafColumn<MemoRead>({
+      id: MemoColumns.M_CONTENT,
+      header: "Content",
+      size: 320,
+      // noWrap clamps to one line with an ellipsis, so long content never drives the row height.
+      cell: (memo) => <Typography noWrap>{memo.content}</Typography>,
+    }),
+    [MemoColumns.M_USER_ID]: leafColumn<MemoRead>({
+      id: MemoColumns.M_USER_ID,
+      header: "Author",
+      size: 160,
+      cell: (memo) => <UserRenderer user={memo.user_id} />,
+    }),
+    [MemoColumns.M_ATTACHED_OBJECT_ID]: leafColumn<MemoRead>({
+      id: MemoColumns.M_ATTACHED_OBJECT_ID,
+      header: "Attached to",
+      size: 160,
+      cell: (memo) => formatOptionLabel(memo.attached_object_type),
+    }),
+    [MemoColumns.M_CREATED]: leafColumn<MemoRead>({
+      id: MemoColumns.M_CREATED,
+      header: "Created",
+      size: 180,
+      cell: (memo) => dateToLocaleString(memo.created),
+    }),
+    [MemoColumns.M_UPDATED]: leafColumn<MemoRead>({
+      id: MemoColumns.M_UPDATED,
+      header: "Updated",
+      size: 180,
+      cell: (memo) => dateToLocaleString(memo.updated),
+    }),
+    [MemoColumns.M_FAVORITE]: leafColumn<MemoRead>({
+      id: MemoColumns.M_FAVORITE,
+      header: "Favorite",
+      size: 80,
+      cell: (memo) => <MemoFavoriteIconButton memo={memo} />,
+    }),
+  };
+  // Canonical enum order, restricted to the renderable columns.
+  return Object.values(MemoColumns)
+    .filter((column): column is RenderableMemoColumn => column in defs)
+    .map((column) => defs[column]);
+})();
