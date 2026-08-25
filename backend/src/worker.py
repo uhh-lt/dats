@@ -67,7 +67,46 @@ class DATSWorker(Worker):
     would copy them into every horse, letting the real connection count exceed
     the configured pool size. Instead, each horse connects its own repos on
     entry and disposes them on exit, so the parent holds zero connections.
+
+    CUDA self-healing: if jobs keep failing because CUDA became unavailable
+    (a transient driver/runtime fault that only a process restart fixes), the
+    worker exits non-zero after MAX_CONSECUTIVE_CUDA_FAILURES in a row so that
+    Docker's restart policy recreates a clean worker instead of failing every
+    subsequent GPU job until manual intervention.
     """
+
+    MAX_CONSECUTIVE_CUDA_FAILURES = 2
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._consecutive_cuda_failures = 0
+
+    def handle_job_success(self, job, queue, started_job_registry):
+        self._consecutive_cuda_failures = 0
+        super().handle_job_success(job, queue, started_job_registry)
+
+    def handle_job_failure(self, job, queue, started_job_registry=None, exc_string=""):
+        from systems.job_system.cuda_utils import CUDA_UNAVAILABLE_REASON
+
+        if CUDA_UNAVAILABLE_REASON in (exc_string or ""):
+            self._consecutive_cuda_failures += 1
+            logger.warning(
+                f"CUDA-unavailable job failure "
+                f"{self._consecutive_cuda_failures}/"
+                f"{self.MAX_CONSECUTIVE_CUDA_FAILURES} on worker {self.name}."
+            )
+        else:
+            self._consecutive_cuda_failures = 0
+
+        super().handle_job_failure(job, queue, started_job_registry, exc_string)
+
+        if self._consecutive_cuda_failures >= self.MAX_CONSECUTIVE_CUDA_FAILURES:
+            logger.error(
+                f"CUDA unavailable for {self._consecutive_cuda_failures} "
+                "consecutive GPU jobs. Exiting worker so the container runtime "
+                "restarts it into a clean state."
+            )
+            os._exit(1)
 
     def main_work_horse(self, job, queue):
         """Horse entry point: connect its own repos, then run the job.
