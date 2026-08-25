@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { MemoRow } from "./MemoRow";
-export type Page_MemoRow_ = {
+import type { MemoRead } from "./MemoRead";
+export type Page_MemoRead_ = {
   /**
    * The rows on the requested page
    */
-  items: Array<MemoRow>;
+  items: Array<MemoRead>;
   /**
    * Total number of matching rows (unpaginated), used for pagination
    */

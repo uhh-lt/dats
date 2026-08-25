@@ -14,7 +14,7 @@ import type { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_M
 import type { GroupQueryRequest_SentAnnoColumns_ } from "@models/GroupQueryRequest_SentAnnoColumns_";
 import type { GroupQueryRequest_SpanColumns_ } from "@models/GroupQueryRequest_SpanColumns_";
 import type { Page_BBoxAnnotationRow_ } from "@models/Page_BBoxAnnotationRow_";
-import type { Page_MemoRow_ } from "@models/Page_MemoRow_";
+import type { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import type { Page_SentenceAnnotationRow_ } from "@models/Page_SentenceAnnotationRow_";
 import type { Page_SpanAnnotationRow_ } from "@models/Page_SpanAnnotationRow_";
 import type { PaginatedSDocHits } from "@models/PaginatedSDocHits";
@@ -119,14 +119,14 @@ export class SearchService {
   }
   /**
    * Queries Memo summaries for a workspace view
-   * @returns Page_MemoRow_ Successful Response
+   * @returns Page_MemoRead_ Successful Response
    * @throws ApiError
    */
   public static searchMemos({
     requestBody,
   }: {
     requestBody: QueryRequest_MemoColumns_;
-  }): CancelablePromise<Page_MemoRow_> {
+  }): CancelablePromise<Page_MemoRead_> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/memo",

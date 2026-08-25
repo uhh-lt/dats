@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, model_validator
@@ -6,7 +5,6 @@ from pydantic import BaseModel, Field, model_validator
 from core.code.code_dto import CodeRead
 from core.doc.folder_dto import FolderRead
 from core.doc.source_document_dto import SourceDocumentRead
-from core.memo.memo_dto import AttachedObjectType
 from repos.elastic.elastic_dto_base import ElasticSearchHit
 from systems.search_system.abstract_column import AbstractColumns
 from systems.search_system.filtering import Filter
@@ -21,7 +19,7 @@ class Page(BaseModel, Generic[ItemT]):
     """A paginated list of row results.
 
     Unified row-query response for every searchable entity. `items` holds the
-    entity-specific row DTO (e.g. MemoRow, SpanAnnotationRow); `total_results`
+    entity-specific row DTO (e.g. MemoRead, SpanAnnotationRow); `total_results`
     is the unpaginated match count used to drive pagination.
     """
 
@@ -71,26 +69,6 @@ class QueryRequest(BaseModel, Generic[T]):
                 "or both must be omitted."
             )
         return self
-
-
-class MemoRow(BaseModel):
-    """Row item DTO for memo search results (the `items` of a Page[MemoRow])."""
-
-    id: int = Field(description="ID of the Memo")
-    title: str = Field(description="Title of the Memo")
-    icon: str | None = Field(description="Icon of the Memo")
-    content_excerpt: str = Field(description="Short excerpt of the Memo's content")
-    user_id: int = Field(description="User who authored the Memo")
-    project_id: int = Field(description="Project the Memo belongs to")
-    created: datetime = Field(description="Created timestamp of the Memo")
-    updated: datetime = Field(description="Updated timestamp of the Memo")
-    is_favorite: bool = Field(description="Whether the Memo is marked as favorite")
-    attached_object_id: int = Field(
-        description="ID of the object the Memo is attached to"
-    )
-    attached_object_type: AttachedObjectType = Field(
-        description="Type of the object the Memo is attached to"
-    )
 
 
 class SpanAnnotationRow(BaseModel):

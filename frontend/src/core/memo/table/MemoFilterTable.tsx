@@ -15,8 +15,8 @@ import {
 import { useResetStateOnSearch } from "@hooks/useResetStateOnSearch";
 import { useURLConnector } from "@hooks/useURLConnector";
 import { MemoColumns } from "@models/MemoColumns";
-import { MemoRow } from "@models/MemoRow";
-import { Page_MemoRow_ } from "@models/Page_MemoRow_";
+import { MemoRead } from "@models/MemoRead";
+import { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import { SortDirection } from "@models/SortDirection";
 import { Stack } from "@mui/material";
 import { RootState } from "@store/store";
@@ -32,7 +32,7 @@ import { MemoURLToolbarLeft } from "./_components/MemoURLToolbarLeft";
 import { useInitMemoFilterSlice } from "./_hooks/useInitMemoFilterSlice";
 import { MemoFilterActions, defaultMemoFilterExpression } from "./memoFilterSlice";
 
-const flatMapData = (page: Page_MemoRow_) => page.items;
+const flatMapData = (page: Page_MemoRead_) => page.items;
 
 /**
  * Component for rendering a filter table for memos.
@@ -43,7 +43,7 @@ const flatMapData = (page: Page_MemoRow_) => page.items;
  * @param renderTopLeftToolbar the function to render the top left toolbar, which is either the ReduxFilterTableToolbarLeft or the URLFilterTableToolbarLeft, depending on the parent component
  * @param toolbarExtraProps the extra props to pass to the toolbar, which contains the necessary information for managing the filter state (either Redux or URL)
  */
-const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>({
+const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRead>>({
   projectId,
   filter,
   rowSelectionModel,
@@ -60,7 +60,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>
   renderTopLeftToolbar,
   renderBottomToolbar,
   toolbarExtraProps,
-}: FilterTableContainerProps<MemoRow, TToolbarProps, MyFilter<MemoColumns>>) => {
+}: FilterTableContainerProps<MemoRead, TToolbarProps, MyFilter<MemoColumns>>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchContent, setIsSearchContent] = useState<boolean>(false);
 
@@ -69,7 +69,7 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>
     if (!tableInfo) return [];
 
     const result = tableInfo.map((column) => {
-      const colDef: MRT_ColumnDef<MemoRow> = {
+      const colDef: MRT_ColumnDef<MemoRead> = {
         id: column.column,
         accessorFn: () => null,
         header: column.label,
@@ -82,41 +82,41 @@ const MemoFilterTable = <TToolbarProps extends FilterTableToolbarProps<MemoRow>>
             ...colDef,
             size: 100,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showTitle />,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
         case MemoColumns.M_CONTENT:
           return {
             ...colDef,
             size: 360,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showContent />,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
         case MemoColumns.M_FAVORITE:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showStar />,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
         case MemoColumns.M_USER_ID:
           return {
             ...colDef,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showUser />,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
         case MemoColumns.M_ATTACHED_OBJECT_ID:
           return {
             ...colDef,
             enableSorting: false,
             Cell: ({ row }) => <MemoRenderer memo={row.original.id} showAttachedObject attachedObjectLink />,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
         default:
           return {
             ...colDef,
             Cell: () => <i>Cannot render column {column.column}</i>,
-          } as MRT_ColumnDef<MemoRow>;
+          } as MRT_ColumnDef<MemoRead>;
       }
     });
 
     return result;
   }, [tableInfo]);
 
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_MemoRow_>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<Page_MemoRead_>({
     queryKey: [QueryKey.MEMO_TABLE, projectId, searchQuery, filter, sortingModel, isSearchContent, fetchSize],
     queryFn: ({ pageParam }) =>
       SearchService.searchMemos({
@@ -206,7 +206,7 @@ export const MemoReduxFilterTable = memo(
     filterName,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<MemoRow, ReduxFilterTableToolbarProps<MemoRow>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<MemoRead, ReduxFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<ReduxFilterDialogProps, "filterActions" | "filterStateSelector">) => {
@@ -243,7 +243,7 @@ export const MemoURLFilterTable = memo(
     routeApi,
     ...tableProps
   }: Omit<
-    FilterTableContainerProps<MemoRow, URLFilterTableToolbarProps<MemoRow>, MyFilter<MemoColumns>>,
+    FilterTableContainerProps<MemoRead, URLFilterTableToolbarProps<MemoRead>, MyFilter<MemoColumns>>,
     "filter" | "renderTopLeftToolbar" | "toolbarExtraProps"
   > &
     Omit<URLFilterDialogProps, "column2InfoSelector" | "defaultFilterExpression" | "filterName">) => {

@@ -1,7 +1,7 @@
 import { UserRenderer } from "@core/user";
 import { leafColumn, WorkspaceTableRow } from "@core/workspace";
 import { MemoColumns } from "@models/MemoColumns";
-import { MemoRow } from "@models/MemoRow";
+import { MemoRead } from "@models/MemoRead";
 import { dateToLocaleString } from "@utils/DateUtils";
 import { formatOptionLabel } from "@utils/StringUtils";
 import { MRT_ColumnDef } from "material-react-table";
@@ -79,12 +79,12 @@ export function memoColumnsToFlags(selectedProperties: MemoColumns[]): MemoPrese
  * Memoized on `onSelect`, which therefore must be referentially stable (`useCallback` at the
  * source) — see the `useTableColumns` contract in `EntityWorkspaceConfig`.
  */
-export const useMemoTableColumns = (onSelect: (id: number) => void): MRT_ColumnDef<WorkspaceTableRow<MemoRow>>[] =>
-  useMemo<MRT_ColumnDef<WorkspaceTableRow<MemoRow>>[]>(() => {
+export const useMemoTableColumns = (onSelect: (id: number) => void): MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[] =>
+  useMemo<MRT_ColumnDef<WorkspaceTableRow<MemoRead>>[]>(() => {
     // Keyed by RenderableMemoColumn so the compiler forces exactly one def per renderable column:
     // a missing or extra key is a type error, keeping the defs in sync with memoRenderableColumns.
-    const defs: Record<RenderableMemoColumn, MRT_ColumnDef<WorkspaceTableRow<MemoRow>>> = {
-      [MemoColumns.M_TITLE]: leafColumn<MemoRow>({
+    const defs: Record<RenderableMemoColumn, MRT_ColumnDef<WorkspaceTableRow<MemoRead>>> = {
+      [MemoColumns.M_TITLE]: leafColumn<MemoRead>({
         id: MemoColumns.M_TITLE,
         header: "Title",
         size: 320,
@@ -94,37 +94,37 @@ export const useMemoTableColumns = (onSelect: (id: number) => void): MRT_ColumnD
           </span>
         ),
       }),
-      [MemoColumns.M_CONTENT]: leafColumn<MemoRow>({
+      [MemoColumns.M_CONTENT]: leafColumn<MemoRead>({
         id: MemoColumns.M_CONTENT,
         header: "Content",
         size: 320,
-        cell: (memo) => memo.content_excerpt,
+        cell: (memo) => memo.content,
       }),
-      [MemoColumns.M_USER_ID]: leafColumn<MemoRow>({
+      [MemoColumns.M_USER_ID]: leafColumn<MemoRead>({
         id: MemoColumns.M_USER_ID,
         header: "Author",
         size: 160,
         cell: (memo) => <UserRenderer user={memo.user_id} />,
       }),
-      [MemoColumns.M_ATTACHED_OBJECT_ID]: leafColumn<MemoRow>({
+      [MemoColumns.M_ATTACHED_OBJECT_ID]: leafColumn<MemoRead>({
         id: MemoColumns.M_ATTACHED_OBJECT_ID,
         header: "Attached to",
         size: 160,
         cell: (memo) => formatOptionLabel(memo.attached_object_type),
       }),
-      [MemoColumns.M_CREATED]: leafColumn<MemoRow>({
+      [MemoColumns.M_CREATED]: leafColumn<MemoRead>({
         id: MemoColumns.M_CREATED,
         header: "Created",
         size: 180,
         cell: (memo) => dateToLocaleString(memo.created),
       }),
-      [MemoColumns.M_UPDATED]: leafColumn<MemoRow>({
+      [MemoColumns.M_UPDATED]: leafColumn<MemoRead>({
         id: MemoColumns.M_UPDATED,
         header: "Updated",
         size: 180,
         cell: (memo) => dateToLocaleString(memo.updated),
       }),
-      [MemoColumns.M_FAVORITE]: leafColumn<MemoRow>({
+      [MemoColumns.M_FAVORITE]: leafColumn<MemoRead>({
         id: MemoColumns.M_FAVORITE,
         header: "Favorite",
         size: 80,

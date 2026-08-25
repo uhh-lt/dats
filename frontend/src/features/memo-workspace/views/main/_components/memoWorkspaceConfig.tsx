@@ -14,7 +14,7 @@ import { EntityWorkspaceConfig, WorkspaceGroupQueryRequest, WorkspaceQueryReques
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoColumns } from "@models/MemoColumns";
-import { MemoRow } from "@models/MemoRow";
+import { MemoRead } from "@models/MemoRead";
 import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
 import { SearchEntityType } from "@models/SearchEntityType";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -52,7 +52,7 @@ const defaultSelectedProperties: MemoColumns[] = [
  * Builds the memo workspace config. `userId` is needed for the "My Memos"
  * create-view template.
  */
-export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig<MemoColumns, MemoRow> => ({
+export const createMemoWorkspaceConfig = (userId: number): EntityWorkspaceConfig<MemoColumns, MemoRead> => ({
   entityType: SearchEntityType.MEMO,
   entityLabel: "memo",
   columns: MemoColumns,

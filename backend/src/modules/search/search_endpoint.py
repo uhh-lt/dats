@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from common.dependencies import get_current_user, get_db_session
 from core.auth.authz_user import AuthzUser
+from core.memo.memo_dto import MemoRead
 from modules.search.bbox_anno_search.bbox_anno_search import (
     find_bbox_annotation_groups,
     find_bbox_annotations,
@@ -22,7 +23,6 @@ from modules.search.sdoc_search.sdoc_search import (
 from modules.search.sdoc_search.sdoc_search_columns import SdocColumns
 from modules.search.search_dto import (
     BBoxAnnotationRow,
-    MemoRow,
     Page,
     PaginatedSDocHits,
     QueryRequest,
@@ -120,7 +120,7 @@ def search_memo_info(
 
 @router.post(
     "/memo",
-    response_model=Page[MemoRow],
+    response_model=Page[MemoRead],
     summary="Queries Memo summaries for a workspace view",
 )
 def search_memos(
@@ -128,7 +128,7 @@ def search_memos(
     db: Session = Depends(get_db_session),
     request: QueryRequest[MemoColumns],
     authz_user: AuthzUser = Depends(),
-) -> Page[MemoRow]:
+) -> Page[MemoRead]:
     authz_user.assert_in_project(request.project_id)
     return find_memos(db=db, request=request, user_id=authz_user.user.id)
 

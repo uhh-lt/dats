@@ -7,10 +7,10 @@ import { SortDirection } from "@models/SortDirection";
 import { GroupConfig_MemoColumns_ } from "@models/GroupConfig_MemoColumns_";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoColumns } from "@models/MemoColumns";
-import { MemoRow } from "@models/MemoRow";
+import { MemoRead } from "@models/MemoRead";
 import { MemoSearchViewRead } from "@models/MemoSearchViewRead";
 import { MemoSearchViewUpdate } from "@models/MemoSearchViewUpdate";
-import { Page_MemoRow_ } from "@models/Page_MemoRow_";
+import { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
 import { Sort_MemoColumns_ } from "@models/Sort_MemoColumns_";
 // Span annotation
@@ -146,7 +146,7 @@ export const _checkMemoGroupQueryRequest: AssertEqual<
 > = true;
 export const _checkMemoSort: AssertEqual<Sort_MemoColumns_, WorkspaceSort<MemoColumns>> = true;
 export const _checkMemoGroupConfig: AssertEqual<GroupConfig_MemoColumns_, WorkspaceGroupConfig<MemoColumns>> = true;
-export const _checkMemoPage: AssertEqual<Page_MemoRow_, WorkspacePage<MemoRow>> = true;
+export const _checkMemoPage: AssertEqual<Page_MemoRead_, WorkspacePage<MemoRead>> = true;
 export const _checkMemoView: AssertEqual<MemoSearchViewRead, WorkspaceView<MemoColumns>> = true;
 export const _checkMemoViewUpdate: AssertEqual<MemoSearchViewUpdate, WorkspaceViewUpdate<MemoColumns>> = true;
 

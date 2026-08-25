@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_dto import AttachedObjectType, MemoRead
 from modules.search.memo_search.memo_search_columns import (
     MemoColumns,
     build_memo_subquery,
 )
-from modules.search.search_dto import MemoRow, Page, QueryRequest
+from modules.search.search_dto import Page, QueryRequest
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.grouping import GroupPage, GroupQueryRequest, GroupSummary
 from systems.search_system.search_builder import SearchBuilder
@@ -27,12 +27,13 @@ def _apply_title_and_content_search(query, subquery_dict, search_query: str):
     )
 
 
-def _to_row(data) -> MemoRow:
-    return MemoRow(
+def _to_row(data) -> MemoRead:
+    return MemoRead(
         id=data["id"],
         title=data[MemoColumns.TITLE.value],
         icon=data["icon"],
-        content_excerpt=data[MemoColumns.CONTENT.value][:240],
+        content=data[MemoColumns.CONTENT.value],
+        content_json=data["content_json"],
         user_id=data[MemoColumns.USER_ID.value],
         project_id=data["project_id"],
         created=data[MemoColumns.CREATED.value],
@@ -47,8 +48,8 @@ def _to_row(data) -> MemoRow:
 
 def find_memos(
     db: Session, *, request: QueryRequest[MemoColumns], user_id: int
-) -> Page[MemoRow]:
-    """Row query: filter/sort/search/drill-down/paginate memos -> Page[MemoRow].
+) -> Page[MemoRead]:
+    """Row query: filter/sort/search/drill-down/paginate memos -> Page[MemoRead].
 
     The SearchBuilder applies filtering + sorting + pagination and returns paginated
     memo IDs; the projection is then re-run restricted to those IDs to resolve the
@@ -85,7 +86,7 @@ def find_memos(
     memo_ids = [row[0] for row in rows]
 
     if len(memo_ids) == 0:
-        return Page[MemoRow](items=[], total_results=total_results)
+        return Page[MemoRead](items=[], total_results=total_results)
 
     # Re-run the projection restricted to the page's memo IDs to resolve the
     # human-readable labels, then reorder to match the paginated order.
@@ -100,7 +101,7 @@ def find_memos(
         summaries_by_id[memo_id] for memo_id in memo_ids if memo_id in summaries_by_id
     ]
 
-    return Page[MemoRow](items=items, total_results=total_results)
+    return Page[MemoRead](items=items, total_results=total_results)
 
 
 def find_memo_groups(

@@ -3625,7 +3625,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Page_MemoRow_" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Page_MemoRead_" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -11266,66 +11266,6 @@
         ],
         "title": "MemoRead"
       },
-      "MemoRow": {
-        "properties": {
-          "id": { "type": "integer", "title": "Id", "description": "ID of the Memo" },
-          "title": { "type": "string", "title": "Title", "description": "Title of the Memo" },
-          "icon": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Icon",
-            "description": "Icon of the Memo"
-          },
-          "content_excerpt": {
-            "type": "string",
-            "title": "Content Excerpt",
-            "description": "Short excerpt of the Memo's content"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User who authored the Memo" },
-          "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Memo belongs to" },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created",
-            "description": "Created timestamp of the Memo"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated",
-            "description": "Updated timestamp of the Memo"
-          },
-          "is_favorite": {
-            "type": "boolean",
-            "title": "Is Favorite",
-            "description": "Whether the Memo is marked as favorite"
-          },
-          "attached_object_id": {
-            "type": "integer",
-            "title": "Attached Object Id",
-            "description": "ID of the object the Memo is attached to"
-          },
-          "attached_object_type": {
-            "$ref": "#/components/schemas/AttachedObjectType",
-            "description": "Type of the object the Memo is attached to"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "title",
-          "icon",
-          "content_excerpt",
-          "user_id",
-          "project_id",
-          "created",
-          "updated",
-          "is_favorite",
-          "attached_object_id",
-          "attached_object_type"
-        ],
-        "title": "MemoRow",
-        "description": "Row item DTO for memo search results (the `items` of a Page[MemoRow])."
-      },
       "MemoSearchViewCreate": {
         "properties": {
           "entity_type": { "type": "string", "const": "memo", "title": "Entity Type", "default": "memo" },
@@ -11635,10 +11575,10 @@
         "required": ["items", "total_results"],
         "title": "Page[BBoxAnnotationRow]"
       },
-      "Page_MemoRow_": {
+      "Page_MemoRead_": {
         "properties": {
           "items": {
-            "items": { "$ref": "#/components/schemas/MemoRow" },
+            "items": { "$ref": "#/components/schemas/MemoRead" },
             "type": "array",
             "title": "Items",
             "description": "The rows on the requested page"
@@ -11651,7 +11591,7 @@
         },
         "type": "object",
         "required": ["items", "total_results"],
-        "title": "Page[MemoRow]"
+        "title": "Page[MemoRead]"
       },
       "Page_SentenceAnnotationRow_": {
         "properties": {

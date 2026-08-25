@@ -8,8 +8,8 @@ import { AttachedObjectTypeOperator } from "@models/AttachedObjectTypeOperator";
 import { BooleanOperator } from "@models/BooleanOperator";
 import { LogicalOperator } from "@models/LogicalOperator";
 import { MemoColumns } from "@models/MemoColumns";
-import { MemoRow } from "@models/MemoRow";
-import { Page_MemoRow_ } from "@models/Page_MemoRow_";
+import { MemoRead } from "@models/MemoRead";
+import { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import { SortDirection } from "@models/SortDirection";
 import AddIcon from "@mui/icons-material/Add";
 import {
@@ -56,7 +56,7 @@ const favoriteFilter: MyFilter<MemoColumns> = {
   ],
 };
 
-const flattenMemoPagesToItems = (data: InfiniteData<Page_MemoRow_> | undefined): MemoRow[] => {
+const flattenMemoPagesToItems = (data: InfiniteData<Page_MemoRead_> | undefined): MemoRead[] => {
   if (!data) return [];
   return data.pages.flatMap((page) => page.items);
 };
@@ -159,7 +159,7 @@ interface SidebarMemoItem {
   icon?: string | null;
 }
 
-/** Structural subset of UseQueryResult, so both MemoRow[] and MemoRead[] queries are accepted. */
+/** Structural subset of UseQueryResult, so any query returning memo items is accepted. */
 interface SidebarMemoQuery {
   isPending: boolean;
   isError: boolean;

@@ -1,5 +1,5 @@
 import { ReduxFilterDialog, ReduxFilterTableToolbarProps } from "@core/filter";
-import { MemoRow } from "@models/MemoRow";
+import { MemoRead } from "@models/MemoRead";
 import { Stack } from "@mui/material";
 import { useMemo } from "react";
 import { MemoDeleteButton } from "../../MemoDeleteButton";
@@ -11,7 +11,7 @@ export function MemoReduxToolbarLeft({
   filterName,
   filterStateSelector,
   filterActions,
-}: ReduxFilterTableToolbarProps<MemoRow>) {
+}: ReduxFilterTableToolbarProps<MemoRead>) {
   const selectedMemoIds = useMemo(() => selectedData.map((memo) => memo.id), [selectedData]);
 
   return (

@@ -1,11 +1,11 @@
 import { FilterTableToolbarProps } from "@core/filter";
-import { MemoRow } from "@models/MemoRow";
+import { MemoRead } from "@models/MemoRead";
 import { Stack } from "@mui/material";
 import { MRT_ShowHideColumnsButton, MRT_ToggleDensePaddingButton } from "material-react-table";
 import { useMemo } from "react";
 import { MemosExportButton } from "../../MemoExportButton";
 
-export function MemoToolbarRight({ table, selectedData }: FilterTableToolbarProps<MemoRow>) {
+export function MemoToolbarRight({ table, selectedData }: FilterTableToolbarProps<MemoRead>) {
   const memoIds = useMemo(() => selectedData.map((a) => a.id), [selectedData]);
   return (
     <Stack direction="row" spacing={1} alignItems="center">

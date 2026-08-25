@@ -3,9 +3,9 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from core.memo.memo_dto import AttachedObjectType
+from core.memo.memo_dto import AttachedObjectType, MemoRead
 from modules.search.memo_search.memo_search_columns import MemoColumns
-from modules.search.search_dto import MemoRow, Page, QueryRequest
+from modules.search.search_dto import Page, QueryRequest
 from systems.search_system.column_info import ColumnInfo
 from systems.search_system.filtering import Filter, FilterExpression, LogicalOperator
 from systems.search_system.filtering_operators import (
@@ -86,7 +86,7 @@ def _post_memo_query(
     )
     response = client.post("/search/memo", json=request.model_dump(mode="json"))
     assert response.status_code == 200, response.text
-    return {m.title for m in Page[MemoRow].model_validate(response.json()).items}
+    return {m.title for m in Page[MemoRead].model_validate(response.json()).items}
 
 
 # --- A. columns support their operators ------------------------------------------
@@ -968,7 +968,7 @@ def test_memo_search_full_text_query_matches_title_and_content(
     )
     response = client.post("/search/memo", json=request.model_dump(mode="json"))
     assert response.status_code == 200, response.text
-    page = Page[MemoRow].model_validate(response.json())
+    page = Page[MemoRead].model_validate(response.json())
     # "Document Memo" title and "A memo on the first document" content both match.
     assert {m.title for m in page.items} == {"Document Memo"}
 
@@ -976,7 +976,7 @@ def test_memo_search_full_text_query_matches_title_and_content(
 def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_project):
     """Memo row query paginates deterministically (default sort: updated desc)."""
 
-    def _page(page_number: int) -> Page[MemoRow]:
+    def _page(page_number: int) -> Page[MemoRead]:
         request = QueryRequest[MemoColumns](
             project_id=search_project["project"].id,
             search_query="",
@@ -985,7 +985,7 @@ def test_memo_search_paginates_rows_without_overlap(client: TestClient, search_p
             page_number=page_number,
             page_size=2,
         )
-        return Page[MemoRow].model_validate(
+        return Page[MemoRead].model_validate(
             client.post("/search/memo", json=request.model_dump(mode="json")).json()
         )
 
@@ -1009,7 +1009,7 @@ def _post_memo_drill_down_query(
     project_id: int,
     group_by: GroupConfig | None,
     group_key: str | None,
-) -> Page[MemoRow]:
+) -> Page[MemoRead]:
     """POST a row query with optional drill-down and return the validated Page."""
     request = QueryRequest[MemoColumns](
         project_id=project_id,
@@ -1023,7 +1023,7 @@ def _post_memo_drill_down_query(
     )
     response = client.post("/search/memo", json=request.model_dump(mode="json"))
     assert response.status_code == 200, response.text
-    return Page[MemoRow].model_validate(response.json())
+    return Page[MemoRead].model_validate(response.json())
 
 
 @pytest.mark.parametrize(

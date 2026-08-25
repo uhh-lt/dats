@@ -4,7 +4,7 @@ import { SearchService } from "@api/services/SearchService";
 import { AttachedObjectType } from "@models/AttachedObjectType";
 import { GroupQueryRequest_MemoColumns_ } from "@models/GroupQueryRequest_MemoColumns_";
 import { MemoRead } from "@models/MemoRead";
-import { Page_MemoRow_ } from "@models/Page_MemoRow_";
+import { Page_MemoRead_ } from "@models/Page_MemoRead_";
 import { QueryRequest_MemoColumns_ } from "@models/QueryRequest_MemoColumns_";
 import { InfiniteData, useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -30,9 +30,9 @@ const useGetObjectMemos = (
     retry: false,
   });
 
-const useQueryMemos = <TData = InfiniteData<Page_MemoRow_>>(
+const useQueryMemos = <TData = InfiniteData<Page_MemoRead_>>(
   request: QueryRequest_MemoColumns_,
-  options?: { enabled?: boolean; select?: (data: InfiniteData<Page_MemoRow_>) => TData },
+  options?: { enabled?: boolean; select?: (data: InfiniteData<Page_MemoRead_>) => TData },
 ) =>
   useInfiniteQuery({
     queryKey: [QueryKey.MEMO_QUERY, request],

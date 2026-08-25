@@ -1,7 +1,6 @@
 import { MemoHooks } from "@api/hooks/MemoHooks";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
-import { MemoRow } from "@models/MemoRow";
 import { Box, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
 import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
@@ -9,14 +8,13 @@ import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
-import { getMemoContent } from "./memoPresentationUtils";
 
 /**
  * A memo rendered as a compact list row: title and content first, then a
  * metadata footer (author, dates, attached object). Favorite status is shown
  * via an amber left border; the favorite toggle and action menu sit at the top
  * right. Shares the `MemoPresentationProps` flags with the other presentation
- * containers. Accepts a `MemoRead`, a `MemoRow`, or an id.
+ * containers. Accepts a `MemoRead` or an id.
  */
 export const MemoListItem = memo(({ memo, ...props }: MemoPresentationProps) => {
   if (typeof memo === "number") {
@@ -50,7 +48,7 @@ const MemoListItemWithData = memo(
     renderAttachedObject,
     attachedObjectLink,
     renderActionMenu,
-  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
+  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead }) => {
     const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
 
     const handleClick = useCallback(() => {
@@ -89,7 +87,7 @@ const MemoListItemWithData = memo(
             )}
             {renderContent && (
               <Typography variant="body2" color="text.secondary" noWrap>
-                {getMemoContent(memo)}
+                {memo.content}
               </Typography>
             )}
             {showFooter && (

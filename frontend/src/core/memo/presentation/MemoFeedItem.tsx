@@ -2,7 +2,6 @@ import { MemoHooks } from "@api/hooks/MemoHooks";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
-import { MemoRow } from "@models/MemoRow";
 import { Box, CardActionArea, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
@@ -12,12 +11,11 @@ import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
-import { getMemoContent } from "./memoPresentationUtils";
 
 /**
  * A memo rendered as a feed entry. Shares the `MemoCard` design and click
  * behavior (the whole item triggers `onSelect`), but renders the full content
- * without excerpt clamping. Accepts a `MemoRead`, a `MemoRow`, or an id.
+ * without excerpt clamping. Accepts a `MemoRead` or an id.
  */
 export const MemoFeedItem = memo(({ memo, ...props }: MemoPresentationProps) => {
   if (typeof memo === "number") {
@@ -52,7 +50,7 @@ const MemoFeedItemWithData = memo(
     renderAttachedObject,
     attachedObjectLink,
     renderActionMenu,
-  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
+  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead }) => {
     const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
 
     const handleClick = useCallback(() => {
@@ -61,8 +59,7 @@ const MemoFeedItemWithData = memo(
 
     const showHeader = renderAttachedObject;
     const showFooter = renderAuthor || renderCreatedDate || renderUpdatedDate;
-    const showContent = renderTitle || (renderContent && getMemoContent(memo).trim().length > 0);
-    const content = getMemoContent(memo);
+    const showContent = renderTitle || (renderContent && memo.content.trim().length > 0);
 
     const body = (
       <Box px={2} py={1.5} sx={{ "&::after": { content: '""', display: "table", clear: "both" } }}>
@@ -101,7 +98,7 @@ const MemoFeedItemWithData = memo(
             )}
             {renderContent && (
               <Box className="markdown-content">
-                <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>{memo.content}</Markdown>
               </Box>
             )}
           </Stack>

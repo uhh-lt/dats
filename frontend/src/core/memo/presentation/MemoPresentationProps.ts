@@ -1,12 +1,10 @@
 import { MemoRead } from "@models/MemoRead";
-import { MemoRow } from "@models/MemoRow";
 
 /**
  * The memo data accepted by every memo presentation container. A presentation
- * component accepts a full `MemoRead`, a search `MemoRow`, or just an id (which
- * it fetches itself).
+ * component accepts a full `MemoRead` or just an id (which it fetches itself).
  */
-type MemoPresentationData = MemoRead | MemoRow | number;
+type MemoPresentationData = MemoRead | number;
 
 /**
  * Render flags shared by all memo presentation containers (card, list item, feed
@@ -16,7 +14,6 @@ type MemoPresentationData = MemoRead | MemoRow | number;
 export interface MemoPresentationFlags {
   renderIcon?: boolean;
   renderTitle?: boolean;
-  /** Excerpt for a `MemoRow`, full markdown content for a `MemoRead`. */
   renderContent?: boolean;
   renderAuthor?: boolean;
   renderCreatedDate?: boolean;

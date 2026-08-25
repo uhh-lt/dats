@@ -2,7 +2,6 @@ import { MemoHooks } from "@api/hooks/MemoHooks";
 import { Icon, getIconComponent } from "@components/icons";
 import { UserRenderer } from "@core/user";
 import { MemoRead } from "@models/MemoRead";
-import { MemoRow } from "@models/MemoRow";
 import { Box, Card, CardActionArea, CircularProgress, Stack, Typography } from "@mui/material";
 import { dateToLocaleDateString, dateToRelativeString } from "@utils/DateUtils";
 import { memo, useCallback } from "react";
@@ -12,13 +11,12 @@ import { MemoActionMenu } from "../MemoActionMenu";
 import { AttachedObjectRenderer } from "../renderer";
 import { useGetMemosAttachedObject } from "../useGetMemosAttachedObject";
 import { MemoPresentationProps } from "./MemoPresentationProps";
-import { getMemoContent, isMemoRow } from "./memoPresentationUtils";
 
 /**
  * The single memo card for the whole application. Renders a memo as a card and
  * is fully customizable through the shared `MemoPresentationProps` flags, so it
  * can serve every surface (workspace gallery, document info panel, whiteboard
- * node, ...). Accepts a `MemoRead`, a `MemoRow`, or an id.
+ * node, ...). Accepts a `MemoRead` or an id.
  */
 export const MemoCard = memo(({ memo, ...props }: MemoPresentationProps) => {
   if (typeof memo === "number") {
@@ -51,7 +49,7 @@ const MemoCardWithData = memo(
     renderAttachedObject,
     attachedObjectLink,
     renderActionMenu,
-  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead | MemoRow }) => {
+  }: Omit<MemoPresentationProps, "memo"> & { memo: MemoRead }) => {
     const attachedObject = useGetMemosAttachedObject(memo.attached_object_type, memo.attached_object_id);
 
     const handleClick = useCallback(() => {
@@ -60,8 +58,8 @@ const MemoCardWithData = memo(
 
     const showHeader = renderAttachedObject;
     const showFooter = renderAuthor || renderCreatedDate || renderUpdatedDate;
-    const showContent = renderTitle || (renderContent && getMemoContent(memo).trim().length > 0);
-    const content = getMemoContent(memo);
+    const showContent = renderTitle || (renderContent && memo.content.trim().length > 0);
+    const content = memo.content;
 
     const actionMenu = (renderFavoriteStatus || renderActionMenu) && (
       <Box sx={{ float: "right", ml: 1, display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -107,26 +105,9 @@ const MemoCardWithData = memo(
                 </Stack>
               )}
               {renderContent && (
-                <>
-                  {isMemoRow(memo) ? (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 3,
-                        overflow: "hidden",
-                      }}
-                    >
-                      {content}
-                    </Typography>
-                  ) : (
-                    <Box className="markdown-content">
-                      <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
-                    </Box>
-                  )}
-                </>
+                <Box className="markdown-content">
+                  <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                </Box>
               )}
             </Stack>
           )}

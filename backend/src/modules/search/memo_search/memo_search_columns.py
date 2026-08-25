@@ -98,6 +98,7 @@ def build_memo_subquery(db, project_id: int, user_id: int):
             MemoORM.title.label("M_TITLE"),
             MemoORM.icon.label("icon"),
             MemoORM.content.label("M_CONTENT"),
+            MemoORM.content_json.label("content_json"),
             MemoORM.user_id.label("M_USER_ID"),
             MemoORM.project_id.label("project_id"),
             MemoORM.created.label("M_CREATED"),
