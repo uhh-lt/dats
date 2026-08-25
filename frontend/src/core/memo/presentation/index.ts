@@ -1,6 +1,6 @@
 export { MemoCard } from "./MemoCard";
-export { memoColumnsToFlags, memoRenderableColumns } from "./memoColumnsToFlags";
+export { memoColumnsToFlags, memoRenderableColumns, useMemoTableColumns } from "./MemoColumnConfig";
+export type { RenderableMemoColumn } from "./MemoColumnConfig";
 export { MemoFeedItem } from "./MemoFeedItem";
 export { MemoListItem } from "./MemoListItem";
 export type { MemoPresentationProps } from "./MemoPresentationProps";
-export { useMemoTableColumns } from "./useMemoTableColumns";

@@ -7,6 +7,7 @@ import {
   MRT_ExpandedState,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
+  MRT_VisibilityState,
   useMaterialReactTable,
 } from "material-react-table";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -68,11 +69,18 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
   totalResults,
 }: TableLayoutProps<TColumns, TRow>): ReactNode {
   const isGrouped = Boolean(view.group_by) && groups !== undefined;
-  const selectedProperties = useMemo(
-    () => view.selected_properties ?? config.defaultSelectedProperties,
-    [view.selected_properties, config.defaultSelectedProperties],
-  );
-  const entityColumns = config.useTableColumns(onSelect, selectedProperties);
+  const entityColumns = config.useTableColumns(onSelect);
+
+  // Column visibility is driven by the view's selected properties (the "properties" selector),
+  // the defs are stable, and we derive MRT's columnVisibility
+  // state so hidden columns keep their identity/order. Only renderable columns are toggleable.
+  const columnVisibility = useMemo<MRT_VisibilityState>(() => {
+    const selected = new Set<string>(view.selected_properties ?? config.defaultSelectedProperties);
+    return Object.keys(config.renderableColumns).reduce<MRT_VisibilityState>((acc, columnId) => {
+      acc[columnId] = selected.has(columnId);
+      return acc;
+    }, {});
+  }, [view.selected_properties, config.defaultSelectedProperties, config.renderableColumns]);
   const { registry, register, unregister } = useGroupSubRows<TRow>();
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
@@ -119,6 +127,8 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
       header: "Group",
       accessorFn: (original) => original.group?.label ?? "",
       size: 220,
+      // The group-label column is structural, not a renderable property: never hide it.
+      enableHiding: false,
       Cell: ({ row }) => {
         const original = row.original;
         if (!isGroupHeaderRow(original)) return null;
@@ -214,11 +224,14 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
     enableBottomToolbar: false,
     enableColumnFilters: false,
     enableGlobalFilter: false,
-    enableHiding: false,
+    // Hiding is enabled so the derived columnVisibility state applies, but all MRT-native hide UI
+    // stays off (no column actions, no toolbars): visibility is driven solely by the properties
+    // selector in the workspace toolbar.
+    enableHiding: true,
     enableColumnActions: false,
     enableSorting: false,
     enableExpandAll: false,
-    state: { expanded, rowSelection, columnSizing: columnSizingState },
+    state: { expanded, rowSelection, columnSizing: columnSizingState, columnVisibility },
     onExpandedChange: handleExpandedChange,
     onColumnSizingChange: handleColumnSizingChange,
     muiTableContainerProps: { sx: { flex: 1, minHeight: 0 }, onScroll: handleScroll },
