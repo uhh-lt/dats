@@ -134,9 +134,9 @@ export function TableLayout<TColumns extends string, TRow extends { id: number }
         if (!isGroupHeaderRow(original)) return null;
         return (
           <>
-            <Typography component="span" fontWeight={600} noWrap>
+            <Typography component="span" fontWeight={600} noWrap sx={{ mr: 1 }}>
               {original.group!.label}
-            </Typography>{" "}
+            </Typography>
             <Typography component="span" color="text.secondary">
               {original.group!.total_results}
             </Typography>
