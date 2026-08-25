@@ -60,14 +60,23 @@ def teardown_repos_and_services(repos: list[RepoBase]):
 
 
 class DATSWorker(Worker):
-    """Custom standard worker (forks per job - used for GPU)"""
+    """Custom standard worker (forks per job - used for GPU).
 
-    def work(self, *args, **kwargs):
-        repos = init_repos_and_services()
-        try:
-            super().work(*args, **kwargs)
-        finally:
-            teardown_repos_and_services(repos)
+    The parent worker deliberately does NOT connect any repos. RQ forks a
+    "horse" process per job; if the parent held open DB/Redis sockets, fork()
+    would copy them into every horse, letting the real connection count exceed
+    the configured pool size. Instead, each horse connects its own repos on
+    entry and disposes them on exit, so the parent holds zero connections.
+    """
+
+    def main_work_horse(self, job, queue):
+        """Horse entry point: connect its own repos, then run the job.
+
+        RQ's main_work_horse() ends with os._exit(), which reclaims all of the
+        horse's connections/sockets, so no explicit teardown is needed (or run).
+        """
+        init_repos_and_services()
+        super().main_work_horse(job, queue)
 
 
 class DATSSimpleWorker(SimpleWorker):

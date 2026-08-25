@@ -41,6 +41,11 @@ class SQLRepo(RepoBase, metaclass=SingletonMeta):
                 pool_pre_ping=True,
                 pool_size=conf.postgres.pool.pool_size,
                 max_overflow=conf.postgres.pool.max_overflow,
+                # Recycle connections older than 30 min to drop stale sockets
+                # (e.g. after fork or idle timeouts) before they are reused.
+                pool_recycle=1800,
+                # Fail fast (30s) instead of hanging when the pool is exhausted.
+                pool_timeout=30,
                 echo=self._echo,
             )
             logger.info("Successfully established connection to PostgresSQL!")
