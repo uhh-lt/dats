@@ -1,6 +1,6 @@
 from typing import Generator
 
-from fastapi import Depends, Query
+from fastapi import Depends, Query, WebSocketException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from pydantic import ValidationError
@@ -71,4 +71,32 @@ def get_current_user(
 
     if user is None:
         raise credentials_exception
+    return user
+
+
+def get_current_user_for_ws(
+    db: Session = Depends(get_db_session),
+    token: str = Query(..., description="JWT token for authentication"),
+) -> UserORM:
+    try:
+        payload = decode_jwt(token=token)
+        email: str | None = payload.get("sub")
+        if email is None:
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token payload"
+            )
+    except (
+        InvalidTokenError,
+        ValidationError,
+    ):
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token"
+        )
+
+    user = crud_user.read_by_email(db=db, email=email)
+
+    if user is None:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="User not found"
+        )
     return user

@@ -6,7 +6,7 @@ import os
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.routing import APIRoute
@@ -15,8 +15,11 @@ from psycopg2.errors import UniqueViolation
 from rq.exceptions import NoSuchJobError
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
+from websocket import manager
 
+from common.dependencies import get_current_user_for_ws
 from config import conf
+from core.user.user_orm import UserORM
 from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
 from utils.logger import setup_logging
@@ -110,6 +113,19 @@ endpoint_modules = import_by_suffix("_endpoint.py")
 endpoint_modules.sort(key=lambda x: x.__name__.split(".")[-1])
 for em in endpoint_modules:
     app.include_router(em.router)
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(
+    websocket: WebSocket, current_user: UserORM = Depends(get_current_user_for_ws)
+):
+    await manager.connect(websocket, current_user.id)
+    try:
+        while True:
+            data = await websocket.receive_text()  # noqa: F841
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, current_user.id)
+
 
 # 5. Dynamically Register Exception Handlers
 from common.exception_handler import exception_handler, exception_handlers
