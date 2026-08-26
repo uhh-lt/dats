@@ -77,6 +77,7 @@ nav:
   - FAQ: faq.md
   - Development:
       - development/index.md
+      - Getting Started: development/getting-started.md
       - Configure GitHub Action Runners: development/github-action-runner.md
   - Admin:
       - admin/index.md
