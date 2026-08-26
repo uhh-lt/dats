@@ -33,7 +33,20 @@ runs:
       run: |
         set -euo pipefail
         ./bin/setup/setup-folders.sh --development
-        ./bin/setup/setup-envs.sh --project_name action-runner --port_prefix 131
+
+        # Derive a per-runner identity so multiple runners can share this machine:
+        # runner names end in two digits (e.g. dats-runner-01), which become the
+        # port prefix (501) and suffix the compose project name. This isolates
+        # ports, containers, networks, and named volumes between runners.
+        RUNNER_INDEX="$(echo "${RUNNER_NAME}" | grep -oE '[0-9]{2}$' || true)"
+        if [ -z "${RUNNER_INDEX}" ]; then
+          echo "Runner name '${RUNNER_NAME}' must end in two digits (e.g. dats-runner-01)." >&2
+          exit 1
+        fi
+        PORT_PREFIX="5${RUNNER_INDEX}"
+        # Compose project names must match [a-z0-9_-]; sanitize the runner name.
+        SAFE_RUNNER_NAME="$(printf '%s' "${RUNNER_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
+        ./bin/setup/setup-envs.sh --project_name "action-runner-${SAFE_RUNNER_NAME}" --port_prefix "${PORT_PREFIX}"
 
         # Bump the image version of every enabled component for this run.
         if [ "${BACKEND}" = "true" ]; then
@@ -64,7 +77,7 @@ runs:
         if [ "${RAY}" = "true" ]; then
           echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
           sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
-          sed -i 's/^RAY_PORT=.*/RAY_PORT=13130/' backend/.env docker/.env
+          sed -i "s/^RAY_PORT=.*/RAY_PORT=${PORT_PREFIX}30/" backend/.env docker/.env
           mkdir -p "$HOME/ray_cache"
           chmod 777 "$HOME/ray_cache"
         fi

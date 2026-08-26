@@ -73,12 +73,13 @@ jobs:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
         run: |
           source .venv/bin/activate
+          API_PORT=$(grep '^UVICORN_PORT=' .env | cut -d= -f2)
           cd ../tools/importer
           uv pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
-          python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
-          python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
+          python dats_importer.py --input_dir json --backend_url "http://localhost:${API_PORT}/" --is_json --doctype text
+          python dats_importer.py --input_dir images --backend_url "http://localhost:${API_PORT}/" --doctype image
       - name: Cleanup
         if: always()
         uses: ./.github/actions/cleanup
