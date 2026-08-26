@@ -39,8 +39,19 @@ bootstrap project_name port_prefix hosted="":
     if [ "{{ hosted }}" = "ltdwise" ]; then
       ./bin/setup/setup-ltdwise.sh
     fi
-    cd backend && uv sync
-    cd ../frontend && npm ci
+    just install backend
+    just install frontend
+
+# Install a component's dependencies: backend | frontend | ray
+install target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ target }}" in
+      backend)  cd backend && uv sync ;;
+      frontend) cd frontend && npm ci ;;
+      ray)      cd ray && uv sync ;;
+      *) echo "unknown install target '{{ target }}' (expected: backend|frontend|ray)" >&2; exit 1 ;;
+    esac
 
 # --- 2. Docker: backing services -------------------------------------------
 
@@ -74,12 +85,15 @@ dev target:
 
 # --- 4. Tests ---------------------------------------------------------------
 
-# Run a test suite: backend
-test target:
+# Run a test suite: backend. Extra args are forwarded to pytest:
+#   just test backend                          # all tests
+#   just test backend test/endpoints/search  # one folder
+#   just test backend -k memo_info           # by test name
+test target *args:
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ target }}" in
-      backend) exec ./bin/dev/backend-test.sh ;;
+      backend) exec ./bin/dev/backend-test.sh {{ args }} ;;
       *) echo "unknown test target '{{ target }}' (expected: backend)" >&2; exit 1 ;;
     esac
 

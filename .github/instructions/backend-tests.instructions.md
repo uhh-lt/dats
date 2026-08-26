@@ -9,12 +9,13 @@ Backend tests use **pytest** with FastAPI's `TestClient`. Tests are endpoint tes
 ## Running Tests
 
 ```bash
-cd backend
-pytest                          # all tests
-pytest test/endpoints/search    # one folder
-pytest test/endpoints/search/test_search_endpoint_memo.py  # one file
-pytest -k memo_info             # by test name
+just test backend               # all tests
+just test backend test/endpoints/search    # one folder
+just test backend test/endpoints/search/test_search_endpoint_memo.py  # one file
+just test backend -k memo_info  # by test name
 ```
+
+Always run tests via `just test backend` (which wraps `bin/dev/backend-test.sh`): it loads `backend/.env` and sets `PYTHONPATH` before invoking pytest. Extra arguments are forwarded to pytest. Bare `pytest` misses this environment setup.
 
 Tests are configured in [pyproject.toml](backend/pyproject.toml) (`testpaths = ["test"]`, `pythonpath = "src"`).
 
