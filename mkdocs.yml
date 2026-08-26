@@ -67,11 +67,16 @@ nav:
           - Health View: feature-guides/tools/health-view.md
       - Document Upload: feature-guides/document-upload.md
       - Export & Import: feature-guides/export-import.md
+      - Technical Details:
+          - technical-details/index.md
+          - Preprocessing Pipeline: technical-details/preprocessing-pipeline.md
   - Workflows:
       - workflows/index.md
       - Frame Analysis: workflows/workflow-frame-analysis.md
       - Tracking Word Sense Evolution: workflows/workflow-tracking-word-senses.md
-  - Technical Details:
-      - technical-details/index.md
-      - Preprocessing Pipeline: technical-details/preprocessing-pipeline.md
   - FAQ: faq.md
+  - Development:
+      - development/index.md
+      - Configure GitHub Action Runners: development/github-action-runner.md
+  - Admin:
+      - admin/index.md
