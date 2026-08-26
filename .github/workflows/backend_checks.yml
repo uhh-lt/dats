@@ -22,7 +22,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Check for changes in ray
+      - name: Check for ray changes
         id: ray_changes
         uses: ./.github/actions/detect-changes
         with:
@@ -33,10 +33,8 @@ jobs:
           backend: true
           ray: ${{ steps.ray_changes.outputs.has_changed }}
           hf_token: ${{ secrets.HF_HUB_TOKEN }}
-      - name: Install uv environment
-        working-directory: backend
-        run: |
-          uv sync
+      - name: Install backend dependencies
+        run: just install backend
       - name: Build backend docker container
         working-directory: docker
         run: |
@@ -52,10 +50,7 @@ jobs:
           fi
           COMPOSE_PROFILES="" docker compose up --wait --quiet-pull
       - name: Pytest runs without errors
-        working-directory: backend
-        run: |
-          source .env
-          uv run pytest
+        run: just test backend
       - name: Upload classifier metrics
         if: always()
         uses: actions/upload-artifact@v7
@@ -64,19 +59,9 @@ jobs:
           path: backend/test-results/*-classification.csv
           if-no-files-found: ignore
       - name: Database migrates without errors
-        working-directory: backend
-        env:
-          PYTHONPATH: ${{ github.workspace }}/backend/src
-        run: |
-          source .env
-          uv run src/migrations/run_migrations.py
+        run: just alembic migrate
       - name: Database schema is up-to-date after migration
-        working-directory: backend
-        env:
-          PYTHONPATH: ${{ github.workspace }}/backend/src
-        run: |
-          source .env
-          uv run alembic -c src/migrations/alembic.ini check
+        run: just alembic check
       - name: Start remaining docker containers
         working-directory: docker
         run: |
