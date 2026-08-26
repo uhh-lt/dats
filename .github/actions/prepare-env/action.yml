@@ -1,0 +1,70 @@
+name: prepare-env
+description: >-
+  Shared CI environment bootstrap: create folders, generate .env files,
+  pin GPU, and — for each enabled component — bump its docker image version
+  for this run. When backend or frontend is enabled, also point at the hosted
+  services and inject the Hugging Face token. When ray is enabled, set up its cache.
+inputs:
+  backend:
+    description: '"true" if the backend component is part of this run.'
+    required: false
+    default: "false"
+  frontend:
+    description: '"true" if the frontend component is part of this run.'
+    required: false
+    default: "false"
+  ray:
+    description: '"true" if the ray component is part of this run.'
+    required: false
+    default: "false"
+  hf_token:
+    description: "Hugging Face hub token."
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Prepare environment
+      shell: bash
+      env:
+        HF_HUB_TOKEN: ${{ inputs.hf_token }}
+        BACKEND: ${{ inputs.backend }}
+        FRONTEND: ${{ inputs.frontend }}
+        RAY: ${{ inputs.ray }}
+      run: |
+        set -euo pipefail
+        ./bin/setup/setup-folders.sh --development
+        ./bin/setup/setup-envs.sh --project_name action-runner --port_prefix 131
+
+        # Bump the image version of every enabled component for this run.
+        if [ "${BACKEND}" = "true" ]; then
+          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+        fi
+        if [ "${FRONTEND}" = "true" ]; then
+          sed -i 's/\(DATS_FRONTEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+        fi
+        if [ "${RAY}" = "true" ]; then
+          sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
+        fi
+
+        # Connect to the hosted services.
+        sed -i 's/^LLM_PROVIDER_HOST=.*/LLM_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
+        sed -i 's/^LLM_PROVIDER_PORT=.*/LLM_PROVIDER_PORT=10133/' backend/.env docker/.env
+        sed -i 's/^EMB_PROVIDER_HOST=.*/EMB_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
+        sed -i 's/^EMB_PROVIDER_PORT=.*/EMB_PROVIDER_PORT=10137/' backend/.env docker/.env
+        sed -i 's/^RAY_HOST=.*/RAY_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
+        sed -i 's/^RAY_PORT=.*/RAY_PORT=10130/' backend/.env docker/.env
+        sed -i 's/^DOCLING_HOST=.*/DOCLING_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
+        sed -i 's/^DOCLING_PORT=.*/DOCLING_PORT=10139/' backend/.env docker/.env
+
+        # Configure secrets.
+        sed -i "s|^HF_HUB_TOKEN=.*|HF_HUB_TOKEN=${HF_HUB_TOKEN}|" docker/.env
+        sed -i "s|^API_HF_HUB_TOKEN=.*|API_HF_HUB_TOKEN=${HF_HUB_TOKEN}|" backend/.env
+
+        # Set up Ray locally, when its part of this run.
+        if [ "${RAY}" = "true" ]; then
+          echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
+          sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
+          sed -i 's/^RAY_PORT=.*/RAY_PORT=13130/' backend/.env docker/.env
+          mkdir -p "$HOME/ray_cache"
+          chmod 777 "$HOME/ray_cache"
+        fi

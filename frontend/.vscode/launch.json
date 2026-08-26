@@ -5,9 +5,7 @@
       "name": "ui",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev",
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/frontend/.env"
+      "command": "${workspaceFolder}/../bin/dev/frontend.sh"
     }
   ]
 }

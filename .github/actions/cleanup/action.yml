@@ -1,0 +1,53 @@
+name: cleanup
+description: >-
+  Tear down the docker compose stacks and remove the images built for this run.
+  Each enabled component's image is removed; the ray stack is torn down when ray
+  is enabled, and the main stack when backend or frontend is enabled.
+inputs:
+  backend:
+    description: '"true" if the backend component was part of this run.'
+    required: false
+    default: "false"
+  frontend:
+    description: '"true" if the frontend component was part of this run.'
+    required: false
+    default: "false"
+  ray:
+    description: '"true" if the ray component was part of this run.'
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Cleanup
+      shell: bash
+      working-directory: docker
+      env:
+        BACKEND: ${{ inputs.backend }}
+        FRONTEND: ${{ inputs.frontend }}
+        RAY: ${{ inputs.ray }}
+      run: |
+        set -euo pipefail
+        source .env
+
+        remove_image() {
+          local var_name="$1" image_name="$2"
+          local tag
+          tag=$(grep -oP "${var_name}=\K.*" .env)
+          docker rmi "uhhlt/${image_name}:${tag}" || true
+        }
+
+        # Tear down DATS stack.
+        docker compose -f compose.ray.yml down -v || true
+        docker compose down -v --remove-orphans || true
+
+        # Remove each enabled component's image.
+        if [ "${RAY}" = "true" ]; then
+          remove_image DATS_RAY_DOCKER_VERSION dats_ray
+        fi
+        if [ "${BACKEND}" = "true" ]; then
+          remove_image DATS_BACKEND_DOCKER_VERSION dats_backend
+        fi
+        if [ "${FRONTEND}" = "true" ]; then
+          remove_image DATS_FRONTEND_DOCKER_VERSION dats_frontend
+        fi

@@ -59,12 +59,16 @@ cd ../backend
 uv run update_version.py --version $1
 read -p "Please restart the backend to make sure its OpenAPI spec is up to date. Afterwards, press any key to continue. " -n 1 -r
 
+# update ray version
+cd ../ray
+uv run update_version.py --version $1
+
 # update frontend version
 cd ../frontend
-npm run update-api && npm run generate-api && npm run update-version
+npm run update-api && npm run update-version
 
 cd ..
-git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/core/OpenAPI.ts
+git add backend/configs/version.yaml backend/pyproject.toml backend/uv.lock ray/pyproject.toml ray/uv.lock docker/.env.example frontend/package.json frontend/package-lock.json frontend/src/openapi.json frontend/src/api/core/OpenAPI.ts
 git commit -m "Release v$1"
 git push
 
