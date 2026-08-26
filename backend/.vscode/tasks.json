@@ -2,16 +2,38 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run DATS Setup",
+      "label": "dev: backend-api (debug)",
       "type": "shell",
-      "command": "${command:python.interpreterPath}",
-      "args": ["src/setup.py"],
+      "command": "${workspaceFolder}/../bin/dev/backend-api.sh",
       "options": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUG": "true"
+        }
       },
+      "isBackground": true,
+      "problemMatcher": [],
       "presentation": {
         "reveal": "always",
-        "panel": "shared",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "dev: backend-worker (debug)",
+      "type": "shell",
+      "command": "${workspaceFolder}/../bin/dev/backend-worker.sh",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEBUG": "true"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
         "clear": true
       }
     }

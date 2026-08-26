@@ -78,13 +78,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://www.hcds.uni-hamburg.de/de/research/demos/dats.html"
+Homepage = "https://dats.science"
 Documentation = "https://github.com/uhh-lt/dats/wiki"
 Repository = "https://github.com/uhh-lt/dats.git"
 Issues = "https://github.com/uhh-lt/dats/issues"
 
 [tool.ruff]
-extend = "../ruff.toml"
+extend = "./ruff.toml"
 src = ["src"]
 
 [tool.ruff.lint.isort]
@@ -106,13 +106,7 @@ known-first-party = [
 
 [tool.pyright]
 include = ["src", "test"]
-exclude = [
-    "**/__pycache__",
-    "**/.venv",
-    "src/dev_notebooks",
-    "**/node_modules",
-    "**/.*"
-]
+exclude = ["**/__pycache__", "**/.venv", "**/node_modules", "**/.*"]
 extraPaths = ["src"]
 reportIncompatibleMethodOverride = false
 reportIncompatibleVariableOverride = false

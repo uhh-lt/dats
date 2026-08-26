@@ -70,3 +70,24 @@ sed -i "s|SPACY_MODELS_DIR=/insert_path_to_dats_repo/docker/ray_cache/spacy_mode
 
 # setup frontend .env file
 sed -i "s/131/${PORT_PREFIX}/g" frontend/.env
+
+# Warn about required values that are still placeholders.
+cat <<'EOF'
+
+=============================================================================
+  Almost done! Some required values are still placeholders.
+  Please fill these in before starting the dev servers:
+
+    docker/.env
+      - HF_HUB_TOKEN            (Hugging Face access token)
+      - LLM_PROVIDER_API_KEY    (vLLM LLM API key)
+      - EMB_PROVIDER_API_KEY    (vLLM embedding API key)
+
+    backend/.env
+      - API_HF_HUB_TOKEN        (Hugging Face access token)
+      - LLM_PROVIDER_API_KEY    (vLLM LLM API key)
+      - EMB_PROVIDER_API_KEY    (vLLM embedding API key)
+
+  (Glitchtip DSNs are optional and can stay empty.)
+=============================================================================
+EOF

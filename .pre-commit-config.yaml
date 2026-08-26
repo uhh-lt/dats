@@ -1,4 +1,77 @@
+# Hooks are grouped by task and run in this order:
+#   1. format      (fix code style first, so lint/typecheck see final code)
+#   2. lint        (catch bugs/style after formatting)
+#   3. typecheck   (whole-project; slowest, runs last)
+#   4. everything else (generic file hygiene, shell formatting)
 repos:
+  # --- 1. Format -------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: format-backend
+        name: "Format: Backend"
+        entry: bash -c 'just format backend "$@"' --
+        language: system
+        files: ^backend/.*\.py$
+      - id: format-ray
+        name: "Format: Ray"
+        entry: bash -c 'just format ray "$@"' --
+        language: system
+        files: ^ray/.*\.py$
+      - id: format-frontend
+        name: "Format: Frontend"
+        entry: bash -c 'just format frontend "$@"' --
+        language: system
+        files: ^frontend/.*\.([jt]sx?|json|ya?ml)$
+      - id: format-repo
+        name: "Format: Repo"
+        entry: bash -c 'just format repo "$@"' --
+        language: system
+        # repo-wide prettier for files NOT already handled by a component hook
+        files: \.([jt]sx?|json|ya?ml|md|css|html)$
+        exclude: ^(frontend|backend|ray)/
+
+  # --- 2. Lint ---------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: lint-backend
+        name: "Lint: Backend"
+        entry: bash -c 'just lint backend "$@"' --
+        language: system
+        files: ^backend/.*\.py$
+      - id: lint-ray
+        name: "Lint: Ray"
+        entry: bash -c 'just lint ray "$@"' --
+        language: system
+        files: ^ray/.*\.py$
+      - id: lint-frontend
+        name: "Lint: Frontend"
+        entry: bash -c 'just lint frontend "$@"' --
+        language: system
+        files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
+
+  # --- 3. Typecheck (whole-project: single-file analysis gives misleading errors) ---
+  - repo: local
+    hooks:
+      - id: typecheck-backend
+        name: "Typecheck: Backend"
+        entry: bash -c 'just typecheck backend' --
+        language: system
+        pass_filenames: false
+        files: ^backend/.*\.py$
+      - id: typecheck-ray
+        name: "Typecheck: Ray"
+        entry: bash -c 'just typecheck ray' --
+        language: system
+        pass_filenames: false
+        files: ^ray/.*\.py$
+      - id: typecheck-frontend
+        name: "Typecheck: Frontend"
+        entry: bash -c 'just typecheck frontend' --
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
+
+  # --- 4. Everything else ------------------------------------------------------
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -6,65 +79,6 @@ repos:
       - id: end-of-file-fixer
       - id: requirements-txt-fixer
       - id: trailing-whitespace
-  # Ruff
-  - repo: local
-    hooks:
-      - id: ruff-lint-backend
-        name: "Ruff Lint (backend)"
-        entry: bash -c 'source backend/.venv/bin/activate && ruff check --fix --config=backend/pyproject.toml "$@"' --
-        language: system
-        files: ^backend/.*\.py$
-      - id: ruff-format-backend
-        name: "Ruff Format (backend)"
-        entry: bash -c 'source backend/.venv/bin/activate && ruff format --config=backend/pyproject.toml "$@"' --
-        language: system
-        files: ^backend/.*\.py$
-      - id: ruff-lint-ray
-        name: "Ruff Lint (ray)"
-        entry: bash -c 'source backend/.venv/bin/activate && ruff check --fix --config=ray/pyproject.toml "$@"' --
-        language: system
-        files: ^ray/.*\.py$
-      - id: ruff-format-ray
-        name: "Ruff Format (ray)"
-        entry: bash -c 'source backend/.venv/bin/activate && ruff format --config=ray/pyproject.toml "$@"' --
-        language: system
-        files: ^ray/.*\.py$
-  # Pyright
-  - repo: local
-    hooks:
-      - id: pyright-backend
-        name: "Pyright (backend)"
-        entry: bash -c 'source backend/.venv/bin/activate && pyright --project backend "$@"' --
-        language: system
-        files: ^backend/.*\.py$
-  # ESLint
-  - repo: local
-    hooks:
-      - id: eslint
-        name: "ESLint (frontend)"
-        entry: bash -c 'cd frontend && npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${@#frontend/}"' --
-        language: system
-        files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
-  # Prettier
-  - repo: local
-    hooks:
-      - id: prettier
-        name: "Prettier"
-        entry: frontend/node_modules/.bin/prettier
-        language: system
-        files: \.([jt]sx?|json|ya?ml)$ # *.js, *.jsx, *.ts, *.tsx, *.json, *.yml, *.yaml
-        args:
-          [
-            "--write",
-            "--ignore-unknown",
-            "--config",
-            ".prettierrc.yaml",
-            "--ignore-path",
-            ".prettierignore",
-            "--cache-location",
-            "frontend/node_modules/.cache/prettier",
-            "--list-different",
-          ]
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.13.1-1
     hooks:

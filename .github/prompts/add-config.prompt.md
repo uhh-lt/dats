@@ -18,7 +18,7 @@ Docker:
 
 Scripts:
 
-- For easy setup, we provide the `/bin/setup-envs.sh` file which copies the example files to `.env` and initializes environment variables.
+- For easy setup, we provide the `/bin/setup/setup-envs.sh` file which copies the example files to `.env` and initializes environment variables.
 
 ## Guidelines for Adding New Configuration Options
 
@@ -33,5 +33,5 @@ If yes:
 1. Add the configuration files in `/backend/configs`.
 2. Add corresponding environment variable entries in `/backend/.env.example` and `/backend/.env`.
 3. Add corresponding entries in `/docker/.env.example` and `/docker/.env`.
-4. Update the `/bin/setup-envs.sh` script if necessary to handle new environment variables.
+4. Update the `/bin/setup/setup-envs.sh` script if necessary to handle new environment variables.
 5. Update Docker Compose files in `/docker/` to forward the new environment variables to the backend services.

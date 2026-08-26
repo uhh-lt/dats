@@ -44,14 +44,20 @@ dependencies = [
 [tool.uv]
 no-build-isolation-package = ['flash-attn']
 
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+    "pyright>=1.1.411",
+]
+
 [project.urls]
-Homepage = "https://www.hcds.uni-hamburg.de/de/research/demos/dats.html"
+Homepage = "https://dats.science"
 Documentation = "https://github.com/uhh-lt/dats/wiki"
 Repository = "https://github.com/uhh-lt/dats.git"
 Issues = "https://github.com/uhh-lt/dats/issues"
 
 [tool.ruff]
-extend = "../ruff.toml"
+extend = "./ruff.toml"
 src = ["src"]
 
 [tool.ruff.lint.isort]
@@ -70,13 +76,3 @@ extraPaths = ["src"]
 reportIncompatibleMethodOverride = false
 reportIncompatibleVariableOverride = false
 reportUnreachable = true
-
-[tool.pytest.ini_options]
-pythonpath = "src"
-addopts = [
-    "--import-mode=importlib",
-    "-ra -q",
-]
-testpaths = [
-    "test"
-]

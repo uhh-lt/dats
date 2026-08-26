@@ -1,7 +1,6 @@
 {
   // general
   "files.exclude": {
-    "airflow": true,
     "backend": true,
     "ray": true,
     "frontend": true

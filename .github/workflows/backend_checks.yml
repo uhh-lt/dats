@@ -15,8 +15,6 @@ on:
 jobs:
   backend-checks:
     runs-on: self-hosted
-    env:
-      RAY_HAS_CHANGED: false
     steps:
       - uses: actions/checkout@v7
       - name: Checkout PR
@@ -24,53 +22,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
-      - name: Check for changes in ray (pull request)
-        id: check_ray_changes_pr
-        if: github.event_name == 'pull_request'
-        run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          base_branch="origin/${{ github.event.pull_request.base.ref }}"
-          if git diff --name-only $base_branch HEAD | grep -q -e '^ray/'; then
-            echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
-          fi
-      - name: Check for changes in ray (push)
-        id: check_ray_changes_push
-        if: github.event_name == 'push'
-        run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q -e '^ray/'; then
-            echo "RAY_HAS_CHANGED=true" >> $GITHUB_ENV
-          fi
+      - name: Check for changes in ray
+        id: ray_changes
+        uses: ./.github/actions/detect-changes
+        with:
+          path: ray
       - name: Prepare environment
-        env:
-          HF_HUB_TOKEN: ${{ secrets.HF_HUB_TOKEN }}
-        run: |
-          ./bin/setup-folders.sh
-          ./bin/setup-envs.sh --project_name action-runner --port_prefix 131
-          sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-          sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
-
-          # Connect to external services
-          sed -i 's/^LLM_PROVIDER_HOST=.*/LLM_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-          sed -i 's/^LLM_PROVIDER_PORT=.*/LLM_PROVIDER_PORT=10133/' backend/.env docker/.env
-          sed -i 's/^EMB_PROVIDER_HOST=.*/EMB_PROVIDER_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-          sed -i 's/^EMB_PROVIDER_PORT=.*/EMB_PROVIDER_PORT=10137/' backend/.env docker/.env
-          sed -i 's/^RAY_HOST=.*/RAY_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-          sed -i 's/^RAY_PORT=.*/RAY_PORT=10130/' backend/.env docker/.env
-          sed -i 's/^DOCLING_HOST=.*/DOCLING_HOST=ltdwise.informatik.uni-hamburg.de/' backend/.env docker/.env
-          sed -i 's/^DOCLING_PORT=.*/DOCLING_PORT=10139/' backend/.env docker/.env
-
-          # Configure secrets
-          sed -i "s|^HF_HUB_TOKEN=.*|HF_HUB_TOKEN=${HF_HUB_TOKEN}|" docker/.env
-          sed -i "s|^API_HF_HUB_TOKEN=.*|API_HF_HUB_TOKEN=${HF_HUB_TOKEN}|" backend/.env
-
-          # Handle the case where RAY has changed
-          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
-            sed -i 's/\(DATS_RAY_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
-            echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
-            sed -i 's/^RAY_PORT=.*/RAY_PORT=10130/' backend/.env docker/.env
-            mkdir -p $HOME/ray_cache
-            chmod 777 $HOME/ray_cache
-          fi
+        uses: ./.github/actions/prepare-env
+        with:
+          backend: true
+          ray: ${{ steps.ray_changes.outputs.has_changed }}
+          hf_token: ${{ secrets.HF_HUB_TOKEN }}
       - name: Install uv environment
         working-directory: backend
         run: |
@@ -79,12 +41,12 @@ jobs:
         working-directory: docker
         run: |
           source .env
-          COMPOSE_PROFILES="rq,backend" docker compose build
+          COMPOSE_PROFILES="rq,backend" docker compose build dats-backend-api
       - name: Start docker containers
         working-directory: docker
         run: |
           source .env
-          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
+          if [ "${{ steps.ray_changes.outputs.has_changed }}" = "true" ]; then
             docker compose -f compose.ray.yml build
             docker compose -f compose.ray.yml up --wait
           fi
@@ -133,15 +95,8 @@ jobs:
           python dats_importer.py --input_dir json --backend_url http://localhost:13120/ --is_json --doctype text
           python dats_importer.py --input_dir images --backend_url http://localhost:13120/ --doctype image
       - name: Cleanup
-        working-directory: docker
         if: always()
-        run: |
-          source .env
-          if [ "${{ env.RAY_HAS_CHANGED }}" = "true" ]; then
-            docker compose -f compose.ray.yml down -v
-            RAY_IMAGE=uhhlt/dats_ray:$(grep -oP 'DATS_RAY_DOCKER_VERSION=\K.*' .env)
-            docker rmi $RAY_IMAGE
-          fi
-          docker compose down -v --remove-orphans
-          BACKEND_IMAGE=uhhlt/dats_backend:$(grep -oP 'DATS_BACKEND_DOCKER_VERSION=\K.*' .env)
-          docker rmi $BACKEND_IMAGE
+        uses: ./.github/actions/cleanup
+        with:
+          backend: true
+          ray: ${{ steps.ray_changes.outputs.has_changed }}

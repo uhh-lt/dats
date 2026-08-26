@@ -42,3 +42,9 @@ if [ "$DEVELOPMENT" -eq 0 ]; then
 	mkdir -p ../docker/kuma_data
 	chmod 777 ../docker/kuma_data
 fi
+
+if [ "$DEVELOPMENT" -eq 1 ]; then
+	echo "Development folders created: docker/ caches and backups/ are ready (production data folders skipped)."
+else
+	echo "Production folders created: docker/ data volumes, caches, and backups/ are ready."
+fi
