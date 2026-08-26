@@ -1,14 +1,14 @@
 # Observes completed main-branch checks and automatically releases valid release commits.
 # A release proceeds only when backend, frontend, precommit, and Ray checks all succeeded.
-name: Release gate
+name: release-gate
 
 on:
   workflow_run:
     workflows:
-      - backend checks
-      - frontend checks
-      - precommit checks
-      - ray checks
+      - backend-checks
+      - frontend-checks
+      - precommit-checks
+      - ray-checks
     types:
       - completed
     branches:
@@ -58,10 +58,10 @@ jobs:
         run: |
           workflow_runs=$(gh api "/repos/${{ github.repository }}/actions/runs?head_sha=$RELEASE_SHA&event=push&per_page=100")
           required_workflows=(
-            "backend checks"
-            "frontend checks"
-            "precommit checks"
-            "ray checks"
+            "backend-checks"
+            "frontend-checks"
+            "precommit-checks"
+            "ray-checks"
           )
 
           for workflow in "${required_workflows[@]}"; do
@@ -89,9 +89,8 @@ jobs:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           tag="v$VERSION"
-          existing_sha=$(gh api "/repos/${{ github.repository }}/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null || true)
 
-          if [ -n "$existing_sha" ]; then
+          if existing_sha=$(gh api "/repos/${{ github.repository }}/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null); then
             if [ "$existing_sha" != "$RELEASE_SHA" ]; then
               echo "Tag $tag already points to a different commit."
               exit 1
