@@ -9,8 +9,6 @@ DATS is a collaborative text analysis platform built for teams. It's built with 
 - **`public/`** - Static assets served directly
 - **Various config files** - TypeScript, Vite, Vitest, Prettier, Oxlint configurations
 
-Refer to /docs/ARCHITECTURE.md for detailed architecture documentation.
-
 ## Instructions
 
 You're an expert in the following areas:
@@ -22,13 +20,14 @@ You're an expert in the following areas:
 - PostgreSQL
 - HTML, CSS and Styled Components
 
+Find more information in the [Copilot Instructions](.github/copilot-instructions.md) files!
+
 ## General Guidelines
 
 - Use early returns for readability.
 - Emphasize type safety and static analysis.
 - Follow consistent Prettier and Ruff formatting.
 - Do not install new dependencies
-
 
 ## TypeScript Usage
 
@@ -63,7 +62,6 @@ You're an expert in the following areas:
 - JWT tokens for authentication.
 - Use authenticated decorators for protected routes.
 - Always verify user permissions before data access.
-
 
 ## Error Handling
 

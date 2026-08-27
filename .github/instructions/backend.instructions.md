@@ -1,5 +1,5 @@
 ---
-applyTo: "backend/**/*.py"
+applyTo: "backend/**"
 ---
 
 # Info
@@ -43,6 +43,7 @@ The backend works with multiple databases:
 The codebase uses strict architectural layers enforced by linters:
 
 **Rules**:
+
 - Core CANNOT import from modules
 - DTOs CANNOT import services, repos, ORMs, or endpoints
 - Endpoints can ONLY import DTOs from their own folder
@@ -53,6 +54,7 @@ The codebase uses strict architectural layers enforced by linters:
 
 The purpose of the file is reflected in its name.
 We use the following suffixes to indicate file types:
+
 - `*_endpoint.py`: API endpoint definitions
 
 - `*_dto.py`: Pydantic schemas (Data Transfer Objects) for request and response validation of payloads
@@ -71,6 +73,7 @@ We use the following suffixes to indicate file types:
 - `*_utils.py`: Utility functions and helpers
 
 ## Code Style & Formatting
+
 Coding guidelines for writing Python code across all `.py` files in this repository.
 
 ### Import Organization
@@ -173,6 +176,7 @@ class CodeORM(ORMBase):
 ```
 
 **Key patterns**:
+
 - Table names auto-generated from class name (strips "ORM" suffix)
 - Use `Mapped[]` for type-safe columns
 - Explicit cascade rules: `cascade="all, delete-orphan"`, `passive_deletes=True`
@@ -216,6 +220,7 @@ class CodeRead(CodeBaseDTO):
 ```
 
 **Key patterns**:
+
 - Create DTOs specify defaults and required fields
 - Update DTOs must extend `UpdateDTOBase` (validates at least one field is set)
 - Read DTOs use `from_attributes=True` for automatic ORM conversion
@@ -263,6 +268,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 ```
 
 **Base CRUD methods** available from `CRUDBase`:
+
 - `read(db, id)` - Read single with error handling
 - `read_by_ids(db, ids)` - Batch read maintaining order
 - `read_multi(db, skip, limit)` - Paginated read
@@ -312,6 +318,7 @@ def compute_tag_statistics(
 ```
 
 **Key patterns**:
+
 - Services coordinate multiple CRUD operations
 - Contain complex business logic that doesn't belong in CRUD
 - Return DTOs or domain-specific types
@@ -358,6 +365,7 @@ def create_code(
 ```
 
 **Key patterns**:
+
 - Router prefix matches resource name (plural)
 - Global dependencies for authentication
 - Tags for OpenAPI grouping
@@ -412,6 +420,7 @@ def get_code(
 ```
 
 **AuthzUser methods**:
+
 - `assert_in_project(project_id: int)` - Verify user is project member
 - `assert_in_same_project_as(crud: Crud, object_id: int)` - Verify user can access object
 - Automatically raises `ForbiddenError` (HTTP 403) on failure
@@ -447,6 +456,7 @@ class DuplicateError(Exception):
 ```
 
 **Usage**:
+
 ```python
 # Exceptions automatically converted to proper HTTP responses with logging
 if not obj:
@@ -604,6 +614,7 @@ def ml_job(payload: MLJobInput, job: Job) -> None:
 ```
 
 **Key concepts**:
+
 - Jobs auto-registered via decorator
 - Type-safe input via Pydantic
 - Match/case pattern for job routing

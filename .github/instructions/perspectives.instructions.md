@@ -1,5 +1,5 @@
 ---
-applyTo: "frontend/src/views/perspectives/**/*.ts, frontend/src/views/perspectives/**/*.tsx, backend/src/modules/perspectives/**/*.py"
+applyTo: "frontend/src/views/perspectives/**, backend/src/modules/perspectives/**"
 ---
 
 ## Perspectives
