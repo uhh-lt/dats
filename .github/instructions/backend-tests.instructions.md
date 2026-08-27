@@ -1,5 +1,5 @@
 ---
-applyTo: "backend/test/**/*.py"
+applyTo: "backend/test/**"
 ---
 
 # Backend Testing

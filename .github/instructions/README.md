@@ -8,8 +8,6 @@ We can add context-dependent instructions automatically to our prompts! These in
 Additionally, we can specify reusable prompts or tasks that can be executed:
 
 - `.github/prompts`
-- `/backend/.github/prompts`
-- `/frontend/.github/prompts`
 
 For more information, see:
 

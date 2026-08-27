@@ -1,5 +1,5 @@
 ---
-applyTo: "frontend/**/*.ts, frontend/**/*.tsx"
+applyTo: "frontend/**"
 ---
 
 # Frontend
