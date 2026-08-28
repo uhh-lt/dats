@@ -75,9 +75,5 @@ runs:
 
         # Set up Ray locally, when its part of this run.
         if [ "${RAY}" = "true" ]; then
-          echo "RAY_CACHE_DIR=$HOME/ray_cache" >> docker/.env
-          sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
           sed -i "s/^RAY_PORT=.*/RAY_PORT=${PORT_PREFIX}30/" backend/.env docker/.env
-          mkdir -p "$HOME/ray_cache"
-          chmod 777 "$HOME/ray_cache"
         fi
