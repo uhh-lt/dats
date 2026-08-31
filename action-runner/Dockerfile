@@ -21,6 +21,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # Create non-root runner user (docker group added at runtime via entrypoint)
 RUN useradd -m -u 1000 runner
 
+# Put the runner user's .local/bin dir on PATH
+ENV PATH="/home/runner/.local/bin:${PATH}"
+
 # Pre-create the uv cache mount point owned by runner, so it can be mounted at runtime without permission issues and be cached properly.
 RUN mkdir -p /home/runner/.cache/uv \
     && chown -R runner:runner /home/runner/.cache
