@@ -33,12 +33,12 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash 
 # Install uv system-wide
 RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 
-# Download and extract the GitHub Runner
+# Download and extract the latest GitHub Runner
 WORKDIR /actions-runner
-# (Check https://github.com/actions/runner/releases for the latest version if needed)
-RUN curl -o actions-runner-linux-x64-2.320.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.320.0/actions-runner-linux-x64-2.320.0.tar.gz \
-    && tar xzf ./actions-runner-linux-x64-2.320.0.tar.gz \
-    && rm actions-runner-linux-x64-2.320.0.tar.gz
+RUN RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest | jq -r '.tag_name | ltrimstr("v")') \
+    && curl -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
+    && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
+    && rm actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
 
 RUN ./bin/installdependencies.sh
 
