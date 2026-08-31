@@ -27,13 +27,6 @@ gosu runner ./config.sh --url "https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}
 	--unattended \
 	--replace
 
-# 2b. Symlink the shared Ray cache into the path CI expects inside _work
-RAY_CACHE_TARGET="/actions-runner/_work/dats/dats/docker/ray_cache"
-if [ -d /ray_cache ] && [ ! -e "${RAY_CACHE_TARGET}" ]; then
-	gosu runner mkdir -p "$(dirname "${RAY_CACHE_TARGET}")"
-	gosu runner ln -s /ray_cache "${RAY_CACHE_TARGET}"
-fi
-
 # 3. Setup a cleanup hook to unregister the runner when the container stops
 cleanup() {
 	echo "Removing runner..."

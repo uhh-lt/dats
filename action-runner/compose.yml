@@ -5,10 +5,10 @@ x-runner-common: &runner-base
     - GITHUB_OWNER=${GITHUB_OWNER:?GITHUB_OWNER is missing - copy .env.example to .env and set it}
     - GITHUB_REPO=${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
     - GITHUB_PAT=${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
+    - RAY_CACHE_HOST_PATH=${RAY_CACHE_HOST_PATH:?RAY_CACHE_HOST_PATH is missing - copy .env.example to .env and set it}
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
-    # Share Ray cache across all runners (symlinked into _work by entrypoint)
-    - ${HOME}/ray_cache:/ray_cache
+    - ${RAY_CACHE_HOST_PATH:?RAY_CACHE_HOST_PATH is missing - copy .env.example to .env and set it}:/ray_cache
   restart: unless-stopped
   security_opt:
     - no-new-privileges:true
