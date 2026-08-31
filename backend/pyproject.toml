@@ -70,7 +70,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "debugpy>=1.8.21",
-    "ruff>=0.15.20",
+    "ruff==0.15.20",
     "pre-commit>=4.6.0",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
