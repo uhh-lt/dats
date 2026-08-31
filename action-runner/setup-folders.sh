@@ -11,10 +11,19 @@
 #
 # Usage:
 #   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_DIR / UV_CACHE_HOST_DIR from .env
+#   ./setup-folders.sh --recreate      # delete all managed directories first, then recreate them
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
+
+# Parse arguments
+RECREATE=0
+for arg in "$@"; do
+	if [[ "$arg" == "--recreate" ]]; then
+		RECREATE=1
+	fi
+done
 
 # Load .env if present (for RUNNER_WORK_BASE_DIR, RAY_CACHE_HOST_DIR, UV_CACHE_HOST_DIR)
 if [[ -f .env ]]; then
@@ -25,6 +34,16 @@ fi
 BASE_DIR="${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is not set. Copy .env.example to .env and configure it.}"
 RAY_CACHE="${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is not set. Copy .env.example to .env and configure it.}"
 UV_CACHE="${UV_CACHE_HOST_DIR:?UV_CACHE_HOST_DIR is not set. Copy .env.example to .env and configure it.}"
+
+if [[ "${RECREATE}" -eq 1 ]]; then
+	echo "Recreating directories — deleting existing content..."
+	for dir in "${BASE_DIR}" "${RAY_CACHE}" "${UV_CACHE}"; do
+		if [[ -d "${dir}" ]]; then
+			echo "  removing: ${dir}"
+			rm -rf "${dir}"
+		fi
+	done
+fi
 
 # The runner container executes jobs as uid 1000 (user "runner", see Dockerfile).
 # Host directories must be owned by that uid so the runner can write to them.
