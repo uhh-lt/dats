@@ -34,16 +34,23 @@ GITHUB_REPO=your-repository-name
 GITHUB_PAT=ghp_YourSuperSecretTokenHere
 ```
 
-### 3. Prepare the Ray cache directory
+### 3. Prepare the runner work directories
 
-The runners share a common Ray model cache on the host. Create it with proper permissions:
+Each runner's work directory (`_work`) is bind-mounted from the host so that
+Docker-out-of-Docker bind mounts (e.g. `docker compose up` inside CI jobs)
+resolve to paths that exist on the host daemon. Create them with:
 
 ```bash
-mkdir -p ~/ray_cache
-chmod 777 ~/ray_cache
+./setup-folders.sh
 ```
 
-This directory is mounted into all runner containers and shared with sibling Ray containers spawned by CI jobs.
+The script reads `RUNNER_WORK_BASE_DIR` from `.env`, creates one subdirectory
+per runner, and sets ownership to uid/gid 1000 (the container's `runner`
+user). It may need `sudo` if the base directory is outside your home:
+
+```bash
+sudo ./setup-folders.sh
+```
 
 ## Managing the Fleet
 
@@ -81,13 +88,14 @@ The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). Th
 
 ## Configuration Reference
 
-| Environment Variable   | Description                              | Default       | Required |
-| ---------------------- | ---------------------------------------- | ------------- | -------- |
-| `GITHUB_OWNER`         | GitHub username or organization name     | —             | Yes      |
-| `GITHUB_REPO`          | Repository name                          | —             | Yes      |
-| `GITHUB_PAT`           | Personal Access Token with `repo` scope  | —             | Yes      |
-| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers      | `0`           | No       |
-| `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping | `dats-action` | No       |
+| Environment Variable   | Description                                          | Default       | Required |
+| ---------------------- | ---------------------------------------------------- | ------------- | -------- |
+| `GITHUB_OWNER`         | GitHub username or organization name                 | —             | Yes      |
+| `GITHUB_REPO`          | Repository name                                      | —             | Yes      |
+| `GITHUB_PAT`           | Personal Access Token with `repo` scope              | —             | Yes      |
+| `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
+| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers                  | `0`           | No       |
+| `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
 
 ## CI Compatibility
 
@@ -106,7 +114,7 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 
 ### Shared Resources
 
-- **Ray cache** (`$HOME/ray_cache`) — mounted into all containers to share model downloads
+- **Runner work dirs** (`$RUNNER_WORK_BASE_DIR/runner-XX`) — host-mounted `_work` directories; each runner's CI checkouts, caches (incl. Ray models), and compose bind mounts live here
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`; only one Ray job should run at a time per machine
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared infrastructure
 

@@ -77,5 +77,4 @@ runs:
         if [ "${RAY}" = "true" ]; then
           sed -i "s/^RAY_PORT=.*/RAY_PORT=${PORT_PREFIX}30/" backend/.env docker/.env
           sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
-          echo "RAY_CACHE_DIR=${RAY_CACHE_HOST_PATH}" >> docker/.env
         fi
