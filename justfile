@@ -41,6 +41,7 @@ bootstrap project_name port_prefix hosted="":
     fi
     just install backend
     just install frontend
+    just install ray
 
 # Install a component's dependencies: backend | frontend | ray
 install target:
@@ -121,8 +122,8 @@ lint target *files:
         else npx eslint --max-warnings=0 --no-warn-ignored --config=eslint.config.mjs "${rel[@]}"; fi ;;
       ray)
         cd ray
-        if [ ${#rel[@]} -eq 0 ]; then uv run --no-default-groups --group dev ruff check --fix --config=pyproject.toml src
-        else uv run --no-default-groups --group dev ruff check --fix --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix --config=pyproject.toml src
+        else uv run ruff check --fix --config=pyproject.toml "${rel[@]}"; fi ;;
       *) echo "unknown lint target '$target' (expected: backend|frontend|ray)" >&2; exit 1 ;;
     esac
 
@@ -144,8 +145,8 @@ format target *files:
         else uv run ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
       ray)
         cd ray
-        if [ ${#rel[@]} -eq 0 ]; then uv run --no-default-groups --group dev ruff format --config=pyproject.toml src
-        else uv run --no-default-groups --group dev ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then uv run ruff format --config=pyproject.toml src
+        else uv run ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
       frontend)
         cd frontend
         if [ ${#rel[@]} -eq 0 ]; then npx prettier --write --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore .
@@ -170,7 +171,7 @@ typecheck target *args:
     case "{{ target }}" in
       backend)  cd backend && uv run pyright --project . {{ args }} ;;
       frontend) cd frontend && npx tsc --noEmit {{ args }} ;;
-      ray)      cd ray && uv run --no-default-groups --group dev pyright --project . {{ args }} ;;
+      ray)      cd ray && uv run pyright --project . {{ args }} ;;
       *) echo "unknown typecheck target '{{ target }}' (expected: backend|frontend|ray)" >&2; exit 1 ;;
     esac
 
