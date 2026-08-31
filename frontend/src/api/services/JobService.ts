@@ -15,14 +15,14 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 export class JobService {
   /**
-   * Start Crawler job
-   * @returns CrawlerJobRead Successful Response
+   * Start Export job
+   * @returns ExportJobRead Successful Response
    * @throws ApiError
    */
-  public static startCrawlerJob({ requestBody }: { requestBody: CrawlerJobInput }): CancelablePromise<CrawlerJobRead> {
+  public static startExportJob({ requestBody }: { requestBody: ExportJobInput }): CancelablePromise<ExportJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/job/crawler",
+      url: "/job/export",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -31,71 +31,16 @@ export class JobService {
     });
   }
   /**
-   * Get Crawler job
-   * @returns CrawlerJobRead Successful Response
+   * Get Export job
+   * @returns ExportJobRead Successful Response
    * @throws ApiError
    */
-  public static getCrawlerJobById({ jobId }: { jobId: string }): CancelablePromise<CrawlerJobRead> {
+  public static getExportJobById({ jobId }: { jobId: string }): CancelablePromise<ExportJobRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/job/crawler/{job_id}",
+      url: "/job/export/{job_id}",
       path: {
         job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Abort Crawler job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static abortCrawlerJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/job/crawler/{job_id}/abort",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Retry Crawler job
-   * @returns boolean Successful Response
-   * @throws ApiError
-   */
-  public static retryCrawlerJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/job/crawler/{job_id}/retry",
-      path: {
-        job_id: jobId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Get all Crawler jobs by project
-   * @returns CrawlerJobRead Successful Response
-   * @throws ApiError
-   */
-  public static getCrawlerJobsByProject({
-    projectId,
-  }: {
-    projectId: number;
-  }): CancelablePromise<Array<CrawlerJobRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/job/crawler/project/{project_id}",
-      path: {
-        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
@@ -224,14 +169,14 @@ export class JobService {
     });
   }
   /**
-   * Start Export job
-   * @returns ExportJobRead Successful Response
+   * Start Crawler job
+   * @returns CrawlerJobRead Successful Response
    * @throws ApiError
    */
-  public static startExportJob({ requestBody }: { requestBody: ExportJobInput }): CancelablePromise<ExportJobRead> {
+  public static startCrawlerJob({ requestBody }: { requestBody: CrawlerJobInput }): CancelablePromise<CrawlerJobRead> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/job/export",
+      url: "/job/crawler",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -240,16 +185,71 @@ export class JobService {
     });
   }
   /**
-   * Get Export job
-   * @returns ExportJobRead Successful Response
+   * Get Crawler job
+   * @returns CrawlerJobRead Successful Response
    * @throws ApiError
    */
-  public static getExportJobById({ jobId }: { jobId: string }): CancelablePromise<ExportJobRead> {
+  public static getCrawlerJobById({ jobId }: { jobId: string }): CancelablePromise<CrawlerJobRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/job/export/{job_id}",
+      url: "/job/crawler/{job_id}",
       path: {
         job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Abort Crawler job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static abortCrawlerJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/crawler/{job_id}/abort",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Retry Crawler job
+   * @returns boolean Successful Response
+   * @throws ApiError
+   */
+  public static retryCrawlerJob({ jobId }: { jobId: string }): CancelablePromise<boolean> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/job/crawler/{job_id}/retry",
+      path: {
+        job_id: jobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Get all Crawler jobs by project
+   * @returns CrawlerJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getCrawlerJobsByProject({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<CrawlerJobRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/job/crawler/project/{project_id}",
+      path: {
+        project_id: projectId,
       },
       errors: {
         422: `Validation Error`,
