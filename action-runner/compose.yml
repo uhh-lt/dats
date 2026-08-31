@@ -7,8 +7,8 @@ x-runner-common: &runner-base
     - GITHUB_PAT=${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
-    # Share Ray cache across all runners: mount host cache to the path CI expects
-    - ${HOME}/ray_cache:/actions-runner/_work/dats/dats/docker/ray_cache
+    # Share Ray cache across all runners (symlinked into _work by entrypoint)
+    - ${HOME}/ray_cache:/ray_cache
   restart: unless-stopped
   security_opt:
     - no-new-privileges:true
