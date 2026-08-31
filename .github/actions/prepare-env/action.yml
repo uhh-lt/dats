@@ -76,4 +76,5 @@ runs:
         # Set up Ray locally, when its part of this run.
         if [ "${RAY}" = "true" ]; then
           sed -i "s/^RAY_PORT=.*/RAY_PORT=${PORT_PREFIX}30/" backend/.env docker/.env
+          echo "RAY_CACHE_DIR=${RAY_CACHE_HOST_PATH}" >> docker/.env
         fi
