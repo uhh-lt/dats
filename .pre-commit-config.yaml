@@ -9,22 +9,22 @@ repos:
     hooks:
       - id: format-backend
         name: "Format: Backend"
-        entry: bash -c 'just format backend "$@"' --
+        entry: just format backend
         language: system
         files: ^backend/.*\.py$
       - id: format-ray
         name: "Format: Ray"
-        entry: bash -c 'just format ray "$@"' --
+        entry: just format ray
         language: system
         files: ^ray/.*\.py$
       - id: format-frontend
         name: "Format: Frontend"
-        entry: bash -c 'just format frontend "$@"' --
+        entry: just format frontend
         language: system
-        files: ^frontend/.*\.([jt]sx?|json|ya?ml)$
+        files: ^frontend/
       - id: format-repo
         name: "Format: Repo"
-        entry: bash -c 'just format repo "$@"' --
+        entry: just format repo
         language: system
         # repo-wide prettier for files NOT already handled by a component hook
         files: \.([jt]sx?|json|ya?ml|md|css|html)$
@@ -35,17 +35,17 @@ repos:
     hooks:
       - id: lint-backend
         name: "Lint: Backend"
-        entry: bash -c 'just lint backend "$@"' --
+        entry: just lint backend
         language: system
         files: ^backend/.*\.py$
       - id: lint-ray
         name: "Lint: Ray"
-        entry: bash -c 'just lint ray "$@"' --
+        entry: just lint ray
         language: system
         files: ^ray/.*\.py$
       - id: lint-frontend
         name: "Lint: Frontend"
-        entry: bash -c 'just lint frontend "$@"' --
+        entry: just lint frontend
         language: system
         files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
 
@@ -54,19 +54,19 @@ repos:
     hooks:
       - id: typecheck-backend
         name: "Typecheck: Backend"
-        entry: bash -c 'just typecheck backend' --
+        entry: just typecheck backend
         language: system
         pass_filenames: false
         files: ^backend/.*\.py$
       - id: typecheck-ray
         name: "Typecheck: Ray"
-        entry: bash -c 'just typecheck ray' --
+        entry: just typecheck ray
         language: system
         pass_filenames: false
         files: ^ray/.*\.py$
       - id: typecheck-frontend
         name: "Typecheck: Frontend"
-        entry: bash -c 'just typecheck frontend' --
+        entry: just typecheck frontend
         language: system
         pass_filenames: false
         files: ^frontend/.*\.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx

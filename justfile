@@ -1,116 +1,91 @@
-# DATS command catalog — single entry point for developers, agents, and CI.
-#
-# Recipes are ordered the way a developer uses them when setting up DATS:
-#
-#   1. bootstrap   install deps + generate .env files + create data folders
-#   2. docker      start the backing services (postgres, redis, weaviate, elasticsearch)
-#   3. dev         run a dev server (backend | worker | frontend | ray)
-#   4. test        run a test suite
-#   5. lint/format/typecheck/precommit   code quality
-#   6. alembic/api-codegen     code generation
-#   7. release     cut a new DATS version (maintainers)
-#
-# Usage:
-#   just --list            # show all commands
-#   just dev backend       # start the FastAPI dev server
-#   just test backend      # run the backend test suite
-#
-# Debugging: prefix with DEBUG=true to run a server under debugpy for attach:
-#   DEBUG=true just dev backend    # then attach VS Code to the debugpy port
+# DATS command catalog — the single entry point for developers, agents, and CI.
 
-set shell := ["bash", "-uc"]
-
-# Default: list available commands.
-default:
-    @just --list
+set minimum-version := "1.55.0"
+set default-list
+set positional-arguments
+set default-script
+set script-interpreter := ["bash", "-eu", "-o", "pipefail"]
 
 # --- 1. Bootstrap: install deps, generate .env, create folders -------------
 
-# First-time setup: install backend & frontend deps, generate .env files, create data folders.
-# Both arguments are required and must be chosen individually per developer:
-# - just bootstrap <project_name> <port_prefix>           e.g.  just bootstrap dats 132
-# On the HCDS ltdwise server, append "ltdwise" to also point at the hosted services:
-# - just bootstrap <project_name> <port_prefix> ltdwise
+[arg("project_name", help="Docker Compose project name, e.g. dats")]
+[arg("hosted", pattern="ltdwise|", help="Optional hosted environment: ltdwise")]
+[arg("port_prefix", pattern="[0-9]+", help="Development port prefix, e.g. 132")]
+[doc("Bootstrap: just bootstrap <project_name> <port_prefix> [ltdwise]")]
+[group("1. Setup")]
 bootstrap project_name port_prefix hosted="":
-    #!/usr/bin/env bash
-    set -euo pipefail
+    project_name="$1"
+    port_prefix="$2"
+    hosted="${3:-}"
     ./bin/setup/setup-folders.sh --development
-    ./bin/setup/setup-envs.sh --project_name {{ project_name }} --port_prefix {{ port_prefix }}
-    if [ "{{ hosted }}" = "ltdwise" ]; then
+    ./bin/setup/setup-envs.sh --project_name "$project_name" --port_prefix "$port_prefix"
+    if [ "$hosted" = "ltdwise" ]; then
       ./bin/setup/setup-ltdwise.sh
     fi
     just install backend
     just install frontend
     just install ray
 
-# Install a component's dependencies: backend | frontend | ray
+[arg("target", pattern="backend|frontend|ray", help="Component to install")]
+[doc("Install dependencies (target: backend|frontend|ray)")]
+[group("1. Setup")]
 install target:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
+    case "$1" in
       backend)  cd backend && uv sync ;;
       frontend) cd frontend && npm ci ;;
       ray)      cd ray && uv sync ;;
-      *) echo "unknown install target '{{ target }}' (expected: backend|frontend|ray)" >&2; exit 1 ;;
     esac
 
 # --- 2. Docker: backing services -------------------------------------------
 
-# Manage the backing services (postgres, redis, weaviate, elasticsearch): up | down | logs | ps
+[arg("action", pattern="up|down|logs|ps", help="Docker Compose action")]
+[doc("Manage backing services (action: up|down|logs|ps)")]
+[group("2. Services")]
 docker action:
-    #!/usr/bin/env bash
-    set -euo pipefail
     cd docker
     export COMPOSE_PROFILES=""
-    case "{{ action }}" in
+    case "$1" in
       up)   docker compose up -d ;;
       down) docker compose down ;;
       logs) docker compose logs -f ;;
       ps)   docker compose ps ;;
-      *) echo "unknown docker action '{{ action }}' (expected: up|down|logs|ps)" >&2; exit 1 ;;
     esac
 
 # --- 3. Development servers -------------------------------------------------
 
-# Start a dev server: backend | worker | frontend | ray
+[arg("target", pattern="backend|worker|frontend|ray", help="Server to start; prefix with DEBUG=true for debugpy")]
+[doc("Start a server (target: backend|worker|frontend|ray; DEBUG=true to debug)")]
+[group("3. Development")]
 dev target:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
+    case "$1" in
       backend)  exec ./bin/dev/backend-api.sh ;;
       worker)   exec ./bin/dev/backend-worker.sh ;;
       frontend) exec ./bin/dev/frontend.sh ;;
       ray)      exec ./bin/dev/ray.sh ;;
-      *) echo "unknown dev target '{{ target }}' (expected: backend|worker|frontend|ray)" >&2; exit 1 ;;
     esac
 
 # --- 4. Tests ---------------------------------------------------------------
 
-# Run a test suite: backend. Extra args are forwarded to pytest:
-# - just test backend                          # all tests
-# - just test backend test/endpoints/search  # one folder
-# - just test backend -k memo_info           # by test name
+[arg("args", help="Arguments forwarded to pytest, e.g. test/endpoints/search or -k memo_info")]
+[arg("target", pattern="backend", help="Component to test (currently backend)")]
+[doc("Run tests (target: backend; extra arguments go to pytest)")]
+[group("4. Testing")]
 test target *args:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
-      backend) exec ./bin/dev/backend-test.sh {{ args }} ;;
-      *) echo "unknown test target '{{ target }}' (expected: backend)" >&2; exit 1 ;;
-    esac
+    shift
+    exec ./bin/dev/backend-test.sh "$@"
 
 # --- 5. Code quality: lint, format, typecheck ---------------------------------
 
-# Lint a component, optionally restricted to specific files:
-# - just lint backend                          # whole component
-# - just lint backend backend/src/foo.py ...   # specific files (pre-commit)
+[arg("files", help="Optional repo-relative files, e.g. backend/src/foo.py")]
+[arg("target", pattern="backend|frontend|ray", help="Component to lint")]
+[doc("Lint code (target: backend|frontend|ray; optionally pass files)")]
+[group("5. Quality")]
 lint target *files:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    target="{{ target }}"
+    target="$1"; shift
     # Strip the "<component>/" prefix from each file (recipes cd into the component,
     # but pre-commit passes repo-root-relative paths).
     rel=()
-    for f in {{ files }}; do rel+=("${f#$target/}"); done
+    for f in "$@"; do rel+=("${f#$target/}"); done
     case "$target" in
       backend)
         cd backend
@@ -124,20 +99,16 @@ lint target *files:
         cd ray
         if [ ${#rel[@]} -eq 0 ]; then uv run ruff check --fix --config=pyproject.toml src
         else uv run ruff check --fix --config=pyproject.toml "${rel[@]}"; fi ;;
-      *) echo "unknown lint target '$target' (expected: backend|frontend|ray)" >&2; exit 1 ;;
     esac
 
-# Format a component, optionally restricted to specific files:
-# - just format backend                          # ruff over backend/src + test
-# - just format frontend                         # prettier over frontend/
-# - just format repo                             # prettier over the whole repo
-# - just format backend backend/src/foo.py ...   # specific files (pre-commit)
+[arg("files", help="Optional repo-relative files, e.g. frontend/src/App.tsx")]
+[arg("target", pattern="backend|frontend|ray|repo", help="Component to format")]
+[doc("Format code (target: backend|frontend|ray|repo; optionally pass files)")]
+[group("5. Quality")]
 format target *files:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    target="{{ target }}"
+    target="$1"; shift
     rel=()
-    for f in {{ files }}; do rel+=("${f#$target/}"); done
+    for f in "$@"; do rel+=("${f#$target/}"); done
     case "$target" in
       backend)
         cd backend
@@ -149,57 +120,52 @@ format target *files:
         else uv run ruff format --config=pyproject.toml "${rel[@]}"; fi ;;
       frontend)
         cd frontend
-        if [ ${#rel[@]} -eq 0 ]; then npx prettier --write --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore .
-        else npx prettier --write --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore "${rel[@]}"; fi ;;
+        if [ ${#rel[@]} -eq 0 ]; then npx prettier --write --no-color --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore . | sed '/ (unchanged)$/d'
+        else npx prettier --write --no-color --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore "${rel[@]}" | sed '/ (unchanged)$/d'; fi ;;
       repo)
-        if [ {{ quote(files) }} = "" ]; then
-          git ls-files -z | xargs -0 npx --prefix frontend prettier --write --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore
+        if [ ${#rel[@]} -eq 0 ]; then
+          git ls-files -z | xargs -0 npx --prefix frontend prettier --write --no-color --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore | sed '/ (unchanged)$/d'
         else
-          npx --prefix frontend prettier --write --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore {{ files }}
+          npx --prefix frontend prettier --write --no-color --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore "${rel[@]}" | sed '/ (unchanged)$/d'
         fi ;;
-      *) echo "unknown format target '$target' (expected: backend|frontend|ray|repo)" >&2; exit 1 ;;
     esac
 
-# Typecheck a component (whole-project), with optional extra args passed to the tool:
-#   just typecheck backend            # pyright over backend
-#   just typecheck frontend           # tsc --noEmit
-#   just typecheck frontend --watch   # tsc --noEmit --watch
-# just typecheck ray --outputjson   # extra args are forwarded to pyright
+[arg("args", help="Arguments forwarded to pyright or tsc, e.g. --watch or --outputjson")]
+[arg("target", pattern="backend|frontend|ray", help="Component to typecheck")]
+[doc("Typecheck code (target: backend|frontend|ray; extra arguments forwarded)")]
+[group("5. Quality")]
 typecheck target *args:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    case "{{ target }}" in
-      backend)  cd backend && uv run pyright --project . {{ args }} ;;
-      frontend) cd frontend && npx tsc --noEmit {{ args }} ;;
-      ray)      cd ray && uv run pyright --project . {{ args }} ;;
-      *) echo "unknown typecheck target '{{ target }}' (expected: backend|frontend|ray)" >&2; exit 1 ;;
+    target="$1"; shift
+    case "$target" in
+      backend)  cd backend && uv run pyright --project . "$@" ;;
+      frontend) cd frontend && npx tsc --noEmit "$@" ;;
+      ray)      cd ray && uv run pyright --project . "$@" ;;
     esac
 
-# Run every pre-commit hook (ruff, pyright, eslint, prettier, shfmt, ...) over all files.
+[doc("Run all format, lint, typecheck, and hygiene hooks over all files")]
+[group("5. Quality")]
 precommit:
-    #!/usr/bin/env bash
-    set -euo pipefail
     pre-commit run --all-files
 
 # --- 6. Code generation ---------------------------------------------------
 
-# Regenerate the frontend API client from the running backend's OpenAPI spec.
+[doc("Regenerate the frontend API client (requires the backend server)")]
+[group("6. Code generation")]
+[working-directory("frontend")]
 update-api:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cd frontend
     npm run update-api
 
-# Backend alembic: migrate | check | revision "message"
+[arg("args", help="Optional action arguments, e.g. the message for revision")]
+[arg("action", pattern="migrate|check|revision", help="Alembic action")]
+[doc("Manage database migrations (action: migrate|check|revision)")]
+[group("6. Code generation")]
 alembic action *args:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ./bin/dev/backend-alembic.sh {{ action }} {{ args }}
+    ./bin/dev/backend-alembic.sh "$@"
 
 # --- 7. Release ---------------------------------------------------------------
 
-# Cut a new DATS release (maintainers only; run from a clean main branch).
+[arg("version", pattern="[0-9]+\\.[0-9]+\\.[0-9]+", help="Semantic version without a v prefix")]
+[doc("Cut a release from a clean main branch (version: MAJOR.MINOR.PATCH)")]
+[group("7. Release")]
 release version:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ./bin/dev/release.sh {{ version }}
+    ./bin/dev/release.sh "$1"
