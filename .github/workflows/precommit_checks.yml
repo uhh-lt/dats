@@ -9,31 +9,15 @@ on:
 
 jobs:
   precommit-checks:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
-      - name: Install just
-        uses: extractions/setup-just@v4
-      - name: Install Node.js
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24.18.0"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
       - name: Install Frontend Dependencies
         run: just install frontend
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.2.0
-        with:
-          enable-cache: true
-          cache-dependency-glob: "backend/uv.lock"
       - name: Install Backend Dependencies
         run: just install backend
-      - name: Cache pre-commit hooks
-        uses: actions/cache@v6.1.0
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install Ray Dependencies
+        run: just install ray
       - name: Run pre-commit
         run: |
           uv tool install pre-commit
