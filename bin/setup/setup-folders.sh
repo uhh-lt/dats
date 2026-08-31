@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-cd "$(dirname "$0")" || exit
+# Resolve the repository root (two levels up from bin/dev/_common.sh).
+DATS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # Parse arguments
 DEVELOPMENT=0
@@ -11,36 +12,36 @@ for arg in "$@"; do
 done
 
 # repo stores all user-uploaded files
-mkdir -p ../docker/backend_repo
-mkdir -p ../docker/test_repo
+mkdir -p docker/backend_repo
+mkdir -p docker/test_repo
 
 # cache directories
-mkdir -p ../docker/api_cache
-mkdir -p ../docker/rq_cpu_cache
-mkdir -p ../docker/rq_gpu_cache
-mkdir -p ../docker/ray_cache
-chmod 777 ../docker/ray_cache
-mkdir -p ../docker/vllm_cache
-mkdir -p ../docker/vllm_config
+mkdir -p docker/api_cache
+mkdir -p docker/rq_cpu_cache
+mkdir -p docker/rq_gpu_cache
+mkdir -p docker/ray_cache
+chmod 777 docker/ray_cache
+mkdir -p docker/vllm_cache
+mkdir -p docker/vllm_config
 
 # backup directories
-mkdir -p ../backups/weaviate
-mkdir -p ../backups/elasticsearch
-mkdir -p ../backups/postgres
-mkdir -p ../backups/repo
+mkdir -p backups/weaviate
+mkdir -p backups/elasticsearch
+mkdir -p backups/postgres
+mkdir -p backups/repo
 
 # Do not create production folders in development mode
 if [ "$DEVELOPMENT" -eq 0 ]; then
 	# in production we use filesystem instead of docker managed volumes
-	mkdir -p ../docker/elasticsearch_data
-	mkdir -p ../docker/pg_data
-	mkdir -p ../docker/redis_data
-	mkdir -p ../docker/weaviate_data
+	mkdir -p docker/elasticsearch_data
+	mkdir -p docker/pg_data
+	mkdir -p docker/redis_data
+	mkdir -p docker/weaviate_data
 
 	# for production monitoring (kuma)
-	mkdir -p ../docker/mariadb_data
-	mkdir -p ../docker/kuma_data
-	chmod 777 ../docker/kuma_data
+	mkdir -p docker/mariadb_data
+	mkdir -p docker/kuma_data
+	chmod 777 docker/kuma_data
 fi
 
 if [ "$DEVELOPMENT" -eq 1 ]; then
