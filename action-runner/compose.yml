@@ -1,11 +1,11 @@
 x-runner-common: &runner-base
   build: .
   network_mode: "host"
-  environment:
-    - GITHUB_OWNER=${GITHUB_OWNER:?GITHUB_OWNER is missing - copy .env.example to .env and set it}
-    - GITHUB_REPO=${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
-    - GITHUB_PAT=${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
-    - RAY_CACHE_HOST_PATH=${RAY_CACHE_HOST_PATH:?RAY_CACHE_HOST_PATH is missing - copy .env.example to .env and set it}
+  environment: &runner-base-env
+    GITHUB_OWNER: ${GITHUB_OWNER:?GITHUB_OWNER is missing - copy .env.example to .env and set it}
+    GITHUB_REPO: ${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
+    GITHUB_PAT: ${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
+    RAY_CACHE_HOST_DIR: ${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is missing - copy .env.example to .env and set it}
   restart: unless-stopped
   security_opt:
     - no-new-privileges:true
@@ -27,24 +27,36 @@ services:
   runner-01:
     <<: *runner-base
     hostname: dats-runner-01
+    environment:
+      <<: *runner-base-env
+      HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-01
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-01:/actions-runner/_work
   runner-02:
     <<: *runner-base
     hostname: dats-runner-02
+    environment:
+      <<: *runner-base-env
+      HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-02
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-02:/actions-runner/_work
   runner-03:
     <<: *runner-base
     hostname: dats-runner-03
+    environment:
+      <<: *runner-base-env
+      HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-03
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-03:/actions-runner/_work
   runner-04:
     <<: *runner-base
     hostname: dats-runner-04
+    environment:
+      <<: *runner-base-env
+      HOST_WORK_DIR: ${RUNNER_WORK_BASE_DIR:?}/runner-04
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is missing}/runner-04:/actions-runner/_work

@@ -48,6 +48,12 @@ runs:
         SAFE_RUNNER_NAME="$(printf '%s' "${RUNNER_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_-' '-')"
         ./bin/setup/setup-envs.sh --project_name "action-runner-${SAFE_RUNNER_NAME}" --port_prefix "${PORT_PREFIX}"
 
+        # CI runs docker compose via the host's docker socket, so bind-mount sources
+        # must be host paths, not runner-container paths. HOST_WORK_DIR is the
+        # host-side path of this runner's work dir; the checkout's docker/ dir
+        # lives at $HOST_WORK_DIR/dats/dats/docker. Point compose at it.
+        echo "DATS_DOCKER_DIR=${HOST_WORK_DIR}/dats/dats/docker" >> docker/.env
+
         # Bump the image version of every enabled component for this run.
         if [ "${BACKEND}" = "true" ]; then
           sed -i 's/\(DATS_BACKEND_DOCKER_VERSION=[0-9.]*\)/\1-${{ github.run_id }}/' docker/.env
@@ -77,5 +83,5 @@ runs:
         if [ "${RAY}" = "true" ]; then
           sed -i "s/^RAY_PORT=.*/RAY_PORT=${PORT_PREFIX}30/" backend/.env docker/.env
           sed -i 's/^RAY_DEVICE_IDS=.*/RAY_DEVICE_IDS=1/' docker/.env
-          echo "RAY_CACHE_DIR=${RAY_CACHE_HOST_PATH}" >> docker/.env
+          echo "RAY_CACHE_DIR=${RAY_CACHE_HOST_DIR}" >> docker/.env
         fi
