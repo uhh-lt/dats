@@ -21,6 +21,10 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # Create non-root runner user (docker group added at runtime via entrypoint)
 RUN useradd -m -u 1000 runner
 
+# Pre-create the uv cache mount point owned by runner, so it can be mounted at runtime without permission issues and be cached properly.
+RUN mkdir -p /home/runner/.cache/uv \
+    && chown -R runner:runner /home/runner/.cache
+
 # Install Docker Compose plugin (v2)
 RUN mkdir -p /usr/local/lib/docker/cli-plugins && \
     curl -SL https://github.com/docker/compose/releases/download/v2.32.0/docker-compose-linux-x86_64 \
