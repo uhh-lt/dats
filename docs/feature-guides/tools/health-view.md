@@ -13,7 +13,7 @@ You do not need to wait in the Import Dialog to see if your documents processed 
 3. Select **Document Health**.
 
 ![Document Health View](../../assets/document-health-view.png)
-*The Document Health View gives you a granular look at the preprocessing status of your corpus.*
+_The Document Health View gives you a granular look at the preprocessing status of your corpus._
 
 ## 2\. Navigating the Status Table
 
@@ -27,9 +27,9 @@ At the very top of the view, you will see tabs for **Text**, **Image**, **Video*
 
 Below the tabs is the main status table.
 
-* **Document Name:** The first column lists the names of the documents or split file chunks.
-* **Pipeline Steps:** The remaining columns represent the specific chronological steps of the preprocessing pipeline for that modality. For example, under the **Text** tab, you might see columns like extract\_html, text\_extraction, text\_language\_detect, text\_spacy (Named Entity Recognition), and text\_es\_index (Elasticsearch indexing).
-* **Status Icons:** Inside each cell is an icon indicating the status of that specific step for that document (e.g., a green checkmark for success, a spinning wheel for in-progress, or a red warning icon for failure).
+- **Document Name:** The first column lists the names of the documents or split file chunks.
+- **Pipeline Steps:** The remaining columns represent the specific chronological steps of the preprocessing pipeline for that modality. For example, under the **Text** tab, you might see columns like extract_html, text_extraction, text_language_detect, text_spacy (Named Entity Recognition), and text_es_index (Elasticsearch indexing).
+- **Status Icons:** Inside each cell is an icon indicating the status of that specific step for that document (e.g., a green checkmark for success, a spinning wheel for in-progress, or a red warning icon for failure).
 
 ## 3\. Fixing Errors: Retry vs. Recompute
 
@@ -41,15 +41,15 @@ It is important to understand the difference between these two functions:
 
 Use **Retry** when a step has explicitly failed (shows an error icon).
 
-* Clicking **Retry** tells DATS to automatically look at the selected documents, identify exactly which steps failed, and attempt to run them again.
-* *Use Case:* A temporary server timeout caused the language detection to fail. Clicking Retry will simply try the language detection again.
+- Clicking **Retry** tells DATS to automatically look at the selected documents, identify exactly which steps failed, and attempt to run them again.
+- _Use Case:_ A temporary server timeout caused the language detection to fail. Clicking Retry will simply try the language detection again.
 
 ### ⚙️ Recompute (The Force Run)
 
-Use **Recompute** when you want to force DATS to re-run a step that has *already succeeded*, or if you want to manually trigger a specific part of the pipeline.
+Use **Recompute** when you want to force DATS to re-run a step that has _already succeeded_, or if you want to manually trigger a specific part of the pipeline.
 
-* Clicking **Recompute** opens a small dropdown menu allowing you to select a *specific* pipeline step (e.g., text\_spacy). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
-* *Use Case:* You have updated the global project settings or you want to force the system to re-evaluate the named entities in a document.
+- Clicking **Recompute** opens a small dropdown menu allowing you to select a _specific_ pipeline step (e.g., text_spacy). DATS will then force-run that step (and all subsequent dependent steps) for the selected documents, even if they had previously completed successfully.
+- _Use Case:_ You have updated the global project settings or you want to force the system to re-evaluate the named entities in a document.
 
 !!! tip "Selecting Multiple Documents"
 

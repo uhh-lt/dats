@@ -14,10 +14,10 @@ Throughout the DATS interface, you will frequently encounter the standard **Expo
 
 You can find this contextual export button in various places, including:
 
-* **Document Search View:** Export metadata and statistics for your currently filtered search results.
-* **Tag & Folder Explorers:** Export your structural taxonomies.
-* **Code Explorer (Annotation View):** Export your hierarchical Codebook.
-* **Annotation Tables:** Export a CSV spreadsheet of your filtered text or image annotations, perfect for external quantitative reporting or supplementary material for a publication.
+- **Document Search View:** Export metadata and statistics for your currently filtered search results.
+- **Tag & Folder Explorers:** Export your structural taxonomies.
+- **Code Explorer (Annotation View):** Export your hierarchical Codebook.
+- **Annotation Tables:** Export a CSV spreadsheet of your filtered text or image annotations, perfect for external quantitative reporting or supplementary material for a publication.
 
 ### Full Project Export ("Export All")
 
@@ -30,23 +30,23 @@ If you need to back up your entire project—including all documents, annotation
 3. Click the large **Export all** button.
 4. DATS will package your entire workspace into a secure ZIP file and download it to your local machine.
 
-*Use the 'Export all' button to generate a complete backup of your research workspace.*
+_Use the 'Export all' button to generate a complete backup of your research workspace._
 
 ## 2\. Importing DATS Data
 
 ![Project Import](../assets/project-details-import.png)
 
-*(Note: This section covers importing structured DATS data, such as project backups or codebooks. To upload raw files like PDFs or URLs for analysis, please refer to the [Document Upload Dialog](document-upload.md) guide).*
+_(Note: This section covers importing structured DATS data, such as project backups or codebooks. To upload raw files like PDFs or URLs for analysis, please refer to the [Document Upload Dialog](document-upload.md) guide)._
 
 If you have an exported DATS ZIP file—perhaps a backup you previously created, or a specific Tag taxonomy sent to you by a colleague—you can easily merge it into your current workspace.
 
 1. Open the **Project Settings** (the cog icon in the bottom left navigation bar).
 2. Navigate to the **Import** tab.
 3. **Select Data Type:** Use the dropdown menu to specify exactly what kind of data is inside the ZIP file you are about to upload. You can choose to import specific entities like Codes, Tags, Folders, or Users.
-   * *Tip:* If you are restoring a full project backup, select Project.
+   - _Tip:_ If you are restoring a full project backup, select Project.
 4. Click the file selection area to browse your computer and select the .zip file.
 5. Click the **Import file** button.
 
-*Select the correct data type before importing a DATS backup file.*
+_Select the correct data type before importing a DATS backup file._
 
 DATS will process the archive and populate your current project with the imported data!

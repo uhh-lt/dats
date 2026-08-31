@@ -22,24 +22,24 @@ The bar is divided into a top section for core research features, and a bottom s
 
 **Core Research Features (Top Section):**
 
-* 🔍 **Search:** The gateway to your corpus. Explore folders, filter documents, manage tags, and search for keywords or semantic concepts.
-* 📝 **Annotation:** The dedicated view for applying codes to specific text passages or image bounding boxes.
-* 🗺️ **Perspectives:** Open the semantic clustering tool to discover latent similarities and group documents together.
-* 📊 **Analysis:** A dashboard containing quantitative tools like Code Frequency, Word Frequency, and Timeline Analyses.
-* 🧠 **Classifier Training:** Access the interface to train, evaluate, and apply custom Machine Learning classifiers based on your manual annotations.
-* 🖼️ **Whiteboard:** Open the visual, Miro-like canvas to map out relationships, organize codes, and synthesize your interpretations.
-* 📓 **Logbook:** Access the project Logbook and the unified Memo Explorer to review your research notes.
-* 🧰 **Tools:** A dropdown menu containing utility features:
-  * *Document Health:* Check the status of your documents' preprocessing pipeline (e.g., if text extraction or entity recognition succeeded or failed).
-  * *Duplicate Finder:* Identify and manage duplicate documents within your corpus.
-  * *Document Sampler:* A utility for creating specific subsets of your data.
+- 🔍 **Search:** The gateway to your corpus. Explore folders, filter documents, manage tags, and search for keywords or semantic concepts.
+- 📝 **Annotation:** The dedicated view for applying codes to specific text passages or image bounding boxes.
+- 🗺️ **Perspectives:** Open the semantic clustering tool to discover latent similarities and group documents together.
+- 📊 **Analysis:** A dashboard containing quantitative tools like Code Frequency, Word Frequency, and Timeline Analyses.
+- 🧠 **Classifier Training:** Access the interface to train, evaluate, and apply custom Machine Learning classifiers based on your manual annotations.
+- 🖼️ **Whiteboard:** Open the visual, Miro-like canvas to map out relationships, organize codes, and synthesize your interpretations.
+- 📓 **Logbook:** Access the project Logbook and the unified Memo Explorer to review your research notes.
+- 🧰 **Tools:** A dropdown menu containing utility features:
+  - _Document Health:_ Check the status of your documents' preprocessing pipeline (e.g., if text extraction or entity recognition succeeded or failed).
+  - _Duplicate Finder:_ Identify and manage duplicate documents within your corpus.
+  - _Document Sampler:_ A utility for creating specific subsets of your data.
 
 **Settings (Bottom Section):**
 
-* 🏠 **Home / Projects:** Return to the main project selection screen.
-* 📖 **Guide:** A quick link out to this official user documentation.
-* ⚙️ **Project Settings (Cog Icon):** Manage project details, add/remove users, edit the codebook and tags globally, and handle import/export functions.
-* 👤 **User Profile:** Manage your personal account settings.
+- 🏠 **Home / Projects:** Return to the main project selection screen.
+- 📖 **Guide:** A quick link out to this official user documentation.
+- ⚙️ **Project Settings (Cog Icon):** Manage project details, add/remove users, edit the codebook and tags globally, and handle import/export functions.
+- 👤 **User Profile:** Manage your personal account settings.
 
 ## 2\. The Top Tab Bar
 
@@ -47,11 +47,11 @@ Because discourse analysis requires looking at multiple pieces of information si
 
 Just above the central workspace is the **Top Tab Bar**.
 
-* Every time you double-click a document in the Search view, or open a new Timeline Analysis or Whiteboard, it opens as a **new tab** in this bar.
-* You can easily switch back and forth between different documents and tools without losing your place.
-* Tabs can be rearranged by clicking and dragging them, and closed by clicking the "X" on the tab.
+- Every time you double-click a document in the Search view, or open a new Timeline Analysis or Whiteboard, it opens as a **new tab** in this bar.
+- You can easily switch back and forth between different documents and tools without losing your place.
+- Tabs can be rearranged by clicking and dragging them, and closed by clicking the "X" on the tab.
 
-*Note: Below the Tab Bar, the active view will usually display its own specific **Toolbar** (e.g., search bars, filtering options, or rendering settings). The contents of this toolbar change depending on which tab you currently have active.*
+_Note: Below the Tab Bar, the active view will usually display its own specific **Toolbar** (e.g., search bars, filtering options, or rendering settings). The contents of this toolbar change depending on which tab you currently have active._
 
 ## 3\. The Central Workspace & Resizable Panels
 
@@ -69,6 +69,6 @@ Clicking the **User Icon** at the very bottom left of the Navigation Bar opens y
 
 Currently, this page allows you to manage your basic account security. You can use this view to:
 
-* View your account email.
-* Change your login email address.
-* Update your password.
+- View your account email.
+- Change your login email address.
+- Update your password.

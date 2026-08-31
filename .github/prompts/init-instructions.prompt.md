@@ -4,6 +4,7 @@ description: Generate or update workspace instructions file for AI coding agents
 argument-hint: Optionally specify a focus area or pattern to document for agents
 agent: agent
 ---
+
 Related skill: `agent-customization`.
 
 Generate or update workspace instructions (`.github/copilot-instructions.md` as first choice, or `.github/instructions/*.md`) for guiding AI coding agents in this workspace.
@@ -18,18 +19,23 @@ Then, start a subagent to research essential knowledge that helps an AI agent be
 # Project Guidelines
 
 ## Code Style
+
 {Language and formatting preferences - reference key files that exemplify patterns}
 
 ## Architecture
+
 {Major components, service boundaries, data flows, the "why" behind structural decisions}
 
 ## Project Conventions
+
 {Patterns that differ from common practices - include specific examples from the codebase}
 
 ## Integration Points
+
 {External dependencies and cross-component communication}
 
 ## Security
+
 {Sensitive areas and auth patterns}
 ```
 

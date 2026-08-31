@@ -47,7 +47,7 @@ flowchart TD
     L --> M[(rows, total_results)]
 ```
 
-The engine never knows *which* entity it is searching. It only knows the column enum
+The engine never knows _which_ entity it is searching. It only knows the column enum
 and the hooks that enum provides.
 
 ---
@@ -64,19 +64,19 @@ that entity's search.
 The enum implements a set of **hooks**. The engine calls these hooks; it never
 hardcodes entity specifics.
 
-| Hook | Purpose | Called from |
-|------|---------|-------------|
-| `get_filter_column(subquery_dict)` | SQL expression used in `WHERE` for this column | filtering |
-| `get_sort_column(subquery_dict)` | SQL expression used in `ORDER BY` for this column | sorting, `ColumnInfo` |
-| `get_filter_operator()` | Which operator family (string, id, date, ...) the column supports | `ColumnInfo` |
-| `get_filter_value_type()` | How the frontend should render the value picker | `ColumnInfo` |
-| `get_label()` | Human-readable column label | `ColumnInfo` |
-| `get_group_expressions(subquery_dict, date_granularity)` | SQL expressions for `GROUP BY` (key/label/targets) | grouping |
-| `is_groupable()` | Whether the column supports grouping (capability flag) | `ColumnInfo` |
-| `add_subquery_filter_statements(builder)` | Augment the **subquery** (add columns, joins) | `build_subquery` |
-| `add_query_filter_statements(builder)` | Augment the **outer query** (joins) | `build_query` |
-| `resolve_ids(db, ids)` | Map DB ids -> display names (for filter round-trips) | filtering |
-| `resolve_names(db, project_id, names)` | Map display names -> DB ids | filtering |
+| Hook                                                     | Purpose                                                           | Called from           |
+| -------------------------------------------------------- | ----------------------------------------------------------------- | --------------------- |
+| `get_filter_column(subquery_dict)`                       | SQL expression used in `WHERE` for this column                    | filtering             |
+| `get_sort_column(subquery_dict)`                         | SQL expression used in `ORDER BY` for this column                 | sorting, `ColumnInfo` |
+| `get_filter_operator()`                                  | Which operator family (string, id, date, ...) the column supports | `ColumnInfo`          |
+| `get_filter_value_type()`                                | How the frontend should render the value picker                   | `ColumnInfo`          |
+| `get_label()`                                            | Human-readable column label                                       | `ColumnInfo`          |
+| `get_group_expressions(subquery_dict, date_granularity)` | SQL expressions for `GROUP BY` (key/label/targets)                | grouping              |
+| `is_groupable()`                                         | Whether the column supports grouping (capability flag)            | `ColumnInfo`          |
+| `add_subquery_filter_statements(builder)`                | Augment the **subquery** (add columns, joins)                     | `build_subquery`      |
+| `add_query_filter_statements(builder)`                   | Augment the **outer query** (joins)                               | `build_query`         |
+| `resolve_ids(db, ids)`                                   | Map DB ids -> display names (for filter round-trips)              | filtering             |
+| `resolve_names(db, project_id, names)`                   | Map display names -> DB ids                                       | filtering             |
 
 > **Not every column supports every operation.** Return `None` from
 > `get_sort_column` (non-sortable) or `get_group_expressions` (non-groupable) to
@@ -105,7 +105,7 @@ rows, total = builder.execute_query(page_number, page_size)
 ```
 
 `SearchBuilder` collects the set of **affected columns** (from the filter tree, the
-sorts, and the group-by field) and only asks *those* columns to augment the queries —
+sorts, and the group-by field) and only asks _those_ columns to augment the queries —
 so unused joins are never added.
 
 ### The subquery dictionary (`subquery_dict`)
@@ -179,13 +179,13 @@ buckets, each with a count.
 - **`GroupConfig[T]`** — `field` (a column enum member) + optional `date_granularity`.
 - **`GroupExpressions`** — what a column returns from `get_group_expressions`:
   - `key` — the expression that **defines the partition** (an id, a date bucket, a
-    first letter, a boolean flag). Grouping is *always* by key, never by label, so
+    first letter, a boolean flag). Grouping is _always_ by key, never by label, so
     two different objects that happen to share a name are never merged.
   - `label` — the human-readable name shown as the group header. It is functionally
     dependent on the key, so adding it to `GROUP BY` does not change the partition;
     it exists so groups can be **ordered alphabetically** and displayed without a
     second lookup.
-  - `target_id` / `target_type` *(optional)* — identify the object a group points to,
+  - `target_id` / `target_type` _(optional)_ — identify the object a group points to,
     enabling drill-down navigation (e.g. "open this source document").
 - **`DateGranularity`** — `day`/`week`/`month`/`year`, used to bucket date columns.
 
@@ -221,7 +221,7 @@ A grouped view is built from **two kinds of requests**:
    group headers and their counts. This is cheap and drives the accordion headers.
 
 2. **Drill-down row query** — `POST /search/{entity}` with a normal `QueryRequest`
-   that *also* sets `group_by` **and** `group_key` to one bucket's `key`. The row
+   that _also_ sets `group_by` **and** `group_key` to one bucket's `key`. The row
    query then filters to just that group (`exprs.key == group_key`) and returns a
    `Page[Row]` of the rows inside it. `group_by` without `group_key` has no effect on
    a row query.
@@ -232,8 +232,8 @@ the user expands another group. So initial load is **2 requests** (groups + firs
 group's rows), never N+1 — you never fetch rows for collapsed groups.
 
 **Why not return rows inside the groups in one request?** Because there are two
-independent pagination axes — which *groups* (page of `GroupPage`) and which *rows
-within a group* (a group may have hundreds of rows). Keeping them as separate
+independent pagination axes — which _groups_ (page of `GroupPage`) and which _rows
+within a group_ (a group may have hundreds of rows). Keeping them as separate
 requests keeps each query a single simple SQL shape and lets the two paginations
 compose cleanly. Fusing them would require window functions / batched subqueries and
 a fused pagination model — more complexity and more bug surface for no benefit in the
@@ -326,13 +326,13 @@ group rows); the service resolves display data for just the returned page.**
 
 ## File map
 
-| File | Responsibility |
-|------|----------------|
-| [abstract_column.py](abstract_column.py) | `AbstractColumns` — the hook contract every column enum implements |
-| [search_builder.py](search_builder.py) | `SearchBuilder` — two-phase query construction + `execute_query` |
-| [filtering.py](filtering.py) | `Filter` / `FilterExpression` tree, id/name resolution, recursive CTE |
-| [filtering_operators.py](filtering_operators.py) | Typed operator enums + `FilterValue` / `FilterValueType` |
-| [sorting.py](sorting.py) | `Sort`, `SortDirection`, `apply_sorting` |
-| [grouping.py](grouping.py) | `GroupConfig`, `GroupExpressions`, `GroupSummary`, `GroupPage`, `GroupQueryRequest`, `DateGranularity`, `apply_grouping`, `NONE_GROUP_KEY` |
-| [pagination.py](pagination.py) | `apply_pagination`, `Pagination` |
-| [column_info.py](column_info.py) | `ColumnInfo` — column self-description for the frontend |
+| File                                             | Responsibility                                                                                                                             |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| [abstract_column.py](abstract_column.py)         | `AbstractColumns` — the hook contract every column enum implements                                                                         |
+| [search_builder.py](search_builder.py)           | `SearchBuilder` — two-phase query construction + `execute_query`                                                                           |
+| [filtering.py](filtering.py)                     | `Filter` / `FilterExpression` tree, id/name resolution, recursive CTE                                                                      |
+| [filtering_operators.py](filtering_operators.py) | Typed operator enums + `FilterValue` / `FilterValueType`                                                                                   |
+| [sorting.py](sorting.py)                         | `Sort`, `SortDirection`, `apply_sorting`                                                                                                   |
+| [grouping.py](grouping.py)                       | `GroupConfig`, `GroupExpressions`, `GroupSummary`, `GroupPage`, `GroupQueryRequest`, `DateGranularity`, `apply_grouping`, `NONE_GROUP_KEY` |
+| [pagination.py](pagination.py)                   | `apply_pagination`, `Pagination`                                                                                                           |
+| [column_info.py](column_info.py)                 | `ColumnInfo` — column self-description for the frontend                                                                                    |

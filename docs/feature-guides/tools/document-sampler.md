@@ -13,26 +13,26 @@ Like the other data preparation utilities, the Document Sampler is tucked away i
 3. Select **Document Sampler**.
 
 ![Document Sampler View](../../assets/document-sampler.png)
-*The Document Sampler uses a 4-panel interface to build and verify your document subsets.*
+_The Document Sampler uses a 4-panel interface to build and verify your document subsets._
 
 ## 2\. Defining the Sample (Left Panels)
 
-The left side of the interface is where you configure exactly *how* DATS should construct your subset.
+The left side of the interface is where you configure exactly _how_ DATS should construct your subset.
 
 ### Step 1: Document Aggregation (Top Left)
 
 Before you can draw a sample, you must tell DATS how to group your data. You do this by selecting specific structural **Tags** that already exist in your project.
 
-* *Example:* If you want to ensure your sample represents different media types equally, you might select your Domain: News, Domain: Blog, and Domain: Forum tags to create those aggregation groups.
+- _Example:_ If you want to ensure your sample represents different media types equally, you might select your Domain: News, Domain: Blog, and Domain: Forum tags to create those aggregation groups.
 
 ### Step 2: Sampling Strategy (Bottom Left)
 
 Next, you must decide how DATS should pull documents from those groups. You have two main strategies:
 
-* **Fixed Sampling:** You specify a strict number (e.g., N \= 10). DATS will randomly pull exactly 10 documents from *every single group*.
-  * *Best Use Case:* This forces a perfectly uniform distribution. It is highly recommended when your original groups are roughly the same size, or when you are trying to balance classes for machine learning training.
-* **Relative Sampling:** You specify a percentage (e.g., 10%). DATS will pull that percentage of documents from each group.
-  * *Best Use Case:* If your original dataset is heavily skewed (e.g., 90% of your articles are from Domain: News and 10% are from Domain: Blog), a relative sample will maintain that exact skewed distribution in the final subset. This is crucial when you want your sample to accurately reflect the real-world occurrence rates of your data.
+- **Fixed Sampling:** You specify a strict number (e.g., N \= 10). DATS will randomly pull exactly 10 documents from _every single group_.
+  - _Best Use Case:_ This forces a perfectly uniform distribution. It is highly recommended when your original groups are roughly the same size, or when you are trying to balance classes for machine learning training.
+- **Relative Sampling:** You specify a percentage (e.g., 10%). DATS will pull that percentage of documents from each group.
+  - _Best Use Case:_ If your original dataset is heavily skewed (e.g., 90% of your articles are from Domain: News and 10% are from Domain: Blog), a relative sample will maintain that exact skewed distribution in the final subset. This is crucial when you want your sample to accurately reflect the real-world occurrence rates of your data.
 
 Once you have defined your aggregation and strategy, the system automatically calculates the results.
 
@@ -53,7 +53,7 @@ Below the chart is a table listing the specific, individual documents that DATS 
 Once you are satisfied with the charts and the table, you need to save the sample back to your project. DATS does this by applying a specific tag to the selected documents.
 
 1. Look at the bottom of the right-hand panel.
-2. Select an existing tag from the dropdown menu (e.g., a tag you created called Sample\_Set\_A or Training\_Data).
+2. Select an existing tag from the dropdown menu (e.g., a tag you created called Sample_Set_A or Training_Data).
 3. Click the **Apply tag to documents** button.
 
 The selected documents are now officially tagged. You can return to the main **Search View**, filter by your new sample tag, and begin your focused manual annotation!

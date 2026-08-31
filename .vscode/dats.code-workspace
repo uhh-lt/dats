@@ -82,7 +82,7 @@
       "dbaeumer.vscode-eslint",
       "esbenp.prettier-vscode",
       // just
-      "nefrob.vscode-just-syntax"
+      "nefrob.vscode-just-syntax",
     ],
   },
 }
