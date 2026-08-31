@@ -10,7 +10,7 @@ The gateway to all of these tools is the **Analysis Dashboard**.
 2. Click the **Analysis** icon (the chart symbol 📊).
 3. This will open the Analysis Dashboard in your central workspace.
 
-*The Analysis Dashboard provides quick access to all quantitative and qualitative evaluation tools.*
+_The Analysis Dashboard provides quick access to all quantitative and qualitative evaluation tools._
 
 ## Overview of Analytical Tools
 
@@ -20,10 +20,10 @@ Clicking on any of these boxes will open that specific tool in a **new tab** in 
 
 The following tools can be accessed from this dashboard:
 
-* 📊 **[Code Frequency Analysis](./code-frequency-analysis.md):** Visualize how often specific codes from your Codebook have been applied across your corpus, filterable by modality and user.
-* 📈 **[Timeline Analysis](./timeline-analysis.md):** Track the evolution of custom concepts over time to uncover discursive shifts, narrative peaks, and historical trends.
-* ☁️ **[Word Frequency Analysis](./word-frequency-analysis.md):** Generate statistical word counts and customizable word clouds to quickly identify dominant vocabulary.
-* 🗄️ **[Annotation Tables](./annotation-tables.md):** Access highly filterable, comprehensive lists of every Span, Sentence, and Bounding Box annotation in your project for bulk review and editing.
-* 🧠 **[Concept-over-Time Analysis (COTA)](./concept-over-time-analysis.md):** An advanced, AI-assisted extension of the Timeline tool that iteratively refines complex thematic concepts.
+- 📊 **[Code Frequency Analysis](./code-frequency-analysis.md):** Visualize how often specific codes from your Codebook have been applied across your corpus, filterable by modality and user.
+- 📈 **[Timeline Analysis](./timeline-analysis.md):** Track the evolution of custom concepts over time to uncover discursive shifts, narrative peaks, and historical trends.
+- ☁️ **[Word Frequency Analysis](./word-frequency-analysis.md):** Generate statistical word counts and customizable word clouds to quickly identify dominant vocabulary.
+- 🗄️ **[Annotation Tables](./annotation-tables.md):** Access highly filterable, comprehensive lists of every Span, Sentence, and Bounding Box annotation in your project for bulk review and editing.
+- 🧠 **[Concept-over-Time Analysis (COTA)](./concept-over-time-analysis.md):** An advanced, AI-assisted extension of the Timeline tool that iteratively refines complex thematic concepts.
 
-*(Each of these tools is covered in detail in the following sections).*
+_(Each of these tools is covered in detail in the following sections)._

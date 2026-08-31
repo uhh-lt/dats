@@ -13,15 +13,15 @@ You can find this utility tucked away in the Tools menu, as it is generally used
 3. Select **Duplicate Finder**.
 
 ![Duplicate Finder View](../../assets/duplicate-finder.png)
-*Use the Duplicate Finder to keep your corpus clean and prevent skewed analysis results.*
+_Use the Duplicate Finder to keep your corpus clean and prevent skewed analysis results._
 
 ## 2\. Configuring the Search
 
 At the top of the Duplicate Finder view, you have a configuration toolbar with two simple parameters to define exactly what counts as a "duplicate" in your project:
 
-* **Filter by Tag:** By default, the tool will check your entire corpus. However, if you only want to look for duplicates within a specific subset of data (e.g., checking only the documents you uploaded today), you can specify a Tag here. The tool will then ignore any documents that do not have that tag.
-* **Max Different Words:** This is the core logic of the finder. Because web pages often have slightly different headers, footers, or ad text depending on when they were scraped, exact 1-to-1 matching is often too strict.
-  * The default setting is **10**. This means if two documents share the same text but differ by 10 words or fewer, DATS will flag them as duplicates. You can increase or decrease this threshold based on how strict you want the matching to be.
+- **Filter by Tag:** By default, the tool will check your entire corpus. However, if you only want to look for duplicates within a specific subset of data (e.g., checking only the documents you uploaded today), you can specify a Tag here. The tool will then ignore any documents that do not have that tag.
+- **Max Different Words:** This is the core logic of the finder. Because web pages often have slightly different headers, footers, or ad text depending on when they were scraped, exact 1-to-1 matching is often too strict.
+  - The default setting is **10**. This means if two documents share the same text but differ by 10 words or fewer, DATS will flag them as duplicates. You can increase or decrease this threshold based on how strict you want the matching to be.
 
 Once configured, click the **Start** button. Depending on the size of your corpus, the tool will take a few moments to compare the texts.
 

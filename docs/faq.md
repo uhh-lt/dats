@@ -2,7 +2,7 @@
 
 Welcome to the DATS FAQ. Here you will find answers to the most common questions regarding data privacy, supported formats, technical requirements, and troubleshooting.
 
-*(Note: This section is continuously updated. If you cannot find the answer to your question here, please see the "Getting Help" section at the bottom of this page).*
+_(Note: This section is continuously updated. If you cannot find the answer to your question here, please see the "Getting Help" section at the bottom of this page)._
 
 ## General & Data Privacy
 
@@ -26,11 +26,11 @@ If you are an IT administrator wishing to self-host the platform for your instit
 
 DATS supports a wide variety of multimodal formats:
 
-* **Text/Documents:** .pdf, .docx, .txt, .html
-* **Images:** .png, .jpg, .jpeg
-* **Audio:** .mp3, .wav
-* **Video:** .mp4, .mov
-* **Archives:** .zip (containing any of the supported formats above)
+- **Text/Documents:** .pdf, .docx, .txt, .html
+- **Images:** .png, .jpg, .jpeg
+- **Audio:** .mp3, .wav
+- **Video:** .mp4, .mov
+- **Archives:** .zip (containing any of the supported formats above)
 
 ### What languages are supported by the automatic NLP pipeline?
 
@@ -50,9 +50,9 @@ Occasionally, a PDF might be corrupted or a web scraper might be blocked. You do
 
 DATS is an actively developed, open-source project, and we highly value user feedback!
 
-* **To report a bug or request a feature:** Please open an issue on our [official GitHub Repository](https://github.com/uhh-lt/dats/issues).
-* **For general feedback:** You can contact the lead developers directly [here](https://www.inf.uni-hamburg.de/en/inst/ab/lt/people/tim-fischer.html).
+- **To report a bug or request a feature:** Please open an issue on our [official GitHub Repository](https://github.com/uhh-lt/dats/issues).
+- **For general feedback:** You can contact the lead developers directly [here](https://www.inf.uni-hamburg.de/en/inst/ab/lt/people/tim-fischer.html).
 
 ## \[Placeholder: Future Questions\]
 
-*(This space is reserved for future questions regarding specific methodological workflows, advanced error codes, or user management. To be expanded as new materials and user feedback are gathered!)*
+_(This space is reserved for future questions regarding specific methodological workflows, advanced error codes, or user management. To be expanded as new materials and user feedback are gathered!)_

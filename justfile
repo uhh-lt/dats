@@ -28,9 +28,9 @@ default:
 
 # First-time setup: install backend & frontend deps, generate .env files, create data folders.
 # Both arguments are required and must be chosen individually per developer:
-#   just bootstrap <project_name> <port_prefix>           e.g.  just bootstrap dats 132
+# - just bootstrap <project_name> <port_prefix>           e.g.  just bootstrap dats 132
 # On the HCDS ltdwise server, append "ltdwise" to also point at the hosted services:
-# just bootstrap <project_name> <port_prefix> ltdwise
+# - just bootstrap <project_name> <port_prefix> ltdwise
 bootstrap project_name port_prefix hosted="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -86,9 +86,9 @@ dev target:
 # --- 4. Tests ---------------------------------------------------------------
 
 # Run a test suite: backend. Extra args are forwarded to pytest:
-#   just test backend                          # all tests
-#   just test backend test/endpoints/search  # one folder
-#   just test backend -k memo_info           # by test name
+# - just test backend                          # all tests
+# - just test backend test/endpoints/search  # one folder
+# - just test backend -k memo_info           # by test name
 test target *args:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -100,8 +100,8 @@ test target *args:
 # --- 5. Code quality: lint, format, typecheck ---------------------------------
 
 # Lint a component, optionally restricted to specific files:
-#   just lint backend                          # whole component
-# just lint backend backend/src/foo.py ...   # specific files (pre-commit)
+# - just lint backend                          # whole component
+# - just lint backend backend/src/foo.py ...   # specific files (pre-commit)
 lint target *files:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -127,10 +127,10 @@ lint target *files:
     esac
 
 # Format a component, optionally restricted to specific files:
-#   just format backend                          # ruff over backend/src + test
-#   just format frontend                         # prettier over frontend/
-#   just format repo                             # prettier over the whole repo
-# just format backend backend/src/foo.py ...   # specific files (pre-commit)
+# - just format backend                          # ruff over backend/src + test
+# - just format frontend                         # prettier over frontend/
+# - just format repo                             # prettier over the whole repo
+# - just format backend backend/src/foo.py ...   # specific files (pre-commit)
 format target *files:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -152,7 +152,7 @@ format target *files:
         else npx prettier --write --ignore-unknown --config ../.prettierrc.yaml --ignore-path ../.prettierignore "${rel[@]}"; fi ;;
       repo)
         if [ {{ quote(files) }} = "" ]; then
-          npx --prefix frontend prettier --write --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore .
+          git ls-files -z | xargs -0 npx --prefix frontend prettier --write --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore
         else
           npx --prefix frontend prettier --write --ignore-unknown --config .prettierrc.yaml --ignore-path .prettierignore {{ files }}
         fi ;;
@@ -170,7 +170,7 @@ typecheck target *args:
     case "{{ target }}" in
       backend)  cd backend && uv run pyright --project . {{ args }} ;;
       frontend) cd frontend && npx tsc --noEmit {{ args }} ;;
-      ray)      cd ray && uv run pyright --project . {{ args }} ;;
+      ray)      cd ray && uv run --no-default-groups --group dev pyright --project . {{ args }} ;;
       *) echo "unknown typecheck target '{{ target }}' (expected: backend|frontend|ray)" >&2; exit 1 ;;
     esac
 

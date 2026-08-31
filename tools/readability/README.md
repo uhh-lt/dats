@@ -1,19 +1,23 @@
 # Readability Python WrapperWrapper for Python
+
 This tool is a simple python wrapper for the Javascript / Node tool Readability.
 
 The wrapper works by automatically starting a simple express server serving the Readability API. Then, the API can be
 called with a normal python function.
 
 ## Requirements
+
 - Python
 - Node
 
 ## Installation
+
 ```
 npm install
 ```
 
 ## Usage
+
 ```
 from readability.readability import Readability
 

@@ -19,11 +19,11 @@ You can switch between these tables depending on what aspect of your coding you 
 When you open an Annotation Table, you are presented with a comprehensive list of every annotation created in the project (including those made by the SYSTEM USER).
 
 ![Span Annotation Table](../../assets/span-annotation-table.png)
-*The Annotation Table provides a bird's-eye view of all manual and automated coding.*
+_The Annotation Table provides a bird's-eye view of all manual and automated coding._
 
-* **Customizing Columns:** Use the "Show/hide columns" button at the top right to select which metadata you want to see.
-* **Sorting and Searching:** Click on any column header to sort the table. You can use the global search bar, or use the **Filter** menu to create complex queries (e.g., "Show me all annotations made by *User A* using the code *Economic Crisis*").
-* **Filtering by Memos:** A highly useful feature for qualitative researchers is the "Memo Content" column. You can use this to filter the table to show *only* annotations where you or your team have written a specific interpretive memo!
+- **Customizing Columns:** Use the "Show/hide columns" button at the top right to select which metadata you want to see.
+- **Sorting and Searching:** Click on any column header to sort the table. You can use the global search bar, or use the **Filter** menu to create complex queries (e.g., "Show me all annotations made by _User A_ using the code _Economic Crisis_").
+- **Filtering by Memos:** A highly useful feature for qualitative researchers is the "Memo Content" column. You can use this to filter the table to show _only_ annotations where you or your team have written a specific interpretive memo!
 
 !!! tip "Cluttered Screen?"
 
@@ -39,12 +39,12 @@ If you realize you have been using a code incorrectly, or if you decide to merge
 2. **Select Multiple Rows:** Use the checkboxes on the left side of the table to select individual annotations, or use the master checkbox in the header to select all visible rows.
 3. **Bulk Edit:** Once annotations are selected, a **Pencil (Edit) icon** will appear at the top of the table (next to the filter button). Click it to instantly re-assign a new code to all selected annotations simultaneously!
 
-*Select multiple annotations to quickly re-assign them to a new code.*
+_Select multiple annotations to quickly re-assign them to a new code._
 
 ## 4\. Jumping to Context
 
 Reviewing a snippet of text in a spreadsheet is often not enough to understand its true meaning.
 
-If you see an annotation in the table and need to read the surrounding paragraphs to understand *why* it was coded that way, simply click on the **Document Name** in that row.
+If you see an annotation in the table and need to read the surrounding paragraphs to understand _why_ it was coded that way, simply click on the **Document Name** in that row.
 
 DATS will immediately open that document in a new tab, automatically scroll down to the exact location of the annotation, and highlight it for you.

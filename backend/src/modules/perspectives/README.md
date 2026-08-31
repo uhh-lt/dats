@@ -33,7 +33,6 @@ The data model is split between **PostgreSQL** (metadata, relational structure) 
 ### PostgreSQL Entities (ORMs)
 
 1.  **`AspectORM`** (`aspect` table)
-
     - **Purpose**: Represents a specific "perspective" or analysis run. Contains configuration (prompts, models, pipeline settings).
     - **Key Fields**:
       - `doc_modification_prompt`: Instructions for the LLM to rewrite docs (optional).
@@ -47,7 +46,6 @@ The data model is split between **PostgreSQL** (metadata, relational structure) 
       - **Has many** `SourceDocuments` (Many-to-Many through `DocumentAspect`).
 
 2.  **`DocumentAspectORM`** (`documentaspect` table)
-
     - **Purpose**: Represents a single document _within_ a specific Aspect. Since an Aspect can modify the document content (e.g. "Extract only sentiment"), we store this modified content separately from the original `SourceDocument`.
     - **Key Fields**:
       - `sdoc_id`, `aspect_id`: Composite Primary Key.
@@ -57,7 +55,6 @@ The data model is split between **PostgreSQL** (metadata, relational structure) 
       - **Links** `SourceDocument` and `Aspect`.
 
 3.  **`ClusterORM`** (`cluster` table)
-
     - **Purpose**: Represents a group of documents found by HDBSCAN.
     - **Key Fields**:
       - `name`, `description`: Generated topic label.
