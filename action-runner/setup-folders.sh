@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 # setup-folders.sh — create host directories required by the runner fleet.
 #
-# Each runner's work directory (_work) is bind-mounted from the host so that
-# Docker-out-of-Docker bind mounts (docker compose up inside CI) resolve to
-# paths that exist on the host daemon.
+# 1. Each runner's work directory (_work) is bind-mounted from the host so that
+#    Docker-out-of-Docker bind mounts (docker compose up inside CI) resolve to
+#    paths that exist on the host daemon.
+# 2. A shared Ray model cache, mounted into all runners at /ray_cache and
+#    reused by sibling Ray containers spawned by CI jobs.
 #
 # Usage:
-#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR from .env
-#   RUNNER_WORK_BASE_DIR=/data/foo ./setup-folders.sh
+#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_PATH from .env
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Load .env if present (for RUNNER_WORK_BASE_DIR)
+# Load .env if present (for RUNNER_WORK_BASE_DIR and RAY_CACHE_HOST_PATH)
 if [[ -f .env ]]; then
 	# shellcheck disable=SC1091
 	set -a && source .env && set +a
 fi
 
 BASE_DIR="${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is not set. Copy .env.example to .env and configure it.}"
+RAY_CACHE="${RAY_CACHE_HOST_PATH:?RAY_CACHE_HOST_PATH is not set. Copy .env.example to .env and configure it.}"
 
 # The runner container executes jobs as uid 1000 (user "runner", see Dockerfile).
 # Host directories must be owned by that uid so the runner can write to them.
@@ -43,5 +45,15 @@ done
 echo "Setting ownership to ${RUNNER_UID}:${RUNNER_GID} (container 'runner' user)..."
 chown -R "${RUNNER_UID}:${RUNNER_GID}" "${BASE_DIR}"
 
+echo "Creating shared Ray cache: ${RAY_CACHE}"
+if [[ -d "${RAY_CACHE}" ]]; then
+	echo "  exists:  ${RAY_CACHE}"
+else
+	mkdir -p "${RAY_CACHE}"
+	echo "  created: ${RAY_CACHE}"
+fi
+chown -R "${RUNNER_UID}:${RUNNER_GID}" "${RAY_CACHE}"
+
 echo "Done. Directory layout:"
 ls -la "${BASE_DIR}"
+ls -la "${RAY_CACHE}"
