@@ -46,7 +46,7 @@ no-build-isolation-package = ['flash-attn']
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.20",
+    "ruff==0.15.20",
     "pyright>=1.1.411",
 ]
 
