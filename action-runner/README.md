@@ -42,7 +42,7 @@ Two kinds of host directories are needed:
   `_work` is bind-mounted from the host so that Docker-out-of-Docker bind
   mounts (e.g. `docker compose up` inside CI jobs) resolve to paths that exist
   on the host daemon.
-- **Shared Ray cache** (`RAY_CACHE_HOST_PATH`) — mounted into all runners at
+- **Shared Ray cache** (`RAY_CACHE_HOST_DIR`) — mounted into all runners at
   `/ray_cache` and reused by sibling Ray containers spawned by CI jobs, so
   model downloads persist across jobs and runners.
 
@@ -52,7 +52,7 @@ Create both with:
 ./setup-folders.sh
 ```
 
-The script reads `RUNNER_WORK_BASE_DIR` and `RAY_CACHE_HOST_PATH` from `.env`,
+The script reads `RUNNER_WORK_BASE_DIR` and `RAY_CACHE_HOST_DIR` from `.env`,
 creates the directories, and sets ownership to uid/gid 1000 (the container's
 `runner` user). It may need `sudo` if the base directory is outside your home:
 
@@ -101,7 +101,7 @@ The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). Th
 | `GITHUB_OWNER`         | GitHub username or organization name                 | —             | Yes      |
 | `GITHUB_REPO`          | Repository name                                      | —             | Yes      |
 | `GITHUB_PAT`           | Personal Access Token with `repo` scope              | —             | Yes      |
-| `RAY_CACHE_HOST_PATH`  | Shared Ray model cache on the host                   | —             | Yes      |
+| `RAY_CACHE_HOST_DIR`   | Shared Ray model cache on the host                   | —             | Yes      |
 | `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
 | `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers                  | `0`           | No       |
 | `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
@@ -124,7 +124,7 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 ### Shared Resources
 
 - **Runner work dirs** (`$RUNNER_WORK_BASE_DIR/runner-XX`) — host-mounted `_work` directories; each runner's CI checkouts and compose bind mounts live here
-- **Ray cache** (`$RAY_CACHE_HOST_PATH`) — mounted into all runners at `/ray_cache`; shared model downloads persist across jobs and runners
+- **Ray cache** (`$RAY_CACHE_HOST_DIR`) — mounted into all runners at `/ray_cache`; shared model downloads persist across jobs and runners
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`; only one Ray job should run at a time per machine
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared infrastructure
 

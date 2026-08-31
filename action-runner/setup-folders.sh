@@ -8,20 +8,20 @@
 #    reused by sibling Ray containers spawned by CI jobs.
 #
 # Usage:
-#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_PATH from .env
+#   ./setup-folders.sh                 # uses RUNNER_WORK_BASE_DIR / RAY_CACHE_HOST_DIR from .env
 
 set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Load .env if present (for RUNNER_WORK_BASE_DIR and RAY_CACHE_HOST_PATH)
+# Load .env if present (for RUNNER_WORK_BASE_DIR and RAY_CACHE_HOST_DIR)
 if [[ -f .env ]]; then
 	# shellcheck disable=SC1091
 	set -a && source .env && set +a
 fi
 
 BASE_DIR="${RUNNER_WORK_BASE_DIR:?RUNNER_WORK_BASE_DIR is not set. Copy .env.example to .env and configure it.}"
-RAY_CACHE="${RAY_CACHE_HOST_PATH:?RAY_CACHE_HOST_PATH is not set. Copy .env.example to .env and configure it.}"
+RAY_CACHE="${RAY_CACHE_HOST_DIR:?RAY_CACHE_HOST_DIR is not set. Copy .env.example to .env and configure it.}"
 
 # The runner container executes jobs as uid 1000 (user "runner", see Dockerfile).
 # Host directories must be owned by that uid so the runner can write to them.
@@ -55,5 +55,7 @@ fi
 chown -R "${RUNNER_UID}:${RUNNER_GID}" "${RAY_CACHE}"
 
 echo "Done. Directory layout:"
+echo "Worker directories:"
 ls -la "${BASE_DIR}"
+echo "Ray cache:"
 ls -la "${RAY_CACHE}"

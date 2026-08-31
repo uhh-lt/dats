@@ -155,8 +155,8 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - ./configs/es/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ../backups/elasticsearch:/mount/backups
+      - ${DATS_DOCKER_DIR:-.}/configs/es/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${DATS_DOCKER_DIR:-.}/../backups/elasticsearch:/mount/backups
     networks:
       - dats_network
 
@@ -176,8 +176,8 @@ services:
       POSTGRES_MAX_OVERFLOW: 1
     command: python src/worker.py work cpu
     volumes:
-      - ./backend_repo:/dats/docker/backend_repo
-      - ./rq_cpu_cache:/cache
+      - ${DATS_DOCKER_DIR:-.}/backend_repo:/dats/docker/backend_repo
+      - ${DATS_DOCKER_DIR:-.}/rq_cpu_cache:/cache
     profiles:
       - rq
 
@@ -196,8 +196,8 @@ services:
       POSTGRES_MAX_OVERFLOW: 1
     command: python src/worker.py work gpu
     volumes:
-      - ./backend_repo:/dats/docker/backend_repo
-      - ./rq_gpu_cache:/cache
+      - ${DATS_DOCKER_DIR:-.}/backend_repo:/dats/docker/backend_repo
+      - ${DATS_DOCKER_DIR:-.}/rq_gpu_cache:/cache
     deploy:
       resources:
         reservations:
@@ -243,8 +243,8 @@ services:
       API_WORKERS: ${API_WORKERS?api-workers-required!}
     command: src/backend_api_entrypoint.sh
     volumes:
-      - ./backend_repo:/dats/docker/backend_repo
-      - ./api_cache:/cache
+      - ${DATS_DOCKER_DIR:-.}/backend_repo:/dats/docker/backend_repo
+      - ${DATS_DOCKER_DIR:-.}/api_cache:/cache
     depends_on:
       <<: *dats-common-depends-on
       rq-cpu-worker:
@@ -270,9 +270,9 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - ./configs/frontend/logo2.png:/usr/share/nginx/html/logo2.png
-      - ./configs/frontend/nginx.conf:/etc/nginx/nginx.conf
-      - ./backend_repo:/usr/share/nginx/content:ro
+      - ${DATS_DOCKER_DIR:-.}/configs/frontend/logo2.png:/usr/share/nginx/html/logo2.png
+      - ${DATS_DOCKER_DIR:-.}/configs/frontend/nginx.conf:/etc/nginx/nginx.conf
+      - ${DATS_DOCKER_DIR:-.}/backend_repo:/usr/share/nginx/content:ro
     depends_on:
       dats-backend-api:
         condition: service_healthy
