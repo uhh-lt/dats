@@ -4,10 +4,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies and Docker CLI
 RUN apt-get update && apt-get install -y \
-    curl jq build-essential python3 python3-pip nodejs docker.io wget \
+    curl jq build-essential python3 python3-pip docker.io wget \
     git pwgen ca-certificates gnupg lsb-release gosu unzip \
     # Backend build deps
     libpq-dev libmagic1 ffmpeg
+
+# Install Node.js 24 (includes npm) from NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y nodejs
 
 # Install GitHub CLI (gh)
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
