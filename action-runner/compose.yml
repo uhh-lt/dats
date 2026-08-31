@@ -1,32 +1,41 @@
+x-runner-common: &runner-base
+  build: .
+  network_mode: "host"
+  environment:
+    - GITHUB_OWNER=${GITHUB_OWNER:?GITHUB_OWNER is missing - copy .env.example to .env and set it}
+    - GITHUB_REPO=${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
+    - GITHUB_PAT=${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    # Share Ray cache across all runners: mount host cache to the path CI expects
+    - ${HOME}/ray_cache:/actions-runner/_work/dats/dats/docker/ray_cache
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  healthcheck:
+    test: ["CMD", "pgrep", "-f", "Runner.Listener"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 40s
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            device_ids: ["${RUNNER_GPU_DEVICE_ID:-0}"]
+            capabilities: [gpu]
+
 services:
-  runner:
-    build: .
-    network_mode: "host"
-    # Note: For 10+ runners, this produces 010, 011 which breaks the CI contract
-    hostname: "${RUNNER_NAME_PREFIX:-dats}-runner-0{{.Task.Slot}}"
-    environment:
-      - GITHUB_OWNER=${GITHUB_OWNER:?GITHUB_OWNER is missing - copy .env.example to .env and set it}
-      - GITHUB_REPO=${GITHUB_REPO:?GITHUB_REPO is missing - copy .env.example to .env and set it}
-      - GITHUB_PAT=${GITHUB_PAT:?GITHUB_PAT is missing - copy .env.example to .env and set it}
-      - RUNNER_NAME_PREFIX=${RUNNER_NAME_PREFIX:-dats}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Share Ray cache across all runners: mount host cache to the path CI expects
-      - ${HOME}/ray_cache:/actions-runner/_work/dats/dats/docker/ray_cache
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD", "pgrep", "-f", "Runner.Listener"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      replicas: ${RUNNER_REPLICAS:-4}
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ["${RUNNER_GPU_DEVICE_ID:-0}"]
-              capabilities: [gpu]
+  runner-01:
+    <<: *runner-base
+    hostname: dats-runner-01
+  runner-02:
+    <<: *runner-base
+    hostname: dats-runner-02
+  runner-03:
+    <<: *runner-base
+    hostname: dats-runner-03
+  runner-04:
+    <<: *runner-base
+    hostname: dats-runner-04

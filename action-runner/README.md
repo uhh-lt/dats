@@ -12,7 +12,6 @@ This directory contains the infrastructure to run an automated, scalable fleet o
 ## Prerequisites
 
 - Docker and Docker Compose installed on the host machine.
-- **Docker Compose v2.24.0+** (required for `{{.Task.Slot}}` hostname templating).
 - A GitHub Personal Access Token (PAT) with `repo` scope (for repository-level runners) or `admin:org` scope (for organization-level runners).
 
 ## Initial Setup
@@ -48,13 +47,24 @@ This directory is mounted into all runner containers and shared with sibling Ray
 
 ## Managing the Fleet
 
-| Command                                 | Description                                            |
-| --------------------------------------- | ------------------------------------------------------ |
-| `docker compose up -d --build`          | Build the image and start all runners in detached mode |
-| `docker compose up -d --scale runner=6` | Scale to 6 concurrent runners                          |
-| `docker compose logs -f`                | Stream logs from all runners                           |
-| `docker compose down`                   | Stop all runners and auto-deregister from GitHub       |
-| `docker compose ps`                     | Show runner status and health                          |
+| Command                        | Description                                            |
+| ------------------------------ | ------------------------------------------------------ |
+| `docker compose up -d --build` | Build the image and start all runners in detached mode |
+| `docker compose logs -f`       | Stream logs from all runners                           |
+| `docker compose down`          | Stop all runners and auto-deregister from GitHub       |
+| `docker compose ps`            | Show runner status and health                          |
+
+### Adding more runners
+
+Each runner is an explicit service in `compose.yml`. To add a fifth runner, copy one of the existing service blocks and increment the suffix:
+
+```yaml
+  runner-05:
+    <<: *runner-base
+    hostname: dats-runner-05
+```
+
+Then run `docker compose up -d` to start it.
 
 ## Viewing Runners in GitHub
 
@@ -62,24 +72,22 @@ After starting the fleet, verify your runners are registered and online:
 
 1. Navigate to your repository on GitHub
 2. Go to **Settings > Actions > Runners**
-3. You should see 4 runners (or your scaled count) with status **Idle** or **Active**
+3. You should see one runner per service defined in `compose.yml` with status **Idle** or **Active**
 
-Each runner is named sequentially with zero-padded two-digit suffixes: `dats-runner-01`, `dats-runner-02`, etc. (configurable via `RUNNER_NAME_PREFIX`).
+Each runner is named after its container hostname: `dats-runner-01`, `dats-runner-02`, etc.
 
 !!! warning "CI Compatibility"
 The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). The CI's `prepare-env` step extracts these digits to compute port prefixes (`501`, `502`) and Compose project names. This ensures multiple runners can execute jobs concurrently without port or container conflicts.
 
 ## Configuration Reference
 
-| Environment Variable   | Description                                      | Default       | Required |
-| ---------------------- | ------------------------------------------------ | ------------- | -------- |
-| `GITHUB_OWNER`         | GitHub username or organization name             | —             | Yes      |
-| `GITHUB_REPO`          | Repository name                                  | —             | Yes      |
-| `GITHUB_PAT`           | Personal Access Token with `repo` scope          | —             | Yes      |
-| `RUNNER_REPLICAS`      | Number of runner containers to spawn             | `4`           | No       |
-| `RUNNER_NAME_PREFIX`   | Prefix for runner names (e.g., `dats-runner-01`) | `dats`        | No       |
-| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers              | `0`           | No       |
-| `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping         | `dats-action` | No       |
+| Environment Variable   | Description                              | Default       | Required |
+| ---------------------- | ---------------------------------------- | ------------- | -------- |
+| `GITHUB_OWNER`         | GitHub username or organization name     | —             | Yes      |
+| `GITHUB_REPO`          | Repository name                          | —             | Yes      |
+| `GITHUB_PAT`           | Personal Access Token with `repo` scope  | —             | Yes      |
+| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers      | `0`           | No       |
+| `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping | `dats-action` | No       |
 
 ## CI Compatibility
 

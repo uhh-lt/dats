@@ -39,14 +39,13 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 Docker image tags are already unique per _run_ (suffixed with the GitHub `run_id`), so concurrent builds never overwrite each other's images.
 
 !!! warning
-Runner names **must end in exactly two digits**. The fleet's Compose template appends `0{{.Task.Slot}}` to the name prefix, which yields `dats-runner-01` … `dats-runner-09` for up to 9 replicas. Scaling beyond 9 replicas produces three-digit suffixes (`010`, `011`), which breaks the CI contract — the `prepare-env` step fails with a clear error if it can't extract exactly two digits.
+Runner names **must end in exactly two digits**. Each runner is an explicit service in `compose.yml` with a hardcoded hostname (`dats-runner-01`, `dats-runner-02`, …). To add more runners, copy a service block and increment the suffix. The `prepare-env` step fails with a clear error if it can't extract exactly two digits from the runner name.
 
 ## Setting up the runner fleet
 
 ### Prerequisites
 
 - Docker and Docker Compose installed on the host machine.
-- **Docker Compose v2.24.0+** (required for the `{{.Task.Slot}}` hostname templating).
 - A GitHub **Personal Access Token (PAT)** with `repo` scope (for repository-level runners) or `admin:org` scope (for organization-level runners). The PAT is used to request fresh registration tokens on the fly, avoiding the 60-minute expiration limit of standard UI tokens.
 
 ### 1. Configure the fleet
@@ -63,7 +62,7 @@ GITHUB_REPO=dats
 GITHUB_PAT=ghp_YourSuperSecretTokenHere
 ```
 
-See the configuration reference in [action-runner/README.md](https://github.com/uhh-lt/dats/blob/main/action-runner/README.md) for optional settings like `RUNNER_REPLICAS`, `RUNNER_NAME_PREFIX`, and `RUNNER_GPU_DEVICE_ID`.
+See the configuration reference in [action-runner/README.md](https://github.com/uhh-lt/dats/blob/main/action-runner/README.md) for optional settings like `RUNNER_GPU_DEVICE_ID`.
 
 ### 2. Prepare the Ray cache directory
 
@@ -82,20 +81,22 @@ This directory is mounted into all runner containers and shared with sibling Ray
 docker compose up -d --build
 ```
 
-This builds the runner image (which bundles Docker CLI + Compose plugin, `just`, `uv`, Node.js, `pwgen`, and `git` — everything the workflows need) and starts the configured number of replicas. Each container registers itself with GitHub under its hostname-derived name.
+This builds the runner image (which bundles Docker CLI + Compose plugin, `just`, `uv`, Node.js, `pwgen`, and `git` — everything the workflows need) and starts one container per service defined in `compose.yml`. Each container registers itself with GitHub under its hostname.
 
 Useful commands:
 
-| Command                                 | Description                                      |
-| --------------------------------------- | ------------------------------------------------ |
-| `docker compose up -d --scale runner=6` | Scale to 6 concurrent runners                    |
-| `docker compose logs -f`                | Stream logs from all runners                     |
-| `docker compose down`                   | Stop all runners and auto-deregister from GitHub |
-| `docker compose ps`                     | Show runner status and health                    |
+| Command                  | Description                                      |
+| ------------------------ | ------------------------------------------------ |
+| `docker compose up -d`   | Start all runners                                |
+| `docker compose logs -f` | Stream logs from all runners                     |
+| `docker compose down`    | Stop all runners and auto-deregister from GitHub |
+| `docker compose ps`      | Show runner status and health                    |
+
+To add more runners, copy one of the service blocks in `compose.yml`, increment the hostname suffix (e.g. `dats-runner-05`), and run `docker compose up -d`.
 
 ### 4. Verify in GitHub
 
-Navigate to **Settings → Actions → Runners** in the repository. You should see one runner per replica (`dats-runner-01`, `dats-runner-02`, …) with status **Idle** or **Active**.
+Navigate to **Settings → Actions → Runners** in the repository. You should see one runner per service defined in `compose.yml` (`dats-runner-01`, `dats-runner-02`, …) with status **Idle** or **Active**.
 
 ## Architecture notes
 
@@ -115,7 +116,7 @@ A few resources are deliberately shared across all runners on the machine:
 ## Troubleshooting
 
 **Job fails with "must end in two digits"**
-The runner name doesn't match the convention. This happens if you scale beyond 9 replicas (hostnames become `dats-runner-010`) or override `RUNNER_NAME_PREFIX`/hostnames so they no longer end in two digits.
+The runner name doesn't match the convention. Check that each service in `compose.yml` has a `hostname` ending in exactly two digits (e.g. `dats-runner-05`).
 
 **"Port is already allocated"**
 Two runners are using the same port prefix. Ensure each runner has a unique two-digit suffix (check `docker compose ps` and the runner names in GitHub).
