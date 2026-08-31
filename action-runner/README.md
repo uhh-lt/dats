@@ -36,7 +36,7 @@ GITHUB_PAT=ghp_YourSuperSecretTokenHere
 
 ### 3. Prepare the host directories
 
-Two kinds of host directories are needed:
+Three kinds of host directories are needed:
 
 - **Runner work directories** (`RUNNER_WORK_BASE_DIR/runner-XX`) — each runner's
   `_work` is bind-mounted from the host so that Docker-out-of-Docker bind
@@ -45,16 +45,20 @@ Two kinds of host directories are needed:
 - **Shared Ray cache** (`RAY_CACHE_HOST_DIR`) — mounted into all runners at
   `/ray_cache` and reused by sibling Ray containers spawned by CI jobs, so
   model downloads persist across jobs and runners.
+- **Shared uv cache** (`UV_CACHE_HOST_DIR`) — mounted into all runners at
+  `/home/runner/.cache/uv`, so Python dependencies are downloaded/built once
+  and reused by all runners.
 
-Create both with:
+Create all three with:
 
 ```bash
 ./setup-folders.sh
 ```
 
-The script reads `RUNNER_WORK_BASE_DIR` and `RAY_CACHE_HOST_DIR` from `.env`,
-creates the directories, and sets ownership to uid/gid 1000 (the container's
-`runner` user). It may need `sudo` if the base directory is outside your home:
+The script reads `RUNNER_WORK_BASE_DIR`, `RAY_CACHE_HOST_DIR`, and
+`UV_CACHE_HOST_DIR` from `.env`, creates the directories, and sets ownership
+to uid/gid 1000 (the container's `runner` user). It may need `sudo` if the
+base directory is outside your home:
 
 ```bash
 sudo ./setup-folders.sh
@@ -102,6 +106,7 @@ The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). Th
 | `GITHUB_REPO`          | Repository name                                      | —             | Yes      |
 | `GITHUB_PAT`           | Personal Access Token with `repo` scope              | —             | Yes      |
 | `RAY_CACHE_HOST_DIR`   | Shared Ray model cache on the host                   | —             | Yes      |
+| `UV_CACHE_HOST_DIR`    | Shared uv (Python) cache on the host                 | —             | Yes      |
 | `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
 | `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers                  | `0`           | No       |
 | `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
@@ -125,6 +130,7 @@ The CI's `prepare-env` step extracts the two digits, builds the port prefix as `
 
 - **Runner work dirs** (`$RUNNER_WORK_BASE_DIR/runner-XX`) — host-mounted `_work` directories; each runner's CI checkouts and compose bind mounts live here
 - **Ray cache** (`$RAY_CACHE_HOST_DIR`) — mounted into all runners at `/ray_cache`; shared model downloads persist across jobs and runners
+- **uv cache** (`$UV_CACHE_HOST_DIR`) — mounted into all runners at `/home/runner/.cache/uv`; Python dependencies are downloaded/built once and shared
 - **GPU** — Ray jobs pin `RAY_DEVICE_IDS=1`; only one Ray job should run at a time per machine
 - **Hosted services** — LLM, embedding, and Docling endpoints point at shared infrastructure
 
