@@ -158,8 +158,24 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
     strategy_type = StrategyType.NER_INLINE_TAGS
     display_name = "Inline Tagging"
     description = (
-        "The LLM repeats the original text and wraps entities in inline tags "
-        "(e.g. <PER>Tim</PER>). Works on the whole document or sentence by sentence."
+        "The LLM repeats the original text and wraps entities in inline tags.\n"
+        "\n"
+        "**How it works:** The LLM receives the full document (or individual sentences) "
+        "and is asked to repeat the text verbatim, wrapping each recognized entity in "
+        "XML-like tags. The tag name is the code name.\n"
+        "\n"
+        "**Example:** Given the code `PER` (Person) and the input text:\n"
+        "\n"
+        "    Tim met Anna in Berlin.\n"
+        "\n"
+        "The LLM responds with:\n"
+        "\n"
+        "    <PER>Tim</PER> met <PER>Anna</PER> in Berlin.\n"
+        "\n"
+        "The backend then parses these tags to compute exact character offsets.\n"
+        "\n"
+        "**When to use:** Best for shorter documents where the LLM can reliably "
+        "reproduce the full text. Supports whole-document and sentence-by-sentence modes."
     )
     strategy_params_type = NERInlineTagStrategyParams
     allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]

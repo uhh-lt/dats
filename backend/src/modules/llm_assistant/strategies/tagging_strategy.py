@@ -76,8 +76,19 @@ class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.TAGGING_DEFAULT
     display_name = "Document Tagging"
     description = (
-        "Classifies each document into the selected tags. "
-        "The LLM sees the whole document and answers with the matching categories."
+        "Classifies each document into the selected tags.\n"
+        "\n"
+        "**How it works:** The LLM sees the full document content along with the "
+        "available tags (name + description). It selects which tags apply to the "
+        "document and provides a reasoning for each assignment.\n"
+        "\n"
+        "**Example:** Given the tags `News` and `Sports` and a document about "
+        "a football match, the LLM responds with:\n"
+        "\n"
+        "    Category: Sports\n"
+        "    Reasoning: The document discusses a football match result.\n"
+        "\n"
+        "**When to use:** For categorizing documents into a flat tag set."
     )
     strategy_params_type = DefaultStrategyParams
     allowed_data_tags = [DataTag.DOCUMENT.value]

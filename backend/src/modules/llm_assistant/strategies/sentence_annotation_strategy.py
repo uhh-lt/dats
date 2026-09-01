@@ -91,8 +91,24 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.SENTENCE_ANNOTATION_DEFAULT
     display_name = "Sentence Annotation"
     description = (
-        "Classifies sentences of each document with the selected codes. "
-        "The LLM sees the document sentence-by-sentence and assigns a category per sentence."
+        "Classifies each sentence of a document with the selected codes.\n"
+        "\n"
+        "**How it works:** The document is split into individual sentences. For each "
+        "sentence, the LLM assigns one of the available codes (or none). Each sentence "
+        "is classified independently.\n"
+        "\n"
+        "**Example:** Given the codes `Claim` and `Evidence` and the sentences:\n"
+        "\n"
+        "    1. Climate change is real.\n"
+        "    2. Global temperatures rose by 1.1\u00b0C since 1880.\n"
+        "\n"
+        "The LLM responds with:\n"
+        "\n"
+        "    Sentence 1: Claim\n"
+        "    Sentence 2: Evidence\n"
+        "\n"
+        "**When to use:** For sentence-level classification tasks like argument "
+        "mining, stance detection, or discourse analysis."
     )
     strategy_params_type = DefaultStrategyParams
     allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]
