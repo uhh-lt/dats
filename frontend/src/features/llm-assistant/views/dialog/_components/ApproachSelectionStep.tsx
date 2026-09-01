@@ -48,6 +48,7 @@ export const ApproachSelectionStep = memo(() => {
   const codes = useAppSelector((state) => state.llmAssistant.llmCodes);
   const tags = useAppSelector((state) => state.llmAssistant.llmTags);
   const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
+  const strategy = useAppSelector((state) => state.llmAssistant.llmStrategy);
   const dispatch = useAppDispatch();
 
   // local state
@@ -96,6 +97,7 @@ export const ApproachSelectionStep = memo(() => {
   const handleNext = useCallback(() => {
     if (!llmMethod) return;
     if (!modelId) return;
+    if (!strategy) return;
 
     const commonParams = {
       llm_job_type: llmMethod,
@@ -115,6 +117,7 @@ export const ApproachSelectionStep = memo(() => {
         createPromptTemplatesMutation(
           {
             approachType: approachType,
+            strategyType: strategy,
             requestBody: {
               llm_job_params: commonParams,
             },
@@ -141,6 +144,7 @@ export const ApproachSelectionStep = memo(() => {
     metadata,
     codeIds,
     sdocIds,
+    strategy,
     approachType,
     createPromptTemplatesMutation,
     dispatch,

@@ -4,6 +4,7 @@ import { RagService } from "@api/services/RagService";
 import { ApproachType } from "@models/ApproachType";
 import { JobStatus } from "@models/JobStatus";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
+import { StrategyInfo } from "@models/StrategyInfo";
 import { TaskType } from "@models/TaskType";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
@@ -110,6 +111,13 @@ const useGetAvailableLLMs = () =>
     queryFn: () => RagService.getAvailableModels(),
   });
 
+const useListStrategies = (taskType: TaskType | undefined) =>
+  useQuery<StrategyInfo[], Error>({
+    queryKey: [QueryKey.LLM_STRATEGIES, taskType],
+    queryFn: () => LlmService.listStrategies({ taskType: taskType! }),
+    enabled: !!taskType,
+  });
+
 export const LLMHooks = {
   usePollLLMJob,
   useStartLLMJob,
@@ -118,4 +126,5 @@ export const LLMHooks = {
   useCreatePromptTemplates,
   useCountExistingAssistantAnnotations,
   useGetAvailableLLMs,
+  useListStrategies,
 };

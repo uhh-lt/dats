@@ -2138,6 +2138,12 @@
             "in": "query",
             "required": true,
             "schema": { "$ref": "#/components/schemas/ApproachType" }
+          },
+          {
+            "name": "strategy_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/StrategyType" }
           }
         ],
         "requestBody": {
@@ -2155,6 +2161,40 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/LLMPromptTemplates" },
                   "title": "Response Llm-Create Prompt Templates"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/llm/list_strategies": {
+      "post": {
+        "tags": ["llm"],
+        "summary": "Returns the available strategies for the given llm task",
+        "operationId": "list_strategies",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/TaskType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/StrategyInfo" },
+                  "title": "Response Llm-List Strategies"
                 }
               }
             }
@@ -9476,6 +9516,19 @@
         "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
         "title": "DateOperator"
       },
+      "DefaultStrategyParams": {
+        "properties": {
+          "llm_strategy_type": {
+            "type": "string",
+            "enum": ["TAGGING_DEFAULT", "METADATA_DEFAULT", "SENTENCE_ANNOTATION_DEFAULT"],
+            "title": "Llm Strategy Type"
+          }
+        },
+        "type": "object",
+        "required": ["llm_strategy_type"],
+        "title": "DefaultStrategyParams",
+        "description": "Params for single-strategy tasks (tagging, metadata, sentence annotation)."
+      },
       "DimensionalityReductionAlgorithm": {
         "type": "string",
         "enum": ["umap", "pca", "tsne"],
@@ -10495,6 +10548,48 @@
         "type": "object",
         "title": "FolderUpdate"
       },
+      "FuzzyGroundingStrategyParams": {
+        "properties": {
+          "llm_strategy_type": {
+            "type": "string",
+            "const": "CONTEXT_ANCHORED_FUZZY_MATCHING",
+            "title": "Llm Strategy Type"
+          },
+          "fuzzy_threshold": {
+            "type": "number",
+            "title": "Fuzzy Threshold",
+            "description": "Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
+            "default": 0.85
+          },
+          "context_before_chars": {
+            "type": "integer",
+            "title": "Context Before Chars",
+            "description": "Number of context characters the LLM should provide before the quote",
+            "default": 64
+          },
+          "context_after_chars": {
+            "type": "integer",
+            "title": "Context After Chars",
+            "description": "Number of context characters the LLM should provide after the quote",
+            "default": 64
+          },
+          "chunk_size_tokens": {
+            "type": "integer",
+            "title": "Chunk Size Tokens",
+            "description": "Size of document chunks (in tokens) sent to the LLM",
+            "default": 650
+          },
+          "chunk_overlap_tokens": {
+            "type": "integer",
+            "title": "Chunk Overlap Tokens",
+            "description": "Overlap (in tokens) between consecutive chunks",
+            "default": 100
+          }
+        },
+        "type": "object",
+        "required": ["llm_strategy_type"],
+        "title": "FuzzyGroundingStrategyParams"
+      },
       "GroupConfig_BBoxColumns_": {
         "properties": {
           "field": { "$ref": "#/components/schemas/BBoxColumns", "description": "The column to group results by" },
@@ -10970,6 +11065,29 @@
                 "LLM_ZERO_SHOT": "#/components/schemas/ZeroShotParams"
               }
             }
+          },
+          "llm_strategy_type": {
+            "$ref": "#/components/schemas/StrategyType",
+            "description": "The strategy to use for the LLMJob"
+          },
+          "specific_strategy_parameters": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/DefaultStrategyParams" },
+              { "$ref": "#/components/schemas/NERInlineTagStrategyParams" },
+              { "$ref": "#/components/schemas/FuzzyGroundingStrategyParams" }
+            ],
+            "title": "Specific Strategy Parameters",
+            "description": "Specific parameters for the strategy w.r.t it's type",
+            "discriminator": {
+              "propertyName": "llm_strategy_type",
+              "mapping": {
+                "CONTEXT_ANCHORED_FUZZY_MATCHING": "#/components/schemas/FuzzyGroundingStrategyParams",
+                "METADATA_DEFAULT": "#/components/schemas/DefaultStrategyParams",
+                "NER_INLINE_TAGS": "#/components/schemas/NERInlineTagStrategyParams",
+                "SENTENCE_ANNOTATION_DEFAULT": "#/components/schemas/DefaultStrategyParams",
+                "TAGGING_DEFAULT": "#/components/schemas/DefaultStrategyParams"
+              }
+            }
           }
         },
         "type": "object",
@@ -10978,7 +11096,9 @@
           "llm_job_type",
           "specific_task_parameters",
           "llm_approach_type",
-          "specific_approach_parameters"
+          "specific_approach_parameters",
+          "llm_strategy_type",
+          "specific_strategy_parameters"
         ],
         "title": "LLMJobInput"
       },
@@ -11503,6 +11623,14 @@
         "type": "object",
         "required": ["job_id", "job_type", "project_id", "status", "current_step", "steps", "input", "created"],
         "title": "MlJobRead"
+      },
+      "NERInlineTagStrategyParams": {
+        "properties": {
+          "llm_strategy_type": { "type": "string", "const": "NER_INLINE_TAGS", "title": "Llm Strategy Type" }
+        },
+        "type": "object",
+        "required": ["llm_strategy_type"],
+        "title": "NERInlineTagStrategyParams"
       },
       "NoteNodeData": {
         "properties": {
@@ -14074,6 +14202,47 @@
         "type": "object",
         "required": ["cluster_id", "split_into"],
         "title": "SplitClusterParams"
+      },
+      "StrategyInfo": {
+        "properties": {
+          "llm_strategy_type": { "$ref": "#/components/schemas/StrategyType", "description": "The strategy type" },
+          "name": { "type": "string", "title": "Name", "description": "Human-readable name of the strategy" },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Explanation of what the strategy does"
+          },
+          "default_params": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/DefaultStrategyParams" },
+              { "$ref": "#/components/schemas/NERInlineTagStrategyParams" },
+              { "$ref": "#/components/schemas/FuzzyGroundingStrategyParams" }
+            ],
+            "title": "Default Params",
+            "description": "Default strategy parameters"
+          },
+          "allowed_data_tags": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Allowed Data Tags",
+            "description": "Data tags (document content placeholders) this strategy supports"
+          }
+        },
+        "type": "object",
+        "required": ["llm_strategy_type", "name", "description", "default_params", "allowed_data_tags"],
+        "title": "StrategyInfo",
+        "description": "Describes an available strategy for a task, for display in the frontend."
+      },
+      "StrategyType": {
+        "type": "string",
+        "enum": [
+          "TAGGING_DEFAULT",
+          "METADATA_DEFAULT",
+          "SENTENCE_ANNOTATION_DEFAULT",
+          "NER_INLINE_TAGS",
+          "CONTEXT_ANCHORED_FUZZY_MATCHING"
+        ],
+        "title": "StrategyType"
       },
       "StringOperator": {
         "type": "string",

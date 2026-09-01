@@ -273,6 +273,9 @@ export const QueryKey = {
   // the available models (no parameters)
   // managed by frontend/src/api/hooks/LLMHooks.ts
   AVAILABLE_LLMS: "availableLLMs",
+  // the available strategies for an llm task (by task type)
+  // managed by frontend/src/api/hooks/LLMHooks.ts
+  LLM_STRATEGIES: "llmStrategies",
 
   // llmjob (by llm job id)
   // managed by frontend/src/features/classifier/_api/classifierQueryOptions.ts

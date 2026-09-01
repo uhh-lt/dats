@@ -4,9 +4,13 @@
 /* eslint-disable */
 import type { AnnotationParams } from "./AnnotationParams";
 import type { ApproachType } from "./ApproachType";
+import type { DefaultStrategyParams } from "./DefaultStrategyParams";
 import type { FewShotParams } from "./FewShotParams";
+import type { FuzzyGroundingStrategyParams } from "./FuzzyGroundingStrategyParams";
 import type { MetadataExtractionParams } from "./MetadataExtractionParams";
+import type { NERInlineTagStrategyParams } from "./NERInlineTagStrategyParams";
 import type { SentenceAnnotationParams } from "./SentenceAnnotationParams";
+import type { StrategyType } from "./StrategyType";
 import type { TaggingParams } from "./TaggingParams";
 import type { TaskType } from "./TaskType";
 import type { ZeroShotParams } from "./ZeroShotParams";
@@ -31,4 +35,12 @@ export type LLMJobInput = {
    * Specific parameters for the approach w.r.t it's type
    */
   specific_approach_parameters: ZeroShotParams | FewShotParams;
+  /**
+   * The strategy to use for the LLMJob
+   */
+  llm_strategy_type: StrategyType;
+  /**
+   * Specific parameters for the strategy w.r.t it's type
+   */
+  specific_strategy_parameters: DefaultStrategyParams | NERInlineTagStrategyParams | FuzzyGroundingStrategyParams;
 };
