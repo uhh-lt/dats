@@ -66,8 +66,19 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.METADATA_DEFAULT
     display_name = "Metadata Extraction"
     description = (
-        "Extracts the selected metadata fields from each document. "
-        "The LLM sees the whole document and answers with the extracted values."
+        "Extracts the selected metadata fields from each document.\n"
+        "\n"
+        "**How it works:** The LLM sees the full document content along with the "
+        "metadata fields to extract (key + description). It returns a structured "
+        "JSON object with the extracted values.\n"
+        "\n"
+        "**Example:** Given the metadata fields `author` and `date` and a news "
+        "article, the LLM responds with:\n"
+        "\n"
+        '    {"author": "Jane Doe", "date": "2024-01-15"}\n'
+        "\n"
+        "**When to use:** For extracting structured metadata (author, date, source, "
+        "etc.) from documents."
     )
     strategy_params_type = DefaultStrategyParams
     allowed_data_tags = [DataTag.DOCUMENT.value]

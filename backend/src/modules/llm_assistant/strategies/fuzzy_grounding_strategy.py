@@ -106,10 +106,28 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
     strategy_type = StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
     display_name = "Context-Anchored Extraction"
     description = (
-        "The LLM extracts entities as JSON with an exact quote plus surrounding "
-        "context. The backend locates each quote in the document (exact or fuzzy "
-        "matching) to compute precise offsets. Robust for long documents and "
-        "repeated mentions. Documents are processed in overlapping chunks."
+        "The LLM extracts entities as JSON; the backend locates them in the document.\n"
+        "\n"
+        "**How it works:** The document is split into overlapping chunks. For each chunk, "
+        "the LLM extracts entities as structured JSON, providing an exact verbatim quote "
+        "plus the surrounding context (a few characters before and after). The backend "
+        "then locates each quote in the original document using exact matching, falling "
+        "back to fuzzy matching (difflib) with the context as an anchor.\n"
+        "\n"
+        "**Example:** Given the code `PER` (Person) and the input text:\n"
+        "\n"
+        "    Tim met Anna in Berlin. She showed him the city.\n"
+        "\n"
+        "The LLM responds with:\n"
+        "\n"
+        '    [{"category": "PER", "quote": "Tim", "context_before": "", "context_after": " met"},\n'
+        '     {"category": "PER", "quote": "Anna", "context_before": "met ", "context_after": " in"}]\n'
+        "\n"
+        "The backend finds each quote's exact position in the document.\n"
+        "\n"
+        "**When to use:** Best for long documents, repeated mentions of the same entity, "
+        "or when the LLM struggles to reproduce text verbatim. More robust than inline "
+        "tagging but requires more LLM calls due to chunking."
     )
     strategy_params_type = FuzzyGroundingStrategyParams
     allowed_data_tags = [DataTag.CHUNK.value]
