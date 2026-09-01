@@ -39,7 +39,7 @@ export const DocumentTagSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToApproachSelection({
+              LLMAssistantActions.llmDialogGoToStrategySelection({
                 approach: data,
                 tags: tags,
                 metadata: [],

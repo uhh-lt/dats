@@ -10,6 +10,8 @@ import type { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import type { LLMJobInput } from "@models/LLMJobInput";
 import type { LLMJobParameters } from "@models/LLMJobParameters";
 import type { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import type { StrategyInfo } from "@models/StrategyInfo";
+import type { StrategyType } from "@models/StrategyType";
 import type { TaskType } from "@models/TaskType";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -22,9 +24,11 @@ export class LlmService {
    */
   public static createPromptTemplates({
     approachType,
+    strategyType,
     requestBody,
   }: {
     approachType: ApproachType;
+    strategyType: StrategyType;
     requestBody: Body_llm_create_prompt_templates;
   }): CancelablePromise<Array<LLMPromptTemplates>> {
     return __request(OpenAPI, {
@@ -32,9 +36,27 @@ export class LlmService {
       url: "/llm/create_prompt_templates",
       query: {
         approach_type: approachType,
+        strategy_type: strategyType,
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns the available strategies for the given llm task
+   * @returns StrategyInfo Successful Response
+   * @throws ApiError
+   */
+  public static listStrategies({ taskType }: { taskType: TaskType }): CancelablePromise<Array<StrategyInfo>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/llm/list_strategies",
+      query: {
+        task_type: taskType,
+      },
       errors: {
         422: `Validation Error`,
       },

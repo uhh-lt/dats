@@ -1,14 +1,20 @@
 import { ApproachRecommendation } from "@models/ApproachRecommendation";
 import { ApproachType } from "@models/ApproachType";
 import { CodeRead } from "@models/CodeRead";
+import { DefaultStrategyParams } from "@models/DefaultStrategyParams";
+import { FuzzyGroundingStrategyParams } from "@models/FuzzyGroundingStrategyParams";
 import { LlmAssistantJobRead } from "@models/LlmAssistantJobRead";
 import { LLMJobOutput } from "@models/LLMJobOutput";
 import { LLMPromptTemplates } from "@models/LLMPromptTemplates";
+import { NERInlineTagStrategyParams } from "@models/NERInlineTagStrategyParams";
 import { ProjectMetadataRead } from "@models/ProjectMetadataRead";
+import { StrategyType } from "@models/StrategyType";
 import { TagRead } from "@models/TagRead";
 import { TaskType } from "@models/TaskType";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { LLMAssistantEvent } from "../_types/LLMAssistantEvent";
+
+export type LLMStrategyParams = DefaultStrategyParams | NERInlineTagStrategyParams | FuzzyGroundingStrategyParams;
 
 interface LLMAssistantState {
   // llm dialog
@@ -21,6 +27,8 @@ interface LLMAssistantState {
   llmTags: TagRead[];
   llmMetadata: ProjectMetadataRead[];
   llmCodes: CodeRead[];
+  llmStrategy?: StrategyType;
+  llmStrategyParams?: LLMStrategyParams;
   llmApproach: ApproachType;
   llmApproachRecommendation: ApproachRecommendation;
   llmDeleteExistingAnnotations: boolean;
@@ -39,6 +47,8 @@ const initialState: LLMAssistantState = {
   llmTags: [],
   llmMetadata: [],
   llmCodes: [],
+  llmStrategy: undefined,
+  llmStrategyParams: undefined,
   llmApproach: ApproachType.LLM_ZERO_SHOT,
   llmApproachRecommendation: {
     available_approaches: {},
@@ -68,8 +78,8 @@ const llmAssistantSlice = createSlice({
       state.llmMethod = action.payload.method;
       state.llmStep = 1;
     },
-    // Step 2: Select tags, metadata, or codes -> Go to the model selection
-    llmDialogGoToApproachSelection: (
+    // Step 2: Select tags, metadata, or codes -> Go to the strategy selection
+    llmDialogGoToStrategySelection: (
       state,
       action: PayloadAction<{
         approach: ApproachRecommendation;
@@ -85,7 +95,19 @@ const llmAssistantSlice = createSlice({
       state.llmMetadata = action.payload.metadata;
       state.llmCodes = action.payload.codes;
     },
-    // Step 3: Select the approach (zero-shot, few-shot) and deletion strategy
+    // Step 3: Select the strategy -> Go to the approach selection
+    llmDialogGoToApproachSelection: (
+      state,
+      action: PayloadAction<{
+        strategy: StrategyType;
+        strategyParams: LLMStrategyParams;
+      }>,
+    ) => {
+      state.llmStep = 3;
+      state.llmStrategy = action.payload.strategy;
+      state.llmStrategyParams = action.payload.strategyParams;
+    },
+    // Step 4: Select the approach (zero-shot, few-shot) and deletion strategy
     // Then, go to the prompt editor
     llmDialogGoToPromptEditor: (
       state,
@@ -96,7 +118,7 @@ const llmAssistantSlice = createSlice({
         modelId: string;
       }>,
     ) => {
-      state.llmStep = 3;
+      state.llmStep = 4;
       state.llmPrompts = action.payload.prompts;
       state.llmApproach = action.payload.approach;
       state.llmDeleteExistingAnnotations = action.payload.deleteExistingAnnotations;
@@ -108,10 +130,10 @@ const llmAssistantSlice = createSlice({
         prompts: LLMPromptTemplates[];
       }>,
     ) => {
-      state.llmStep = 3;
+      state.llmStep = 4;
       state.llmPrompts = action.payload.prompts;
     },
-    // Step 4 Variant A: Edit the prompts -> start the job & go to the waiting screen
+    // Step 5 Variant A: Edit the prompts -> start the job & go to the waiting screen
     llmDialogGoToWaiting: (
       state,
       action: PayloadAction<{
@@ -120,24 +142,26 @@ const llmAssistantSlice = createSlice({
       }>,
     ) => {
       state.isLLMDialogOpen = true;
-      state.llmStep = 4;
+      state.llmStep = 5;
       state.llmJobId = action.payload.jobId;
       state.llmPrompts = action.payload.prompts;
     },
-    // Step 4 Variant B: We click on View Results from Background Tasks
+    // Step 5 Variant B: We click on View Results from Background Tasks
     llmDialogOpenFromBackgroundTask: (state, action: PayloadAction<LlmAssistantJobRead>) => {
       state.isLLMDialogOpen = true;
-      state.llmStep = 4;
+      state.llmStep = 5;
 
       state.llmProjectId = action.payload.input.project_id;
       state.llmJobId = action.payload.job_id;
       state.llmMethod = action.payload.input.llm_job_type;
       state.llmApproach = action.payload.input.llm_approach_type;
+      state.llmStrategy = action.payload.input.llm_strategy_type;
+      state.llmStrategyParams = action.payload.input.specific_strategy_parameters;
     },
-    // Step 5: Wait for the job to finish
+    // Step 6: Wait for the job to finish
     llmDialogGoToResult: (state, action: PayloadAction<{ result: LLMJobOutput }>) => {
       state.llmJobResult = action.payload.result;
-      state.llmStep = 5;
+      state.llmStep = 6;
     },
     // close the dialog & reset
     closeLLMDialog: (state) => {
@@ -150,6 +174,8 @@ const llmAssistantSlice = createSlice({
       state.llmTags = initialState.llmTags;
       state.llmMetadata = initialState.llmMetadata;
       state.llmCodes = initialState.llmCodes;
+      state.llmStrategy = initialState.llmStrategy;
+      state.llmStrategyParams = initialState.llmStrategyParams;
       state.llmPrompts = initialState.llmPrompts;
       state.llmApproach = initialState.llmApproach;
       state.llmApproachRecommendation = initialState.llmApproachRecommendation;
@@ -171,8 +197,12 @@ const llmAssistantSlice = createSlice({
         state.llmTags = initialState.llmTags;
         state.llmMetadata = initialState.llmMetadata;
         state.llmCodes = initialState.llmCodes;
-        // user just selected the approach, reset approach selection
+        // user just selected the strategy, reset strategy selection
       } else if (state.llmStep === 2) {
+        state.llmStrategy = initialState.llmStrategy;
+        state.llmStrategyParams = initialState.llmStrategyParams;
+        // user just selected the approach, reset approach selection
+      } else if (state.llmStep === 3) {
         state.llmId = initialState.llmId;
         state.llmApproach = initialState.llmApproach;
         state.llmDeleteExistingAnnotations = initialState.llmDeleteExistingAnnotations;

@@ -46,7 +46,7 @@ export const CodeSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToApproachSelection({
+              LLMAssistantActions.llmDialogGoToStrategySelection({
                 approach: data,
                 tags: [],
                 metadata: [],

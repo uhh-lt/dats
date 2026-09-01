@@ -30,6 +30,8 @@ export function PromptEditorStep() {
   const sdocIds = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
   const recommendedPrompts = useAppSelector((state) => state.llmAssistant.llmPrompts);
   const deleteExistingAnnotations = useAppSelector((state) => state.llmAssistant.llmDeleteExistingAnnotations);
+  const strategy = useAppSelector((state) => state.llmAssistant.llmStrategy);
+  const strategyParams = useAppSelector((state) => state.llmAssistant.llmStrategyParams);
   const dispatch = useAppDispatch();
 
   // local state (to manage tabs)
@@ -46,6 +48,7 @@ export function PromptEditorStep() {
   const handleSelectExamples = useCallback(
     (codeId: number, annotationIds: number[]) => {
       if (!method) return;
+      if (!strategy) return;
       setSelectedAnnotationIds((prev) => {
         const newSelected = { ...prev };
         newSelected[codeId] = annotationIds;
@@ -59,6 +62,7 @@ export function PromptEditorStep() {
       createPromptTemplatesMutation(
         {
           approachType: approach,
+          strategyType: strategy,
           requestBody: {
             llm_job_params: {
               llm_job_type: method,
@@ -82,7 +86,18 @@ export function PromptEditorStep() {
         },
       );
     },
-    [method, selectedAnnotationIds, createPromptTemplatesMutation, approach, projectId, tags, metadata, codes, sdocIds],
+    [
+      method,
+      strategy,
+      selectedAnnotationIds,
+      createPromptTemplatesMutation,
+      approach,
+      projectId,
+      tags,
+      metadata,
+      codes,
+      sdocIds,
+    ],
   );
   const handleResetExamples = useCallback(() => {
     setSelectedAnnotationIds({});
@@ -114,6 +129,8 @@ export function PromptEditorStep() {
   const handleStartLLMJob = useCallback(() => {
     if (model === undefined) return;
     if (method === undefined) return;
+    if (strategy === undefined) return;
+    if (strategyParams === undefined) return;
 
     startLLMJobMutation(
       {
@@ -121,6 +138,8 @@ export function PromptEditorStep() {
           project_id: projectId,
           llm_job_type: method,
           llm_approach_type: approach,
+          llm_strategy_type: strategy,
+          specific_strategy_parameters: strategyParams,
           specific_approach_parameters: {
             model: model,
             llm_approach_type: approach,
@@ -150,6 +169,8 @@ export function PromptEditorStep() {
   }, [
     model,
     method,
+    strategy,
+    strategyParams,
     projectId,
     approach,
     prompts,

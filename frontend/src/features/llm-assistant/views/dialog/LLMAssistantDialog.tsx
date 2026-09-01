@@ -16,6 +16,7 @@ import { MethodSelectionStep } from "./_components/MethodSelectionStep";
 import { ProjectMetadataSelectionStep } from "./_components/ProjectMetadataSelectionStep";
 import { SentenceAnnotationResultStep } from "./_components/SentenceAnnotationResultStep";
 import { StatusStep } from "./_components/StatusStep";
+import { StrategySelectionStep } from "./_components/StrategySelectionStep";
 
 const title: Record<TaskType, string> = {
   [TaskType.TAGGING]: "Document Tagging",
@@ -25,19 +26,37 @@ const title: Record<TaskType, string> = {
 };
 
 const steps: Record<TaskType, string[]> = {
-  [TaskType.TAGGING]: ["Select method", "Select tags", "Select appproach", "Edit settings", "Wait", "View results"],
-  [TaskType.METADATA_EXTRACTION]: [
+  [TaskType.TAGGING]: [
     "Select method",
-    "Select metadata",
+    "Select tags",
+    "Select strategy",
     "Select appproach",
     "Edit settings",
     "Wait",
     "View results",
   ],
-  [TaskType.ANNOTATION]: ["Select method", "Select codes", "Select appproach", "Edit settings", "Wait", "View results"],
+  [TaskType.METADATA_EXTRACTION]: [
+    "Select method",
+    "Select metadata",
+    "Select strategy",
+    "Select appproach",
+    "Edit settings",
+    "Wait",
+    "View results",
+  ],
+  [TaskType.ANNOTATION]: [
+    "Select method",
+    "Select codes",
+    "Select strategy",
+    "Select appproach",
+    "Edit settings",
+    "Wait",
+    "View results",
+  ],
   [TaskType.SENTENCE_ANNOTATION]: [
     "Select method",
     "Select codes",
+    "Select strategy",
     "Select appproach",
     "Edit settings",
     "Wait",
@@ -59,24 +78,30 @@ const contentDict: Record<number, Record<TaskType, React.ReactNode>> = {
     [TaskType.SENTENCE_ANNOTATION]: <CodeSelectionStep />,
   },
   2: {
+    [TaskType.TAGGING]: <StrategySelectionStep />,
+    [TaskType.METADATA_EXTRACTION]: <StrategySelectionStep />,
+    [TaskType.ANNOTATION]: <StrategySelectionStep />,
+    [TaskType.SENTENCE_ANNOTATION]: <StrategySelectionStep />,
+  },
+  3: {
     [TaskType.TAGGING]: <ApproachSelectionStep />,
     [TaskType.METADATA_EXTRACTION]: <ApproachSelectionStep />,
     [TaskType.ANNOTATION]: <ApproachSelectionStep />,
     [TaskType.SENTENCE_ANNOTATION]: <ApproachSelectionStep />,
   },
-  3: {
+  4: {
     [TaskType.TAGGING]: <EditorStep />,
     [TaskType.METADATA_EXTRACTION]: <EditorStep />,
     [TaskType.ANNOTATION]: <EditorStep />,
     [TaskType.SENTENCE_ANNOTATION]: <EditorStep />,
   },
-  4: {
+  5: {
     [TaskType.TAGGING]: <StatusStep />,
     [TaskType.METADATA_EXTRACTION]: <StatusStep />,
     [TaskType.ANNOTATION]: <StatusStep />,
     [TaskType.SENTENCE_ANNOTATION]: <StatusStep />,
   },
-  5: {
+  6: {
     [TaskType.TAGGING]: <DocumentTagResultStep />,
     [TaskType.METADATA_EXTRACTION]: <MetadataExtractionResultStep />,
     [TaskType.ANNOTATION]: <AnnotationResultStep />,
