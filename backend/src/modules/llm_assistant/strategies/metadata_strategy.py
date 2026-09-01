@@ -62,7 +62,7 @@ example_template = """
 """
 
 
-class MetadataStrategy(LLMStrategy):
+class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.METADATA_DEFAULT
     display_name = "Metadata Extraction"
     description = (

@@ -92,7 +92,7 @@ Text:
 """.strip()
 
 
-class FuzzyGroundingStrategy(LLMStrategy):
+class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
     """Span annotation via extractive JSON + context-anchored fuzzy grounding.
 
     The LLM acts as an extraction engine and outputs structured JSON with the
