@@ -116,6 +116,63 @@ class FewShotParams(SpecificApproachParameters):
     model: str = Field(description="Large Language Model to use for the job")
 
 
+# --- END APPROACH PARAMETERS ---
+
+# --- START STRATEGY PARAMETERS ---
+
+
+class StrategyType(str, Enum):
+    TAGGING_DEFAULT = "TAGGING_DEFAULT"
+    METADATA_DEFAULT = "METADATA_DEFAULT"
+    SENTENCE_ANNOTATION_DEFAULT = "SENTENCE_ANNOTATION_DEFAULT"
+    NER_INLINE_TAGS = "NER_INLINE_TAGS"
+    CONTEXT_ANCHORED_FUZZY_MATCHING = "CONTEXT_ANCHORED_FUZZY_MATCHING"
+
+
+class SpecificStrategyParameters(BaseModel):
+    llm_strategy_type: StrategyType = Field(
+        description="The type of the strategy (how to llm)"
+    )
+
+
+class DefaultStrategyParams(SpecificStrategyParameters):
+    """Params for single-strategy tasks (tagging, metadata, sentence annotation)."""
+
+    llm_strategy_type: Literal[
+        StrategyType.TAGGING_DEFAULT,
+        StrategyType.METADATA_DEFAULT,
+        StrategyType.SENTENCE_ANNOTATION_DEFAULT,
+    ]
+
+
+class NERInlineTagStrategyParams(SpecificStrategyParameters):
+    llm_strategy_type: Literal[StrategyType.NER_INLINE_TAGS]
+
+
+class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
+    llm_strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING]
+    fuzzy_threshold: float = Field(
+        default=0.85,
+        description="Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
+    )
+    context_before_chars: int = Field(
+        default=64,
+        description="Number of context characters the LLM should provide before the quote",
+    )
+    context_after_chars: int = Field(
+        default=64,
+        description="Number of context characters the LLM should provide after the quote",
+    )
+    chunk_size_tokens: int = Field(
+        default=650,
+        description="Size of document chunks (in tokens) sent to the LLM",
+    )
+    chunk_overlap_tokens: int = Field(
+        default=100,
+        description="Overlap (in tokens) between consecutive chunks",
+    )
+
+
 class LLMJobInput(LLMJobParameters):
     llm_approach_type: ApproachType = Field(
         description="The approach to use for the LLMJob"
@@ -124,7 +181,20 @@ class LLMJobInput(LLMJobParameters):
         description="Specific parameters for the approach w.r.t it's type",
         discriminator="llm_approach_type",
     )
+    llm_strategy_type: StrategyType = Field(
+        description="The strategy to use for the LLMJob"
+    )
+    specific_strategy_parameters: (
+        DefaultStrategyParams
+        | NERInlineTagStrategyParams
+        | FuzzyGroundingStrategyParams
+    ) = Field(
+        description="Specific parameters for the strategy w.r.t it's type",
+        discriminator="llm_strategy_type",
+    )
 
+
+# --- END STRATEGY PARAMETERS ---
 
 # --- END INPUT ---
 
@@ -225,6 +295,22 @@ class ApproachRecommendation(BaseModel):
     reasoning: str = Field(description="Reasoning for the recommendation")
     available_approaches: dict[ApproachType, bool] = Field(
         description="Available approaches"
+    )
+
+
+class StrategyInfo(BaseModel):
+    """Describes an available strategy for a task, for display in the frontend."""
+
+    llm_strategy_type: StrategyType = Field(description="The strategy type")
+    name: str = Field(description="Human-readable name of the strategy")
+    description: str = Field(description="Explanation of what the strategy does")
+    default_params: (
+        DefaultStrategyParams
+        | NERInlineTagStrategyParams
+        | FuzzyGroundingStrategyParams
+    ) = Field(description="Default strategy parameters")
+    allowed_data_tags: list[str] = Field(
+        description="Data tags (document content placeholders) this strategy supports"
     )
 
 

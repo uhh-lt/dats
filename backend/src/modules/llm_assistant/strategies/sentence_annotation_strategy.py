@@ -9,10 +9,13 @@ from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
 from core.user.user_crud import SYSTEM_USER_IDS
 from modules.llm_assistant.llm_job_dto import (
+    DefaultStrategyParams,
     LLMPromptTemplates,
     SentenceAnnotationParams,
+    StrategyType,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
+from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 from repos.llm_repo import LLMMessage
 
 
@@ -84,7 +87,16 @@ Kategorie: {}
 """
 
 
-class SentenceAnnotationPromptBuilder(PromptBuilder):
+class SentenceAnnotationStrategy(LLMStrategy):
+    strategy_type = StrategyType.SENTENCE_ANNOTATION_DEFAULT
+    display_name = "Sentence Annotation"
+    description = (
+        "Classifies sentences of each document with the selected codes. "
+        "The LLM sees the document sentence-by-sentence and assigns a category per sentence."
+    )
+    strategy_params_type = DefaultStrategyParams
+    allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]
+
     supported_languages = ["en", "de"]
     prompt_templates = {
         "en": en_prompt_template.strip(),
@@ -122,6 +134,9 @@ class SentenceAnnotationPromptBuilder(PromptBuilder):
             params=params,
             example_ids=example_ids,
         )
+
+    def get_response_model(self) -> type[BaseModel]:
+        return LLMSentenceAnnotationResults
 
     def build_prompt(
         self, language: str, sdoc_data: SourceDocumentDataORM
