@@ -1,27 +1,34 @@
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.span_annotation_crud import crud_span_anno
 from core.annotation.span_annotation_dto import (
     SpanAnnotationCreate,
     SpanAnnotationRead,
 )
-from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from core.code.code_crud import crud_code
+from core.user.user_crud import (
+    ASSISTANT_FEWSHOT_ID,
+    ASSISTANT_ZEROSHOT_ID,
+    SYSTEM_USER_IDS,
+)
 from modules.llm_assistant.llm_job_dto import (
     AnnotationLLMJobResult,
     AnnotationParams,
     AnnotationResult,
+    ApproachRecommendation,
+    ApproachType,
     FewShotParams,
     LLMJobOutput,
+    SpecificTaskParameters,
     TaskType,
     ZeroShotParams,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
 )
 from modules.llm_assistant.strategies.ner_inline_tag_strategy import (
-    LLMHighlightedAnnotationResult,
     NERInlineTagStrategy,
 )
 from modules.llm_assistant.tasks.llm_task import (
@@ -40,6 +47,70 @@ class AnnotationTask(LLMTask):
     - NERInlineTagStrategy: LLM repeats text with inline XML tags.
     - FuzzyGroundingStrategy: LLM extracts entities as JSON; backend grounds them.
     """
+
+    @classmethod
+    def determine_approach(
+        cls, db: Session, task_parameters: SpecificTaskParameters
+    ) -> ApproachRecommendation:
+        assert isinstance(task_parameters, AnnotationParams)
+        selected_code_ids = task_parameters.code_ids
+
+        # 1. Find the number of labeled spans for each code
+        span_annotations = [
+            sa
+            for sa in crud_span_anno.read_by_codes(db=db, code_ids=selected_code_ids)
+            if sa.user_id not in SYSTEM_USER_IDS  # exclude system / assistant users
+        ]
+
+        # 2. Find the code names
+        codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
+        code_id2name = {code.id: code.name for code in codes}
+
+        # 3. Count annotations by code_id
+        code_id2num_span_annos = {code.id: 0 for code in codes}
+        for span_anno in span_annotations:
+            code_id2num_span_annos[span_anno.code_id] += 1
+
+        # 4. Determine the minimum number of labeled spans
+        code_with_min_labeled_spans = min(
+            code_id2num_span_annos.keys(),
+            key=lambda k: code_id2num_span_annos[k],
+        )
+        min_labeled_spans = code_id2num_span_annos[code_with_min_labeled_spans]
+
+        # 5. Create reasoning
+        reasoning = (
+            f"You selected {len(selected_code_ids)} codes. "
+            "I checked the number of labeled spans for each code and found:\n"
+        )
+        code_counts = []
+        for code_id, num_labeled_spans in code_id2num_span_annos.items():
+            code_counts.append(f"{code_id2name[code_id]}: {num_labeled_spans}")
+        reasoning += "\n".join(code_counts)
+        reasoning += (
+            f"\nThe code with the least labeled spans ({min_labeled_spans}) "
+            f"is {code_id2name[code_with_min_labeled_spans]}. "
+            "Based on this, I recommend the following approach:"
+        )
+
+        # 6. Determine available approaches
+        available_approaches: dict[ApproachType, bool] = {
+            ApproachType.LLM_ZERO_SHOT: True,
+            ApproachType.LLM_FEW_SHOT: min_labeled_spans
+            >= conf.llm_assistant.few_shot_threshold,
+        }
+
+        # 7. Determine recommended approach
+        if min_labeled_spans < conf.llm_assistant.few_shot_threshold:
+            recommended_approach = ApproachType.LLM_ZERO_SHOT
+        else:
+            recommended_approach = ApproachType.LLM_FEW_SHOT
+
+        return ApproachRecommendation(
+            recommended_approach=recommended_approach,
+            available_approaches=available_approaches,
+            reasoning=reasoning,
+        )
 
     def execute(
         self,
@@ -155,12 +226,11 @@ class AnnotationTask(LLMTask):
                         sdoc_id2raw_responses[sdoc_id] = []
                     sdoc_id2raw_responses[sdoc_id].append(response.raw)
 
-                # strategy-specific parsing -> spans with absolute char offsets
-                parsed_spans = self._parse_response_to_spans(
-                    strategy=strategy,
-                    response_parsed=response.parsed,
-                    sdoc_data=sdoc_data,
-                    message_id=message_id,
+                # parse the response into spans with absolute char offsets
+                parsed_spans = strategy.parse_result(
+                    response.parsed,  # type: ignore
+                    sdoc_data,
+                    message_id,
                 )
 
                 # build char->token map
@@ -288,39 +358,3 @@ class AnnotationTask(LLMTask):
                 llm_job_type=TaskType.ANNOTATION, results=result
             ),
         )
-
-    def _parse_response_to_spans(
-        self,
-        *,
-        strategy: NERInlineTagStrategy | FuzzyGroundingStrategy,
-        response_parsed,
-        sdoc_data,
-        message_id: int,
-    ) -> list[dict]:
-        """Parse a single LLM response into spans with absolute char offsets."""
-        if isinstance(strategy, FuzzyGroundingStrategy):
-            # response_parsed is LLMExtractionResult
-            entities = strategy.parse_result(response_parsed)
-            return strategy.ground_entities(entities, sdoc_data)
-
-        # NERInlineTagStrategy: response_parsed is LLMHighlightedAnnotationResult
-        assert isinstance(response_parsed, LLMHighlightedAnnotationResult)
-
-        match strategy.data_tag:
-            case DataTag.SENTENCE:
-                # the prompt was constructed per sentence, so we only annotate within this sentence
-                start_offset = sdoc_data.sentence_starts[message_id]
-            case DataTag.DOCUMENT:
-                # the prompt was constructed on the entire document
-                start_offset = 0
-            case _:
-                raise ValueError("Unknown DataTag!")  # type: ignore
-
-        clean_text, parsed_spans = strategy.parse_result(response_parsed.text)
-
-        # make offsets absolute
-        for span in parsed_spans:
-            span["begin"] += start_offset
-            span["end"] += start_offset
-
-        return parsed_spans

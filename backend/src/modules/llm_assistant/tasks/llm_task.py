@@ -8,9 +8,11 @@ from core.doc.source_document_data_crud import crud_sdoc_data
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.llm_assistant.llm_job_dto import (
+    ApproachRecommendation,
     DocumentBasedTaskParams,
     FewShotParams,
     LLMJobOutput,
+    SpecificTaskParameters,
     ZeroShotParams,
 )
 from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
@@ -57,6 +59,15 @@ class LLMTask(ABC, Generic[StrategyT, TaskParamsT]):
 
     def __init__(self, llm: LLMRepo):
         self.llm = llm
+
+    @classmethod
+    @abstractmethod
+    def determine_approach(
+        cls, db: Session, task_parameters: SpecificTaskParameters
+    ) -> ApproachRecommendation:
+        """Determine the recommended and available approaches for this task,
+        given the task parameters (e.g. selected codes)."""
+        ...
 
     @abstractmethod
     def execute(

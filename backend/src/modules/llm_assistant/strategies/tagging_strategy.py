@@ -8,7 +8,7 @@ from modules.llm_assistant.llm_job_dto import (
     StrategyType,
     TaggingParams,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 
 
