@@ -87,7 +87,7 @@ Kategorie: {}
 """
 
 
-class SentenceAnnotationStrategy(LLMStrategy):
+class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.SENTENCE_ANNOTATION_DEFAULT
     display_name = "Sentence Annotation"
     description = (

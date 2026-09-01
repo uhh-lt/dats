@@ -147,7 +147,7 @@ def _render_sentence_example_multi(
     return " ".join(rendered_sentences)
 
 
-class NERInlineTagStrategy(LLMStrategy):
+class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
     """Span annotation via inline XML-style tags.
 
     The LLM repeats the original text and wraps entities in inline tags like

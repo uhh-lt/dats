@@ -72,7 +72,7 @@ Begründung: Das Dokument handelt von {}.
 """
 
 
-class TaggingStrategy(LLMStrategy):
+class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
     strategy_type = StrategyType.TAGGING_DEFAULT
     display_name = "Document Tagging"
     description = (

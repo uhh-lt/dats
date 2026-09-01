@@ -2,7 +2,6 @@ from modules.llm_assistant.llm_job_dto import StrategyInfo, StrategyType, TaskTy
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
 )
-from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 from modules.llm_assistant.strategies.metadata_strategy import MetadataStrategy
 from modules.llm_assistant.strategies.ner_inline_tag_strategy import (
     NERInlineTagStrategy,
@@ -19,6 +18,15 @@ from modules.llm_assistant.tasks.metadata_extraction_task import (
 from modules.llm_assistant.tasks.sentence_annotation_task import SentenceAnnotationTask
 from modules.llm_assistant.tasks.tagging_task import TaggingTask
 
+# Any concrete strategy class (parametrized with its specific params type).
+AnyStrategyClass = (
+    type[TaggingStrategy]
+    | type[MetadataStrategy]
+    | type[NERInlineTagStrategy]
+    | type[FuzzyGroundingStrategy]
+    | type[SentenceAnnotationStrategy]
+)
+
 # task type -> task class
 TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMTask]] = {
     TaskType.TAGGING: TaggingTask,
@@ -28,7 +36,7 @@ TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMTask]] = {
 }
 
 # task type -> list of supported strategy classes (order = display order)
-STRATEGIES_FOR_TASK_TYPE: dict[TaskType, list[type[LLMStrategy]]] = {
+STRATEGIES_FOR_TASK_TYPE: dict[TaskType, list[AnyStrategyClass]] = {
     TaskType.TAGGING: [TaggingStrategy],
     TaskType.METADATA_EXTRACTION: [MetadataStrategy],
     TaskType.ANNOTATION: [NERInlineTagStrategy, FuzzyGroundingStrategy],
@@ -37,7 +45,7 @@ STRATEGIES_FOR_TASK_TYPE: dict[TaskType, list[type[LLMStrategy]]] = {
 
 # (task type, strategy type) -> strategy class
 STRATEGY_FOR_TASK_AND_STRATEGY: dict[
-    tuple[TaskType, StrategyType], type[LLMStrategy]
+    tuple[TaskType, StrategyType], AnyStrategyClass
 ] = {
     (task_type, strategy_cls.strategy_type): strategy_cls
     for task_type, strategy_clses in STRATEGIES_FOR_TASK_TYPE.items()
@@ -54,7 +62,7 @@ def get_task_class(task_type: TaskType) -> type[LLMTask]:
 
 def get_strategy_class(
     task_type: TaskType, strategy_type: StrategyType
-) -> type[LLMStrategy]:
+) -> AnyStrategyClass:
     strategy_cls = STRATEGY_FOR_TASK_AND_STRATEGY.get((task_type, strategy_type))
     if strategy_cls is None:
         raise ValueError(
