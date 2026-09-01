@@ -2,8 +2,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import LLMPromptTemplates, TaggingParams
-from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
+from modules.llm_assistant.llm_job_dto import (
+    DefaultStrategyParams,
+    LLMPromptTemplates,
+    StrategyType,
+    TaggingParams,
+)
+from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 
 
 class LLMParsedTaggingResult(BaseModel):
@@ -66,7 +72,16 @@ Begründung: Das Dokument handelt von {}.
 """
 
 
-class TaggingPromptBuilder(PromptBuilder):
+class TaggingStrategy(LLMStrategy):
+    strategy_type = StrategyType.TAGGING_DEFAULT
+    display_name = "Document Tagging"
+    description = (
+        "Classifies each document into the selected tags. "
+        "The LLM sees the whole document and answers with the matching categories."
+    )
+    strategy_params_type = DefaultStrategyParams
+    allowed_data_tags = [DataTag.DOCUMENT.value]
+
     prompt_templates = {
         "en": en_prompt_template.strip(),
         "de": de_prompt_template.strip(),
@@ -101,6 +116,9 @@ class TaggingPromptBuilder(PromptBuilder):
             params=params,
             example_ids=example_ids,
         )
+
+    def get_response_model(self) -> type[BaseModel]:
+        return LLMTaggingResult
 
     def _build_example(self, language: str, tag_id: int) -> str:
         tag = self.tagid2tag[tag_id]

@@ -8,6 +8,8 @@ from modules.llm_assistant.llm_job_dto import (
     ApproachType,
     LLMJobParameters,
     LLMPromptTemplates,
+    StrategyInfo,
+    StrategyType,
     TaskType,
 )
 from modules.llm_assistant.llm_service import LLMAssistantService
@@ -29,6 +31,7 @@ def create_prompt_templates(
     db: Session = Depends(get_db_session),
     llm_job_params: LLMJobParameters,
     approach_type: ApproachType,
+    strategy_type: StrategyType,
     example_ids: list[int] | None = None,
     authz_user: AuthzUser = Depends(),
 ) -> list[LLMPromptTemplates]:
@@ -38,8 +41,22 @@ def create_prompt_templates(
         db=db,
         llm_job_params=llm_job_params,
         approach_type=approach_type,
+        strategy_type=strategy_type,
         example_ids=example_ids,
     )
+
+
+@router.post(
+    "/list_strategies",
+    response_model=list[StrategyInfo],
+    summary="Returns the available strategies for the given llm task",
+)
+def list_strategies(
+    *,
+    task_type: TaskType,
+    authz_user: AuthzUser = Depends(),
+) -> list[StrategyInfo]:
+    return llms.list_strategies(task_type=task_type)
 
 
 @router.post(

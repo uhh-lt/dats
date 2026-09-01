@@ -26,6 +26,7 @@ Du bist ein System zur Unterstützung bei der Analyse großer Textmengen. Du ant
 class DataTag(str, Enum):
     DOCUMENT = "<document>"
     SENTENCE = "<sentence>"
+    CHUNK = "<chunk>"
 
 
 class PromptBuilder:

@@ -1,7 +1,6 @@
 import random
 import re
 from collections import defaultdict
-from typing import List
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -10,8 +9,14 @@ from config import conf
 from core.annotation.span_annotation_orm import SpanAnnotationORM
 from core.doc.source_document_data_orm import SourceDocumentDataORM
 from core.project.project_crud import crud_project
-from modules.llm_assistant.llm_job_dto import AnnotationParams, LLMPromptTemplates
-from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
+from modules.llm_assistant.llm_job_dto import (
+    AnnotationParams,
+    LLMPromptTemplates,
+    NERInlineTagStrategyParams,
+    StrategyType,
+)
+from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 
 
 class LLMHighlightedAnnotationResult(BaseModel):
@@ -142,7 +147,22 @@ def _render_sentence_example_multi(
     return " ".join(rendered_sentences)
 
 
-class AnnotationPromptBuilder(PromptBuilder):
+class NERInlineTagStrategy(LLMStrategy):
+    """Span annotation via inline XML-style tags.
+
+    The LLM repeats the original text and wraps entities in inline tags like
+    ``<PER>Tim</PER>``. Parsing depends on those tags.
+    """
+
+    strategy_type = StrategyType.NER_INLINE_TAGS
+    display_name = "Inline Tagging"
+    description = (
+        "The LLM repeats the original text and wraps entities in inline tags "
+        "(e.g. <PER>Tim</PER>). Works on the whole document or sentence by sentence."
+    )
+    strategy_params_type = NERInlineTagStrategyParams
+    allowed_data_tags = [DataTag.DOCUMENT.value, DataTag.SENTENCE.value]
+
     supported_languages = ["en", "de"]
     prompt_templates = {
         "en": EN_PROMPT_TEMPLATE,
@@ -154,9 +174,9 @@ class AnnotationPromptBuilder(PromptBuilder):
         db: Session,
         project_id: int,
         is_fewshot: bool,
-        prompt_templates: List[LLMPromptTemplates] | None = None,
+        prompt_templates: list[LLMPromptTemplates] | None = None,
         params: AnnotationParams | None = None,
-        example_ids: List[int] | None = None,
+        example_ids: list[int] | None = None,
     ):
         project = crud_project.read(db=db, id=project_id)
         self.db = db
@@ -174,11 +194,14 @@ class AnnotationPromptBuilder(PromptBuilder):
             example_ids=example_ids,
         )
 
+    def get_response_model(self) -> type[BaseModel]:
+        return LLMHighlightedAnnotationResult
+
     def _build_user_prompt_template(
         self,
         *,
         language: str,
-        example_ids: List[int] | None = None,
+        example_ids: list[int] | None = None,
         params: AnnotationParams,
     ) -> str:
         codes = ", ".join(

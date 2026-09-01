@@ -9,10 +9,13 @@ from common.meta_type import MetaType
 from core.metadata.project_metadata_dto import ProjectMetadataRead
 from core.project.project_crud import crud_project
 from modules.llm_assistant.llm_job_dto import (
+    DefaultStrategyParams,
     LLMPromptTemplates,
     MetadataExtractionParams,
+    StrategyType,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag, PromptBuilder
+from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
 
 # ENGLISH
 
@@ -59,7 +62,16 @@ example_template = """
 """
 
 
-class MetadataPromptBuilder(PromptBuilder):
+class MetadataStrategy(LLMStrategy):
+    strategy_type = StrategyType.METADATA_DEFAULT
+    display_name = "Metadata Extraction"
+    description = (
+        "Extracts the selected metadata fields from each document. "
+        "The LLM sees the whole document and answers with the extracted values."
+    )
+    strategy_params_type = DefaultStrategyParams
+    allowed_data_tags = [DataTag.DOCUMENT.value]
+
     supported_languages = ["en", "de"]
     prompt_templates = {
         "en": en_prompt_template.strip(),
@@ -104,6 +116,9 @@ class MetadataPromptBuilder(PromptBuilder):
             params=params,
             example_ids=example_ids,
         )
+
+    def get_response_model(self) -> type[BaseModel]:
+        return self.output_model
 
     def _generate_dynamic_model(self, project_metadata_ids: list[int]):
         """
