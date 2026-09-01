@@ -16,8 +16,9 @@ from modules.llm_assistant.llm_job_dto import (
     LLMPromptTemplates,
     StrategyType,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 from repos.llm_repo import LLMMessage
 
 lac = conf.llm_assistant
@@ -144,7 +145,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             example_ids=example_ids,
         )
 
-    def get_response_model(self) -> type[BaseModel]:
+    def get_response_model(self) -> type[LLMExtractionResult]:
         return LLMExtractionResult
 
     # --- PROMPT TEMPLATE GENERATION ---
@@ -312,20 +313,15 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
     # --- PARSING + GROUNDING ---
 
-    def parse_result(self, result: LLMExtractionResult) -> list[LLMExtractedEntity]:
-        return result.entities
-
-    def ground_entities(
+    def parse_result(
         self,
-        entities: list[LLMExtractedEntity],
+        result: LLMExtractionResult,
         sdoc_data: SourceDocumentDataORM,
-    ) -> list[dict]:
-        """Ground extracted entities to character offsets in the full document.
-
-        Returns a list of span dicts: {code_id, text, begin, end}.
-        """
-        spans: list[dict] = []
-        for entity in entities:
+        message_id: int,
+    ) -> list[ParsedSpan]:
+        """Parse and ground extracted entities to absolute char offsets."""
+        spans: list[ParsedSpan] = []
+        for entity in result.entities:
             code_id = self.codename2id_dict.get(entity.category.upper())
             if code_id is None:
                 continue
@@ -343,12 +339,12 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
             begin, end = located
             spans.append(
-                {
-                    "code_id": code_id,
-                    "text": sdoc_data.content[begin:end],
-                    "begin": begin,
-                    "end": end,
-                }
+                ParsedSpan(
+                    code_id=code_id,
+                    text=sdoc_data.content[begin:end],
+                    begin=begin,
+                    end=end,
+                )
             )
 
         return self._dedupe_spans(spans)
@@ -408,12 +404,12 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         begin = best_start + before_len
         return begin, begin + quote_len
 
-    def _dedupe_spans(self, spans: list[dict]) -> list[dict]:
+    def _dedupe_spans(self, spans: list[ParsedSpan]) -> list[ParsedSpan]:
         """Remove duplicate spans arising from overlapping chunks.
 
         Two spans are duplicates if they share a code and overlap.
         """
-        result: list[dict] = []
+        result: list[ParsedSpan] = []
         for span in sorted(spans, key=lambda s: (s["begin"], s["end"])):
             duplicate = False
             for kept in result:

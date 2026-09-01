@@ -15,8 +15,9 @@ from modules.llm_assistant.llm_job_dto import (
     NERInlineTagStrategyParams,
     StrategyType,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
+from modules.llm_assistant.strategies.types.parsed_span import ParsedSpan
 
 
 class LLMHighlightedAnnotationResult(BaseModel):
@@ -194,7 +195,7 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
             example_ids=example_ids,
         )
 
-    def get_response_model(self) -> type[BaseModel]:
+    def get_response_model(self) -> type[LLMHighlightedAnnotationResult]:
         return LLMHighlightedAnnotationResult
 
     def _build_user_prompt_template(
@@ -290,22 +291,29 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
 
     def parse_result(
         self,
-        result: str,
-    ):
-        """
-        Returns:
-        - clean_text: str
-        - spans: list of dicts with code_id, text, begin, end
-        """
+        result: LLMHighlightedAnnotationResult,
+        sdoc_data: SourceDocumentDataORM,
+        message_id: int,
+    ) -> list[ParsedSpan]:
+        """Parse inline-tagged text into spans with absolute char offsets."""
+        # determine the start offset for this message
+        match self.data_tag:
+            case DataTag.SENTENCE:
+                start_offset = sdoc_data.sentence_starts[message_id]
+            case DataTag.DOCUMENT:
+                start_offset = 0
+            case _:
+                raise ValueError(f"Unknown DataTag: {self.data_tag}")  # type: ignore
+
         clean_text = ""
-        spans = []
+        spans: list[ParsedSpan] = []
 
         # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
         cursor = 0
 
-        for match in CODE_PATTERN.finditer(result):
+        for match in CODE_PATTERN.finditer(result.text):
             # 1. Grab the raw text before this match and add it to our clean string
-            before = result[cursor : match.start()]
+            before = result.text[cursor : match.start()]
             clean_text += before
 
             entity_text = match.group("text")
@@ -318,20 +326,16 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
             # 3. Only append to spans if the code is recognized
             if code.upper() in self.codename2id_dict:
                 spans.append(
-                    {
-                        "code_id": self.codename2id_dict[code.upper()],
-                        "text": entity_text,
-                        "begin": begin,
-                        "end": end,
-                    }
+                    ParsedSpan(
+                        code_id=self.codename2id_dict[code.upper()],
+                        text=entity_text,
+                        begin=begin + start_offset,
+                        end=end + start_offset,
+                    )
                 )
 
             # 4. ALWAYS append the text and advance the original string cursor
             clean_text += entity_text
             cursor = match.end()
 
-        # 5. Append anything left over after the final match
-        tail = result[cursor:]
-        clean_text += tail
-
-        return clean_text, spans
+        return spans

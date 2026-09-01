@@ -1,11 +1,20 @@
 from common.job_type import JobType
 from modules.llm_assistant.llm_endpoint import router
-from modules.llm_assistant.llm_job_dto import LLMJobInput, LLMJobOutput
+from modules.llm_assistant.llm_job_dto import (
+    FewShotParams,
+    LLMJobInput,
+    LLMJobOutput,
+)
+from modules.llm_assistant.strategies.strategy_factory import build_strategy
+from modules.llm_assistant.tasks.task_factory import build_task
 from repos.db.sql_repo import SQLRepo
+from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import EndpointGeneration, Job, JobTiming
 from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
+
+BATCH_SIZE = 32
 
 
 @register_job(
@@ -22,13 +31,52 @@ def llm_assistant(
     payload: LLMJobInput,
     job: Job,
 ) -> LLMJobOutput:
-    from modules.llm_assistant.llm_service import LLMAssistantService
+    num_batches = (
+        len(payload.specific_task_parameters.sdoc_ids) + BATCH_SIZE - 1
+    ) // BATCH_SIZE
+
+    job.update(
+        steps=["Start"]
+        + [f"Batch Processing {i + 1}" for i in range(num_batches)]
+        + ["Finish"],
+        current_step=0,
+        status_message="Started LLM Assistant!",
+    )
+
+    task_type = payload.llm_job_type
+    approach_parameters = payload.specific_approach_parameters
+    task_parameters = payload.specific_task_parameters
+    is_fewshot = isinstance(approach_parameters, FewShotParams)
 
     with sqlr.transaction() as db:
-        result = LLMAssistantService().handle_llm_job(
+        # build the strategy
+        strategy = build_strategy(
+            db=db,
+            project_id=payload.project_id,
+            is_fewshot=is_fewshot,
+            task_type=task_type,
+            strategy_type=payload.llm_strategy_type,
+            strategy_params=payload.specific_strategy_parameters,
+            prompt_templates=approach_parameters.prompts,
+            params=task_parameters,
+        )
+
+        # build the task
+        task = build_task(task_type, llm=LLMRepo())
+
+        # execute
+        result = task.execute(
             db=db,
             job=job,
-            payload=payload,
+            project_id=payload.project_id,
+            approach_parameters=approach_parameters,
+            task_parameters=task_parameters,
+            strategy=strategy,
         )
+
+    job.update(
+        current_step=len(job.get_steps()) - 1,
+        status_message="Finished LLMJob successfully!",
+    )
 
     return result

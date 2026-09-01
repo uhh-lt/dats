@@ -3,8 +3,11 @@ from sqlalchemy.orm import Session
 
 from core.doc.source_document_crud import crud_sdoc
 from modules.llm_assistant.llm_job_dto import (
+    ApproachRecommendation,
+    ApproachType,
     FewShotParams,
     LLMJobOutput,
+    SpecificTaskParameters,
     TaggingLLMJobResult,
     TaggingParams,
     TaggingResult,
@@ -24,6 +27,19 @@ from systems.job_system.job_dto import Job
 
 
 class TaggingTask(LLMTask[TaggingStrategy, TaggingParams]):
+    @classmethod
+    def determine_approach(
+        cls, db: Session, task_parameters: SpecificTaskParameters
+    ) -> ApproachRecommendation:
+        return ApproachRecommendation(
+            recommended_approach=ApproachType.LLM_ZERO_SHOT,
+            available_approaches={
+                ApproachType.LLM_ZERO_SHOT: True,
+                ApproachType.LLM_FEW_SHOT: False,
+            },
+            reasoning="Only zero-shot approach is available for document tagging (yet).",
+        )
+
     def execute(
         self,
         *,

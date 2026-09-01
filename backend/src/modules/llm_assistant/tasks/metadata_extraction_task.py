@@ -6,11 +6,14 @@ from core.metadata.source_document_metadata_dto import (
     SourceDocumentMetadataReadResolved,
 )
 from modules.llm_assistant.llm_job_dto import (
+    ApproachRecommendation,
+    ApproachType,
     FewShotParams,
     LLMJobOutput,
     MetadataExtractionLLMJobResult,
     MetadataExtractionParams,
     MetadataExtractionResult,
+    SpecificTaskParameters,
     TaskType,
     ZeroShotParams,
 )
@@ -24,6 +27,19 @@ from systems.job_system.job_dto import Job
 
 
 class MetadataExtractionTask(LLMTask[MetadataStrategy, MetadataExtractionParams]):
+    @classmethod
+    def determine_approach(
+        cls, db: Session, task_parameters: SpecificTaskParameters
+    ) -> ApproachRecommendation:
+        return ApproachRecommendation(
+            recommended_approach=ApproachType.LLM_ZERO_SHOT,
+            available_approaches={
+                ApproachType.LLM_ZERO_SHOT: True,
+                ApproachType.LLM_FEW_SHOT: False,
+            },
+            reasoning="Only zero-shot approach is available for metadata extraction (yet).",
+        )
+
     def execute(
         self,
         *,

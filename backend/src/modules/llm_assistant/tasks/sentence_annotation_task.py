@@ -1,22 +1,31 @@
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from config import conf
 from core.annotation.sentence_annotation_crud import crud_sentence_anno
 from core.annotation.sentence_annotation_dto import (
     SentenceAnnotationCreate,
     SentenceAnnotationRead,
 )
-from core.user.user_crud import ASSISTANT_FEWSHOT_ID, ASSISTANT_ZEROSHOT_ID
+from core.code.code_crud import crud_code
+from core.user.user_crud import (
+    ASSISTANT_FEWSHOT_ID,
+    ASSISTANT_ZEROSHOT_ID,
+    SYSTEM_USER_IDS,
+)
 from modules.llm_assistant.llm_job_dto import (
+    ApproachRecommendation,
+    ApproachType,
     FewShotParams,
     LLMJobOutput,
     SentenceAnnotationLLMJobResult,
     SentenceAnnotationParams,
     SentenceAnnotationResult,
+    SpecificTaskParameters,
     TaskType,
     ZeroShotParams,
 )
-from modules.llm_assistant.prompts.prompt_builder import DataTag
+from modules.llm_assistant.prompts.data_tag import DataTag
 from modules.llm_assistant.strategies.sentence_annotation_strategy import (
     LLMSentenceAnnotationResults,
     SentenceAnnotationStrategy,
@@ -33,6 +42,72 @@ from systems.job_system.job_dto import Job
 class SentenceAnnotationTask(
     LLMTask[SentenceAnnotationStrategy, SentenceAnnotationParams]
 ):
+    @classmethod
+    def determine_approach(
+        cls, db: Session, task_parameters: SpecificTaskParameters
+    ) -> ApproachRecommendation:
+        assert isinstance(task_parameters, SentenceAnnotationParams)
+        selected_code_ids = task_parameters.code_ids
+
+        # 1. Find the number of labeled sentences for each code
+        sentence_annotations = [
+            sa
+            for sa in crud_sentence_anno.read_by_code_ids(
+                db=db, code_ids=selected_code_ids
+            )
+            if sa.user_id not in SYSTEM_USER_IDS  # exclude system / assistant users
+        ]
+
+        # 2. Find the code names
+        codes = crud_code.read_by_ids(db=db, ids=selected_code_ids)
+        code_id2name = {code.id: code.name for code in codes}
+
+        # 3. Count annotations by code_id
+        code_id2num_sent_annos = {code.id: 0 for code in codes}
+        for sent_anno in sentence_annotations:
+            code_id2num_sent_annos[sent_anno.code_id] += 1
+
+        # 4. Determine the minimum number of labeled sentences
+        code_with_min_labeled_sentences = min(
+            code_id2num_sent_annos.keys(),
+            key=lambda k: code_id2num_sent_annos[k],
+        )
+        min_labeled_sentences = code_id2num_sent_annos[code_with_min_labeled_sentences]
+
+        # 5. Create reasoning
+        reasoning = (
+            f"You selected {len(selected_code_ids)} codes. "
+            "I checked the number of labeled sentences for each code and found:\n"
+        )
+        code_counts = []
+        for code_id, num_labeled_sentences in code_id2num_sent_annos.items():
+            code_counts.append(f"{code_id2name[code_id]}: {num_labeled_sentences}")
+        reasoning += "\n".join(code_counts)
+        reasoning += (
+            f"\nThe code with the least labeled sentences ({min_labeled_sentences}) "
+            f"is {code_id2name[code_with_min_labeled_sentences]}. "
+            "Based on this, I recommend the following approach:"
+        )
+
+        # 6. Determine available approaches
+        available_approaches: dict[ApproachType, bool] = {
+            ApproachType.LLM_ZERO_SHOT: True,
+            ApproachType.LLM_FEW_SHOT: min_labeled_sentences
+            >= conf.llm_assistant.few_shot_threshold,
+        }
+
+        # 7. Determine recommended approach
+        if min_labeled_sentences < conf.llm_assistant.few_shot_threshold:
+            recommended_approach = ApproachType.LLM_ZERO_SHOT
+        else:
+            recommended_approach = ApproachType.LLM_FEW_SHOT
+
+        return ApproachRecommendation(
+            recommended_approach=recommended_approach,
+            available_approaches=available_approaches,
+            reasoning=reasoning,
+        )
+
     def execute(
         self,
         *,
