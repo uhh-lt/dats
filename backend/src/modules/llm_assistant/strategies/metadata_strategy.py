@@ -23,18 +23,16 @@ en_prompt_template = """
 Please extract the following information from the provided document. It is possible that not all information is contained in the document:
 {}.
 
-Please answer in this format. If the information is not contained in the document, skip the field:
+Use the following value requirements. If information is not contained in the document, omit that field:
 {}
 
-e.g.
+Example values:
 {}
 
 Document:
 <document>
 
 Remember, you MUST extract the information verbatim from the document, do not generate facts!
-
-Lets think step by step.
 """
 
 # GERMAN
@@ -43,18 +41,16 @@ de_prompt_template = """
 Bitte extrahiere die folgenden Informationen aus dem Dokument. Es kann sein, dass nicht alle Informationen im Dokument enthalten sind:
 {}.
 
-Bitte anworte in diesem Format. Wenn die Information nicht im Dokument enthalten ist, überspringe das Feld:
+Beachte die folgenden Anforderungen an die Werte. Wenn eine Information nicht im Dokument enthalten ist, überspringe das Feld:
 {}
 
-e.g.
+Beispielwerte:
 {}
 
 Dokument:
 <document>
 
 Denke daran, die Informationen MÜSSEN wörtlich aus dem Dokument extrahiert werden, generiere keine Fakten!
-
-Lass uns Schritt für Schritt denken.
 """
 
 example_template = """
@@ -69,13 +65,14 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         "Extracts the selected metadata fields from each document.\n"
         "\n"
         "**How it works:** The LLM sees the full document content along with the "
-        "metadata fields to extract (key + description). It returns a structured "
-        "JSON object with the extracted values.\n"
+        "metadata fields to extract (key + description). It returns the extracted "
+        "values as a structured response.\n"
         "\n"
         "**Example:** Given the metadata fields `author` and `date` and a news "
-        "article, the LLM responds with:\n"
+        "article, an example response is:\n"
         "\n"
-        '    {"author": "Jane Doe", "date": "2024-01-15"}\n'
+        "    author: Jane Doe\n"
+        "    date: 2024-01-15\n"
         "\n"
         "**When to use:** For extracting structured metadata (author, date, source, "
         "etc.) from documents."
@@ -166,18 +163,12 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
             MetaType.LIST: "<item1, item2, item3>",
         }
 
-        return (
-            "{\n"
-            + ",\n".join(
-                [
-                    example_template.format(
-                        self.metadataid2metadata[pmid].key,
-                        answer_templates[self.metadataid2metadata[pmid].metatype],
-                    ).strip()
-                    for pmid in project_metadata_ids
-                ]
-            )
-            + "\n}"
+        return "\n".join(
+            example_template.format(
+                self.metadataid2metadata[pmid].key,
+                answer_templates[self.metadataid2metadata[pmid].metatype],
+            ).strip()
+            for pmid in project_metadata_ids
         )
 
     def _build_example(self, project_metadata_ids: list[int]) -> str:
@@ -190,18 +181,12 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
             MetaType.BOOLEAN: "True",
             MetaType.LIST: "info1, info2, info3",
         }
-        return (
-            "{\n"
-            + ",\n".join(
-                [
-                    example_template.format(
-                        self.metadataid2metadata[pmid].key,
-                        example_values[self.metadataid2metadata[pmid].metatype],
-                    ).strip()
-                    for pmid in project_metadata_ids
-                ]
-            )
-            + "\n}"
+        return "\n".join(
+            example_template.format(
+                self.metadataid2metadata[pmid].key,
+                example_values[self.metadataid2metadata[pmid].metatype],
+            ).strip()
+            for pmid in project_metadata_ids
         )
 
     def _build_user_prompt_template(

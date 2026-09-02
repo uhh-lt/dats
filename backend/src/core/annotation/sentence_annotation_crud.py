@@ -184,7 +184,11 @@ class CRUDSentenceAnnotation(
     def read_by_code_ids(
         self, db: Session, *, code_ids: list[int]
     ) -> list[SentenceAnnotationORM]:
-        return super().read_by_ids(db=db, ids=code_ids, id_field="code_id")
+        if not code_ids:
+            return []
+
+        query = db.query(self.model).filter(self.model.code_id.in_(code_ids))
+        return query.all()
 
     def read_by_user_sdocs_codes(
         self, db: Session, *, user_id: int, sdoc_ids: list[int], code_ids: list[int]

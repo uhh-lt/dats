@@ -1,13 +1,13 @@
 # ENGLISH
 
 en_system_prompt_template = """
-You are a system to support the analysis of large amounts of text. You will always answer in the required format and use no other formatting than expected by the user!
+You support the analysis of large amounts of text. Follow the task instructions precisely and do not add information that is unsupported by the provided text.
 """
 
 # GERMAN
 
 de_system_prompt_template = """
-Du bist ein System zur Unterstützung bei der Analyse großer Textmengen. Du antwortest immer in dem geforderten Format und verwendest keine andere Formatierung als vom Benutzer erwartet!
+Du unterstützt die Analyse großer Textmengen. Befolge die Aufgabenstellung genau und füge keine Informationen hinzu, die nicht durch den bereitgestellten Text belegt sind.
 """
 
 system_prompt_templates = {

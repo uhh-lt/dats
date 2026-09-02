@@ -28,9 +28,7 @@ en_prompt_template = """
 Please classify the document into all appropriate categories below. Multiple or zero categories are possible:
 {}.
 
-Please answer in this format. The reasoning is optional.
-Categories: <category 1>, <category 2>, ...
-Reasoning: <reason>
+Select only from the provided categories and briefly explain your selection.
 
 e.g.
 {}
@@ -42,8 +40,8 @@ Remember, you MUST classify the document using the provided categories, do not g
 """
 
 en_example_tempalate = """
-Categories: {}
-Reasoning: This document is about {}.
+Category: {}
+Explanation: This document is about {}.
 """
 
 
@@ -53,9 +51,7 @@ de_prompt_template = """
 Bitte klassifiziere das Dokument in alle passenden folgenden Kategorien. Es sind mehrere oder keine Kategorien möglich:
 {}.
 
-Bitte anworte in diesem Format. Die Begründung ist optional.
-Kategorien: <Kategorie 1>, <Kategorie 2>, ...
-Begründung: <Begründung>
+Wähle ausschließlich aus den bereitgestellten Kategorien und begründe deine Auswahl kurz.
 
 e.g.
 {}
@@ -67,7 +63,7 @@ Denke daran, das Dokument MUSS mithilfe der gegebenen Kategorien klassifiziert w
 """
 
 de_example_tempalate = """
-Kategorien: {}
+Kategorie: {}
 Begründung: Das Dokument handelt von {}.
 """
 
@@ -83,10 +79,10 @@ class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
         "document and provides a reasoning for each assignment.\n"
         "\n"
         "**Example:** Given the tags `News` and `Sports` and a document about "
-        "a football match, the LLM responds with:\n"
+        "a football match, the LLM selects:\n"
         "\n"
         "    Category: Sports\n"
-        "    Reasoning: The document discusses a football match result.\n"
+        "    Explanation: The document discusses a football match result.\n"
         "\n"
         "**When to use:** For categorizing documents into a flat tag set."
     )

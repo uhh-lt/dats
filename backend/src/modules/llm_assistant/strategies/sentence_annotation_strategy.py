@@ -40,9 +40,7 @@ en_prompt_template = """
 Please use the following categories to classify sentences of the provided document:
 {}
 
-Please answer in this format. Do not provide your reasoning. Only use the provided categories.
-Sentence ID: <sentence number>
-Category: <category>
+Classify only sentences that clearly fit. Identify them by sentence number, use only the provided categories, and do not provide reasoning.
 
 e.g.
 {}
@@ -52,7 +50,6 @@ This is the document, sentence by sentence:
 
 Remember you do not have to provide a category for each sentence. Only assign a category if you are sure that the category fits well to the sentence. Use only the provided categories!
 
-Lets think step by step.
 """
 
 en_example_template = """
@@ -67,9 +64,7 @@ de_prompt_template = """
 Bitte nutze die folgenden Kategorien um Sätze des gegebenen Dokumentes zu klassifizieren:
 {}
 
-Bitte anworte in diesem Format. Gebe keine Begründung an. Verwende nur die bereitgestellten Kategorien.
-Satz ID: <Satz Nummer>
-Kategorie: <Kategorie>
+Klassifiziere nur Sätze, auf die eine Kategorie eindeutig passt. Identifiziere sie anhand der Satznummer, verwende nur die bereitgestellten Kategorien und gib keine Begründung an.
 
 e.g.
 {}
@@ -79,11 +74,10 @@ Dies ist das Dokument, Satz für Satz:
 
 Denke daran, dass du nicht für jeden Satz eine Kategorie angeben musst. Vergebe nur eine Kategorie, wenn du dir sicher bist, dass die Kategorie gut zu dem Satz passt. Verwende ausschließlich die bereitgestellten Kategorien!
 
-Lass uns Schritt für Schritt denken.
 """
 
 de_example_template = """
-Satz ID: {}
+Satz-ID: {}
 Kategorie: {}
 """
 
@@ -103,7 +97,7 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
         "    1. Climate change is real.\n"
         "    2. Global temperatures rose by 1.1\u00b0C since 1880.\n"
         "\n"
-        "The LLM responds with:\n"
+        "The classifications are:\n"
         "\n"
         "    Sentence 1: Claim\n"
         "    Sentence 2: Evidence\n"
@@ -198,10 +192,10 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
 
         examples = [
             self.example_templates[language].format(idx, example)
-            for idx, example in enumerate(examples)
+            for idx, example in enumerate(examples, start=1)
         ]
 
-        return "\n".join(examples)
+        return "\n\n".join(examples)
 
     def _build_user_prompt_template(
         self,
