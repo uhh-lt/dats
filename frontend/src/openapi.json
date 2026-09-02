@@ -10557,30 +10557,36 @@
           },
           "fuzzy_threshold": {
             "type": "number",
+            "maximum": 1,
+            "minimum": 0,
             "title": "Fuzzy Threshold",
             "description": "Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
             "default": 0.85
           },
           "context_before_chars": {
             "type": "integer",
+            "minimum": 0,
             "title": "Context Before Chars",
             "description": "Number of context characters the LLM should provide before the quote",
             "default": 64
           },
           "context_after_chars": {
             "type": "integer",
+            "minimum": 0,
             "title": "Context After Chars",
             "description": "Number of context characters the LLM should provide after the quote",
             "default": 64
           },
           "chunk_size_tokens": {
             "type": "integer",
+            "exclusiveMinimum": 0,
             "title": "Chunk Size Tokens",
             "description": "Size of document chunks (in tokens) sent to the LLM",
             "default": 650
           },
           "chunk_overlap_tokens": {
             "type": "integer",
+            "minimum": 0,
             "title": "Chunk Overlap Tokens",
             "description": "Overlap (in tokens) between consecutive chunks",
             "default": 100
