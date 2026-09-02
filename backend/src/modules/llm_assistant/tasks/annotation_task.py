@@ -48,6 +48,26 @@ class AnnotationTask(LLMTask):
     - FuzzyGroundingStrategy: LLM extracts text passages as JSON; backend grounds them.
     """
 
+    @staticmethod
+    def _dedupe_annotations(
+        annotations: list[SpanAnnotationCreate],
+    ) -> list[SpanAnnotationCreate]:
+        """Remove exact duplicate suggestions while preserving their order."""
+        seen: set[tuple[int, int, int, int]] = set()
+        result: list[SpanAnnotationCreate] = []
+        for annotation in annotations:
+            key = (
+                annotation.sdoc_id,
+                annotation.code_id,
+                annotation.begin,
+                annotation.end,
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(annotation)
+        return result
+
     @classmethod
     def determine_approach(
         cls, db: Session, task_parameters: SpecificTaskParameters
@@ -269,6 +289,9 @@ class AnnotationTask(LLMTask):
                             code_id=code_id,
                         )
                     )
+
+            # Deduplicate after all responses for the document batch have been parsed.
+            suggested_annotations = self._dedupe_annotations(suggested_annotations)
 
             # create the suggested annotations in the database
             created_annos = crud_span_anno.create_bulk(
