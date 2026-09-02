@@ -55,7 +55,7 @@ A **strategy** describes **HOW** the LLM assistant accomplishes a task. Each str
 | `TaggingStrategy` | Tagging | Default tagging via structured output |
 | `MetadataStrategy` | Metadata Extraction | Default metadata extraction |
 | `NERInlineTagStrategy` | Annotation | LLM repeats text with inline XML tags |
-| `FuzzyGroundingStrategy` | Annotation | LLM extracts entities as JSON; backend grounds them via fuzzy matching |
+| `FuzzyGroundingStrategy` | Annotation | LLM extracts text passages as JSON; backend grounds them via fuzzy matching |
 | `SentenceAnnotationStrategy` | Sentence Annotation | Per-sentence classification |
 
 A task can support multiple strategies (e.g., Annotation has two). The mapping is defined in `llm_task_strategy_mapping.py`.

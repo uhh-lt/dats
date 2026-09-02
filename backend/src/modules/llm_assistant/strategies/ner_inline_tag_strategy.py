@@ -32,7 +32,7 @@ class LLMAnnotationResults(BaseModel):
 lac = conf.llm_assistant
 
 EN_PROMPT_TEMPLATE = """
-You are an assistant that performs word-level classification.
+You are an assistant that identifies and classifies relevant text passages.
 
 Allowed codes:
 {codes}
@@ -45,7 +45,7 @@ Rules:
 - Do NOT add or remove characters outside of tags
 - Do NOT change whitespace or punctuation
 - Codes must not overlap or nest
-- Only use the allowed codes around the specific entities and not the entire sentence
+- Wrap only the text passages that are relevant to an allowed code; do not include unrelated surrounding text
 - If no relevant text that fits the codes is present, return the text unchanged
 
 Lets think step by step.
@@ -56,7 +56,7 @@ Text:
 
 
 DE_PROMPT_TEMPLATE = """
-Du bist ein Assistent für word-level Klassifizierung.
+Du bist ein Assistent, der relevante Textpassagen identifiziert und klassifiziert.
 
 Erlaubte Codes:
 {codes}
@@ -69,7 +69,7 @@ Regeln:
 - Füge außerhalb der Tags keine Zeichen hinzu und entferne keine
 - Ändere keine Leerzeichen oder Satzzeichen
 - Annotationen dürfen sich nicht überlappen oder verschachtelt sein
-- Verwende nur die erlaubten Codes um die spezifischen Entitäten und nicht um den gesamten Satz
+- Umschließe nur Textpassagen, die für einen erlaubten Code relevant sind; schließe keinen irrelevanten umgebenden Text ein
 - Wenn keine Textpassage passend zu den Codes ist, gib den Text unverändert zurück
 
 Lass uns Schritt für Schritt denken.
@@ -81,19 +81,19 @@ Text:
 EN_FALLBACK_EXAMPLE = """
 Example:
 Input:
-John lives in New York.
+The survey results support the proposal.
 
 Output:
-<PERSON>John</PERSON> lives in <LOCATION>New York</LOCATION>.
+The <EVIDENCE>survey results</EVIDENCE> support the proposal.
 """.strip()
 
 DE_FALLBACK_EXAMPLE = """
 Beispiel:
 Eingabe:
-John lebt in New York.
+Die Umfrageergebnisse stützen den Vorschlag.
 
 Ausgabe:
-<PERSON>John</PERSON> lebt in <LOCATION>New York</LOCATION>.
+Die <BELEG>Umfrageergebnisse</BELEG> stützen den Vorschlag.
 """.strip()
 
 
@@ -151,26 +151,27 @@ def _render_sentence_example_multi(
 class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
     """Span annotation via inline XML-style tags.
 
-    The LLM repeats the original text and wraps entities in inline tags like
-    ``<PER>Tim</PER>``. Parsing depends on those tags.
+    The LLM repeats the original text and wraps relevant text passages in inline
+    tags like ``<EVIDENCE>survey results</EVIDENCE>``. Parsing depends on those tags.
     """
 
     strategy_type = StrategyType.NER_INLINE_TAGS
     display_name = "Inline Tagging"
     description = (
-        "The LLM repeats the original text and wraps entities in inline tags.\n"
+        "The LLM repeats the original text and wraps relevant text passages in "
+        "inline tags.\n"
         "\n"
         "**How it works:** The LLM receives the full document (or individual sentences) "
-        "and is asked to repeat the text verbatim, wrapping each recognized entity in "
+        "and is asked to repeat the text verbatim, wrapping each relevant passage in "
         "XML-like tags. The tag name is the code name.\n"
         "\n"
-        "**Example:** Given the code `PER` (Person) and the input text:\n"
+        "**Example:** Given the code `Evidence` and the input text:\n"
         "\n"
-        "    Tim met Anna in Berlin.\n"
+        "    The survey results support the proposal.\n"
         "\n"
         "The LLM responds with:\n"
         "\n"
-        "    <PER>Tim</PER> met <PER>Anna</PER> in Berlin.\n"
+        "    The <EVIDENCE>survey results</EVIDENCE> support the proposal.\n"
         "\n"
         "The backend then parses these tags to compute exact character offsets.\n"
         "\n"
@@ -332,26 +333,26 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
             before = result.text[cursor : match.start()]
             clean_text += before
 
-            entity_text = match.group("text")
+            passage_text = match.group("text")
             code = match.group("code")
 
             # 2. Calculate the offsets based on the CURRENT length of our clean string
             begin = len(clean_text)
-            end = begin + len(entity_text)
+            end = begin + len(passage_text)
 
             # 3. Only append to spans if the code is recognized
             if code.upper() in self.codename2id_dict:
                 spans.append(
                     ParsedSpan(
                         code_id=self.codename2id_dict[code.upper()],
-                        text=entity_text,
+                        text=passage_text,
                         begin=begin + start_offset,
                         end=end + start_offset,
                     )
                 )
 
             # 4. ALWAYS append the text and advance the original string cursor
-            clean_text += entity_text
+            clean_text += passage_text
             cursor = match.end()
 
         return spans

@@ -45,7 +45,7 @@ class AnnotationTask(LLMTask):
 
     Supports two strategies:
     - NERInlineTagStrategy: LLM repeats text with inline XML tags.
-    - FuzzyGroundingStrategy: LLM extracts entities as JSON; backend grounds them.
+    - FuzzyGroundingStrategy: LLM extracts text passages as JSON; backend grounds them.
     """
 
     @classmethod
