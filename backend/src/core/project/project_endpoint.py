@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
+from websocket import manager
 
 from common.dependencies import get_current_user, get_db_session
 from common.sdoc_status_enum import SDocStatus
@@ -34,9 +35,16 @@ def create_new_project(
     db: Session = Depends(get_db_session),
     proj: ProjectCreate,
     current_user: UserORM = Depends(get_current_user),
+    background_tasks: BackgroundTasks,
 ) -> ProjectRead:
     db_obj = ProjectService().create_project(
         db=db, create_dto=proj, creating_user_id=current_user.id
+    )
+    background_tasks.add_task(
+        manager.send_personal_event,
+        user_id=current_user.id,
+        event_type="PROJECT_CREATED",
+        payload={"project_id": db_obj.id},
     )
     return ProjectRead.model_validate(db_obj)
 
@@ -85,9 +93,17 @@ def delete_project(
     db: Session = Depends(get_db_session),
     proj_id: int,
     authz_user: AuthzUser = Depends(),
+    background_tasks: BackgroundTasks,
 ) -> ProjectRead:
     authz_user.assert_in_project(proj_id)
     db_obj = ProjectService().delete_project(db=db, proj_id=proj_id)
+    background_tasks.add_task(
+        manager.broadcast_to_project_users,
+        db=db,
+        event_type="PROJECT_DELETED",
+        payload={"project_id": db_obj.id},
+        proj_db_obj=db_obj,
+    )
     return ProjectRead.model_validate(db_obj)
 
 

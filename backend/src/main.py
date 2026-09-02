@@ -1,12 +1,14 @@
 # ignore unorganized imports for this file
 # ruff: noqa: E402
 
+import asyncio
 import inspect
+import json
 import os
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.routing import APIRoute
@@ -14,12 +16,15 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from rq.exceptions import NoSuchJobError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 from websocket import manager
 
-from common.dependencies import get_current_user_for_ws
+from common.dependencies import (
+    get_current_user,
+    get_db_session,
+)
 from config import conf
-from core.user.user_orm import UserORM
 from repos.repo_base import RepoBase
 from utils.import_utils import import_by_suffix
 from utils.logger import setup_logging
@@ -117,9 +122,29 @@ for em in endpoint_modules:
 
 @app.websocket("/ws")
 async def websocket_endpoint(
-    websocket: WebSocket, current_user: UserORM = Depends(get_current_user_for_ws)
+    websocket: WebSocket, db: Session = Depends(get_db_session)
 ):
+    await websocket.accept()
+    try:
+        # Wait up to 5 seconds for the authentication message
+        auth_message = await asyncio.wait_for(websocket.receive_json(), timeout=5.0)
+        token = auth_message.get("token")
+
+        if not token:
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION, reason="Missing token"
+            )
+            return
+        current_user = get_current_user(db, token)
+
+    except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Authentication failed"
+        )
+        return
+
     await manager.connect(websocket, current_user.id)
+    logger.info(f"User {current_user.id} connected to WebSocket.")
     try:
         while True:
             data = await websocket.receive_text()  # noqa: F841
