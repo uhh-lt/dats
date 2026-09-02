@@ -128,6 +128,18 @@ export const StrategySelectionStep = memo(() => {
   // local state
   const [selectedStrategy, setSelectedStrategy] = useState<StrategyType | undefined>(undefined);
   const [fuzzyParams, setFuzzyParams] = useState(fuzzyDefaults);
+  const fuzzyParamsAreValid =
+    fuzzyParams.fuzzy_threshold >= 0 &&
+    fuzzyParams.fuzzy_threshold <= 1 &&
+    Number.isInteger(fuzzyParams.context_before_chars) &&
+    fuzzyParams.context_before_chars >= 0 &&
+    Number.isInteger(fuzzyParams.context_after_chars) &&
+    fuzzyParams.context_after_chars >= 0 &&
+    Number.isInteger(fuzzyParams.chunk_size_tokens) &&
+    fuzzyParams.chunk_size_tokens > 0 &&
+    Number.isInteger(fuzzyParams.chunk_overlap_tokens) &&
+    fuzzyParams.chunk_overlap_tokens >= 0 &&
+    fuzzyParams.chunk_overlap_tokens < fuzzyParams.chunk_size_tokens;
 
   // the currently selected strategy info
   const selectedStrategyInfo: StrategyInfo | undefined = useMemo(
@@ -253,6 +265,7 @@ export const StrategySelectionStep = memo(() => {
               value={fuzzyParams.fuzzy_threshold}
               onChange={handleChangeFuzzyParam("fuzzy_threshold")}
               inputProps={{ step: 0.05, min: 0, max: 1 }}
+              error={fuzzyParams.fuzzy_threshold < 0 || fuzzyParams.fuzzy_threshold > 1}
               helperText="Minimum similarity (0-1) for grounding extracted quotes"
             />
             <TextField
@@ -262,6 +275,8 @@ export const StrategySelectionStep = memo(() => {
               value={fuzzyParams.context_before_chars}
               onChange={handleChangeFuzzyParam("context_before_chars")}
               inputProps={{ step: 8, min: 0 }}
+              error={!Number.isInteger(fuzzyParams.context_before_chars) || fuzzyParams.context_before_chars < 0}
+              helperText="Must be a non-negative whole number"
             />
             <TextField
               label="Context after (chars)"
@@ -270,6 +285,8 @@ export const StrategySelectionStep = memo(() => {
               value={fuzzyParams.context_after_chars}
               onChange={handleChangeFuzzyParam("context_after_chars")}
               inputProps={{ step: 8, min: 0 }}
+              error={!Number.isInteger(fuzzyParams.context_after_chars) || fuzzyParams.context_after_chars < 0}
+              helperText="Must be a non-negative whole number"
             />
             <TextField
               label="Chunk size (tokens)"
@@ -278,6 +295,8 @@ export const StrategySelectionStep = memo(() => {
               value={fuzzyParams.chunk_size_tokens}
               onChange={handleChangeFuzzyParam("chunk_size_tokens")}
               inputProps={{ step: 50, min: 1 }}
+              error={!Number.isInteger(fuzzyParams.chunk_size_tokens) || fuzzyParams.chunk_size_tokens <= 0}
+              helperText="Must be a positive whole number"
             />
             <TextField
               label="Chunk overlap (tokens)"
@@ -286,6 +305,12 @@ export const StrategySelectionStep = memo(() => {
               value={fuzzyParams.chunk_overlap_tokens}
               onChange={handleChangeFuzzyParam("chunk_overlap_tokens")}
               inputProps={{ step: 10, min: 0 }}
+              error={
+                !Number.isInteger(fuzzyParams.chunk_overlap_tokens) ||
+                fuzzyParams.chunk_overlap_tokens < 0 ||
+                fuzzyParams.chunk_overlap_tokens >= fuzzyParams.chunk_size_tokens
+              }
+              helperText="Must be a non-negative whole number smaller than the chunk size"
             />
           </Stack>
         )}
@@ -297,7 +322,10 @@ export const StrategySelectionStep = memo(() => {
           variant="contained"
           startIcon={<PlayCircleIcon />}
           loadingPosition="start"
-          disabled={!selectedStrategy}
+          disabled={
+            !selectedStrategy ||
+            (selectedStrategy === StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING && !fuzzyParamsAreValid)
+          }
           onClick={handleNext}
         >
           Next!
