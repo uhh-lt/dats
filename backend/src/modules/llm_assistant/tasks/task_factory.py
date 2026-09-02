@@ -18,6 +18,7 @@ TASK_FOR_TASK_TYPE: dict[TaskType, type[LLMTask]] = {
 
 
 def get_task_class(task_type: TaskType) -> type[LLMTask]:
+    """Return the task class registered for a task type."""
     task_cls = TASK_FOR_TASK_TYPE.get(task_type)
     if task_cls is None:
         raise ValueError(f"No task registered for task type {task_type}")

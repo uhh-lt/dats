@@ -18,45 +18,52 @@ The module is built around three core concepts: **Tasks**, **Strategies**, and *
      │  build_strategy() │  │  build_task()   │
      └─────────┬─────────┘  └────────┬────────┘
                │                     │
-     ┌─────────▼─────────┐  ┌────────▼────────┐
-     │    LLMStrategy    │  │     LLMTask     │
-     │  (HOW to do it)   │  │  (WHAT to do)   │
-     │                   │  │                 │
-     │ - build_prompt()  │  │ - execute()     │
-     │ - parse_result()  │  │ - determine_    │
-     │ - response_model  │  │   approach()    │
-     └───────────────────┘  └─────────────────┘
+     ┌─────────▼────────────┐  ┌────────▼────────┐
+     │      LLMStrategy      │  │     LLMTask     │
+     │    (HOW to do it)     │  │  (WHAT to do)   │
+     │                       │  │                 │
+     │ - generate_prompts()  │  │ - execute()     │
+     │ - parse_result()      │  │ - determine_    │
+     │ - response_model      │  │   approach()    │
+     └───────────────────────┘  └─────────────────┘
 ```
 
 ### Tasks (`tasks/`)
 
-A **task** describes **WHAT** the LLM assistant does. Each task is a class inheriting from `LLMTask` and implements:
+A **task** describes **WHAT** the LLM assistant does. `LLMTask.execute()` is a final Template Method that always runs the same lifecycle:
 
-- **`execute()`** — the batch-processing skeleton: iterates documents in batches, builds prompts via the strategy, calls the LLM, assembles per-document results.
-- **`determine_approach()`** — a classmethod that recommends zero-shot vs few-shot based on the task parameters (e.g., how many annotations exist per code).
+1. Initialize the job and create its execution context.
+2. Run the optional task-specific `_prepare()` hook.
+3. Ask `LLMDocumentProcessor` to generate and batch the actual LLM requests.
+4. Pass each complete document response to `_process_document()`.
+5. Pass all document results to `_build_output()`.
 
-| Task | File | Description |
-|------|------|-------------|
-| `TaggingTask` | `tagging_task.py` | Assign tags to documents |
-| `MetadataExtractionTask` | `metadata_extraction_task.py` | Extract metadata from documents |
-| `AnnotationTask` | `annotation_task.py` | Create span annotations in documents |
-| `SentenceAnnotationTask` | `sentence_annotation_task.py` | Classify individual sentences |
+Concrete tasks implement `_get_response_model()`, `_process_document()`, `_build_output()`, and `determine_approach()`. They override `_prepare()` only when setup such as deleting prior annotations is required.
+
+`LLMDocumentProcessor` owns the batching mechanics. It loads documents incrementally and batches actual prompt requests rather than documents. A strategy may yield one or many prompts per document; responses retain their document and message (sentence/chunk) identity and are delivered to tasks only when the document is complete.
+
+| Task                     | File                          | Description                          |
+| ------------------------ | ----------------------------- | ------------------------------------ |
+| `TaggingTask`            | `tagging_task.py`             | Assign tags to documents             |
+| `MetadataExtractionTask` | `metadata_extraction_task.py` | Extract metadata from documents      |
+| `AnnotationTask`         | `annotation_task.py`          | Create span annotations in documents |
+| `SentenceAnnotationTask` | `sentence_annotation_task.py` | Classify individual sentences        |
 
 ### Strategies (`strategies/`)
 
 A **strategy** describes **HOW** the LLM assistant accomplishes a task. Each strategy inherits from `LLMStrategy` and owns:
 
-- **Prompt building** — constructs system + user prompts from templates, with placeholder substitution (`<document>`, `<sentence>`, `<chunk>`)
+- **`generate_prompts()`** — lazily yields the system + user messages required for a document, with placeholder substitution (`<document>`, `<sentence>`, `<chunk>`)
 - **Response model** — the Pydantic model used for structured LLM output
 - **`parse_result()`** — parses the LLM response and grounds it to document offsets
 
-| Strategy | Task | Description |
-|----------|------|-------------|
-| `TaggingStrategy` | Tagging | Default tagging via structured output |
-| `MetadataStrategy` | Metadata Extraction | Default metadata extraction |
-| `NERInlineTagStrategy` | Annotation | LLM repeats text with inline XML tags |
-| `FuzzyGroundingStrategy` | Annotation | LLM extracts text passages as JSON; backend grounds them via fuzzy matching |
-| `SentenceAnnotationStrategy` | Sentence Annotation | Per-sentence classification |
+| Strategy                     | Task                | Description                                                                 |
+| ---------------------------- | ------------------- | --------------------------------------------------------------------------- |
+| `TaggingStrategy`            | Tagging             | Default tagging via structured output                                       |
+| `MetadataStrategy`           | Metadata Extraction | Default metadata extraction                                                 |
+| `NERInlineTagStrategy`       | Annotation          | LLM repeats text with inline XML tags                                       |
+| `FuzzyGroundingStrategy`     | Annotation          | LLM extracts text passages as JSON; backend grounds them via fuzzy matching |
+| `SentenceAnnotationStrategy` | Sentence Annotation | Per-sentence classification                                                 |
 
 A task can support multiple strategies (e.g., Annotation has two). The mapping is defined in `llm_task_strategy_mapping.py`.
 
@@ -81,6 +88,7 @@ All request/response types: task parameters (`TaggingParams`, `AnnotationParams`
 ### Service (`llm_service.py`)
 
 Thin orchestration layer used by the REST endpoints. Delegates to tasks and strategies via the factories. Handles:
+
 - `determine_approach` → delegates to `task_cls.determine_approach()`
 - `create_prompt_templates` → builds a strategy to generate prompt templates
 - `list_strategies` → returns available strategies for a task type
@@ -89,6 +97,7 @@ Thin orchestration layer used by the REST endpoints. Delegates to tasks and stra
 ### Endpoints (`llm_endpoint.py`)
 
 REST API under `/llm/`:
+
 - `POST /llm/determine_approach` — get approach recommendation
 - `POST /llm/create_prompt_templates` — generate prompt templates
 - `POST /llm/list_strategies` — list available strategies
@@ -100,7 +109,7 @@ REST API under `/llm/`:
 1. Create a new params class in `llm_job_dto.py` (inherit `DocumentBasedTaskParams`)
 2. Create a result class in `llm_job_dto.py`
 3. Create the task class in `tasks/`, inheriting `LLMTask`
-4. Implement `execute()` and `determine_approach()`
+4. Implement `_get_response_model()`, `_process_document()`, `_build_output()`, and `determine_approach()`
 5. Register in `tasks/task_factory.py` (`TASK_FOR_TASK_TYPE`)
 6. Create at least one strategy in `strategies/`
 7. Register the strategy in `llm_task_strategy_mapping.py` (`STRATEGIES_FOR_TASK_TYPE`)

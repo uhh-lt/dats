@@ -1,6 +1,7 @@
 import difflib
 import random
 from collections import defaultdict
+from collections.abc import Iterator
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -164,11 +165,13 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         )
 
     def get_response_model(self) -> type[LLMExtractionResult]:
+        """Return the structured schema for extracted text passages."""
         return LLMExtractionResult
 
     # --- PROMPT TEMPLATE GENERATION ---
 
     def _build_examples_block(self, language: str) -> str:
+        """Build the fallback extraction example for a language."""
         if language == "en":
             return (
                 "Example output:\n"
@@ -190,6 +193,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         example_ids: list[int] | None = None,
         params: AnnotationParams,
     ) -> str:
+        """Build a chunk-extraction prompt template for the selected codes."""
         codes = ", ".join(
             self.codeids2code_dict[cid].name.upper() for cid in params.code_ids
         )
@@ -222,6 +226,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         example_ids: list[int] | None,
         params: AnnotationParams,
     ) -> str:
+        """Build extraction examples from existing span annotations."""
         from core.annotation.span_annotation_crud import crud_span_anno
         from core.doc.source_document_data_crud import crud_sdoc_data
         from core.user.user_crud import SYSTEM_USER_IDS
@@ -292,16 +297,20 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         Returns a list of (chunk_start_char_offset, chunk_text).
         """
+        return [
+            self._get_chunk(sdoc_data, chunk_id)
+            for chunk_id in range(self._get_num_chunks(sdoc_data))
+        ]
+
+    def _get_num_chunks(self, sdoc_data: SourceDocumentDataORM) -> int:
+        """Calculate how many overlapping token chunks a document requires."""
         num_tokens = len(sdoc_data.token_starts)
         size = self.fuzzy_params.chunk_size_tokens
-        overlap = self.fuzzy_params.chunk_overlap_tokens
-
         if num_tokens <= size:
-            return [(0, sdoc_data.content)]
+            return 1
 
-        step = size - overlap
-        num_chunks = (num_tokens - size + step - 1) // step + 1
-        return [self._get_chunk(sdoc_data, chunk_id) for chunk_id in range(num_chunks)]
+        step = size - self.fuzzy_params.chunk_overlap_tokens
+        return (num_tokens - size + step - 1) // step + 1
 
     def _get_chunk(
         self, sdoc_data: SourceDocumentDataORM, chunk_id: int
@@ -320,7 +329,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             return 0, sdoc_data.content
 
         step = size - self.fuzzy_params.chunk_overlap_tokens
-        num_chunks = (num_tokens - size + step - 1) // step + 1
+        num_chunks = self._get_num_chunks(sdoc_data)
         if chunk_id < 0 or chunk_id >= num_chunks:
             raise ValueError(
                 f"Chunk index {chunk_id} is out of range for document {sdoc_data.id}"
@@ -332,18 +341,18 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         char_end = token_ends[end_token - 1]
         return char_start, sdoc_data.content[char_start:char_end]
 
-    def build_prompt(
+    def generate_prompts(
         self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> list[LLMMessage]:
-        chunks = self._chunk_document(sdoc_data)
+    ) -> Iterator[LLMMessage]:
+        """Yield one extraction prompt for each chunk of a document."""
         system_prompt = self._build_system_prompt(language)
-        messages: list[LLMMessage] = []
-        for _, chunk_text in chunks:
+        for chunk_id in range(self._get_num_chunks(sdoc_data)):
+            _, chunk_text = self._get_chunk(sdoc_data, chunk_id)
             user_prompt = self._build_user_prompt(language=language, data=chunk_text)
-            messages.append(
-                LLMMessage(system_prompt=system_prompt, user_prompt=user_prompt)
+            yield LLMMessage(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
             )
-        return messages
 
     # --- PARSING + GROUNDING ---
 

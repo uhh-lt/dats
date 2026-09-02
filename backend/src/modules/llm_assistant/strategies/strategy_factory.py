@@ -48,6 +48,7 @@ STRATEGY_FOR_TASK_AND_STRATEGY: dict[
 def get_strategy_class(
     task_type: TaskType, strategy_type: StrategyType
 ) -> AnyStrategyClass:
+    """Return the strategy class registered for a task and strategy type."""
     strategy_cls = STRATEGY_FOR_TASK_AND_STRATEGY.get((task_type, strategy_type))
     if strategy_cls is None:
         raise ValueError(
