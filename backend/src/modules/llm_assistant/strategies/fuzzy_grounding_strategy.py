@@ -24,11 +24,9 @@ from repos.llm_repo import LLMMessage
 lac = conf.llm_assistant
 
 
-class LLMExtractedEntity(BaseModel):
-    category: str = Field(description="The category/code of the extracted entity")
-    exact_quote: str = Field(
-        description="The exact verbatim quote of the entity from the text"
-    )
+class LLMExtractedPassage(BaseModel):
+    category: str = Field(description="The category/code of the extracted text passage")
+    exact_quote: str = Field(description="The exact verbatim quote of the text passage")
     context_before: str = Field(
         default="",
         description="Verbatim text immediately before the quote (anchor for disambiguation)",
@@ -40,13 +38,13 @@ class LLMExtractedEntity(BaseModel):
 
 
 class LLMExtractionResult(BaseModel):
-    entities: list[LLMExtractedEntity] = Field(
-        default_factory=list, description="The extracted entities"
+    passages: list[LLMExtractedPassage] = Field(
+        default_factory=list, description="The extracted relevant text passages"
     )
 
 
 EN_PROMPT_TEMPLATE = """
-You are an extraction engine that identifies entities in a text.
+You are an extraction engine that identifies relevant text passages.
 
 Allowed codes:
 {codes}
@@ -56,10 +54,10 @@ Code definitions:
 
 Rules:
 - Extract passages matching the code system.
-- For each entity, output the category, the exact verbatim quote, and the surrounding context.
+- For each relevant text passage, output the category, the exact verbatim quote, and the surrounding context.
 - The exact_quote MUST be copied verbatim from the text (do not change whitespace or punctuation).
 - Provide up to {context_before_chars} characters of context_before and {context_after_chars} characters of context_after to uniquely locate the quote.
-- Do NOT generate entities that are not present in the text.
+- Do NOT generate passages that are not present in the text.
 - If no relevant text fits the codes, return an empty list.
 
 {examples_block}
@@ -70,7 +68,7 @@ Text:
 
 
 DE_PROMPT_TEMPLATE = """
-Du bist eine Extraktions-Engine, die Entitäten in einem Text identifiziert.
+Du bist eine Extraktions-Engine, die relevante Textpassagen identifiziert.
 
 Erlaubte Codes:
 {codes}
@@ -80,10 +78,10 @@ Code-Definitionen:
 
 Regeln:
 - Extrahiere Passagen, die zum Code-System passen.
-- Gib für jede Entität die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext aus.
+- Gib für jede relevante Textpassage die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext aus.
 - Das exact_quote MUSS wörtlich aus dem Text kopiert werden (keine Änderung von Leerzeichen oder Satzzeichen).
 - Gib bis zu {context_before_chars} Zeichen context_before und {context_after_chars} Zeichen context_after an, um das Zitat eindeutig zu lokalisieren.
-- Generiere KEINE Entitäten, die nicht im Text vorhanden sind.
+- Generiere KEINE Textpassagen, die nicht im Text vorhanden sind.
 - Wenn keine passende Textpassage zu den Codes vorhanden ist, gib eine leere Liste zurück.
 
 {examples_block}
@@ -106,26 +104,28 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
     strategy_type = StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
     display_name = "Context-Anchored Extraction"
     description = (
-        "The LLM extracts entities as JSON; the backend locates them in the document.\n"
+        "The LLM extracts relevant text passages as JSON; the backend locates them "
+        "in the document.\n"
         "\n"
         "**How it works:** The document is split into overlapping chunks. For each chunk, "
-        "the LLM extracts entities as structured JSON, providing an exact verbatim quote "
+        "the LLM extracts relevant passages as structured JSON, providing an exact "
+        "verbatim quote "
         "plus the surrounding context (a few characters before and after). The backend "
         "then locates each quote in the original document using exact matching, falling "
         "back to fuzzy matching (difflib) with the context as an anchor.\n"
         "\n"
-        "**Example:** Given the code `PER` (Person) and the input text:\n"
+        "**Example:** Given the code `Claim` and the input text:\n"
         "\n"
-        "    Tim met Anna in Berlin. She showed him the city.\n"
+        "    The report concludes that the policy reduced emissions substantially.\n"
         "\n"
         "The LLM responds with:\n"
         "\n"
-        '    [{"category": "PER", "quote": "Tim", "context_before": "", "context_after": " met"},\n'
-        '     {"category": "PER", "quote": "Anna", "context_before": "met ", "context_after": " in"}]\n'
+        '    [{"category": "CLAIM", "exact_quote": "the policy reduced emissions", '
+        '"context_before": "concludes that ", "context_after": " substantially"}]\n'
         "\n"
-        "The backend finds each quote's exact position in the document.\n"
+        "The backend finds the passage's exact position in the document.\n"
         "\n"
-        "**When to use:** Best for long documents, repeated mentions of the same entity, "
+        "**When to use:** Best for long documents, repeated or similar passages, "
         "or when the LLM struggles to reproduce text verbatim. More robust than inline "
         "tagging but requires more LLM calls due to chunking."
     )
@@ -172,15 +172,15 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         if language == "en":
             return (
                 "Example output:\n"
-                '[{"category": "PER", "exact_quote": "Tim", '
-                '"context_before": "On Tuesday, ", '
-                '"context_after": " works for the university"}]'
+                '[{"category": "CLAIM", "exact_quote": "the policy reduced emissions", '
+                '"context_before": "The report concludes that ", '
+                '"context_after": " substantially"}]'
             )
         return (
             "Beispiel-Ausgabe:\n"
-            '[{"category": "PER", "exact_quote": "Tim", '
-            '"context_before": "Am Dienstag, ", '
-            '"context_after": " arbeitet für die Universität"}]'
+            '[{"category": "BEHAUPTUNG", "exact_quote": "die Maßnahme senkte die Emissionen", '
+            '"context_before": "Der Bericht kommt zu dem Schluss, dass ", '
+            '"context_after": " deutlich"}]'
         )
 
     def _build_user_prompt_template(
@@ -337,21 +337,21 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         sdoc_data: SourceDocumentDataORM,
         message_id: int,
     ) -> list[ParsedSpan]:
-        """Parse and ground extracted entities to absolute char offsets."""
+        """Parse and ground extracted text passages to absolute char offsets."""
         spans: list[ParsedSpan] = []
-        for entity in result.entities:
-            code_id = self.codename2id_dict.get(entity.category.upper())
+        for passage in result.passages:
+            code_id = self.codename2id_dict.get(passage.category.upper())
             if code_id is None:
                 continue
-            if entity.exact_quote.strip() == "":
+            if passage.exact_quote.strip() == "":
                 continue
 
-            located = self._locate_quote(entity, sdoc_data.content)
+            located = self._locate_quote(passage, sdoc_data.content)
             if located is None:
                 logger.debug(
                     "Could not ground quote '{}' for code {}",
-                    entity.exact_quote,
-                    entity.category,
+                    passage.exact_quote,
+                    passage.category,
                 )
                 continue
 
@@ -368,7 +368,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         return self._dedupe_spans(spans)
 
     def _locate_quote(
-        self, entity: LLMExtractedEntity, content: str
+        self, passage: LLMExtractedPassage, content: str
     ) -> tuple[int, int] | None:
         """Locate the exact_quote in content, using context as an anchor.
 
@@ -377,9 +377,9 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         2. Exact match of the quote alone (if unambiguous).
         3. Fuzzy match of the anchored string via difflib sliding window.
         """
-        quote = entity.exact_quote
-        before = entity.context_before or ""
-        after = entity.context_after or ""
+        quote = passage.exact_quote
+        before = passage.context_before or ""
+        after = passage.context_after or ""
 
         # 1. anchored exact match
         anchored = before + quote + after
