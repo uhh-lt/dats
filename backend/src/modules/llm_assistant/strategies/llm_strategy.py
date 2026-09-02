@@ -42,20 +42,18 @@ class LLMStrategy(Generic[StrategyParamsT]):
     A user prompt template must contain the placeholder "<document>",
     "<sentence>" or "<chunk>".
 
-    A user prompt template always consists of the same building blocks:
+    A user prompt template usually consists of these building blocks:
     1. The task description, e.g. Please classify the documents ...
-    2. The categories to work with, e.g. Category 1 - Description 1, Category 2 - Description 2...
-    3.1. Instructions on how to answer, e.g. Please answer in this format. The reasoning is optional.
-    3.2. A generalized answer template, e.g. Category: <category 1>\n Reasoning: <reasoning>
-    3.3. An example answer, e.g. Category: News\n Reasoning: Because ...
-    4. The document to work with
-    5. Reiteration of the task, e.g. Remember, you have to classify the document into one of the provided categories, do not generate new categories!
+    2. The categories or fields to work with
+    3. Semantic requirements that are not fully expressed by the response schema
+    4. Optional examples demonstrating the intended classification or extraction
+    5. The document content placeholder
+    6. A brief reiteration of important task constraints
 
-    Consequently, we have the following building blocks:
+    Consequently, prompts can contain the following building blocks:
     <task_description>
     <task_data>
-    <answer_instruction>
-    <answer_template>
+    <semantic_requirements>
     <answer_example>
     <document>
     <task_reiteration>

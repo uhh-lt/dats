@@ -41,14 +41,13 @@ Code definitions:
 {code_definitions}
 
 Rules:
-- Return the original text with inline XML-style tags (e.g. <CODE>text</CODE>)
+- Repeat the original text with relevant passages wrapped in inline XML-style tags (e.g. <CODE>text</CODE>)
+- Use the allowed code name exactly as the tag name, including spaces and punctuation
 - Do NOT add or remove characters outside of tags
 - Do NOT change whitespace or punctuation
 - Codes must not overlap or nest
 - Wrap only the text passages that are relevant to an allowed code; do not include unrelated surrounding text
 - If no relevant text that fits the codes is present, return the text unchanged
-
-Lets think step by step.
 
 Text:
 <sentence>
@@ -65,14 +64,13 @@ Code-Definitionen:
 {code_definitions}
 
 Regeln:
-- Gib den Originaltext mit Inline-XML-Tags zurück (z. B. <CODE>Text</CODE>)
+- Wiederhole den Originaltext und umschließe relevante Passagen mit Inline-XML-Tags (z. B. <CODE>Text</CODE>)
+- Verwende den erlaubten Code-Namen exakt als Tag-Namen, einschließlich Leerzeichen und Satzzeichen
 - Füge außerhalb der Tags keine Zeichen hinzu und entferne keine
 - Ändere keine Leerzeichen oder Satzzeichen
 - Annotationen dürfen sich nicht überlappen oder verschachtelt sein
 - Umschließe nur Textpassagen, die für einen erlaubten Code relevant sind; schließe keinen irrelevanten umgebenden Text ein
 - Wenn keine Textpassage passend zu den Codes ist, gib den Text unverändert zurück
-
-Lass uns Schritt für Schritt denken.
 
 Text:
 <sentence>
@@ -97,10 +95,21 @@ Die <BELEG>Umfrageergebnisse</BELEG> stützen den Vorschlag.
 """.strip()
 
 
-CODE_PATTERN = re.compile(
-    r"<(?P<code>[A-Z_]+)>(?P<text>.*?)</(?P=code)>",
-    re.DOTALL,
-)
+def _compile_code_pattern(code_names: list[str]) -> re.Pattern[str]:
+    """Match inline tags for the project's actual code names."""
+    escaped_names = sorted(
+        (re.escape(code_name) for code_name in code_names),
+        key=len,
+        reverse=True,
+    )
+    if not escaped_names:
+        return re.compile(r"(?!)")
+
+    alternatives = "|".join(escaped_names)
+    return re.compile(
+        rf"<(?P<code>{alternatives})>(?P<text>.*?)</(?P=code)>",
+        re.DOTALL,
+    )
 
 
 def _find_sentences_for_span(
@@ -170,7 +179,7 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
         "\n"
         "    The survey results support the proposal.\n"
         "\n"
-        "The LLM responds with:\n"
+        "The tagged response is:\n"
         "\n"
         "    The <EVIDENCE>survey results</EVIDENCE> support the proposal.\n"
         "\n"
@@ -202,6 +211,7 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
         self.codes = project.codes
         self.codename2id_dict = {code.name.upper(): code.id for code in self.codes}
         self.codeids2code_dict = {code.id: code for code in self.codes}
+        self.code_pattern = _compile_code_pattern(list(self.codename2id_dict))
 
         super().__init__(
             db=db,
@@ -328,7 +338,7 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
         # Tracks our position in the ORIGINAL string so we can slice out the untagged text between regex matches
         cursor = 0
 
-        for match in CODE_PATTERN.finditer(result.text):
+        for match in self.code_pattern.finditer(result.text):
             # 1. Grab the raw text before this match and add it to our clean string
             before = result.text[cursor : match.start()]
             clean_text += before
@@ -341,13 +351,16 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
             end = begin + len(passage_text)
 
             # 3. Only append to spans if the code is recognized
-            if code.upper() in self.codename2id_dict:
+            source_begin = begin + start_offset
+            source_end = end + start_offset
+            source_text = sdoc_data.content[source_begin:source_end]
+            if code.upper() in self.codename2id_dict and source_text == passage_text:
                 spans.append(
                     ParsedSpan(
                         code_id=self.codename2id_dict[code.upper()],
                         text=passage_text,
-                        begin=begin + start_offset,
-                        end=end + start_offset,
+                        begin=source_begin,
+                        end=source_end,
                     )
                 )
 

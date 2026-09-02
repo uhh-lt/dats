@@ -55,11 +55,11 @@ Code definitions:
 
 Rules:
 - Extract passages matching the code system.
-- For each relevant text passage, output the category, the exact verbatim quote, and the surrounding context.
+- For each relevant text passage, identify the category, the exact verbatim quote, and the surrounding context.
 - The exact_quote MUST be copied verbatim from the text (do not change whitespace or punctuation).
 - Provide up to {context_before_chars} characters of context_before and {context_after_chars} characters of context_after to uniquely locate the quote.
 - Do NOT generate passages that are not present in the text.
-- If no relevant text fits the codes, return an empty list.
+- If no relevant text fits the codes, return no passages.
 
 {examples_block}
 
@@ -79,11 +79,11 @@ Code-Definitionen:
 
 Regeln:
 - Extrahiere Passagen, die zum Code-System passen.
-- Gib für jede relevante Textpassage die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext aus.
+- Gib für jede relevante Textpassage die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext an.
 - Das exact_quote MUSS wörtlich aus dem Text kopiert werden (keine Änderung von Leerzeichen oder Satzzeichen).
 - Gib bis zu {context_before_chars} Zeichen context_before und {context_after_chars} Zeichen context_after an, um das Zitat eindeutig zu lokalisieren.
 - Generiere KEINE Textpassagen, die nicht im Text vorhanden sind.
-- Wenn keine passende Textpassage zu den Codes vorhanden ist, gib eine leere Liste zurück.
+- Wenn keine passende Textpassage zu den Codes vorhanden ist, gib keine Passagen zurück.
 
 {examples_block}
 
@@ -93,9 +93,9 @@ Text:
 
 
 class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
-    """Span annotation via extractive JSON + context-anchored fuzzy grounding.
+    """Span annotation via structured extraction and context-anchored grounding.
 
-    The LLM acts as an extraction engine and outputs structured JSON with the
+    The LLM acts as an extraction engine and outputs structured data with the
     category, an exact verbatim quote, and surrounding context. The backend
     grounds each quote to character offsets via exact matching, falling back to
     fuzzy matching (difflib) using the context as an anchor for disambiguation.
@@ -105,11 +105,11 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
     strategy_type = StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING
     display_name = "Context-Anchored Extraction"
     description = (
-        "The LLM extracts relevant text passages as JSON; the backend locates them "
+        "The LLM extracts relevant text passages; the backend locates them "
         "in the document.\n"
         "\n"
         "**How it works:** The document is split into overlapping chunks. For each chunk, "
-        "the LLM extracts relevant passages as structured JSON, providing an exact "
+        "the LLM extracts relevant passages, providing an exact "
         "verbatim quote "
         "plus the surrounding context (a few characters before and after). The backend "
         "then locates each quote in the original document using exact matching, falling "
@@ -119,10 +119,12 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         "\n"
         "    The report concludes that the policy reduced emissions substantially.\n"
         "\n"
-        "The LLM responds with:\n"
+        "An extracted passage contains:\n"
         "\n"
-        '    [{"category": "CLAIM", "exact_quote": "the policy reduced emissions", '
-        '"context_before": "concludes that ", "context_after": " substantially"}]\n'
+        "    Category: CLAIM\n"
+        "    Exact quote: the policy reduced emissions\n"
+        "    Context before: concludes that \n"
+        "    Context after:  substantially\n"
         "\n"
         "The backend finds the passage's exact position in the document.\n"
         "\n"
@@ -174,16 +176,18 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         """Build the fallback extraction example for a language."""
         if language == "en":
             return (
-                "Example output:\n"
-                '[{"category": "CLAIM", "exact_quote": "the policy reduced emissions", '
-                '"context_before": "The report concludes that ", '
-                '"context_after": " substantially"}]'
+                "Example passage:\n"
+                "Category: CLAIM\n"
+                "Exact quote: the policy reduced emissions\n"
+                "Context before: The report concludes that \n"
+                "Context after:  substantially"
             )
         return (
-            "Beispiel-Ausgabe:\n"
-            '[{"category": "BEHAUPTUNG", "exact_quote": "die Maßnahme senkte die Emissionen", '
-            '"context_before": "Der Bericht kommt zu dem Schluss, dass ", '
-            '"context_after": " deutlich"}]'
+            "Beispielpassage:\n"
+            "Kategorie: BEHAUPTUNG\n"
+            "Exaktes Zitat: die Maßnahme senkte die Emissionen\n"
+            "Kontext davor: Der Bericht kommt zu dem Schluss, dass \n"
+            "Kontext danach:  deutlich"
         )
 
     def _build_user_prompt_template(
@@ -205,7 +209,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         examples_block = self._build_examples_block(language)
 
-        # few-shot: render real examples in the JSON output format
+        # few-shot: render real examples with the relevant extraction fields
         if self.is_fewshot:
             examples_block = self._build_fewshot_examples_block(
                 language=language, example_ids=example_ids, params=params
@@ -262,7 +266,18 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             if d is not None
         }
 
-        # render each example as a JSON extraction entry
+        if language == "en":
+            category_label = "Category"
+            quote_label = "Exact quote"
+            context_before_label = "Context before"
+            context_after_label = "Context after"
+        else:
+            category_label = "Kategorie"
+            quote_label = "Exaktes Zitat"
+            context_before_label = "Kontext davor"
+            context_after_label = "Kontext danach"
+
+        # render each example with human-readable extraction labels
         example_lines: list[str] = []
         for cid, annos in code_id2annos.items():
             code = self.codeids2code_dict[cid].name.upper()
@@ -276,17 +291,14 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
                     a.end : a.end + self.fuzzy_params.context_after_chars
                 ]
                 example_lines.append(
-                    '{"category": "%s", "exact_quote": %s, "context_before": %s, "context_after": %s}'
-                    % (
-                        code,
-                        _json_str(quote),
-                        _json_str(ctx_before),
-                        _json_str(ctx_after),
-                    )
+                    f"{category_label}: {code}\n"
+                    f"{quote_label}: {quote}\n"
+                    f"{context_before_label}: {ctx_before}\n"
+                    f"{context_after_label}: {ctx_after}"
                 )
 
         header = "Examples:" if language == "en" else "Beispiele:"
-        return f"{header}\n[" + ",\n".join(example_lines) + "]"
+        return f"{header}\n" + "\n\n".join(example_lines)
 
     # --- PROMPT BUILDING (chunked) ---
 
@@ -449,10 +461,3 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         begin = best_start + before_len
         return begin, begin + quote_len
-
-
-def _json_str(s: str) -> str:
-    """JSON-encode a string (with quotes)."""
-    import json
-
-    return json.dumps(s, ensure_ascii=False)
