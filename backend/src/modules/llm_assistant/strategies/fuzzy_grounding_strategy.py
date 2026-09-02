@@ -57,7 +57,9 @@ Rules:
 - Extract passages matching the code system.
 - For each relevant text passage, identify the category, the exact verbatim quote, and the surrounding context.
 - The exact_quote MUST be copied verbatim from the text (do not change whitespace or punctuation).
+- The exact_quote must contain ONLY the extracted passage. Do not include context, field names, explanations, character counts, or serialized data in it.
 - Provide up to {context_before_chars} characters of context_before and {context_after_chars} characters of context_after to uniquely locate the quote.
+- The context fields must contain only verbatim text immediately before or after the exact quote.
 - Do NOT generate passages that are not present in the text.
 - If no relevant text fits the codes, return no passages.
 
@@ -81,7 +83,9 @@ Regeln:
 - Extrahiere Passagen, die zum Code-System passen.
 - Gib für jede relevante Textpassage die Kategorie, das exakte wörtliche Zitat und den umgebenden Kontext an.
 - Das exact_quote MUSS wörtlich aus dem Text kopiert werden (keine Änderung von Leerzeichen oder Satzzeichen).
+- Das exact_quote darf NUR die extrahierte Passage enthalten. Füge dort keinen Kontext, keine Feldnamen, Erklärungen, Zeichenanzahlen oder serialisierten Daten ein.
 - Gib bis zu {context_before_chars} Zeichen context_before und {context_after_chars} Zeichen context_after an, um das Zitat eindeutig zu lokalisieren.
+- Die Kontextfelder dürfen nur den wörtlichen Text unmittelbar vor oder nach dem exakten Zitat enthalten.
 - Generiere KEINE Textpassagen, die nicht im Text vorhanden sind.
 - Wenn keine passende Textpassage zu den Codes vorhanden ist, gib keine Passagen zurück.
 
@@ -176,18 +180,22 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         """Build the fallback extraction example for a language."""
         if language == "en":
             return (
-                "Example passage:\n"
+                "Example text:\n"
+                "The report concludes that the policy reduced emissions substantially.\n\n"
+                "Expected passage:\n"
                 "Category: CLAIM\n"
                 "Exact quote: the policy reduced emissions\n"
                 "Context before: The report concludes that \n"
                 "Context after:  substantially"
             )
         return (
-            "Beispielpassage:\n"
+            "Beispieltext:\n"
+            "Der Bericht zeigt, dass die Maßnahme die Emissionen deutlich senkte.\n\n"
+            "Erwartete Passage:\n"
             "Kategorie: BEHAUPTUNG\n"
-            "Exaktes Zitat: die Maßnahme senkte die Emissionen\n"
-            "Kontext davor: Der Bericht kommt zu dem Schluss, dass \n"
-            "Kontext danach:  deutlich"
+            "Exaktes Zitat: die Maßnahme die Emissionen deutlich senkte\n"
+            "Kontext davor: Der Bericht zeigt, dass \n"
+            "Kontext danach: ."
         )
 
     def _build_user_prompt_template(
@@ -267,11 +275,15 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         }
 
         if language == "en":
+            text_label = "Example text"
+            passage_label = "Expected passage"
             category_label = "Category"
             quote_label = "Exact quote"
             context_before_label = "Context before"
             context_after_label = "Context after"
         else:
+            text_label = "Beispieltext"
+            passage_label = "Erwartete Passage"
             category_label = "Kategorie"
             quote_label = "Exaktes Zitat"
             context_before_label = "Kontext davor"
@@ -284,13 +296,42 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             for a in annos:
                 sdoc = sdoc_id2data[a.sdoc_id]
                 quote = sdoc.content[a.begin : a.end]
+
+                sentence_offsets = [
+                    (sentence_start, sentence_end)
+                    for sentence_start, sentence_end in zip(
+                        sdoc.sentence_starts, sdoc.sentence_ends
+                    )
+                    if sentence_start < a.end and sentence_end > a.begin
+                ]
+                if sentence_offsets:
+                    example_start = sentence_offsets[0][0]
+                    example_end = sentence_offsets[-1][1]
+                else:
+                    example_start = max(
+                        0, a.begin - self.fuzzy_params.context_before_chars
+                    )
+                    example_end = min(
+                        len(sdoc.content),
+                        a.end + self.fuzzy_params.context_after_chars,
+                    )
+
+                example_text = sdoc.content[example_start:example_end]
                 ctx_before = sdoc.content[
-                    max(0, a.begin - self.fuzzy_params.context_before_chars) : a.begin
+                    max(
+                        example_start,
+                        a.begin - self.fuzzy_params.context_before_chars,
+                    ) : a.begin
                 ]
                 ctx_after = sdoc.content[
-                    a.end : a.end + self.fuzzy_params.context_after_chars
+                    a.end : min(
+                        example_end,
+                        a.end + self.fuzzy_params.context_after_chars,
+                    )
                 ]
                 example_lines.append(
+                    f"{text_label}:\n{example_text}\n\n"
+                    f"{passage_label}:\n"
                     f"{category_label}: {code}\n"
                     f"{quote_label}: {quote}\n"
                     f"{context_before_label}: {ctx_before}\n"
@@ -298,7 +339,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
                 )
 
         header = "Examples:" if language == "en" else "Beispiele:"
-        return f"{header}\n" + "\n\n".join(example_lines)
+        return f"{header}\n\n" + "\n\n---\n\n".join(example_lines)
 
     # --- PROMPT BUILDING (chunked) ---
 

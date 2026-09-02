@@ -362,11 +362,11 @@ def llm_assistant_project(
         filename="target-facts.txt",
         name="Target facts",
         sentences=[
-            "Author is Alice.",
-            "Year is 2024.",
-            "Published is 2024-01-15.",
-            "Reviewed is true.",
-            "Topics are solar and energy.",
+            "The document author is Alice.",
+            "The document year is 2024.",
+            "The publication date is 2024-01-15.",
+            "The document's reviewed status is true.",
+            "The document topics are solar and energy.",
         ],
     )
     example_sdoc = _create_text_document(
@@ -374,7 +374,7 @@ def llm_assistant_project(
         project=test_project,
         filename="few-shot-examples.txt",
         name="Few-shot examples",
-        sentences=[f"{name} is a person." for name in example_names],
+        sentences=[f"The text names {name} as a person." for name in example_names],
     )
     no_match_sdoc = _create_text_document(
         db_session,
