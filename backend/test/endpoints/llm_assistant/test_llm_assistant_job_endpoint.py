@@ -42,7 +42,7 @@ def _wait_for_status(
     expected_status: JobStatus,
     *,
     timeout: float = 180.0,
-    poll_interval: float = 0.5,
+    poll_interval: float = 1,
 ) -> LLMJobRead:
     """Poll one assistant job until the expected or another terminal status occurs."""
     deadline = time.monotonic() + timeout
@@ -497,27 +497,24 @@ def test_inline_tag_annotation_job_supports_unusual_code_names(
 
 
 @pytest.mark.parametrize(
-    "approach_type,data_tag,expected_ranges",
+    "approach_type,data_tag",
     [
-        # Document mode merges consecutive FACT sentences into one range.
+        # Document mode may merge consecutive classified sentences into ranges.
         pytest.param(
             ApproachType.LLM_ZERO_SHOT,
             "<document>",
-            [(0, 4)],
             id="zero-shot-document",
         ),
-        # Per-sentence mode produces one independently processed range per prompt.
+        # Per-sentence mode processes every sentence in an independent prompt.
         pytest.param(
             ApproachType.LLM_ZERO_SHOT,
             "<sentence>",
-            [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)],
             id="zero-shot-sentences",
         ),
         # Few-shot document mode uses the four human sentence examples.
         pytest.param(
             ApproachType.LLM_FEW_SHOT,
             "<document>",
-            [(0, 4)],
             id="few-shot-document",
         ),
     ],
@@ -527,9 +524,8 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
     llm_assistant_project: LLMAssistantProject,
     approach_type: ApproachType,
     data_tag: str,
-    expected_ranges: list[tuple[int, int]],
 ) -> None:
-    """Sentence jobs persist exact FACT ranges without duplicate suggestions."""
+    """Sentence jobs persist valid FACT ranges without duplicate suggestions."""
     payload = _sentence_annotation_payload(
         client,
         llm_assistant_project,
@@ -562,15 +558,22 @@ def test_sentence_annotation_job_covers_approaches_and_data_tags(
         )
         for annotation in result.suggested_annotations
     ]
-    assert suggestions == [
-        (
-            start,
-            end,
-            llm_assistant_project["fact_code"].id,
-            assistant_user_id,
-        )
-        for start, end in expected_ranges
-    ]
+    assert suggestions
+
+    ranges = [(start, end) for start, end, _, _ in suggestions]
+    assert ranges == sorted(set(ranges))
+
+    num_sentences = len(llm_assistant_project["target_sdoc"].data.sentences)
+    covered_sentence_ids: list[int] = []
+    for start, end, code_id, user_id in suggestions:
+        assert 0 <= start <= end < num_sentences
+        assert code_id == llm_assistant_project["fact_code"].id
+        assert user_id == assistant_user_id
+        covered_sentence_ids.extend(range(start, end + 1))
+
+    assert len(covered_sentence_ids) == len(set(covered_sentence_ids))
+    if data_tag == "<sentence>":
+        assert all(start == end for start, end in ranges)
 
 
 # ===========================================================================

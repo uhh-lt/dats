@@ -267,7 +267,7 @@ def test_create_prompt_templates_covers_task_strategy_and_approach_variants(
     [
         # Inline-tag examples render the selected human span annotations.
         pytest.param(StrategyType.NER_INLINE_TAGS, id="inline-tags"),
-        # Fuzzy examples render the selected human spans as extraction JSON.
+        # Fuzzy examples pair source text with the expected extracted passage.
         pytest.param(
             StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING,
             id="fuzzy-grounding",
@@ -311,7 +311,9 @@ def test_create_prompt_templates_uses_explicit_sentence_example_ids(
     assert response.status_code == 200, response.text
     prompts = TypeAdapter(list[LLMPromptTemplates]).validate_python(response.json())
 
-    assert all("Anna is a person." in prompt.user_prompt for prompt in prompts)
+    assert all(
+        "The text names Anna as a person." in prompt.user_prompt for prompt in prompts
+    )
 
 
 def test_create_prompt_templates_rejects_an_incompatible_task_and_strategy(
