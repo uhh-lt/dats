@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from core.annotation.sentence_annotation_dto import SentenceAnnotationRead
 from core.annotation.span_annotation_dto import SpanAnnotationRead
@@ -153,24 +153,36 @@ class FuzzyGroundingStrategyParams(SpecificStrategyParameters):
     llm_strategy_type: Literal[StrategyType.CONTEXT_ANCHORED_FUZZY_MATCHING]
     fuzzy_threshold: float = Field(
         default=0.85,
+        ge=0,
+        le=1,
         description="Minimum similarity ratio (0-1) for fuzzy grounding of extracted quotes",
     )
     context_before_chars: int = Field(
         default=64,
+        ge=0,
         description="Number of context characters the LLM should provide before the quote",
     )
     context_after_chars: int = Field(
         default=64,
+        ge=0,
         description="Number of context characters the LLM should provide after the quote",
     )
     chunk_size_tokens: int = Field(
         default=650,
+        gt=0,
         description="Size of document chunks (in tokens) sent to the LLM",
     )
     chunk_overlap_tokens: int = Field(
         default=100,
+        ge=0,
         description="Overlap (in tokens) between consecutive chunks",
     )
+
+    @model_validator(mode="after")
+    def validate_chunk_overlap(self) -> Self:
+        if self.chunk_overlap_tokens >= self.chunk_size_tokens:
+            raise ValueError("Chunk overlap must be smaller than chunk size")
+        return self
 
 
 class LLMJobInput(LLMJobParameters):
