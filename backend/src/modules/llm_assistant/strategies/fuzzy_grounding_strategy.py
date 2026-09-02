@@ -292,29 +292,45 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         Returns a list of (chunk_start_char_offset, chunk_text).
         """
+        num_tokens = len(sdoc_data.token_starts)
+        size = self.fuzzy_params.chunk_size_tokens
+        overlap = self.fuzzy_params.chunk_overlap_tokens
+
+        if num_tokens <= size:
+            return [(0, sdoc_data.content)]
+
+        step = size - overlap
+        num_chunks = (num_tokens - size + step - 1) // step + 1
+        return [self._get_chunk(sdoc_data, chunk_id) for chunk_id in range(num_chunks)]
+
+    def _get_chunk(
+        self, sdoc_data: SourceDocumentDataORM, chunk_id: int
+    ) -> tuple[int, str]:
+        """Return one chunk without materializing every chunk in the document."""
         token_starts = sdoc_data.token_starts
         token_ends = sdoc_data.token_ends
         num_tokens = len(token_starts)
         size = self.fuzzy_params.chunk_size_tokens
-        overlap = self.fuzzy_params.chunk_overlap_tokens
 
-        if num_tokens == 0:
-            return [(0, sdoc_data.content)]
         if num_tokens <= size:
-            return [(0, sdoc_data.content)]
+            if chunk_id != 0:
+                raise ValueError(
+                    f"Chunk index {chunk_id} is out of range for document {sdoc_data.id}"
+                )
+            return 0, sdoc_data.content
 
-        chunks: list[tuple[int, str]] = []
-        step = max(1, size - overlap)
-        start_tok = 0
-        while start_tok < num_tokens:
-            end_tok = min(start_tok + size, num_tokens)
-            char_start = token_starts[start_tok]
-            char_end = token_ends[end_tok - 1]
-            chunks.append((char_start, sdoc_data.content[char_start:char_end]))
-            if end_tok >= num_tokens:
-                break
-            start_tok += step
-        return chunks
+        step = size - self.fuzzy_params.chunk_overlap_tokens
+        num_chunks = (num_tokens - size + step - 1) // step + 1
+        if chunk_id < 0 or chunk_id >= num_chunks:
+            raise ValueError(
+                f"Chunk index {chunk_id} is out of range for document {sdoc_data.id}"
+            )
+
+        start_token = chunk_id * step
+        end_token = min(start_token + size, num_tokens)
+        char_start = token_starts[start_token]
+        char_end = token_ends[end_token - 1]
+        return char_start, sdoc_data.content[char_start:char_end]
 
     def build_prompt(
         self, language: str, sdoc_data: SourceDocumentDataORM
@@ -338,6 +354,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
         message_id: int,
     ) -> list[ParsedSpan]:
         """Parse and ground extracted text passages to absolute char offsets."""
+        chunk_start, chunk_text = self._get_chunk(sdoc_data, message_id)
         spans: list[ParsedSpan] = []
         for passage in result.passages:
             code_id = self.codename2id_dict.get(passage.category.upper())
@@ -346,7 +363,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
             if passage.exact_quote.strip() == "":
                 continue
 
-            located = self._locate_quote(passage, sdoc_data.content)
+            located = self._locate_quote(passage, chunk_text)
             if located is None:
                 logger.debug(
                     "Could not ground quote '{}' for code {}",
@@ -355,7 +372,9 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
                 )
                 continue
 
-            begin, end = located
+            local_begin, local_end = located
+            begin = chunk_start + local_begin
+            end = chunk_start + local_end
             spans.append(
                 ParsedSpan(
                     code_id=code_id,
@@ -365,7 +384,7 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
                 )
             )
 
-        return self._dedupe_spans(spans)
+        return spans
 
     def _locate_quote(
         self, passage: LLMExtractedPassage, content: str
@@ -421,25 +440,6 @@ class FuzzyGroundingStrategy(LLMStrategy[FuzzyGroundingStrategyParams]):
 
         begin = best_start + before_len
         return begin, begin + quote_len
-
-    def _dedupe_spans(self, spans: list[ParsedSpan]) -> list[ParsedSpan]:
-        """Remove duplicate spans arising from overlapping chunks.
-
-        Two spans are duplicates if they share a code and overlap.
-        """
-        result: list[ParsedSpan] = []
-        for span in sorted(spans, key=lambda s: (s["begin"], s["end"])):
-            duplicate = False
-            for kept in result:
-                if kept["code_id"] != span["code_id"]:
-                    continue
-                # overlap check
-                if kept["begin"] < span["end"] and span["begin"] < kept["end"]:
-                    duplicate = True
-                    break
-            if not duplicate:
-                result.append(span)
-        return result
 
 
 def _json_str(s: str) -> str:
