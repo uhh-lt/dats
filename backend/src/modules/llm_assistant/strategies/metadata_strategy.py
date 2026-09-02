@@ -132,9 +132,7 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         return self.output_model
 
     def _generate_dynamic_model(self, project_metadata_ids: list[int]):
-        """
-        Creates a Pydantic model where each key is a metadata field.
-        """
+        """Create a Pydantic response model containing the selected metadata fields."""
         # map metaType to Python types
         type_mapping = {
             MetaType.STRING: str,
@@ -158,6 +156,7 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         return create_model("DynamicMetadataExtraction", **fields, __base__=BaseModel)
 
     def _build_answer_template(self, project_metadata_ids: list[int]) -> str:
+        """Build the expected answer shape for the selected metadata fields."""
         # The example will be a list of metadata keys and some example values
         answer_templates: dict[MetaType, str] = {
             MetaType.STRING: "<extracted text>",
@@ -182,6 +181,7 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         )
 
     def _build_example(self, project_metadata_ids: list[int]) -> str:
+        """Build an example response for the selected metadata fields."""
         # The example will be a list of metadata keys and some example values
         example_values: dict[MetaType, str] = {
             MetaType.STRING: "relevant information here",
@@ -224,9 +224,6 @@ class MetadataStrategy(LLMStrategy[DefaultStrategyParams]):
         )
 
     def parse_result(self, result: BaseModel) -> dict[int, Any]:
-        """
-        Takes the validated dynamic model and maps field names back to metadata IDs.
-        """
         extracted_data = result.model_dump(exclude_none=True)
         out_dict: dict[int, Any] = {}
         for key, value in extracted_data.items():

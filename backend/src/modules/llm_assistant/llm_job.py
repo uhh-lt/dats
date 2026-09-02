@@ -14,8 +14,6 @@ from systems.job_system.job_register_decorator import register_job
 
 sqlr = SQLRepo()
 
-BATCH_SIZE = 32
-
 
 @register_job(
     job_type=JobType.LLM_ASSISTANT,
@@ -31,14 +29,8 @@ def llm_assistant(
     payload: LLMJobInput,
     job: Job,
 ) -> LLMJobOutput:
-    num_batches = (
-        len(payload.specific_task_parameters.sdoc_ids) + BATCH_SIZE - 1
-    ) // BATCH_SIZE
-
     job.update(
-        steps=["Start"]
-        + [f"Batch Processing {i + 1}" for i in range(num_batches)]
-        + ["Finish"],
+        steps=["Start", "Process documents", "Finish"],
         current_step=0,
         status_message="Started LLM Assistant!",
     )

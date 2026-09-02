@@ -132,6 +132,7 @@ class TaggingStrategy(LLMStrategy[DefaultStrategyParams]):
         return LLMTaggingResult
 
     def _build_example(self, language: str, tag_id: int) -> str:
+        """Build a tagging answer example for one tag."""
         tag = self.tagid2tag[tag_id]
 
         return self.example_templates[language].format(tag.name, tag.name)

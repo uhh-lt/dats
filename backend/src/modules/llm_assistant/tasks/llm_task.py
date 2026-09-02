@@ -1,44 +1,48 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Type, TypeVar
+from dataclasses import dataclass
+from functools import partial
+from typing import Generic, TypeVar, final
 
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from core.doc.source_document_data_crud import crud_sdoc_data
-from core.doc.source_document_data_orm import SourceDocumentDataORM
-from core.metadata.source_document_metadata_crud import crud_sdoc_meta
 from modules.llm_assistant.llm_job_dto import (
     ApproachRecommendation,
     DocumentBasedTaskParams,
     FewShotParams,
     LLMJobOutput,
+    LLMResultWithStatus,
     SpecificTaskParameters,
     ZeroShotParams,
 )
 from modules.llm_assistant.strategies.llm_strategy import LLMStrategy
-from repos.llm_repo import LLMBatchChatResponse, LLMMessage, LLMRepo
+from modules.llm_assistant.tasks.llm_document_processor import (
+    LLMDocumentProcessor,
+    LLMDocumentResponse,
+)
+from repos.llm_repo import LLMRepo
 from systems.job_system.job_dto import Job
 
-BATCH_SIZE = 32
-
-T = TypeVar("T", bound=BaseModel)
+ResponseT = TypeVar("ResponseT", bound=BaseModel)
+ResultT = TypeVar("ResultT", bound=LLMResultWithStatus)
 StrategyT = TypeVar("StrategyT", bound=LLMStrategy)
 TaskParamsT = TypeVar("TaskParamsT", bound=DocumentBasedTaskParams)
 
 
-class BatchProcessingError(Exception):
-    """Error during batch processing of a single document.
+@dataclass(frozen=True)
+class LLMTaskContext(Generic[StrategyT, TaskParamsT]):
+    """Provide the shared job inputs required by task-specific execution hooks."""
 
-    Carries the raw LLM response (if available) for transparency.
-    """
-
-    def __init__(self, message: str, raw_response: str | None = None):
-        super().__init__(message)
-        self.raw_response = raw_response
+    db: Session
+    project_id: int
+    approach_parameters: ZeroShotParams | FewShotParams
+    task_parameters: TaskParamsT
+    strategy: StrategyT
 
 
 def aggregate_raw_responses(raw_responses: list[str]) -> str:
-    """Joins multiple raw LLM responses (e.g. one per sentence) into one string."""
+    """Join multiple raw LLM responses into one user-visible value."""
     if len(raw_responses) == 1:
         return raw_responses[0]
     return "\n---\n".join(
@@ -47,29 +51,30 @@ def aggregate_raw_responses(raw_responses: list[str]) -> str:
     )
 
 
-class LLMTask(ABC, Generic[StrategyT, TaskParamsT]):
-    """A task describes WHAT the LLM assistant does (tagging, metadata
-    extraction, annotation, sentence annotation).
+class LLMTask(
+    ABC,
+    Generic[StrategyT, TaskParamsT, ResponseT, ResultT],
+):
+    """Define the shared execution lifecycle for every LLM assistant task.
 
-    It owns the batch-processing skeleton: iterating documents in batches,
-    building prompts via the strategy, calling the LLM, and assembling the
-    per-document results. Strategy-specific parsing/grounding is delegated to
-    the strategy; task-specific result assembly is implemented by subclasses.
+    Subclasses provide the response model, optional preparation, per-document
+    processing, and final output construction while this class fixes their order.
     """
 
+    task_name: str
+
     def __init__(self, llm: LLMRepo):
-        self.llm = llm
+        self.document_processor = LLMDocumentProcessor(llm)
 
     @classmethod
     @abstractmethod
     def determine_approach(
         cls, db: Session, task_parameters: SpecificTaskParameters
     ) -> ApproachRecommendation:
-        """Determine the recommended and available approaches for this task,
-        given the task parameters (e.g. selected codes)."""
+        """Determine the recommended and available approaches for this task."""
         ...
 
-    @abstractmethod
+    @final
     def execute(
         self,
         *,
@@ -80,69 +85,75 @@ class LLMTask(ABC, Generic[StrategyT, TaskParamsT]):
         task_parameters: TaskParamsT,
         strategy: StrategyT,
     ) -> LLMJobOutput:
-        """Run the task end-to-end and return the job output."""
-        ...
+        """Run the fixed task lifecycle around task-specific execution hooks."""
+        context = LLMTaskContext(
+            db=db,
+            project_id=project_id,
+            approach_parameters=approach_parameters,
+            task_parameters=task_parameters,
+            strategy=strategy,
+        )
+        self._start_job(job=job, num_documents=len(task_parameters.sdoc_ids))
+        self._prepare(context)
 
-    def _next_llm_job_step(self, job: Job, description: str) -> None:
-        job.update(current_step=job.get_current_step() + 1, status_message=description)
+        documents = self.document_processor.process(
+            model=approach_parameters.model,
+            strategy=strategy,
+            db=db,
+            sdoc_ids=task_parameters.sdoc_ids,
+            response_model=self._get_response_model(strategy),
+            on_progress=partial(self._update_progress, job=job),
+        )
+        results: list[ResultT] = []
+        for document in documents:
+            results.append(self._process_document(context=context, document=document))
 
-    def _update_llm_job_description(self, job: Job, description: str) -> None:
-        job.update(status_message=description)
+        return self._build_output(results)
 
-    def _read_sdoc_datas(
-        self, db: Session, sdoc_ids: list[int]
-    ) -> list[SourceDocumentDataORM]:
-        return crud_sdoc_data.read_by_ids(db=db, ids=sdoc_ids)
+    def _start_job(self, job: Job, num_documents: int) -> None:
+        """Set and log the initial status for this task execution."""
+        message = f"Started LLMJob - {self.task_name}, num docs: {num_documents}"
+        job.update(status_message=message)
+        logger.info(message)
 
-    def _process_batch(
+    def _update_progress(
         self,
-        model: str,
-        strategy: LLMStrategy,
-        db: Session,
-        sdoc_ids: list[int],
-        sdoc_datas: list[SourceDocumentDataORM],
-        response_model: Type[T],
-    ) -> tuple[list[LLMBatchChatResponse[T]], list[int], list[int]]:
-        """Build prompts for a batch of documents and call the LLM.
-
-        Returns (responses, response_sdoc_ids, response_message_ids) where the
-        two id lists align with the responses list.
-        """
-        # prepare batch messages
-        batch_messages: list[LLMMessage] = []
-        bm_sids: list[int] = []  # sdoc_id corresponding to each batch_message
-        bm_ids: list[int] = []  # message id corresponding to each batch_message
-        for sdoc_id, sdoc_data in zip(sdoc_ids, sdoc_datas):
-            # get language
-            language = crud_sdoc_meta.read_by_sdoc_and_key(
-                db=db, sdoc_id=sdoc_data.id, key="language"
-            ).str_value
-            if language is None:
-                raise BatchProcessingError(
-                    f"Document with ID {sdoc_id} has no language!"
-                )
-
-            # construct prompts
-            prompts = strategy.build_prompt(
-                language=language,
-                sdoc_data=sdoc_data,
+        processed_documents: int,
+        total_documents: int,
+        completed_requests: int,
+        *,
+        job: Job,
+    ) -> None:
+        """Report document and LLM-request progress on the job."""
+        job.update(
+            status_message=(
+                f"Processed {processed_documents} of {total_documents} documents "
+                f"({completed_requests} LLM requests completed)"
             )
-            batch_messages.extend(prompts)
-            bm_sids.extend([sdoc_id] * len(prompts))
-            bm_ids.extend(list(range(len(prompts))))
-
-        # prompt the model (batchwise)
-        responses = self.llm.llm_batch_chat(
-            model=model,
-            messages=batch_messages,
-            response_model=response_model,
-            capture_raw=True,
         )
 
-        return responses, bm_sids, bm_ids
+    def _prepare(
+        self,
+        context: LLMTaskContext[StrategyT, TaskParamsT],
+    ) -> None:
+        """Perform optional task-specific preparation before documents are processed."""
 
-    def _iter_batches(self, sdoc_ids: list[int]):
-        """Yield (batch_index, num_batches, batch_sdoc_ids)."""
-        num_batches = (len(sdoc_ids) + BATCH_SIZE - 1) // BATCH_SIZE
-        for i in range(0, len(sdoc_ids), BATCH_SIZE):
-            yield i // BATCH_SIZE, num_batches, sdoc_ids[i : i + BATCH_SIZE]
+    @abstractmethod
+    def _get_response_model(self, strategy: StrategyT) -> type[ResponseT]:
+        """Return the structured response model required by this task."""
+        ...
+
+    @abstractmethod
+    def _process_document(
+        self,
+        *,
+        context: LLMTaskContext[StrategyT, TaskParamsT],
+        document: LLMDocumentResponse[ResponseT],
+    ) -> ResultT:
+        """Validate, parse, deduplicate if needed, persist, and build the result for one document."""
+        ...
+
+    @abstractmethod
+    def _build_output(self, results: list[ResultT]) -> LLMJobOutput:
+        """Wrap all per-document results in the task-specific job output."""
+        ...

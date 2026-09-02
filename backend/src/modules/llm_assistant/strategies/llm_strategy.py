@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from collections.abc import Iterator
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
@@ -60,15 +61,15 @@ class LLMStrategy(Generic[StrategyParamsT]):
     <task_reiteration>
     """
 
-    #: The strategy type this class implements.
+    # The strategy type this class implements.
     strategy_type: StrategyType
-    #: Human-readable name (shown in the frontend).
+    # Human-readable name (shown in the frontend).
     display_name: str
-    #: Explanation of what the strategy does (shown in the frontend).
+    # Explanation of what the strategy does (shown in the frontend).
     description: str
-    #: The params model type for this strategy.
+    # The params model type for this strategy.
     strategy_params_type: type[StrategyParamsT]
-    #: The DataTags this strategy supports (class-level, for introspection).
+    # The DataTags this strategy supports (class-level, for introspection).
     allowed_data_tags: list[str] = []
 
     supported_languages = ["en", "de"]
@@ -145,21 +146,25 @@ class LLMStrategy(Generic[StrategyParamsT]):
     # VALIDATION
 
     def _is_system_prompt_valid(self, system_prompt: str) -> bool:
+        """Return whether a system prompt satisfies the shared requirements."""
         return True
 
     def _is_user_prompt_valid(self, user_prompt: str) -> bool:
+        """Return whether a user prompt contains an allowed data placeholder."""
         for tag in self.valid_data_tags:
             if tag.value in user_prompt:
                 return True
         return False
 
     def _extract_data_tag(self, user_prompt: str) -> DataTag | None:
+        """Extract the first allowed data placeholder used by a user prompt."""
         for tag in self.valid_data_tags:
             if tag.value in user_prompt:
                 return tag
         return None
 
     def _check_prompt_templates(self) -> tuple[bool, DataTag | None, str]:
+        """Validate all language templates and return their shared data tag."""
         for language in self.supported_languages:
             if language not in self.lang2prompt_templates:
                 return False, None, f"No prompts provided for language '{language}'!"
@@ -192,6 +197,7 @@ class LLMStrategy(Generic[StrategyParamsT]):
     # PROMPT BUILDING
 
     def _build_system_prompt(self, language: str) -> str:
+        """Render the configured system prompt for a language and project."""
         if language not in self.supported_languages:
             raise ValueError("Language not supported")
 
@@ -201,42 +207,40 @@ class LLMStrategy(Generic[StrategyParamsT]):
         return system_prompt.replace("<project_description>", self.project_description)
 
     def _build_user_prompt(self, language: str, data: str) -> str:
+        """Render the configured user prompt with the supplied document data."""
         if language not in self.supported_languages:
             raise ValueError("Language not supported")
 
         user_prompt_template = self.lang2prompt_templates[language].user_prompt
         return user_prompt_template.replace(self.data_tag.value, data)
 
-    def build_prompt(
+    def generate_prompts(
         self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> list[LLMMessage]:
+    ) -> Iterator[LLMMessage]:
+        """Yield the LLM messages required to process one document."""
         match self.data_tag:
             case DataTag.DOCUMENT:
-                datas = [sdoc_data.content]
+                datas = iter([sdoc_data.content])
             case DataTag.SENTENCE:
-                datas = sdoc_data.sentences
+                datas = iter(sdoc_data.sentences)
             case _:
-                raise ValueError(f"Data tag {self.data_tag} not supported!")  # type: ignore
+                raise ValueError(f"Data tag {self.data_tag} not supported!")
 
-        messages: list[LLMMessage] = []
         system_prompt = self._build_system_prompt(language)
         for data in datas:
             user_prompt = self._build_user_prompt(
                 language=language,
                 data=data,
             )
-            messages.append(
-                LLMMessage(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                )
+            yield LLMMessage(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
             )
-
-        return messages
 
     # PROMPT TEMPLATE BUILDING
 
     def _build_system_prompt_template(self, language: str) -> str:
+        """Return the default system prompt template for a language."""
         return self.system_prompt_templates[language]
 
     def _build_user_prompt_template(
@@ -246,11 +250,13 @@ class LLMStrategy(Generic[StrategyParamsT]):
         example_ids: list[int] | None = None,
         params: DocumentBasedTaskParams,
     ) -> str:
+        """Build the task-specific user prompt template for a language."""
         raise NotImplementedError()
 
     def _build_prompt_templates(
         self, params: DocumentBasedTaskParams, example_ids: list[int] | None = None
     ) -> list[LLMPromptTemplates]:
+        """Build system and user prompt templates for every supported language."""
         if example_ids is not None and not self.is_fewshot:
             raise ValueError("Example IDs are only allowed for few-shot learning!")
 

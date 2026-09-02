@@ -1,4 +1,5 @@
 import random
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -154,9 +155,9 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
     def get_response_model(self) -> type[BaseModel]:
         return LLMSentenceAnnotationResults
 
-    def build_prompt(
+    def generate_prompts(
         self, language: str, sdoc_data: SourceDocumentDataORM
-    ) -> list[LLMMessage]:
+    ) -> Iterator[LLMMessage]:
         match self.data_tag:
             case DataTag.DOCUMENT:
                 # we need to provide document sentence by sentence for sentence annotation
@@ -166,29 +167,25 @@ class SentenceAnnotationStrategy(LLMStrategy[DefaultStrategyParams]):
                         for idx, sentence in enumerate(sdoc_data.sentences)
                     ]
                 )
-                datas = [document_sentences]
+                datas = iter([document_sentences])
             case DataTag.SENTENCE:
-                datas = [f"1: {sentence}" for sentence in sdoc_data.sentences]
+                datas = (f"1: {sentence}" for sentence in sdoc_data.sentences)
             case _:
                 raise ValueError(f"Data tag {self.data_tag} not supported!")  # type: ignore
 
-        messages: list[LLMMessage] = []
         system_prompt = self._build_system_prompt(language)
         for data in datas:
             user_prompt = self._build_user_prompt(
                 language=language,
                 data=data,
             )
-            messages.append(
-                LLMMessage(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                )
+            yield LLMMessage(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
             )
 
-        return messages
-
     def _build_example(self, language: str, code_ids: list[int]) -> str:
+        """Build a sentence-classification answer example for selected codes."""
         examples: list[str] = []
         for code_id in code_ids:
             if code_id not in self.codeid2name_dict:

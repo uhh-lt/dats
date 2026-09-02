@@ -127,6 +127,7 @@ def _render_sentence_example_multi(
     end: int,
     code: str,
 ) -> str:
+    """Render the annotated sentences overlapping a span as an inline-tag example."""
     sent_offsets = _find_sentences_for_span(sdoc, begin, end)
     rendered_sentences = []
 
@@ -312,7 +313,6 @@ class NERInlineTagStrategy(LLMStrategy[NERInlineTagStrategyParams]):
         sdoc_data: SourceDocumentDataORM,
         message_id: int,
     ) -> list[ParsedSpan]:
-        """Parse inline-tagged text into spans with absolute char offsets."""
         # determine the start offset for this message
         match self.data_tag:
             case DataTag.SENTENCE:

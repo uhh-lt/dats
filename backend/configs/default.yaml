@@ -110,6 +110,8 @@ rq:
 
 llm_assistant:
   few_shot_threshold: ${oc.env:LLM_ASSISTANT_FEW_SHOT_THRESHOLD, 4}
+  request_batch_size: ${oc.env:LLM_ASSISTANT_REQUEST_BATCH_SIZE, 100}
+  document_read_batch_size: ${oc.env:LLM_ASSISTANT_DOCUMENT_READ_BATCH_SIZE, 100}
 
 cota:
   model: ${oc.env:COTA_MODEL, "paraphrase-multilingual-mpnet-base-v2"}

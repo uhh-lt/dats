@@ -19,3 +19,9 @@ class NoSuchLLMJobError(Exception):
 class UnsupportedLLMJobTypeError(Exception):
     def __init__(self, llm_job_type: TaskType) -> None:
         super().__init__(f"LLMJobType {llm_job_type} is not supported! ")
+
+
+class LLMBatchProcessingError(Exception):
+    def __init__(self, message: str, raw_response: str | None = None):
+        super().__init__(message)
+        self.raw_response = raw_response

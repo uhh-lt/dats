@@ -1,4 +1,5 @@
 from loguru import logger
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from config import conf
@@ -23,7 +24,6 @@ from modules.llm_assistant.llm_job_dto import (
     LLMJobOutput,
     SpecificTaskParameters,
     TaskType,
-    ZeroShotParams,
 )
 from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
     FuzzyGroundingStrategy,
@@ -31,22 +31,27 @@ from modules.llm_assistant.strategies.fuzzy_grounding_strategy import (
 from modules.llm_assistant.strategies.ner_inline_tag_strategy import (
     NERInlineTagStrategy,
 )
+from modules.llm_assistant.tasks.llm_document_processor import LLMDocumentResponse
 from modules.llm_assistant.tasks.llm_task import (
-    BATCH_SIZE,
-    BatchProcessingError,
     LLMTask,
+    LLMTaskContext,
     aggregate_raw_responses,
 )
-from systems.job_system.job_dto import Job
+
+AnnotationStrategy = NERInlineTagStrategy | FuzzyGroundingStrategy
 
 
-class AnnotationTask(LLMTask):
+class AnnotationTask(
+    LLMTask[AnnotationStrategy, AnnotationParams, BaseModel, AnnotationResult]
+):
     """Span annotation task.
 
     Supports two strategies:
     - NERInlineTagStrategy: LLM repeats text with inline XML tags.
     - FuzzyGroundingStrategy: LLM extracts text passages as JSON; backend grounds them.
     """
+
+    task_name = "Annotation"
 
     @staticmethod
     def _dedupe_annotations(
@@ -132,252 +137,151 @@ class AnnotationTask(LLMTask):
             reasoning=reasoning,
         )
 
-    def execute(
+    def _prepare(
+        self,
+        context: LLMTaskContext[AnnotationStrategy, AnnotationParams],
+    ) -> None:
+        if not context.task_parameters.delete_existing_annotations:
+            return
+
+        is_fewshot = isinstance(context.approach_parameters, FewShotParams)
+        previous_annotations = crud_span_anno.read_by_user_sdocs_codes(
+            db=context.db,
+            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+            sdoc_ids=context.task_parameters.sdoc_ids,
+            code_ids=context.task_parameters.code_ids,
+        )
+
+        logger.info("Deleting {} previous span annotations.", len(previous_annotations))
+        crud_span_anno.remove_bulk(
+            db=context.db, ids=[annotation.id for annotation in previous_annotations]
+        )
+
+    def _get_response_model(self, strategy: AnnotationStrategy) -> type[BaseModel]:
+        return strategy.get_response_model()
+
+    def _process_document(
         self,
         *,
-        db: Session,
-        job: Job,
-        project_id: int,
-        approach_parameters: ZeroShotParams | FewShotParams,
-        task_parameters: AnnotationParams,
-        strategy: NERInlineTagStrategy | FuzzyGroundingStrategy,
-    ) -> LLMJobOutput:
-        is_fewshot = isinstance(approach_parameters, FewShotParams)
+        context: LLMTaskContext[AnnotationStrategy, AnnotationParams],
+        document: LLMDocumentResponse[BaseModel],
+    ) -> AnnotationResult:
+        is_fewshot = isinstance(context.approach_parameters, FewShotParams)
+        strategy = context.strategy
+        sdoc_data = document.sdoc_data
+        suggested_annotations: list[SpanAnnotationCreate] = []
+        raw_responses: list[str] = []
+        errors: list[tuple[str, str | None]] = []
+        document_token_map: dict[int, int] = {}
+        last_character_offset = 0
+        for token_id, token_end in enumerate(sdoc_data.token_ends):
+            for character_offset in range(last_character_offset, token_end):
+                document_token_map[character_offset] = token_id
+            last_character_offset = token_end
 
-        msg = (
-            f"Started LLMJob - Annotation ({'Few-Shot' if is_fewshot else 'Zero-Shot'}), "
-            f"num docs: {len(task_parameters.sdoc_ids)}"
-        )
-        self._update_llm_job_description(job=job, description=msg)
-        logger.info(msg)
-
-        project_codes = strategy.codeids2code_dict
-
-        # read sdocs
-        sdoc_datas = self._read_sdoc_datas(db, task_parameters.sdoc_ids)
-
-        # Delete all existing span annotations for the sdocs
-        if task_parameters.delete_existing_annotations:
-            previous_annotations = crud_span_anno.read_by_user_sdocs_codes(
-                db=db,
-                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-                sdoc_ids=task_parameters.sdoc_ids,
-                code_ids=task_parameters.code_ids,
-            )
-
-            msg = f"Deleting {len(previous_annotations)} previous span annotations."
-            logger.info(msg)
-
-            crud_span_anno.remove_bulk(
-                db=db, ids=[anno.id for anno in previous_annotations]
-            )
-
-        # automatic annotation
-        result: list[AnnotationResult] = []
-        for batch_idx, num_batches, sids in self._iter_batches(
-            task_parameters.sdoc_ids
-        ):
-            # update job status
-            msg = f"Processing batch {batch_idx + 1} of {num_batches}"
-            self._next_llm_job_step(job=job, description=msg)
-            logger.info(msg)
-
-            # batch data
-            start = batch_idx * BATCH_SIZE
-            sdata = sdoc_datas[start : start + BATCH_SIZE]
-            sid2sdata = {
-                sdoc_data.id: sdoc_data for sdoc_data in sdata if sdoc_data is not None
-            }
-
-            # process the batch with LLM
-            try:
-                responses, response_sdoc_ids, response_message_ids = (
-                    self._process_batch(
-                        model=approach_parameters.model,
-                        strategy=strategy,
-                        db=db,
-                        sdoc_ids=sids,
-                        sdoc_datas=sdata,
-                        response_model=strategy.get_response_model(),
+        for response_item in document.responses:
+            response = response_item.response
+            if response.is_error or response.parsed is None:
+                errors.append(
+                    (
+                        response.error or "Unknown LLM error",
+                        response.raw,
                     )
-                )
-            except BatchProcessingError as e:
-                logger.error(f"Batch processing failed: {e}")
-                result.extend(
-                    [
-                        AnnotationResult(
-                            status="error",
-                            status_message=str(e),
-                            sdoc_id=sdoc_id,
-                            suggested_annotations=[],
-                            raw_response=e.raw_response,
-                        )
-                        for sdoc_id in sids
-                    ]
                 )
                 continue
 
-            # parse the responses, preparing the suggested annotation creation
-            suggested_annotations: list[SpanAnnotationCreate] = []
-            # raw responses per sdoc (only kept for docs without annotations)
-            # note: a document can have multiple responses (one per sentence/chunk)
-            sdoc_id2raw_responses: dict[int, list[str]] = {}
-            # errors per sdoc
-            sdoc_id2errors: dict[int, list[tuple[str, str | None]]] = {}
-            for response, sdoc_id, message_id in zip(
-                responses, response_sdoc_ids, response_message_ids
-            ):
-                sdoc_data = sid2sdata.get(sdoc_id, None)
-                assert sdoc_data is not None
+            if response.raw is not None:
+                raw_responses.append(response.raw)
 
-                if response.is_error or response.parsed is None:
-                    if sdoc_id not in sdoc_id2errors:
-                        sdoc_id2errors[sdoc_id] = []
-                    sdoc_id2errors[sdoc_id].append(
-                        (
-                            response.error or "Unknown LLM error",
-                            response.raw,
-                        )
-                    )
+            parsed_spans = strategy.parse_result(
+                response.parsed,  # type: ignore
+                sdoc_data,
+                response_item.message_id,
+            )
+            for span in parsed_spans:
+                code_id = span["code_id"]
+                if code_id not in strategy.codeids2code_dict:
+                    continue
+                if span["text"].strip() == "":
                     continue
 
-                if response.raw is not None:
-                    if sdoc_id not in sdoc_id2raw_responses:
-                        sdoc_id2raw_responses[sdoc_id] = []
-                    sdoc_id2raw_responses[sdoc_id].append(response.raw)
+                start = span["begin"]
+                end = span["end"]
+                begin_token = document_token_map.get(start)
+                end_token = document_token_map.get(end - 1)
+                if begin_token is None or end_token is None:
+                    continue
 
-                # parse the response into spans with absolute char offsets
-                parsed_spans = strategy.parse_result(
-                    response.parsed,  # type: ignore
-                    sdoc_data,
-                    message_id,
+                suggested_annotations.append(
+                    SpanAnnotationCreate(
+                        sdoc_id=sdoc_data.id,
+                        begin=start,
+                        end=end,
+                        begin_token=begin_token,
+                        end_token=end_token + 1,
+                        span_text=span["text"],
+                        code_id=code_id,
+                    )
                 )
 
-                # build char->token map
-                document_token_map = {}
-                last_character_offset = 0
-                for token_id, token_end in enumerate(sdoc_data.token_ends):
-                    for i in range(last_character_offset, token_end):
-                        document_token_map[i] = token_id
-                    last_character_offset = token_end
+        suggested_annotations = self._dedupe_annotations(suggested_annotations)
+        created_annos = crud_span_anno.create_bulk(
+            db=context.db,
+            user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
+            create_dtos=suggested_annotations,
+        )
+        created_annos_for_sdoc = [
+            SpanAnnotationRead.model_validate(annotation)
+            for annotation in created_annos
+        ]
 
-                for span in parsed_spans:
-                    code_id = span["code_id"]
-                    if code_id not in project_codes:
-                        continue
-
-                    if span["text"].strip() == "":
-                        continue
-
-                    start = span["begin"]
-                    end = span["end"]
-
-                    begin_token = document_token_map.get(start)
-                    end_token = document_token_map.get(end - 1)
-                    if begin_token is None or end_token is None:
-                        continue
-
-                    # create the suggested annotation
-                    suggested_annotations.append(
-                        SpanAnnotationCreate(
-                            sdoc_id=sdoc_data.id,
-                            begin=start,
-                            end=end,
-                            begin_token=begin_token,
-                            end_token=end_token + 1,
-                            span_text=span["text"],
-                            code_id=code_id,
-                        )
-                    )
-
-            # Deduplicate after all responses for the document batch have been parsed.
-            suggested_annotations = self._dedupe_annotations(suggested_annotations)
-
-            # create the suggested annotations in the database
-            created_annos = crud_span_anno.create_bulk(
-                db=db,
-                user_id=ASSISTANT_FEWSHOT_ID if is_fewshot else ASSISTANT_ZEROSHOT_ID,
-                create_dtos=suggested_annotations,
+        if errors:
+            raw_response = aggregate_raw_responses(
+                [raw for _, raw in errors if raw is not None]
+            )
+            error_msg = (
+                errors[0][0]
+                if len(errors) == 1
+                else f"{len(errors)} requests failed. First error: {errors[0][0]}"
+            )
+            if created_annos_for_sdoc:
+                return AnnotationResult(
+                    status="partial",
+                    status_message=f"Annotation partially successful. {error_msg}",
+                    sdoc_id=sdoc_data.id,
+                    suggested_annotations=created_annos_for_sdoc,
+                    raw_response=raw_response or None,
+                )
+            return AnnotationResult(
+                status="error",
+                status_message=error_msg,
+                sdoc_id=sdoc_data.id,
+                suggested_annotations=[],
+                raw_response=raw_response or None,
             )
 
-            # create results for this batch
-            sdoc_id2created_annos: dict[int, list[SpanAnnotationRead]] = {}
-            for anno in created_annos:
-                if anno.sdoc_id not in sdoc_id2created_annos:
-                    sdoc_id2created_annos[anno.sdoc_id] = []
-                sdoc_id2created_annos[anno.sdoc_id].append(
-                    SpanAnnotationRead.model_validate(anno)
-                )
+        if created_annos_for_sdoc:
+            return AnnotationResult(
+                status="finished",
+                status_message="Annotation successful",
+                sdoc_id=sdoc_data.id,
+                suggested_annotations=created_annos_for_sdoc,
+            )
 
-            # create a result for EVERY processed document
-            for sdoc_id in sids:
-                created_annos_for_sdoc = sdoc_id2created_annos.get(sdoc_id, [])
-                errors = sdoc_id2errors.get(sdoc_id, [])
+        return AnnotationResult(
+            status="finished",
+            status_message="No annotations suggested",
+            sdoc_id=sdoc_data.id,
+            suggested_annotations=[],
+            raw_response=(
+                aggregate_raw_responses(raw_responses) if raw_responses else None
+            ),
+        )
 
-                if errors:
-                    # aggregate the raw responses of the failed requests
-                    raw_response = aggregate_raw_responses(
-                        [raw for _, raw in errors if raw is not None]
-                    )
-                    error_msg = (
-                        errors[0][0]
-                        if len(errors) == 1
-                        else f"{len(errors)} requests failed. First error: {errors[0][0]}"
-                    )
-                    if created_annos_for_sdoc:
-                        # partial success: some requests failed, but annotations exist
-                        result.append(
-                            AnnotationResult(
-                                status="partial",
-                                status_message=f"Annotation partially successful. {error_msg}",
-                                sdoc_id=sdoc_id,
-                                suggested_annotations=created_annos_for_sdoc,
-                                raw_response=raw_response if raw_response else None,
-                            )
-                        )
-                    else:
-                        # complete failure: no annotations created
-                        result.append(
-                            AnnotationResult(
-                                status="error",
-                                status_message=error_msg,
-                                sdoc_id=sdoc_id,
-                                suggested_annotations=[],
-                                raw_response=raw_response if raw_response else None,
-                            )
-                        )
-                    continue
-
-                if len(created_annos_for_sdoc) > 0:
-                    # success results
-                    result.append(
-                        AnnotationResult(
-                            status="finished",
-                            status_message="Annotation successful",
-                            sdoc_id=sdoc_id,
-                            suggested_annotations=created_annos_for_sdoc,
-                        )
-                    )
-                else:
-                    # no annotations suggested -> keep raw responses for transparency
-                    raw_responses = sdoc_id2raw_responses.get(sdoc_id, [])
-                    result.append(
-                        AnnotationResult(
-                            status="finished",
-                            status_message="No annotations suggested",
-                            sdoc_id=sdoc_id,
-                            suggested_annotations=[],
-                            raw_response=(
-                                aggregate_raw_responses(raw_responses)
-                                if raw_responses
-                                else None
-                            ),
-                        )
-                    )
-
+    def _build_output(self, results: list[AnnotationResult]) -> LLMJobOutput:
         return LLMJobOutput(
             llm_job_type=TaskType.ANNOTATION,
             specific_task_result=AnnotationLLMJobResult(
-                llm_job_type=TaskType.ANNOTATION, results=result
+                llm_job_type=TaskType.ANNOTATION, results=results
             ),
         )

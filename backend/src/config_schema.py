@@ -314,6 +314,8 @@ class LlmAssistantConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     few_shot_threshold: int = Field(gt=0)
+    request_batch_size: int = Field(gt=0)
+    document_read_batch_size: int = Field(gt=0)
 
 
 class CotaConfig(BaseModel):
