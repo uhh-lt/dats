@@ -115,13 +115,24 @@ class LLMDocumentProcessor:
                     "The LLM returned a different number of responses than requests"
                 )
 
+            response_debug_entries: list[str] = []
             for work, response in zip(pending_work, batch_responses):
+                response_debug_entries.append(
+                    f"--- Document {work.sdoc_id}, prompt chunk {work.message_id} ---\n"
+                    f"Error: {response.error or '<none>'}\n"
+                    f"Raw:\n{response.raw or '<none>'}"
+                )
                 responses_by_sdoc.setdefault(work.sdoc_id, []).append(
                     LLMResponseItem(
                         message_id=work.message_id,
                         response=response,
                     )
                 )
+            logger.debug(
+                "--- LLM responses for batch {} ---\n{}\n--- End LLM responses ---",
+                submitted_batches,
+                "\n\n".join(response_debug_entries),
+            )
             failed_requests = sum(response.is_error for response in batch_responses)
             logger.info(
                 "Completed LLM batch {} in {:.2f}s: {} successful, {} failed request(s).",

@@ -56,22 +56,73 @@ class AnnotationTask(
     @staticmethod
     def _dedupe_annotations(
         annotations: list[SpanAnnotationCreate],
-    ) -> list[SpanAnnotationCreate]:
-        """Remove exact duplicate suggestions while preserving their order."""
-        seen: set[tuple[int, int, int, int]] = set()
-        result: list[SpanAnnotationCreate] = []
-        for annotation in annotations:
-            key = (
+        document_content: str,
+    ) -> tuple[list[SpanAnnotationCreate], list[SpanAnnotationCreate]]:
+        """Merge overlapping suggestions for the same document and code."""
+        sorted_annotations = sorted(
+            annotations,
+            key=lambda annotation: (
                 annotation.sdoc_id,
                 annotation.code_id,
                 annotation.begin,
                 annotation.end,
-            )
-            if key in seen:
+            ),
+        )
+        kept: list[SpanAnnotationCreate] = []
+        removed: list[SpanAnnotationCreate] = []
+        for annotation in sorted_annotations:
+            if len(kept) == 0:
+                kept.append(annotation)
                 continue
-            seen.add(key)
-            result.append(annotation)
-        return result
+
+            previous = kept[-1]
+            is_same_group = (
+                previous.sdoc_id == annotation.sdoc_id
+                and previous.code_id == annotation.code_id
+            )
+            is_overlapping = (
+                annotation.begin < previous.end and previous.begin < annotation.end
+            )
+            if not is_same_group or not is_overlapping:
+                kept.append(annotation)
+                continue
+
+            begin = min(previous.begin, annotation.begin)
+            end = max(previous.end, annotation.end)
+            kept[-1] = SpanAnnotationCreate(
+                sdoc_id=previous.sdoc_id,
+                code_id=previous.code_id,
+                begin=begin,
+                end=end,
+                begin_token=min(previous.begin_token, annotation.begin_token),
+                end_token=max(previous.end_token, annotation.end_token),
+                span_text=document_content[begin:end],
+            )
+            removed.append(annotation)
+
+        return kept, removed
+
+    @staticmethod
+    def _annotation_key(annotation: SpanAnnotationCreate) -> tuple[int, int, int, int]:
+        return (
+            annotation.sdoc_id,
+            annotation.code_id,
+            annotation.begin,
+            annotation.end,
+        )
+
+    @classmethod
+    def _format_annotation(cls, annotation: SpanAnnotationCreate) -> str:
+        compact_text = " ".join(annotation.span_text.split())
+        preview = (
+            compact_text if len(compact_text) <= 100 else f"{compact_text[:97]}..."
+        )
+        return (
+            f"key={cls._annotation_key(annotation)}, code={annotation.code_id}, "
+            f"chars={annotation.begin}:{annotation.end}, "
+            f"tokens={annotation.begin_token}:{annotation.end_token}, "
+            f"length={annotation.end - annotation.begin}, preview={preview!r}"
+        )
 
     @classmethod
     def determine_approach(
@@ -225,12 +276,32 @@ class AnnotationTask(
                 )
 
         parsed_annotation_count = len(suggested_annotations)
-        suggested_annotations = self._dedupe_annotations(suggested_annotations)
+        suggested_annotations, removed_annotations = self._dedupe_annotations(
+            suggested_annotations,
+            document_content=sdoc_data.content,
+        )
+        deduplicated_annotation_count = len(suggested_annotations)
+        logger.debug(
+            "--- Span annotation deduplication: document {} ---\nKept ({}):\n{}\nRemoved ({}):\n{}",
+            sdoc_data.id,
+            deduplicated_annotation_count,
+            "\n".join(
+                self._format_annotation(annotation)
+                for annotation in suggested_annotations
+            )
+            or "<none>",
+            len(removed_annotations),
+            "\n".join(
+                self._format_annotation(annotation)
+                for annotation in removed_annotations
+            )
+            or "<none>",
+        )
         logger.info(
             "Document {} produced {} annotation suggestion(s), {} after deduplication, with {} failed response(s).",
             sdoc_data.id,
             parsed_annotation_count,
-            len(suggested_annotations),
+            deduplicated_annotation_count,
             len(errors),
         )
         created_annos = crud_span_anno.create_bulk(
