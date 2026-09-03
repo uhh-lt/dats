@@ -11,14 +11,17 @@ import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 export const CodeSelectionStep = memo(() => {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
   const llmJobType = useAppSelector((state) => state.llmAssistant.llmMethod);
+  const savedCodes = useAppSelector((state) => state.llmAssistant.llmCodes);
   const dispatch = useAppDispatch();
+
+  // local state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
+    Object.fromEntries(savedCodes.map((code) => [code.id, true])),
+  );
 
   // initiate next step (get the generated prompts)
   const { mutate: determineApproachMutation, isPending } = LLMHooks.useDetermineApproach();
@@ -46,7 +49,7 @@ export const CodeSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToStrategySelection({
+              LLMAssistantActions.llmDialogGoToSettings({
                 approach: data,
                 tags: [],
                 metadata: [],

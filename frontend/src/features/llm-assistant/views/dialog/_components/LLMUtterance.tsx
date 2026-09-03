@@ -7,7 +7,7 @@ export const LLMUtterance = memo(
     return (
       <Stack direction="row" alignItems="center" {...props}>
         {getIconComponent(Icon.LLM_ASSISTANT, { fontSize: "large", color: "primary" })}
-        <Box className="speech-bubble" sx={{ ml: 8 }}>
+        <Box className="speech-bubble" sx={{ ml: 8, bgcolor: "background.paper" }}>
           {children}
         </Box>
       </Stack>

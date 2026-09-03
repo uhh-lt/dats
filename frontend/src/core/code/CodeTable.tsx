@@ -142,6 +142,7 @@ export const CodeTable = memo(
     // table
     const table = useMaterialReactTable<CodeTableRow>({
       data: projectCodesRows,
+      rowCount: projectCodes.data?.length ?? 0,
       columns: columns,
       getRowId: (row) => `${row.id}`,
       // style

@@ -13,13 +13,16 @@ import { LLMAssistantActions } from "../../../store/llmAssistantSlice";
 import { LLMUtterance } from "./LLMUtterance";
 
 export const ProjectMetadataSelectionStep = memo(() => {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
-
   // global state
   const projectId = useAppSelector((state) => state.llmAssistant.llmProjectId);
   const selectedDocuments = useAppSelector((state) => state.llmAssistant.llmDocumentIds);
+  const savedMetadata = useAppSelector((state) => state.llmAssistant.llmMetadata);
   const dispatch = useAppDispatch();
+
+  // local state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>(() =>
+    Object.fromEntries(savedMetadata.map((metadata) => [metadata.id, true])),
+  );
 
   // global server state
   const projectMetadata = MetadataHooks.useGetProjectMetadataList();
@@ -48,7 +51,7 @@ export const ProjectMetadataSelectionStep = memo(() => {
         {
           onSuccess(data) {
             dispatch(
-              LLMAssistantActions.llmDialogGoToStrategySelection({
+              LLMAssistantActions.llmDialogGoToSettings({
                 approach: data,
                 tags: [],
                 metadata: projectMetadata,
