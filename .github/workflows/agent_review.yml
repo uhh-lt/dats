@@ -1,0 +1,60 @@
+# Runs the autonomous ci-reviewer agent on every PR that is opened or updated.
+# The agent runs headlessly via the GitHub Copilot CLI on our self-hosted runners.
+# Inference is routed to our own OpenAI-compatible endpoint (BYOK) via the
+# COPILOT_PROVIDER_* / COPILOT_MODEL environment variables configured on the
+# runner fleet (see action-runner/.env.example) — no code leaves our network.
+name: agent-review
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to review"
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: write # required to post review comments
+
+jobs:
+  review:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the agent reads full git history/diffs
+
+      - name: Resolve PR number
+        id: pr
+        env:
+          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          PR_NUMBER="${EVENT_PR_NUMBER:-${INPUT_PR_NUMBER}}"
+          if [ -z "${PR_NUMBER}" ]; then
+            echo "No PR number available (neither pull_request event nor workflow_dispatch input)." >&2
+            exit 1
+          fi
+          echo "number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout PR branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+        run: gh pr checkout ${{ steps.pr.outputs.number }}
+
+      - name: Run ci-reviewer agent (headless)
+        env:
+          # GitHub auth for the Copilot CLI and for posting PR comments.
+          # The PAT is injected into the runner container from action-runner/.env.
+          GH_TOKEN: ${{ secrets.GITHUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+        run: |
+          # All review instructions live in .github/agents/ci-reviewer.agent.md;
+          # the prompt only passes the per-run PR number.
+          copilot -p "Review pull request #${{ steps.pr.outputs.number }}." \
+            --agent ci-reviewer \
+            --allow-tool='github' \
+            --deny-tool='shell' \
+            --deny-tool='write'
