@@ -108,11 +108,17 @@ class UnusualCodeNamesProject(TypedDict):
     Project ``Unusual code names`` belongs to ``testuser@dats.org`` and contains:
 
     - One text document, ``Unusual code targets``, whose content is exactly
-      ``Dashword spaceword dotword``.
-    - Three enabled codes: ``UN-FRESH`` describes only ``Dashword``, ``VERY FRESH``
-      describes only ``spaceword``, and ``ODD.CODE_2`` describes only ``dotword``.
+      ``Mia owns a cat and a dog.``.
+    - Three enabled codes whose names deliberately contain unusual characters
+      (a dash, a space, and a dot plus a digit) to stress inline-tag parsing:
+      ``PERSON-NAME`` describes only ``Mia``, ``ANIMAL CAT`` describes only
+      ``cat``, and ``ANIMAL.DOG2`` describes only ``dog``.
     - The required read-only ``language`` metadata field, set to ``en`` on the
       document.
+
+    The text and code descriptions are intentionally obvious so that any LLM can
+    solve the tagging task: each target word is a clear, real-world instance of
+    its code's description (a person's name, a cat, a dog).
 
     Non-obvious derived behavior:
 
@@ -303,22 +309,22 @@ def unusual_code_names_project(
         project=project,
         filename="unusual-code-targets.txt",
         name="Unusual code targets",
-        sentences=["Dashword spaceword dotword"],
+        sentences=["Mia owns a cat and a dog."],
     )
     codes = [
         crud_code.create(
             db=db_session,
             create_dto=CodeCreate(
                 name=name,
-                description=f"Only the exact word {target}.",
+                description=description,
                 project_id=project.id,
                 is_system=False,
             ),
         )
-        for name, target in [
-            ("UN-FRESH", "Dashword"),
-            ("VERY FRESH", "spaceword"),
-            ("ODD.CODE_2", "dotword"),
+        for name, description in [
+            ("PERSON-NAME", "The name of a person, e.g. Mia."),
+            ("ANIMAL CAT", "A cat (the pet animal)."),
+            ("ANIMAL.DOG2", "A dog (the pet animal)."),
         ]
     ]
 
@@ -331,9 +337,9 @@ def unusual_code_names_project(
         "target_sdoc": target_sdoc,
         "codes": codes,
         "expected_annotations": [
-            ("Dashword", codes[0].id, 0, 8),
-            ("spaceword", codes[1].id, 9, 18),
-            ("dotword", codes[2].id, 19, 26),
+            ("Mia", codes[0].id, 0, 3),
+            ("cat", codes[1].id, 11, 14),
+            ("dog", codes[2].id, 21, 24),
         ],
     }
 
