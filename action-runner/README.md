@@ -98,18 +98,38 @@ Each runner is named after its container hostname: `dats-runner-01`, `dats-runne
 !!! warning "CI Compatibility"
 The runner names **must end in exactly two digits** (e.g., `dats-runner-01`). The CI's `prepare-env` step extracts these digits to compute port prefixes (`501`, `502`) and Compose project names. This ensures multiple runners can execute jobs concurrently without port or container conflicts.
 
+## Autonomous Agents (Copilot CLI + BYOK)
+
+The runner image ships the [GitHub Copilot CLI](https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli), so workflows can run AI agents headlessly on this fleet (e.g. `.github/workflows/agent_review.yml`, which reviews PRs with the `.github/agents/ci-reviewer.agent.md` agent).
+
+The CLI supports custom model providers (BYOK): the `COPILOT_*` variables (see [Configuration Reference](#configuration-reference)) define where inference is routed to. Notes:
+
+- Because the runners use `network_mode: "host"`, `localhost` in `COPILOT_PROVIDER_BASE_URL` refers to the Docker host — no extra host mapping is needed.
+- The configured model must support **tool calling** and **streaming**.
+- The CLI authenticates to GitHub with the fleet's `GITHUB_PAT`; the PAT's account needs Copilot access.
+- Headless runs enforce least privilege via CLI flags in the workflow (`--deny-tool='shell' --deny-tool='write'`); the agent file's `tools:` list is only advisory.
+- After changing these values, recreate the fleet: `docker compose up -d --force-recreate`.
+
 ## Configuration Reference
 
-| Environment Variable   | Description                                          | Default       | Required |
-| ---------------------- | ---------------------------------------------------- | ------------- | -------- |
-| `GITHUB_OWNER`         | GitHub username or organization name                 | —             | Yes      |
-| `GITHUB_REPO`          | Repository name                                      | —             | Yes      |
-| `GITHUB_PAT`           | Personal Access Token with `repo` scope              | —             | Yes      |
-| `RAY_CACHE_HOST_DIR`   | Shared Ray model cache on the host                   | —             | Yes      |
-| `UV_CACHE_HOST_DIR`    | Shared uv (Python) cache on the host                 | —             | Yes      |
-| `RUNNER_WORK_BASE_DIR` | Host base dir for runner work dirs (one subdir each) | —             | Yes      |
-| `RUNNER_GPU_DEVICE_ID` | GPU device ID for runner containers                  | `0`           | No       |
-| `COMPOSE_PROJECT_NAME` | Docker Compose project name for grouping             | `dats-action` | No       |
+| Environment Variable                 | Description                                                         | Default       | Required |
+| ------------------------------------ | ------------------------------------------------------------------- | ------------- | -------- |
+| `GITHUB_OWNER`                       | GitHub username or organization name                                | —             | Yes      |
+| `GITHUB_REPO`                        | Repository name                                                     | —             | Yes      |
+| `GITHUB_PAT`                         | Personal Access Token with `repo` scope                             | —             | Yes      |
+| `RAY_CACHE_HOST_DIR`                 | Shared Ray model cache on the host                                  | —             | Yes      |
+| `UV_CACHE_HOST_DIR`                  | Shared uv (Python) cache on the host                                | —             | Yes      |
+| `RUNNER_WORK_BASE_DIR`               | Host base dir for runner work dirs (one subdir each)                | —             | Yes      |
+| `COPILOT_PROVIDER_BASE_URL`          | Base URL of the model provider endpoint used for agent inference    | —             | Yes      |
+| `COPILOT_PROVIDER_TYPE`              | Provider type (`openai` for any OpenAI-compatible endpoint)         | —             | Yes      |
+| `COPILOT_PROVIDER_API_KEY`           | API key for the provider (a dummy value is fine if unauthenticated) | —             | Yes      |
+| `COPILOT_PROVIDER_WIRE_API`          | Wire API of the provider (`completions` or `responses`)             | —             | Yes      |
+| `COPILOT_PROVIDER_TRANSPORT`         | Transport protocol (`http` or `https`)                              | —             | Yes      |
+| `COPILOT_MODEL`                      | Model to use for agent inference, as served by the provider         | —             | Yes      |
+| `COPILOT_PROVIDER_MAX_PROMPT_TOKENS` | Maximum prompt tokens sent to the provider                          | —             | Yes      |
+| `COPILOT_PROVIDER_MAX_OUTPUT_TOKENS` | Maximum output tokens requested from the provider                   | —             | Yes      |
+| `RUNNER_GPU_DEVICE_ID`               | GPU device ID for runner containers                                 | `0`           | No       |
+| `COMPOSE_PROJECT_NAME`               | Docker Compose project name for grouping                            | `dats-action` | No       |
 
 ## CI Compatibility
 
